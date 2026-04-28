@@ -14,8 +14,9 @@ arg list is dramatically simpler than the in-tree routine. FUN-removal
 is a single isolated commit on the branch and can be `git revert`ed if
 FUN turns out to matter for perf.
 
-Both `use_nitrif_denitrif` branches are preserved and runtime-selectable
-via a driver arg.
+Both `use_nitrif_denitrif` branches are preserved, plus the
+`carbon_only` and `decomp_method == mimics_decomp` switches. The driver
+exercises all 8 combinations by default (see [Driver modes](#driver-modes)).
 
 ## Files
 
@@ -23,11 +24,12 @@ via a driver arg.
   depends on intrinsic kinds (`selected_real_kind(12)` defines `r8`
   locally).
 - `driver.F90` — synthetic timing harness; allocates inputs (pointer
-  arrays where the routine signature requires pointer), times `niters`
-  calls, prints results, writes `last_run.txt`, compares against
-  `baseline_checksum.txt`.
+  arrays where the routine signature requires pointer), runs all 8
+  config combinations per iter (or 1 with `--fast`), prints results,
+  writes `last_run.txt`, compares against `baseline_checksum.txt`.
 - `baseline_checksum.txt` — committed reference output of the canonical
-  run (default params). Driver compares against this when present.
+  run (default params, `--all` mode). Driver compares against this when
+  the fingerprint matches.
 - `Makefile` — tiny wrapper that sets `OBJ` and includes
   [../Makefile.common](../Makefile.common) (which carries `FC`,
   `FFLAGS`, the `PERF_TIMING` macro plumbing, and the `clean` target).
@@ -44,19 +46,40 @@ Shared across all `perf_testing/` subdirs (one level up):
 
 ```bash
 . ../env.sh                # makes nvfortran available (shared)
-make                       # builds ./driver with -O3 -g -DPERF_TIMING
-./driver                   # canonical params (8000 10 8 -1 1 .true. .false.)
+make                       # builds ./driver with -DPERF_TIMING
+./driver                   # default: --all mode, 8 configs, default sizes
+./driver --fast            # canonical config only (1 call instead of 8)
 ```
 
-Override params positionally — `ncol nlevdecomp ndct numfc niters use_nitrif_denitrif carbon_only`:
+Override sizes positionally — `ncol nlevdecomp ndct numfc niters`:
 
 ```bash
-./driver 16000 15 12 16000 100 .true.  .false.   # bigger run, both branches
-./driver 8000  10  8 -1    1   .false. .false.   # exercise the .not. nitrif branch
-./driver 8000  10  8 -1    1   .true.  .true.    # exercise carbon_only path
+./driver 16000 15 12 16000 100         # bigger --all run
+./driver --fast 16000 15 12 16000 100  # bigger run, single config
 ```
 
-`numfc=-1` is a sentinel meaning "use ncol".
+`numfc=-1` (default) means "use ncol". `--fast` may appear before or
+after the positional args.
+
+## Driver modes
+
+- **`--all` (default)** — runs each iter as 8 calls covering every
+  combination of (`use_nitrif_denitrif`, `carbon_only`,
+  `decomp_method == mimics_decomp`). The reported checksum is the sum
+  of all 8 per-config checksums, so it locks correctness across every
+  top-level branch in the routine. Per-call time = elapsed / (niters * 8).
+- **`--fast`** — runs only the canonical config
+  (`use_nitrif_denitrif=.true.`, `carbon_only=.false.`,
+  `decomp_method=mimics_decomp`). Use it for tight perf-iteration loops
+  where covering every branch every time is unnecessary. Has its own
+  fingerprint, so an `--all` baseline doesn't `MATCH` a `--fast` run
+  (the driver prints `param set differs; skipping compare`).
+
+Within a single config, the synthetic inputs are rigged so per-cell
+branches inside the routine fire on different cells (`sminn_vr` ranges
+0.05..2 g/m3 so both `supply > demand` and `supply < demand` cells
+exist; `cascade_receiver_pool` cycles 1..5 so the MIMICS pool-id test
+both hits and misses).
 
 Override compiler / flags at make time:
 
@@ -87,41 +110,40 @@ does not touch `baseline_checksum.txt`.
 ## Output
 
 Each run prints config + (if `PERF_TIMING`) elapsed/per-call time +
-checksum, e.g.:
+checksum, e.g. (default `--all` mode):
 
 ```
 === SoilBiogeochemCompetition standalone driver ===
+  mode                 = all
   ncol                 = 8000
   nlevdecomp           = 10
   ndct                 = 8
   numfc                = 8000
   niters               = 1
-  use_nitrif_denitrif  = T
-  carbon_only          = F
-  decomp_method        = 2
-  elapsed (s)          =   8.399000E-03
-  per call (s)         =   8.399000E-03
-  checksum             =   9.5970435393765438E+04
+  configs / iter       = 8
+  total calls          = 8
+  elapsed (s)          =   4.957000E-02
+  per call (s)         =   6.196250E-03
+  checksum             =   7.6772246368780360E+05
   baseline             = MATCH (|diff| =   0.000000E+00)
 ```
 
 Every run also writes `last_run.txt` (gitignored) with the parameter
-fingerprint + checksum.
+fingerprint (`mode`, sizes, `niters`) + checksum.
 
 ## Baseline checksum
 
-`baseline_checksum.txt` is committed. It captures the checksum of the
-canonical run (default parameters) and serves as a correctness reference
-for future optimized variants of `SoilBiogeochemCompetition`. The
-driver:
+`baseline_checksum.txt` is committed. It captures the summed checksum
+of the canonical default run (`--all` mode, default sizes) and serves
+as a correctness reference for future optimized variants. The driver:
 
 - prints `MATCH` if the parameter fingerprint matches the baseline and
   the checksum agrees within `1e-10 * max(|baseline|, 1)`;
 - prints `MISMATCH` (with the diff and tol) if the checksum has drifted
   — treat this as a correctness regression;
-- skips the comparison when the parameter set doesn't match the
-  baseline, since the checksum is parameter-dependent (e.g. the
-  `use_nitrif_denitrif` flag changes which code paths execute).
+- skips the comparison when the fingerprint doesn't match (e.g.
+  different sizes, `niters`, or running `--fast` against an `--all`
+  baseline).
 
 To **regenerate** the baseline (e.g. after deliberately changing the
 algorithm or input fill pattern):
@@ -136,10 +158,9 @@ git commit -m "Regenerate SoilBiogeochemCompetition baseline_checksum.txt"
 ## Notes for future optimization stages
 
 - The routine accumulates into `actual_immob`, `potential_immob`,
-  `sminn_to_plant` in the non-nitrif branch (uses `+=` without
-  re-zeroing). The driver zeros them once before the call loop;
-  setting `niters > 1` makes the checksum reflect cumulative state and
-  the canonical baseline (niters=1) won't match.
+  `sminn_to_plant` in the non-nitrif branch (`+=` without re-zeroing).
+  The driver re-zeros all output / inout arrays before every call, so
+  per-call results are independent of `niters` and config order.
 - Pointer attributes on the pointer args mirror the in-tree
   `soilbiogeochem_*_inst%*_col` declarations. Don't switch them to
   assumed-shape `intent(in/out)` during extraction; save signature
