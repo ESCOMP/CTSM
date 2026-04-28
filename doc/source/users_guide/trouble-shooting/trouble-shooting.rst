@@ -243,7 +243,7 @@ Binary files committed without the use of git lfs
 
 If someone commits a binary file without git lfs enabled, it will actually be committed directly. The same thing will happen even if they have git lfs enabled if the file has an extension that isn't currently tracked by git lfs. Look for any such binary files when looking through the list of changed files. These will often appear in the doc directory.
 
-See the .gitattributes file at the top level of the repository for files typically handled by git lfs).
+See the .gitattributes file at the top level of the repository for files typically handled by git lfs.
 
 .. _A specific troubleshooting example:
 
