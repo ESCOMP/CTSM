@@ -3,16 +3,15 @@ module p2c_2d_filter_mod
   !-----------------------------------------------------------------------
   ! Standalone extraction of p2c_2d_filter from src/main/subgridAveMod.F90.
   !
-  ! Stage 2: col/patch lookups replaced with array arguments. Argument
-  ! attributes (pointer, etc.) are preserved from the original signature
-  ! so the only change in behavior is where the arrays come from. The
-  ! module now depends only on shr_kind_mod for r8.
+  ! Stage 3: shr_kind_mod dependency removed; r8 is now defined locally
+  ! via selected_real_kind(12), which matches CTSM's shr_kind_r8 in
+  ! practice. The module has no non-intrinsic dependencies.
   !-----------------------------------------------------------------------
-
-  use shr_kind_mod , only : r8 => shr_kind_r8
 
   implicit none
   private
+
+  integer, parameter, public :: r8 = selected_real_kind(12)
 
   public :: p2c_2d_filter
 
