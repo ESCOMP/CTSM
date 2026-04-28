@@ -157,17 +157,19 @@ contains
                   ! --- NVP volumetric water content (clamped to valid range) ---
                   if (dz(c,0) > 0._r8) then
                      if (t_soisno(c,0) >= tfrz) then
-                        ! For unfrozen soil
+                        ! For unfrozen soil — compute matric potential from van Genuchten curve
                         vol_ice = min(watsat_nvp, h2osoi_ice(c,0)/(dz(c,0)*denice))
                         eff_porosity = watsat_nvp-vol_ice
                         vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(dz(c,0)*denh2o))
+                        call NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van_nvp, alpha_van_nvp, &
+                                 watsat_nvp, watres_nvp, psit_nvp)
+                        hr_nvp = exp(psit_nvp/roverg/t_nvp_col(c))
                      else
-                        ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
-                        vol_liq = watres_nvp            
+                        ! [PORTED by Hui Tang: frozen NVP — water is unavailable for liquid evaporation;
+                        !  treat surface as saturated over ice (hr_nvp=1) so qg_nvp=qsat(t_nvp).
+                        !  Calling NVPWaterRetentionCurve here is invalid: satfrac=0 → 0**(-1/m_van)=Inf.]
+                        hr_nvp = 1._r8
                      end if
-                     call NVPWaterRetentionCurve(vol_liq, eff_porosity, n_van_nvp, alpha_van_nvp, &
-                              watsat_nvp, watres_nvp, psit_nvp)
-                     hr_nvp = exp(psit_nvp/roverg/t_nvp_col(c))
                   else
                      ! If dz(c,0) is not positive, set hr_nvp to 0
                      hr_nvp = 0._r8

@@ -224,7 +224,8 @@ contains
     m_van        = 1.0_r8 - 1.0_r8 / n_van
 
     satfrac = (vol_liq - watres) / (eff_porosity - watres)
-    satfrac = max(0.0_r8, min(1.0_r8, satfrac))   ! clamp to [0, 1]
+    ! [PORTED by Hui Tang: clamp away from 0 — satfrac**(1/-m_van) = 0**negative = Inf otherwise]
+    satfrac = max(1.0e-6_r8, min(1.0_r8, satfrac))
 
     ! van Genuchten retention curve: psi in units of (1/alpha_van)
     smp = -(1.0_r8 / alpha_van) * &
@@ -461,6 +462,9 @@ contains
         qflx_nvp_infl_col(c) = frac_nvp_eff * qflx_rain_plus_snomelt(c)   ! [mm/s]
 
         ! --- NVP volumetric water content (clamped to valid range) ---
+        ! [PORTED by Hui Tang: initialise eff_porosity and vol_ice on every branch — they are
+        !  passed to NVPWaterRetentionCurve / NVPHydraulicConductivity below; uninitialised
+        !  values would cause undefined behaviour or divide-by-zero inside the curves.]
         if (col%dz(c,0) > 0._r8) then
            if (t_nvp_col(c) >= tfrz) then
              ! For unfrozen soil
@@ -468,11 +472,15 @@ contains
               eff_porosity = watsat_nvp-vol_ice
               vol_liq = min(eff_porosity, h2osoi_liq(c,0)/(col%dz(c,0)*denh2o))
            else
-              ! For frozen soil, assume NVP water content is at residual (unavailable for evaporation)
-              vol_liq = watres_nvp            
+              ! For frozen NVP, water is at residual (unavailable for liquid evaporation)
+              vol_ice      = watsat_nvp
+              eff_porosity = watsat_nvp
+              vol_liq      = watres_nvp
            end if
         else
-           vol_liq = 0._r8
+           vol_ice      = 0._r8
+           eff_porosity = watsat_nvp
+           vol_liq      = 0._r8
         end if
 
         ! --- NVP van Genuchten matric potential and hydraulic conductivity ---
