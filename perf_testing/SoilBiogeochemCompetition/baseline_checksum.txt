@@ -1,0 +1,9 @@
+ncol                 8000
+nlevdecomp           10
+ndct                 8
+numfc                8000
+niters               1
+use_nitrif_denitrif  T
+carbon_only          F
+decomp_method        2
+checksum               9.5970435393765438E+04
