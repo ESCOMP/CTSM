@@ -1,0 +1,42 @@
+fsurdat = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_WIEMIP_c260408.nc'
+flanduse_timeseries = ''
+
+! likely not needed since do_transient_urban=.false. w/ above
+stream_year_last_urbantv = 1850
+irrigate = .false.
+
+
+stream_fldfilename_ndep = '/glade/derecho/scratch/wwieder/temp_work/WIEMIP/ndep/fndep_clm_hist_from_input4MIPs_surfaceFluxes_C4MIP_MPI-B-1pctNdep-1-0_gn_1850-2000.nc'
+stream_meshfile_ndep = '/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc'
+stream_year_first_ndep = 1850
+model_year_align_ndep = 1850
+stream_year_last_ndep = 1850
+stream_year_last_popdens = 1850
+
+use_c13 = .false.
+use_c14 = .false.
+
+!--------------------
+! Flat case
+!--------------------
+
+paramfile = '/glade/work/wwieder/modified_inputs/ctsm60_params.genericCropFix.ch4cal_d.c260410.nc'
+
+!--------------------
+! Hillslope changes
+!--------------------
+! suggested fire chagnes from Fang
+paramfile = '/glade/u/home/fangli/ctsm60_params.genericCropFix.ch4cal_e.fire.c260424.nc'
+
+! 16 column hillslope and vegetation data
+!hillslope_file = '/glade/derecho/scratch/swensosc/WIEMIP/hillslope_geo_params_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+
+! 9 column hillslope file
+hillslope_file = '/glade/work/swensosc/HillslopeHydrology/InputData/Global/hillslope_geo_params_3_col_3_aspect_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+
+use_hillslope = .true.
+use_hillslope_routing = .true.
+finundation_method = 'h2osfc'
+hillslope_fsat_equals_zero = .true.
+n_dom_pfts = 2
+

@@ -31,6 +31,8 @@
 !      <file>foo3</file>
 !   </datafiles>
 !------------------------------------------------------------------------
+
+
 CLMCRUJRA2024b.Solar:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc
 CLMCRUJRA2024b.Solar:mapalgo=bilinear
 CLMCRUJRA2024b.Solar:year_first=1850
@@ -109,9 +111,4 @@ CLMCRUJRA2024b.TPQW:datafiles=/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg
     /glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/clmforc.wiemip_stable_1deg.TPQWL.1868_cdf5.nc,\
     /glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/clmforc.wiemip_stable_1deg.TPQWL.1869_cdf5.nc
 
-
-co2tseries:datafiles=/glade/derecho/scratch/slevis/temp_work/WIEMIP/WIEMIP_1pctco2_FaIR_input_20260331_to_netcdf_20260420.nc
-co2tseries:year_first=1850
-co2tseries:year_last=2000
-co2tseries:year_align=1
 

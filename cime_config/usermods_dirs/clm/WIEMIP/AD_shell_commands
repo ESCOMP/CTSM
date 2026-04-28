@@ -1,9 +1,0 @@
-./xmlchange MOSART_MODE=NULL
-./xmlchange DATM_YR_START=1850,DATM_YR_END=1869
-./xmlchange CLM_ACCELERATED_SPINUP=on,CLM_FORCE_COLDSTART=on
-./xmlchange CCSM_CO2_PPMV=280.
-./xmlchange STOP_N=80,STOP_OPTION=nyears
-./xmlchange CONTINUE_RUN=FALSE,RESUBMIT=3
-
-./xmlchange --subgroup case.run JOB_WALLCLOCK_TIME=12:00:00
-
