@@ -15,14 +15,22 @@ build.
   `niters` calls, prints results, writes `last_run.txt`.
 - `baseline_checksum.txt` — committed reference output of a canonical run
   (default params). The driver compares against this when present.
-- `Makefile` — builds the driver. Default `FC=nvfortran`, override-able.
-- `env.sh` — `. ./env.sh` to load `nvhpc` so `nvfortran` is on PATH.
-- `clean.sh` — removes build artifacts and `last_run.txt`.
+- `Makefile` — tiny per-routine wrapper that sets `OBJ` and includes
+  [../Makefile.common](../Makefile.common) (which carries `FC`, `FFLAGS`,
+  the `PERF_TIMING` macro plumbing, and the `clean` target).
+
+Shared across all `perf_testing/` subdirs (one level up):
+
+- [../env.sh](../env.sh) — `. ../env.sh` to load `nvhpc` so `nvfortran` is
+  on PATH.
+- [../.gitignore](../.gitignore) — recursive; covers `*.o`, `*.mod`,
+  `driver`, `last_run.txt`.
+- [../Makefile.common](../Makefile.common) — shared build rules.
 
 ## Build & run
 
 ```bash
-. ./env.sh                 # makes nvfortran available
+. ../env.sh                # makes nvfortran available (shared)
 make                       # builds ./driver with -O3 -g
 ./driver                   # runs with default params (8000 16 10 8000 1)
 ```
@@ -54,6 +62,9 @@ make clean && make TIMING=0
 The `TIMING=0` binary still allocates inputs, runs the call loop, computes
 the checksum, and writes `last_run.txt` / compares against the baseline —
 just nothing in the call loop's surrounding region except the loop itself.
+
+`make clean` removes `driver`, `*.o`, `*.mod`, and `last_run.txt`. It does
+not touch `baseline_checksum.txt`.
 
 ## Output
 
@@ -93,7 +104,7 @@ To **regenerate** the baseline (e.g. after deliberately changing the
 algorithm or input fill pattern):
 
 ```bash
-./clean.sh && make && ./driver
+make clean && make && ./driver
 cp last_run.txt baseline_checksum.txt
 git add baseline_checksum.txt
 git commit -m "Regenerate p2c_2d_filter baseline_checksum.txt"
