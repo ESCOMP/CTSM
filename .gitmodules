@@ -71,7 +71,7 @@ url = https://github.com/ekluzek/ccs_config_cesm.git
 #url = https://github.com/ESMCI/ccs_config_cesm.git
 #fxtag = ccs_config_cesm1.0.79
 #branch = nvidia-hackathon-26
-fxtag = 5d98e6e9e6fe892bf3c02a9351c6ef6758029dd3
+fxtag = 5d09b1ef92630db3c064b4ec2d7cf3882bcf6e81
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
