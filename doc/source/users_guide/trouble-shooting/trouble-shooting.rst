@@ -51,7 +51,7 @@ Solutions:
 
   foo = max(foo, 0._r8)
 
-or use the `truncate_small_values` subroutine in `NumericsMod`.
+or use the ``truncate_small_values`` subroutine in ``NumericsMod``.
 
 -----------------------------------------------------------------------------------------------------
 Possible sources of science bugs and maintainability problems
