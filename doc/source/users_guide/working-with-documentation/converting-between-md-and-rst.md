@@ -6,7 +6,7 @@ You may find yourself wanting to convert a Markdown file to a reStructuredText f
 
 1. Paste the contents of the file into the text box on the left.
 1. Select the correct file types in the "from" and "to" menus (just use plain "Markdown", not one of the other flavors).
-1. **Make sure "Preserve breaks" is selected, not "Auto wrap"**—see [style guide](#docs-style-guide).
+1. **Make sure "Preserve breaks" is selected, not "Auto wrap"**—see [style guide](#ctsm-docs-style-guide).
 1. Click "Convert". You will be given the results of the conversion on the right side of the page.
 1. Copy and paste that into a new file with the new extension.
 
