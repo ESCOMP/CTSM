@@ -765,7 +765,11 @@ contains
              ! per unit flux incident on NVP). trd/tri are below-canopy direct/diffuse fluxes.
              ! sabg(p) is unchanged (ground total = NVP + soil via modified albedo).
              ! sabg_soil is corrected because it was computed using soil-only albedo (albsod).
-             if (use_nvp .and. col%nvp_layer_active(patch%column(p))) then
+             ! [PORTED by Hui Tang: nest the NVP guard — Fortran does not short-circuit .and.,
+             !  and the NVP arrays are only allocated when use_nvp=.true.; combining the
+             !  use_nvp check with array access in one .and. dereferences a null pointer.]
+             if (use_nvp) then
+             if (col%nvp_layer_active(patch%column(p))) then
                 sabg_lyr(p,0) = 0._r8
                 do ib = 1, nband
                    sabg_lyr(p,0) = sabg_lyr(p,0) + &
@@ -776,6 +780,7 @@ contains
                 sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_lyr(p,0)
                 sabg_soil(p)  = sabg_soil(p)  - sabg_lyr(p,0)
              end if
+             end if  ! [PORTED by Hui Tang: close outer use_nvp guard]
 
              ! CASE 2: Snow layers present: absorbed radiation is scaled according to
              ! flux factors computed by SNICAR
@@ -796,9 +801,12 @@ contains
              ! When use_nvp and SNICAR NVP layer-0 is active, flx_absdv(c,0)/flx_absiv(c,0)
              ! already hold NVP absorption (set by SNICAR_RT above), so sabg_lyr(p,0) is
              ! correct from the SNICAR loop above. Correct sabg_soil to use SNICAR soil layer.
-             if (use_nvp .and. surfalb_inst%nvp_tau_col(c) > 0._r8) then
-                ! sabg_lyr(p,1) = SNICAR soil-layer absorption (excludes NVP); use it directly.
-                sabg_soil(p) = sabg_lyr(p,1)
+             ! [PORTED by Hui Tang: nest the NVP guard — see line ~768 for rationale]
+             if (use_nvp) then
+                if (surfalb_inst%nvp_tau_col(c) > 0._r8) then
+                   ! sabg_lyr(p,1) = SNICAR soil-layer absorption (excludes NVP); use it directly.
+                   sabg_soil(p) = sabg_lyr(p,1)
+                end if
              end if
 
              ! Divide absorbed by total, to get fraction absorbed in subsurface
