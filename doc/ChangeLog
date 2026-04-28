@@ -1,4 +1,81 @@
 ===============================================================
+Tag name: ctsm5.4.036
+Originator(s): slevis, rgknox (Samuel Levis,UCAR/TSS,303-665-1310; Ryan Knox,LBNL,rgknox@lbl.gov)
+Date: Mon Apr 27 03:07:00 PM MDT 2026
+One-line Summary: Complete the FATES-CLM nitrogen coupling
+
+Purpose and description of changes
+----------------------------------
+
+ Intoduce code, namelist option, and tests on the CLM side to accommodate interactive nitrogen with FATES.
+
+ The FATES side PR is https://github.com/NGEET/fates/pull/1472.
+
+ Supporting information (other than in the issue referenced below):
+ - Nutrient enabled FATES handbook: https://docs.google.com/document/d/1I35fGDfKTkn9_8Z6qXot7HZf3ICSpLONd-iFEErAh0k/edit?usp=drive_link
+ - FATES CLM N coupling: https://docs.google.com/document/d/1mpBtpCLGJpAGw6R3-nGGY92IWRU3ISvaAUKxvcDVJRw/edit?usp=drive_link
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3378
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ Chaged namelist variable fates_parteh_mode from integer flag to string with options "carbon_only" and "carbon_nitrogen".
+
+Changes made to namelist defaults (e.g., changed parameter values):
+ Namelist variable suplnitro previously defaulted to NONE for use_cn and to ALL for use_fates. Now it defaults to NONE in all cases except fates_parteh_mode="carbon_only".
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ In build-namelist_test.pl, replaced useFATESWOsuplnitro (test in list of tests that are supposed to fail) with useFATESCwsuplnNONE and useFATESCNwuse_fates_sp.
+ Updated FatesColdPRT2 testmods to use prescribed_p paramfile instead of prescribed_np, because this test runs with interactive nitrogen.
+ Added testmods FatesColdPRT2_suplnAll (returns the PRT2 test to carbon_only) and FatesColdPRT2_synthN (runs carbon_nitrogen but uses presecribed_np paramfile).
+ Remove passing test ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars from expected fails.
+ Remove machine lawrencium from test-suites as not used and not planned to be used.
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected failures)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests comapared to baseline fates-sci.1.92.4_api.45.0.0-ctsm5.4.036 (generated before merging the FATES side PR https://github.com/NGEET/fates/pull/1472):
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Most, though not Sp and FatesSp
+    - what platforms/compilers: All
+    - nature of change: roundoff
+
+ In summary, a necessary update in order of operations in CNNDynamicsMod.F90, changes the outcome from b4b to roundoff. A post in the PR (https://github.com/ESCOMP/CTSM/pull/3409#issuecomment-4238969834) explains how I confirmed the transition from b4b to roundoff diffs.
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ fates from sci.1.92.1_api.44.1.0 to sci.1.92.4_api.45.0.0
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3409
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.035
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Sun Apr 26 09:38:17 PM MDT 2026
