@@ -36,14 +36,12 @@ Possible sources of model crashes or non-physical results
 Potential for divide-by-zero
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Solution: put code in a conditional that checks for 0, and handles 0
-values specially
+Solution: put code in a conditional that checks for 0, and handles 0 values specially
 
 Potential for other floating point exceptions (e.g,. raising 0 to a negative power, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Solution: put code in a conditional that handles mathematically
-impossible cases specially
+Solution: put code in a conditional that handles mathematically impossible cases specially
 
 Potential for a quantity that should be non-negative to go negative, due to rounding errors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,55 +60,30 @@ Possible sources of science bugs and maintainability problems
 Block of code is copy & pasted, or effectively duplicated
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This is one of the most common issues we encounter. It causes both
-maintainability problems and future bugs (when one block of code gets
-modified and thus becomes out of sync with the other block). Sometimes a
-block of code is copied and pasted entirely; other times this issue is
-more subtle, with logic effectively duplicated in two places even though
-the code looks somewhat different.
+This is one of the most common issues we encounter. It causes both maintainability problems and future bugs (when one block of code gets modified and thus becomes out of sync with the other block). Sometimes a block of code is copied and pasted entirely; other times this issue is more subtle, with logic effectively duplicated in two places even though the code looks somewhat different.
 
-This problem can be identified by asking yourself: If I make a change in
-place A, will I need to make a corresponding change in place B?
+This problem can be identified by asking yourself: If I make a change in place A, will I need to make a corresponding change in place B?
 
 Possible solutions:
 
-- Introduce a subroutine that holds the common code, with parameters to
-  allow for any differences in behavior between the different locations
+- Introduce a subroutine that holds the common code, with parameters to allow for any differences in behavior between the different locations
 
-- Save the result of a calculation in a variable that can be reused in
-  multiple places
+- Save the result of a calculation in a variable that can be reused in multiple places
 
 Variable is missing from the restart file, or is on the restart file when it doesn't need to be
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Variables need to be written to and read from the restart file if their
-value persists from one time step to the next. This is mainly the case
-for the model's fundamental state variables. However, in order to
-minimize restart file size (reasons of disk usage, performance, and
-understandability), we try to avoid adding variables to the restart file
-unless they're truly needed.
+Variables need to be written to and read from the restart file if their value persists from one time step to the next. This is mainly the case for the model's fundamental state variables. However, in order to minimize restart file size (reasons of disk usage, performance, and understandability), we try to avoid adding variables to the restart file unless they're truly needed.
 
 Some good rules of thumb to use are:
 
-- If a variable's value at time `t` directly depends on its value at
-  time `t-1`, often through evolution equations of the form `x = x +
-  flux*dtime`, then it likely needs to be on the restart file.
+- If a variable's value at time `t` directly depends on its value at time `t-1`, often through evolution equations of the form `x = x + flux*dtime`, then it likely needs to be on the restart file.
 
-- Imagine setting a variable to 0 at the start of each time step. Would
-  this cause incorrect results? If so, it likely needs to be on the
-  restart file.
+- Imagine setting a variable to 0 at the start of each time step. Would this cause incorrect results? If so, it likely needs to be on the restart file.
 
-- However, if a variable can be recalculated based on other variables,
-  then it probably should *not* be on the restart file. Instead, its
-  initial value can be calculated in model initialization, after reading
-  the restart file.
+- However, if a variable can be recalculated based on other variables, then it probably should *not* be on the restart file. Instead, its initial value can be calculated in model initialization, after reading the restart file.
 
-There are also some cases where a variable is needed on the restart file
-because its value is referenced (i.e., it appears on the right-hand side
-of an equation) earlier in the driver loop than where it is set. This is
-a subtle issue, and needs to be kept in mind when developing and
-reviewing code. For example, the relevant parts of the driver loop could
-look like this:
+There are also some cases where a variable is needed on the restart file because its value is referenced (i.e., it appears on the right-hand side of an equation) earlier in the driver loop than where it is set. This is a subtle issue, and needs to be kept in mind when developing and reviewing code. For example, the relevant parts of the driver loop could look like this:
 ::
 
   foo = bar*2
@@ -119,23 +92,11 @@ look like this:
 
   bar = ...
 
-In reality, these lines will be in subroutines called from the main
-driver loop, so an understanding is needed of the calling order of the
-model's subroutines.
+In reality, these lines will be in subroutines called from the main driver loop, so an understanding is needed of the calling order of the model's subroutines.
 
-An ideal solution in this case is to reorder the code so that `bar` is
-calculated before it is used. The next most ideal solution is to
-recalculate `bar` from other variables in initialization after the
-restart file is read. However, if neither of these are possible, then
-`bar` needs to be added to the restart file.
+An ideal solution in this case is to reorder the code so that `bar` is calculated before it is used. The next most ideal solution is to recalculate `bar` from other variables in initialization after the restart file is read. However, if neither of these are possible, then `bar` needs to be added to the restart file.
 
-We have many restart tests in the automated test suite; these catch many
-problems with variables being absent from the restart file that should
-be there. However, these tests cannot catch all problems - particularly
-if a variable's value only needs to persist between time steps in
-certain circumstances (such as if the restart is done mid-day). In
-addition, these tests cannot catch problems with variables being added
-to the restart file unnecessarily.
+We have many restart tests in the automated test suite; these catch many problems with variables being absent from the restart file that should be there. However, these tests cannot catch all problems - particularly if a variable's value only needs to persist between time steps in certain circumstances (such as if the restart is done mid-day). In addition, these tests cannot catch problems with variables being added to the restart file unnecessarily.
 
 Variable is used on right-hand side of an equation before it has its "final" value
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -151,17 +112,9 @@ Example:
 
    bar = bar + 1._r8
 
-In this case, it's possible that the foo assignment should really have
-happened after the increment to bar.
+In this case, it's possible that the foo assignment should really have happened after the increment to bar.
 
-Solution: Check code carefully for assignments to variables that are
-used on the right-hand side of equations. Ideally, this search would
-only need to be done within the current subroutine. But in practice,
-variables in CTSM are sometimes updated in multiple subroutines, so you
-should extend this search to make sure your new code happens in the
-correct place in the driver loop. (i.e., make sure that there aren't
-subroutines called later in the driver that update the quantity that
-you're using on the right-hand side of the equation.)
+Solution: Check code carefully for assignments to variables that are used on the right-hand side of equations. Ideally, this search would only need to be done within the current subroutine. But in practice, variables in CTSM are sometimes updated in multiple subroutines, so you should extend this search to make sure your new code happens in the correct place in the driver loop. (i.e., make sure that there aren't subroutines called later in the driver that update the quantity that you're using on the right-hand side of the equation.)
 
 ------------------------------------------------------------------------------------------------------------
 Possible sources of answer changes with changing processor count (PEM test failures, also seen in ERP tests)
@@ -227,14 +180,12 @@ Whole-array assignment
 
   foo(:) = 0._r8
 
-should be replaced by the following, assuming foo is a column-level
-array:
+should be replaced by the following, assuming foo is a column-level array:
 ::
 
   foo(bounds%begc:bounds%endc) = 0._r8
 
-or, better, initialize foo within a loop over the appropriate filter, or
-a loop over bounds%begc to bounds%endc, ideally subset by active points.
+or, better, initialize foo within a loop over the appropriate filter, or a loop over bounds%begc to bounds%endc, ideally subset by active points.
 
 Forgetting to index into a variable for assignment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -248,8 +199,7 @@ See [this page on the old wiki](https://wiki.ucar.edu/display/ccsm/CLM+Coding+Co
 Identify specific loops with issues by turning off threading for loops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One way to identify threaded loops with issues is to turn off more and more loops until you
-identify ones with issues.
+One way to identify threaded loops with issues is to turn off more and more loops until you identify ones with issues.
 
 For example a subroutine with a loop like this...
 ::
@@ -264,12 +214,9 @@ For example a subroutine with a loop like this...
 Incorrect list of private variables in threaded loops
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For threading each processor thread needs to have its own version of temporary or loop indexing variables.
-For longer loops the list needed can be quite long, if you don't have the right list of variables in the private
-list, different threads will share these variables and result in strange behavior.
+For threading each processor thread needs to have its own version of temporary or loop indexing variables.  For longer loops the list needed can be quite long, if you don't have the right list of variables in the private list, different threads will share these variables and result in strange behavior.
 
-So in the above example, if either nc, or bounds_clump weren't in the private list the loop would not be able to
-function correctly.
+So in the above example, if either nc, or bounds_clump weren't in the private list the loop would not be able to function correctly.
 
 Turn off OpenMP parallelism by removing the first line or adding an extra comment character (!) to comment it out.
 
@@ -280,8 +227,7 @@ Possible sources of performance problems
 Doing an operation on all array elements rather than just active points
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Active points are (generally, but not entirely) ones with > 0 weight
-on the grid cell.
+Active points are (generally, but not entirely) ones with > 0 weight on the grid cell.
 
 Solution: Use the filters, which only include active points
 
@@ -295,14 +241,9 @@ Other things to look for in a PR review
 Binary files committed without the use of git lfs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If someone commits a binary file without git lfs enabled, it will
-actually be committed directly. The same thing will happen even if they
-have git lfs enabled if the file has an extension that isn't currently
-tracked by git lfs. Look for any such binary files when looking through
-the list of changed files. These will often appear in the doc directory.
+If someone commits a binary file without git lfs enabled, it will actually be committed directly. The same thing will happen even if they have git lfs enabled if the file has an extension that isn't currently tracked by git lfs. Look for any such binary files when looking through the list of changed files. These will often appear in the doc directory.
 
-See the .gitattributes file at the top level of the repository for files
-typically handled by git lfs).
+See the .gitattributes file at the top level of the repository for files typically handled by git lfs).
 
 .. _A specific troubleshooting example:
 
