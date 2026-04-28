@@ -140,16 +140,16 @@ However, we do not have many parallel algorithms in CTSM; these would mainly app
 Incorrect indexing of a subgrid variable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One common cause of processor count dependence is the incorrect indexing of a subgrid variable. For example, if a patch variable is indexed by `g` instead of `p`, then it will access the wrong index. This will be picked up in a PEM (or ERP) test because exactly which point it accesses is processor count-dependent.
+One common cause of processor count dependence is the incorrect indexing of a subgrid variable. For example, if a patch variable is indexed by ``g`` instead of ``p``, then it will access the wrong index. This will be picked up in a PEM (or ERP) test because exactly which point it accesses is processor count-dependent.
 
-Here are some `git grep` commands that can help find this problem:
+Here are some ``git grep`` commands that can help find this problem:
 
 .. code:: shell
 
-   > git grep -i '_patch \*( \*[glc] \*)'
-   > git grep -i '_col \*( \*[glp] \*)'
-   > git grep -i '_lun \*( \*[gcp] \*)'
-   > git grep -i '_grc \*( \*[lcp] \*)'
+   git grep -i '_patch \*( \*[glc] \*)'
+   git grep -i '_col \*( \*[glp] \*)'
+   git grep -i '_lun \*( \*[gcp] \*)'
+   git grep -i '_grc \*( \*[lcp] \*)'
 
 However, since we often strip the suffix in associate statements, you cannot rely on these grep commands to detect this issue.
 
@@ -160,10 +160,10 @@ Another common cause of answer changes with changing processor counts is a scala
 
 There are a few common specific ways that this appears in CTSM code, as noted below:
 
-Missing setting of `c`, `l` or `g` in a loop
+Missing setting of ``c``, ``l`` or ``g`` in a loop
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-Often, a loop over one subgrid level will access variables in arrays at a coarser subgrid level. For example, a loop over patches will access column and gridcell-level variables. This requires settings like `c = patch%column(p)`. Sometimes there is a bug where a given loop is missing one of these needed settings; instead its setting comes from the previous loop in that subroutine. In this case, all patches – on all grid cells – will use the same `c` value.
+Often, a loop over one subgrid level will access variables in arrays at a coarser subgrid level. For example, a loop over patches will access column and gridcell-level variables. This requires settings like ``c = patch%column(p)``. Sometimes there is a bug where a given loop is missing one of these needed settings; instead its setting comes from the previous loop in that subroutine. In this case, all patches – on all grid cells – will use the same ``c`` value.
 
 Scalar variable set in a conditional but accessed outside that conditional
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -185,11 +185,11 @@ should be replaced by the following, assuming ``foo`` is a column-level array:
 
   foo(bounds%begc:bounds%endc) = 0._r8
 
-or, better, initialize ``foo`` within a loop over the appropriate filter, or a loop over bounds%begc to bounds%endc, ideally subset by active points.
+or, better, initialize ``foo`` within a loop over the appropriate filter, or a loop over ``bounds%begc`` to ``bounds%endc``, ideally subset by active points.
 
 Forgetting to index into a variable for assignment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-E.g., `variable_patch = 0._r8` instead of `variable_patch(p) = 0._r8`.
+E.g., ``variable_patch = 0._r8`` instead of ``variable_patch(p) = 0._r8``.
 
 Improper argument passing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,7 +216,7 @@ Incorrect list of private variables in threaded loops
 
 For threading each processor thread needs to have its own version of temporary or loop indexing variables.  For longer loops the list needed can be quite long, if you don't have the right list of variables in the private list, different threads will share these variables and result in strange behavior.
 
-So in the above example, if either nc, or bounds_clump weren't in the private list the loop would not be able to function correctly.
+So in the above example, if either ``nc``, or ``bounds_clump`` weren't in the private list the loop would not be able to function correctly.
 
 Turn off OpenMP parallelism by removing the first line or adding an extra comment character (!) to comment it out.
 
@@ -288,7 +288,7 @@ First of all, it is important to examine all of the component log files in the r
    398:libc.so.6          00002B8B95D306E5  __libc_start_main     Unknown  Unknown
    398:cesm.exe           0000000000408C29  Unknown               Unknown  Unknown
 
-Here, the output is identifying the sequence of Fortran statements involved in the error, starting with line 133 in cime_driver.F90 and ending with line 114 in shr_abort_mod.F90.  In this case the run is triggering an error check in the model related to negative carbon/nitrogen at line 693 of CNPrecisionControlMod.F90. In addition, there is additional information related to the error indicating the carbon or nitrogen state is critically negative at line 207 in CNPrecisionControlMod.F90, which is a subroutine call
+Here, the output is identifying the sequence of Fortran statements involved in the error, starting with line 133 in ``cime_driver.F90`` and ending with line 114 in ``shr_abort_mod.F90``.  In this case the run is triggering an error check in the model related to negative carbon/nitrogen at line 693 of ``CNPrecisionControlMod.F90``. In addition, there is additional information related to the error indicating the carbon or nitrogen state is critically negative at line 207 in ``CNPrecisionControlMod.F90``, which is a subroutine call
 ::
 
    call TruncateCandNStates( bounds, filter_soilp, num_soilp, cs%leafc_patch(bounds%begp:bounds%endp), &
@@ -322,7 +322,7 @@ Or, if all you want is the global index of ``p`` for the sake of writing extra d
            p, get_global_index(subgrid_index=p, subgrid_level=subgrid_level_patch)
    end if
 
-In all of these cases, the output will appear in either the cesm or lnd log file. In the above example, we see that the local patch index is 482 on processor 362 and the global patch index is 163723. From there, one can use this patch index to write out variables that are used in updating leafc, for example, leafc is updated a number of times in CNCStateUpdate1Mod.F90.
+In all of these cases, the output will appear in either the cesm or lnd log file. In the above example, we see that the local patch index is 482 on processor 362 and the global patch index is 163723. From there, one can use this patch index to write out variables that are used in updating leafc, for example, leafc is updated a number of times in ``CNCStateUpdate1Mod.F90``.
 
 There are two equivalent methods to write a conditional statement to provide more output for the problem patch within a loop over all patches. The first method is to translate the local index to a global index:
 ::
