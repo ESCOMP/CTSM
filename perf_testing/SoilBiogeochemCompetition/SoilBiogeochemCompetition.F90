@@ -4,18 +4,15 @@ module SoilBiogeochemCompetition_mod
   ! Standalone extraction of SoilBiogeochemCompetition from
   ! src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90.
   !
-  ! Stage 3: signature refactored to take all derived-type fields, runtime
-  ! constants, and module state (dt, bdnr, compet_* params) as arguments
-  ! instead of looking them up via col%, params_inst%, soilbiogeochem_*_inst%,
-  ! etc. The associate(...) block is gone; the body now references the
-  ! arguments directly. Pointer / intent attributes mirror the in-tree
-  ! field declarations.
+  ! Stage 4: shr_kind_mod dependency removed; r8 is now defined locally
+  ! via selected_real_kind(12), which matches CTSM's shr_kind_r8 in
+  ! practice. The module has no non-intrinsic dependencies.
   !-----------------------------------------------------------------------
-
-  use shr_kind_mod, only : r8 => shr_kind_r8
 
   implicit none
   private
+
+  integer, parameter, public :: r8 = selected_real_kind(12)
 
   public :: SoilBiogeochemCompetition
 
