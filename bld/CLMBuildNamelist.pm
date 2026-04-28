@@ -1679,7 +1679,7 @@ sub process_namelist_inline_logic {
   setup_logic_lnd_frac($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref);
   setup_logic_co2_type($opts, $nl_flags, $definition, $defaults, $nl);
   setup_logic_irrigate($opts, $nl_flags, $definition, $defaults, $nl);
-  setup_logic_start_type($opts, $nl_flags, $nl);
+  setup_logic_start_type($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_decomp_performance($opts,  $nl_flags, $definition, $defaults, $nl);
   setup_logic_roughness_methods($opts, $nl_flags, $definition, $defaults, $nl, $physv);
   setup_logic_snicar_methods($opts, $nl_flags, $definition, $defaults, $nl);
@@ -1920,7 +1920,7 @@ sub process_namelist_inline_logic {
   #########################################
   # namelist group: clm_initinterp_inparm #
   #########################################
-  setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl);
+  setup_logic_initinterp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
   #################################
   # namelist group: exice_streams #
@@ -2101,7 +2101,7 @@ sub setup_logic_irrigate {
 #-------------------------------------------------------------------------------
 
 sub setup_logic_start_type {
-  my ($opts, $nl_flags, $nl) = @_;
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
 
   my $var = "start_type";
   my $drv_start_type = $nl->get_value($var);
@@ -2111,11 +2111,12 @@ sub setup_logic_start_type {
     if (not defined $nl->get_value('nrevsn')) {
       $log->fatal_error("nrevsn is required for a branch type.");
     }
-    if (defined $nl->get_value('use_init_interp')) {
-       if ( &value_is_true($nl->get_value('use_init_interp') ) ) {
-         # Always print this warning, but don't stop if it happens
-         print "\nWARNING: use_init_interp will NOT happen for a branch case.\n\n";
-       }
+    # Check what use_init_interp is, in order to print a warning if the user set it to true
+    setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+    # use_init_interp is not fully determined at this point, only if the user set it
+    if ( &value_is_true($nl_flags->{'use_init_interp'} ) ) {
+      # Always print this warning, but don't stop if it happens
+      print "\nWARNING: use_init_interp will NOT happen for a branch case.\n\n";
     }
   } else {
     if (defined $nl->get_value('nrevsn')) {
@@ -2614,7 +2615,55 @@ sub setup_logic_surface_dataset {
 }
 
 #-------------------------------------------------------------------------------
+sub setup_preliminary_use_init_interp {
+  my ($opts, $nl_flags, $definition, $defaults, $nl, $physv, $settings_ref) = @_;
+  # Output: $nl_flags for use_init_interp
 
+  # this can be called multitple times
+  my $var = "use_init_interp";
+  my $val = $nl->get_value($var);
+  if ( not defined($val) ) {
+      if ( remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) eq "branch" ) {
+         $val = ".false.";
+      } else {
+         # List of attributes that must be set for use_init_interp
+         my @attribute_list = ( "use_cndv", "use_fates", "sim_year", "lnd_tuning_mode" );
+
+         # Validate that all attributes are set in nl_flags that are needed for use_init_interp
+         # Should be both in nl_flags and in the settings sent in
+         foreach my $item ( @attribute_list ) {
+            if ( not defined($nl_flags->{$item}) ) {
+               $log->fatal_error("internal error: $var should be defined in nl_flags at this point");
+            }
+         }
+         # If settings reference was passed in, use it, otherwise get from the namelist defaults
+         my %settings;
+         if ( $settings_ref ) {
+            %settings = %$settings_ref;
+         } else {
+            foreach my $item ( @attribute_list ) {
+               $settings{$item} = $nl_flags->{$item};
+            }
+         }
+         # Make sure settings has all the attributes needed for use_init_interp
+         foreach my $item ( @attribute_list ) {
+            if ( not defined($settings{$item}) ) {
+               $log->fatal_error("internal error: $var should be defined in settings sent in at this point");
+            }
+         }
+         # Do not use add_default here, to allow the value to change
+         $val = $defaults->get_value($var, \%settings);
+      }
+  }
+  # Set the current default based on above
+  $nl_flags->{$var} = $val;
+  # Validate that its defined on output
+  if ( ! defined($nl_flags->{$var}) ) {
+     $log->fatal_error("internal error: $var should be defined at this point");
+  }
+}
+
+#-------------------------------------------------------------------------------
 sub setup_logic_initial_conditions {
   # Initial conditions
   # The initial date is an attribute in the defaults file which should be matched unless
@@ -2645,6 +2694,8 @@ sub setup_logic_initial_conditions {
     }
   }
   my $useinitvar = "use_init_interp";
+  setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
+  my $use_init_interp_default = $nl_flags->{$useinitvar};
 
   my %settings;
   my $use_init_interp_default = ".false.";
@@ -2686,11 +2737,9 @@ sub setup_logic_initial_conditions {
     } else {
        $settings{'ic_ymd'} = $ic_date;
     }
-    $use_init_interp_default = $nl->get_value($useinitvar);
+    setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv, \%settings);
+    $use_init_interp_default = $nl_flags->{$useinitvar};
     $settings{$useinitvar} = $use_init_interp_default;
-    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-      $settings{$useinitvar} = ".false.";
-    }
     my $try = 0;
     my $done = 2;
     do {
@@ -2724,10 +2773,11 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                 $how_close = abs($st_year - $sim_yr);
              }
              if ( ($sim_yr == $sim_years[-1]) || (($how_close < $nl->get_value("init_interp_how_close")) && ($how_close < $close)) ) {
-                my $group = $definition->get_group_name($useinitvar);
+                setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv, \%settings);
+                $settings{$useinitvar} = $nl_flags->{$useinitvar};
+
                 $settings{'sim_year'} = $sim_yr;
-                $settings{$useinitvar} = $defaults->get_value($useinitvar, \%settings);
-                if ( ! defined($settings{$useinitvar}) ) {
+                if ( not &value_is_true($settings{$useinitvar}) ) {
                    $settings{$useinitvar} = $use_init_interp_default;
                 }
                 if ( &value_is_true($settings{$useinitvar}) ) {
@@ -2746,10 +2796,11 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                       'sim_year'=>$settings{'sim_year'}, 'nofail'=>1, 'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
                       'use_fates'=>$nl_flags->{'use_fates'} );
           $settings{$useinitvar} = $nl->get_value($useinitvar);
-          if ( ! &value_is_true($nl->get_value($useinitvar) ) ) {
+          $nl_flags->{$useinitvar} = $settings{$useinitvar};
+          if ( not &value_is_true($nl_flags->{$useinitvar} ) ) {
              if ( $nl_flags->{'clm_start_type'} =~ /startup/ ) {
                 my $err_msg = "clm_start_type is startup so an initial conditions ($var) file is required,";
-                if ( defined($use_init_interp_default) ) {
+                if ( not &value_is_true($use_init_interp_default) ) {
                    $log->fatal_error($err_msg." but can't find one without $useinitvar being set to true, change it to true in your user_nl_clm file in your case");
                 } else {
                    my $set = "Relevent settings: use_cndv = ". $nl_flags->{'use_cndv'} . " phys = " .
@@ -2777,6 +2828,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
                    $log->fatal_error("Problem interpreting init_interp_attributes from the namelist_defaults file: $pair");
                 }
              }
+             $nl_flags->{'excess_ice_on_finidat'} = $settings{'use_excess_ice'};
              # Add init_interp_fill_missing_urban_with_HD defaults as a function of sim_year and phys
              add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'init_interp_fill_missing_urban_with_HD',
                       'sim_year'=>$settings{'sim_year'}, 'phys'=>$physv->as_string() );
@@ -2791,8 +2843,8 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
     }
   }
   $finidat = $nl->get_value($var);
-  if ( &value_is_true($nl->get_value($useinitvar) ) && string_is_undef_or_empty($finidat) ) {
-     if ( ! defined($use_init_interp_default) ) {
+  if ( &value_is_true($nl_flags->{$useinitvar} ) && string_is_undef_or_empty($finidat) ) {
+     if ( &value_is_true($use_init_interp_default) ) {
         $log->fatal_error("You set $useinitvar but a $var file could not be found for this case, try setting $var explicitly, and/or removing the setting for $useinitvar" );
      } else {
         $log->fatal_error("$useinitvar is being set for you but a $var was not found, so $useinitvar, init_interp_attributes, and finidat must not be set correctly for this configuration in the namelist_default file" );
@@ -2800,7 +2852,7 @@ SIMYR:    foreach my $sim_yr ( @sim_years ) {
   }
 
   # this check has to be here and not earlier since use_init_interp is set here and hillslope is already set above in setup_logic_hillslope
-  if ( &value_is_true($nl->get_value($useinitvar)) && value_is_true($nl->get_value("use_hillslope")) ) {
+  if ( &value_is_true($nl_flags->{$useinitvar}) && value_is_true($nl->get_value("use_hillslope")) ) {
      $log->warning("WARNING: You have set use_hillslope while $useinitvar is TRUE.\n This means all hillslope columns in a gridcell will read identical values from initial conditions, even if the initial conditions (finidat) file has hillslope information. If you are sure you want this behaviour, add -ignore_warnings to CLM_BLDNML_OPTS.")
 }
 
@@ -4861,10 +4913,13 @@ sub setup_logic_initinterp {
    #
    # Options related to init_interp
    #
-   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+   my ($opts, $nl_flags, $definition, $defaults, $nl, $physv) = @_;
+
+   # Make sure use_init_interp is set in nl_flags at this point:
+   setup_preliminary_use_init_interp($opts, $nl_flags, $definition, $defaults, $nl, $physv);
 
    my $var = 'init_interp_method';
-   if ( &value_is_true($nl->get_value("use_init_interp"))) {
+   if ( &value_is_true($nl_flags->{"use_init_interp"})) {
       add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var);
    } else {
       if (defined($nl->get_value($var))) {
