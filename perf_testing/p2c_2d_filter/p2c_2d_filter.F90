@@ -3,15 +3,13 @@ module p2c_2d_filter_mod
   !-----------------------------------------------------------------------
   ! Standalone extraction of p2c_2d_filter from src/main/subgridAveMod.F90.
   !
-  ! Stage 1: verbatim copy. Still depends on ColumnType (col) and PatchType
-  ! (patch); does not yet compile outside the CTSM build. Subsequent stages
-  ! convert the col/patch lookups into array arguments and then drop the
-  ! shr_kind_mod dependency.
+  ! Stage 2: col/patch lookups replaced with array arguments. Argument
+  ! attributes (pointer, etc.) are preserved from the original signature
+  ! so the only change in behavior is where the arrays come from. The
+  ! module now depends only on shr_kind_mod for r8.
   !-----------------------------------------------------------------------
 
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use ColumnType   , only : col
-  use PatchType    , only : patch
 
   implicit none
   private
@@ -21,7 +19,10 @@ module p2c_2d_filter_mod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine p2c_2d_filter (lev, numfc, filterc, patcharr, colarr)
+  subroutine p2c_2d_filter (lev, numfc, filterc, &
+                            patchi, patchf,      &  ! were col%patchi, col%patchf
+                            active, wtcol,       &  ! were patch%active, patch%wtcol
+                            patcharr, colarr)
     !
     ! !DESCRIPTION:
     ! perform patch to column averaging for multi level patch arrays
@@ -30,6 +31,10 @@ contains
     integer , intent(in)  :: lev
     integer , intent(in)  :: numfc
     integer , intent(in)  :: filterc(numfc)
+    integer , pointer     :: patchi(:)        ! beginning patch index for each column
+    integer , pointer     :: patchf(:)        ! ending patch index for each column
+    logical , pointer     :: active(:)        ! true=>do computations on this patch
+    real(r8), pointer     :: wtcol(:)         ! patch weight relative to column
     real(r8), pointer     :: patcharr(:,:)
     real(r8), pointer     :: colarr(:,:)
     !
@@ -41,8 +46,8 @@ contains
        do fc = 1,numfc
           c = filterc(fc)
           colarr(c,j) = 0._r8
-          do p = col%patchi(c), col%patchf(c)
-             if (patch%active(p)) colarr(c,j) = colarr(c,j) + patcharr(p,j) * patch%wtcol(p)
+          do p = patchi(c), patchf(c)
+             if (active(p)) colarr(c,j) = colarr(c,j) + patcharr(p,j) * wtcol(p)
           end do
        end do
     end do
