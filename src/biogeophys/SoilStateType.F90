@@ -45,8 +45,6 @@ module SoilStateType
      real(r8), pointer :: sucsat_col           (:,:) ! col minimum soil suction (mm) (nlevgrnd) 
      real(r8), pointer :: dsl_col              (:)   ! col dry surface layer thickness (mm)
      real(r8), pointer :: soilresis_col        (:)   ! col soil evaporative resistance S&L14 (s/m)
-     ! [PORTED by Hui Tang: NVP (moss/lichen) surface evaporative resistance, analogous to soilresis_col]
-     real(r8), pointer :: rnvp_col             (:)   ! col NVP surface evaporative resistance (s/m)
      real(r8), pointer :: soilbeta_col         (:)   ! col factor that reduces ground evaporation L&P1992(-)
      real(r8), pointer :: soilalpha_col        (:)   ! col factor that reduces ground saturated specific humidity (-)
      real(r8), pointer :: soilalpha_u_col      (:)   ! col urban factor that reduces ground saturated specific humidity (-) 
@@ -146,9 +144,7 @@ contains
     allocate(this%watfc_col            (begc:endc,nlevgrnd))            ; this%watfc_col            (:,:) = nan
     allocate(this%sucsat_col           (begc:endc,nlevgrnd))            ; this%sucsat_col           (:,:) = spval
     allocate(this%dsl_col              (begc:endc))                     ; this%dsl_col         (:)   = spval!nan   
-    allocate(this%soilresis_col        (begc:endc))                     ; this%soilresis_col         (:)   = spval!nan
-    ! [PORTED by Hui Tang: allocate NVP surface resistance unconditionally — small array, safe defaults]
-    allocate(this%rnvp_col             (begc:endc))                     ; this%rnvp_col              (:)   = spval
+    allocate(this%soilresis_col        (begc:endc))                     ; this%soilresis_col         (:)   = spval!nan   
     allocate(this%soilbeta_col         (begc:endc))                     ; this%soilbeta_col         (:)   = nan   
     allocate(this%soilalpha_col        (begc:endc))                     ; this%soilalpha_col        (:)   = nan
     allocate(this%soilalpha_u_col      (begc:endc))                     ; this%soilalpha_u_col      (:)   = nan
@@ -311,12 +307,6 @@ contains
     call hist_addfld1d (fname='SOILRESIS',  units='s/m',  &
          avgflag='A', long_name='soil resistance to evaporation', &
          ptr_col=this%soilresis_col)
-
-    ! [PORTED by Hui Tang: NVP surface resistance history field, analogous to SOILRESIS]
-    this%rnvp_col(begc:endc) = spval
-    call hist_addfld1d (fname='RNVP',  units='s/m',  &
-         avgflag='A', long_name='NVP (moss/lichen) surface resistance to evaporation', &
-         ptr_col=this%rnvp_col, default='inactive')
 
     this%dsl_col(begc:endc) = spval
     call hist_addfld1d (fname='DSL',  units='mm',  &

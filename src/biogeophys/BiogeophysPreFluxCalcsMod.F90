@@ -33,8 +33,6 @@ module BiogeophysPreFluxCalcsMod
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use SurfaceResistanceMod    , only : calc_soilevap_resis
-  ! [PORTED by Hui Tang: NVP surface resistance computed alongside soil resistance]
-  use SurfaceResistanceMod    , only : calc_nvp_resis
   use WaterFluxBulkType     , only : waterfluxbulk_type
 
   !
@@ -117,12 +115,6 @@ contains
          soilstate_inst, &
          waterstatebulk_inst, waterdiagnosticbulk_inst, &
          temperature_inst)
-
-    ! [PORTED by Hui Tang: compute NVP surface resistance into soilstate_inst%rnvp_col
-    !  for use by BareGroundFluxesMod / CanopyFluxesMod NVP evaporation paths]
-    call calc_nvp_resis(bounds, &
-         num_nolakec, filter_nolakec,                       &
-         soilstate_inst, waterdiagnosticbulk_inst, temperature_inst)
 
   end subroutine BiogeophysPreFluxCalcs
 

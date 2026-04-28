@@ -320,8 +320,6 @@ contains
     real(r8) :: wtaq                                 ! latent heat conductance for air [m/s]
     real(r8) :: wtlq                                 ! latent heat conductance for leaf [m/s]
     real(r8) :: wtgq(bounds%begp:bounds%endp)        ! latent heat conductance for ground [m/s]
-    real(r8) :: wtgq_nvp                             ! [PORTED by Hui Tang: latent heat conductance for NVP, with rnvp]
-    real(r8) :: r_surf_eff                           ! [PORTED by Hui Tang: area-weighted soil+NVP surface resistance [s/m]]
     real(r8) :: wtaq0(bounds%begp:bounds%endp)       ! normalized latent heat conductance for air [-]
     real(r8) :: wtlq0(bounds%begp:bounds%endp)       ! normalized latent heat conductance for leaf [-]
     real(r8) :: wtgq0                                ! normalized heat conductance for ground [-]
@@ -457,7 +455,6 @@ contains
          t_stem                 => temperature_inst%t_stem_patch                , & ! Output: [real(r8) (:)   ]  stem temperature (Kelvin)
          dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]
          soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:)   ]  soil evaporative resistance
-         rnvp_col               => soilstate_inst%rnvp_col                      , & ! [PORTED by Hui Tang: NVP surface evaporative resistance (s/m)]
          snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers
          dayl                   => grc%dayl                                     , & ! Input:  [real(r8) (:)   ]  daylength (s)
          max_dayl               => grc%max_dayl                                 , & ! Input:  [real(r8) (:)   ]  maximum daylength for this grid cell (s)
@@ -1285,19 +1282,7 @@ bioms:   do f = 1, fn
                   wtgq(p) = soilbeta(c)*frac_veg_nosno(p)/(raw(p,below_canopy)+rdl)
                endif
                if (do_soil_resistance_sl14()) then
-                  ! [PORTED by Hui Tang: blend NVP surface resistance into the column wtgq
-                  !  by area fraction — same Kirchhoff linear blend as in BareGroundFluxesMod.
-                  !  When f_nvp=0, r_eff=soilresis exactly so non-NVP columns are unaffected.]
-                  if (use_nvp) then
-                     if (frac_nvp(c) > 0._r8) then
-                        ! blend soilresis and rnvp_col by the fraction of NVP in the column
-                        r_surf_eff = (1._r8 - col%frac_nvp(c)) * soilresis(c) &
-                                +         col%frac_nvp(c)  * rnvp_col(c)
-                     end if
-                  else
-                     r_surf_eff = soilresis(c)
-                  end if
-                  wtgq(p) = frac_veg_nosno(p)/(raw(p,below_canopy) + r_surf_eff)
+                  wtgq(p) = frac_veg_nosno(p)/(raw(p,below_canopy)+soilresis(c))
                endif
             end if
 
@@ -1557,11 +1542,9 @@ bioms:   do f = 1, fn
          eflx_sh_soil(p) = cpair*forc_rho(c)*wtg(p)*delt_soil
          eflx_sh_h2osfc(p) = cpair*forc_rho(c)*wtg(p)*delt_h2osfc
          ! [PORTED by Hui Tang: NVP individual sensible heat flux, analogous to snow/h2osfc]
-         if (use_nvp) then
-            if (col%frac_nvp(c) > 0._r8)  then
-               delt_nvp  = wtal(p)*t_nvp_col(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)-wtstem0(p)*t_stem(p)
-               eflx_sh_nvp(p) = cpair*forc_rho(c)*wtg(p)*delt_nvp
-            end if
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            delt_nvp  = wtal(p)*t_nvp_col(c)-wtl0(p)*t_veg(p)-wta0(p)*thm(p)-wtstem0(p)*t_stem(p)
+            eflx_sh_nvp(p) = cpair*forc_rho(c)*wtg(p)*delt_nvp
          else
             eflx_sh_nvp(p) = 0._r8
          end if
@@ -1577,17 +1560,12 @@ bioms:   do f = 1, fn
          delq_h2osfc = wtalq(p)*qg_h2osfc(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
          qflx_ev_h2osfc(p) = forc_rho(c)*wtgq(p)*delq_h2osfc
 
-         ! [PORTED by Hui Tang: NVP individual latent heat flux.
-         !  Apply NVP surface resistance rnvp_col in series with raw(p,below_canopy),
-         !  mirroring the soilresis treatment at the wtgq line ~1285. wtgq_nvp replaces
-         !  the canopy-iteration wtgq (which was computed with soilresis) so the NVP
-         !  diagnostic reflects the moss/lichen-specific surface resistance.]
-         if (use_nvp) then
-            if (col%frac_nvp(c) > 0._r8)  then
-               delq_nvp = wtalq(p)*qg_nvp(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
-               wtgq_nvp = frac_veg_nosno(p) / (raw(p,below_canopy) + rnvp_col(c))
-               qflx_ev_nvp(p) = forc_rho(c) * wtgq_nvp * delq_nvp
-            end if
+         ! [PORTED by Hui Tang: NVP individual latent heat flux, analogous to snow/h2osfc]
+         ! qflx_evap_soi already includes NVP because qg(c) blends NVP in SurfaceHumidityMod.
+         ! This is the diagnostic breakdown of the NVP contribution.
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+            delq_nvp = wtalq(p)*qg_nvp(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
+            qflx_ev_nvp(p) = forc_rho(c)*wtgq(p)*delq_nvp
          else
             qflx_ev_nvp(p) = 0._r8
          end if
