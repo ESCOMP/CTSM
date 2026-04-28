@@ -781,9 +781,9 @@ The obliquity of the Earth :math:`\varepsilon` (degrees) is
 .. math::
    :label: 3.79
 
-   \varepsilon =\varepsilon{*}+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
+   \varepsilon =\varepsilon^{*}+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
 
-where :math:`\varepsilon{*}` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file ``shr_orb_mod.F90``.
+where :math:`\varepsilon^{*}` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file ``shr_orb_mod.F90``.
 
 The true longitude of the Earth :math:`\lambda` (radians) is counted counterclockwise from the vernal equinox (:math:`\lambda =0` at the vernal equinox)
 
@@ -857,7 +857,7 @@ The numerical solution for the longitude of the perihelion :math:`\tilde{\omega 
  +--------------------------------------+-------------+
  | Parameter                            |             |
  +======================================+=============+
- | :math:`\varepsilon *`                | 23.320556   |
+ | :math:`\varepsilon^{*}`              | 23.320556   |
  +--------------------------------------+-------------+
  | :math:`\tilde{\psi }` (arcseconds)   | 50.439273   |
  +--------------------------------------+-------------+
