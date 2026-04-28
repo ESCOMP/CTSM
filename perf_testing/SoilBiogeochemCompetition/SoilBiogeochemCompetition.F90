@@ -4,155 +4,135 @@ module SoilBiogeochemCompetition_mod
   ! Standalone extraction of SoilBiogeochemCompetition from
   ! src/soilbiogeochem/SoilBiogeochemCompetitionMod.F90.
   !
-  ! Stage 1: verbatim copy of the SoilBiogeochemCompetition subroutine.
-  ! Module-level use lines and state (dt, bdnr, params_inst) are copied
-  ! from the parent module so the body diff is byte-identical to the
-  ! in-tree routine. This stage does NOT build standalone (still depends
-  ! on col, params_inst, the derived types, etc.) and is a textual
-  ! checkpoint that makes Stage 2 / Stage 3 diffs reviewable.
+  ! Stage 3: signature refactored to take all derived-type fields, runtime
+  ! constants, and module state (dt, bdnr, compet_* params) as arguments
+  ! instead of looking them up via col%, params_inst%, soilbiogeochem_*_inst%,
+  ! etc. The associate(...) block is gone; the body now references the
+  ! arguments directly. Pointer / intent attributes mirror the in-tree
+  ! field declarations.
   !-----------------------------------------------------------------------
 
-  ! !USES: copied verbatim from SoilBiogeochemCompetitionMod.F90 (those
-  ! used by the routine body). Lines below mirror the parent module.
-  use shr_kind_mod                    , only : r8 => shr_kind_r8
-  use shr_log_mod                     , only : errMsg => shr_log_errMsg
-  use clm_varcon                      , only : dzsoi_decomp
-  use clm_varctl                      , only : use_nitrif_denitrif
-  use decompMod                       , only : bounds_type
-  use SoilBiogeochemStateType         , only : soilbiogeochem_state_type
-  use SoilBiogeochemCarbonStateType   , only : soilbiogeochem_carbonstate_type
-  use SoilBiogeochemCarbonFluxType    , only : soilbiogeochem_carbonflux_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenStateType , only : soilbiogeochem_nitrogenstate_type
-  use SoilBiogeochemNitrogenFluxType  , only : soilbiogeochem_nitrogenflux_type
-  use SoilBiogeochemNitrogenUptakeMod , only : SoilBiogeochemNitrogenUptake
-  use ColumnType                      , only : col
-  !
+  use shr_kind_mod, only : r8 => shr_kind_r8
+
   implicit none
   private
-  !
+
   public :: SoilBiogeochemCompetition
-
-  type :: params_type
-     real(r8) :: bdnr              ! bulk denitrification rate (1/s)
-     real(r8) :: compet_plant_no3  ! (unitless) relative compettiveness of plants for NO3
-     real(r8) :: compet_plant_nh4  ! (unitless) relative compettiveness of plants for NH4
-     real(r8) :: compet_decomp_no3 ! (unitless) relative competitiveness of immobilizers for NO3
-     real(r8) :: compet_decomp_nh4 ! (unitless) relative competitiveness of immobilizers for NH4
-     real(r8) :: compet_denit      ! (unitless) relative competitiveness of denitrifiers for NO3
-     real(r8) :: compet_nit        ! (unitless) relative competitiveness of nitrifiers for NH4
-  end type params_type
-
-  type(params_type), private :: params_inst  ! params_inst is populated in readParamsMod
-
-  ! !PRIVATE DATA MEMBERS:
-  real(r8) :: dt   ! decomp timestep (seconds)
-  real(r8) :: bdnr ! bulk denitrification rate (1/s)
-
-  character(len=*), parameter, private :: sourcefile = &
-       __FILE__
-  !-----------------------------------------------------------------------
 
 contains
 
   !-----------------------------------------------------------------------
-   subroutine SoilBiogeochemCompetition (bounds, num_bgc_soilc, filter_bgc_soilc, &
-                                         p_decomp_cn_gain, pmnf_decomp_cascade,  &
-                                         soilbiogeochem_carbonflux_inst,                                           &
-                                         soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst,             &
-                                         soilbiogeochem_nitrogenflux_inst)
-    !
-    ! !USES:
-    use clm_varctl       , only: allocate_carbon_only
-    use clm_varpar       , only: nlevdecomp, ndecomp_cascade_transitions
-    use clm_varpar       , only: i_cop_mic, i_oli_mic
-    use clm_varcon       , only: nitrif_n2o_loss_frac
-    use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con,  mimics_decomp, decomp_method
+   subroutine SoilBiogeochemCompetition( &
+       ! sizes / index ranges
+       begc, endc, nlevdecomp, ndecomp_cascade_transitions, &
+       num_bgc_soilc, filter_bgc_soilc,                     &
+       ! scalar config (was module state / runtime flags / params_inst)
+       dt, bdnr,                                            &
+       use_nitrif_denitrif, carbon_only,                    &
+       decomp_method, mimics_decomp, i_cop_mic, i_oli_mic,  &
+       compet_plant_no3, compet_plant_nh4,                  &
+       compet_decomp_no3, compet_decomp_nh4,                &
+       compet_denit, compet_nit,                            &
+       ! 1D arrays
+       dzsoi_decomp, cascade_receiver_pool, landunit,       &
+       ! state-block fields (was soilbiogeochem_state_inst%*_col)
+       fpg, fpi, fpi_vr, nfixation_prof, plant_ndemand,     &
+       ! n-state fields
+       sminn_vr, smin_nh4_vr, smin_no3_vr,                  &
+       ! c-flux fields
+       c_overflow_vr,                                       &
+       ! n-flux fields
+       pot_f_nit_vr, pot_f_denit_vr, f_nit_vr, f_denit_vr,  &
+       potential_immob, actual_immob, sminn_to_plant,       &
+       sminn_to_denit_excess_vr,                            &
+       actual_immob_no3_vr, actual_immob_nh4_vr,            &
+       smin_no3_to_plant_vr, smin_nh4_to_plant_vr,          &
+       n2_n2o_ratio_denit_vr, f_n2o_denit_vr, f_n2o_nit_vr, &
+       supplement_to_sminn_vr, sminn_to_plant_vr,           &
+       potential_immob_vr, actual_immob_vr,                 &
+       ! 3D arrays
+       pmnf_decomp_cascade, p_decomp_cn_gain)
     !
     ! !ARGUMENTS:
-    type(bounds_type)                       , intent(in)    :: bounds
-    integer                                 , intent(in)    :: num_bgc_soilc        ! number of soil columns in filter
-    integer                                 , intent(in)    :: filter_bgc_soilc(:)  ! filter for soil columns
-    real(r8)                                , intent(in)    :: pmnf_decomp_cascade(bounds%begc:,1:,1:)  ! potential mineral N flux from one pool to another (gN/m3/s)
-    real(r8)                                , intent(in)    :: p_decomp_cn_gain(bounds%begc:,1:,1:)  ! C:N ratio of the flux gained by the receiver pool
-    type(soilbiogeochem_carbonflux_type)    , intent(inout) :: soilbiogeochem_carbonflux_inst
-    type(soilbiogeochem_state_type)         , intent(inout) :: soilbiogeochem_state_inst
-    type(soilbiogeochem_nitrogenstate_type) , intent(inout) :: soilbiogeochem_nitrogenstate_inst
-    type(soilbiogeochem_nitrogenflux_type)  , intent(inout) :: soilbiogeochem_nitrogenflux_inst
-!
+    integer , intent(in) :: begc, endc                                  ! column index range (was bounds%begc:bounds%endc)
+    integer , intent(in) :: nlevdecomp                                  ! number of biogeochemically active soil layers
+    integer , intent(in) :: ndecomp_cascade_transitions                 ! number of decomposition cascade transitions
+    integer , intent(in) :: num_bgc_soilc                               ! number of soil columns in filter
+    integer , intent(in) :: filter_bgc_soilc(:)                         ! filter for soil columns
+    real(r8), intent(in) :: dt                                          ! decomp timestep (seconds)
+    real(r8), intent(in) :: bdnr                                        ! bulk denitrification rate (1/s)
+    logical , intent(in) :: use_nitrif_denitrif                         ! true => use nitrif/denitrif branch
+    logical , intent(in) :: carbon_only                                 ! true => carbon-only mode (was allocate_carbon_only())
+    integer , intent(in) :: decomp_method                               ! type of decomposition method
+    integer , intent(in) :: mimics_decomp                               ! id value of MIMICS decomposition method
+    integer , intent(in) :: i_cop_mic                                   ! copiotrophic microbial pool index
+    integer , intent(in) :: i_oli_mic                                   ! oligotrophic microbial pool index
+    real(r8), intent(in) :: compet_plant_no3                            ! relative competitiveness of plants for NO3
+    real(r8), intent(in) :: compet_plant_nh4                            ! relative competitiveness of plants for NH4
+    real(r8), intent(in) :: compet_decomp_no3                           ! relative competitiveness of immobilizers for NO3
+    real(r8), intent(in) :: compet_decomp_nh4                           ! relative competitiveness of immobilizers for NH4
+    real(r8), intent(in) :: compet_denit                                ! relative competitiveness of denitrifiers for NO3
+    real(r8), intent(in) :: compet_nit                                  ! relative competitiveness of nitrifiers for NH4
+    real(r8), intent(in) :: dzsoi_decomp(:)                             ! per-layer thickness for biogeochemical layers
+    integer , pointer    :: cascade_receiver_pool(:)                    ! which pool is C added to for a given decomposition step
+    integer , pointer    :: landunit(:)                                 ! landunit index per column (was col%landunit)
+    real(r8), pointer    :: fpg(:)                                      ! fraction of potential gpp
+    real(r8), pointer    :: fpi(:)                                      ! fraction of potential immobilization
+    real(r8), pointer    :: fpi_vr(:,:)                                 ! fraction of potential immobilization (per layer)
+    real(r8), pointer    :: nfixation_prof(:,:)
+    real(r8), pointer    :: plant_ndemand(:)                            ! column-level plant N demand
+    real(r8), pointer    :: sminn_vr(:,:)                               ! (gN/m3) soil mineral N
+    real(r8), pointer    :: smin_nh4_vr(:,:)                            ! (gN/m3) soil mineral NH4
+    real(r8), pointer    :: smin_no3_vr(:,:)                            ! (gN/m3) soil mineral NO3
+    real(r8), pointer    :: c_overflow_vr(:,:,:)                        ! (gC/m3/s) C rejected by microbes that cannot process it
+    real(r8), pointer    :: pot_f_nit_vr(:,:)                           ! (gN/m3/s) potential soil nitrification flux
+    real(r8), pointer    :: pot_f_denit_vr(:,:)                         ! (gN/m3/s) potential soil denitrification flux
+    real(r8), pointer    :: f_nit_vr(:,:)                               ! (gN/m3/s) soil nitrification flux
+    real(r8), pointer    :: f_denit_vr(:,:)                             ! (gN/m3/s) soil denitrification flux
+    real(r8), pointer    :: potential_immob(:)
+    real(r8), pointer    :: actual_immob(:)
+    real(r8), pointer    :: sminn_to_plant(:)
+    real(r8), pointer    :: sminn_to_denit_excess_vr(:,:)
+    real(r8), pointer    :: actual_immob_no3_vr(:,:)
+    real(r8), pointer    :: actual_immob_nh4_vr(:,:)
+    real(r8), pointer    :: smin_no3_to_plant_vr(:,:)
+    real(r8), pointer    :: smin_nh4_to_plant_vr(:,:)
+    real(r8), pointer    :: n2_n2o_ratio_denit_vr(:,:)                  ! ratio of N2 to N2O production by denitrification [gN/gN]
+    real(r8), pointer    :: f_n2o_denit_vr(:,:)                         ! flux of N2O from denitrification [gN/m3/s]
+    real(r8), pointer    :: f_n2o_nit_vr(:,:)                           ! flux of N2O from nitrification [gN/m3/s]
+    real(r8), pointer    :: supplement_to_sminn_vr(:,:)
+    real(r8), pointer    :: sminn_to_plant_vr(:,:)
+    real(r8), pointer    :: potential_immob_vr(:,:)
+    real(r8), pointer    :: actual_immob_vr(:,:)
+    real(r8), intent(in) :: pmnf_decomp_cascade(begc:,1:,1:)            ! potential mineral N flux from one pool to another (gN/m3/s)
+    real(r8), intent(in) :: p_decomp_cn_gain(begc:,1:,1:)               ! C:N ratio of the flux gained by the receiver pool
     !
     ! !LOCAL VARIABLES:
-    integer  :: c,p,l,pi,j,k                                          ! indices
-    integer  :: fc                                                    ! filter column index
-    real(r8) :: amnf_immob_vr                                         ! actual mineral N flux from immobilization (gN/m3/s)
-    real(r8) :: n_deficit_vr                                          ! microbial N deficit, vertically resolved (gN/m3/s)
-    real(r8) :: compet_plant_no3                                      ! (unitless) relative compettiveness of plants for NO3
-    real(r8) :: compet_plant_nh4                                      ! (unitless) relative compettiveness of plants for NH4
-    real(r8) :: compet_decomp_no3                                     ! (unitless) relative competitiveness of immobilizers for NO3
-    real(r8) :: compet_decomp_nh4                                     ! (unitless) relative competitiveness of immobilizers for NH4
-    real(r8) :: compet_denit                                          ! (unitless) relative competitiveness of denitrifiers for NO3
-    real(r8) :: compet_nit                                            ! (unitless) relative competitiveness of nitrifiers for NH4
-    real(r8) :: fpi_no3_vr(bounds%begc:bounds%endc,1:nlevdecomp)      ! fraction of potential immobilization supplied by no3(no units)
-    real(r8) :: fpi_nh4_vr(bounds%begc:bounds%endc,1:nlevdecomp)      ! fraction of potential immobilization supplied by nh4 (no units)
-    real(r8) :: sum_nh4_demand(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: sum_nh4_demand_scaled(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: sum_no3_demand(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: sum_no3_demand_scaled(bounds%begc:bounds%endc,1:nlevdecomp)
-    real(r8) :: sum_ndemand_vr(bounds%begc:bounds%endc, 1:nlevdecomp) !total column N demand (gN/m3/s) at a given level
-    real(r8) :: nuptake_prof(bounds%begc:bounds%endc, 1:nlevdecomp)
-    real(r8) :: sminn_tot(bounds%begc:bounds%endc)
-    integer  :: nlimit(bounds%begc:bounds%endc,0:nlevdecomp)          !flag for N limitation
-    integer  :: nlimit_no3(bounds%begc:bounds%endc,0:nlevdecomp)      !flag for NO3 limitation
-    integer  :: nlimit_nh4(bounds%begc:bounds%endc,0:nlevdecomp)      !flag for NH4 limitation
-    real(r8) :: residual_sminn_vr(bounds%begc:bounds%endc, 1:nlevdecomp)
-    real(r8) :: residual_sminn(bounds%begc:bounds%endc)
-    real(r8) :: residual_smin_nh4_vr(bounds%begc:bounds%endc, 1:nlevdecomp)
-    real(r8) :: residual_smin_no3_vr(bounds%begc:bounds%endc, 1:nlevdecomp)
-    real(r8) :: residual_smin_nh4(bounds%begc:bounds%endc)
-    real(r8) :: residual_smin_no3(bounds%begc:bounds%endc)
-    real(r8) :: residual_plant_ndemand(bounds%begc:bounds%endc)
+    real(r8), parameter :: nitrif_n2o_loss_frac = 6.e-4_r8              ! fraction of N lost as N2O in nitrification (Li et al., 2000)
+    integer  :: c,p,l,pi,j,k                                            ! indices
+    integer  :: fc                                                      ! filter column index
+    real(r8) :: amnf_immob_vr                                           ! actual mineral N flux from immobilization (gN/m3/s)
+    real(r8) :: n_deficit_vr                                            ! microbial N deficit, vertically resolved (gN/m3/s)
+    real(r8) :: fpi_no3_vr(begc:endc,1:nlevdecomp)                      ! fraction of potential immobilization supplied by no3
+    real(r8) :: fpi_nh4_vr(begc:endc,1:nlevdecomp)                      ! fraction of potential immobilization supplied by nh4
+    real(r8) :: sum_nh4_demand(begc:endc,1:nlevdecomp)
+    real(r8) :: sum_nh4_demand_scaled(begc:endc,1:nlevdecomp)
+    real(r8) :: sum_no3_demand(begc:endc,1:nlevdecomp)
+    real(r8) :: sum_no3_demand_scaled(begc:endc,1:nlevdecomp)
+    real(r8) :: sum_ndemand_vr(begc:endc, 1:nlevdecomp)                 ! total column N demand (gN/m3/s) at a given level
+    real(r8) :: nuptake_prof(begc:endc, 1:nlevdecomp)
+    real(r8) :: sminn_tot(begc:endc)
+    integer  :: nlimit(begc:endc,0:nlevdecomp)                          ! flag for N limitation
+    integer  :: nlimit_no3(begc:endc,0:nlevdecomp)                      ! flag for NO3 limitation
+    integer  :: nlimit_nh4(begc:endc,0:nlevdecomp)                      ! flag for NH4 limitation
+    real(r8) :: residual_sminn_vr(begc:endc, 1:nlevdecomp)
+    real(r8) :: residual_sminn(begc:endc)
+    real(r8) :: residual_smin_nh4_vr(begc:endc, 1:nlevdecomp)
+    real(r8) :: residual_smin_no3_vr(begc:endc, 1:nlevdecomp)
+    real(r8) :: residual_smin_nh4(begc:endc)
+    real(r8) :: residual_smin_no3(begc:endc)
+    real(r8) :: residual_plant_ndemand(begc:endc)
     !-----------------------------------------------------------------------
-
-    associate(                                                                                           &
-         fpg                          => soilbiogeochem_state_inst%fpg_col                             , & ! Output: [real(r8) (:)   ]  fraction of potential gpp (no units)
-         fpi                          => soilbiogeochem_state_inst%fpi_col                             , & ! Output: [real(r8) (:)   ]  fraction of potential immobilization (no units)
-         fpi_vr                       => soilbiogeochem_state_inst%fpi_vr_col                          , & ! Output: [real(r8) (:,:) ]  fraction of potential immobilization (no units)
-         nfixation_prof               => soilbiogeochem_state_inst%nfixation_prof_col                  , & ! Output: [real(r8) (:,:) ]
-         plant_ndemand                => soilbiogeochem_state_inst%plant_ndemand_col                   , & ! Input:  [real(r8) (:)   ]  column-level plant N demand
-
-         sminn_vr                     => soilbiogeochem_nitrogenstate_inst%sminn_vr_col                , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N
-         smin_nh4_vr                  => soilbiogeochem_nitrogenstate_inst%smin_nh4_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NH4
-         smin_no3_vr                  => soilbiogeochem_nitrogenstate_inst%smin_no3_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NO3
-
-         c_overflow_vr                => soilbiogeochem_carbonflux_inst%c_overflow_vr                  , & ! Output: [real(r8) (:,:,:)] (gC/m3/s) vertically-resolved C rejected by microbes that cannot process it
-         cascade_receiver_pool        => decomp_cascade_con%cascade_receiver_pool                      , & ! Input:  [integer (:)     ]  which pool is C added to for a given decomposition step
-
-         pot_f_nit_vr                 => soilbiogeochem_nitrogenflux_inst%pot_f_nit_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3/s) potential soil nitrification flux
-         pot_f_denit_vr               => soilbiogeochem_nitrogenflux_inst%pot_f_denit_vr_col           , & ! Input:  [real(r8) (:,:) ]  (gN/m3/s) potential soil denitrification flux
-         f_nit_vr                     => soilbiogeochem_nitrogenflux_inst%f_nit_vr_col                 , & ! Output: [real(r8) (:,:) ]  (gN/m3/s) soil nitrification flux
-         f_denit_vr                   => soilbiogeochem_nitrogenflux_inst%f_denit_vr_col               , & ! Output: [real(r8) (:,:) ]  (gN/m3/s) soil denitrification flux
-         potential_immob              => soilbiogeochem_nitrogenflux_inst%potential_immob_col          , & ! Output: [real(r8) (:)   ]
-         actual_immob                 => soilbiogeochem_nitrogenflux_inst%actual_immob_col             , & ! Output: [real(r8) (:)   ]
-         sminn_to_plant               => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_col           , & ! Output: [real(r8) (:)   ]
-         sminn_to_denit_excess_vr     => soilbiogeochem_nitrogenflux_inst%sminn_to_denit_excess_vr_col , & ! Output: [real(r8) (:,:) ]
-         actual_immob_no3_vr          => soilbiogeochem_nitrogenflux_inst%actual_immob_no3_vr_col      , & ! Output: [real(r8) (:,:) ]
-         actual_immob_nh4_vr          => soilbiogeochem_nitrogenflux_inst%actual_immob_nh4_vr_col      , & ! Output: [real(r8) (:,:) ]
-         smin_no3_to_plant_vr         => soilbiogeochem_nitrogenflux_inst%smin_no3_to_plant_vr_col     , & ! Output: [real(r8) (:,:) ]
-         smin_nh4_to_plant_vr         => soilbiogeochem_nitrogenflux_inst%smin_nh4_to_plant_vr_col     , & ! Output: [real(r8) (:,:) ]
-         n2_n2o_ratio_denit_vr        => soilbiogeochem_nitrogenflux_inst%n2_n2o_ratio_denit_vr_col    , & ! Output: [real(r8) (:,:) ]  ratio of N2 to N2O production by denitrification [gN/gN]
-         f_n2o_denit_vr               => soilbiogeochem_nitrogenflux_inst%f_n2o_denit_vr_col           , & ! Output: [real(r8) (:,:) ]  flux of N2O from denitrification [gN/m3/s]
-         f_n2o_nit_vr                 => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_vr_col             , & ! Output: [real(r8) (:,:) ]  flux of N2O from nitrification [gN/m3/s]
-         supplement_to_sminn_vr       => soilbiogeochem_nitrogenflux_inst%supplement_to_sminn_vr_col   , & ! Output: [real(r8) (:,:) ]
-         sminn_to_plant_vr            => soilbiogeochem_nitrogenflux_inst%sminn_to_plant_vr_col        , & ! Output: [real(r8) (:,:) ]
-         potential_immob_vr           => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col       , & ! Input:  [real(r8) (:,:) ]
-         actual_immob_vr              => soilbiogeochem_nitrogenflux_inst%actual_immob_vr_col            & ! Output: [real(r8) (:,:) ]
-         )
-
-      ! calcualte nitrogen uptake profile
-      ! nuptake_prof(:,:) = nan
-      ! call SoilBiogelchemNitrogenUptakeProfile(bounds, &
-      !     nlevdecomp, num_bgc_soilc, filter_bgc_soilc, &
-      !     sminn_vr, dzsoi_decomp, nfixation_prof, nuptake_prof)
 
       ! column loops to resolve plant/heterotroph competition for mineral N
 
@@ -192,7 +172,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               l = col%landunit(c)
+               l = landunit(c)
                if (sum_ndemand_vr(c,j)*dt < sminn_vr(c,j)) then
 
                   ! N availability is not limiting immobilization or plant
@@ -201,7 +181,7 @@ contains
                   fpi_vr(c,j) = 1.0_r8
                   actual_immob_vr(c,j) = potential_immob_vr(c,j)
                   sminn_to_plant_vr(c,j) = plant_ndemand(c) * nuptake_prof(c,j)
-               else if ( allocate_carbon_only()) then !.or. &
+               else if ( carbon_only ) then !.or. &
                   ! this code block controls the addition of N to sminn pool
                   ! to eliminate any N limitation, when Carbon_Only is set.  This lets the
                   ! model behave essentially as a carbon-only model, but with the
@@ -338,13 +318,6 @@ contains
       else  !----------NITRIF_DENITRIF-------------!
 
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
-         !read constants from external netcdf file
-         compet_plant_no3  = params_inst%compet_plant_no3
-         compet_plant_nh4  = params_inst%compet_plant_nh4
-         compet_decomp_no3 = params_inst%compet_decomp_no3
-         compet_decomp_nh4 = params_inst%compet_decomp_nh4
-         compet_denit      = params_inst%compet_denit
-         compet_nit        = params_inst%compet_nit
 
          ! init total mineral N pools
          do fc=1,num_bgc_soilc
@@ -376,7 +349,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               l = col%landunit(c)
+               l = landunit(c)
 
                !  first compete for nh4
                sum_nh4_demand(c,j) = plant_ndemand(c) * nuptake_prof(c,j) + potential_immob_vr(c,j) + pot_f_nit_vr(c,j)
@@ -511,7 +484,7 @@ contains
                ! eliminate N limitations, so there is still a diagnostic quantity
                ! that describes the degree of N limitation at steady-state.
 
-               if ( allocate_carbon_only()) then !.or. &
+               if ( carbon_only ) then !.or. &
                   if ( fpi_no3_vr(c,j) + fpi_nh4_vr(c,j) < 1._r8 ) then
                      fpi_nh4_vr(c,j) = 1.0_r8 - fpi_no3_vr(c,j)
                      supplement_to_sminn_vr(c,j) = (potential_immob_vr(c,j) &
@@ -696,8 +669,6 @@ contains
          end do ! end of column loops
 
       end if if_nitrif  !end of if_not_use_nitrif_denitrif
-
-    end associate
 
   end subroutine SoilBiogeochemCompetition
 
