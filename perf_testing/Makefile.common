@@ -1,0 +1,31 @@
+# Shared Makefile fragment for perf_testing/<routine>/ subdirs.
+#
+# Per-routine Makefile is expected to:
+#   - set OBJ to the list of .o files (driver.o + the routine's .o)
+#   - declare module-use ordering, e.g. driver.o: <routine>.o
+#   - include this file
+#
+# TIMING=1 (default) compiles the driver with built-in system_clock-based
+# timing. TIMING=0 omits the -DPERF_TIMING flag, leaving wall-clock
+# measurement to an external profiler.
+
+.DEFAULT_GOAL := driver
+
+FC      ?= nvfortran
+FFLAGS  ?= -O3 -g
+LDFLAGS ?=
+
+TIMING  ?= 1
+ifeq ($(TIMING),1)
+    FFLAGS += -DPERF_TIMING
+endif
+
+driver: $(OBJ)
+	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $(OBJ)
+
+%.o: %.F90
+	$(FC) $(FFLAGS) -c $< -o $@
+
+.PHONY: clean
+clean:
+	rm -f driver *.o *.mod last_run.txt
