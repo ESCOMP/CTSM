@@ -53,4 +53,4 @@ You tried to build the documentation using our container (``./build_docs ... -d`
 
 The labels `(common-docs-errors)=` and `(common-doc-builder-errors)=` will need to be manually converted to their [reStructuredText equivalents](#rst-cross-references) `.. _common-docs-errors:` and `.. _common-doc-builder-errors:`, respectively.
 
-This can also happen when converting in the other direction, from reStructuredText to Markdown.
+This can also happen when converting in the other direction, from reStructuredText to Markdown. In that case, however, there are tools that can convert from reStructuredText to MyST Markdown specifically. See the command-line tool [`rst-to-myst`](https://rst-to-myst.readthedocs.io/en/latest/) and the [MySTyc website](https://astrojuanlu.github.io/mystyc/), although at the time of writing the latter wasn't working.
