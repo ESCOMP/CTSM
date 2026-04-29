@@ -150,7 +150,7 @@ There are also a number of built-in admonition types that get their own special 
 
 
 
-reStructuredText: Text subscripts
+reStructuredText: Text superscripts and subscripts
 --------------------------------------------------------------
 
 Note that these instructions apply to text (i.e., not in inline or block math).
