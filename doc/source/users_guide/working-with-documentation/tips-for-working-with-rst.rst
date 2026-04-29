@@ -150,6 +150,49 @@ There are also a number of built-in admonition types that get their own special 
 
 
 
+reStructuredText: Embedding a different reStructuredText file
+-------------------------------------------------------------
+
+.. code-block:: reStructuredText
+
+  .. include:: embed-example-rst.rst
+
+Becomes:
+
+.. include:: embed-example-rst.rst
+
+You can also embed literal contents of any file without the rendering:
+
+.. code-block:: reStructuredText
+
+  .. literalinclude:: embed-example-rst.rst
+     :language: restructuredtext
+
+That becomes the literal contents (note syntax highlighting):
+
+.. literalinclude:: embed-example-rst.rst
+   :language: restructuredtext
+
+You can also get fancy:
+
+.. code-block:: reStructuredText
+
+  .. literalinclude:: embed-example-python.py
+     :language: python
+     :start-at: print
+     :linenos:
+     :lineno-match:
+
+Becomes:
+
+.. literalinclude:: embed-example-python.py
+   :language: python
+   :start-at: print
+   :linenos:
+   :lineno-match:
+
+See `the Sphinx documentation <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-literalinclude>`_ for more options to the ``literalinclude`` directive.
+
 reStructuredText: Common error messages and how to handle them
 --------------------------------------------------------------
 
