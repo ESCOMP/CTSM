@@ -5,7 +5,7 @@
 You may find yourself wanting to convert a Markdown file to a reStructuredText file or vice versa. [`pandoc`](https://pandoc.org/) is a command-line utility that can do this for you, or at least get you something that's most of the way there. Installation instructions can be found [here](https://pandoc.org/installing.html), but it's pretty complicated. An easier alternative is to use the online demo page [here](https://pandoc.org/try/):
 
 1. Paste the contents of the file into the text box on the left.
-1. Select the correct file types in the "from" and "to" menus (just use plain "Markdown", not one of the other flavors).
+1. Select the correct file types in the "from" and "to" menus (just use plain "Markdown", not one of the other flavors, unless you've copied something in one of those other flavors—e.g., if you've copied Markdown from a GitHub wiki page).
 1. **Make sure "Preserve breaks" is selected, not "Auto wrap"**—see [style guide](#ctsm-docs-style-guide).
 1. Click "Convert". You will be given the results of the conversion on the right side of the page.
 1. Copy and paste that into a new file with the new extension.
