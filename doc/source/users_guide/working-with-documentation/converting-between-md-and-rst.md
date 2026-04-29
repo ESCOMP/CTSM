@@ -52,3 +52,5 @@ You tried to build the documentation using our container (``./build_docs ... -d`
 ```
 
 The labels `(common-docs-errors)=` and `(common-doc-builder-errors)=` will need to be manually converted to their [reStructuredText equivalents](#rst-cross-references) `.. _common-docs-errors:` and `.. _common-doc-builder-errors:`, respectively.
+
+This can also happen when converting in the other direction, from reStructuredText to Markdown.
