@@ -1,0 +1,6 @@
+ncol            8000
+npatch_per_col  16
+nlev            10
+numfc           8000
+niters          1
+checksum          5.1204800000000000E+09
