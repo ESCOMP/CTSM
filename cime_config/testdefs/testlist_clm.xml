@@ -2544,7 +2544,7 @@
   </test>
   <test name="PFS_Ld5" grid="f10_f10_mt232" compset="I2000Clm60BgcCropCrujra" testmods="clm/crop">
     <machines>
-      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
     </machines>
     <options>
@@ -3401,7 +3401,7 @@
   <test name="PFS_Ld5_PS" grid="f19_f19_mt232" compset="I2000Clm60BgcCropCrujra" testmods="clm/crop">
     <machines>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
-      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="gnu" category="nvidia-hackathon-26"/>
     </machines>
     <options>
@@ -3722,7 +3722,7 @@
   </test>
   <test name="PFS_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesCold">
     <machines>
-      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="gnu" category="nvidia-hackathon-26"/>
     </machines>
@@ -3733,7 +3733,7 @@
   </test>
   <test name="PFS_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
-      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
     </machines>
     <options>
