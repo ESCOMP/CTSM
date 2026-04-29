@@ -32,10 +32,10 @@ cd $SCRATCH/SMS.f10_f10_mg37.I2000Clm60BgcCrop.derecho_nvhpc-prof.clm-crop.test_
 # Get the module load and environment setup for later
 source .env_mach_specific.csh # for cshell
 . .env_mach_specific.sh # For bash
-# Use nsys to analyze the report file
-nsys analyze run/report1.nsys-rep
+# Use the GUI nsys-ui to analyze the report file it generated
+ls run/report1.nsys-rep
+nsys-ui  # Open the above report file there
 ```
-
 ## Some things we'd like to do:
 
 - Fix some of the bugs that make changing the build for a case more difficult
