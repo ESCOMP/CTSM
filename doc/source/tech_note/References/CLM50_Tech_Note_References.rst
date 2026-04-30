@@ -255,6 +255,7 @@ Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on
 .. _ComstockEhleringer1986:
 
 Comstock, J. and Ehleringer, J.R. 1986. Photoperiod and photosynthetic capacity in *Lotus scoparius*. Plant Cell Environ. 9:609-612.
+
 .. _Comolaetal2019:
 
 Comola, F., Kok, J.F., Chamecki, M. and Martin, R.L., 2019. The intermittency of wind‐driven sand transport. Geophysical Research Letters, 46(22), pp.13430-13440. DOI:10.1029/2019GL085739.
