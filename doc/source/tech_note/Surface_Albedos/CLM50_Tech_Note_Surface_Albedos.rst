@@ -461,14 +461,14 @@ For frozen lakes without resolved snow layers (:math:`snl=0`), the albedo at col
 .. math::
    :label: AlbFrozenLakeSnl0Dir
 
-   \alpha _{soi,\, \Lambda }^{\mu }=a_{0} \left(1-x\right)+\max(0.10,a)x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
+   \alpha _{soi,\, \Lambda }^{\mu }=a_{0} \left(1-x\right)+\max(0.10,\alpha _{soi,\, \Lambda }^{\mu })x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
 
 .. math::
    :label: AlbFrozenLakeSnl0Dif
 
    \alpha _{soi,\, \Lambda }=a_{0} \left(1-x\right)+0.10x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
 
-where :math:`a` is calculated from :eq:`3.60` for direct radiation.
+where :math:`\alpha _{soi,\, \Lambda }^{\mu }` is calculated from :eq:`3.60` for direct radiation.
 
 For frozen lakes with resolved snow layers, the reflectance of the ice surface is fixed at :math:`a_0`, and the snow reflectance is calculated as over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`). These two reflectances are combined to obtain the snow-fraction-weighted albedo as in over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`).
 
