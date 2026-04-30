@@ -239,6 +239,10 @@ Collatz, G.J., Ribas-Carbo, M., and Berry, J.A. 1992. Coupled photosynthesis-sto
 
 Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on internal aeration and radial oxygen loss from roots. Plant Cell and Environment 26:17-36.
 
+.. _Comolaetal2019:
+
+Comola, F., Kok, J.F., Chamecki, M. and Martin, R.L., 2019. The intermittency of wind‐driven sand transport. Geophysical Research Letters, 46(22), pp.13430-13440. DOI:10.1029/2019GL085739.
+
 .. _Conwayetal1996:
 
 Conway, H., Gades, A., and Raymond, C.F. 1996. Albedo of dirty snow during conditions of melt. Water Resour. Res. 32:1713-1718.
@@ -274,6 +278,10 @@ Dai, Y., Dickinson, R.E., and Wang, Y.-P. 2004. A two-big-leaf model for canopy 
 .. _DaiTrenberth2002:
 
 Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from continents: Latitudinal and seasonal variations. J. Hydrometeor. 3:660-687.
+
+.. _Darmenovaetal2009:
+
+Darmenova, K., Sokolik, I.N., Shao, Y., Marticorena, B. and Bergametti, G., 2009. Development of a physically based dust emission module within the Weather Research and Forecasting (WRF) model: Assessment of dust emission parameterizations and input parameters for source regions in Central and East Asia. Journal of Geophysical Research: Atmospheres, 114(D14). DOI:10.1029/2008JD011236.
 
 .. _DeFriesetal2000:
 
@@ -339,6 +347,10 @@ Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization 
 
 Fang, X. and Stefan, H.G., 1996. Long-term lake water temperature and ice cover simulations/measurements. Cold Regions Science and Technology 24:289-304.
 
+.. _Fangetal2026:
+
+Fang, B., Zhao, L., Oleson, K., Zhang, K., Lawrence, P., Sacks, B., Cao, C., He, C., Huang, Q., Liu, Z., and Lee, X. 2026. Representing dynamic urban land change in the Community Earth System Model (CESM). JAMES, in revision.
+
 .. _Farouki1981:
 
 Farouki, O.T. 1981. The thermal properties of soils in cold regions. Cold Regions Sci. and Tech. 5:67-75.
@@ -350,6 +362,10 @@ Farquhar, G.D., von Caemmerer, S., and Berry, J.A. 1980. A biochemical model of 
 .. _FarquharvonCaemmerer1982:
 
 Farquhar, G.D., and von Caemmerer, S. 1982. Modeling of photosynthetic response to environmental conditions. pp. 549-587. In: O.L. Lange, P.S. Nobel, C.B. Osmond, and H. Zeigler (editors) Encyclopedia of Plant Physiology. Vol. 12B. Physiological Plant Ecology. II. Water Relations and Carbon Assimilation. Springer-Verlag, New York.
+
+.. _Fecanetal1999:
+
+Fécan, F., Marticorena, B. and Bergametti, G., 1998, December. Parametrization of the increase of the aeolian erosion threshold wind friction velocity due to soil moisture for arid and semi-arid areas. In Annales Geophysicae (Vol. 17, No. 1, pp. 149-157). Berlin/Heidelberg: Springer-Verlag. DOI:10.1007/s00585-999-0149-7.
 
 .. _FeddemaKauffman2016:
 
@@ -418,6 +434,10 @@ Gallais, A., Coque, M., Gouis, J. L., Prioul, J. L., Hirel, B., and Quillere, I.
 .. _Gallowayetal2004:
 
 Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+
+.. _GaoOneill2020:
+
+Gao, J., and O’Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
 
 .. _Garciaetal1988:
 
@@ -635,6 +655,18 @@ Kimball, J.S., Thornton, P.E., White, M.A. and Running, S.W. 1997. Simulating fo
 
 Kohyama, T., Suzuki, E., Partomihardjo, T., and Yamada, T. 2001. Dynamic steady state of patch-mosaic tree size structure of a mixed diptocarp forest regulated by local crowding. Ecological Research 16:85-98.
 
+.. _Koketal2012:
+
+Kok, J.F., Parteli, E.J., Michaels, T.I. and Karam, D.B., 2012. The physics of wind-blown sand and dust. Reports on progress in Physics, 75(10), p.106901. DOI:10.1088/0034-4885/75/10/106901.
+
+.. _Koketal2014a:
+
+Kok, J.F., Mahowald, N.M., Fratini, G., Gillies, J.A., Ishizuka, M., Leys, J.F., Mikami, M., Park, M.S., Park, S.U., Van Pelt, R.S. and Zobeck, T.M., 2014a. An improved dust emission model–Part 1: Model description and comparison against measurements. Atmospheric Chemistry and Physics, 14(23), pp.13023-13041.
+
+.. _Koketal2014b:
+
+Kok, J.F., Albani, S., Mahowald, N.M. and Ward, D.S., 2014b. An improved dust emission model–Part 2: Evaluation in the Community Earth System Model, with implications for the use of dust source functions. Atmospheric Chemistry and Physics, 14(23), pp.13043-13061. DOI: 10.5194/acp-14-13043-2014.
+
 .. _Kourzeneva2009:
 
 Kourzeneva, E., 2009. Global dataset for the parameterization of lakes in Numerical Weather Prediction and Climate modeling. ALADIN Newsletter, No 37, July-December, 2009, F. Bouttier and C. Fischer, Eds., Meteo-France, Toulouse, France, 46-53.
@@ -759,6 +791,14 @@ Lerman, A., 1979. Geochemical processes: Water and sediment environments. John W
 
 Letts, M.G., Roulet, N.T., Comer, N.T., Skarupa, M.R., and Verseghy, D.L. 2000. Parametrization of peatland hydraulic properties for the Canadian Land Surface Scheme. Atmos.-Ocean 38:141-160.
 
+.. _Leungetal2023:
+
+Leung, D.M., Kok, J.F., Li, L., Okin, G.S., Prigent, C., Klose, M., Pérez García-Pando, C., Menut, L., Mahowald, N.M., Lawrence, D.M. and Chamecki, M., 2023. A new process-based and scale-aware desert dust emission scheme for global climate models–Part I: Description and evaluation against inverse modeling emissions. Atmos. Chem. Phys., 23(11), pp.6487-6523. DOI:10.5194/acp-23-6487-2023.
+
+.. _Leungetal2024:
+
+Leung, D.M., Kok, J.F., Li, L., Mahowald, N.M., Lawrence, D.M., Tilmes, S., Kluzek, E., Klose, M. and Pérez García-Pando, C., 2024. A new process-based and scale-aware desert dust emission scheme for global climate models–Part II: Evaluation in the Community Earth System Model version 2 (CESM2). Atmos. Chem. Phys., 24(4), pp.2287-2318. DOI:10.5194/acp-24-2287-2024.
+
 .. _Levisetal2003:
 
 Levis, S., Wiedinmyer, C., Bonan, G.B., and Guenther, A. 2003. Simulating biogenic volatile organic compound emissions in the Community Climate System Model. J. Geophys. Res. 108:4659. DOI:10.1029/2002JD003203.
@@ -814,6 +854,10 @@ Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and N. Voisin. 201
 .. _Lietal2015b:
 
 Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the Anthropocene: An earth system modeling approach, J. Adv. Model. Earth Syst., 7, doi:10.1002/2015MS000471.
+
+.. _Lietal2024:
+
+Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
 
 .. _Liangetal1994:
 
@@ -883,6 +927,10 @@ Mao, J., Thornton, P.E., Shi, X., Zhao, M., and Post, W.M. 2012. Remote sensing 
 
 Mao, J., Shi, X., Thornton, P.E., Hoffman, F.M., Zhu, Z., and Ranga B. Myneni, R.B. 2013. Global latitudinal-asymmetric vegetation growth trends and their driving mechanisms: 1982-2009. Remote Sensing 5:1484-1497.
 
+.. _MarticorenaBergametti1995:
+
+Marticorena, B. and Bergametti, G., 1995. Modeling the atmospheric dust cycle: 1. Design of a soil‐derived dust emission scheme. Journal of geophysical research: atmospheres, 100(D8), pp.16415-16430. DOI: 10.1029/95JD00690.
+
 .. _Martinetal1980:
 
 Martin, J.P., Haider, K. and Kassim, G., 1980. Biodegradation and stabilization after 2 years of specific crop, lignin, and polysaccharide carbons in soils. Soil Science Society of America Journal 44:1250-1255.
@@ -915,6 +963,10 @@ https://doi.org/10.5194/gmd-15-2365-2022
 .. _MelzerOLeary1987:
 
 Melzer, E., and O'Leary, M.H. 1987. Anapleurotic CO2 Fixation by Phosphoenolpyruvate Carboxylase in C3 Plants. Plant. Physiol. 84:58.
+
+.. _Mengetal2022:
+
+Meng, J., Huang, Y., Leung, D.M., Li, L., Adebiyi, A.A., Ryder, C.L., Mahowald, N.M. and Kok, J.F., 2022. Improved parameterization for the size distribution of emitted dust aerosols reduces model underestimation of super coarse dust. Geophysical Research Letters, 49(8), p.e2021GL097287. DOI:10.1029/2021GL097287.
 
 .. _Milleretal1994:
 
@@ -990,7 +1042,11 @@ Oikawa, S., Hikosaka, K. and Hirose, T., 2005. Dynamics of leaf area and nitroge
 
 .. _Oke1987:
 
-Oke, T. 1987. Boundary Layer Climates (2:math:`{}^{nd}` edition). Routledge, London and New York.
+Oke, T. 1987. Boundary Layer Climates (2nd edition). Routledge, London and New York.
+
+.. _Okin2008:
+
+Okin, G.S., 2008. A new model of wind erosion in the presence of vegetation. Journal of Geophysical Research: Earth Surface, 113(F2). DOI: 10.1029/2007JF000758.
 
 .. _OlesonBonan2000:
 
@@ -1024,9 +1080,9 @@ Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Kluzek, E. 2010b. T
 
 Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-503+STR, National Center for Atmospheric Research, Boulder, CO, 420 pp.
 
-.. _OlesonFeddema2018:
+.. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2018. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, submitted.
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001596. 
 
 .. _Olson1963:
 
@@ -1051,6 +1107,10 @@ Ozdogan, M., Rodell, M., Beaudoing, H.K., and Toll, D.L. 2010. Simulating the ef
 .. _Pageetal2002:
 
 Page, S.E., Siegert, F., Rieley, J.O., Boehm, H-D.V., Jaya, A., and Limin, S. 2002. The amount of carbon released from peat and forest fires in Indonesia in 1997. Nature 420:61-65.
+
+.. _Panofskyetal1977:
+
+Panofsky, H.A., Tennekes, H., Lenschow, D.H. and Wyngaard, J.C., 1977. The characteristics of turbulent velocity components in the surface layer under convective conditions. Boundary-Layer Meteorology, 11(3), pp.355-361. DOI:10.1007/BF02186086.
 
 .. _PanofskyDutton1984:
 
@@ -1104,6 +1164,10 @@ Philip, J.R. 1957. Evaporation, and moisture and heat fields in the soil. J. Met
 
 Piao, S.L., et al. 2012. The carbon budget of terrestrial ecosystems in East Asia over the last two decades. Biogeosciences 9:3571-3586.
 
+.. _Pierreetal2014:
+
+Pierre, C., Bergametti, G., Marticorena, B., Kergoat, L., Mougin, E. and Hiernaux, P., 2014. Comparing drag partition schemes over a herbaceous Sahelian rangeland. Journal of Geophysical Research: Earth Surface, 119(10), pp.2291-2313. DOI: 10.1002/2014JF003177.
+
 .. _Pivovarov1972:
 
 Pivovarov, A.A., 1972. Thermal Conditions in Freezing Lakes and Reservoirs. John Wiley, New York.
@@ -1123,6 +1187,10 @@ Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global monthly irri
 .. _Pressetal1992:
 
 Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
+
+.. _Prigentetal2005:
+
+Prigent, C., Tegen, I., Aires, F., Marticorena, B. and Zribi, M., 2005. Estimation of the aerodynamic roughness length in arid and semi‐arid regions over the globe with the ERS scatterometer. Journal of Geophysical Research: Atmospheres, 110(D9). DOI:10.1029/2004JD005370.
 
 .. _Prigentetal2007:
 
@@ -1259,6 +1327,10 @@ Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, 
 .. _sellers1996:
 
 Sellers, Piers J et al. (1996). A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data. Journal of climate 9.4, pp. 706-737.
+
+.. _ShaoLu2000:
+
+Shao, Y. and Lu, H., 2000. A simple expression for wind erosion threshold friction velocity. Journal of Geophysical Research: Atmospheres, 105(D17), pp.22437-22443. DOI:10.1029/2000JD900304.
 
 .. _Shietal2013:
 
