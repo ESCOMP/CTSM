@@ -583,16 +583,19 @@ contains
       ! [PORTED by Hui Tang: update t_nvp_col BEFORE t_grnd so t_grnd can use it]
       ! Default: inactive-NVP columns track soil layer 1.  Active-NVP columns track
       ! layer 0.  Use the nvpc filter so the active override is O(NVP columns) only.
-      if (use_nvp) then
+      
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
             t_nvp_col(c) = t_soisno(c,1)          ! default: no NVP → layer 1
          end do
+         
+      if (use_nvp) then
          do fc = 1, num_nvpc                        ! [PORTED: override for NVP-active columns]
             c = filter_nvpc(fc)
             t_nvp_col(c) = t_soisno(c,0)
          end do
       end if
+
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
