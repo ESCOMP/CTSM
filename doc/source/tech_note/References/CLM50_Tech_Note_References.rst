@@ -927,6 +927,7 @@ Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M., Zender, C.S., 
 .. _Maireetal2012:
 
 Maire, V., Martre, P., Kattge, J., Gastal, F., Esser, G., Fontaine, S., and Soussana, F. 2012. The coordination of leaf photosynthesis links C and N fluxes in C3 plant species, PLos ONE, 7:e38245. doi:38310.31371/journal.pone.0038345.
+
 .. _MajasalmiBright2019:
 
 Majasalmi, T., and Bright, R.M. 2019. Evaluation of leaf-level optical properties employed in land surface models. Geosci. Model Dev. 12:3923-3938. https://doi.org/10.5194/gmd-12-3923-2019.
