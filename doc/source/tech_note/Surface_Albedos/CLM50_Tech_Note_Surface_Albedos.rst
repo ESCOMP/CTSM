@@ -121,6 +121,8 @@ where the single scattering albedo is
 
 Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`. We have seen cases where small values can cause unrealistic single scattering albedo associated with the log calculation, thereby eventually causing a negative soil albedo.
 
+Note that the parameters :math:`h_{1}` –:math:`h_{10}`, :math:`\sigma`, :math:`h`, :math:`s_{1}`, and :math:`s_{2}` in the following equations [:eq:`3.17` - :eq:`3.30`] are defined in :eq:`3.31` - :eq:`3.57`.
+
 The upward diffuse fluxes per unit incident direct beam and diffuse flux (i.e., the surface albedos) are
 
 .. math::
