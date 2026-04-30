@@ -347,6 +347,10 @@ Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization 
 
 Fang, X. and Stefan, H.G., 1996. Long-term lake water temperature and ice cover simulations/measurements. Cold Regions Science and Technology 24:289-304.
 
+.. _Fangetal2026:
+
+Fang, B., Zhao, L., Oleson, K., Zhang, K., Lawrence, P., Sacks, B., Cao, C., He, C., Huang, Q., Liu, Z., and Lee, X. 2026. Representing dynamic urban land change in the Community Earth System Model (CESM). JAMES, in revision.
+
 .. _Farouki1981:
 
 Farouki, O.T. 1981. The thermal properties of soils in cold regions. Cold Regions Sci. and Tech. 5:67-75.
@@ -430,6 +434,10 @@ Gallais, A., Coque, M., Gouis, J. L., Prioul, J. L., Hirel, B., and Quillere, I.
 .. _Gallowayetal2004:
 
 Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+
+.. _GaoOneill2020:
+
+Gao, J., and O’Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
 
 .. _Garciaetal1988:
 
@@ -839,6 +847,10 @@ Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and N. Voisin. 201
 
 Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the Anthropocene: An earth system modeling approach, J. Adv. Model. Earth Syst., 7, doi:10.1002/2015MS000471.
 
+.. _Lietal2024:
+
+Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
+
 .. _Liangetal1994:
 
 Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrologically based model of land surface water and energy fluxes for GSMs. J. Geophys. Res. 99(D7):14,415–14,428.
@@ -1018,7 +1030,7 @@ Oikawa, S., Hikosaka, K. and Hirose, T., 2005. Dynamics of leaf area and nitroge
 
 .. _Oke1987:
 
-Oke, T. 1987. Boundary Layer Climates (2:math:`{}^{nd}` edition). Routledge, London and New York.
+Oke, T. 1987. Boundary Layer Climates (2nd edition). Routledge, London and New York.
 
 .. _Okin2008:
 
@@ -1056,9 +1068,9 @@ Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Kluzek, E. 2010b. T
 
 Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-503+STR, National Center for Atmospheric Research, Boulder, CO, 420 pp.
 
-.. _OlesonFeddema2018:
+.. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2018. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, submitted.
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001596. 
 
 .. _Olson1963:
 
