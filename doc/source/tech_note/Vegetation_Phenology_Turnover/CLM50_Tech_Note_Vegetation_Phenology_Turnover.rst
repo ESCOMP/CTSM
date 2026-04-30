@@ -412,7 +412,7 @@ and the associated nitrogen fluxes are:
 
 where :math:`{f}_{stor,xfer}` is the fraction of current storage pool moved into the transfer pool for display over the incipient onset period. This fraction is set to 0.5, based on the observation that seasonal deciduous trees are capable of replacing their canopies from storage reserves in the event of a severe early-season disturbance such as frost damage or defoliation due to insect herbivory.
 
-If the onset critera are not met before the summer solstice, then :math:`{GDD}_{sum}` is set to 0.0 and the growing-degree-day accumulation will not start again until the following winter solstice. This mechanism prevents the initiation of very short growing seasons late in the summer in cold climates. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
+If the onset criteria are not met before the summer solstice, then :math:`{GDD}_{sum}` is set to 0.0 and the growing-degree-day accumulation will not start again until the following winter solstice. This mechanism prevents the initiation of very short growing seasons late in the summer in cold climates. The onset counter is decremented on each time step after initiation of the onset period, until it reaches zero, signaling the end of the onset period:
 
 .. math::
    :label: t_onset_decrement
