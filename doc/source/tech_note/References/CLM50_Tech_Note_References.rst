@@ -111,6 +111,10 @@ Berkowitz, B., and Balberg, I. 1992. Percolation approach to the problem of hydr
 
 Beven, K.J., and Kirkby, M.J. 1979. A physically based variable contributing area model of basin hydrology. Hydrol. Sci. Bull. 24:43-69.
 
+.. _Birchetal2021:
+
+Birch, L., Schwalm, C.R., Natali, S., Lombardozzi, D., Keppel-Aleks, G., Watts, J., Lin, X., Zona, D., Oechel, W., Sachs, T., Black, T.A., and Rogers, B.M. 2021. Addressing biases in Arctic–boreal carbon cycling in the Community Land Model Version 5, Geosci. Model Dev., 14, 3361–3382.
+
 .. _BohrenHuffman1983:
 
 Bohren, C. F., and Huffman, D. R. 1983. Absorption and scattering of light by small particles. John Wiley & Sons, New York, NY.
@@ -338,6 +342,10 @@ Drewniak, B., Song, J., Prell, J., Kotamarthi, V.R., and Jacob, R. 2013. Modelin
 .. _Dunfieldetal1993:
 
 Dunfield, P., Knowles, R., Dumont, R. and Moore, T.R., 1993. Methane Production and Consumption in Temperate and Sub-Arctic Peat Soils - Response to Temperature and Ph. Soil Biology & Biochemistry 25:321-326.
+
+.. _Eiteletal2019:
+
+Eitel, J.U., Maguire, A.J., Boelman, N., Vierling, L.A., Griffin, K.L., Jensen, J., Magney, T.S., Mahoney, P.J., Meddens, A.J., Silva, C., and Sonnentag, O. 2019. Proximal remote sensing of tree physiology at northern treeline: Do late-season changes in the photochemical reflectance index (PRI) respond to climate or photoperiod? Remote Sens. Environ. 221:340–350.
 
 .. _EntekhabiEagleson1989:
 
