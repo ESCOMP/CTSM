@@ -189,7 +189,7 @@ Byram, G.M., 1959. Combustion of forest fuels. In Forest fire: control and use.(
 
 .. _CampbellNorman1998:
 
-Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2:math:`{}^{nd}` edition). Springer-Verlag, New York.
+Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
 
 .. _Castilloetal2012:
 
@@ -906,6 +906,10 @@ Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simul
 .. _Mahowaldetal2006:
 
 Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M., Zender, C.S., and Luo, C. 2006. Change in atmospheric mineral aerosols in response to climate: last glacial period, pre-industrial, modern and doubled CO\ :sub:`2` climates. J. Geophys. Res\ *.* 111:D10202. DOI:10.1029/2005JD006653.
+
+.. _MajasalmiBright2019:
+
+Majasalmi, T., and Bright, R.M. 2019. Evaluation of leaf-level optical properties employed in land surface models. Geosci. Model Dev. 12:3923-3938. https://doi.org/10.5194/gmd-12-3923-2019.
 
 .. _Makela2002:
 
