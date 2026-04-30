@@ -135,13 +135,6 @@
   </test>
 
   <!-- mpi-serial failures on derecho_intel with the intel compiler update to intel/2025.3.2 -->
-  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50FatesCruRsGs.derecho_intel.clm-FatesColdAllVars">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3798</issue>
-      <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
-    </phase>
-  </test>
   <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.derecho_intel.clm-decStart1851_noinitial">
     <phase name="RUN">
       <status>FAIL</status>
@@ -189,6 +182,20 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>ESCOMP/mizuRoute#613</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#4966</issue>
+    </phase>
+  </test>
+  
+  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_intel.mizuroute-default">
+    <phase name="NLCOMP">
+      <status>FAIL</status>
+      <issue>ESMCI/cime#4966</issue>
     </phase>
   </test>
 
