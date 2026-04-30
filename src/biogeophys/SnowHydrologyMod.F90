@@ -1228,6 +1228,19 @@ contains
        h2osoi_liq(c,lev_top(c)) = h2osoi_liq(c,lev_top(c)) +  &
             frac_sno_eff(c) * (qflx_liq_grnd(c) + qflx_liqdew_to_top_layer(c) &
             - qflx_liqevap_from_top_layer(c)) * dtime
+
+       ! [PORTED by Hui Tang: NaN diagnostic — catch NaN from flux inputs before it propagates]
+       if (h2osoi_liq(c,lev_top(c)) /= h2osoi_liq(c,lev_top(c))) then
+          write(iulog,*) "NaN DIAGNOSTIC: h2osoi_liq is NaN after UpdateState_TopLayerFluxes"
+          write(iulog,*) "  c, lev_top(c)                   = ", c, lev_top(c)
+          write(iulog,*) "  h2osoi_liq_top_orig             = ", h2osoi_liq_top_orig(c)
+          write(iulog,*) "  frac_sno_eff                    = ", frac_sno_eff(c)
+          write(iulog,*) "  qflx_liq_grnd*dtime             = ", qflx_liq_grnd(c)*dtime
+          write(iulog,*) "  qflx_liqdew_to_top_layer*dtime  = ", qflx_liqdew_to_top_layer(c)*dtime
+          write(iulog,*) "  qflx_liqevap_from_top_layer*dtime=", qflx_liqevap_from_top_layer(c)*dtime
+          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, &
+               msg="NaN in h2osoi_liq after UpdateState_TopLayerFluxes — check flux inputs")
+       end if
     end do
 
     ! If states were supposed to go to 0 but instead ended up near-0 (positive or
@@ -1320,6 +1333,7 @@ contains
     real(r8) :: vol_liq(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of liquid water in layer
     real(r8) :: vol_ice(bounds%begc:bounds%endc,-nlevsno+1:0)      ! partial volume of ice lens in layer
     real(r8) :: eff_porosity(bounds%begc:bounds%endc,-nlevsno+1:0) ! effective porosity = porosity - vol_ice
+    real(r8) :: denom_j                                            ! dz*frac_sno_eff denominator for vol calculations
 
     character(len=*), parameter :: subname = 'BulkFlux_SnowPercolation'
     !-----------------------------------------------------------------------
@@ -1338,9 +1352,17 @@ contains
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
              ! need to scale dz by frac_sno to convert to grid cell average depth
-             vol_ice(c,j)      = min(1._r8, h2osoi_ice(c,j)/(dz(c,j)*frac_sno_eff(c)*denice))
-             eff_porosity(c,j) = 1._r8 - vol_ice(c,j)
-             vol_liq(c,j)      = min(eff_porosity(c,j),h2osoi_liq(c,j)/(dz(c,j)*frac_sno_eff(c)*denh2o))
+             ! [PORTED by Hui Tang: guard zero denominator; dz*frac_sno_eff=0 gives 0/0=NaN without this]
+             denom_j = dz(c,j) * frac_sno_eff(c)
+             if (denom_j > 0._r8) then
+                vol_ice(c,j)      = min(1._r8, h2osoi_ice(c,j)/(denom_j*denice))
+                eff_porosity(c,j) = max(0._r8, 1._r8 - vol_ice(c,j))
+                vol_liq(c,j)      = min(eff_porosity(c,j), h2osoi_liq(c,j)/(denom_j*denh2o))
+             else
+                vol_ice(c,j)      = 0._r8
+                eff_porosity(c,j) = 1._r8
+                vol_liq(c,j)      = 0._r8
+             end if
           end if
        end do
     end do
@@ -2749,6 +2771,14 @@ contains
                    zwice(wi) = propor*swice(wi,c,k)
                    zwliq(wi) = propor*swliq(wi,c,k)
                 end do
+                
+                write(iulog,*) 'msno=',msno, &
+                               'dzsno=',dzsno(c,k), &
+                               'swliq=',swliq(:,c,k), &
+                               'swice=',swice(:,c,k), &
+                               'zwliq=',zwliq,      &
+                               'zwice=',zwice                 
+
                 zmbc_phi = propor*mbc_phi(c,k)
                 zmbc_pho = propor*mbc_pho(c,k)
                 zmoc_phi = propor*moc_phi(c,k)
@@ -2785,6 +2815,12 @@ contains
                 mdst4(c,k+1)   = mdst4(c,k+1)+zmdst4  ! (combo)
 
                 ! Mass-weighted combination of radius
+                write(iulog,*) 'c=',c,          &
+                               'k=',k,          &
+                               'dzmax_u=', dzmax_u(k), &
+                               'swliq(k+1)=', swliq(:,c,:), & 
+                               'swice(k+1)=', swice(:,c,:) 
+
                 rds(c,k+1) = MassWeightedSnowRadius( rds(c,k), rds(c,k+1), &
                      (swliq(i_bulk,c,k+1)+swice(i_bulk,c,k+1)), (zwliq(i_bulk)+zwice(i_bulk)) )
 
@@ -3960,6 +3996,11 @@ contains
     real(r8), intent(IN) :: swtot        ! snow water total layer 2
     real(r8), intent(IN) :: zwtot        ! snow water total layer 1
     real(r8) :: mass_weighted_snowradius ! resulting bounded mass weighted snow radius
+
+    if (.not. (swtot + zwtot > 0._r8)) then
+     write(iulog,*) 'MassWeightedSnowRadius about to abort: rds1=',rds1, &
+          ' rds2=',rds2,' swtot=',swtot,' zwtot=',zwtot
+    end if
 
     SHR_ASSERT_FL( (swtot+zwtot > 0.0_r8), sourcefile, __LINE__)
     mass_weighted_snowradius = (rds2*swtot + rds1*zwtot)/(swtot+zwtot)

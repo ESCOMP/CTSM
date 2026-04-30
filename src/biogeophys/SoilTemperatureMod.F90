@@ -439,12 +439,16 @@ contains
       call t_startf( 'SoilTempBandDiag')
 
       ! Solve the system
+      print*, "tvector_before=", tvector 
+      print*, "nvp_layer_active=", col%nvp_layer_active, snl
 
       call BandDiagonal(bounds, -nlevsno, nlevmaxurbgrnd, jtop(begc:endc), jbot(begc:endc), &
            num_nolakec, filter_nolakec, nband, bmatrix(begc:endc, :, :), &
            rvector(begc:endc, :), tvector(begc:endc, :))
       call t_stopf( 'SoilTempBandDiag')
 
+      print*, "tvector_after=", tvector
+      
       ! return temperatures to original array
 
       do fc = 1,num_nolakec
@@ -584,10 +588,10 @@ contains
       ! Default: inactive-NVP columns track soil layer 1.  Active-NVP columns track
       ! layer 0.  Use the nvpc filter so the active override is O(NVP columns) only.
       
-         do fc = 1, num_nolakec
-            c = filter_nolakec(fc)
-            t_nvp_col(c) = t_soisno(c,1)          ! default: no NVP → layer 1
-         end do
+      do fc = 1, num_nolakec
+         c = filter_nolakec(fc)
+         t_nvp_col(c) = t_soisno(c,1)          ! default: no NVP → layer 1
+      end do
          
       if (use_nvp) then
          do fc = 1, num_nvpc                        ! [PORTED: override for NVP-active columns]
@@ -596,6 +600,7 @@ contains
          end do
       end if
 
+      print *, "t_nvp_col=", t_nvp_col, t_soisno(c,:)
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)
@@ -817,6 +822,8 @@ contains
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0) .AND. &
                 .NOT. (use_nvp .AND. jbot_sno(c) == -1 .AND. j == 0)) then
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
+               print *, 'bw=', bw(c,j), h2osoi_ice(c,j), h2osoi_liq(c,j),dz(c,j)
+               
                l = col%landunit(c)
 
                ! Select method over glacier land unit 

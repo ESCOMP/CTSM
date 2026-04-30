@@ -202,6 +202,22 @@ contains
             qflx_ev_nvp(p) = 0._r8
             qflx_ev_snow(p) = qflx_evap_soi(p)
          else
+            ! [PORTED by Hui Tang: NaN diagnostic — identify which term makes qflx_ev_snow NaN]
+            if ((qflx_ev_snow(p) /= qflx_ev_snow(p)) .or. &
+                (tinc(c)*cgrndl(p) /= tinc(c)*cgrndl(p))) then
+               write(iulog,*) "NaN DIAGNOSTIC SoilFluxesMod: before qflx_ev_snow linearization"
+               write(iulog,*) "  p, c                  = ", p, c
+               write(iulog,*) "  qflx_ev_snow(p)       = ", qflx_ev_snow(p)
+               write(iulog,*) "  tinc(c)                = ", tinc(c)
+               write(iulog,*) "  cgrndl(p)              = ", cgrndl(p)
+               write(iulog,*) "  tinc*cgrndl            = ", tinc(c)*cgrndl(p)
+               write(iulog,*) "  t_grnd(c)              = ", t_grnd(c)
+               write(iulog,*) "  t_grnd0(c)             = ", t_grnd0(c)
+               write(iulog,*) "  tssbef(c,snl+1)        = ", tssbef(c,col%snl(c)+1)
+               write(iulog,*) "  frac_sno_eff(c)        = ", frac_sno_eff(c)
+               !call endrun(subgrid_index=p, subgrid_level=subgrid_level_patch, &
+               !     msg="NaN in qflx_ev_snow or tinc*cgrndl in SoilFluxesMod")
+            end if
             qflx_ev_snow(p) = qflx_ev_snow(p) + tinc(c)*cgrndl(p)
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) + tinc(c)*cgrndl(p)
