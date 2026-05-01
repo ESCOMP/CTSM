@@ -21,5 +21,5 @@ Using CLM tools
    creating-surface-datasets.rst
    creating-domain-files.rst
    observational-sites-datasets.rst
-   cprnc.rst
+   cprnc.md
    paramfile-tools.md
