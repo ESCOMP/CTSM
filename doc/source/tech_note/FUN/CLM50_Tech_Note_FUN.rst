@@ -105,7 +105,7 @@ where :math:`k_{n,active}` varies according to whether we are considering ecto o
    k_{n,Aactive}&  e = 0
    \end{array}\right\}
 
-where m=1 pertains to the fraction of the PFT that is ecotmycorrhizal, as opposed to arbuscular mycorrhizal.
+where e = 1 pertains to the fraction of the PFT that is ectomycorrhizal, as opposed to arbuscular mycorrhizal.
 
 CLM6 corrects an error in the calculation of non-mycorrhizal uptake in CLM5, which had swapped parameter values for   :math:`k_{c,nonmyc}` and :math:`k_{n,nonmyc}` that were interited from original publication of :ref:`Brzostek et al. (2014)<Brzosteketal2014>`. 
 
