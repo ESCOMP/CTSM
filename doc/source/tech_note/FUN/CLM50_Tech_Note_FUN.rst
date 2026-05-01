@@ -115,7 +115,7 @@ The total cost of N uptake is calculated based on the assumption that carbon is 
 
  .. math::
 
-   N_{conductance,f}=  \sum{(1/N_{cost,x})}
+   N_{conductance}=  \sum{(1/N_{cost,x})}
 
 From this, we then calculate the fraction of the carbon allocated to each pathway as
 
