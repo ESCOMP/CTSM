@@ -300,11 +300,6 @@ Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic,
 
 Subsequent sensitivity tests found relatively low flexibility in the target C:N ratios resulting from this approach (:ref:`Fisher et al. 2019<Fisheretal2019>`). Thus, :ref:`Hauser et al. (2023)<Hauseretal2023>` introduced an additional function to force time evolving foliar C:N ratios to vary with atmospheric CO\ :sub:`2` concentrations as shown in Eq. :eq:`time-evolv target leaf CN` (section :numref:`rst_CN Pools`).
 
- .. math::
-   target_{CN} = target_{CN,ref} + max[(CN_{CO_2,slope} . log(CO_{2} / CO_{2,ref})), 0]
-
-where :math:`target_{CN,ref}` is the target C:N ratio for a PFT at the reference CO\ :sub:`2` concentration (:math:`CO_{2,ref}`), and :math:`CN_{CO_2,slope}` is a parameter which controls the sensitivity of foliar C:N ratios to atmospheric CO\ :sub:`2` concentrations. In CLM6 we set :math:`CN_{CO_2,slope} = 0` to turn off this feature in default simulations.
-
 Response of C expenditure to Nitrogen uptake cost
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The environmental cost of Nitrogen (:math:`N_{cost,tot}`) is used to determine :math:`\gamma_{FUN}`.
