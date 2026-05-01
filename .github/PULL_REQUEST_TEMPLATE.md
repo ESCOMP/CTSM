@@ -15,7 +15,7 @@ the list of common problems to watch out for
 **Contributors other than yourself, if any:**
 - [ ] (Replace this text and add more list items as needed)
 
-**CTSM Issues Fixed:**
+**CTSM issues resolved or otherwise addressed:**
 - (Replace this text, including GitHub issue #, and add more list items as needed)
 
 **Are answers expected to change? If so, in what way?**
@@ -33,10 +33,10 @@ the list of common problems to watch out for
 
 ### Requirements before merge:
 - [ ] I have followed the [CTSM contribution guidelines](https://github.com/ESCOMP/CTSM/blob/master/CONTRIBUTING.md).
+<!-- Delete all list items below if this PR is purely Tech Note and/or User's Guide updates -->
 - [ ] The code in this PR branch builds with no errors.
 - [ ] The code in this PR branch runs with no errors. **Briefly describe tested configuration(s):**
 - [ ] This either (a) does not change answers, (b) it only changes answers at roundoff level, or (c) I have performed a scientific evaluation of the answer changes. **Which?:**
 <!-- If (c) above, include your analyses in the "Description of changes" section. -->
-<!-- Delete the list items below if this PR is purely Tech Note and/or User's Guide updates -->
 - [ ] I have checked whether this PR creates a need to update the CLM documentation [Tech Note](https://escomp.github.io/CTSM/tech_note/index.html) or [User's Guide](https://escomp.github.io/CTSM/users_guide/index.html). **If it does, describe:**
 - [ ] This PR either (a) does not create a need to update the documentation or (b) includes required documentation updates (see [guidelines for contributing documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines)).
