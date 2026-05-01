@@ -40,7 +40,7 @@ Growth respiration is thus only calculated on the part of the carbon uptake that
 
 Cost of Nitrogen Fixation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Nitrogen fixation rates are demperature dependent. In CLM6 the carbon cost of nitrogen fixation was derived from emperical function fit to data from a greenhouse experiment measuring nitrogen fixation by woody plants from :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`.  CLM5 used a different emperical function to describe the temperature dependence of nitrogenase activity from :ref:`Houlton et al. (2008)<Houltonetal2008>`. 
+Nitrogen fixation rates are temperature dependent. In CLM6 the carbon cost of nitrogen fixation was derived from an empirical function fit to data from a greenhouse experiment measuring nitrogen fixation by woody plants from :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`.  CLM5 used a different empirical function to describe the temperature dependence of nitrogenase activity from :ref:`Houlton et al. (2008)<Houltonetal2008>`. 
 
 This Bytnerowicz formulation (:math:`F_B`) defines a temperature dependent N fixation rate function as: 
 
