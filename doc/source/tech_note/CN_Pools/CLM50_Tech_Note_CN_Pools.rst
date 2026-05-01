@@ -38,7 +38,7 @@ As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\tex
 
 where :math:`\text{C:N}_{\text{target}}^\text{pft}` is the time-invarying base target leaf C\:N that depends on PFT, :math:`\text{C:N}_{\text{slope}}^{\text{CO2}}` (unitless) is the slope of the function, :math:`\text{CO2}_{\text{atm}}` is atmospheric CO\ :sub:`2` in parts per million by volume (ppmv), and :math:`\text{CO2}_{\text{atm}}^{\text{base}}` is the base CO\ :sub:`2` (ppmv) above which atmospheric CO\ :sub:`2` begins to scale the target leaf C\:N (see :numref:`Table PFT target leaf CN parameters`).
 
-The optional time-evolving target leaf C\:N was documented in :ref:`Hauser et al. (2023) <Hauseretal2023>`.
+The optional time-evolving target leaf C\:N was documented in :ref:`Hauser et al. (2023) <Hauseretal2023>`, and its current default is off by setting :math:`\text{C:N}_{\text{slope}}^{\text{CO2}} = 0`.
 
 .. _Table PFT target leaf CN parameters:
 
