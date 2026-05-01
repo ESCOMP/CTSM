@@ -732,18 +732,18 @@ Thermal conductivity :math:`\lambda _{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow
    \lambda _{i} = \left\{
    \begin{array}{lr}
    0.023 + 0.234(\rho _{sno,\, i} /1000) &\qquad \rho _{sno,\, i} <= 156 \\
-   0.138 - 1.01(\rho _{sno,\, i} /1000) + 3.233((\rho _{sno,\, i} /1000)^2) &\qquad \rho _{sno,\, i} > 156
+   0.138 - 1.01(\rho _{sno,\, i} /1000) + 3.233(\rho _{sno,\, i} /1000)^2 &\qquad \rho _{sno,\, i} > 156
    \end{array}\right\} 
 
 
-With the bulk density of snow :math:`\rho _{sno,\, i}` (kg m\ :sup:`-3`) calculated as the mass of ice and liquid water per unit volume of snow layer 
+with the bulk density of snow :math:`\rho _{sno,\, i}` (kg m\ :sup:`-3`) calculated as the mass of ice and liquid water per unit volume of snow layer 
 
 .. math::
    :label: 6.88
 
    \rho _{sno,\, i} =\frac{w_{ice,\, i} +w_{liq,\, i} }{\Delta z_{i} } .
    
-Previou versions of CLM used the :ref:`Jordan (1991) <Jordan1991>` parameterization for snow thermal conductivity, which uses the thermal conductivity of air and the bulk density of snow as: 
+Previous versions of CLM used the :ref:`Jordan (1991) <Jordan1991>` parameterization for snow thermal conductivity, which uses the thermal conductivity of air and the bulk density of snow as: 
 
 .. math::
    :label: 6.89
