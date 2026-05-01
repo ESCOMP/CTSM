@@ -28,7 +28,7 @@ As of CLM5, vegetation tissues have a flexible stoichiometry, as described in :r
 As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\text{target}}^{\text{pft,CO2}}`, as a logarithmic function of atmospheric CO\ :sub:`2` that we denote :math:`\text{C:N}_{\text{perturb}}^{\text{CO2}}`:
 
 .. math::
-  :label: time-evolving target leaf C\:N
+  :label: time-evolv target leaf CN
 
   \begin{split}
   \text{C:N}_{\text{perturb}}^{\text{CO2}} &= \text{C:N}_{\text{slope}}^{\text{CO2}} \cdot \ln\left(\frac{\text{CO2}_{\text{atm}}}{\text{CO2}_{\text{atm}}^{\text{base}}}\right) \\
