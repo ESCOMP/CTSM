@@ -61,7 +61,7 @@ The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and i
 \ Extra-tropical: :math:`T_{min}` =−2.04, :math:`T_{opt}` =32.10, and :math:`T_{max}` =43.98. 
 
 
-The Houlton function used in CLM5 the cost of fixation (:math:`N_{cost,fix}`) is calculated as:
+The Houlton function used in CLM5 the cost of fixation (:math:`N_{cost,fix}`) calculated as:
 
  .. math::
 
