@@ -1,0 +1,521 @@
+!------------------------------------------------------------------------
+! This file is used to modify datm.streams.xml generated in $RUNDIR
+! Entries should have the form
+!  <streamname>:<stream_variable>= <new stream_value> (NO Quotes!!!)
+! The following are accepted values for a stream named foo
+!  foo:meshfile = character string
+!  foo:datafiles = comma separated string of full pathnames (e.g. file1,file2,file3...)
+!  foo:datavars = comma separated string of field pairs  (e.g. foo foobar,foo2 foobar2...)
+!  foo:taxmode = one of [cycle, extend, limit]
+!  foo:tintalgo = one of [lower,upper,nearest,linear,coszen]
+!  foo:readmode = single (only suported mode right now)
+!  foo:mapalgo = one of [bilinear,redist,nn,consf,consd,none]
+!  foo:dtlimit = real (1.5 is default)
+!  foo:year_first = integer
+!  foo:year_last = integer
+!  foo:year_align = integer
+!  foo:vectors = null or the names of the vector fields in the model (i.e. Sa_u:Sa_v)
+!  foo:lev_dimname: = one of [null,name of level dimenion name]
+!  foo:offset = integer
+! As an example:
+!   foo:year_first = 1950
+! would change the stream year_first stream_entry to 1950 for the foo stream block
+! NOTE: multi-line inputs are enabled by adding a \ at the end of the line
+! As an emaple:
+! foo:datafiles=foo1,foo2, \
+!     foo3
+! Will yield the following new entry for datafiles in stream foo
+!   <datafiles>
+!      <file>foo1</file>
+!      <file>foo2</file>
+!      <file>foo3</file>
+!   </datafiles>
+!------------------------------------------------------------------------
+co2tseries.cmip6_20tr:datafiles=/glade/derecho/scratch/slevis/temp_work/WIEMIP/co2/WIEMIP_1pctco2_FaIR_input_20260331_to_netcdf_20260420.nc
+co2tseries.cmip6_20tr:year_first=1850
+co2tseries.cmip6_20tr:year_last=1850
+co2tseries.cmip6_20tr:year_align=1850
+co2tseries.cmip6_20tr:datavars=co2 Sa_co2diag
+
+presaero.hist:year_first=1850
+presaero.hist:year_last=1850
+presaero.hist:year_align=1850
+
+preso3.hist:year_first=1850
+preso3.hist:year_last=1850
+preso3.hist:year_align=1850
+
+CLMCRUJRA2024b.Solar:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc
+CLMCRUJRA2024b.Solar:mapalgo=bilinear
+CLMCRUJRA2024b.Solar:year_first=1850
+CLMCRUJRA2024b.Solar:year_last=2000
+CLMCRUJRA2024b.Solar:year_align=1850
+CLMCRUJRA2024b.Solar:datafiles=\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Solar.2000.nc
+
+CLMCRUJRA2024b.Precip:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc
+CLMCRUJRA2024b.Precip:mapalgo=bilinear
+CLMCRUJRA2024b.Precip:year_first=1850
+CLMCRUJRA2024b.Precip:year_last=2000
+CLMCRUJRA2024b.Precip:year_align=1850
+CLMCRUJRA2024b.Precip:datafiles=\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.Precip.2000.nc
+
+CLMCRUJRA2024b.TPQW:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc
+CLMCRUJRA2024b.TPQW:mapalgo=bilinear
+CLMCRUJRA2024b.TPQW:year_first=1850
+CLMCRUJRA2024b.TPQW:year_last=2000
+CLMCRUJRA2024b.TPQW:year_align=1850
+CLMCRUJRA2024b.TPQW:datafiles=\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/UKESM1-0-LL_1deg/clmforc.wiemip_UKESM1-0-LL_clim3_50perc_1pctCO2.TPQWL.2000.nc
+
