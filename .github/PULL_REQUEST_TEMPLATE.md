@@ -38,5 +38,5 @@ the list of common problems to watch out for
 - [ ] The code in this PR branch runs with no errors. **Briefly describe tested configuration(s):**
 - [ ] This either (a) does not change answers, (b) it only changes answers at roundoff level, or (c) I have performed a scientific evaluation of the answer changes. **Which?:**
 <!-- If (c) above, include your analyses in the "Description of changes" section. -->
-- [ ] I have checked whether this PR creates a need to update the CLM documentation [Tech Note](https://escomp.github.io/CTSM/tech_note/index.html) or [User's Guide](https://escomp.github.io/CTSM/users_guide/index.html). **If it does, describe:**
+- [ ] I have reviewed relevant parts of the CLM documentation [Tech Note](https://escomp.github.io/CTSM/tech_note/index.html) or [User's Guide](https://escomp.github.io/CTSM/users_guide/index.html) to determine if anything needs to be changed or added. **If it does, describe:**
 - [ ] This PR either (a) does not create a need to update the documentation or (b) includes required documentation updates (see [guidelines for contributing documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines)). **Which?:**
