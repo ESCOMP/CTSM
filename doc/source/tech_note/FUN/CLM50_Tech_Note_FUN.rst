@@ -6,7 +6,7 @@ Fixation and Uptake of Nitrogen (FUN)
 Introduction
 -----------------
 
-The Fixation and Uptake of Nitrogen model (FUN) is based on work by :ref:`Fisher et al. (2010)<Fisheretal2010>`, :ref:`Brzostek et al. (2014)<Brzosteketal2014>`, and :ref:`Shi et al. (2016)<Shietal2016>`, as described :ref:`Fisher et al. (2019)<Fisheretal2019>`.The concept of FUN is that in most cases, nitrogen (N) uptake requires the expenditure of energy in the form of carbon (C), and further, that there are numerous potential sources of N in the environment which a plant may exchange for C. The ratio of carbon expended to nitrogen acquired is referred to here as the cost, or exchange rate, of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
+The Fixation and Uptake of Nitrogen model (FUN) is based on work by :ref:`Fisher et al. (2010)<Fisheretal2010>`, :ref:`Brzostek et al. (2014)<Brzosteketal2014>`, and :ref:`Shi et al. (2016)<Shietal2016>`, as described in :ref:`Fisher et al. (2019)<Fisheretal2019>`.The concept of FUN is that in most cases, nitrogen (N) uptake requires the expenditure of energy in the form of carbon (C), and further, that there are numerous potential sources of N in the environment which a plant may exchange for C. The ratio of carbon expended to nitrogen acquired is referred to here as the cost, or exchange rate, of N acquisition (:math:`E_{nacq}`, gC/gN)). There are eight pathways for N uptake:
 
 1. Fixation by symbiotic bacteria in root nodules (for N fixing plants) (:math:`_{fix}`)
 2. Retranslocation of N from senescing tissues (:math:`_{ret}`)
