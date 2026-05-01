@@ -1,17 +1,19 @@
 fsurdat = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_WIEMIP_c260408.nc'
 flanduse_timeseries = ''
 
-! likely not needed since do_transient_urban=.false. w/ above
-stream_year_last_urbantv = 1850
 irrigate = .false.
-
 
 stream_fldfilename_ndep = '/glade/derecho/scratch/wwieder/temp_work/WIEMIP/ndep/fndep_clm_hist_from_input4MIPs_surfaceFluxes_C4MIP_MPI-B-1pctNdep-1-0_gn_1850-2000.nc'
 stream_meshfile_ndep = '/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc'
 stream_year_first_ndep = 1850
 model_year_align_ndep = 1850
 stream_year_last_ndep = 1850
+
 stream_year_last_popdens = 1850
+! likely not needed since do_transient_urban=.false. w/ above
+model_year_align_urbantv = 1850
+stream_year_first_urbantv = 1850
+stream_year_last_urbantv = 1850
 
 use_c13 = .false.
 use_c14 = .false.
@@ -39,4 +41,27 @@ use_hillslope_routing = .true.
 finundation_method = 'h2osfc'
 hillslope_fsat_equals_zero = .true.
 n_dom_pfts = 2
+
+!---------------------
+! History output
+!---------------------
+
+!!! TODO add any additional suggestions from Peter based on the WIEMIP data request
+
+hist_nhtfrq = 0,0
+hist_mfilt = 1,1
+hist_dov2xy = .true., .false.
+
+! average to column level for vector output
+hist_type1d_pertape = 'GRID','COLS'
+
+hist_fincl1 = 'STREAM_WATER_DEPTH','STREAM_WATER_VOLUME','FROST_TABLE'
+
+hist_fincl2 = 'H2OSFC','H2OSNO','ZWT','ZWT_PERCH','FROST_TABLE',
+'TWS','SOILLIQ','SOILICE','FSNO','FH2OSFC','ALT','QFLOOD','QLATFLOWOUT',
+'QDRAI','QOVER','QVEGT','QVEGE','QSOIL','TSOI','FINUNDATED',
+'CH4_SURF_DIFF_SAT','CH4_SURF_DIFF_UNSAT','CH4_EBUL_TOTAL_SAT',
+'CH4_EBUL_TOTAL_UNSAT','CH4_SURF_EBUL_SAT','CH4_SURF_EBUL_UNSAT',
+'CH4_SURF_AERE_SAT','CH4_SURF_AERE_UNSAT','TOTCOLCH4','CONC_CH4_SAT',
+'CONC_CH4_UNSAT','CH4_PROD_COL','CH4_OXID_COL'
 
