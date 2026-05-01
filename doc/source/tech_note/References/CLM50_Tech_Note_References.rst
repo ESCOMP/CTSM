@@ -281,7 +281,7 @@ Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from contin
 
 .. _Damseauxetal2025:
 
-Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025
+Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025.
 
 .. _Darmenovaetal2009:
 

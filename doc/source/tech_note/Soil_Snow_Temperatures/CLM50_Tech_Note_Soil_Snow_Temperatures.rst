@@ -724,8 +724,7 @@ where
    S_{r,\, i} =\left(\frac{w_{liq,\, i} }{\rho _{liq} \Delta z_{i} } +\frac{w_{ice,\, i} }{\rho _{ice} \Delta z_{i} } \right)\frac{1}{\theta _{sat,\, i} } =\frac{\theta _{liq,\, i} +\theta _{ice,\, i} }{\theta _{sat,\, i} } \le 1.
 
 
-
-Thermal conductivity :math:`\lambda _{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow in CLM6.0 is modified from :ref:`Sturm et al. (1997)<Sturmetal1997>`, as applied by :ref:`Dutch et al. (2022)<Dutchetal2022>` and :ref:`Damseaux et al. (2025)<Damseauxetal2025>`. The Sturm function uses of the bulk density of snow to determine the thermal conductivity of snow layer (:math:`_{i}`) as:
+Thermal conductivity :math:`\lambda _{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow in CLM6.0 is modified from :ref:`Sturm et al. (1997)<Sturmetal1997>`, as applied by :ref:`Dutch et al. (2022)<Dutchetal2022>` and :ref:`Damseaux et al. (2025)<Damseauxetal2025>`. The Sturm function uses the bulk density of snow to determine the thermal conductivity of snow layer (:math:`_{i}`) as:
 
 .. math::
    :label: 6.87
@@ -753,7 +752,7 @@ Previou versions of CLM used the :ref:`Jordan (1991) <Jordan1991>` parameterizat
 
 where :math:`\lambda _{air}` is the thermal conductivity of air (:numref:`Table Physical Constants`) and :math:`\rho _{sno,\, i}` calculated, as in :eq:`6.88`.
 
-The Sturm (1997) parameterization is used in CLM6 over vegetated, glacier, and lake land units, but users can choose to use the Jordan (1991) parameterization over any of these land units if desired.
+The Sturm (1997) parameterization is used in CLM6 over vegetated, glacier, and lake land units, but users can choose to use the Jordan (1991) parameterization over any of these land units. This can be accomplished through a change to the lnd_in namelist by using user_nl_clm.
 
 The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from :ref:`de Vries (1963) <deVries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
 
