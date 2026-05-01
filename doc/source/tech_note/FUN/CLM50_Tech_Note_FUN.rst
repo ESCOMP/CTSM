@@ -298,7 +298,7 @@ Thus, in CLM5, we introduce the capacity for tissue C:N ratios to be prognostic,
  .. math::
    C_{nuptake} = C_{nuptake}.\gamma_{FUN}
 
-Subsequent sensitivity tests found relatively low flexibility in the target C:N ratios resulting from this approach (:ref:`Fisher et al. 2019<Fisheretal2019>`). Thus, :ref:`Hauser et al. (2023)<Hauseretal2023>` introduced an additional function to force time evolving foliar C:N ratios to vary with atmospheric CO\ :sub:`2` concentrations as follows:
+Subsequent sensitivity tests found relatively low flexibility in the target C:N ratios resulting from this approach (:ref:`Fisher et al. 2019<Fisheretal2019>`). Thus, :ref:`Hauser et al. (2023)<Hauseretal2023>` introduced an additional function to force time evolving foliar C:N ratios to vary with atmospheric CO\ :sub:`2` concentrations as shown in Eq. :eq:`time-evolv target leaf CN` (section :numref:`rst_CN Pools`).
 
  .. math::
    target_{CN} = target_{CN,ref} + max[(CN_{CO_2,slope} . log(CO_{2} / CO_{2,ref})), 0]
