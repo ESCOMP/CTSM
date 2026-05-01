@@ -54,7 +54,7 @@ where :math:`T_{soil}` is soil temperature (°C), and :math:`T_{min}`, :math:`T_
 
     N_{cost,\ fix} = \frac{S_{fix}}{F_{B}}
 
-The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and is set as 6 gC :math:`\mathrm{gN}^{-1}`. When soil temperature falls outside the range of :math:`T_{min}` and :math:`T_{max}`, the cost of fixation is set to an arbitrarily large value (10\ :sup:`9`) to effectively suppress N fixation. Parameters for :math:`T_{min}`, :math:`T_{opt}` :math:`T_{max}` differ between tropical and extra tropical plant functional types (PFTs), following the biome specific estimates reported by :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`. Parameter values for tropical and extra-tropical PFTs are as follows:
+The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and is set as 6 gC :math:`\mathrm{gN}^{-1}`. When soil temperature falls outside the range of :math:`T_{min}` and :math:`T_{max}`, the cost of fixation is set to an arbitrarily large value (10\ :sup:`9`) to effectively suppress N fixation. Parameters for :math:`T_{min}`, :math:`T_{opt}`, :math:`T_{max}` differ between tropical and extra tropical plant functional types (PFTs), following the biome specific estimates reported by :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`. Parameter values for tropical and extra-tropical PFTs are as follows:
 
 \ Tropical: :math:`T_{min}` =7.04, :math:`T_{opt}` =33.22, and :math:`T_{max}` =45.35.
 
