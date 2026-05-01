@@ -82,3 +82,23 @@ jobs:
         with:
           name: test-build-docs-container_failed
           path: build-logs/
+
+  check-docs-style:
+    if: ${{ always() }}
+    name: Check documentation against style guide
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Disallow curly apostrophes/quotes
+        run: |
+          set +e
+          instances_of_curlies="$(grep -onE "“|”|‘|’" $(find doc -name "*.md" -or -name "*.rst"))"
+          set -e
+          if [[ "$instances_of_curlies" ]] then
+            echo -e "Instances of curly apostrophes and/or quote marks:\n${instances_of_curlies}"
+            exit 1
+          fi
+          exit 0
