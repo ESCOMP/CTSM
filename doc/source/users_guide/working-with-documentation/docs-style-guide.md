@@ -6,3 +6,17 @@
 - You can write the degree symbol ° with Opt-Shift-8 on Mac or Alt+0176 on Windows, or you can copy it from here. Note that this is different from the [masculine ordinal indicator](https://en.wikipedia.org/wiki/Ordinal_indicator) º (typed with Opt-0 on Mac). This is much cleaner and more searchable than using RestructuredText syntax to write a superscript-o!
 - Whenever possible, please give equations meaningful labels. E.g., for [eq. 2.26.2](https://escomp.github.io/ctsm-docs/versions/release-clm5.0/html/tech_note/Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.html#equation-25-2), `:label: gdds_for_cfts` would be better than `:label: 25.2`. Numeric labels become obsolete—as you can see in that example!—whenever new equations and/or sections are added. (Note that the equation numbering in the rendered HTML is automatic.)
 - Tables defined with the [:table: directive](https://docutils.sourceforge.io/docs/ref/rst/directives.html#table) can be annoying because they're very sensitive to the cells inside them being precisely the right widths, as defined by the first `====` strings. If you don't get the widths right, you'll see "Text in column margin" errors. Instead, define your tables using the `:list-table:` directive.
+
+- This uses superscript-o in Markdown math style: 30$^o$C
+- This uses superscript-o in Markdown math style: 30$^{o}$C
+- This uses superscript-o in Markdown math style: 30$ ^o$C
+- This uses superscript-o in Markdown math style: 30 $^o$C
+- This uses superscript-o in Markdown math style: 30 $ ^O$C
+- This uses superscript-o in Markdown math style: $30^o$C
+- This uses superscript-o in Markdown math style: $30 ^o$C
+- This uses superscript-o in Markdown math style: $30 ^{ o}$C
+- This uses superscript-o but is okay: $x^{ o}$C
+- This uses superscript-o in MyST text style: 30{sup}`o`
+- This uses superscript-o in MyST text style: 30 {sup}`O`
+- This uses superscript-o in MyST text style: 30 {sup}` o`
+- This uses the masculine ordinal indicator: 30ºC
