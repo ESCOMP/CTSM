@@ -13,7 +13,7 @@ the list of common problems to watch out for
 ### Specific notes
 
 **Contributors other than yourself, if any:**
-- [ ] (Replace this text and add more list items as needed)
+- (Replace this text and add more list items as needed)
 
 **CTSM issues resolved or otherwise addressed:**
 - (Replace this text, including GitHub issue #, and add more list items as needed)
