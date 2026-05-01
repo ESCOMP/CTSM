@@ -1,26 +1,42 @@
+<!-- Please fill this out to the best of your ability when opening your PR! -->
+
+<!-- **NOTE: Be sure to check your coding style against the standard
+(https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines) and review
+the list of common problems to watch out for
+(https://github.com/ESCOMP/CTSM/wiki/List-of-common-problems).** -->
+
+
 ### Description of changes
+
+<!-- Description goes here -->
 
 ### Specific notes
 
-Contributors other than yourself, if any:
+**Contributors other than yourself, if any:**
+- [ ] (Replace this text and add more list items as needed)
 
-CTSM Issues Fixed (include github issue #):
+**CTSM Issues Fixed:**
+- (Replace this text, including GitHub issue #, and add more list items as needed)
 
-Are answers expected to change (and if so in what way)?
+**Are answers expected to change? If so, in what way?**
 
-Any User Interface Changes (namelist or namelist defaults changes)?
+**Any user interface changes (namelist or namelist defaults changes)?**
 
-Does this create a need to change or add documentation? Did you do so?
+**Testing planned or performed, if any:**
+- [ ] (Replace this text and add more list items as needed)
 
-Testing performed, if any:
-(List what testing you did to show your changes worked as expected)
+<!-- (List what testing you did to show your changes worked as expected)
 (This can be manual testing or running of the different test suites)
 (Documentation on system testing is here: https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide)
-(aux_clm on derecho for intel/gnu and izumi for intel/gnu/nag/nvhpc is the standard for tags on master)
+(aux_clm on derecho for intel/gnu and izumi for intel/gnu/nag/nvhpc is the standard for tags on master) -->
 
-**NOTE: Be sure to check your coding style against the standard
-(https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines) and review
-the list of common problems to watch out for
-(https://github.com/ESCOMP/CTSM/wiki/List-of-common-problems).**
 
-**If this PR changes the CTSM web documentation, please see our [contribution guidelines for documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines).**
+### Requirements before merge:
+- [ ] I have followed the [CTSM contribution guidelines](https://github.com/ESCOMP/CTSM/blob/master/CONTRIBUTING.md).
+- [ ] The code in this PR branch builds with no errors.
+- [ ] The code in this PR branch runs with no errors. **Briefly describe tested configuration(s):**
+- [ ] This either (a) does not change answers, (b) it only changes answers at roundoff level, or (c) I have performed a scientific evaluation of the answer changes. **Which?:**
+<!-- If (c) above, include your analyses in the "Description of changes" section. -->
+<!-- Delete the list items below if this PR is purely Tech Note and/or User's Guide updates -->
+- [ ] I have checked whether this PR creates a need to update the CLM documentation [Tech Note](https://escomp.github.io/CTSM/tech_note/index.html) or [User's Guide](https://escomp.github.io/CTSM/users_guide/index.html). **If it does, describe:**
+- [ ] This PR either (a) does not create a need to update the documentation or (b) includes required documentation updates (see [guidelines for contributing documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines)).
