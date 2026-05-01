@@ -32,7 +32,6 @@ Available Carbon
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The carbon available for FUN, :math:`C_{avail}` (gC m\ :sup:`-2`) is the total canopy  photosynthetic uptake (GPP), minus the maintenance respiration fluxes (:math:`m_r`) and multiplied by the time step in seconds (:math:`\delta t`). Thus, the remainder of this chapter considers fluxes per timestep, and integrates these fluxes as they are calculated.
 
- .. math::
 
 .. math::
    :label: C_avail
