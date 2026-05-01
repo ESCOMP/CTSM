@@ -40,6 +40,9 @@ The :ref:`model history section <model-history>` section gives a synopsis of the
 - `CLM 4.5 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm4_5_ChangeLog>`_
 - `CLM 5.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/clm5_0_ChangeLog>`_
 - `CTSM 1.0 ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/ctsm1_0_ChangeLog>`_
+- `CTSM 5.2 WhatsNew file <https://github.com/ESCOMP/CTSM/blob/master/doc/WhatsNewInCTSM5.2.md>`_
+- `CTSM 5.3 WhatsNew file <https://github.com/ESCOMP/CTSM/blob/master/doc/WhatsNewInCTSM5.3.md>`_
+- `CTSM 5.4 WhatsNew file <https://github.com/ESCOMP/CTSM/blob/master/doc/WhatsNewInCTSM5.4.md>`_
 - `Latest ChangeLog file <https://github.com/ESCOMP/CTSM/blob/master/doc/ChangeLog>`_
 
 Previous release pages give similar list of changes for previous versions of the model.
