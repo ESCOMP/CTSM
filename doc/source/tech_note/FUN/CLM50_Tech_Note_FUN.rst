@@ -107,7 +107,7 @@ where :math:`k_{n,active}` varies according to whether we are considering ecto o
 
 where e = 1 pertains to the fraction of the PFT that is ectomycorrhizal, as opposed to arbuscular mycorrhizal.
 
-CLM6 corrects an error in the calculation of non-mycorrhizal uptake in CLM5, which had swapped parameter values for   :math:`k_{c,nonmyc}` and :math:`k_{n,nonmyc}` that were interited from original publication of :ref:`Brzostek et al. (2014)<Brzosteketal2014>`. 
+CLM6 corrects an error in the calculation of non-mycorrhizal uptake in CLM5, which had swapped parameter values for   :math:`k_{c,nonmyc}` and :math:`k_{n,nonmyc}` that were inherited from the original publication of :ref:`Brzostek et al. (2014)<Brzosteketal2014>`. 
 
 Resolving N cost across simultaneous uptake streams
 --------------------------------------------------------
