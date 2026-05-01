@@ -34,7 +34,10 @@ The carbon available for FUN, :math:`C_{avail}` (gC m\ :sup:`-2`) is the total c
 
  .. math::
 
-   C_{avail} = (GPP - m_r) \delta t
+.. math::
+   :label: C_avail
+
+  C_{avail} = (GPP - m_r) \delta t
 
 Growth respiration is thus only calculated on the part of the carbon uptake that remains after expenditure of C by the FUN module.
 
