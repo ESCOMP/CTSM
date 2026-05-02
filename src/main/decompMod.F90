@@ -107,6 +107,8 @@ module decompMod
      integer :: begc, endc       ! beginning and ending column index
      integer :: begp, endp       ! beginning and ending patch index
      integer :: begCohort, endCohort ! beginning and ending cohort indices
+  contains
+       procedure, public, pass(this) :: Init ! Initialize the clump values
   end type clump_type
   public clump_type
   type(clump_type),public, allocatable :: clumps(:)
@@ -150,6 +152,26 @@ contains
          call shr_abort_abort(string='allocation error for this%cid', file=sourcefile, line=__LINE__)
          return
       endif
+      ! Initialize the values to something:
+      ! beg and end indices initialized for simple addition of cells later
+
+       procinfo%nclumps   = clump_pproc
+       procinfo%cid(:)    = -1
+       procinfo%ncells    = 0
+       procinfo%nlunits   = 0
+       procinfo%ncols     = 0
+       procinfo%npatches  = 0
+       procinfo%nCohorts  = 0
+       procinfo%begg      = 1
+       procinfo%begl      = 1
+       procinfo%begc      = 1
+       procinfo%begp      = 1
+       procinfo%begCohort = 1
+       procinfo%endg      = 0
+       procinfo%endl      = 0
+       procinfo%endc      = 0
+       procinfo%endp      = 0
+       procinfo%endCohort = 0
   end subroutine InitAllocate
 
   !-----------------------------------------------------------------------
@@ -833,6 +855,30 @@ contains
      end if
 
   end subroutine decompmod_allocate_clumps
+
+  !-----------------------------------------------------------------------
+  elemental subroutine Init( this )
+     ! Initialize a clump_type object to default values
+     class(clump_type), intent(inout) :: this
+
+     this%owner     = -1
+     this%ncells    = 0
+     this%nlunits   = 0
+     this%ncols     = 0
+     this%npatches  = 0
+     this%nCohorts  = 0
+     this%begg      = 1
+     this%begl      = 1
+     this%begc      = 1
+     this%begp      = 1
+     this%begCohort = 1
+     this%endg      = 0
+     this%endl      = 0
+     this%endc      = 0
+     this%endp      = 0
+     this%endCohort = 0
+
+  end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine decompmod_allocate_gindex( endg )

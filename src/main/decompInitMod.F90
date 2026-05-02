@@ -1,4 +1,4 @@
-module decompInitMod
+ module decompInitMod
 
 #include "shr_assert.h"
 
@@ -89,43 +89,9 @@ contains
     call decompInit_lnd_allocate( ier )
     if (ier /= 0) return
 
-    ! Initialize procinfo and clumps
-    ! beg and end indices initialized for simple addition of cells later
+    ! Initialize clumps
 
-    procinfo%nclumps   = clump_pproc
-    procinfo%cid(:)    = -1
-    procinfo%ncells    = 0
-    procinfo%nlunits   = 0
-    procinfo%ncols     = 0
-    procinfo%npatches  = 0
-    procinfo%nCohorts  = 0
-    procinfo%begg      = 1
-    procinfo%begl      = 1
-    procinfo%begc      = 1
-    procinfo%begp      = 1
-    procinfo%begCohort = 1
-    procinfo%endg      = 0
-    procinfo%endl      = 0
-    procinfo%endc      = 0
-    procinfo%endp      = 0
-    procinfo%endCohort = 0
-
-    clumps(:)%owner     = -1
-    clumps(:)%ncells    = 0
-    clumps(:)%nlunits   = 0
-    clumps(:)%ncols     = 0
-    clumps(:)%npatches  = 0
-    clumps(:)%nCohorts  = 0
-    clumps(:)%begg      = 1
-    clumps(:)%begl      = 1
-    clumps(:)%begc      = 1
-    clumps(:)%begp      = 1
-    clumps(:)%begCohort = 1
-    clumps(:)%endg      = 0
-    clumps(:)%endl      = 0
-    clumps(:)%endc      = 0
-    clumps(:)%endp      = 0
-    clumps(:)%endCohort = 0
+    call clumps(:)%Init()
 
     ! assign clumps to proc round robin
     cid = 0

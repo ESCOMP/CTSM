@@ -45,6 +45,7 @@ contains
     call set_decomp_info( ni=ni, nj=nj )
     call decompmod_allocate_gindex( ni*nj )
     call procinfo%AllocateAfterGCellSet()
+    call clumps(:)%Init()
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================
