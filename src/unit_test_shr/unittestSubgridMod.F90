@@ -180,7 +180,7 @@ contains
     !
     ! USES:
     use decompMod    , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, nglob_x, nglob_y
-    use decompMod    , only : clumps, nclumps, decompmod_allocate_clumps
+    use decompMod    , only : clumps, nclumps, decompmod_allocate_clumps, decompmod_allocate_gindex
     use spmdMod      , only : iam
     ! !ARGUMENTS:
     integer, intent(in), optional :: ni ! number of grid cells in the x direction;
