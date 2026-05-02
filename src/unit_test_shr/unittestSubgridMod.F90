@@ -202,6 +202,10 @@ contains
 
     if ( present(ni) .and. present(nj) ) then
        gi = ni * nj
+       ! Assume one landunit per grid cell, one column per landunit and one patch per column
+       li = gi
+       ci = li
+       pi = ci
     end if
     procinfo%begg = begg
     procinfo%endg = gi
@@ -224,9 +228,10 @@ contains
        nglob_x = 1
        nglob_y = procinfo%ncells
     end if
-    allocate(procinfo%ggidx(nglob_x*nglob_y))
-    allocate(procinfo%gi(nglob_x*nglob_y))
-    allocate(procinfo%gj(nglob_x*nglob_y))
+
+    call decompmod_allocate_gindex( ni*nj )
+    call procinfo%AllocateAfterGCellSet()
+    call clumps(:)%Init()
 
     ! Currently leaving cohort info unset because it isn't needed in any unit tests. We
     ! may have to fix this in the future.
