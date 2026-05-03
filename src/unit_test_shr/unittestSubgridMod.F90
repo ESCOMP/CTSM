@@ -229,7 +229,6 @@ contains
        nglob_y = procinfo%ncells
     end if
 
-    call decompmod_allocate_gindex( ni*nj )
     call procinfo%AllocateAfterGCellSet()
     call clumps(:)%Init()
 
