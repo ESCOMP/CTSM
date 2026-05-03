@@ -465,8 +465,13 @@ contains
 
      do fc = 1, num_hydrologyc
         c = filter_hydrologyc(fc)
-        ! [PORTED by Hui Tang: add NVP drainage to total infiltration into soil layer 1]
-        qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c) + qflx_nvp_drain_col(c)
+        ! [PORTED by Hui Tang: add NVP drainage to total infiltration into soil layer 1;
+        !  guard with use_nvp to avoid NaN when qflx_nvp_drain_col is uninitialised]
+        if (use_nvp) then
+           qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c) + qflx_nvp_drain_col(c)
+        else
+           qflx_infl(c) = qflx_in_soil_limited(c) + qflx_h2osfc_drain(c)
+        end if
      end do
 
      end associate
