@@ -272,6 +272,7 @@ contains
     ! Verify
     expected = sum(values)/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_basic
 
   @Test
@@ -296,6 +297,7 @@ contains
     ! Verify
     expected = sum(values(2:4))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_reset1
 
   @Test
@@ -320,6 +322,7 @@ contains
     ! Verify
     expected = sum(values(3:5))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_reset2
 
   @Test
@@ -341,6 +344,7 @@ contains
 
     ! Verify
     @assertEqual(spval, val_output)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_wrongTime
 
   @Test
@@ -366,6 +370,7 @@ contains
     ! Verify
     expected = sum(values(accum_period+1:2*accum_period))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_onlyLatestPeriod
 
   @Test
@@ -392,6 +397,7 @@ contains
     ! Verify
     expected = sum(values(accum_period+1:2*accum_period))/accum_period
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_onlyLatestPeriod_redundantReset
 
   @Test
@@ -422,6 +428,7 @@ contains
     ! Verify
     expected = sum(values(5:6))/2._r8
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_newlyActive
 
   @Test
@@ -449,6 +456,7 @@ contains
 
     ! Verify
     @assertEqual(values(accum_period), val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_veryNewlyActive
 
   @Test
@@ -481,6 +489,7 @@ contains
     ! Verify
     expected = (values(1) + values(2) + values(5) + values(6))/4._r8
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_activeInactiveActive
 
   @Test
@@ -516,6 +525,7 @@ contains
     expected_lev2 = sum(values_lev2(4:6))/accum_period
     @assertEqual(expected_lev1, val_output(1), tolerance=tol)
     @assertEqual(expected_lev2, val_output(2), tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine timeavg_multiLevel
 
   ! ------------------------------------------------------------------------
@@ -542,6 +552,7 @@ contains
 
     ! Verify
     @assertEqual(my_value, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_oneStep
 
   @Test
@@ -567,6 +578,7 @@ contains
     expected_ts2 = (expected_ts1 + values(2))/2._r8
     expected_ts3 = (2._r8 * expected_ts2 + values(3)) / 3._r8
     @assertEqual(expected_ts3, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_beforePeriod
 
   @Test
@@ -594,6 +606,7 @@ contains
     expected_ts4 = (2._r8 * expected_ts3 + values(4)) / 3._r8
     expected_ts5 = (2._r8 * expected_ts4 + values(5)) / 3._r8
     @assertEqual(expected_ts5, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_afterPeriod
 
   @Test
@@ -618,6 +631,7 @@ contains
     ! Verify
     expected_ts5 = (values(4) + values(5)) / 2._r8
     @assertEqual(expected_ts5, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_afterPeriod_reset
 
   @Test
@@ -642,6 +656,7 @@ contains
 
     ! Verify
     @assertEqual(values(5), val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_afterPeriod_resetWhileInactive
 
   @Test
@@ -671,6 +686,7 @@ contains
     expected_ts6 = (2._r8 * expected_ts5 + values(6)) / 3._r8
     expected_ts7 = (2._r8 * expected_ts6 + values(7)) / 3._r8
     @assertEqual(expected_ts7, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_newlyActive
 
   @Test
@@ -703,6 +719,7 @@ contains
     expected_ts6 = (2._r8 * expected_ts5 + values(6)) / 3._r8
     expected_ts7 = (2._r8 * expected_ts6 + values(7)) / 3._r8
     @assertEqual(expected_ts7, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runmean_activeInactiveActive
 
   ! ------------------------------------------------------------------------
@@ -730,6 +747,7 @@ contains
     ! Verify
     expected = sum(values)
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runaccum_basic
 
   @Test
@@ -754,6 +772,7 @@ contains
     ! Verify
     expected = sum(values(4:5))
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runaccum_reset
 
   @Test
@@ -783,6 +802,7 @@ contains
     ! Verify
     expected = sum(values(4:5))
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runaccum_newlyActive
 
   @Test
@@ -815,6 +835,7 @@ contains
     ! Verify
     expected = values(1) + values(4) + values(5)
     @assertEqual(expected, val_output, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine runaccum_activeInactiveActive
 
   ! ------------------------------------------------------------------------
@@ -858,6 +879,7 @@ contains
     expected2 = sum(values2)
     @assertEqual(expected1, val_output1, tolerance=tol)
     @assertEqual(expected2, val_output2, tolerance=tol)
+    call unittest_subgrid_teardown()
   end subroutine multipleFields
 
   ! ------------------------------------------------------------------------
@@ -896,6 +918,7 @@ contains
     ! Verify
     reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
+    call unittest_subgrid_teardown()
   end subroutine markreset_nopoints_nolevels
 
   @Test
@@ -931,6 +954,7 @@ contains
     ! Verify
     reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
+    call unittest_subgrid_teardown()
   end subroutine markreset_1point_nolevels
 
   @Test
@@ -967,7 +991,8 @@ contains
     ! Verify
     reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
-end subroutine markreset_allpoints_1level
+    call unittest_subgrid_teardown()
+  end subroutine markreset_allpoints_1level
 
 @Test
 subroutine markreset_allpoints_alllevels(this)
@@ -1003,6 +1028,7 @@ subroutine markreset_allpoints_alllevels(this)
   ! Verify
   reset_output_int = merge(1, 0, reset_output)
   @assertEqual(expected, reset_output_int)
+  call unittest_subgrid_teardown()
 end subroutine markreset_allpoints_alllevels
 
 
