@@ -16,8 +16,9 @@ module test_decompMod
      procedure :: create_simpleSingleDecomp
   end type TestDecompMod
 
+  ! Make sure sizes are different in order to catch certain type of errors
   integer, parameter :: ni = 2
-  integer, parameter :: nj = 2
+  integer, parameter :: nj = 3
 
 contains
 
@@ -41,9 +42,19 @@ contains
   subroutine create_simpleSingleDecomp(this)
     use unittestSubgridMod, only : set_decomp_info
     class(TestDecompMod), intent(inout) :: this
+    integer :: i, j, g
 
     call set_decomp_info( ni=ni, nj=nj )
     call decompmod_allocate_gindex( ni*nj )
+    ! Fill the gi/gj arrays
+    g = 0
+    do j = 1, nj
+      do i = 1, ni
+        g = g + 1
+        procinfo%gi = i
+        procinfo%gj = j
+      end do
+    end do
 
   end subroutine create_simpleSingleDecomp
   ! ========================================================================
@@ -164,6 +175,24 @@ contains
     @assertEqual(j, -1)
 
   end subroutine test_calc_globalxy_fails_when_not_allocated
+
+  @Test
+  subroutine test_calc_global_index_fromij(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: expect_g
+    integer :: i, j, g
+    ! Expected indices is just the pattern on the simple 2D grid with no mask
+    expect_g = 0
+    do j = 1, nj
+      do i = 1, ni
+        expect_g = expect_g + 1
+        g = procinfo%calc_global_index_fromij( expect_g )
+        write(*,*) 'i = ', i, ' j = ', j, ' expect_g = ', expect_g, ' g = ', g
+        @assertEqual(g, expect_g)
+      end do
+    end do
+  end subroutine test_calc_global_index_fromij
 
   @Test
   subroutine test_calc_ijindices_from_full_global_index_fails(this)
