@@ -154,21 +154,3 @@ reStructuredText: Common error messages and how to handle them
 --------------------------------------------------------------
 
 See :ref:`common-rst-errors`.
-
-- This uses superscript-o in reStructuredText text style: 30\ :sup:`o`
-- This uses superscript-o in reStructuredText text style: 30 :sup:`O`
-- But this is okay: x\ :sup:`O`
-- And this is too: y :sup:`o`
-- This uses superscript-o in reStructuredText math style: 30 :math:`^O`
-- This uses superscript-o in reStructuredText math style: 30 :math:`^o`
-- This uses superscript-o in reStructuredText math style: 30\ :math:`^o`
-- This uses superscript-o in reStructuredText math style: 30\ :math:` ^o`
-- This uses superscript-o in reStructuredText math style: 30\ :math:`^{o}`
-- This uses superscript-o in reStructuredText math style: 30\ :math:` ^{o}`
-- This uses superscript-o in reStructuredText math style: 30\ :math:`^{ o}`
-- This uses superscript-o in reStructuredText math style: \ :math:`30^o`
-- This uses superscript-o in reStructuredText math style: \ :math:` 30^o`
-- This uses superscript-o in reStructuredText math style: \ :math:`30 ^o`
-- This uses superscript-o in reStructuredText math style: \ :math:`30 ^{o}`
-- This uses superscript-o in reStructuredText math style: \ :math:`30 ^{ o}`
-- This uses superscript-o in reStructuredText math style but is okay: z\ :math:`^o`
