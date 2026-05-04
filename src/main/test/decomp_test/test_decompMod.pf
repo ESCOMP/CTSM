@@ -51,8 +51,8 @@ contains
     do j = 1, nj
       do i = 1, ni
         g = g + 1
-        procinfo%gi = i
-        procinfo%gj = j
+        procinfo%gi(g) = i
+        procinfo%gj(g) = j
       end do
     end do
 
