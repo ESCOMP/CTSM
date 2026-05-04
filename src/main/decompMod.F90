@@ -233,7 +233,7 @@ contains
        !write(iulog,*) 'WARNING: Global gi index is out of bounds'
        return
     end if
-    if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_x) ) then
+    if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_y) ) then
        !write(iulog,*) 'this%gj(g) = ', this%gj(g)
        !write(iulog,*) 'WARNING: Global gj index is out of bounds'
        return
