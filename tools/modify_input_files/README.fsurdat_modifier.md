@@ -5,7 +5,7 @@ Current applications are limited to the simplest CTSM(SP) mode, so bgc, fire,
 urban, vic, lake, transient, and crop-related variables in the fsurdat file
 remain unchanged.
 
-It differs from modify_singlept_site_neon.py in that the latter specifically
+It differs from `modify_singlept_site_neon.py` in that the latter specifically
 modifies soil properties of single-point surface datasets.
 
 It also differs from the subset_data tool in that the latter subsets fsurdat
@@ -51,13 +51,13 @@ conda activate ctsm_pylib
 ```
 (Use "deactivate" to reverse the latter.)
 
-2) Copy, then modify the configure file named modify_fsurdat_template.cfg, which contains all the arguments needed by the script.
+2) Copy, then modify the configure file named `modify_fsurdat_template.cfg`, which contains all the arguments needed by the script.
 
-3) Run the script ./fsurdat_modifier pointing to the copied/modified .cfg file, e.g. modify_users_copy.cfg
+3) Run the script `./fsurdat_modifier` pointing to the copied/modified `.cfg` file, e.g. `modify_users_copy.cfg`
 ```
 ./fsurdat_modifier modify_users_copy.cfg
 ```
-See modify_fsurdat_template.cfg for required and optional settings.
+See `modify_fsurdat_template.cfg` for required and optional settings.
 
-4) Use the --verbose option to see progress output on your screen.
+4) Use the `--verbose option` to see progress output on your screen.
 
