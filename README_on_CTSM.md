@@ -20,24 +20,22 @@ For Code of Conduct (how to work with each other on the CTSM project):
 https://github.com/ESCOMP/CTSM?tab=coc-ov-file
 
 INFORMATION ON THE CMEPS DRIVER:
-
-https://escomp.github.io/CMEPS
-
-https://earthsystemmodeling.org/nuopc/
+- https://escomp.github.io/CMEPS
+- https://earthsystemmodeling.org/nuopc/
 
 IMPORTANT NOTE ON CESM CHECKOUT VERSUS A CTSM CHECKOUT:
 
 If this is the top level directory from making a clone of CTSM the 
 directory structure is a little bit different than if CTSM is from 
 a clone of the entire CESM. If this is part of CESM this directory
-will be under components/clm alongside other CESM component models.
+will be under `components/clm` alongside other CESM component models.
 For a CTSM checkout this will be the top level directory.
 
-Other documentation will refer to $CTSMROOT and it means the directory
+Other documentation will refer to `$CTSMROOT` and it means the directory
 that this file is at. CIMEROOT is the directory where "cime" is for
-this checkout. For a CESM checkout $CIMEROOT will be the "cime" directory
-beneath the top level directory. For a CTSM checkout $CIMEROOT will
-be $CTSMROOT/cime.
+this checkout. For a CESM checkout `$CIMEROOT` will be the "cime" directory
+beneath the top level directory. For a CTSM checkout `$CIMEROOT` will
+be `$CTSMROOT/cime`.
 
 IMPORTANT NOTE ABOUT (deprecated)
 
