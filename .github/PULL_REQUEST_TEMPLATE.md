@@ -15,7 +15,7 @@ the list of common problems to watch out for
 **Contributors other than yourself, if any:**
 - (Replace this text and add more list items as needed)
 
-**CTSM issues resolved or otherwise addressed:**
+**CTSM issues resolved or otherwise addressed, if any:**
 - (Replace this text, including GitHub issue #, and add more list items as needed)
 <!-- Put each issue on its own line, like "Resolves #3986" or "Contributes to #3151". -->
 <!-- "Resolves" is a magic word; see them all at https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/using-keywords-in-issues-and-pull-requests#linking-a-pull-request-to-an-issue -->
