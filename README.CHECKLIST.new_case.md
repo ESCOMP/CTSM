@@ -1,25 +1,25 @@
-$CTSMROOT/README.CHECKLIST.new\_case                       03/01/2021
+`$CTSMROOT/README.CHECKLIST.new_case`                       03/01/2021
 
 This is a check list of things to do when setting up a new case in order to help ensure everything is correct. There are lots of tiny details that need to be right and it's easy to get something wrong. So the first screening to make sure it's right is for you to carefully check through your case and make sure it's right.
 
-The following assumes you have created a new case and are in it's case directory.
+The following assumes you have created a new case and are in its case directory.
 
 General Checklist to always do:
 
-- Make sure CLM\_ env settings are correct: ./xmlquery \-p CLM
-- Make sure you are using the correct CLM\_PHYSICS\_VERSION: ./xmlquery \-p CLM\_PHYSICS\_VERSION
-- Make sure you are running the appropriate overall CLM vegetation model, i.e. the "-bgc" option of either Satellite Phenology (sp) or Full BioGeoChemistry (bgc) or FATES (fates): ./xmlquery \-p CLM\_BLDNML\_OPTS
-- If you are running the bgc model, check to see if you should be running the prognostic crop model: option \-crop in CLM\_BLDNML\_OPTS
-- Make sure the LND\_TUNING\_MODE is correct: ./xmlquery LND\_TUNING\_MODE
-- For an "I compset" make sure you are running over the correct forcing years: usually ./xmlquery \-p DATM\_YR
-- For an "I compset" make sure the DATM streams are operating over the correct years: look at the CaseDocs/datm.streams.xml file
-- First and align year for streams should be the start year of a historical simulation: ./xmlquery RUN\_STARTDATE; grep stream\_year\_first CaseDocs/lnd\_in; grep model\_year\_align CaseDocs/lnd\_in
-- Last year for streams should be the last year you are going to run to (or beyond it): grep stream\_year\_last CaseDocs/lnd\_in
+- Make sure `CLM_` environment settings are correct: `./xmlquery -p CLM`
+- Make sure you are using the correct `CLM_PHYSICS_VERSION`: `./xmlquery -p CLM_PHYSICS_VERSION`
+- Make sure you are running the appropriate overall CLM vegetation model, i.e. the `-bgc` option of either Satellite Phenology (`sp`) or Full BioGeoChemistry (`bgc`) or FATES (`fates`): `./xmlquery -p CLM_BLDNML_OPTS`
+- If you are running the `bgc` model, check to see if you should be running the prognostic crop model: option `-crop` in `CLM_BLDNML_OPTS`
+- Make sure the `LND_TUNING_MODE` is correct: `./xmlquery LND_TUNING_MODE`
+- For an "`I` compset" make sure you are running over the correct forcing years: usually `./xmlquery -p DATM_YR`
+- For an "`I` compset" make sure the DATM streams are operating over the correct years: look at the `CaseDocs/datm.streams.xml` file
+- First and align year for streams should be the start year of a historical simulation: `./xmlquery RUN_STARTDATE; grep stream_year_first CaseDocs/lnd_in; grep model_year_align CaseDocs/lnd_in`
+- Last year for streams should be the last year you are going to run to (or beyond it): `grep stream_year_last CaseDocs/lnd_in`
 - Make sure you are starting from appropriate spunup initial conditions:
-    - Check the run-type with: ./xmlquery RUN\_TYPE
-    - Check finidat for a startup or hybrid simulation: grep finidat CaseDocs/lnd\_in
-    - Check nrevsn for a branch simulation: grep nrevsn CaseDocs/lnd\_in
-- Run for a month (or some short period) and go over the log files and especially the settings and files read in them: for an I case you especially want to look at the lnd.log and atm.log files
+    - Check the run-type with: `./xmlquery RUN_TYPE`
+    - Check finidat for a startup or hybrid simulation: `grep finidat CaseDocs/lnd_in`
+    - Check nrevsn for a branch simulation: `grep nrevsn CaseDocs/lnd_in`
+- Run for a month (or some short period) and go over the log files and especially the settings and files read in them: for an `I` case you especially want to look at the `lnd.log` and `atm.log` files
 
 Some other suggestions on things that can be done:
 
