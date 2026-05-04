@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.037 multiple 05/04/2026 Fix for FATES year-boundary restart issue
        ctsm5.4.036 multiple 04/27/2026 Complete the FATES-CLM nitrogen coupling
        ctsm5.4.035     erik 04/26/2026 Merge b4b-dev to master
        ctsm5.4.034  afoster 04/22/2026 bug fix to the FATES land use driver input code
