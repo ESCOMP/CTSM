@@ -19,7 +19,7 @@ cmake ../
 make
 ```
 
-The `cprnc` README is embedded below for your convenience.
+The `cprnc` README is embedded below for your convenience. Note that this is for the version included with CTSM (via CIME), which might differ from the version (if any) available on your machine.
 
 ```{include} ../../../../cime/CIME/non_py/cprnc/README.md
 ```
