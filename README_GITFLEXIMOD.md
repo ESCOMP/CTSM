@@ -12,21 +12,21 @@ To obtain the CTSM code you need to do the following:
 
     This will create a directory `my_ctsm_sandbox/` in your current working directory.
 
-2.  Run **./bin/git-fleximod update**. :
+2.  Run `./bin/git-fleximod update`:
 
         cd my_ctsm_sandbox
         ./bin/git-fleximod update
         ./bin/git-fleximod --help  # for a user's guide
 
-    **git-fleximod** is a package manager that will
+    `git-fleximod` is a package manager that will
     populate the ctsm directory with the relevant versions of each of the
     components along with the CIME infrastructure code.
     Additional documentation for git-fleximod appears here:
     <https://github.com/ESMCI/git-fleximod?tab=readme-ov-file#git-fleximod>
 
-\"components\" here refers to seperate git repositories for seperable parts of
+"components" here refers to seperate git repositories for seperable parts of
 the code (such as the MOSART or mizuRoute river models). Because they are
-managed with \"submodule\" in git hereafter we will refer to them as \"submodule(s)\".
+managed with "submodule" in git hereafter we will refer to them as "submodule(s)".
 
 At this point you have a working version of CTSM.
 
@@ -34,18 +34,18 @@ To see full details of how to set up a case, compile and run, see the CIME docum
 
 ## More details on git-fleximod
 
-The file **.gitmodules** in your top-level CTSM directory tells
-**git-fleximod** which tag/branch of each submodule
+The file `.gitmodules` in your top-level CTSM directory tells
+`git-fleximod` which tag/branch of each submodule
 should be brought in to generate your sandbox.
 
-NOTE: If you manually modify a submodule without updating .gitmodules,
+NOTE: If you manually modify a submodule without updating `.gitmodules`,
 e.g. switch to a different tag, then rerunning git-fleximod will warn you of
 local changes you need to resolve.
 git-fleximod will not change a modified submodule back to what is specified in
-.gitmodules without the \--force option.
+`.gitmodules` without the `--force` option.
 See below documentation [Customizing your CTSM sandbox](#customizing-your-ctsm-sandbox) for more details.
 
-**You need to rerun git-fleximod whenever .gitmodules has
+**You need to rerun git-fleximod whenever `.gitmodules` has
 changed** (unless you have already manually updated the relevant
 submodule(s) to have the correct branch/tag checked out). Common times
 when this is needed are:
@@ -70,12 +70,12 @@ you would simply do the following:
 
 You should **not** use this method if you have made any source code
 changes, or if you have any ongoing CTSM cases that were created from
-this sandbox. In these cases, it is often easiest to do a second **git
-clone**.
+this sandbox. In these cases, it is often easiest to do a second `git
+clone`.
 
 ## Pointing to a different version of a submodule
 
-Each entry in **.gitmodules** has the following form (we use CIME as an
+Each entry in `.gitmodules` has the following form (we use CIME as an
 example below):
 
     [submodule "cime"]
@@ -87,7 +87,7 @@ example below):
 
 Each entry specifies either a tag or a hash. To point to a new tag or hash:
 
-1.  Modify the relevant entry/entries in **.gitmodules** (e.g., changing
+1.  Modify the relevant entry/entries in `.gitmodules` (e.g., changing
     `cime6.0.246` to `cime6.0.247` above)
 
 2.  Checkout the new submodule(s):
@@ -95,15 +95,15 @@ Each entry specifies either a tag or a hash. To point to a new tag or hash:
         ./bin/git-fleximod update <submodule>
 
 Keep in mind that changing individual submodule from a tag may result
-in an invalid model (won\'t compile, won\'t run, not scientifically
+in an invalid model (won't compile, won't run, not scientifically
 meaningful) and is unsupported.
 
-### Committing your change to .gitmodules
+### Committing your change to `.gitmodules`
 
-After making this change, it\'s a good idea to commit the change in your
+After making this change, it's a good idea to commit the change in your
 local CTSM git repository. First create a branch in your local
 repository, then commit it. Feel free to create whatever local branches
-you\'d like in git. For example:
+you'd like in git. For example:
 
     git checkout -b my_ctsm_branch
     git add .gitmodules
