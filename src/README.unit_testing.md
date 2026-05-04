@@ -1,6 +1,6 @@
 To run all CTSM unit tests, run the following command:
 
-This reuses the existing 'unit_tests.temp' directory (if present) in
+This reuses the existing `unit_tests.temp` directory (if present) in
 order to do an incremental rebuild of the unit tests from the last
 time you ran them from this directory.
 
