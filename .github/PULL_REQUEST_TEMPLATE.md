@@ -18,7 +18,7 @@ the list of common problems to watch out for
 **CTSM issues resolved or otherwise addressed:**
 - (Replace this text, including GitHub issue #, and add more list items as needed)
 
-**Are answers expected to change? If so, in what way?**
+**If answers are expected to change, describe (delete this line otherwise):**
 
 **Any user interface changes (namelist or namelist defaults changes)?**
 
