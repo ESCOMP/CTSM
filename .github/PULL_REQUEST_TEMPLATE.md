@@ -24,11 +24,8 @@ the list of common problems to watch out for
 
 **Testing planned or performed, if any:**
 - [ ] (Replace this text and add more list items as needed)
+<!-- (List what testing you did to show your changes worked as expected) -->
 
-<!-- (List what testing you did to show your changes worked as expected)
-(This can be manual testing or running of the different test suites)
-(Documentation on system testing is here: https://github.com/ESCOMP/ctsm/wiki/System-Testing-Guide)
-(aux_clm on derecho for intel/gnu and izumi for intel/gnu/nag/nvhpc is the standard for tags on master) -->
 
 
 ### Requirements before merge:
