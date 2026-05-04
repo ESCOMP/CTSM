@@ -16,6 +16,7 @@ on:
       - 'src/README.unit_testing'
       - 'tools/README'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
+      - 'cime/CIME/non_py/cprnc/README.md'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -30,6 +31,7 @@ on:
       - 'src/README.unit_testing'
       - 'tools/README'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
+      - 'cime/CIME/non_py/cprnc/README.md'
 
   workflow_dispatch:
 
