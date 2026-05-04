@@ -445,7 +445,7 @@ Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeoc
 
 .. _GaoOneill2020:
 
-Gao, J., and O’Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
+Gao, J., and O'Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
 
 .. _Garciaetal1988:
 

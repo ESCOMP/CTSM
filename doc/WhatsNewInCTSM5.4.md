@@ -14,7 +14,7 @@
 
 * Unsupported script that checks for spinup equilibrium in `tools/contrib/` for spectral element grids ([PR #2991](https://github.com/ESCOMP/ctsm/pull/2991)).  
 * New paramfile tools that allow users to query and modify CLM parameter files ([documentation](https://escomp.github.io/CTSM/users_guide/using-clm-tools/paramfile-tools.html))  
-* Optional time-evolving \`leafcn\_target\`. More under “Additional detail” below.  
+* Optional time-evolving \`leafcn\_target\`. More under "Additional detail" below.  
 * New vertical movement scheme for soil nitrate, which is off by default (PR [#2992](https://github.com/ESCOMP/CTSM/pull/2992)).  
 * Documentation improvements and new URL: https://escomp.github.io/CTSM/index.html.  
 * FATES:  
@@ -32,9 +32,9 @@ Changes to defaults for \`clm6\` physics:
 * Updates to MEGAN for BVOCs (https://github.com/ESCOMP/CTSM/pull/3065 https://github.com/ESCOMP/CTSM/pull/3309). Removes dependence on soil moisture from clm6 physics.  
 * New model parameter values that were calibrated to improve carbon cycle representation with CRUJRA.  
 * New model parameter values that were calibrated to improve the fire model. Now using li2024 fire code.  
-* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000\) resolutions.  
+* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 ("2-degree" 1850), and ne30 (1850, 1979, 2000\) resolutions.  
 * Change default for glcmec\_downscale\_longwave to FALSE for clm6 physics as turning off the LW downscaling improves the melt and runoff biases.  
-* See “Changes to FATES and the FATES parameter file” below.  
+* See "Changes to FATES and the FATES parameter file" below.  
 * Namelist defaults change so that  
   * use\_c13/use\_c14 are on only for HistClm60Bgc compsets with CRUJRA2024 or CAM7 forcing; examples of when use\_c13/use\_c14 are now off include SSP and single-point compsets, as well as cases using older forcings, such as CAM6, GSWP3v1, Qian, and CRUv7  
   * when use\_c13 or use\_c14 is on, turn on the corresponding time series file  (responding to the CLM_CMIP_ERA flag)
@@ -44,13 +44,13 @@ Changes to defaults for \`clm6\` physics:
 Changes for all physics versions:
 
 * Parameters updated: Added MIMICS parameter \`mimics\_fi\` (fraction of litter inputs that bypass litter pools, directly contributing to SOM) and updated other MIMICS parameters (https://github.com/ESCOMP/CTSM/pull/2365) to remove NPP control on turnover, fix density dependent control on turnover, add litterfall fluxes that bypass litter pools and contribute directly to soil organic matter.  
-* FATES parameter file updated: ([PR \#2965](https://github.com/ESCOMP/CTSM/pull/2965), [PR \#2904](https://github.com/ESCOMP/CTSM/pull/2904), [PR \#1344](https://github.com/NGEET/fates/pull/1344), [PR \#3087](https://github.com/ESCOMP/CTSM/pull/3087)). See “FATES parameter file” section below for details.  
-* New surface datasets and landuse timeseries files (see “surface datasets” section below).
+* FATES parameter file updated: ([PR \#2965](https://github.com/ESCOMP/CTSM/pull/2965), [PR \#2904](https://github.com/ESCOMP/CTSM/pull/2904), [PR \#1344](https://github.com/NGEET/fates/pull/1344), [PR \#3087](https://github.com/ESCOMP/CTSM/pull/3087)). See "FATES parameter file" section below for details.  
+* New surface datasets and landuse timeseries files (see "surface datasets" section below).
 * CMIP7 C13/C14 atmospheric timeseries data
 
 ## Heads up
 
-* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the “history files” section below and in the PRs https://github.com/ESCOMP/ctsm/pull/2445 https://github.com/ESCOMP/MOSART/pull/117 https://github.com/ESCOMP/RTM/pull/61 and the corresponding issues.  
+* History tapes now split into two files from hX to hXi and hXa, where X is the tape number (e.g. h0i/h0a) and where "i" stands for history file containing instantaneous fields, while "a" stands for history file containing non-instantaneous fields. Details in the "history files" section below and in the PRs https://github.com/ESCOMP/ctsm/pull/2445 https://github.com/ESCOMP/MOSART/pull/117 https://github.com/ESCOMP/RTM/pull/61 and the corresponding issues.  
 * Adding time to 1d weighting fields in transient simulations PR https://github.com/ESCOMP/CTSM/pull/3328  
 * Regarding CMIP7 vs. CMIP6 inputs:  
   * C13/C14 isotope datasets are the new CMIP7 datasets using streams, while when CLM_CMIP_ERA==cmip6, the older cmip6 files are used
@@ -59,14 +59,14 @@ Changes for all physics versions:
   * For DATM we supply only CMIP6 aerosols.  
   * For DATM we supply only CMIP6 CO2.  
 * Issue with DOUT\_S\_SAVE\_INTERIM\_REST [https://github.com/ESCOMP/CTSM/issues/3351](https://github.com/ESCOMP/CTSM/issues/3351) was fixed.  
-* As of ctsm5.3.040, the new ctsm\_pylib conda environment is incompatible with our tools from before ctsm5.3.040 and vice versa. More under “Additional detail” below.
+* As of ctsm5.3.040, the new ctsm\_pylib conda environment is incompatible with our tools from before ctsm5.3.040 and vice versa. More under "Additional detail" below.
 
 # Additional detail
 
 ## Changes related to history files
 
 (Note 1: The same information in this section applies to MOSART and RTM.  
-Note 2: The gist of the information in this section also appears in the [CTSM User’s Guide](https://escomp.github.io/CTSM/users_guide/setting-up-and-running-a-case/customizing-the-clm-namelist.html#various-ways-to-change-history-output-averaging-flags)).
+Note 2: The gist of the information in this section also appears in the [CTSM User's Guide](https://escomp.github.io/CTSM/users_guide/setting-up-and-running-a-case/customizing-the-clm-namelist.html#various-ways-to-change-history-output-averaging-flags)).
 
 Following ctsm5.3.018 "Change history time to be the middle of the time bounds" and keeping CLM history consistent with CAM history, the CTSM5.4 change intends to prevent confusion associated with the time corresponding to instantaneous history fields by putting them on separate files than non-instantaneous fields.
 
@@ -99,7 +99,7 @@ The CLM handles empty history (and corresponding history-restart) files by not g
 
 ## Changes to FATES and the FATES parameter file
 
-* See [HLM-FATES compatibility table](https://fates-users-guide.readthedocs.io/en/latest/user/release-tags-compat-table.html) in the FATES user’s guide for all FATES tags associated with CTSM tag updates  
+* See [HLM-FATES compatibility table](https://fates-users-guide.readthedocs.io/en/latest/user/release-tags-compat-table.html) in the FATES user's guide for all FATES tags associated with CTSM tag updates  
 * FATES answer changing updates  
   * The default hydro solver is updated to 2D Picard from 1D Taylor ([ctsm5.3.027](https://github.com/ESCOMP/CTSM/releases/tag/ctsm5.3.027))  
   * Simplified leaf sun-shade fraction for two-stream radiation ([sci.1.83.0\_api.39.0.0](https://github.com/NGEET/fates/releases/tag/sci.1.83.0_api.39.0.0))  
