@@ -34,9 +34,9 @@ conda activate ctsm_py
 ```
 (Use "deactivate" to reverse the latter.)
 
-2) Copy, then modify the configure file named modify_mesh_template.cfg, which contains all the arguments needed by the script.
+2) Copy, then modify the configure file named `modify_mesh_template.cfg`, which contains all the arguments needed by the script.
 
-3) Run the script ./mesh_mask_modifier pointing to the copied/modified .cfg file, e.g. modify_users_copy.cfg
+3) Run the script .`/mesh_mask_modifier` pointing to the copied/modified `.cfg` file, e.g. `modify_users_copy.cfg`
 
 # Example use-case
 
@@ -47,17 +47,17 @@ own land fraction mask on the CESM 1-degree grid, as well as the area to
 be specified as grassland in a netcdf file. This has been obtained by
 modifying the default land fraction of CESM. The file contains two arrays:
 
-- landmask = the new landmask
-- mod_lnd_props = set to 1 where the new land surface has been specified (i.e., where grassland needs to be specified) and zero elsewhere
+- `landmask` = the new landmask
+- `mod_lnd_props` = set to 1 where the new land surface has been specified (i.e., where grassland needs to be specified) and zero elsewhere
 
-This use-case requires modification to the fsurdat and mesh files. To modify the former, use the modify_fsurdat tool. See that tool for instructions. Here are the steps to modify the mesh file:
+This use-case requires modification to the fsurdat and mesh files. To modify the former, use the `modify_fsurdat` tool. See that tool for instructions. Here are the steps to modify the mesh file:
 
-In your copy of the CTSM (say, ~user/ctsm), go to the appropriate tool:
+In your copy of the CTSM (say, `~user/ctsm`), go to the appropriate tool:
 ```
 cd tools/modify_input_files
 cp modify_mesh_template.cfg modify_fill_indianocean.cfg
 ```
-Enter the following (or similar) selections in modify_fill_indianocean.cfg:
+Enter the following (or similar) selections in `modify_fill_indianocean.cfg`:
 ```
 mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
 mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
@@ -69,9 +69,9 @@ Run the tool
 ```
 
 A modified mesh file should appear in the directory where you ran.
-Point to this file in your case's env_run.xml in the line that sets
-MASK_MESH. If for some reason this fails, hardwire the ocean domain mesh
-file name in ~user/ctsm/ccs_config/component_grids_nuopc.xml before
+Point to this file in your case's `env_run.xml` in the line that sets
+`MASK_MESH`. If for some reason this fails, hardwire the ocean domain mesh
+file name in `~user/ctsm/ccs_config/component_grids_nuopc.xml` before
 starting your CTSM or CESM simulation. In the specific example shown
-here, hardwire the mesh file name for domain name gx1v7.
+here, hardwire the mesh file name for domain name `gx1v7`.
 
