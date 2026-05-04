@@ -823,8 +823,7 @@ sub setup_cmdl_fates_mode {
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		      "use_fates_managed_fire"
-                   );
+		      "use_fates_managed_fire", "fates_lu_transition_logic");
 
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -2084,12 +2083,15 @@ sub setup_logic_irrigate {
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'irrigate',
-                'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'},
+                'use_crop'=>$nl_flags->{'use_crop'}, 'use_cndv'=>$nl_flags->{'use_cndv'}, 'use_fates'=>$nl_flags->{'use_fates'},
                 'sim_year'=>$nl_flags->{'sim_year'}, 'sim_year_range'=>$nl_flags->{'sim_year_range'}, );
   if ( &value_is_true($nl->get_value('irrigate') ) ) {
      $nl_flags->{'irrigate'} = ".true.";
      if ( $nl_flags->{'sim_year'} eq "PtVg" ) {
         $log->fatal_error("irrigate=TRUE does NOT make sense with the Potential Vegetation dataset, leave irrigate=FALSE");
+     }
+     if (&value_is_true($nl_flags->{'use_fates'})) {
+        $log->fatal_error("irrigate=TRUE is NOT possible with use_fates=TRUE, leave irrigate=FALSE");
      }
   } else {
      $nl_flags->{'irrigate'} = ".false.";
@@ -2264,6 +2266,7 @@ sub setup_logic_params_file {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile',
               'phys'=>$nl_flags->{'phys'},
+              'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
               'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
 }
 
@@ -2644,12 +2647,7 @@ sub setup_logic_initial_conditions {
   my $useinitvar = "use_init_interp";
 
   my %settings;
-  my $use_init_interp_default = $nl->get_value($useinitvar);
-  $settings{$useinitvar} = $use_init_interp_default;
-  if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
-    $use_init_interp_default = $defaults->get_value($useinitvar, \%settings);
-    $settings{$useinitvar} = ".false.";
-  }
+  my $use_init_interp_default = ".false.";
   if (not defined $finidat ) {
     my $ic_date = $nl->get_value('start_ymd');
     my $st_year = $nl_flags->{'st_year'};
@@ -2687,6 +2685,11 @@ sub setup_logic_initial_conditions {
        $settings{'ic_md'} = $ic_date;
     } else {
        $settings{'ic_ymd'} = $ic_date;
+    }
+    $use_init_interp_default = $nl->get_value($useinitvar);
+    $settings{$useinitvar} = $use_init_interp_default;
+    if ( string_is_undef_or_empty( $use_init_interp_default ) ) {
+      $settings{$useinitvar} = ".false.";
     }
     my $try = 0;
     my $done = 2;
@@ -4886,7 +4889,7 @@ sub setup_logic_fates {
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                        "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		       "use_fates_managed_fire"
+		                  "use_fates_managed_fire","fates_lu_transition_logic"
                     );
 
         foreach my $var ( @list ) {
@@ -4899,6 +4902,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_luh', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_potentialveg'=>$nl->get_value('use_fates_potentialveg'),
+		              'fates_lu_transition_logic'=>$nl->get_value('fates_lu_transition_logic'),
                     'fates_harvest_mode'=>remove_leading_and_trailing_quotes($nl->get_value('fates_harvest_mode')) );
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_nocomp', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
