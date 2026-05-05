@@ -191,6 +191,10 @@ Buzan, J.R., Oleson, K., and Huber, M. 2015: Implementation and comparison of a 
 
 Byram, G.M., 1959. Combustion of forest fuels. In Forest fire: control and use.(Ed. KP Davis) pp. 61-89.
 
+.. _Bytnerowiczetal2022:
+
+Bytnerowicz, T. A., Akana, P. R., Griffin, K. L., & Menge, D. N. L. 2022: Temperature sensitivity of woody nitrogen fixation across species and growing temperatures. Nature Plants, 8(3), 209-216. doi: 10.1038/s41477-021-01090-x.
+
 .. _CampbellNorman1998:
 
 Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
@@ -407,6 +411,10 @@ Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, 
 
 Fisher, R.A., C.D. Koven, W.R.L. Anderegg, et al., 2018: Vegetation demographics in Earth System Models: A review of progress and priorities. Glob Change Biol. 2018;24:35–54. https://doi.org/10.1111/gcb.13910
 
+.. _Fisheretal2019:
+
+Fisher, R.A., Wieder, W.R., Sanderson, B., Koven, C.D., Oleson, K.W., Xu, C., Fisher, J.B., Shi, M., Walker, A.P., Lawrence, D.M. 2019. Parametric controls on vegetation responses to biogeochemical forcing in the CLM5. Journal of Advances in Modeling Earth Systems, 11, 2879–2895. DOI:10.1029/2019MS001609
+
 .. _FlannerZender2005:
 
 Flanner, M.G., and Zender. C.S. 2005. Snowpack radiative heating: Influence on Tibetan Plateau climate. Geophys. Res. Lett. 32:L06501. DOI:10.1029/2004GL022076.
@@ -545,7 +553,7 @@ Hastings, D.A., Dunbar, P.K., Elphingstone, G.M., Bootz, M., Murakami, H., Maruy
 
 .. _Hauseretal2023:
 
-Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.
+Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.  DOI:10.1029/2023GL105493
 
 .. _Healdetal2008:
 
@@ -638,6 +646,10 @@ Jenkinson, D. and Coleman, K. 2008. The turnover of organic carbon in subsoils. 
 .. _Jordan1991:
 
 Jordan, R. 1991. A One-dimensional Temperature Model for a Snow Cover: Technical Documentation for SNTHERM.89. U.S. Army Cold Regions Research and Engineering Laboratory, Special Report 91-16.
+
+.. _Kou-Giesbrechtetal2025: 
+
+Kou-Giesbrecht, C.R. Reis Ely, S.S. Perakis, C.C. Cleveland, D.N.L. Menge, S.C. Reed, B.N. Taylor, S.A. Batterman, T.E. Crews, K.A. Dynarski, M. Gei, M.J. Gundale, D.F. Herridge, S.E. Jovan, M.B. Peoples, J. Piipponen, E. Rodríguez-Caballero, V.G. Salmon, F.M. Soper, A.P. Staccone, B. Weber, C.A. Williams, & N. Wurzburger, 2025. Overestimated natural biological nitrogen fixation translates to an exaggerated CO2 fertilization effect in Earth system models, Proc. Natl. Acad. Sci. U.S.A. 122 (48) e2514628122, DOI:10.1073/pnas.2514628122.
 
 .. _KattgeKnorr2007:
 
@@ -1636,6 +1648,14 @@ White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000. Parameterizat
 
 Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects of model structural uncertainty on carbon cycle projections: biological nitrogen fixation as a case study. Environmental Research Letters, 10(4), 044016.
 
+.. _Wiederetal2019:
+
+Wieder, W.R., Lawrence, D.M., Fisher, R.A., Bonan, G.B., Cheng, S.J., Goodale, C.L., Grandy, A.S., Koven, C.D., Lombardozzi, D.L., Oleson, K.W. and Thomas, R.Q., 2019. Beyond static benchmarking: Using experimental manipulations to evaluate land model assumptions. Global Biogeochemical Cycles, 33(10), 1289-1309. DOI:10.1029/2018GB006141
+
+.. _Wiederetal2021:
+
+Wieder, W.R., Butterfield, Z., Lindsay, K., Lombardozzi, D.L., Keppel-Aleks, G. 2021. Interannual and seasonal drivers of carbon cycle variability represented by the Community Earth System Model (CESM2). Global Biogeochemical Cycles, 35, e2021GB007034. DOI:10.1029/2021GB007034
+
 .. _Williamsetal1996:
 
 Williams, M., Rastetter, E.B., Fernandes, D.N., Goulden, M.L., Wofsy, S.C., Shaver, G.R., Melillo, J.M., Munger, J.W., Fan, S.M. and Nadelhoffer, K.J. 1996. Modelling the soil-plant-atmosphere continuum in a Quercus–Acer stand at Harvard Forest: the regulation of stomatal conductance by light, nitrogen and soil/plant hydraulic properties. Plant, Cell & Environment, 19: 911–927. doi:10.1111/j.1365-3040.1996.tb00456.x
@@ -1672,6 +1692,10 @@ Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell,
 
 Yang, Z.-L. 1998. Technical note of a 10-layer soil moisture and temperature model. Unpublished manuscript.
 
+.. _ZaehleandFriend2010:
+
+Zaehle, S. and A.D.Friend 2010. Carbon and nitrogen cycle dynamics in the O-CN land surface model: 1. Model description, site-scale evaluation, and sensitivity to parameter estimates, Global Biogeochem. Cycles, 24, GB1005, DOI:10.1029/2009GB003521.
+
 .. _Zenderetal2003:
 
 Zender, C.S., Bian, H., and Newman, D. 2003. Mineral dust entrainment and deposition (DEAD) model: Description and 1990s dust climatology. ** J. Geophys. Res\ *.* 108(D14):4416. DOI:10.1029/2002JD002775.
@@ -1699,6 +1723,8 @@ Zeng, X., Dickinson, R.E., Barlage, M., Dai, Y., Wang, G., and Oleson, K. 2005. 
 .. _ZengWang2007:
 
 Zeng, X., and Wang, A. 2007. Consistent parameterization of roughness length and displacement height for sparse and dense canopies in land models. J. Hydrometeor. 8:730-737.
+
+.. _ZengandDecker2009:
 
 Zeng, X., and Decker, M. 2009. Improving the numerical solution of soil moisture-based Richards equation for land models with a deep or shallow water table. J. Hydrometeor. 10:308-319.
 
