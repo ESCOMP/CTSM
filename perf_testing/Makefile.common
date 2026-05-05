@@ -19,8 +19,7 @@ ifeq ($(FC_NAME),nvfortran)
 else ifeq ($(FC_NAME),ifx)
    FFLAGS := -O2 -qopt-report=3 -vec-threshold0
 else ifeq ($(FC_NAME),gfortran)
-   # For gfortran, I don't care about an optimization report, just warnings
-   FFLAGS := -Wall
+   FFLAGS := -O2 -fopt-info-vec -fopt-info-vec-missed
 else
    $(error FC basename must be nvfortran, ifx, or gfortran (got FC='$(FC)', basename='$(FC_NAME)'))
 endif
