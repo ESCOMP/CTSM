@@ -349,7 +349,7 @@ where :math:`a_{cnflex}` and :math:`b_{cnflex}` are parameters fitted to give fl
 
 Response of C expenditure to plant C:N ratios
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We first calculate a :math:`\delta_{CN}`, which is the difference between the target C:N (:math:`target_{CN}`) a model parameter, and the existing C:N ratio (:math:`CN_{plant}`)
+We first calculate a :math:`\delta_{CN}`, which is the difference between the target C:N (:math:`CN_{target}`) a model parameter (:numref:`Table PFT target leaf CN`), and the existing C:N ratio (:math:`CN_{plant}`)
 
 .. math::
    :label: CN_plant
@@ -360,7 +360,7 @@ and
 .. math::
    :label: delta_CN
 
-   \delta_{CN} = CN_{plant} - target_{CN}
+   \delta_{CN} = CN_{plant} - CN_{target}
 
 We then increase :math:`\gamma_{FUN}` to  account for situations where (even if N is expensive) plant C:N ratios have increased too far from the target.  Where  :math:`\delta_{CN}` is negative, we reduce C spent on N uptake and retain more C for growth
 
