@@ -27,6 +27,11 @@ endif
 
 LDFLAGS ?=
 
+# Extra flags appended on top of the per-compiler defaults. Pass with
+# `make EXTRA_FFLAGS="-fopenmp -DDEBUG"` etc. Use `FFLAGS=...` instead
+# if you want to clobber the defaults entirely.
+FFLAGS += $(EXTRA_FFLAGS)
+
 TIMING  ?= 1
 ifeq ($(TIMING),1)
     FFLAGS += -DPERF_TIMING
