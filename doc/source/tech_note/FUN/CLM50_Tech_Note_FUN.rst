@@ -134,7 +134,7 @@ From this, we then calculate the fraction of the carbon allocated to each pathwa
 These fractions are used later, to calculate the carbon expended on different uptake pathways.  Next, the N acquired from each uptake stream per unit C spent (:math:`N_{exch,x}`, gN/gC)  is determined as
 
 .. math::
-   :label; N_exch,x
+   :label: N_exch,x
 
    N_{exch,x} = \frac{C_{frac,x}}{N_{cost,x}}
 
@@ -152,7 +152,7 @@ and thus the subsequent overall N cost is
 
    N_{cost,tot} = 1/{N_{exch,tot}}
 
- Retranslocation is determined via a different set of mechanisms, once the :math:`N_{cost,tot}` is known.
+Retranslocation is determined via a different set of mechanisms, once the :math:`N_{cost,tot}` is known.
 
 Nitrogen Retranslocation
 --------------------------------------------------------
@@ -215,7 +215,7 @@ First we calculate the cost of extraction (:math:`cost_{retrans}`, gC/gN) for th
 where :math:`k_{retrans}`  is a parameter controlling the overall cost of resorption, which also increases exponentially as the C:N ratio increases.
 
 Next, we calculate the amount of C needed to be spent to increase the falling leaf C:N ratio by 1.0 in this iteration
-:math:`i` (:math:`C_{retrans_spent,i}`,  gC m\ :sup:`-2`) as:
+:math:`i` (:math:`C_{retrans,spent,i}`,  gC m\ :sup:`-2`) as:
 
 .. math::
    :label: C_retrans,spent,i_1
@@ -230,7 +230,7 @@ Next, we calculate the amount of C needed to be spent to increase the falling le
 
    C_{retrans,spent,i} = min(C_{retrans,spent,i}, C_{avail,retrans,i})
 
-The amount of N retranslocated from the leaf in this iteration (:math:`N_{retrans_paid,i}`,  gN m\ :sup:`-2`) is calculated, checking that it does not fall below zero:
+The amount of N retranslocated from the leaf in this iteration (:math:`N_{retrans,paid,i}`,  gN m\ :sup:`-2`) is calculated, checking that it does not fall below zero:
 
 .. math::
    :label: N_retrans,paid,i
@@ -260,9 +260,9 @@ and the :math:`CN_{fallingleaf}` and :math:`cost_{retrans}` are updated. The amo
 
 Outputs of Retranslocation algorithm.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The final output of the retranslocation calculation are the retranslocated N (:math:`N_{retrans}`,  gN m\ :sup:`-2`), C spent on retranslocation (:math:`C_{retrans_paid}`,  gC m\ :sup:`-2`), and C accounted for by retranslocation (:math:`C_{retrans_accounted}`,  gC m\ :sup:`-2`).
+The final output of the retranslocation calculation are the retranslocated N (:math:`N_{retrans}`,  gN m\ :sup:`-2`), C spent on retranslocation (:math:`C_{retrans,paid}`,  gC m\ :sup:`-2`), and C accounted for by retranslocation (:math:`C_{retrans,accounted}`,  gC m\ :sup:`-2`).
 
-For paid-for uptake, we accumulate the total carbon spent on retranslocation (:math:`C_{spent_retrans}`),
+For paid-for uptake, we accumulate the total carbon spent on retranslocation (:math:`C_{spent,retrans}`),
 
 .. math::
    :label: C_retrans,spent
@@ -283,7 +283,7 @@ where N acquired by paid-for retranslocation is
 
    N_{retrans,paid} = \sum{N_{retrans,paid,i}}
 
-The total carbon accounted for by retranslocation is the sum of the C accounted for by paid-for N uptake (:math:`N_{retrans_paid}`) and by free N uptake (:math:`N_{retrans_free}`).
+The total carbon accounted for by retranslocation is the sum of the C accounted for by paid-for N uptake (:math:`N_{retrans,paid}`) and by free N uptake (:math:`N_{retrans,free}`).
 
 .. math::
    :label: C_retrans,accounted
