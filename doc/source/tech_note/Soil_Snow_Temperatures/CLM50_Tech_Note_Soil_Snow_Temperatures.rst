@@ -792,7 +792,7 @@ For the special case when snow is present (:math:`W_{sno} >0`) but there are no 
 
    c_{1} =c_{1}^{*} +\frac{C_{ice} W_{sno} }{\Delta z_{1} }
 
-where :math:`c_{1}^{*}`  is calculated from :eq:`6.88` or :eq:`6.91`.
+where :math:`c_{1}^{*}`  is calculated from :eq:`6.90` or :eq:`6.93`.
 
 .. _Excess Ground Ice:
 
