@@ -33,7 +33,7 @@ Available Carbon
 The carbon available for FUN, :math:`C_{avail}` (gC m\ :sup:`-2`) is the total canopy  photosynthetic uptake (GPP), minus the maintenance respiration fluxes (:math:`m_r`) and multiplied by the time step in seconds (:math:`\delta t`). Thus, the remainder of this chapter considers fluxes per timestep, and integrates these fluxes as they are calculated.
 
 .. math::
-   :label: C_avail
+   :label: C_avail_1
 
    C_{avail} = (GPP - m_r) \delta t
 
@@ -303,7 +303,7 @@ Carbon expenditure on fixation and active uptake.
 At each model timestep, the overall cost of N uptake is calculated (see below) in terms of C:N ratios. The available carbon (:math:`C_{avail}`, g m\ :sup:`-2` s\ :sup:`-1`) is then allocated to two alternative outcomes, payment for N uptake, or conservation for growth. For each carbon conserved for growth, a corresponding quantity of N must be made available.  In the case where the plant target C:N ratio is fixed, the partitioning between carbon for growth (:math:`C_{growth}`) and carbon for N uptake  (:math:`C_{nuptake}`) is calculated by solving a system of simultaneous equations. First, the carbon available must equal the carbon spent on N uptake plus that saved for growth.
 
 .. math::
-   :label: C_avail
+   :label: C_avail_2
 
    C_{growth}+C_{nuptake}=C_{avail}
 
@@ -357,6 +357,7 @@ We first calculate a :math:`\delta_{CN}`, which is the difference between the ta
    CN_{plant} = \frac{C_{leaf} + C_{leaf,storage}}{N_{leaf} + N_{leaf,storage})}
 
 and
+
 .. math::
    :label: delta_CN
 
