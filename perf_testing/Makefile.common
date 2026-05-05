@@ -11,8 +11,19 @@
 
 .DEFAULT_GOAL := driver
 
-FC      ?= nvfortran
-FFLAGS  ?= -O2 -g -Minfo=vect -Mneginfo=vect
+ifneq ($(MAKECMDGOALS),clean)
+ifeq ($(FC),nvfortran)
+   FFLAGS := -O2 -g -Minfo -Mneginfo=vect
+else ifeq ($(FC),ifx)
+   FFLAGS := -O2 -qopt-report=3 -vec-threshold0
+else ifeq ($(FC),gfortran)
+   # For gfortran, I don't care about an optimization report, just warnings
+   FFLAGS := -Wall
+else
+   $(error FC must be set to nvfortran, ifx, or gfortran (got '$(FC)'))
+endif
+endif
+
 LDFLAGS ?=
 
 TIMING  ?= 1
