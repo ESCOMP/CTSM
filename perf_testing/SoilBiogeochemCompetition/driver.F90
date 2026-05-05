@@ -40,7 +40,7 @@ program SoilBiogeochemCompetition_driver
   integer :: nlevdecomp     = 10
   integer :: ndct           = 8       ! ndecomp_cascade_transitions
   integer :: numfc          = -1      ! -1 sentinel -> default to ncol
-  integer :: niters         = 1
+  integer :: niters         = 100
   logical :: is_fast        = .false. ! --fast => single canonical config
 
   ! Per-config switches: in --fast mode, only the canonical config below
