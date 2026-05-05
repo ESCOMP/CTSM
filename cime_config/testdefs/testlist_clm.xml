@@ -17,6 +17,7 @@
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+        nvidia-hackathon-26: Tests for the nvidia-hackathon-26 branch in order to run simple tests for the work there
       ROF model test lists: (in each component model)
         mosart: MOSART test list, run when MOSARt is updated
         rtm: RTM test list, run when RTM is updated
@@ -2533,15 +2534,28 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Non DEBUG standard BgcCrop with clm5_0</option>
+    </options>
+  </test>
+  <test name="PFS_Ld5" grid="f10_f10_mt232" compset="I2000Clm60BgcCropCrujra" testmods="clm/crop">
+    <machines>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Performance test with standard BgcCrop with clm6_0</option>
     </options>
   </test>
   <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="nvhpc" category="fates"/>
     </machines>
     <options>
@@ -2870,13 +2884,17 @@
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/crop">
     <machines>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="nvidia-hackathon-26"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">DEBUG standard BgcCrop with clm6_0</option>
     </options>
   </test>
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRs" testmods="clm/CLM1PTStartDate">
@@ -3380,6 +3398,26 @@
       <option name="comment">include a relatively long crop test at relatively high resolution</option>
     </options>
   </test>
+  <test name="PFS_Ld5_PS" grid="f19_f19_mt232" compset="I2000Clm60BgcCropCrujra" testmods="clm/crop">
+    <machines>
+      <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="gnu" category="nvidia-hackathon-26"/>
+    </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+      <option name="comment">Include a performance test at a near standard resolution for a single node</option>
+    </options>
+  </test>
+  <test name="SMS_D_Ld5_PS" grid="f19_f19_mt232" compset="I2000Clm60BgcCropCrujra" testmods="clm/crop">
+    <machines>
+      <machine name="derecho" compiler="nvhpc" category="nvidia-hackathon-26"/>
+    </machines>
+    <options>
+      <option name="wallclock">02:00:00</option>
+      <option name="comment">Include a test at a near standard resolution for a single node, debug on</option>
+    </options>
+  </test>
   <test name="SMS_Ly3" grid="f10_f10_mg37" compset="I1850Clm50SpG" testmods="clm/glcMEC_long--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -3680,6 +3718,27 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Fates with clm6_0</option>
+    </options>
+  </test>
+  <test name="PFS_P128x1_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesCold">
+    <machines>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="gnu" category="nvidia-hackathon-26"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Performance test for Fates with clm6_0, needs to be non-concurrent PE layout</option>
+    </options>
+  </test>
+  <test name="PFS_P128x1_Ld5" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
+    <machines>
+      <machine name="derecho" compiler="nvhpc-prof" category="nvidia-hackathon-26"/>
+      <machine name="derecho" compiler="intel" category="nvidia-hackathon-26"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Performance test for FatesSp with clm6_0, needs to be non-concurrent PE layout</option>
     </options>
   </test>
   <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
