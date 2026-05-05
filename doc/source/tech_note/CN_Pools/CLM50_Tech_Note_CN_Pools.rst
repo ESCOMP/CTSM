@@ -23,7 +23,7 @@ In addition to the vegetation pools, CLM includes a series of decomposing carbon
 Tissue Stoichiometry
 -----------------------
 
-As of CLM5, vegetation tissues have a flexible stoichiometry, as described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each tissue has a target C\:N ratio, with the target leaf C\:N, :math:`\text{C:N}_{\text{target}}^\text{pft}`, varying by plant functional type (PFT). Nitrogen is allocated at each timestep to allow the plant to best match the target stoichiometry. Nitrogen downregulation of productivity acts by increasing the actual C\:N ratio of leaves when insufficient nitrogen is available to meet stoichiometric demands of leaf growth, thereby reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and :math:`J_{\text{max25}}` terms, as described in Chapter :numref:`rst_Photosynthetic Capacity`. Details of the flexible tissue stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
+As of CLM5, vegetation tissues have a flexible stoichiometry, as described in :ref:`Ghimire et al. (2016) <Ghimireetal2016>`. Each tissue has a target C\:N ratio, with the target leaf C\:N, :math:`\text{C:N}_{\text{target}}^\text{pft}`, varying by plant functional type (PFT) (:numref:`Table PFT target leaf CN`). Nitrogen is allocated at each timestep to allow the plant to best match the target stoichiometry. Nitrogen downregulation of productivity acts by increasing the actual C\:N ratio of leaves when insufficient nitrogen is available to meet stoichiometric demands of leaf growth, thereby reducing the N available for photosynthesis and reducing the :math:`V_{\text{c,max25}}` and :math:`J_{\text{max25}}` terms, as described in Chapter :numref:`rst_Photosynthetic Capacity`. Details of the flexible tissue stoichiometry are described in Chapter :numref:`rst_CN Allocation`.
 
 As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\text{target}}^{\text{pft,CO2}}`, as a logarithmic function of atmospheric CO\ :sub:`2` that we denote :math:`\text{C:N}_{\text{perturb}}^{\text{CO2}}`:
 
@@ -36,11 +36,9 @@ As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\tex
   \text{C:N}_{\text{target}}^{\text{pft,CO2}} &= \text{C:N}_{\text{target}}^\text{pft} + \text{C:N}_{\text{perturb}}^{\text{CO2}}
   \end{split}
 
-where :math:`\text{C:N}_{\text{target}}^\text{pft}` is the time-invarying target leaf C\:N at reference CO\ :sub:`2` that depends on PFT, :math:`\text{C:N}_{\text{slope}}^{\text{CO2}}` (unitless) is the slope of the function, :math:`\text{CO2}_{\text{atm}}` is atmospheric CO\ :sub:`2` in parts per million by volume (ppmv), and :math:`\text{CO2}_{\text{atm}}^{\text{ref}}` is the reference CO\ :sub:`2` (ppmv) above which atmospheric CO\ :sub:`2` begins to scale the target leaf C\:N (see :numref:`Table PFT target leaf CN parameters`).
+where :math:`\text{C:N}_{\text{target}}^\text{pft}` is the time-invarying target leaf C\:N at reference CO\ :sub:`2` that depends on PFT, :math:`\text{C:N}_{\text{slope}}^{\text{CO2}}` (unitless) is the slope of the function, :math:`\text{CO2}_{\text{atm}}` is atmospheric CO\ :sub:`2` in parts per million by volume (ppmv), and :math:`\text{CO2}_{\text{atm}}^{\text{ref}}` is the reference CO\ :sub:`2` (ppmv) above which atmospheric CO\ :sub:`2` begins to scale the target leaf C\:N. The optional time-evolving target leaf C\:N was documented in :ref:`Hauser et al. (2023) <Hauseretal2023>`, and its current default is off by setting :math:`\text{C:N}_{\text{slope}}^{\text{CO2}} = 0`.
 
-The optional time-evolving target leaf C\:N was documented in :ref:`Hauser et al. (2023) <Hauseretal2023>`, and its current default is off by setting :math:`\text{C:N}_{\text{slope}}^{\text{CO2}} = 0`.
-
-.. _Table PFT target leaf CN parameters:
+.. _Table PFT target leaf CN:
 
 .. table:: Plant functional type (PFT) target leaf C:N, :math:`\text{C:N}_{\text{target}}^\text{pft}`.
 
