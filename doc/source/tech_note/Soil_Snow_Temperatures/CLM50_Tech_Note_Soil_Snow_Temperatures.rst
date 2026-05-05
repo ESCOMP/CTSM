@@ -752,7 +752,7 @@ Previous versions of CLM used the :ref:`Jordan (1991) <Jordan1991>` parameteriza
 
 where :math:`\lambda _{air}` is the thermal conductivity of air (:numref:`Table Physical Constants`) and :math:`\rho _{sno,\, i}` calculated, as in :eq:`6.88`.
 
-The Sturm (1997) parameterization is used in CLM6 over vegetated, glacier, and lake land units, but users can choose to use the Jordan (1991) parameterization over any of these land units. This can be accomplished through a change to the lnd_in namelist by using user_nl_clm.
+The :ref:`Sturm et al. (1997)<Sturmetal1997>` parameterization is used in CLM6 over vegetated, glacier, and lake land units, but users can choose to use the Jordan (1991) parameterization over any of these land units. This can be accomplished through a change to the lnd_in namelist by using user_nl_clm.
 
 The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from :ref:`de Vries (1963) <deVries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
 
