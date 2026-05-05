@@ -1,4 +1,5 @@
 # Instructions for Using mksurfdata_esmf to Create Surface Datasets
+#### $CTSMROOT/tools/mksurfdata_esmf/README
 
 ## Table of contents
 1. [Purpose](#purpose)
@@ -217,4 +218,3 @@ ncks --mk_rec_dmn time file_with_time_equals_12.nc -o file_with_time_unlimited.n
 
 In general we recommend using subset_data and/or fsurdat_modifier
 for regional grids.
-

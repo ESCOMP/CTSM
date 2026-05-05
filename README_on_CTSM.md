@@ -120,7 +120,6 @@ Important files in main directories (under $CTSMROOT):
 - `cime_config/usermods_dirs/clm`: Directories of sets of user-modification subdirs; these are directories that add specific user modifications to simulations created using `cime/scripts/create_newcase --user-mods-dir clm/*`
 
 - `tools/mksurfdata_esmf`: Directory to build program to create surface dataset at any resolution
-- `tools/mkmapgrids`: NCL script to create a SCRIP grid file for a regular lat/lon grid (deprecated)
 - `tools/crop_calendars`: Tools to process and process and create crop calendar datasets for CTSM
 - `tools/modify_input_files`: Script to modify existing CTSM input datasets in standard ways
 - `tools/site_and_regional`: Scripts to create input datasets for single site and regional cases, primarily by modifying existing global datasets

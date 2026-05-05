@@ -15,18 +15,7 @@ The tools produce files that can be used for CLM4.5 and |version|. They do **NOT
 
 The list of generally important scripts and programs are as follows.
 
-1. ``./mkmapgrids`` to create SCRIP grid data files from old CLM format grid files that can then be used to create new CLM datasets (deprecated). There is also a NCL script (``./mkmapgrids/mkscripgrid.ncl``) to create SCRIP grid files for regular latitude/longitude grids.
-
-#. ``./mkmapdata`` to create SCRIP mapping data file from SCRIP grid files (uses ESMF).
-
-#. ``mksurfdata_esmf`` to create surface datasets from grid datasets (clm4_0 and |version| versions).
-
-.. todo::
-    Update the below, as domain files aren't needed with nuopc.
-
-#. *$CIMEROOT/tools/mapping/gen_domain_files/gen_domain* to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
-
-#. ``$CIMEROOT/tools/mapping/gen_domain_files/gen_domain`` to create a domain file for datm from a mapping file. The domain file is then used by BOTH datm AND CLM to define the grid and land-mask.
+1. ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
 
 #. ``$CIMEROOT/tools/cprnc`` to compare two NetCDF files.
 
@@ -40,15 +29,11 @@ In the following sections, we will outline how to make these files available for
 Running FORTRAN tools with namelists
 ------------------------------------
 
-``mksurfdata_esmf`` runs with a namelist that is read from standard input. Hence, you create a namelist and then run them by redirecting the namelist file into standard input as follows:
-::
+``mksurfdata_esmf`` runs with a namelist that is read from standard input. First you create a namelist, then you create a jobscript that runs mksurfdata_esmf by redirecting the namelist file into standard input as follows::
 
    ./program < namelist
 
-**mksurfdata_esmf** also has a script that creates the namelist and runs the program for you. The namelist values are also documented along with the other namelists in the:
-::
-
-   $CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml`` file
+There is a tool that generates the namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.py``. The namelist contains information gathered from the file ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml``. There is also a tool that generates a jobscript for running, and this is called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_jobscript_single.py``.
 
 -----------------------------------------------
 Running FORTRAN tools with command line options
