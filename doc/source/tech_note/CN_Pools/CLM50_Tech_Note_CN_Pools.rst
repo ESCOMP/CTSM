@@ -31,8 +31,7 @@ As of CLM5.4, the target leaf C\:N may be time-evolving, :math:`\text{C:N}_{\tex
   :label: time-evolv target leaf CN
 
   \begin{split}
-  \text{C:N}_{\text{perturb}}^{\text{CO2}} &= \text{C:N}_{\text{slope}}^{\text{CO2}} \cdot \ln\left(\frac{\text{CO2}_{\text{atm}}}{\text{CO2}_{\text{atm}}^{\text{ref}}}\right) \\
-  \text{C:N}_{\text{perturb}}^{\text{CO2}} &\ge 0 \\
+  \text{C:N}_{\text{perturb}}^{\text{CO2}} &= \text{C:N}_{\text{slope}}^{\text{CO2}} \cdot \ln\left(\frac{\text{CO2}_{\text{atm}}}{\text{CO2}_{\text{atm}}^{\text{ref}}}\right), \text{where } \text{C:N}_{\text{perturb}}^{\text{CO2}} &\ge 0 \\
   \text{C:N}_{\text{target}}^{\text{pft,CO2}} &= \text{C:N}_{\text{target}}^\text{pft} + \text{C:N}_{\text{perturb}}^{\text{CO2}}
   \end{split}
 
