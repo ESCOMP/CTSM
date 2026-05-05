@@ -53,9 +53,9 @@ This Bytnerowicz formulation (:math:`F_B`) defines a temperature dependent N fix
 where :math:`T_{soil}` is soil temperature (°C), and :math:`T_{min}`, :math:`T_{opt}` , and :math:`T_{max}` define the lower bound, optimum, and upper bound of the biome-specific temperature response. The function is unitless and bounded between 0 and 1. The function is calculated separately for each soil layer and weighted by the fraction of roots present in that layer. The rate function is interpreted as a conductance like term for N acquisition, and its inverse is used to represent a temperature-limited carbon cost of nitrogen fixation (:math:`N_{cost,fix}`) to give a temperature limited cost in terms of C to N ratios: 
 
 .. math::
-   :label: N_{cost,fix}
+   :label: N_cost_fix_1
 
-   N_{cost,\ fix} = \frac{S_{fix}}{F_{B}}
+   N_{cost,fix} = \frac{S_{fix}}{F_{B}}
 
 The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and is set as 6 gC :math:`\mathrm{gN}^{-1}`. When soil temperature falls outside the range of :math:`T_{min}` and :math:`T_{max}`, the cost of fixation is set to an arbitrarily large value (10\ :sup:`9`) to effectively suppress N fixation. Parameters for :math:`T_{min}`, :math:`T_{opt}`, :math:`T_{max}` differ between tropical and extra tropical plant functional types (PFTs), following the biome specific estimates reported by :ref:`Bytnerowicz et al. (2022)<Bytnerowiczetal2022>`. Parameter values for tropical and extra-tropical PFTs are as follows:
 
@@ -67,7 +67,7 @@ The minimum cost of N fixation, :math:`S_{fix}`, occurs at :math:`T_{opt}` and i
 The Houlton function used in CLM5 the cost of fixation (:math:`N_{cost,fix}`) calculated as:
 
 .. math::
-   :label: N_cost,fix
+   :label: N_cost_fix_2
 
    N_{cost,fix} = -S_{fix}/(1.25 e^{a_{fix} + b_{fix} . T_{soil}  (1 - 0.5 T_{soil}/ c_{fix}) })
 
