@@ -1397,9 +1397,14 @@ Smith, A.M.S., Wooster, M.J., Drake, N.A., Dipotso, F.M. and Perry, G.L.W., 2005
 
 Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. Plant, cell & environment 30.9, pp. 1126-1149.
 
+.. _Smith1937:
+
+Smith, E. 1937. The influence of light and carbon dioxide on photosynthesis. General Physiology, 20:807-830.
+
 .. _Sollins1982:
 
 Sollins, P., 1982. Input and decay of coarse woody debris in coniferous stands in western Oregon and Washington. Canadian Journal of Forest Research, 12: 18-28.
+
 
 .. _Songetal2013:
 

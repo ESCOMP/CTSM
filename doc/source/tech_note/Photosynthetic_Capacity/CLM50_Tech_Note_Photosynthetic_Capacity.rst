@@ -22,7 +22,7 @@ The LUNA model includes the following four unitless parameters:
 - :math:`t_{c,j0}` , which defines the baseline ratio of Rubisco-limited rate to light-limited rate;
 - :math:`H` , which determines the response of electron transport rate to relative humidity.
 
-For CLM5, the above four parameters were estimated by fitting the LUNA model to a global compilation of >800 observations located at different biomes, canopy locations, and time of the year from 1993-2013 (Ali et al. 2015). The model inputs are area-based leaf nitrogen content, leaf mass per unit leaf area and the driving environmental conditions (average of the past 10 days) including temperature, CO\ :sub:`2` concentrations, daily mean and maximum radiation, relative humidity and day length. The estimated values in CLM5 for the listed parameters were 0.0311, 0.17, 0.8054, and 6.0999, respectively. As of CLM6, these values have since been updated during our calibration process. See the latest parameter file for the most up-to-date values. In LUNA V1.0, the estimated parameter values are for C3 natural vegetation. In view that potentially large differences in photosynthetic capacity could exist between crops and natural vegetation due to human selection and genetic modifications, the LUNA model is used only for C3 natural vegetation. The photosynthetic capacity for crops and C4 plants are thus still kept the same as CLM4.5. Namely, it is estimated based on the leaf nitrogen content, fixed RUBISCO allocations for :math:`V_{c\max 25}` and an adjusting factor to account for the impact of day length. In CLM, the model simulates both sun-lit and shaded leaves; however, because the sun-lit and shaded leaves can changes through the day based on the sun angles, we do not differentiate the photosynthetic capacity difference for sun-lit or shaded leaves.
+For CLM5, the above four parameters were estimated by fitting the LUNA model to a global compilation of >800 observations located at different biomes, canopy locations, and time of the year from 1993-2013 (:ref:`Ali et al. 2016<Alietal2016>`). The model inputs are area-based leaf nitrogen content, leaf mass per unit leaf area and the driving environmental conditions (average of the past 10 days) including temperature, CO\ :sub:`2` concentrations, daily mean and maximum radiation, relative humidity and day length. The estimated values in CLM5 for the listed parameters were 0.0311, 0.17, 0.8054, and 6.0999, respectively. As of CLM6, these values have since been updated during our calibration process. See the latest parameter file for the most up-to-date values. In LUNA V1.0, the estimated parameter values are for C3 natural vegetation. In view that potentially large differences in photosynthetic capacity could exist between crops and natural vegetation due to human selection and genetic modifications, the LUNA model is used only for C3 natural vegetation. The photosynthetic capacity for crops and C4 plants are thus still kept the same as CLM4.5. Namely, it is estimated based on the leaf nitrogen content, fixed rubisco allocations for :math:`V_{c\max 25}` and an adjusting factor to account for the impact of day length. In CLM, the model simulates both sun-lit and shaded leaves; however, because the sun-lit and shaded leaves can changes through the day based on the sun angles, we do not differentiate the photosynthetic capacity difference for sun-lit or shaded leaves.
 
 .. _Model structure:
 
@@ -59,7 +59,7 @@ where :math:`\text{SNC}` is set to be fixed at 0.004 (gN/g biomass), based on da
 
 .. _Table Plant functional type (PFT) leaf N parameters:
 
-.. table:: Plant functional type (PFT) leaf N parameters.
+.. table:: Plant functional type (PFT) leaf N parameters. Note: These are the original CLM5 values and may not reflect current values. :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m\ :sup:`2` leaf/g biomass).
 
  +----------------------------------+--------------------------+
  | PFT                              |  :math:`SLA_{\text{0}}`  |
@@ -113,7 +113,6 @@ where :math:`\text{SNC}` is set to be fixed at 0.004 (gN/g biomass), based on da
  | Switchgrass                      |          0.03500         |
  +----------------------------------+--------------------------+
 
-Note: These are the original CLM5 values and may not reflect current values. :math:`SLA_{\text{0}}` is the specific leaf area at the canopy top (m\ :sup:`2` leaf/g biomass)
 
 We assume that plants optimize their nitrogen allocations (i.e., :math:`N_{\text{store}}`, :math:`N_{\text{resp}}`, :math:`N_{\text{lc}}`, :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`) to maximize the photosynthetic carbon gain, defined as the gross photosynthesis (:math:`A`) minus the maintenance respiration for photosynthetic enzymes (:math:`R_{\text{psn}}`), under specific environmental conditions and given the plant's strategy of leaf nitrogen use. Namely, the solutions of nitrogen allocations \{:math:`N_{\text{store}}`, :math:`N_{\text{resp}}`, :math:`N_{\text{lc}}`, :math:`N_{\text{et}}`, :math:`N_{\text{cb}}`\} can be estimated as follows,
 
@@ -172,7 +171,7 @@ The efficiency of light energy absorption (unitless), :math:`\alpha`, is calcula
 
   \alpha =\frac{0.292}{1+\frac{0.076}{\mathrm{N}_{\text{lc}}C_{b}}}
 
-where 0.292 is the conversion factor from photon to electron. :math:`C_{b}` is the conversion factor (set to 1.78) from nitrogen to chlorophyll. After we estimate :math:`J_{\text{max}}`, the actual electron transport rate with the daily maximum radiation (:math:`J_{x}`) can be calculated using the empirical expression of leaf (1937),
+where 0.292 is the conversion factor from photon to electron. :math:`C_{b}` is the conversion factor (set to 1.78) from nitrogen to chlorophyll. After we estimate :math:`J_{\text{max}}`, the actual electron transport rate with the daily maximum radiation (:math:`J_{x}`) can be calculated using the empirical expression of :ref:`Smith (1937)<Smith1937>`,
 
 .. math::
   :label: :J_x:)
