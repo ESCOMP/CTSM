@@ -37,6 +37,14 @@ ifeq ($(TIMING),1)
     FFLAGS += -DPERF_TIMING
 endif
 
+# INNER_TIMING=1 turns on the per-loop perf_timers_mod instrumentation.
+# Independent of TIMING/PERF_TIMING (which controls the driver-level
+# system_clock around the whole iteration loop).
+INNER_TIMING ?= 0
+ifeq ($(INNER_TIMING),1)
+    FFLAGS += -DINNER_TIMING
+endif
+
 driver: $(OBJ)
 	$(FC) $(FFLAGS) $(LDFLAGS) -o $@ $(OBJ)
 
