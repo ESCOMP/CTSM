@@ -2380,12 +2380,21 @@ contains
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
 
+       ! When there is no standing water (c_h2osfc == thin_sfclayer), dtime/c_h2osfc = 1.8e9
+       ! which amplifies any non-zero hs_h2osfc by ~10^9, producing an unphysically huge RHS
+       ! that corrupts the banded solver and cascades to NaN in subsequent timesteps.
+       ! Use a trivial identity row (rt = t_h2osfc, no coupling) instead.
+       if (c_h2osfc(c) <= thin_sfclayer) then
+          fn_h2osfc(c) = 0.0_r8
+          rt(c,1)      = t_h2osfc(c)
+       else
        ! surface water layer has two coefficients
        dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
        fn_h2osfc(c)=tk_h2osfc(c)*(t_soisno(c,1)-t_h2osfc(c))/dzm
        rt(c,1)= t_h2osfc(c) +  (dtime/c_h2osfc(c)) &
             *( hs_h2osfc(c) - dhsdT(c)*t_h2osfc(c) + cnfac*fn_h2osfc(c) )!rhs for h2osfc
+       end if
 
     enddo
 
@@ -3094,6 +3103,12 @@ end subroutine SetMatrix_Snow
     do fc = 1,num_nolakec
        c = filter_nolakec(fc)
 
+       ! When there is no standing water (c_h2osfc == thin_sfclayer), dtime/c_h2osfc = 1.8e9
+       ! which inflates diagonal and off-diagonal coefficients to ~10^11, corrupting the solver.
+       ! Use a trivial identity row (diagonal=1, off-diagonals=0) instead.
+       if (c_h2osfc(c) <= thin_sfclayer) then
+          bmatrix_ssw(c,3,0) = 1.0_r8   ! diagonal = 1; off-diagonals already 0 from init
+       else
        ! surface water layer has two coefficients
        dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
@@ -3106,6 +3121,7 @@ end subroutine SetMatrix_Snow
        if ( frac_h2osfc(c) /= 0.0_r8 )then
           bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
                * tk_h2osfc(c)/dzm !flux from h2osfc
+          end if
        end if
     enddo
 
