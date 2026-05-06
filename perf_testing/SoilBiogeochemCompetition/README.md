@@ -110,17 +110,31 @@ Three build/run targets cover the perf-comparison space. Each is a
 passthrough of `EXTRA_FFLAGS` to `make`, so `verify.sh` handles them
 all the same way:
 
-| Target            | Build flags                          | Where to run        |
-|-------------------|--------------------------------------|---------------------|
-| **CPU serial**    | (none — default)                     | Any CPU node        |
-| **CPU multicore** | `EXTRA_FFLAGS="-acc=multicore"`      | Multi-core CPU node |
-| **GPU**           | `EXTRA_FFLAGS="-acc=gpu -gpu=cc80"`  | GPU node (via PBS)  |
+| Target          | Build flags                          | Where to run        |
+|-----------------|--------------------------------------|---------------------|
+| **CPU serial**  | (none — default)                     | Any CPU node        |
+| **CPU OpenMP**  | `EXTRA_FFLAGS="-mp"`                 | Multi-core CPU node |
+| **GPU**         | `EXTRA_FFLAGS="-acc=gpu -gpu=cc80"`  | GPU node (via PBS)  |
+
+The CPU-OpenMP target picks up `!$omp parallel do ...` directives
+that sit alongside the `!$acc parallel loop ...` directives in
+`SoilBiogeochemCompetition.F90`. Both sets of directives are
+Fortran-comment-prefixed sentinels; whichever build flag is passed
+activates the matching set. Without `-mp` or `-acc=...`, both sets
+are no-ops and the code runs serial.
+
+(An earlier draft of this README had a `EXTRA_FFLAGS="-acc=multicore"`
+target. We dropped it: per-call parallel-region overhead in
+nvfortran's multicore runtime made the numbers ~100–1000× slower
+than serial on small kernels, which isn't representative of any
+real CPU-parallel code. CTSM uses OpenMP for CPU threading in
+production, so OpenMP is the right baseline.)
 
 Verify any target builds and the checksums match:
 
 ```bash
 ./verify.sh                                            # CPU serial
-./verify.sh EXTRA_FFLAGS="-acc=multicore"              # CPU multicore
+./verify.sh EXTRA_FFLAGS="-mp"                         # CPU OpenMP
 ./verify.sh EXTRA_FFLAGS="-acc=gpu -gpu=cc80"          # GPU
 ```
 
@@ -141,16 +155,16 @@ Job output is written to `./sbgc_gpu.o<jobid>` (gitignored). For an
 interactive shell instead, just submit `qsub` directly:
 `qsub -I -A ucsg0003 -q tutorial -l select=1:ncpus=1:ngpus=1 -l walltime=00:05:00`.
 
-**Reading the speedup numbers** (mainly relevant once Step 5 OpenACC
-directives are added):
-- *CPU multicore vs CPU serial* — measures how much pure parallelism
+**Reading the speedup numbers** (mainly relevant once Step 5
+parallel directives are added):
+- *CPU OpenMP vs CPU serial* — measures how much pure parallelism
   on the host alone buys you.
-- *GPU vs CPU multicore* — the honest "directives-only" GPU win:
-  same OpenACC source, just a different target.
+- *GPU vs CPU OpenMP* — the honest "directives-only" GPU win:
+  same source, just a different parallel target.
 - *GPU vs CPU serial* — the headline number (combines both effects).
   Easier to communicate, less informative on its own.
 
-Until OpenACC directives land in Step 5, all three targets are
+Until parallel directives land in Step 5, all three targets are
 functionally equivalent and produce identical timings.
 
 ### Disabling the built-in timing

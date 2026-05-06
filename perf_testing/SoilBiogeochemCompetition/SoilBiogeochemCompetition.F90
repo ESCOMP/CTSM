@@ -357,14 +357,16 @@ contains
          !$acc data copyin(sminn_tot) copyout(nuptake_prof)
 
          ! sum up total mineral N pools.
-         ! GPU/multicore (_OPENACC): parallelize over fc, serialize j inside
-         ! each thread (sminn_tot(c) is accumulated across j for each c —
-         ! keep that reduction serial per-thread). CPU-serial: original loop
-         ! order (j outer, fc inner) is more cache-friendly because
-         ! smin_no3_vr(c,j) etc. are column-major. Body and end-do's are
-         ! shared; only the loop opening differs.
+         ! Parallel build (_OPENACC or _OPENMP): parallelize over fc,
+         ! serialize j inside each thread (sminn_tot(c) is accumulated
+         ! across j for each c — keep that reduction serial per-thread,
+         ! and ensure each thread owns a unique c so there's no race).
+         ! CPU-serial: original loop order (j outer, fc inner) is more
+         ! cache-friendly because smin_no3_vr(c,j) etc. are column-major.
+         ! Body and end-do's are shared; only the loop opening differs.
          call perf_timer_start('accum_sminn_tot')
-#ifdef _OPENACC
+#if defined(_OPENACC) || defined(_OPENMP)
+         !$omp parallel do private(c)
          !$acc parallel loop default(present)
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
@@ -383,6 +385,7 @@ contains
          ! Each (c,j) writes to its own nuptake_prof(c,j); no reduction —
          ! safe to parallelize both loops together via collapse(2).
          call perf_timer_start('compute_nuptake_prof')
+         !$omp parallel do collapse(2) private(c)
          !$acc parallel loop collapse(2) default(present)
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
