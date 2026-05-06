@@ -59,8 +59,6 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Pool structure` Pool structure, transitions, respired fractions, and turnover times for the 2 alternate soil decomposition models included in CLM.
 
-- :numref:`Figure Biological nitrogen fixation` Biological nitrogen fixation as a function of annual net primary production.
-
 - :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux.
 
 - :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes.

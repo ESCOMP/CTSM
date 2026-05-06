@@ -595,6 +595,10 @@ Hou, Z., Huang, M., Leung, L.R., Lin, G., and Ricciuto, D.M. 2012. Sensitivity o
 
 Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
 
+.. _Houltonetal2015:
+
+Houlton, B., Marklein, A. & Bai, E. Representation of nitrogen in climate change forecasts. Nature Clim Change 5, 398–401 (2015). https://doi.org/10.1038/nclimate2538
+
 .. _HuangLiang2006:
 
 Huang, M., and Liang, X. 2006. On the assessment of the impact of reducing parameters and identification of parameter uncertainties for a hydrologic model with applications to ungauged basins. J. Hydrol. 320:37-61.
@@ -1039,6 +1043,10 @@ Negron-Juarez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q. 2015. Env
 .. _NemaniRunning1996:
 
 Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical global vegetation classification in ecosystem function models. J. Veg. Sci. 7:337-346.
+
+.. _Nevisonetal2022:
+
+Nevison, C., Hess, P., Goodale, C., Zhu Q., and Vira, J. 2022. Nitrification, Denitrification, and Competition for Soil N: Evaluation of Two Earth System Models against Observations. Ecological Applications 32(4): e2528. doi:10.1002/eap.2528
 
 .. _Niinemetstal1998:
 
