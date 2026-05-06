@@ -2,6 +2,8 @@
 CTSM History Fields (nofates)
 =============================
 
+NOTE: Instantaneous fields will appear in history files - labeled h0i, h1i, ... - representing individual model time steps documented in each file's metadata (variables time, nstep). Non-instantaneous fields will appear in history files - labeled h0a, h1a, ... - representing the mid-point of the time bounds documented in each file's metadata (variables time, time_bounds).
+
 CAUTION: Not all variables are relevant / present for all CTSM cases.
 Key flags used in this CTSM case:
 use_cn = T

@@ -2,19 +2,15 @@
 #PBS -N job_name
 #PBS -A P93300606 
 #PBS -l walltime=00:10:00
-#PBS -q premium
-##PBS -q share
-##PBS -q regular
+#PBS -q main
 #PBS -j oe
 
-#PBS -l select=2:ncpus=4:mpiprocs=8
-##PBS -l select=1:ncpus=1:mpiprocs=2
-##PBS -l select=1:ncpus=1:mpiprocs=1
+#PBS -l select=1:ncpus=128:mpiprocs=128
 
 #ml ???
 
 ### Set TMPDIR as recommended
-setenv TMPDIR /glade/scratch/$USER
+setenv TMPDIR /glade/derecho/scratch/$USER
 mkdir -p $TMPDIR
 
 echo "hello"
@@ -25,7 +21,6 @@ source /glade/u/apps/ch/opt/lmod/7.5.3/lmod/lmod/init/csh
 module purge 
 module load ncarenv/1.2 intel/19.0.2 esmf_libs mkl mpt/2.19 netcdf-mpi/4.6.1 pnetcdf/1.11.0 ncarcompilers/0.4.1
 setenv OMP_STACKSIZE 256M
-setenv MPI_TYPE_DEPTH 16
 setenv MPI_IB_CONGESTED 1
 setenv MPI_USE_ARRAY None
 setenv ESMFMKFILE /glade/u/home/dunlap/ESMF-INSTALL/intel19/8.0.0bs32/lib/libO/Linux.intel.64.mpt.default/esmf.mk
@@ -36,4 +31,4 @@ setenv UGCSFIXEDFILEPATH /glade/work/turuncu/FV3GFS/fix_am
 setenv UGCSADDONPATH /glade/work/turuncu/FV3GFS/addon
 #setenv MPI_USE_ARRAY false
 
-mpiexec_mpt -p "%g:" ./atm_driver.exe
+mpibind ./atm_driver.exe

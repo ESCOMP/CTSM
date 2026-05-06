@@ -20,6 +20,8 @@ module controlMod
   use decompInitMod                    , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
+  use clm_varpar                       , only: clmfates_carbon_only
+  use clm_varpar                       , only: clmfates_carbon_nitrogen
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen
   use histFileMod                      , only: hist_empty_htapes, hist_all_fields, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
@@ -42,7 +44,7 @@ module controlMod
   use CNSharedParamsMod                , only: use_fun, use_matrixcn
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
   use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
-  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
+  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon, suplnAll
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
@@ -51,6 +53,7 @@ module controlMod
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
   use clm_varctl
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -259,8 +262,9 @@ contains
           use_fates_tree_damage,                        &
           use_fates_daylength_factor,                   &
           fates_photosynth_acclimation,                 &
-          fates_history_dimlevel,                       &
-          use_fates_managed_fire
+          use_fates_managed_fire,                       &
+          fates_lu_transition_logic,                    &
+          fates_history_dimlevel
 
     ! Ozone vegetation stress method
     namelist / clm_inparm / o3_veg_stress_method
@@ -493,12 +497,19 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon .and. use_fates_bgc )then
-             write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_only) .and. suplnitro == suplnNon)then
+             write(iulog,*) ' When fates_parteh_mode == carbon_only,'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
              write(iulog,*) '  meaningful limitations to nitrogen.'
-             call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_only must have suplnitro set to suplnAll.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_nitrogen) .and. use_fates_sp )then
+             write(iulog,*) ' When fates_parteh_mode == carbon_nirogen,'
+             write(iulog,*) '  you must have use_fates_bgc and not use_fates_sp.'
+             write(iulog,*) ' When you have use_fates_sp, then fates_parteh_mode should equal carbon_only.'
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_nitrogen and use_fates_sp are inconsistent.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           
@@ -819,6 +830,7 @@ contains
     call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_lu_transition_logic, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_harvest_mode, len(fates_harvest_mode) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_stomatal_model, len(fates_stomatal_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_stomatal_assimilation, len(fates_stomatal_assimilation) , MPI_CHARACTER, 0, mpicom, ier)
@@ -850,7 +862,7 @@ contains
     call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_managed_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_parteh_mode, len(fates_parteh_mode), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
 
@@ -1237,6 +1249,7 @@ contains
     if (use_fates) then
        write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
        write(iulog, *) '    fates_harvest_mode = ', fates_harvest_mode
+       write(iulog, *) '    fates_lu_transition_logic = ', fates_lu_transition_logic
        write(iulog, *) '    fates_stomatal_model = ', fates_stomatal_model
        write(iulog, *) '    fates_stomatal_assimilation = ', fates_stomatal_assimilation
        write(iulog, *) '    fates_leafresp_model = ', fates_leafresp_model
