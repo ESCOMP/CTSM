@@ -10,8 +10,7 @@ To get the |version|-BGC model to a steady state, you start it from arbitrary in
 
 .. _Figure BGC AD spinup plot for 1850:
 
-.. Pick a simulation and create the new figure for the next 2 lines, which I have temporarily commented out:
-.. .. figure:: AD_spinup.png
+.. figure:: AD_spinup_placeholder.png
 
  BGC AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
@@ -19,8 +18,7 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
 .. _Figure BGC SASU spinup plot for 1850:
 
-.. Pick a simulation and create the new figure for the next 2 lines, which I have temporarily commented out:
-.. .. figure:: SASU_spinup.png
+.. figure:: SASU_spinup_placeholder.png
 
  BGC SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
