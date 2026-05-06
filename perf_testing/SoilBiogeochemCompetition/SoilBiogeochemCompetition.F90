@@ -475,8 +475,8 @@ contains
                   c = filter_bgc_soilc(fc)
                   if (residual_plant_ndemand(c)  >  0._r8 ) then
                      if (nlimit_nh4(c,j) .eq. 0) then
-                        residual_smin_nh4_vr(c,j) = max(smin_nh4_vr(c,j) - (actual_immob_nh4_vr(c,j) + &
-                                                    smin_nh4_to_plant_vr(c,j) + f_nit_vr(c,j) ) * dt, 0._r8)
+                        residual_smin_nh4_vr(c,j) = compute_residual_smin_vr( &
+                             smin_nh4_vr(c,j), actual_immob_nh4_vr(c,j), smin_nh4_to_plant_vr(c,j), f_nit_vr(c,j), dt)
 
                         residual_smin_nh4(c) = residual_smin_nh4(c) + residual_smin_nh4_vr(c,j) * dzsoi_decomp(j)
                      else
@@ -484,8 +484,8 @@ contains
                      endif
 
                      if ( residual_smin_nh4(c) > 0._r8 .and. nlimit_nh4(c,j) .eq. 0 ) then
-                        smin_nh4_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + residual_smin_nh4_vr(c,j) * &
-                             min(( residual_plant_ndemand(c) *  dt ) / residual_smin_nh4(c), 1._r8) / dt
+                        smin_nh4_to_plant_vr(c,j) = distribute_residual_to_plant( &
+                             smin_nh4_to_plant_vr(c,j), residual_smin_nh4_vr(c,j), residual_plant_ndemand(c), residual_smin_nh4(c), dt)
                      endif
                   end if
                end do
@@ -835,5 +835,26 @@ contains
     real(r8), intent(in)    :: sminn_to_plant_vr, dzsoi_decomp
     sminn_to_plant = sminn_to_plant + sminn_to_plant_vr * dzsoi_decomp
   end subroutine accum_sminn_to_plant
+
+  !-----------------------------------------------------------------------
+  ! Per-layer leftover mineral N after first-pass demands (used for both
+  ! NH4 and NO3). f_loss is f_nit_vr for NH4, f_denit_vr for NO3.
+  pure function compute_residual_smin_vr( &
+       smin_vr, actual_immob_vr, smin_to_plant_vr, f_loss_vr, dt) result(residual_smin_vr)
+    real(r8) :: residual_smin_vr
+    real(r8), intent(in) :: smin_vr, actual_immob_vr, smin_to_plant_vr, f_loss_vr, dt
+    residual_smin_vr = max(smin_vr - (actual_immob_vr + smin_to_plant_vr + f_loss_vr ) * dt, 0._r8)
+  end function compute_residual_smin_vr
+
+  !-----------------------------------------------------------------------
+  ! Distribute layer-wise residual N to satisfy residual plant demand
+  ! (used for both NH4 and NO3).
+  pure function distribute_residual_to_plant( &
+       smin_to_plant_vr, residual_smin_vr, residual_plant_ndemand, residual_smin, dt) result(smin_to_plant_vr_new)
+    real(r8) :: smin_to_plant_vr_new
+    real(r8), intent(in) :: smin_to_plant_vr, residual_smin_vr, residual_plant_ndemand, residual_smin, dt
+    smin_to_plant_vr_new = smin_to_plant_vr + residual_smin_vr * &
+         min(( residual_plant_ndemand *  dt ) / residual_smin, 1._r8) / dt
+  end function distribute_residual_to_plant
 
 end module SoilBiogeochemCompetition_mod
