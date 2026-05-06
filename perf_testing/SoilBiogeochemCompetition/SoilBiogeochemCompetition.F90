@@ -407,9 +407,11 @@ contains
                     carbon_only)
 
                ! sum up no3 and nh4 fluxes
-               fpi_vr(c,j) = fpi_no3_vr(c,j) + fpi_nh4_vr(c,j)
-               sminn_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)
-               actual_immob_vr(c,j) = actual_immob_no3_vr(c,j) + actual_immob_nh4_vr(c,j)
+               call compute_competition_summary( &
+                    fpi_vr(c,j), sminn_to_plant_vr(c,j), actual_immob_vr(c,j), &
+                    fpi_no3_vr(c,j), fpi_nh4_vr(c,j), &
+                    smin_no3_to_plant_vr(c,j), smin_nh4_to_plant_vr(c,j), &
+                    actual_immob_no3_vr(c,j), actual_immob_nh4_vr(c,j))
             end do
          end do
          call perf_timer_stop('main_competition')
@@ -811,5 +813,20 @@ contains
                   sminn_to_plant_vr = smin_no3_to_plant_vr + smin_nh4_to_plant_vr
                end if
   end subroutine apply_carbon_only_adjustment
+
+  !-----------------------------------------------------------------------
+  pure subroutine compute_competition_summary( &
+       fpi_vr, sminn_to_plant_vr, actual_immob_vr, &
+       fpi_no3_vr, fpi_nh4_vr, &
+       smin_no3_to_plant_vr, smin_nh4_to_plant_vr, &
+       actual_immob_no3_vr, actual_immob_nh4_vr)
+    real(r8), intent(out) :: fpi_vr, sminn_to_plant_vr, actual_immob_vr
+    real(r8), intent(in)  :: fpi_no3_vr, fpi_nh4_vr
+    real(r8), intent(in)  :: smin_no3_to_plant_vr, smin_nh4_to_plant_vr
+    real(r8), intent(in)  :: actual_immob_no3_vr, actual_immob_nh4_vr
+               fpi_vr = fpi_no3_vr + fpi_nh4_vr
+               sminn_to_plant_vr = smin_no3_to_plant_vr + smin_nh4_to_plant_vr
+               actual_immob_vr = actual_immob_no3_vr + actual_immob_nh4_vr
+  end subroutine compute_competition_summary
 
 end module SoilBiogeochemCompetition_mod
