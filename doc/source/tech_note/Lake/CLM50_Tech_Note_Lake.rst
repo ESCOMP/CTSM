@@ -605,7 +605,7 @@ Finally, the mass of ice in the layer :math:`M_{ice}` is adjusted downwards by :
 
 where :math:`c'_{v,i} =c_{v,i} +M\left(c_{liq} -c_{ice} \right)`.
 
-If freezing occurs, :math:`Q_{avail}` is again given by equation :eq:12.47, but will be negative. The melt :math:`M`, also negative, is given by
+If freezing occurs, :math:`Q_{avail}` is again given by equation :eq:`12.47`, but will be negative. The melt :math:`M`, also negative, is given by
 
 .. math::
    :label: 12.51
