@@ -336,14 +336,37 @@ contains
          end do
          call perf_timer_stop('init_sminn_tot')
 
-         ! sum up total mineral N pools
+         ! sum up total mineral N pools.
+         ! GPU/multicore (_OPENACC): parallelize over fc, serialize j inside
+         ! each thread (sminn_tot(c) is accumulated across j for each c —
+         ! keep that reduction serial per-thread). CPU-serial: original loop
+         ! order (j outer, fc inner) is more cache-friendly because
+         ! smin_no3_vr(c,j) etc. are column-major. Body and end-do's are
+         ! shared; only the loop opening differs.
+         !
+         ! The !$acc data region scopes data movement to this kernel for
+         ! now. A later step will hoist it (and the surrounding ones) into
+         ! a larger region in the driver so transfers happen once per
+         ! iteration, not once per loop. !$acc directives are comment
+         ! sentinels — no-op when -acc isn't passed, so no #ifdef needed.
          call perf_timer_start('accum_sminn_tot')
+         !$acc data copy(sminn_tot)                              &
+         !$acc&     copyin(smin_no3_vr, smin_nh4_vr,             &
+         !$acc&            dzsoi_decomp, filter_bgc_soilc)
+#ifdef _OPENACC
+         !$acc parallel loop
+         do fc=1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+            do j = 1, nlevdecomp
+#else
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
+#endif
                call accum_sminn_tot(sminn_tot(c), smin_no3_vr(c,j), smin_nh4_vr(c,j), dzsoi_decomp(j))
             end do
          end do
+         !$acc end data
          call perf_timer_stop('accum_sminn_tot')
 
          ! define N uptake profile for initial vertical distribution of plant N uptake, assuming plant seeks N from where it is most abundant
@@ -583,6 +606,7 @@ contains
 
   !-----------------------------------------------------------------------
   pure subroutine accum_sminn_tot(sminn_tot, smin_no3_vr, smin_nh4_vr, dzsoi_decomp)
+    !$acc routine seq
     real(r8), intent(inout) :: sminn_tot
     real(r8), intent(in)    :: smin_no3_vr, smin_nh4_vr, dzsoi_decomp
     sminn_tot = sminn_tot + (smin_no3_vr + smin_nh4_vr) * dzsoi_decomp
