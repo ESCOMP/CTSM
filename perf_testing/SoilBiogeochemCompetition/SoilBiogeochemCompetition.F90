@@ -326,6 +326,13 @@ contains
 
       else  !----------NITRIF_DENITRIF-------------!
 
+         ! Hoisted !$acc data region for read-only inputs that are constant
+         ! across all kernels in the canonical path. Inner kernels reference
+         ! these as 'present' so transfers happen once per call to this
+         ! routine (i.e. once per timestep in the real model), not once per
+         ! kernel. The copyin list grows as more kernels get OpenACC-ified.
+         !$acc data copyin(smin_nh4_vr, smin_no3_vr, dzsoi_decomp, filter_bgc_soilc)
+
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
 
          ! init total mineral N pools
@@ -599,6 +606,8 @@ contains
             fpi(c) = compute_fraction_or_one(actual_immob(c),   potential_immob(c))
          end do ! end of column loops
          call perf_timer_stop('compute_fpg_fpi')
+
+         !$acc end data
 
       end if if_nitrif  !end of if_not_use_nitrif_denitrif
 

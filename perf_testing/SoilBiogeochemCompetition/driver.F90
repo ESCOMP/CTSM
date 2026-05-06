@@ -131,12 +131,6 @@ program SoilBiogeochemCompetition_driver
   call system_clock(count_rate=t_rate)
   call system_clock(t_start)
 #endif
-  ! Hoisted !$acc data region for read-only inputs that are constant
-  ! across the iteration loop. Each kernel inside SoilBiogeochemCompetition
-  ! references these as 'present' so transfers happen once per driver run
-  ! instead of once per kernel call. The list grows as more kernels get
-  ! OpenACC-ified.
-  !$acc data copyin(smin_nh4_vr, smin_no3_vr, dzsoi_decomp, filter_bgc_soilc)
   do iter = 1, niters
      if (is_fast) then
         ! Canonical config only: use_nitrif_denitrif=.true.,
@@ -156,7 +150,6 @@ program SoilBiogeochemCompetition_driver
         call run_config(.false., .true.,  non_mimics_decomp, partial_cs); checksum = checksum + partial_cs
      end if
   end do
-  !$acc end data
 #ifdef PERF_TIMING
   call system_clock(t_end)
   elapsed_s  = real(t_end - t_start, r8) / real(t_rate, r8)
