@@ -519,16 +519,16 @@ contains
                   c = filter_bgc_soilc(fc)
                   if (residual_plant_ndemand(c) > 0._r8 ) then
                      if (nlimit_no3(c,j) .eq. 0) then
-                       residual_smin_no3_vr(c,j) = max(smin_no3_vr(c,j) - (actual_immob_no3_vr(c,j) + &
-                                                   smin_no3_to_plant_vr(c,j) + f_denit_vr(c,j) ) * dt, 0._r8)
+                       residual_smin_no3_vr(c,j) = compute_residual_smin_vr( &
+                             smin_no3_vr(c,j), actual_immob_no3_vr(c,j), smin_no3_to_plant_vr(c,j), f_denit_vr(c,j), dt)
                         residual_smin_no3(c) = residual_smin_no3(c) + residual_smin_no3_vr(c,j) * dzsoi_decomp(j)
                      else
                         residual_smin_no3_vr(c,j)  = 0._r8
                      endif
 
                      if ( residual_smin_no3(c) > 0._r8 .and. nlimit_no3(c,j) .eq. 0) then
-                        smin_no3_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + residual_smin_no3_vr(c,j) * &
-                             min(( residual_plant_ndemand(c) *  dt ) / residual_smin_no3(c), 1._r8) / dt
+                        smin_no3_to_plant_vr(c,j) = distribute_residual_to_plant( &
+                             smin_no3_to_plant_vr(c,j), residual_smin_no3_vr(c,j), residual_plant_ndemand(c), residual_smin_no3(c), dt)
                      endif
                   endif
                end do
