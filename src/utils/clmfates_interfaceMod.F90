@@ -1867,9 +1867,6 @@ module CLMFatesInterfaceMod
       ! I think that is it...
       ! ---------------------------------------------------------------------------------
 
-      ! Set the FATES global time and date variables
-      call GetAndSetTime
-
       if(.not.initialized) then
 
          initialized=.true.
@@ -2002,6 +1999,11 @@ module CLMFatesInterfaceMod
       ! ---------------------------------------------------------------------------------
 
       if(flag=='read')then
+        ! pass time to FATES internal variables
+        ! since this routine is called on 'define','write','read'
+        ! and the first two can be called whenever, calling this outside 'read'
+        ! will change the time that has been previously set in dynamics_driver
+        call GetAndSetTime
 
          !$OMP PARALLEL DO PRIVATE (nc,bounds_clump,s)
          do nc = 1, nclumps
