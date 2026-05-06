@@ -27,9 +27,12 @@ exercises all 8 combinations by default (see [Driver modes](#driver-modes)).
   arrays where the routine signature requires pointer), runs all 8
   config combinations per iter (or 1 with `--fast`), prints results,
   writes `last_run.txt`, compares against `baseline_checksum.txt`.
-- `baseline_checksum.txt` — committed reference output of the canonical
-  run (default params, `--all` mode). Driver compares against this when
-  the fingerprint matches.
+- `baseline_checksum.txt` — committed reference output of the `--all`
+  run (default params). Driver compares against this when run without
+  `--fast` and the fingerprint matches.
+- `baseline_checksum_fast.txt` — committed reference output of the
+  canonical `--fast` run (default params). Driver compares against
+  this when run with `--fast` and the fingerprint matches.
 - `Makefile` — tiny wrapper that sets `OBJ` and includes
   [../Makefile.common](../Makefile.common) (which carries `FC`,
   `FFLAGS`, the `PERF_TIMING` macro plumbing, and the `clean` target).
@@ -69,11 +72,11 @@ after the positional args.
   of all 8 per-config checksums, so it locks correctness across every
   top-level branch in the routine. Per-call time = elapsed / (niters * 8).
 - **`--fast`** — runs only the canonical config
-  (`use_nitrif_denitrif=.true.`, `carbon_only=.false.`,
-  `decomp_method=mimics_decomp`). Use it for tight perf-iteration loops
-  where covering every branch every time is unnecessary. Has its own
-  fingerprint, so an `--all` baseline doesn't `MATCH` a `--fast` run
-  (the driver prints `param set differs; skipping compare`).
+  (`use_nitrif_denitrif=.true.`, `carbon_only=.false.`, MIMICS off —
+  i.e. `decomp_method /= mimics_decomp`). Use it for tight
+  perf-iteration loops where covering every branch every time is
+  unnecessary. Compares against its own baseline file
+  (`baseline_checksum_fast.txt`), not the `--all` baseline.
 
 Within a single config, the synthetic inputs are rigged so per-cell
 branches inside the routine fire on different cells (`sminn_vr` ranges
@@ -105,7 +108,7 @@ baseline — just nothing in the call loop's surrounding region except
 the loop itself.
 
 `make clean` removes `driver`, `*.o`, `*.mod`, and `last_run.txt`. It
-does not touch `baseline_checksum.txt`.
+does not touch `baseline_checksum.txt` or `baseline_checksum_fast.txt`.
 
 ## Output
 
@@ -133,26 +136,37 @@ fingerprint (`mode`, sizes, `niters`) + checksum.
 
 ## Baseline checksum
 
-`baseline_checksum.txt` is committed. It captures the summed checksum
-of the canonical default run (`--all` mode, default sizes) and serves
-as a correctness reference for future optimized variants. The driver:
+Two committed baseline files, picked by mode:
 
-- prints `MATCH` if the parameter fingerprint matches the baseline and
-  the checksum agrees within `1e-10 * max(|baseline|, 1)`;
+- `baseline_checksum.txt` — `--all` mode (summed checksum across all 8
+  configs).
+- `baseline_checksum_fast.txt` — `--fast` mode (canonical config only).
+
+Both serve as correctness references for future optimized variants.
+The driver:
+
+- prints `MATCH` if the parameter fingerprint matches the relevant
+  baseline and the checksum agrees within `1e-10 * max(|baseline|, 1)`;
 - prints `MISMATCH` (with the diff and tol) if the checksum has drifted
   — treat this as a correctness regression;
 - skips the comparison when the fingerprint doesn't match (e.g.
-  different sizes, `niters`, or running `--fast` against an `--all`
-  baseline).
+  different sizes or `niters`).
 
-To **regenerate** the baseline (e.g. after deliberately changing the
+To **regenerate** a baseline (e.g. after deliberately changing the
 algorithm or input fill pattern):
 
 ```bash
+# Regenerate the --all baseline
 make clean && make && ./driver
 cp last_run.txt baseline_checksum.txt
 git add baseline_checksum.txt
 git commit -m "Regenerate SoilBiogeochemCompetition baseline_checksum.txt"
+
+# Regenerate the --fast baseline
+./driver --fast
+cp last_run.txt baseline_checksum_fast.txt
+git add baseline_checksum_fast.txt
+git commit -m "Regenerate SoilBiogeochemCompetition baseline_checksum_fast.txt"
 ```
 
 ## Notes for future optimization stages
