@@ -3,3 +3,5 @@
 driver
 last_run.txt
 last_run_timings.csv
+sbgc_gpu.o*
+sbgc_gpu.e*
