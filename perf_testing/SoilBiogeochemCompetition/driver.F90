@@ -10,9 +10,10 @@ program SoilBiogeochemCompetition_driver
   ! routine.
   !
   ! --fast mode: runs only the canonical config
-  ! (use_nitrif_denitrif=.true., carbon_only=.false.,
-  ! decomp_method=mimics_decomp). Use it for tight perf-iteration loops
-  ! where covering every branch every time is unnecessary.
+  ! (use_nitrif_denitrif=.true., carbon_only=.false., MIMICS off).
+  ! Use it for tight perf-iteration loops where covering every branch
+  ! every time is unnecessary. --fast and --all use separate baseline
+  ! files (baseline_checksum_fast.txt vs baseline_checksum.txt).
   !
   ! Built-in timing (system_clock around the call loop, plus printed
   ! 'elapsed (s)' / 'per call (s)' lines) is gated by the cpp macro
@@ -130,8 +131,9 @@ program SoilBiogeochemCompetition_driver
 #endif
   do iter = 1, niters
      if (is_fast) then
-        ! Canonical config only.
-        call run_config(.true., .false., mimics_decomp, partial_cs)
+        ! Canonical config only: use_nitrif_denitrif=.true.,
+        ! carbon_only=.false., MIMICS off (dmethod /= mimics_decomp).
+        call run_config(.true., .false., mimics_decomp - 1, partial_cs)
         checksum = checksum + partial_cs
      else
         ! All 8 combinations of (use_nitrif_denitrif, carbon_only,
@@ -397,18 +399,25 @@ contains
     integer  :: u, ios
     logical  :: exists
     character(len=64) :: key, b_mode
+    character(len=64) :: baseline_path
     integer  :: b_ncol, b_nlevdecomp, b_ndct, b_numfc, b_niters
     real(r8) :: b_checksum, tol, diff
 
-    inquire(file='baseline_checksum.txt', exist=exists)
+    if (is_fast) then
+       baseline_path = 'baseline_checksum_fast.txt'
+    else
+       baseline_path = 'baseline_checksum.txt'
+    end if
+
+    inquire(file=trim(baseline_path), exist=exists)
     if (.not. exists) then
-       write(*,'(a)') '  baseline             = (no baseline_checksum.txt found; skipping compare)'
+       write(*,'(a,a,a)') '  baseline             = (no ', trim(baseline_path), ' found; skipping compare)'
        return
     end if
 
-    open(newunit=u, file='baseline_checksum.txt', status='old', action='read', iostat=ios)
+    open(newunit=u, file=trim(baseline_path), status='old', action='read', iostat=ios)
     if (ios /= 0) then
-       write(*,'(a)') '  baseline             = (could not open baseline_checksum.txt)'
+       write(*,'(a,a,a)') '  baseline             = (could not open ', trim(baseline_path), ')'
        return
     end if
     read(u,*,iostat=ios) key, b_mode;       if (ios /= 0) goto 99
@@ -441,7 +450,7 @@ contains
 
  99 continue
     close(u)
-    write(*,'(a)') '  baseline             = (parse error in baseline_checksum.txt; skipping compare)'
+    write(*,'(a,a,a)') '  baseline             = (parse error in ', trim(baseline_path), '; skipping compare)'
   end subroutine compare_to_baseline
 
 end program SoilBiogeochemCompetition_driver
