@@ -6,22 +6,23 @@
  Spinup of |version|-BGC-Crop
 =============================
 
-To get the |version|-BGC model to a steady state, you start it from arbitrary initial conditions using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM ``env_run.xml``, see example below) mode for about 360 simulation years. :numref:`Figure BGC AD spinup plot for 1850` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
+To get the |version|-BGC model to a steady state, you start it from arbitrary initial conditions using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM ``env_run.xml``, see example below) mode for 300-400 simulation years. :numref:`Figure BGC AD spinup plot for 1850` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
 
-.. Pick a simulation and create the new figure for the next 3 lines, which I have temporarily commented out:
-.. .. _Figure BGC AD spinup plot for 1850:
+.. _Figure BGC AD spinup plot for 1850:
 
+.. Pick a simulation and create the new figure for the next 2 lines, which I have temporarily commented out:
 .. .. figure:: AD_spinup.png
 
  BGC AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-After this you branch from this mode in the "final spinup" (``-bgc_spinup off`` in CLM ``configure``, see example below), and run for several hundred simulation years. :numref:`Figure BGC pAD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC post accelerated decomposition (pAD) case using GSWP3 atmospheric forcing. As before, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy. It can be difficult to meet this strict criteria in less than 1000 years and users may want to relax this criteria depending on their application.
+After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM ``env_run.xml``, see example below), and run for 300-350 simulation years. :numref:`Figure BGC SASU spinup plot for 1850` shows spinup behavior for an 1850 BGC SASU case using CRUJRA atmospheric forcing. The criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy and need not be met for this step.
 
-.. _Figure BGC pAD spinup plot for 1850 GSWP3:
+.. _Figure BGC SASU spinup plot for 1850:
 
-.. figure:: image4.png
+.. Pick a simulation and create the new figure for the next 2 lines, which I have temporarily commented out:
+.. .. figure:: SASU_spinup.png
 
- BGC pAD spinup plot for a year 1850 case with GSWP3 atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
 You can also start from a default initial file that is setup as part of the selected compset. :numref:`Figure BGC initialized spinup plot for 1850` shows spinup behavior for an 1850 pAD BGC case that loops over one year of coupler history output for atmospheric forcing (generated from the fully coupled model), initialized with a BGC initial file generated from a GSWP3 atmospheric forcing case. Note that it takes about 10 years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a specified equilibrium state (denoted by the dotted lines) due to the different atmospheric forcing.
 
