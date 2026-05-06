@@ -107,6 +107,33 @@ computes the checksum, and writes `last_run.txt` / compares against the
 baseline — just nothing in the call loop's surrounding region except
 the loop itself.
 
+### Per-loop ("inner") timing
+
+A separate cpp macro `INNER_TIMING` enables per-loop wall-clock
+instrumentation for the canonical-path science loops in
+`SoilBiogeochemCompetition` (init / accum / nuptake-prof / main
+competition / etc.). Default off:
+
+```bash
+make clean && make INNER_TIMING=1
+./driver --fast
+```
+
+When enabled, each canonical loop's elapsed time and call count
+are accumulated by [`../perf_timers_mod.F90`](../perf_timers_mod.F90)
+(intrinsic `system_clock`, no external library). At the end of a
+run the driver:
+
+- prints a `--- per-loop wall-clock timers ---` table to stdout, and
+- writes one row per label to `last_run_timings.csv` (gitignored;
+  see [`../.gitignore`](../.gitignore)).
+
+`INNER_TIMING` is independent of `TIMING` / `PERF_TIMING` (which
+gates the driver-level total-time block), so you can measure
+per-loop times alone, total time alone, both, or neither. Use
+`./verify.sh INNER_TIMING=1` to build, run, and confirm both
+`--fast` and `--all` still MATCH with timers on.
+
 `make clean` removes `driver`, `*.o`, `*.mod`, and `last_run.txt`. It
 does not touch `baseline_checksum.txt` or `baseline_checksum_fast.txt`.
 
