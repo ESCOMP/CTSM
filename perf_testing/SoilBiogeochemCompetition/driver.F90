@@ -46,7 +46,8 @@ program SoilBiogeochemCompetition_driver
 
   ! Per-config switches: in --fast mode, only the canonical config below
   ! runs; in --all (default), every combination is exercised.
-  integer , parameter :: mimics_decomp  = 2     ! id value of MIMICS decomposition method
+  integer , parameter :: mimics_decomp     = 2  ! id value of MIMICS decomposition method
+  integer , parameter :: non_mimics_decomp = 1  ! any value /= mimics_decomp turns MIMICS off
   integer , parameter :: i_cop_mic      = 3
   integer , parameter :: i_oli_mic      = 4
   real(r8), parameter :: dt   = 1800.0_r8       ! 30-min decomp timestep
@@ -132,20 +133,20 @@ program SoilBiogeochemCompetition_driver
   do iter = 1, niters
      if (is_fast) then
         ! Canonical config only: use_nitrif_denitrif=.true.,
-        ! carbon_only=.false., MIMICS off (dmethod /= mimics_decomp).
-        call run_config(.true., .false., mimics_decomp - 1, partial_cs)
+        ! carbon_only=.false., MIMICS off.
+        call run_config(.true., .false., non_mimics_decomp, partial_cs)
         checksum = checksum + partial_cs
      else
         ! All 8 combinations of (use_nitrif_denitrif, carbon_only,
         ! decomp_method == mimics_decomp).
-        call run_config(.true.,  .false., mimics_decomp,    partial_cs); checksum = checksum + partial_cs
-        call run_config(.true.,  .false., mimics_decomp - 1, partial_cs); checksum = checksum + partial_cs
-        call run_config(.true.,  .true.,  mimics_decomp,    partial_cs); checksum = checksum + partial_cs
-        call run_config(.true.,  .true.,  mimics_decomp - 1, partial_cs); checksum = checksum + partial_cs
-        call run_config(.false., .false., mimics_decomp,    partial_cs); checksum = checksum + partial_cs
-        call run_config(.false., .false., mimics_decomp - 1, partial_cs); checksum = checksum + partial_cs
-        call run_config(.false., .true.,  mimics_decomp,    partial_cs); checksum = checksum + partial_cs
-        call run_config(.false., .true.,  mimics_decomp - 1, partial_cs); checksum = checksum + partial_cs
+        call run_config(.true.,  .false., mimics_decomp,     partial_cs); checksum = checksum + partial_cs
+        call run_config(.true.,  .false., non_mimics_decomp, partial_cs); checksum = checksum + partial_cs
+        call run_config(.true.,  .true.,  mimics_decomp,     partial_cs); checksum = checksum + partial_cs
+        call run_config(.true.,  .true.,  non_mimics_decomp, partial_cs); checksum = checksum + partial_cs
+        call run_config(.false., .false., mimics_decomp,     partial_cs); checksum = checksum + partial_cs
+        call run_config(.false., .false., non_mimics_decomp, partial_cs); checksum = checksum + partial_cs
+        call run_config(.false., .true.,  mimics_decomp,     partial_cs); checksum = checksum + partial_cs
+        call run_config(.false., .true.,  non_mimics_decomp, partial_cs); checksum = checksum + partial_cs
      end if
   end do
 #ifdef PERF_TIMING
