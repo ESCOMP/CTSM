@@ -3,14 +3,14 @@
 Lake Model
 =============
 
-The lake model, denoted the *Lake, Ice, Snow, and Sediment Simulator* (LISSS), is from :ref:`Subin et al. (2012a) <Subinetal2012a>`. It includes extensive modifications to the lake code of :ref:`Zeng et al. (2002) <Zengetal2002>` used in CLM versions 2 through 4, which utilized concepts from the lake models of :ref:`Bonan (1996) <Bonan1996>`, :ref:`Henderson-Sellers (1985) <Henderson-Sellers1985>`, :ref:`Henderson-Sellers (1986) <Henderson-Sellers1986>`, :ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`, and the coupled lake-atmosphere model of :ref:`Hostetler et al. (1993) <Hostetleretal1993>`, :ref:`Hostetler et al. (1993) <Hostetleretal1993>`. Lakes have spatially variable depth prescribed in the surface data (section :ref:`External Data Lake`); the surface data optionally includes lake optical extinction coeffient and horizontal fetch, currently only used for site simulations. Lake physics includes freezing and thawing in the lake body, resolved snow layers, and "soil" and bedrock layers below the lake body. Temperatures and ice fractions are simulated for :math:`N_{levlak} =10` layers (for global simulations) or :math:`N_{levlak} =25` (for site simulations) with discretization described in section :numref:`Vertical Discretization Lake`. Lake albedo is described in section :numref:`Surface Albedo Lake`. Lake surface fluxes (section :numref:`Surface Fluxes and Surface Temperature Lake`) generally follow the formulations for non-vegetated surfaces, including the calculations of aerodynamic resistances (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`); however, the lake surface temperature :math:`T_{g}` (representing an infinitesimal interface layer between the top resolved lake layer and the atmosphere) is solved for simultaneously with the surface fluxes. After surface fluxes are evaluated, temperatures are solved simultaneously in the resolved snow layers (if present), the lake body, and the soil and bedrock, using the ground heat flux *G* as a top boundary condition. Snow, soil, and bedrock models generally follow the formulations for non-vegetated surfaces (Chapter :numref:`rst_Soil and Snow Temperatures`), with modifications described below.
+The lake model, denoted the *Lake, Ice, Snow, and Sediment Simulator* (LISSS), is from :ref:`Subin et al. (2012a) <Subinetal2012a>`. It includes extensive modifications to the lake code of :ref:`Zeng et al. (2002) <Zengetal2002>` used in CLM versions 2 through 4, which utilized concepts from the lake models of :ref:`Bonan (1996) <Bonan1996>`, :ref:`Henderson-Sellers (1985) <Henderson-Sellers1985>`, :ref:`Henderson-Sellers (1986) <Henderson-Sellers1986>`, :ref:`Hostetler and Bartlein (1990) <HostetlerBartlein1990>`, and the coupled lake-atmosphere model of :ref:`Hostetler et al. (1993) <Hostetleretal1993>`. Lakes have spatially varying depth prescribed in the surface data (section :ref:`External Data Lake`); the surface data optionally includes lake optical extinction coeffient and horizontal fetch, currently only used for site simulations. Lake physics includes freezing and thawing in the lake body, resolved snow layers, and "soil" and bedrock layers below the lake body. Temperatures and ice fractions are simulated for :math:`N_{levlak} =10` layers (for global simulations) or :math:`N_{levlak} =25` (for site simulations) with discretization described in section :numref:`Vertical Discretization Lake`. Lake albedo is described in section :numref:`Surface Albedo Lake`. Lake surface fluxes (section :numref:`Surface Fluxes and Surface Temperature Lake`) generally follow the formulations for non-vegetated surfaces, including the calculations of aerodynamic resistances (section :numref:`Sensible and Latent Heat Fluxes for Non-Vegetated Surfaces`); however, the lake surface temperature :math:`T_{g}` (representing an infinitesimal interface layer between the top resolved lake layer and the atmosphere) is solved for simultaneously with the surface fluxes. After surface fluxes are evaluated, temperatures are solved simultaneously in the resolved snow layers (if present), the lake body, and the soil and bedrock, using the ground heat flux *G* as a top boundary condition. Snow, soil, and bedrock models generally follow the formulations for non-vegetated surfaces (Chapter :numref:`rst_Soil and Snow Temperatures`), with modifications described below.
 
 .. _Vertical Discretization Lake:
 
 Vertical Discretization
 ---------------------------
 
-Currently, there is one lake modeled in each grid cell (with prescribed or assumed depth *d*, extinction coefficient :math:`\eta`, and fetch *f*), although this could be modified with changes to the CLM subgrid decomposition algorithm in future model versions. As currently implemented, the lake consists of 0-5 snow layers; water and ice layers (10 for global simulations and 25 for site simulations) comprising the "lake body;" 10 "soil" layers; and 5 bedrock layers. Each lake body layer has a fixed water mass (set by the nominal layer thickness and the liquid density), with frozen mass-fraction *I* a state variable. Resolved snow layers are present if the snow thickness :math:`z_{sno} \ge s_{\min }`, where *s*\ :sub:`min` = 4 cm by default, and is adjusted for model timesteps other than 1800 s in order to maintain numerical stability (section :numref:`Modifications to Snow Layer Logic Lake`). For global simulations with 10 body layers, the default (50 m lake) body layer thicknesses are given by: :math:`\Delta z_{i}` of 0.1, 1, 2, 3, 4, 5, 7, 7, 10.45, and 10.45 m, with node depths :math:`z_{i}` located at the center of each layer (i.e., 0.05, 0.6, 2.1, 4.6, 8.1, 12.6, 18.6, 25.6, 34.325, 44.775 m). For site simulations with 25 layers, the default thicknesses are (m): 0.1 for layer 1; 0.25 for layers 2-5; 0.5 for layers 6-9; 0.75 for layers 10-13; 2 for layers 14-15; 2.5 for layers 16-17; 3.5 for layers 18-21; and 5.225 for layers 22-25. For lakes with depth *d* :math:`\neq` 50 m and *d* :math:`\ge` 1 m, the top layer is kept at 10 cm and the other 9 layer thicknesses are adjusted to maintain fixed proportions. For lakes with *d* :math:`<` 1 m, all layers have equal thickness. Thicknesses of snow, soil, and bedrock layers follow the scheme used over non-vegetated surfaces (Chapter :numref:`rst_Soil and Snow Temperatures`), with modifications to the snow layer thickness rules to keep snow layers at least as thick as *s*\ :sub:`min` (section :numref:`Modifications to Snow Layer Logic Lake`).
+Currently, there is one lake modeled in each grid cell (with prescribed or default depth *d*, extinction coefficient :math:`\eta`, and fetch *f*), although this could be modified with changes to the CLM subgrid decomposition algorithm in future model versions. As currently implemented, the lake consists of 0-5 snow layers; water and ice layers (10 for global simulations and 25 for site simulations) comprising the "lake body;" 10 "soil" layers; and 5 bedrock layers. Each lake body layer has a fixed water mass (set by the nominal layer thickness and the liquid density), with frozen mass-fraction *I* a state variable. Resolved snow layers are present if the snow thickness :math:`z_{sno} \ge s_{\min }`, where *s*\ :sub:`min` = 4 cm by default, and is adjusted for model timesteps other than 1800 s in order to maintain numerical stability (section :numref:`Modifications to Snow Layer Logic Lake`). For global simulations with 10 body layers, the default (50 m lake) body layer thicknesses are given by: :math:`\Delta z_{i}` of 0.1, 1, 2, 3, 4, 5, 7, 7, 10.45, and 10.45 m, with node depths :math:`z_{i}` located at the center of each layer (i.e., 0.05, 0.6, 2.1, 4.6, 8.1, 12.6, 18.6, 25.6, 34.325, 44.775 m). For site simulations with 25 layers, the default thicknesses are (m): 0.1 for layer 1; 0.25 for layers 2-5; 0.5 for layers 6-9; 0.75 for layers 10-13; 2 for layers 14-15; 2.5 for layers 16-17; 3.5 for layers 18-21; and 5.225 for layers 22-25. For lakes with depth *d* :math:`\neq` 50 m and *d* :math:`\ge` 1 m, the top layer is kept at 10 cm and the other 9 layer thicknesses are adjusted to maintain fixed proportions. For lakes with *d* :math:`<` 1 m, all layers have equal thickness. Thicknesses of snow, soil, and bedrock layers follow the scheme used over non-vegetated surfaces (Chapter :numref:`rst_Soil and Snow Temperatures`), with modifications to the snow layer thickness rules to keep snow layers at least as thick as *s*\ :sub:`min` (section :numref:`Modifications to Snow Layer Logic Lake`).
 
 .. _External Data Lake:
 
@@ -56,7 +56,7 @@ Surface Properties
 
 The fraction of shortwave radiation absorbed at the surface, :math:`\beta`, depends on the lake state. If resolved snow layers are present, then :math:`\beta` is set equal to the absorption fraction predicted by the snow-optics submodel (Chapter :numref:`rst_Surface Albedos`) for the top snow layer. Otherwise, :math:`\beta` is set equal to the near infrared fraction of the shortwave radiation reaching the surface simulated by the atmospheric model or atmospheric data model used for offline simulations (Chapter :numref:`rst_Land-only Mode`). The remainder of the shortwave radiation fraction (1 :math:`{-}` :math:`\beta`) is absorbed in the lake body or soil as described in section :numref:`Radiation Penetration`.
 
-The surface roughnesses are functions of the lake state and atmospheric forcing. 
+The surface roughnesses are functions of the lake state and atmospheric forcing.
 
 For unfrozen lakes (:math:`T_{g} > T_{f}`), :math:`z_{0m}` is given by (:ref:`Subin et al. (2012a) <Subinetal2012a>`)
 
@@ -68,7 +68,7 @@ For unfrozen lakes (:math:`T_{g} > T_{f}`), :math:`z_{0m}` is given by (:ref:`Su
 where :math:`\alpha` = 0.1, :math:`\nu` is the kinematic viscosity of air given below, *C* is the effective Charnock coefficient given below, :math:`u_{*}` is the friction velocity (m/s), and *g* is the acceleration of gravity (:numref:`Table Physical Constants`). The kinematic viscosity is given by
 
 .. math::
-   :label: 12.4 
+   :label: 12.4
 
    \nu =\nu _{0} \left(\frac{T_{g} }{T_{0} } \right)^{1.5} \frac{P_{0} }{P_{ref} }
 
@@ -79,7 +79,7 @@ where
 :math:`P_{ref}` is the pressure at the atmospheric reference height. The Charnock coefficient *C* is a function of the lake fetch *F* (m), given in the surface data or set to 25 times the lake depth *d* by default:
 
 .. math::
-   :label: 12.5 
+   :label: 12.5
 
    \begin{array}{l} {C=C_{\min } +(C_{\max } -C_{\min } )\exp \left\{-\min \left(A,B\right)\right\}} \\ {A={\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} } \mathord{\left/ {\vphantom {\left(\frac{Fg}{u_{*} ^{2} } \right)^{{1\mathord{\left/ {\vphantom {1 3}} \right.} 3} }  f_{c} }} \right.} f_{c} } } \\ {B=\varepsilon \frac{\sqrt{dg} }{u} } \end{array}
 
@@ -104,7 +104,7 @@ For frozen lakes ( :math:`T_{g} \le T_{f}` ) without resolved snow
 layers ( :math:`snl = 0` ), :math:`z_{0m} =z_{0m_{ice}} =2.3\times 10^{-3} {\rm m}` (:ref:`Meier et al. (2022) <Meieretal2022>`).
 
 For frozen lakes with resolved
-snow layers ( :math:`snl > 0` ), the momentum roughness length is evaluated based on accumulated snow melt :math:`M_{a} {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`). 
+snow layers ( :math:`snl > 0` ), the momentum roughness length is evaluated based on accumulated snow melt :math:`M_{a} {\rm }` (:ref:`Meier et al. (2022) <Meieretal2022>`).
 For :math:`M_{a} >=1\times 10^{-5}`
 
 .. math::
@@ -123,7 +123,7 @@ For :math:`M_{a} <1\times 10^{-5}`
 Accumulated snow melt :math:`M_{a}` at the current time step :math:`t` is defined as
 
 .. math::
-   :label: 12.5d   
+   :label: 12.5d
 
    M ^{t}_{a} = M ^{t-1}_{a} - (q ^{t}_{sno} \Delta t + q ^{t}_{snowmelt} \Delta t)\times 10^{-3}
 
@@ -169,7 +169,7 @@ where :math:`\vec{S}_{g}` \ is the absorbed solar radiation in the lake,
 .. math::
    :label: 12.8
 
-   \lambda =\left\{\begin{array}{l} {\lambda _{sub} \qquad T_{g} \le T_{f} } \\ {\lambda _{vap} \qquad T_{g} >T_{f} } \end{array}\right\}.
+   \lambda =\Bigg\{\begin{array}{l} {\lambda _{sub} \qquad T_{g} \le T_{f} } \\ {\lambda _{vap} \qquad T_{g} >T_{f} } \end{array}
 
 The sensible heat flux (W m\ :sup:`-2`) is
 
@@ -241,7 +241,7 @@ where :math:`L_{g} \, \uparrow` is the upward longwave radiation from the surfac
 .. math::
    :label: 12.16
 
-   L\, \uparrow =\left(1-\varepsilon _{g} \right)L_{atm} \, \downarrow +\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{4} +4\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{3} \left(T_{g}^{n+1} -T_{g}^{n} \right)
+   \vec{L}_{g}\, \uparrow =\left(1-\varepsilon _{g} \right)L_{atm} \, \downarrow +\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{4} +4\varepsilon _{g} \sigma \left(T_{g}^{n} \right)^{3} \left(T_{g}^{n+1} -T_{g}^{n} \right)
 
 where :math:`\varepsilon _{g} =0.97` is the lake surface emissivity,
 :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`Table Physical Constants`), and
@@ -285,29 +285,29 @@ where the partial derivatives are
 
 The fluxes of momentum, sensible heat, and water vapor are solved for simultaneously with lake surface temperature as follows. To begin, :math:`z_{0m}` and the scalar roughness lengths are set as described in section :numref:`Surface Properties Lake`.
 
-#. An initial guess for the wind speed :math:`V_{a}` including the convective velocity :math:`U_{c}` is obtained from :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m s\ :sup:`-1` for stable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from :eq:`5.50`) and :math:`U_{c} =0.5` for unstable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
+#. An initial guess for the wind speed :math:`V_{a}` including the convective velocity :math:`U_{c}` is obtained from equation :eq:`5.24` assuming an initial convective velocity :math:`U_{c} =0` m s\ :sup:`-1` for stable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} \ge 0` as evaluated from equation :eq:`5.50`) and :math:`U_{c} =0.5` for unstable conditions (:math:`\theta _{v,\, atm} -\theta _{v,\, s} <0`).
 
-#. An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using :eq:`5.46` and :eq:`5.48`.
+#. An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equations :eq:`5.46` and :eq:`5.48`.
 
 #. The following system of equations is iterated four times:
 
-#. Heat of vaporization / sublimation :math:`\lambda` \ (:eq:`12.8`)
+#. Heat of vaporization / sublimation :math:`\lambda` \ (equation :eq:`12.8`)
 
 #. Thermal conductivity :math:`\lambda _{T}` \ (above)
 
-#. Friction velocity :math:`u_{*}` (:eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
+#. Friction velocity :math:`u_{*}` (equations :eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
-#. Potential temperature scale :math:`\theta _{*}` (:eq:`5.37`, :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
+#. Potential temperature scale :math:`\theta _{*}` (equations :eq:`5.37`, :eq:`5.38`, :eq:`5.39`, :eq:`5.40`)
 
-#. Humidity scale :math:`q_{*}` (:eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
+#. Humidity scale :math:`q_{*}` (equations :eq:`5.41`, :eq:`5.42`, :eq:`5.43`, :eq:`5.44`)
 
-#. Aerodynamic resistances :math:`r_{am}`, :math:`r_{ah}`, and :math:`r_{aw}` (:eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
+#. Aerodynamic resistances :math:`r_{am}`, :math:`r_{ah}`, and :math:`r_{aw}` (equations :eq:`5.55`, :eq:`5.56`, :eq:`5.57`)
 
-#. Lake surface temperature :math:`T_{g}^{n+1}` (:eq:`12.18`)
+#. Lake surface temperature :math:`T_{g}^{n+1}` (equation :eq:`12.18`)
 
-#. Heat of vaporization / sublimation :math:`\lambda` (:eq:`12.8`)
+#. Heat of vaporization / sublimation :math:`\lambda` (equation :eq:`12.8`)
 
-#. Sensible heat flux :math:`H_{g}` is updated for :math:`T_{g}^{n+1}` (:eq:`12.9`)
+#. Sensible heat flux :math:`H_{g}` is updated for :math:`T_{g}^{n+1}` (equation :eq:`12.9`)
 
 #. Water vapor flux :math:`E_{g}` is updated for :math:`T_{g}^{n+1}` as
 
@@ -320,11 +320,11 @@ where the last term on the right side of equation :eq:`12.23` is the change in s
 
 #. Saturated specific humidity :math:`q_{sat}^{T_{g} }` and its derivative :math:`\frac{dq_{sat}^{T_{g} } }{dT_{g} }` are updated for :math:`T_{g}^{n+1}` (section :numref:`Monin-Obukhov Similarity Theory`).
 
-#. Virtual potential temperature scale :math:`\theta _{v*}` (:eq:`5.17`)
+#. Virtual potential temperature scale :math:`\theta _{v*}` (equation :eq:`5.17`)
 
-#. Wind speed including the convective velocity, :math:`V_{a}` (:eq:`5.24`)
+#. Wind speed including the convective velocity, :math:`V_{a}` (equation :eq:`5.24`)
 
-#. Monin-Obukhov length :math:`L` (:eq:`5.49`)
+#. Monin-Obukhov length :math:`L` (equation :eq:`5.49`)
 
 #. Roughness lengths (section :numref:`Surface Properties Lake`).
 
@@ -375,28 +375,21 @@ where :math:`\tilde{c}_{v}` is the volumetric heat capacity (J m\ :sup:`-3` K\ :
 
    \frac{d}{dt} \sum _{j=1}^{N}\left[\tilde{c}_{v,j} (t)\left(T_{j} -T_{f} \right)+L_{j} (t)\right] \Delta z_{j} =G+\left(1-\beta \right)\vec{S}_{g}
 
-where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Radiation Penetration`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing eq. to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in eq..
-
-.. _Overview of Changes from CLM4 2:
-
-Overview of Changes from CLM4
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Thermal conductivities include additional eddy diffusivity, beyond the :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>` formulation, due to unresolved processes (:ref:`Fang and Stefan 1996<FangStefan1996>`; :ref:`Subin et al. (2012a) <Subinetal2012a>`). Lake water is now allowed to freeze by an arbitrary fraction for each layer, which releases latent heat and changes thermal properties. Convective mixing occurs for all lakes, even if frozen. Soil and bedrock are included beneath the lake. The full snow model is used if the snow thickness exceeds a threshold; if there are resolved snow layers, radiation transfer is predicted by the snow-optics submodel (Chapter :numref:`rst_Surface Albedos`), and the remaining radiation penetrating the bottom snow layer is absorbed in the top layer of lake ice; conversely, if there are no snow layers, the solar radiation penetrating the bottom lake layer is absorbed in the top soil layer. The lakes have variable depth, and all physics is assumed valid for arbitrary depth, except for a depth-dependent enhanced mixing (section :numref:`Eddy Diffusivity and Thermal Conductivities`). Finally, a previous sign error in the calculation of eddy diffusivity (specifically, the Brunt-Väisälä frequency term; eq. ) was corrected.
+where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Heat Capacities Lake`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing eq. to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in eq..
 
 .. _Boundary Conditions Lake:
 
 Boundary Conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The top boundary condition, imposed at the top modeled layer :math:`i=j_{top}`, where :math:`j_{top} =-n_{sno} +1`, is the downwards surface flux *G* defined by the energy flux residual during the surface temperature solution (section :numref:`Boundary Conditions Lake`). The bottom boundary condition, imposed at :math:`i=N_{levlak} +N_{levgrnd}`, is zero flux. The 2-m windspeed :math:`u_{2}` \ (m s\ :sup:`-1`) is used in the calculation of eddy diffusivity:
+The top boundary condition, imposed at the top modeled layer :math:`i=j_{top}`, where :math:`j_{top} =-n_{sno} +1`, is the downwards surface flux *G* defined by the energy flux residual during the surface temperature solution (section :numref:`Surface Flux Solution Lake`). The bottom boundary condition, imposed at :math:`i=N_{levlak} +N_{levgrnd}`, is zero flux. The 2-m windspeed :math:`u_{2}` \ (m s\ :sup:`-1`) is used in the calculation of eddy diffusivity:
 
 .. math::
    :label: 12.28
 
    u_{2} =\frac{u_{*} }{k} \ln \left(\frac{2}{z_{0m} } \right)\ge 0.1.
 
-where :math:`u_{*}` \ is the friction velocity calculated in section :numref:`Boundary Conditions Lake` and
+where :math:`u_{*}` \ is the friction velocity calculated in section :numref:`Monin-Obukhov Similarity Theory` and
 *k* is the von Karman constant (:numref:`Table Physical Constants`).
 
 .. _Eddy Diffusivity and Thermal Conductivities:
@@ -419,7 +412,7 @@ where :math:`\kappa _{e}` is due to wind-driven eddies (:ref:`Hostetler and Bart
 .. math::
    :label: 12.30
 
-   m_{d} =\left\{\begin{array}{l} {1,\qquad d<25{\rm m}} \\ {10,\qquad d\ge 25{\rm m}} \end{array}\right\}
+   m_{d} =\Bigg\{\begin{array}{rr} {1,\qquad d<25{\rm m}} \\ {10,\qquad d\ge 25{\rm m}} \end{array}
 
 where *d* is the lake depth.
 
@@ -428,7 +421,7 @@ The wind-driven eddy diffusion coefficient :math:`\kappa _{e,\, i}` (m\ :sup:`2`
 .. math::
    :label: 12.31
 
-   \kappa _{e,\, i} =\left\{\begin{array}{l} {\frac{kw^{*} z_{i} }{P_{0} \left(1+37Ri^{2} \right)} \exp \left(-k^{*} z_{i} \right)\qquad T_{g} >T_{f} } \\ {0\qquad T_{g} \le T_{f} } \end{array}\right\}
+   \kappa _{e,\, i} =\Bigg\{\begin{array}{rr} {\frac{kw^{*} z_{i} }{P_{0} \left(1+37Ri^{2} \right)} \exp \left(-k^{*} z_{i} \right)\qquad T_{g} >T_{f} } \\ {0\qquad T_{g} \le T_{f} } \end{array}
 
 where :math:`P_{0} =1` is the neutral value of the turbulent Prandtl number, :math:`z_{i}` is the node depth (m), the surface friction velocity (m s\ :sup:`-1`) is :math:`w^{*} =0.0012u_{2}`, and :math:`k^{*}` varies with latitude :math:`\phi` as :math:`k^{*} =6.6u_{2}^{-1.84} \sqrt{\left|\sin \phi \right|}`. For the bottom layer, :math:`\kappa _{e,\, N_{levlak} } =\kappa _{e,N_{levlak} -1\, }`. As in :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`, the 2-m wind speed :math:`u_{2}` (m s\ :sup:`-1`) (eq. ) is used to evaluate :math:`w^{*}` and :math:`k^{*}` rather than the 10-m wind used by :ref:`Henderson-Sellers (1985) <Henderson-Sellers1985>`.
 
@@ -492,7 +485,7 @@ The thermal conductivity of snow, soil, and bedrock layers above and below the l
 Radiation Penetration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If there are no resolved snow layers, the surface absorption fraction :math:`\beta` is set according to the near-infrared fraction simulated by the atmospheric model. This is apportioned to the surface energy budget (section :numref:`Surface Properties Lake`), and thus no additional radiation is absorbed in the top :math:`z_{a}` (currently 0.6 m) of unfrozen lakes, for which the light extinction coefficient :math:`\eta` (m\ :sup:`-1`) varies between lake columns (eq. ). For frozen lakes (:math:`T_{g} \le T_{f}` ), the remaining :math:`\left(1-\beta \right)\vec{S}_{g}` fraction of surface absorbed radiation that is not apportioned to the surface energy budget is absorbed in the top lake body layer. This is a simplification, as lake ice is partially transparent. If there are resolved snow layers, then the snow optics submodel (Chapter :numref:`rst_Surface Albedos`) is used to calculate the snow layer absorption (except for the absorption predicted for the top layer by the snow optics submodel, which is assigned to the surface energy budget), with the remainder penetrating snow layers absorbed in the top lake body ice layer.
+If there are no resolved snow layers, the surface absorption fraction :math:`\beta` is set according to the near-infrared fraction simulated by the atmospheric model. This is apportioned to the surface energy budget (section :numref:`Surface Properties Lake`), and thus no additional radiation is absorbed in the top :math:`z_{a}` (currently 0.6 m) of unfrozen lakes, for which the light extinction coefficient :math:`\eta` (m\ :sup:`-1`) varies between lake columns (equation :eq:`12.41`). For frozen lakes (:math:`T_{g} \le T_{f}` ), the remaining :math:`\left(1-\beta \right)\vec{S}_{g}` fraction of surface absorbed radiation that is not apportioned to the surface energy budget is absorbed in the top lake body layer. This is a simplification, as lake ice is partially transparent. If there are resolved snow layers, then the snow optics submodel (Chapter :numref:`rst_Surface Albedos`) is used to calculate the snow layer absorption (except for the absorption predicted for the top layer by the snow optics submodel, which is assigned to the surface energy budget), with the remainder penetrating snow layers absorbed in the top lake body ice layer.
 
 For unfrozen lakes, the solar radiation remaining at depth :math:`z>z_{a}` in the lake body is given by
 
@@ -612,7 +605,7 @@ Finally, the mass of ice in the layer :math:`M_{ice}` is adjusted downwards by :
 
 where :math:`c'_{v,i} =c_{v,i} +M\left(c_{liq} -c_{ice} \right)`.
 
-If freezing occurs, :math:`Q_{avail}` is again given by but will be negative. The melt :math:`M`, also negative, is given by
+If freezing occurs, :math:`Q_{avail}` is again given by equation :eq:12.47, but will be negative. The melt :math:`M`, also negative, is given by
 
 .. math::
    :label: 12.51
