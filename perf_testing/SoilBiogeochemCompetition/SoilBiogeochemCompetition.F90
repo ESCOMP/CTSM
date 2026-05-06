@@ -572,17 +572,8 @@ contains
             ! calculate the fraction of potential growth that can be
             ! acheived with the N available to plants
             ! calculate the fraction of immobilization realized (for diagnostic purposes)
-            if (plant_ndemand(c) > 0.0_r8) then
-               fpg(c) = sminn_to_plant(c) / plant_ndemand(c)
-            else
-               fpg(c) = 1._r8
-            end if
-
-            if (potential_immob(c) > 0.0_r8) then
-               fpi(c) = actual_immob(c) / potential_immob(c)
-            else
-               fpi(c) = 1._r8
-            end if
+            fpg(c) = compute_fraction_or_one(sminn_to_plant(c), plant_ndemand(c))
+            fpi(c) = compute_fraction_or_one(actual_immob(c),   potential_immob(c))
          end do ! end of column loops
          call perf_timer_stop('compute_fpg_fpi')
 
@@ -858,5 +849,19 @@ contains
     smin_to_plant_vr_new = smin_to_plant_vr + residual_smin_vr * &
          min(( residual_plant_ndemand *  dt ) / residual_smin, 1._r8) / dt
   end function distribute_residual_to_plant
+
+  !-----------------------------------------------------------------------
+  ! Defensive fraction: numerator/denominator if denominator > 0, else 1.
+  ! Used for fpg (sminn_to_plant / plant_ndemand) and fpi (actual_immob /
+  ! potential_immob) — both naturally return 1 when there's no demand.
+  pure function compute_fraction_or_one(numerator, denominator) result(frac)
+    real(r8) :: frac
+    real(r8), intent(in) :: numerator, denominator
+    if (denominator > 0.0_r8) then
+       frac = numerator / denominator
+    else
+       frac = 1._r8
+    end if
+  end function compute_fraction_or_one
 
 end module SoilBiogeochemCompetition_mod
