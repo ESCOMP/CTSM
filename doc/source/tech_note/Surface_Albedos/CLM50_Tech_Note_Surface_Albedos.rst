@@ -8,7 +8,7 @@ Surface Albedos
 Canopy Radiative Transfer
 -----------------------------
 
-Radiative transfer within vegetative canopies is calculated from the two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
+Radiative transfer within vegetated canopies is calculated from the two-stream approximation of :ref:`Dickinson (1983) <Dickinson1983>` and :ref:`Sellers (1985) <Sellers1985>` as described by :ref:`Bonan (1996) <Bonan1996>`
 
 .. math::
    :label: 3.1
@@ -82,14 +82,14 @@ For vegetation, :math:`\omega _{\Lambda }^{veg} =\alpha _{\Lambda } +\tau _{\Lam
 .. math::
    :label: 3.11
 
-   \alpha _{\Lambda } =\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem}
+   \alpha _{\Lambda } =\max(\alpha _{\Lambda }^{leaf} w_{leaf} +\alpha _{\Lambda }^{stem} w_{stem},1e-6)
 
-where :math:`w_{leaf} ={L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)}` and :math:`w_{stem} ={S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)}`. :math:`\tau _{\Lambda }` is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
+where :math:`w_{leaf} =\max({L\mathord{\left/ {\vphantom {L \left(L+S\right)}} \right.} \left(L+S\right)},1e-6)` and :math:`w_{stem} =\max({S\mathord{\left/ {\vphantom {S \left(L+S\right)}} \right.} \left(L+S\right)},1e-6)`. :math:`\tau _{\Lambda }` is a weighted combination of the leaf and stem transmittances (:math:`\tau _{\Lambda }^{leaf}, \tau _{\Lambda }^{stem}`)
 
 .. math::
    :label: 3.12
 
-   \tau _{\Lambda } =\tau _{\Lambda }^{leaf} w_{leaf} +\tau _{\Lambda }^{stem} w_{stem} .
+   \tau _{\Lambda } =\max(\tau _{\Lambda }^{leaf} w_{leaf} +\tau _{\Lambda }^{stem} w_{stem},1e-6) .
 
 The upscatter for diffuse radiation is
 
@@ -121,6 +121,8 @@ where the single scattering albedo is
 
 Note here the restriction on :math:`\mu \phi _{2} +G\left(\mu \right)`. We have seen cases where small values can cause unrealistic single scattering albedo associated with the log calculation, thereby eventually causing a negative soil albedo.
 
+Note that the parameters :math:`h_{1}` –:math:`h_{10}`, :math:`\sigma`, :math:`h`, :math:`s_{1}`, and :math:`s_{2}` in the following equations [:eq:`3.17` - :eq:`3.30`] are defined in :eq:`3.31` - :eq:`3.57`.
+
 The upward diffuse fluxes per unit incident direct beam and diffuse flux (i.e., the surface albedos) are
 
 .. math::
@@ -138,7 +140,7 @@ The downward diffuse fluxes per unit incident direct beam and diffuse radiation,
 .. math::
    :label: 3.19
 
-   I\, \downarrow _{\Lambda }^{\mu } =\frac{h_{4} }{\sigma } e^{-K\left(L+S\right)} +h_{5} s_{1} +\frac{h_{6} }{s_{1} }
+   I\, \downarrow _{\Lambda }^{\mu } =\frac{h_{4} }{\sigma } s_{2} +h_{5} s_{1} +\frac{h_{6} }{s_{1} }
 
 .. math::
    :label: 3.20
@@ -150,7 +152,7 @@ With reference to :numref:`Figure Radiation Schematic`, the direct beam flux tra
 .. math::
    :label: 3.21
 
-   \vec{I}_{\Lambda }^{\mu } =1-I\, \uparrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda } \right)I\, \downarrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda }^{\mu } \right)e^{-K\left(L+S\right)}
+   \vec{I}_{\Lambda }^{\mu } =1-I\, \uparrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda } \right)I\, \downarrow _{\Lambda }^{\mu } -\left(1-\alpha _{g,\, \Lambda }^{\mu }\right) s_{2}
 
 .. math::
    :label: 3.22
@@ -346,7 +348,7 @@ The parameters :math:`h_{1}` –:math:`h_{10}`, :math:`\sigma`, :math:`h`, :math
 
    h_{10} =\frac{-s_{1} \left(u_{2} -\bar{\mu }h\right)}{d_{2} } .
 
-Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. Leaf and stem optical properties (VIS and NIR reflectance and transmittance) were derived for grasslands and crops from full optical range spectra of measured optical properties (:ref:`Asner et al. 1998 <Asneretal1998>`). Optical properties for intercepted snow (:numref:`Table Intercepted snow optical properties`) are from :ref:`Sellers et al. (1986) <Sellersetal1986>`.
+Plant functional type optical properties (:numref:`Table Plant functional type optical properties`) for :math:`\chi _{L}`, :math:`\alpha _{vis}^{leaf}`, :math:`\alpha _{nir}^{leaf}`, :math:`\alpha _{vis}^{stem}`, :math:`\alpha _{nir}^{stem}`, :math:`\tau _{vis}^{leaf}`, and :math:`\tau _{nir}^{leaf}` are from :ref:`Majasalmi and Bright (2019) <MajasalmiBright2019>`. One of these parameter values was tuned based on a Perturbed Parameter Ensemble.  Specifically, :math:`\chi _{L}` for BET Tropical was changed from 0.32 to 0.45. :math:`\tau _{vis}^{stem}` and :math:`\tau _{nir}^{stem}` for trees and shrubs are from :ref:`Dorman and Sellers (1989) <DormanSellers1989>`. :math:`\tau _{vis}^{stem}` and :math:`\tau _{nir}^{stem}` for grassland and crops were derived from full optical range spectra of measured optical properties (:ref:`Asner et al. 1998 <Asneretal1998>`). Optical properties for intercepted snow (:numref:`Table Intercepted snow optical properties`) are from :ref:`Sellers et al. (1986) <Sellersetal1986>`.
 
 .. _Table Plant functional type optical properties:
 
@@ -355,55 +357,55 @@ Plant functional type optical properties (:numref:`Table Plant functional type o
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
  | Plant Functional Type            | :math:`\chi _{L}`    | :math:`\alpha _{vis}^{leaf}`    | :math:`\alpha _{nir}^{leaf}`    | :math:`\alpha _{vis}^{stem}`    | :math:`\alpha _{nir}^{stem}`    | :math:`\tau _{vis}^{leaf}`    | :math:`\tau _{nir}^{leaf}`    | :math:`\tau _{vis}^{stem}`    | :math:`\tau _{nir}^{stem}`    |
  +==================================+======================+=================================+=================================+=================================+=================================+===============================+===============================+===============================+===============================+
- | NET Temperate                    | 0.01                 | 0.07                            | 0.35                            | 0.16                            | 0.39                            | 0.05                          | 0.10                          | 0.001                         | 0.001                         |
+ | NET Temperate                    | 0.01                 | 0.09                            | 0.41                            | 0.12                            | 0.36                            | 0.04                          | 0.32                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | NET Boreal                       | 0.01                 | 0.07                            | 0.35                            | 0.16                            | 0.39                            | 0.05                          | 0.10                          | 0.001                         | 0.001                         |
+ | NET Boreal                       | 0.01                 | 0.09                            | 0.41                            | 0.12                            | 0.36                            | 0.04                          | 0.32                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | NDT Boreal                       | 0.01                 | 0.07                            | 0.35                            | 0.16                            | 0.39                            | 0.05                          | 0.10                          | 0.001                         | 0.001                         |
+ | NDT Boreal                       | 0.01                 | 0.08                            | 0.39                            | 0.12                            | 0.36                            | 0.06                          | 0.42                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BET Tropical                     | 0.10                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BET Tropical                     | 0.45                 | 0.11                            | 0.46                            | 0.21                            | 0.49                            | 0.06                          | 0.33                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BET temperate                    | 0.10                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BET temperate                    | 0.32                 | 0.11                            | 0.46                            | 0.21                            | 0.49                            | 0.06                          | 0.33                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BDT tropical                     | 0.01                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BDT tropical                     | 0.20                 | 0.08                            | 0.41                            | 0.21                            | 0.49                            | 0.06                          | 0.43                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BDT temperate                    | 0.25                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BDT temperate                    | 0.59                 | 0.08                            | 0.41                            | 0.21                            | 0.49                            | 0.06                          | 0.43                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BDT boreal                       | 0.25                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BDT boreal                       | 0.59                 | 0.08                            | 0.41                            | 0.21                            | 0.49                            | 0.06                          | 0.43                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BES temperate                    | 0.01                 | 0.07                            | 0.35                            | 0.16                            | 0.39                            | 0.05                          | 0.10                          | 0.001                         | 0.001                         |
+ | BES temperate                    | 0.32                 | 0.11                            | 0.46                            | 0.21                            | 0.49                            | 0.06                          | 0.33                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BDS temperate                    | 0.25                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BDS temperate                    | 0.59                 | 0.08                            | 0.41                            | 0.21                            | 0.49                            | 0.06                          | 0.43                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | BDS boreal                       | 0.25                 | 0.10                            | 0.45                            | 0.16                            | 0.39                            | 0.05                          | 0.25                          | 0.001                         | 0.001                         |
+ | BDS boreal                       | 0.59                 | 0.08                            | 0.41                            | 0.21                            | 0.49                            | 0.06                          | 0.43                          | 0.001                         | 0.001                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | C\ :sub:`3` arctic grass         | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`3` arctic grass         | -0.23                | 0.05                            | 0.28                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | C\ :sub:`3` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`3` grass                | -0.23                | 0.05                            | 0.28                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | C\ :sub:`4` grass                | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`4` grass                | -0.23                | 0.05                            | 0.28                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | C\ :sub:`3` Crop                 | -0.30                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | C\ :sub:`3` Crop                 | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Corn                        | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Corn                        | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Spring Wheat                     | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Spring Wheat                     | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Temp Soybean                     | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Temp Soybean                     | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Cotton                           | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Cotton                           | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Rice                             | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Rice                             | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Sugarcane                        | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Sugarcane                        | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Tropical Corn                    | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Corn                    | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Tropical Soybean                 | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Tropical Soybean                 | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Miscanthus                       | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Miscanthus                       | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
- | Switchgrass                      | -0.50                | 0.11                            | 0.35                            | 0.31                            | 0.53                            | 0.05                          | 0.34                          | 0.120                         | 0.250                         |
+ | Switchgrass                      | 0.30                 | 0.08                            | 0.42                            | 0.31                            | 0.53                            | 0.05                          | 0.40                          | 0.120                         | 0.250                         |
  +----------------------------------+----------------------+---------------------------------+---------------------------------+---------------------------------+---------------------------------+-------------------------------+-------------------------------+-------------------------------+-------------------------------+
 
 .. _Table Intercepted snow optical properties:
@@ -439,24 +441,38 @@ The overall direct beam :math:`\alpha _{g,\, \Lambda }^{\mu }` and diffuse :math
 
 where :math:`f_{sno}` is the fraction of the ground covered with snow (section :numref:`Snow Covered Area Fraction`).
 
-:math:`\alpha _{soi,\, \Lambda }^{\mu }` and :math:`\alpha _{soi,\, \Lambda }` vary with glacier, lake, and soil surfaces. Glacier albedos are from :ref:`Paterson (1994) <Paterson1994>`
+:math:`\alpha _{soi,\, \Lambda }^{\mu }` and :math:`\alpha _{soi,\, \Lambda }` vary with glacier, lake, and soil surfaces. Glacier albedos were originally from :ref:`Paterson (1994) <Paterson1994>` but were adjusted to the following values agreed upon by the Land Ice Working Group leadership team
 
-.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.6
+.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.5
 
-.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.4.
+.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.3.
 
-Unfrozen lake albedos depend on the cosine of the solar zenith angle :math:`\mu`
+Note that these are read in from the ``clm_inparm`` namelist group (variable ``albice``). 
+
+Unfrozen lake direct albedos depend on the cosine of the solar zenith angle :math:`\mu`
 
 .. math::
    :label: 3.60
 
-   \alpha _{soi,\, \Lambda }^{\mu } =\alpha _{soi,\, \Lambda } =0.05\left(\mu +0.15\right)^{-1} .
+   \alpha _{soi,\, \Lambda }^{\mu } =0.05\left(\max (0.001,\mu +0.15\right))^{-1} .
 
-Frozen lake albedos are from NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`)
+For diffuse radiation the expression in equation :eq:`3.60` is integrated over the full sky to yield :math:`\alpha _{soi,\, \Lambda } =0.10`.
 
-.. math:: \alpha _{soi,\, vis}^{\mu } =\alpha _{soi,\, vis} =0.60
+For frozen lakes without resolved snow layers (:math:`snl=0`), the albedo at cold temperatures :math:`a_0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
 
-.. math:: \alpha _{soi,\, nir}^{\mu } =\alpha _{soi,\, nir} =0.40.
+.. math::
+   :label: AlbFrozenLakeSnl0Dir
+
+   \alpha _{soi,\, \Lambda }^{\mu }=a_{0} \left(1-x\right)+\max(0.10,\alpha _{soi,\, \Lambda }^{\mu })x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
+
+.. math::
+   :label: AlbFrozenLakeSnl0Dif
+
+   \alpha _{soi,\, \Lambda }=a_{0} \left(1-x\right)+0.10x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
+
+where :math:`\alpha _{soi,\, \Lambda }^{\mu }` is calculated from :eq:`3.60` for direct radiation.
+
+For frozen lakes with resolved snow layers, the reflectance of the ice surface is fixed at :math:`a_0`, and the snow reflectance is calculated as over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`). These two reflectances are combined to obtain the snow-fraction-weighted albedo as in over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`).
 
 As in NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`), soil albedos vary with color class
 
@@ -467,7 +483,7 @@ As in NCAR LSM (:ref:`Bonan 1996 <Bonan1996>`), soil albedos vary with color cla
 
 where :math:`\Delta` depends on the volumetric water content of the first soil layer :math:`\theta _{1}` (section :numref:`Soil Water`) as :math:`\Delta =0.11-0.40\theta _{1} >0`, and :math:`\alpha _{sat,\, \Lambda }` and :math:`\alpha _{dry,\, \Lambda }` are albedos for saturated and dry soil color classes (:numref:`Table Dry and saturated soil albedos`).
 
-CLM soil colors are prescribed so that they best reproduce observed MODIS local solar noon surface albedo values at the CLM grid cell following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. The soil colors are fitted over the range of 20 soil classes shown in :numref:`Table Dry and saturated soil albedos` and compared to the MODIS monthly local solar noon all-sky surface albedo as described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and :ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM two-stream radiation model was used to calculate the model equivalent surface albedo using climatological monthly soil moisture along with the vegetation parameters of PFT fraction, LAI, and SAI. The soil color that produced the closest all-sky albedo in the two-stream radiation model was selected as the best fit for the month. The fitted monthly soil colors were averaged over all snow-free months to specify a representative soil color for the grid cell. In cases where there was no snow-free surface albedo for the year, the soil color derived from snow-affected albedo was used to give a representative soil color that included the effects of the minimum permanent snow cover.
+Albedos associated with CLM soil colors were updated for CLM4 using the procedure described below (:ref:`Lawrence et al. (2011) <Lawrenceetal2011>`) but have not been updated since then. CLM soil colors are prescribed so that they best reproduce observed MODIS local solar noon surface albedo values at the CLM grid cell following the methods of :ref:`Lawrence and Chase (2007) <LawrenceChase2007>`. The soil colors are fitted over the range of 20 soil classes shown in :numref:`Table Dry and saturated soil albedos` and compared to the MODIS monthly local solar noon all-sky surface albedo as described in :ref:`Strahler et al. (1999) <Strahleretal1999>` and :ref:`Schaaf et al. (2002) <Schaafetal2002>`. The CLM two-stream radiation model was used to calculate the model equivalent surface albedo using climatological monthly soil moisture along with the vegetation parameters of PFT fraction, LAI, and SAI. The soil color that produced the closest all-sky albedo in the two-stream radiation model was selected as the best fit for the month. The fitted monthly soil colors were averaged over all snow-free months to specify a representative soil color for the grid cell. In cases where there was no snow-free surface albedo for the year, the soil color derived from snow-affected albedo was used to give a representative soil color that included the effects of the minimum permanent snow cover.
 
 .. _Table Dry and saturated soil albedos:
 
@@ -767,9 +783,9 @@ The obliquity of the Earth :math:`\varepsilon` (degrees) is
 .. math::
    :label: 3.79
 
-   \varepsilon =\varepsilon *+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
+   \varepsilon =\varepsilon^{*}+\sum _{i=1}^{i=47}A_{i}  \cos \left(f_{i} t+\delta _{i} \right)
 
-where :math:`\varepsilon *` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file shr\_orb\_mod.F90.
+where :math:`\varepsilon^{*}` is a constant of integration (:numref:`Table Orbital parameters`), :math:`A_{i}`, :math:`f_{i}`, and :math:`\delta _{i}` are amplitude, mean rate, and phase terms in the cosine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`, and :math:`t=t_{0} -1950` where :math:`t_{0}` is the year. The series expansion terms are not shown here but can be found in the source code file ``shr_orb_mod.F90``.
 
 The true longitude of the Earth :math:`\lambda` (radians) is counted counterclockwise from the vernal equinox (:math:`\lambda =0` at the vernal equinox)
 
@@ -806,7 +822,7 @@ where
 
    \begin{array}{l} {e^{\cos } =\sum _{j=1}^{19}M_{j} \cos \left(g_{j} t+B_{j} \right) ,} \\ {e^{\sin } =\sum _{j=1}^{19}M_{j} \sin \left(g_{j} t+B_{j} \right) } \end{array}
 
-are the cosine and sine series expansions for :math:`e`, and :math:`M_{j}`, :math:`g_{j}`, and :math:`B_{j}` are amplitude, mean rate, and phase terms in the series expansions (:ref:`Berger (1978a,b) <Berger1978a>`). The longitude of the perihelion relative to the moving vernal equinox :math:`\tilde{\omega }` (degrees) is
+are the cosine and sine series expansions for :math:`e`, and :math:`M_{j}`, :math:`g_{j}`, and :math:`B_{j}` are amplitude, mean rate, and phase terms in the series expansions (:ref:`Berger (1978a,b) <Berger1978a>`) (series expansion terms not shown but can be found in the source code file ``shr_orb_mod.F90``). The longitude of the perihelion relative to the moving vernal equinox :math:`\tilde{\omega }` (degrees) is
 
 .. math::
    :label: 3.85
@@ -820,7 +836,7 @@ where :math:`\Pi` is the longitude of the perihelion measured from the reference
 
    \psi =\frac{\tilde{\psi }t}{3600} +\zeta +\sum _{i=1}^{78}F_{i}  \sin \left(f_{i} ^{{'} } t+\delta _{i} ^{{'} } \right)
 
-where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constants (:numref:`Table Orbital parameters`), and :math:`F_{i}`, :math:`f_{i} ^{{'} }`, and :math:`\delta _{i} ^{{'} }` are amplitude, mean rate, and phase terms in the sine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`)). The longitude of the perihelion :math:`\Pi` (radians) depends on the sine and cosine series expansions for the eccentricity :math:`e`\ as follows:
+where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constants (:numref:`Table Orbital parameters`), and :math:`F_{i}`, :math:`f_{i} ^{{'} }`, and :math:`\delta _{i} ^{{'} }` are amplitude, mean rate, and phase terms in the sine series expansion (:ref:`Berger (1978a,b) <Berger1978a>`) (series expansion terms not shown but can be found in the source code file ``shr_orb_mod.F90``). The longitude of the perihelion :math:`\Pi` (radians) depends on the sine and cosine series expansions for the eccentricity :math:`e` as follows:
 
 .. math::
    :label: 3.87
@@ -834,7 +850,7 @@ where :math:`\tilde{\psi }` (arcseconds) and :math:`\zeta` (degrees) are constan
    \tan ^{-1} \left[\frac{e^{\sin } }{e^{\cos } } \right] & \qquad {\rm for\; }e^{\cos } >{\rm 1}\times {\rm 10}^{{\rm -8}} {\rm \; and\; }e^{\sin } \ge 0
    \end{array}\right\}.
 
-The numerical solution for the longitude of the perihelion :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees (measured from the autumn equinox). A constant 180 degrees is then added to :math:`\tilde{\omega }` because the Sun is considered as revolving around the Earth (geocentric coordinate system) (:ref:`Berger et al. 1993 <Bergeretal1993>`)).
+The numerical solution for the longitude of the perihelion :math:`\tilde{\omega }` is constrained to be between 0 and 360 degrees (measured from the autumn equinox). A constant 180 degrees is then added to :math:`\tilde{\omega }` because the Sun is considered as revolving around the Earth (geocentric coordinate system) (:ref:`Berger et al. 1993 <Bergeretal1993>`).
 
 .. _Table Orbital parameters:
 
@@ -843,7 +859,7 @@ The numerical solution for the longitude of the perihelion :math:`\tilde{\omega 
  +--------------------------------------+-------------+
  | Parameter                            |             |
  +======================================+=============+
- | :math:`\varepsilon *`                | 23.320556   |
+ | :math:`\varepsilon^{*}`              | 23.320556   |
  +--------------------------------------+-------------+
  | :math:`\tilde{\psi }` (arcseconds)   | 50.439273   |
  +--------------------------------------+-------------+
