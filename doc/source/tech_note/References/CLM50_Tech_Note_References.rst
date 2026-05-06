@@ -1160,6 +1160,10 @@ Pomeroy, J. W., D. M. Gray, K. R. Shook, B. Toth, R. L. H. Essery, A. Pietroniro
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global monthly irrigated and rainfed crop areas around the year 2000: A new high-resolution data set for agricultural and hydrological modeling. Global Biogeochem. Cycles. 24, GB1011. DOI:10.1029/2008GB003435.
 
+.. _Potosnak2014:
+
+Potosnak, M. J., LeStourgeon, L., Pallardy, S. G., Hosman, K. P., Gu, L., Karl, T., et al. (2014). Observed and modeled ecosystem isoprene fluxes from an oak-dominated temperate forest and the influence of drought stress. Atmospheric Environment, 84, 314–322. http://www.sciencedirect.com/science/article/pii/S1352231013009059
+
 .. _Pressetal1992:
 
 Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
@@ -1568,6 +1572,22 @@ Vitousek, P.M., and Howarth, R.W. 1991. Nitrogen limitation on land and in the s
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
 
+.. _WangZeng2009:
+
+Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+
+.. _WangHui2022:
+
+Wang, H., Lu, X., Seco, R., Stavrakou, T., Karl, T., Jiang, X., et al. 2022. Modeling Isoprene Emission Response to Drought and Heatwaves Within MEGAN Using Evapotranspiration Data and by Coupling With the Community Land Model. Journal of Advances in Modeling Earth Systems, 14, e2022MS003174. https://doi.org/10.1029/2022MS003174.
+
+.. _WangHui2024a:
+
+Wang, H., Welch, A., Nagalingam, S., Leong, C., Kittitananuvong, P., Barsanti, K. C., et al. 2024a. Arctic Heatwaves Could Significantly Influence the Isoprene Emissions From Shrubs. Geophysical Research Letters, 51, e2023GL107599. https://doi.org/10.1029/2023GL107599.
+
+.. _WangHui2024b:
+
+Wang, H., Welch, A. M., Nagalingam, S., Leong, C., Czimczik, C. I., Tang, J., et al. 2024b. High temperature sensitivity of Arctic isoprene emissions explained by sedges. Nature Communications, 15(1), 6144. https://doi.org/10.1038/s41467-024-49960-0.
+
 .. _Waniaetal2009:
 
 Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafrost into a dynamic global vegetation model: 2. Evaluation and sensitivity of vegetation and carbon cycle processes. Global Biogeochem. Cycles 23.
@@ -1575,10 +1595,6 @@ Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafros
 .. _Waniaetal2010:
 
 Wania, R., Ross, I. and Prentice, I.C. 2010. Implementation and evaluation of a new methane model within a dynamic global vegetation model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions 3:1-59.
-
-.. _WangZeng2009:
-
-Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
 
 .. _weng2014:
 
