@@ -167,7 +167,7 @@ where :math:`H` (unitless) specifies the impact of relative humidity on electron
 The efficiency of light energy absorption (unitless), :math:`\alpha`, is calculated depending on the amount of nitrogen allocated for light capture, :math:`\mathrm{N}_{\text{lc}}`. Following :ref:`Niinemets and Tenhunen (1997)<NiinetmetsTenhunen1997>`, the LUNA model has,
 
 .. math::
-  :label: :alpha:)
+  :label: :light_energy_absorp_alpha:)
 
   \alpha =\frac{0.292}{1+\frac{0.076}{\mathrm{N}_{\text{lc}}C_{b}}}
 
