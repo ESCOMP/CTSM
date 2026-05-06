@@ -385,8 +385,10 @@ contains
                     decomp_method, mimics_decomp)
 
                ! n2o emissions: n2o from nitr is const fraction, n2o from denitr is calculated in nitrif_denitrif
-               f_n2o_nit_vr(c,j) = f_nit_vr(c,j) * nitrif_n2o_loss_frac
-               f_n2o_denit_vr(c,j) = f_denit_vr(c,j) / (1._r8 + n2_n2o_ratio_denit_vr(c,j))
+               call compute_n2o_emissions( &
+                    f_n2o_nit_vr(c,j), f_n2o_denit_vr(c,j), &
+                    f_nit_vr(c,j), f_denit_vr(c,j), n2_n2o_ratio_denit_vr(c,j), &
+                    nitrif_n2o_loss_frac)
 
 
                ! this code block controls the addition of N to sminn pool
@@ -771,5 +773,17 @@ contains
                                              actual_immob_nh4_vr  ! => 0
                end if
   end subroutine compete_no3
+
+  !-----------------------------------------------------------------------
+  pure subroutine compute_n2o_emissions( &
+       f_n2o_nit_vr, f_n2o_denit_vr, &
+       f_nit_vr, f_denit_vr, n2_n2o_ratio_denit_vr, &
+       nitrif_n2o_loss_frac)
+    real(r8), intent(out) :: f_n2o_nit_vr, f_n2o_denit_vr
+    real(r8), intent(in)  :: f_nit_vr, f_denit_vr, n2_n2o_ratio_denit_vr
+    real(r8), intent(in)  :: nitrif_n2o_loss_frac
+               f_n2o_nit_vr = f_nit_vr * nitrif_n2o_loss_frac
+               f_n2o_denit_vr = f_denit_vr / (1._r8 + n2_n2o_ratio_denit_vr)
+  end subroutine compute_n2o_emissions
 
 end module SoilBiogeochemCompetition_mod
