@@ -32,4 +32,9 @@ run_mode() {
 }
 
 run_mode "--fast" --fast
+# Preserve the --fast inner-timing CSV (--all overwrites it). Only do this
+# when INNER_TIMING was actually requested (no file otherwise).
+if [ -f last_run_timings.csv ]; then
+    cp last_run_timings.csv last_run_timings_fast.csv
+fi
 run_mode "--all"

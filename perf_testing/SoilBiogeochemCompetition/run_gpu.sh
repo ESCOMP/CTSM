@@ -20,7 +20,13 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 walltime="${WALLTIME:-00:05:00}"
-verify_args="$*"
+
+# Re-quote each arg with printf %q so values containing spaces (e.g.
+# EXTRA_FFLAGS="-acc=gpu -gpu=cc80") survive the heredoc round-trip.
+quoted_args=""
+for arg in "$@"; do
+    quoted_args+=" $(printf '%q' "$arg")"
+done
 
 # qsub -W block=true (PBS Pro) submits and waits for the job to finish,
 # returning the jobid on stdout and the job's exit status as its own.
@@ -34,7 +40,7 @@ job_id=$(qsub -W block=true \
 #!/bin/bash
 cd "\$PBS_O_WORKDIR"
 . ../env.sh
-./verify.sh $verify_args
+./verify.sh$quoted_args
 EOF
 )
 
