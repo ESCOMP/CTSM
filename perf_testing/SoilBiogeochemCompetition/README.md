@@ -20,9 +20,22 @@ exercises all 8 combinations by default (see [Driver modes](#driver-modes)).
 
 ## Files
 
-- `SoilBiogeochemCompetition.F90` — the routine. Self-contained: only
-  depends on intrinsic kinds (`selected_real_kind(12)` defines `r8`
-  locally).
+- `SoilBiogeochemCompetition.F90` — the routine plus a set of
+  per-element helper procedures (sibling subroutines/functions in the
+  same module) factored out of the canonical-path science loops so the
+  upcoming OpenACC `do`-loop apparatus doesn't pollute the science
+  code. Helper layout:
+  - `accum_sminn_tot`, `compute_nuptake_prof`, `accum_dz_weighted`,
+    `compute_fraction_or_one`, `compute_residual_smin_vr`,
+    `distribute_residual_to_plant` — per-element math.
+  - `compete_nh4`, `compete_no3`, `compute_n2o_emissions`,
+    `apply_carbon_only_adjustment`, `compute_competition_summary` —
+    sub-blocks of the main competition loop (Loop 17).
+  - The non-canonical branches (`use_nitrif_denitrif=.false.` block,
+    Loop 19 MIMICS overflow) are intentionally not refactored.
+  - Depends on intrinsic kinds (`selected_real_kind(12)` defines `r8`
+    locally) and on [`../perf_timers_mod.F90`](../perf_timers_mod.F90)
+    (which is a no-op when `INNER_TIMING` is undefined).
 - `driver.F90` — synthetic timing harness; allocates inputs (pointer
   arrays where the routine signature requires pointer), runs all 8
   config combinations per iter (or 1 with `--fast`), prints results,
@@ -198,6 +211,20 @@ git commit -m "Regenerate SoilBiogeochemCompetition baseline_checksum_fast.txt"
 
 ## Notes for future optimization stages
 
+- The canonical-path science loops have been factored into per-element
+  helper procedures (see the helper layout under
+  `SoilBiogeochemCompetition.F90` above). Each helper takes scalar
+  args (no `(c,j)` indices); the surrounding `do j; do fc;` loops live
+  in the main routine. This shape is OpenACC-friendly: each helper can
+  be marked `!$acc routine seq` and the surrounding loop can be
+  `!$acc parallel loop` without further restructuring.
+- The first attempt at extracting Loop NH4's residual-uptake body wrapped
+  the whole branchy loop body in a single `pure subroutine` and caused
+  a +27% per-call regression at `-O2` because nvfortran wouldn't inline
+  it. The current shape (extract just the pure-math expressions as
+  `pure function`s, leave branches and accumulators at the call site)
+  is what works — keep helpers small enough that the compiler inlines
+  them.
 - The routine accumulates into `actual_immob`, `potential_immob`,
   `sminn_to_plant` in the non-nitrif branch (`+=` without re-zeroing).
   The driver re-zeros all output / inout arrays before every call, so
