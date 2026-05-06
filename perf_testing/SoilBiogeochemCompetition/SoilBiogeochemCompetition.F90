@@ -49,6 +49,7 @@ contains
        potential_immob_vr, actual_immob_vr,                 &
        ! 3D arrays
        pmnf_decomp_cascade, p_decomp_cn_gain)
+    use perf_timers_mod, only : perf_timer_start, perf_timer_stop
     !
     ! !ARGUMENTS:
     integer , intent(in) :: begc, endc                                  ! column index range (was bounds%begc:bounds%endc)
@@ -328,20 +329,25 @@ contains
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
 
          ! init total mineral N pools
+         call perf_timer_start('init_sminn_tot')
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             sminn_tot(c) = 0.
          end do
+         call perf_timer_stop('init_sminn_tot')
 
          ! sum up total mineral N pools
+         call perf_timer_start('accum_sminn_tot')
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                sminn_tot(c) = sminn_tot(c) + (smin_no3_vr(c,j) + smin_nh4_vr(c,j)) * dzsoi_decomp(j)
             end do
          end do
+         call perf_timer_stop('accum_sminn_tot')
 
          ! define N uptake profile for initial vertical distribution of plant N uptake, assuming plant seeks N from where it is most abundant
+         call perf_timer_start('compute_nuptake_prof')
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -352,8 +358,10 @@ contains
                endif
             end do
          end do
+         call perf_timer_stop('compute_nuptake_prof')
 
          ! main column/vertical loop
+         call perf_timer_start('main_competition')
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -514,8 +522,10 @@ contains
                actual_immob_vr(c,j) = actual_immob_no3_vr(c,j) + actual_immob_nh4_vr(c,j)
             end do
          end do
+         call perf_timer_stop('main_competition')
 
          ! sum up N fluxes to plant after initial competition
+         call perf_timer_start('sum_sminn_to_plant')
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             sminn_to_plant(c) = 0._r8
@@ -526,6 +536,7 @@ contains
                sminn_to_plant(c) = sminn_to_plant(c) + sminn_to_plant_vr(c,j) * dzsoi_decomp(j)
             end do
          end do
+         call perf_timer_stop('sum_sminn_to_plant')
 
          if (decomp_method == mimics_decomp) then
             do j = 1, nlevdecomp
@@ -561,6 +572,7 @@ contains
 
          ! give plants a second pass to see if there is any mineral N left over with which to satisfy residual N demand.
          ! first take frm nh4 pool; then take from no3 pool
+         call perf_timer_start('residual_uptake_nh4')
          do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                residual_plant_ndemand(c) = plant_ndemand(c) - sminn_to_plant(c)
@@ -599,9 +611,11 @@ contains
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
             end do
+            call perf_timer_stop('residual_uptake_nh4')
 
             !
             ! and now do second pass for no3
+            call perf_timer_start('residual_uptake_no3')
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                residual_plant_ndemand(c) = plant_ndemand(c) - sminn_to_plant(c)
@@ -640,8 +654,10 @@ contains
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
             end do
+            call perf_timer_stop('residual_uptake_no3')
 
          ! sum up N fluxes to immobilization
+         call perf_timer_start('sum_immobilization')
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             actual_immob(c) = 0._r8
@@ -654,10 +670,11 @@ contains
                potential_immob(c) = potential_immob(c) + potential_immob_vr(c,j) * dzsoi_decomp(j)
             end do
          end do
+         call perf_timer_stop('sum_immobilization')
 
 
 
-
+         call perf_timer_start('compute_fpg_fpi')
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             ! calculate the fraction of potential growth that can be
@@ -675,6 +692,7 @@ contains
                fpi(c) = 1._r8
             end if
          end do ! end of column loops
+         call perf_timer_stop('compute_fpg_fpi')
 
       end if if_nitrif  !end of if_not_use_nitrif_denitrif
 
