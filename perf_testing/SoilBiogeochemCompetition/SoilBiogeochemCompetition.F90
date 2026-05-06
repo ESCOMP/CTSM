@@ -135,12 +135,13 @@ contains
 
       if_nitrif: if (.not. use_nitrif_denitrif) then
 
-         ! init sminn_tot
+         ! Initialize sminn_tot
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             sminn_tot(c) = 0.
          end do
 
+         ! Get total soil mineral N
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -148,6 +149,7 @@ contains
             end do
          end do
 
+         ! Get N uptake profile (fraction of plant uptake coming from each soil layer)
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -159,6 +161,7 @@ contains
             end do
          end do
 
+         ! Get total column N demand from each soil layer
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -166,6 +169,7 @@ contains
             end do
          end do
 
+         ! Get actual plant N uptake from each soil layer
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -222,13 +226,16 @@ contains
             end do
          end do
 
-         ! give plants a second pass to see if there is any mineral N left over with which to satisfy residual N demand.
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! Give plants a second pass to see if there is any mineral N left over
+         ! with which to satisfy residual N demand.
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+         ! sum up total N left over after initial plant and immobilization fluxes
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             residual_sminn(c) = 0._r8
          end do
-
-         ! sum up total N left over after initial plant and immobilization fluxes
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             residual_plant_ndemand(c) = plant_ndemand(c) - sminn_to_plant(c)
@@ -270,6 +277,10 @@ contains
                sum_ndemand_vr(c,j) = potential_immob_vr(c,j) + sminn_to_plant_vr(c,j)
             end do
          end do
+
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         ! Done with second pass
+         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
          ! under conditions of excess N, some proportion is assumed to
          ! be lost to denitrification, in addition to the constant
@@ -504,9 +515,9 @@ contains
             end do
          end do
 
+         ! sum up N fluxes to plant after initial competition
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
-            ! sum up N fluxes to plant after initial competition
             sminn_to_plant(c) = 0._r8
          end do
          do j = 1, nlevdecomp
