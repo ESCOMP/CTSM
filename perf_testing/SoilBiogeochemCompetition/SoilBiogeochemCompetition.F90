@@ -331,7 +331,9 @@ contains
          ! these as 'present' so transfers happen once per call to this
          ! routine (i.e. once per timestep in the real model), not once per
          ! kernel. The copyin list grows as more kernels get OpenACC-ified.
-         !$acc data copyin(smin_nh4_vr, smin_no3_vr, dzsoi_decomp, filter_bgc_soilc)
+         !$acc data copyin(smin_nh4_vr, smin_no3_vr,             &
+         !$acc&            dzsoi_decomp, filter_bgc_soilc,       &
+         !$acc&            sminn_vr, nfixation_prof)
 
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
 
@@ -343,6 +345,17 @@ contains
          end do
          call perf_timer_stop('init_sminn_tot')
 
+         ! Inner data region scoped to the two kernels that use the
+         ! routine-local automatics sminn_tot and nuptake_prof. sminn_tot
+         ! was just initialized to zero on the host (init_sminn_tot
+         ! above); copyin brings those zeros to device. accum_sminn_tot
+         ! then accumulates into it on device, and compute_nuptake_prof
+         ! reads it on device — no host round-trip between the two
+         ! kernels. nuptake_prof is written on device and copied out at
+         ! region end so the host-side main_competition (still on CPU)
+         ! sees the final values.
+         !$acc data copyin(sminn_tot) copyout(nuptake_prof)
+
          ! sum up total mineral N pools.
          ! GPU/multicore (_OPENACC): parallelize over fc, serialize j inside
          ! each thread (sminn_tot(c) is accumulated across j for each c —
@@ -350,16 +363,7 @@ contains
          ! order (j outer, fc inner) is more cache-friendly because
          ! smin_no3_vr(c,j) etc. are column-major. Body and end-do's are
          ! shared; only the loop opening differs.
-         !
-         ! sminn_tot is a routine-local automatic, so its data region must
-         ! live here. The read-only inputs (smin_no3_vr, smin_nh4_vr,
-         ! dzsoi_decomp, filter_bgc_soilc) are hoisted to the driver's
-         ! iter-loop !$acc data region, so the parallel loop uses
-         ! default(present) to pick those up. !$acc directives are
-         ! comment sentinels — no-op when -acc isn't passed, so no
-         ! #ifdef needed for them; only the loop swap needs ifdef.
          call perf_timer_start('accum_sminn_tot')
-         !$acc data copy(sminn_tot)
 #ifdef _OPENACC
          !$acc parallel loop default(present)
          do fc=1,num_bgc_soilc
@@ -373,11 +377,13 @@ contains
                call accum_sminn_tot(sminn_tot(c), smin_no3_vr(c,j), smin_nh4_vr(c,j), dzsoi_decomp(j))
             end do
          end do
-         !$acc end data
          call perf_timer_stop('accum_sminn_tot')
 
-         ! define N uptake profile for initial vertical distribution of plant N uptake, assuming plant seeks N from where it is most abundant
+         ! define N uptake profile for initial vertical distribution of plant N uptake, assuming plant seeks N from where it is most abundant.
+         ! Each (c,j) writes to its own nuptake_prof(c,j); no reduction —
+         ! safe to parallelize both loops together via collapse(2).
          call perf_timer_start('compute_nuptake_prof')
+         !$acc parallel loop collapse(2) default(present)
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
@@ -385,6 +391,8 @@ contains
             end do
          end do
          call perf_timer_stop('compute_nuptake_prof')
+
+         !$acc end data
 
          ! main column/vertical loop
          call perf_timer_start('main_competition')
@@ -623,6 +631,7 @@ contains
 
   !-----------------------------------------------------------------------
   pure subroutine compute_nuptake_prof(nuptake_prof, sminn_tot, sminn_vr, nfixation_prof)
+    !$acc routine seq
     real(r8), intent(out) :: nuptake_prof
     real(r8), intent(in)  :: sminn_tot, sminn_vr, nfixation_prof
     if (sminn_tot  >  0.) then
