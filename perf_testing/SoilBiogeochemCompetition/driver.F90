@@ -33,6 +33,7 @@ program SoilBiogeochemCompetition_driver
   !-----------------------------------------------------------------------
 
   use SoilBiogeochemCompetition_mod, only : r8, SoilBiogeochemCompetition
+  use perf_timers_mod              , only : perf_timer_print, perf_timer_dump_csv
 
   implicit none
 
@@ -158,6 +159,7 @@ program SoilBiogeochemCompetition_driver
   call report(checksum)
   call write_last_run(checksum)
   call compare_to_baseline(checksum)
+  call write_inner_timings()
 
 contains
 
@@ -453,5 +455,19 @@ contains
     close(u)
     write(*,'(a,a,a)') '  baseline             = (parse error in ', trim(baseline_path), '; skipping compare)'
   end subroutine compare_to_baseline
+
+  !---------------------------------------------------------------------
+  subroutine write_inner_timings()
+    ! Print the per-loop timer table to stdout and dump a CSV row per
+    ! label to last_run_timings.csv. No-op (and no file written) when
+    ! INNER_TIMING is undefined.
+#ifdef INNER_TIMING
+    integer :: u
+    call perf_timer_print(6)
+    open(newunit=u, file='last_run_timings.csv', status='replace', action='write')
+    call perf_timer_dump_csv(u)
+    close(u)
+#endif
+  end subroutine write_inner_timings
 
 end program SoilBiogeochemCompetition_driver
