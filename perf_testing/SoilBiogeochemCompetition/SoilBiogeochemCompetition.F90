@@ -344,17 +344,17 @@ contains
          ! smin_no3_vr(c,j) etc. are column-major. Body and end-do's are
          ! shared; only the loop opening differs.
          !
-         ! The !$acc data region scopes data movement to this kernel for
-         ! now. A later step will hoist it (and the surrounding ones) into
-         ! a larger region in the driver so transfers happen once per
-         ! iteration, not once per loop. !$acc directives are comment
-         ! sentinels — no-op when -acc isn't passed, so no #ifdef needed.
+         ! sminn_tot is a routine-local automatic, so its data region must
+         ! live here. The read-only inputs (smin_no3_vr, smin_nh4_vr,
+         ! dzsoi_decomp, filter_bgc_soilc) are hoisted to the driver's
+         ! iter-loop !$acc data region, so the parallel loop uses
+         ! default(present) to pick those up. !$acc directives are
+         ! comment sentinels — no-op when -acc isn't passed, so no
+         ! #ifdef needed for them; only the loop swap needs ifdef.
          call perf_timer_start('accum_sminn_tot')
-         !$acc data copy(sminn_tot)                              &
-         !$acc&     copyin(smin_no3_vr, smin_nh4_vr,             &
-         !$acc&            dzsoi_decomp, filter_bgc_soilc)
+         !$acc data copy(sminn_tot)
 #ifdef _OPENACC
-         !$acc parallel loop
+         !$acc parallel loop default(present)
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             do j = 1, nlevdecomp
