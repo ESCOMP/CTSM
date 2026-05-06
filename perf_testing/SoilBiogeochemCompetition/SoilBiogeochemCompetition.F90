@@ -425,7 +425,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               sminn_to_plant(c) = sminn_to_plant(c) + sminn_to_plant_vr(c,j) * dzsoi_decomp(j)
+               call accum_sminn_to_plant(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
             end do
          end do
          call perf_timer_stop('sum_sminn_to_plant')
@@ -828,5 +828,12 @@ contains
                sminn_to_plant_vr = smin_no3_to_plant_vr + smin_nh4_to_plant_vr
                actual_immob_vr = actual_immob_no3_vr + actual_immob_nh4_vr
   end subroutine compute_competition_summary
+
+  !-----------------------------------------------------------------------
+  pure subroutine accum_sminn_to_plant(sminn_to_plant, sminn_to_plant_vr, dzsoi_decomp)
+    real(r8), intent(inout) :: sminn_to_plant
+    real(r8), intent(in)    :: sminn_to_plant_vr, dzsoi_decomp
+    sminn_to_plant = sminn_to_plant + sminn_to_plant_vr * dzsoi_decomp
+  end subroutine accum_sminn_to_plant
 
 end module SoilBiogeochemCompetition_mod
