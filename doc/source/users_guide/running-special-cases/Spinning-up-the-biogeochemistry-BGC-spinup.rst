@@ -6,9 +6,9 @@
  Spinup of |version|-BGC-Crop
 =============================
 
-To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (``-bgc_spinup on`` in CLM ``configure``, see example below) mode for about 200 simulation years. :numref:`Figure BGC AD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using GSWP3 atmospheric forcing. Generally, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
+To get the |version|-BGC model to a steady state, you start it from arbitrary initial conditions using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM ``env_run.xml``, see example below) mode for about 360 simulation years. :numref:`Figure BGC AD spinup plot for 1850` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
 
-.. _Figure BGC AD spinup plot for 1850 GSWP3:
+.. _Figure BGC AD spinup plot for 1850:
 
 .. figure:: image3.png
 
