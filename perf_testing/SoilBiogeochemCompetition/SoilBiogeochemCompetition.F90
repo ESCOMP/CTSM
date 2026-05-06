@@ -425,7 +425,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               call accum_sminn_to_plant(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
+               call accum_dz_weighted(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
             end do
          end do
          call perf_timer_stop('sum_sminn_to_plant')
@@ -558,8 +558,8 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               actual_immob(c) = actual_immob(c) + actual_immob_vr(c,j) * dzsoi_decomp(j)
-               potential_immob(c) = potential_immob(c) + potential_immob_vr(c,j) * dzsoi_decomp(j)
+               call accum_dz_weighted(actual_immob(c),    actual_immob_vr(c,j),    dzsoi_decomp(j))
+               call accum_dz_weighted(potential_immob(c), potential_immob_vr(c,j), dzsoi_decomp(j))
             end do
          end do
          call perf_timer_stop('sum_immobilization')
@@ -830,11 +830,13 @@ contains
   end subroutine compute_competition_summary
 
   !-----------------------------------------------------------------------
-  pure subroutine accum_sminn_to_plant(sminn_to_plant, sminn_to_plant_vr, dzsoi_decomp)
-    real(r8), intent(inout) :: sminn_to_plant
-    real(r8), intent(in)    :: sminn_to_plant_vr, dzsoi_decomp
-    sminn_to_plant = sminn_to_plant + sminn_to_plant_vr * dzsoi_decomp
-  end subroutine accum_sminn_to_plant
+  ! Generic per-layer dzsoi-weighted accumulation: column_total += value_vr * dz.
+  ! Used to vertically integrate sminn_to_plant, actual_immob, potential_immob.
+  pure subroutine accum_dz_weighted(column_total, value_vr, dzsoi_decomp)
+    real(r8), intent(inout) :: column_total
+    real(r8), intent(in)    :: value_vr, dzsoi_decomp
+    column_total = column_total + value_vr * dzsoi_decomp
+  end subroutine accum_dz_weighted
 
   !-----------------------------------------------------------------------
   ! Per-layer leftover mineral N after first-pass demands (used for both
