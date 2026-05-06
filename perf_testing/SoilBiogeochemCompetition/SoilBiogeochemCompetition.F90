@@ -341,7 +341,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               sminn_tot(c) = sminn_tot(c) + (smin_no3_vr(c,j) + smin_nh4_vr(c,j)) * dzsoi_decomp(j)
+               call accum_sminn_tot(sminn_tot(c), smin_no3_vr(c,j), smin_nh4_vr(c,j), dzsoi_decomp(j))
             end do
          end do
          call perf_timer_stop('accum_sminn_tot')
@@ -697,5 +697,12 @@ contains
       end if if_nitrif  !end of if_not_use_nitrif_denitrif
 
   end subroutine SoilBiogeochemCompetition
+
+  !-----------------------------------------------------------------------
+  pure subroutine accum_sminn_tot(sminn_tot, smin_no3_vr, smin_nh4_vr, dzsoi_decomp)
+    real(r8), intent(inout) :: sminn_tot
+    real(r8), intent(in)    :: smin_no3_vr, smin_nh4_vr, dzsoi_decomp
+    sminn_tot = sminn_tot + (smin_no3_vr + smin_nh4_vr) * dzsoi_decomp
+  end subroutine accum_sminn_tot
 
 end module SoilBiogeochemCompetition_mod
