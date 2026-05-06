@@ -397,22 +397,14 @@ contains
                ! benefit of keeping track of the N additions needed to
                ! eliminate N limitations, so there is still a diagnostic quantity
                ! that describes the degree of N limitation at steady-state.
-
-               if ( carbon_only ) then !.or. &
-                  if ( fpi_no3_vr(c,j) + fpi_nh4_vr(c,j) < 1._r8 ) then
-                     fpi_nh4_vr(c,j) = 1.0_r8 - fpi_no3_vr(c,j)
-                     supplement_to_sminn_vr(c,j) = (potential_immob_vr(c,j) &
-                                                  - actual_immob_no3_vr(c,j)) - actual_immob_nh4_vr(c,j)
-                     ! update to new values that satisfy demand
-                     actual_immob_nh4_vr(c,j) = potential_immob_vr(c,j) -  actual_immob_no3_vr(c,j)
-                  end if
-                  if ( smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j) < plant_ndemand(c)*nuptake_prof(c,j) ) then
-                     supplement_to_sminn_vr(c,j) = supplement_to_sminn_vr(c,j) + &
-                          (plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)) - smin_nh4_to_plant_vr(c,j)  ! use old values
-                     smin_nh4_to_plant_vr(c,j) = plant_ndemand(c)*nuptake_prof(c,j) - smin_no3_to_plant_vr(c,j)
-                  end if
-                  sminn_to_plant_vr(c,j) = smin_no3_to_plant_vr(c,j) + smin_nh4_to_plant_vr(c,j)
-               end if
+               call apply_carbon_only_adjustment( &
+                    fpi_nh4_vr(c,j), supplement_to_sminn_vr(c,j), &
+                    actual_immob_nh4_vr(c,j), smin_nh4_to_plant_vr(c,j), &
+                    sminn_to_plant_vr(c,j), &
+                    fpi_no3_vr(c,j), actual_immob_no3_vr(c,j), &
+                    smin_no3_to_plant_vr(c,j), &
+                    potential_immob_vr(c,j), plant_ndemand(c), nuptake_prof(c,j), &
+                    carbon_only)
 
                ! sum up no3 and nh4 fluxes
                fpi_vr(c,j) = fpi_no3_vr(c,j) + fpi_nh4_vr(c,j)
@@ -785,5 +777,39 @@ contains
                f_n2o_nit_vr = f_nit_vr * nitrif_n2o_loss_frac
                f_n2o_denit_vr = f_denit_vr / (1._r8 + n2_n2o_ratio_denit_vr)
   end subroutine compute_n2o_emissions
+
+  !-----------------------------------------------------------------------
+  pure subroutine apply_carbon_only_adjustment( &
+       fpi_nh4_vr, supplement_to_sminn_vr, &
+       actual_immob_nh4_vr, smin_nh4_to_plant_vr, &
+       sminn_to_plant_vr, &
+       fpi_no3_vr, actual_immob_no3_vr, &
+       smin_no3_to_plant_vr, &
+       potential_immob_vr, plant_ndemand, nuptake_prof, &
+       carbon_only)
+    real(r8), intent(inout) :: fpi_nh4_vr, supplement_to_sminn_vr
+    real(r8), intent(inout) :: actual_immob_nh4_vr, smin_nh4_to_plant_vr
+    real(r8), intent(inout) :: sminn_to_plant_vr
+    real(r8), intent(in)    :: fpi_no3_vr, actual_immob_no3_vr
+    real(r8), intent(in)    :: smin_no3_to_plant_vr
+    real(r8), intent(in)    :: potential_immob_vr, plant_ndemand, nuptake_prof
+    logical , intent(in)    :: carbon_only
+
+               if ( carbon_only ) then !.or. &
+                  if ( fpi_no3_vr + fpi_nh4_vr < 1._r8 ) then
+                     fpi_nh4_vr = 1.0_r8 - fpi_no3_vr
+                     supplement_to_sminn_vr = (potential_immob_vr &
+                                                  - actual_immob_no3_vr) - actual_immob_nh4_vr
+                     ! update to new values that satisfy demand
+                     actual_immob_nh4_vr = potential_immob_vr -  actual_immob_no3_vr
+                  end if
+                  if ( smin_no3_to_plant_vr + smin_nh4_to_plant_vr < plant_ndemand*nuptake_prof ) then
+                     supplement_to_sminn_vr = supplement_to_sminn_vr + &
+                          (plant_ndemand*nuptake_prof - smin_no3_to_plant_vr) - smin_nh4_to_plant_vr  ! use old values
+                     smin_nh4_to_plant_vr = plant_ndemand*nuptake_prof - smin_no3_to_plant_vr
+                  end if
+                  sminn_to_plant_vr = smin_no3_to_plant_vr + smin_nh4_to_plant_vr
+               end if
+  end subroutine apply_carbon_only_adjustment
 
 end module SoilBiogeochemCompetition_mod
