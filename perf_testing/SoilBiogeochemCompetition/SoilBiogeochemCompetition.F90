@@ -351,11 +351,7 @@ contains
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               if (sminn_tot(c)  >  0.) then
-                  nuptake_prof(c,j) = sminn_vr(c,j) / sminn_tot(c)
-               else
-                  nuptake_prof(c,j) = nfixation_prof(c,j)
-               endif
+               call compute_nuptake_prof(nuptake_prof(c,j), sminn_tot(c), sminn_vr(c,j), nfixation_prof(c,j))
             end do
          end do
          call perf_timer_stop('compute_nuptake_prof')
@@ -704,5 +700,16 @@ contains
     real(r8), intent(in)    :: smin_no3_vr, smin_nh4_vr, dzsoi_decomp
     sminn_tot = sminn_tot + (smin_no3_vr + smin_nh4_vr) * dzsoi_decomp
   end subroutine accum_sminn_tot
+
+  !-----------------------------------------------------------------------
+  pure subroutine compute_nuptake_prof(nuptake_prof, sminn_tot, sminn_vr, nfixation_prof)
+    real(r8), intent(out) :: nuptake_prof
+    real(r8), intent(in)  :: sminn_tot, sminn_vr, nfixation_prof
+    if (sminn_tot  >  0.) then
+       nuptake_prof = sminn_vr / sminn_tot
+    else
+       nuptake_prof = nfixation_prof
+    endif
+  end subroutine compute_nuptake_prof
 
 end module SoilBiogeochemCompetition_mod
