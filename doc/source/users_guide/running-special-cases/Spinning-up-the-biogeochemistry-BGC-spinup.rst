@@ -22,21 +22,23 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
  BGC SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-You can also start from a default initial file that is setup as part of the selected compset. :numref:`Figure BGC initialized spinup plot for 1850` shows spinup behavior for an 1850 pAD BGC case that loops over one year of coupler history output for atmospheric forcing (generated from the fully coupled model), initialized with a BGC initial file generated from a GSWP3 atmospheric forcing case. Note that it takes about 10 years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a specified equilibrium state (denoted by the dotted lines) due to the different atmospheric forcing.
+After this you continue in standard mode for about 160 years. We refer to this as the post-SASU or pSASU phase (``CLM_ACCELERATED_SPINUP off`` in CLM ``env_run.xml``, see example below). :numref:`Figure BGC pSASU spinup plot for 1850` shows spinup behavior for an 1850 BGC pSASU case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
+
+As an alternative to spinning up, you may start from a default initial file that is setup as part of the selected compset. :numref:`Figure BGC initialized spinup plot for 1850` shows spinup behavior for an 1850 pSASU BGC case that loops over one year of coupler history output for atmospheric forcing (generated from the fully coupled model), initialized with a BGC initial file generated from a CRUJRA atmospheric forcing case. Note that it takes about 10 years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a specified equilibrium state (denoted by the dotted lines) due to the different atmospheric forcing.
 
 .. _Figure BGC initialized spinup plot for 1850:
 
-.. figure:: image5.png
+.. figure:: initialized_spinup_placeholder.png
 
- BGC initialized spinup plot for year 1850. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC initialized spinup plot for year 1850. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-:numref:`Figure BGC initialized spinup plot for 2000 CO2` shows spinup behavior for the same case but also changes CO2 to present-day conditions (379ppmv). Again, it takes about 10 years to reach equilibrium for TLAI, GPP, and TWS.
+:numref:`Figure BGC initialized spinup plot for 2000 CO2` shows spinup behavior for the same case but also changes CO2 to present-day conditions (379 ppmv). Again, it takes about 10 years to reach equilibrium for TLAI, GPP, and TWS.
 
 .. _Figure BGC initialized spinup plot for 2000 CO2:
 
-.. figure:: image6.png
+.. figure:: initialized_2000_placeholder.png
 
- BGC initialized spinup plot for year 2000 CO2.  Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC initialized spinup plot for year 2000 CO2.  Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
 If you use the default initial file and you signficantly change model behavior or atmospheric forcing, and you are concerned about the carbon equilibrium (e.g., TOTECOSYSC, TOTSOMC, TOTVEGC), particularly at high latitudes, then we recommend you put the model back into AD mode to reach a new equilibrium. In this configuration, this will also automatically reseed "dead" plant functional types in the initial file with a bit of leaf carbon to give those plant functional types another chance to grow under the new atmospheric forcing or model conditions.
 
