@@ -1,0 +1,7 @@
+mode                 fast
+ncol                 8000
+nlevdecomp           10
+ndct                 8
+numfc                8000
+niters               100
+checksum               9.5857105051752981E+06
