@@ -86,7 +86,7 @@ This will take a while the first time you build the previews during a session.
 When you make changes to and save a documentation source file, Esbonio will re-generate the preview for that file. This should be relatively quick, since it's not doing a clean build—just a new build of that file in particular. However, you may need to close and re-open the preview pane before you see your changes. Also, there are some types of changes you can make to one file that will affect *other* files (such as changing a section label that is cross-referenced in a different file). Esbonio will not know to rebuild those other files. To force a clean build, try the `Esbonio: Restart Language Server` command in the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette). Failing that, you can try deleting the directory referenced in the "The HTML pages are in" message printed in the Esbonio Output log.
 
 Some other tips:
+- If you see long lines in the editor that require you to scroll far to the right, search the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) for "word wrap" and select `View: Toggle Word Wrap`. These long lines are intentional (see [style guide](#docs-style-guide-section)).
 - Once the preview is ready, you can scroll in either the source file or the preview and they will stay approximately in sync with each other.
 - You should be able to open other source files and get their preview instantly.
 - More info on features can be found on the [Esbonio VS Code Extension page](https://marketplace.visualstudio.com/items?itemName=swyddfa.esbonio)
-

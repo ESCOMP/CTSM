@@ -1,4 +1,4 @@
-(docs-style-guide)=
+(docs-style-guide-section)=
 
 # Documentation style guide
 
