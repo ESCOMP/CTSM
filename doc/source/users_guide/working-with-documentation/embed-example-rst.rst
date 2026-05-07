@@ -4,4 +4,4 @@ directory as the "Tips for working with reStructuredText" source file, so we onl
 specify the filename. If it were in a different directory, we would specify the path
 relative to "Tips for working with reStructuredText". (Note that this file does NOT follow
 the "no line breaks within paragraphs" style convention; this is purely for readability of
-the embed.)
+the embedded text.)
