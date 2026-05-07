@@ -6,3 +6,5 @@ last_run_timings.csv
 last_run_timings_fast.csv
 sbgc_gpu.o*
 sbgc_gpu.e*
+sbgc_dbg.o*
+sbgc_dbg.e*

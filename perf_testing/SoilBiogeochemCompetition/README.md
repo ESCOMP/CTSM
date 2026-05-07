@@ -141,7 +141,7 @@ Verify any target builds and the checksums match:
 For GPU runs, use [`run_gpu.sh`](run_gpu.sh) — it submits a
 non-interactive PBS job that builds + runs `verify.sh` on a GPU
 node, waits for completion (`qsub -W block=true`), and cats the
-job's stdout/stderr (defaults: `ucsg0003`, queue `tutorial`, 1 GPU,
+job's stdout/stderr (defaults: `ucsg0003`, queue `develop`, 1 GPU,
 5 min walltime). All script args are forwarded to `verify.sh`
 inside the job; override walltime via env var:
 
@@ -153,7 +153,7 @@ WALLTIME=00:30:00 ./run_gpu.sh EXTRA_FFLAGS="-acc=gpu -gpu=cc80"
 
 Job output is written to `./sbgc_gpu.o<jobid>` (gitignored). For an
 interactive shell instead, just submit `qsub` directly:
-`qsub -I -A ucsg0003 -q tutorial -l select=1:ncpus=1:ngpus=1 -l walltime=00:05:00`.
+`qsub -I -A ucsg0003 -q develop -l select=1:ncpus=1:ngpus=1 -l walltime=00:05:00`.
 
 **Reading the speedup numbers** (mainly relevant once Step 5
 parallel directives are added):

@@ -3,7 +3,7 @@
 # (with optional flags passed through), wait for completion, and print
 # the job's stdout/stderr.
 #
-# Defaults: account ucsg0003, queue 'tutorial', 1 GPU, 5 min walltime.
+# Defaults: account ucsg0003, queue 'develop', 1 GPU, 5 min walltime.
 # Override walltime via env var (e.g. WALLTIME=00:30:00 ./run_gpu.sh).
 #
 # Examples:
@@ -31,7 +31,7 @@ done
 # qsub -W block=true (PBS Pro) submits and waits for the job to finish,
 # returning the jobid on stdout and the job's exit status as its own.
 job_id=$(qsub -W block=true \
-              -A ucsg0003 -q tutorial \
+              -A ucsg0003 -q develop \
               -l select=1:ncpus=1:ngpus=1 \
               -l walltime="$walltime" \
               -N sbgc_gpu \
