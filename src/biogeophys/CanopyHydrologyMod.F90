@@ -493,21 +493,21 @@ contains
      ! !ARGUMENTS:
      type(bounds_type), intent(in) :: bounds
      integer, intent(in) :: num_nolakep
-     integer, intent(in) :: filter_nolakep(:)
+     integer, intent(in), contiguous :: filter_nolakep(:)
      type(patch_type), intent(in) :: patch
      type(column_type), intent(in) :: col
 
-     integer  , intent(in)    :: frac_veg_nosno( bounds%begp: )                          ! fraction of vegetation not covered by snow (0 OR 1)
-     real(r8) , intent(in)    :: elai( bounds%begp: )                                    ! canopy one-sided leaf area index with burying by snow
-     real(r8) , intent(in)    :: esai( bounds%begp: )                                    ! canopy one-sided stem area index with burying by snow
-     real(r8) , intent(in)    :: forc_snow( bounds%begp: )                               ! atm snow (mm H2O/s)
-     real(r8) , intent(in)    :: qflx_liq_above_canopy( bounds%begp: )                   ! liquid water input above canopy (rain plus irrigation) (mm H2O/s)
+     integer  , intent(in), contiguous    :: frac_veg_nosno( bounds%begp: )                          ! fraction of vegetation not covered by snow (0 OR 1)
+     real(r8) , intent(in), contiguous    :: elai( bounds%begp: )                                    ! canopy one-sided leaf area index with burying by snow
+     real(r8) , intent(in), contiguous    :: esai( bounds%begp: )                                    ! canopy one-sided stem area index with burying by snow
+     real(r8) , intent(in), contiguous    :: forc_snow( bounds%begp: )                               ! atm snow (mm H2O/s)
+     real(r8) , intent(in), contiguous    :: qflx_liq_above_canopy( bounds%begp: )                   ! liquid water input above canopy (rain plus irrigation) (mm H2O/s)
 
-     real(r8) , intent(inout) :: qflx_through_snow( bounds%begp: )                       ! canopy throughfall of snow (mm H2O/s)
-     real(r8) , intent(inout) :: qflx_through_liq( bounds%begp: )                        ! canopy throughfall of liquid (mm H2O/s)
-     real(r8) , intent(inout) :: qflx_intercepted_snow( bounds%begp: )                   ! canopy interception of snow (mm H2O/s)
-     real(r8) , intent(inout) :: qflx_intercepted_liq( bounds%begp: )                    ! canopy interception of liquid (mm H2O/s)
-     logical  , intent(inout) :: check_point_for_interception_and_excess( bounds%begp: ) ! whether each patch in the filter needs to have the interception calculations (here) and snow/liquid excess calculations (elsewhere) computed
+     real(r8) , intent(inout), contiguous :: qflx_through_snow( bounds%begp: )                       ! canopy throughfall of snow (mm H2O/s)
+     real(r8) , intent(inout), contiguous :: qflx_through_liq( bounds%begp: )                        ! canopy throughfall of liquid (mm H2O/s)
+     real(r8) , intent(inout), contiguous :: qflx_intercepted_snow( bounds%begp: )                   ! canopy interception of snow (mm H2O/s)
+     real(r8) , intent(inout), contiguous :: qflx_intercepted_liq( bounds%begp: )                    ! canopy interception of liquid (mm H2O/s)
+     logical  , intent(inout), contiguous :: check_point_for_interception_and_excess( bounds%begp: ) ! whether each patch in the filter needs to have the interception calculations (here) and snow/liquid excess calculations (elsewhere) computed
      !
      ! !LOCAL VARIABLES:
      integer :: fp, p, c
