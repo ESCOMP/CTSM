@@ -356,10 +356,13 @@ substep before committing.
   `!$acc update self(sum_*_demand_scaled)` to stay live. GPU-ifying
   it would let us delete that update self.
 - Total per-call GPU time is essentially tied with serial despite
-  some kernels running 100×+ faster. Two suspects: per-call data
-  transfers in/out of the `!$acc data` region, and the OpenACC kernel
-  launch overhead summed across ~10 small kernels per call. A
-  reasonable next step is to hoist the data region out to the
-  driver's iteration loop so the data-region open/close happens once
-  per timing run instead of once per call. That would also amortize
-  the kernel-launch cost across many iterations.
+  some kernels running 100×+ faster. The bottleneck is per-call data
+  transfer in/out of the `!$acc data` region (the `copyin`/`copyout`
+  arrays cross the PCIe link every call). The honest fix is to keep
+  data on the device *across* routine calls — i.e., GPU-ify the
+  upstream code that produces the inputs and the downstream code
+  that consumes the outputs, so the arrays simply stay resident
+  between routines. **Do not** hoist the data region up into the
+  driver's per-call timing loop; that would amortize transfers
+  across an artificial loop the real model does not run, and the
+  resulting numbers wouldn't represent any production behavior.
