@@ -11,6 +11,7 @@ module CanopyHydrologyMod
   !
   ! !USES:
 #include "shr_assert.h"
+  use perf_mod, only : t_startf, t_stopf
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use shr_log_mod     , only : errMsg => shr_log_errMsg
   use shr_sys_mod     , only : shr_sys_flush
@@ -524,6 +525,8 @@ contains
      SHR_ASSERT_FL((ubound(qflx_intercepted_liq, 1) == bounds%endp), sourcefile, __LINE__)
      SHR_ASSERT_FL((ubound(check_point_for_interception_and_excess, 1) == bounds%endp), sourcefile, __LINE__)
 
+     call t_startf("CanIntAndThrough")
+
      do fp = 1, num_nolakep
         p = filter_nolakep(fp)
         c = patch%column(p)
@@ -562,6 +565,8 @@ contains
            end if
         end if
      end do
+
+     call t_stopf("CanIntAndThrough")
 
    end subroutine BulkFlux_CanopyInterceptionAndThroughfall
 
