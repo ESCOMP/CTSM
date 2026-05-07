@@ -369,7 +369,8 @@ contains
          !$acc&            fpi_nh4_vr, fpi_no3_vr,                  &
          !$acc&            smin_nh4_to_plant_vr,                    &
          !$acc&            smin_no3_to_plant_vr,                    &
-         !$acc&            sminn_to_plant_vr)                       &
+         !$acc&            sminn_to_plant_vr,                       &
+         !$acc&            sminn_to_plant)                          &
          !$acc&     copyout(actual_immob_nh4_vr, f_nit_vr,          &
          !$acc&             actual_immob_no3_vr,                    &
          !$acc&             f_denit_vr,                             &
@@ -482,8 +483,37 @@ contains
          end do
          call perf_timer_stop('main_competition')
 
+         ! sum up N fluxes to plant after initial competition.
+         ! Init: each (c) writes its own sminn_to_plant(c) — naturally
+         ! parallelizable. Accumulation: dz-weighted sum over j into
+         ! sminn_to_plant(c); same race pattern as accum_sminn_tot —
+         ! parallelize over fc, serialize j inside each thread so each
+         ! thread owns a unique c. CPU-serial keeps j outer for cache.
+         call perf_timer_start('sum_sminn_to_plant')
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
+         do fc=1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+            sminn_to_plant(c) = 0._r8
+         end do
+#if defined(_OPENACC) || defined(_OPENMP)
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
+         do fc=1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+            do j = 1, nlevdecomp
+#else
+         do j = 1, nlevdecomp
+            do fc=1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+#endif
+               call accum_dz_weighted(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
+            end do
+         end do
+         call perf_timer_stop('sum_sminn_to_plant')
+
          ! Sync arrays back to host so the still-CPU loops below
-         ! (sum_sminn_to_plant, residual_uptake_*, sum_immobilization,
+         ! (the mimics_decomp block, residual_uptake_*, sum_immobilization,
          ! compute_fpg_fpi) read fresh device-computed values rather
          ! than stale host-side ones. As each downstream loop becomes
          ! a GPU kernel, drop the arrays it consumes from this list;
@@ -497,21 +527,8 @@ contains
          !$acc&            actual_immob_vr,                         &
          !$acc&            supplement_to_sminn_vr,                  &
          !$acc&            nlimit_nh4, nlimit_no3,                  &
-         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled)
-
-         ! sum up N fluxes to plant after initial competition
-         call perf_timer_start('sum_sminn_to_plant')
-         do fc=1,num_bgc_soilc
-            c = filter_bgc_soilc(fc)
-            sminn_to_plant(c) = 0._r8
-         end do
-         do j = 1, nlevdecomp
-            do fc=1,num_bgc_soilc
-               c = filter_bgc_soilc(fc)
-               call accum_dz_weighted(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
-            end do
-         end do
-         call perf_timer_stop('sum_sminn_to_plant')
+         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled, &
+         !$acc&            sminn_to_plant)
 
          if (decomp_method == mimics_decomp) then
             do j = 1, nlevdecomp
@@ -916,6 +933,7 @@ contains
   ! Generic per-layer dzsoi-weighted accumulation: column_total += value_vr * dz.
   ! Used to vertically integrate sminn_to_plant, actual_immob, potential_immob.
   pure subroutine accum_dz_weighted(column_total, value_vr, dzsoi_decomp)
+    !$acc routine seq
     real(r8), intent(inout) :: column_total
     real(r8), intent(in)    :: value_vr, dzsoi_decomp
     column_total = column_total + value_vr * dzsoi_decomp
