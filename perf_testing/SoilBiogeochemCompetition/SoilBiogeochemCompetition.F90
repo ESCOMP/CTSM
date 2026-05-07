@@ -367,16 +367,19 @@ contains
          !$acc&            sum_no3_demand, sum_no3_demand_scaled,   &
          !$acc&            nlimit_nh4, nlimit_no3,                  &
          !$acc&            fpi_nh4_vr, fpi_no3_vr,                  &
-         !$acc&            smin_nh4_to_plant_vr,                    &
-         !$acc&            smin_no3_to_plant_vr,                    &
-         !$acc&            sminn_to_plant_vr,                       &
-         !$acc&            sminn_to_plant)                          &
+         !$acc&            sminn_to_plant,                          &
+         !$acc&            residual_plant_ndemand,                  &
+         !$acc&            residual_smin_nh4, residual_smin_no3,    &
+         !$acc&            residual_smin_nh4_vr, residual_smin_no3_vr) &
          !$acc&     copyout(actual_immob_nh4_vr, f_nit_vr,          &
          !$acc&             actual_immob_no3_vr,                    &
          !$acc&             f_denit_vr,                             &
          !$acc&             f_n2o_nit_vr, f_n2o_denit_vr,           &
          !$acc&             fpi_vr,                                 &
-         !$acc&             actual_immob_vr)                        &
+         !$acc&             actual_immob_vr,                        &
+         !$acc&             smin_nh4_to_plant_vr,                   &
+         !$acc&             smin_no3_to_plant_vr,                   &
+         !$acc&             sminn_to_plant_vr)                      &
          !$acc&     copy(supplement_to_sminn_vr)
 
          ! sum up total mineral N pools.
@@ -512,23 +515,15 @@ contains
          end do
          call perf_timer_stop('sum_sminn_to_plant')
 
-         ! Sync arrays back to host so the still-CPU loops below
-         ! (the mimics_decomp block, residual_uptake_*, sum_immobilization,
-         ! compute_fpg_fpi) read fresh device-computed values rather
-         ! than stale host-side ones. As each downstream loop becomes
-         ! a GPU kernel, drop the arrays it consumes from this list;
-         ! when all loops are GPU, delete the !$acc update self entirely.
-         !$acc update self(actual_immob_nh4_vr, f_nit_vr,           &
-         !$acc&            smin_nh4_to_plant_vr,                    &
-         !$acc&            actual_immob_no3_vr,                     &
-         !$acc&            smin_no3_to_plant_vr, f_denit_vr,        &
-         !$acc&            f_n2o_nit_vr, f_n2o_denit_vr,            &
-         !$acc&            sminn_to_plant_vr, fpi_vr,               &
-         !$acc&            actual_immob_vr,                         &
-         !$acc&            supplement_to_sminn_vr,                  &
-         !$acc&            nlimit_nh4, nlimit_no3,                  &
-         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled, &
-         !$acc&            sminn_to_plant)
+         ! Sync arrays back to host so the still-CPU loops between
+         ! here and the next !$acc update self read fresh
+         ! device-computed values: the mimics_decomp block needs
+         ! sum_*_demand_scaled, and sum_immobilization needs
+         ! actual_immob_vr. As more loops become GPU kernels, drop
+         ! arrays they consume from this list; when all loops are
+         ! GPU, delete the !$acc update self entirely.
+         !$acc update self(actual_immob_vr,                         &
+         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled)
 
          if (decomp_method == mimics_decomp) then
             do j = 1, nlevdecomp
@@ -564,15 +559,31 @@ contains
 
          ! give plants a second pass to see if there is any mineral N left over with which to satisfy residual N demand.
          ! first take frm nh4 pool; then take from no3 pool
+         ! Init: per-c writes; naturally parallel.
+         ! Main work: residual_smin_nh4(c) accumulates over j and the
+         ! distribute step reads that running total — must serialize j
+         ! within each thread (fc-outer / j-inner under parallel builds).
+         ! Re-sum: same race pattern as accum_sminn_tot — fc-outer / j-inner
+         ! to keep the per-c sminn_to_plant accumulation race-free.
          call perf_timer_start('residual_uptake_nh4')
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                residual_plant_ndemand(c) = plant_ndemand(c) - sminn_to_plant(c)
                residual_smin_nh4(c) = 0._r8
             end do
+#if defined(_OPENACC) || defined(_OPENMP)
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
+            do fc=1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+               do j = 1, nlevdecomp
+#else
             do j = 1, nlevdecomp
                do fc=1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
+#endif
                   if (residual_plant_ndemand(c)  >  0._r8 ) then
                      if (nlimit_nh4(c,j) .eq. 0) then
                         residual_smin_nh4_vr(c,j) = compute_residual_smin_vr( &
@@ -592,13 +603,23 @@ contains
             end do
 
             ! re-sum up N fluxes to plant after second pass for nh4
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                sminn_to_plant(c) = 0._r8
             end do
+#if defined(_OPENACC) || defined(_OPENMP)
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
+            do fc=1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+               do j = 1, nlevdecomp
+#else
             do j = 1, nlevdecomp
                do fc=1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
+#endif
                   sminn_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + smin_no3_to_plant_vr(c,j)
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
@@ -607,16 +628,29 @@ contains
 
             !
             ! and now do second pass for no3
+            ! Same parallelization pattern as residual_uptake_nh4:
+            ! init is per-c (naturally parallel); main work and re-sum
+            ! are fc-outer / j-inner under parallel builds.
             call perf_timer_start('residual_uptake_no3')
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                residual_plant_ndemand(c) = plant_ndemand(c) - sminn_to_plant(c)
                residual_smin_no3(c) = 0._r8
             end do
 
+#if defined(_OPENACC) || defined(_OPENMP)
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
+            do fc=1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+               do j = 1, nlevdecomp
+#else
             do j = 1, nlevdecomp
                do fc=1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
+#endif
                   if (residual_plant_ndemand(c) > 0._r8 ) then
                      if (nlimit_no3(c,j) .eq. 0) then
                        residual_smin_no3_vr(c,j) = compute_residual_smin_vr( &
@@ -635,18 +669,33 @@ contains
             end do
 
             ! re-sum up N fluxes to plant after second passes of both no3 and nh4
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
                sminn_to_plant(c) = 0._r8
             end do
+#if defined(_OPENACC) || defined(_OPENMP)
+            !$omp parallel do private(c)
+            !$acc parallel loop default(present) private(c)
+            do fc=1,num_bgc_soilc
+               c = filter_bgc_soilc(fc)
+               do j = 1, nlevdecomp
+#else
             do j = 1, nlevdecomp
                do fc=1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
+#endif
                   sminn_to_plant_vr(c,j) = smin_nh4_to_plant_vr(c,j) + smin_no3_to_plant_vr(c,j)
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
             end do
             call perf_timer_stop('residual_uptake_no3')
+
+         ! sminn_to_plant was modified on device by the residual_uptake
+         ! kernels above; compute_fpg_fpi (still CPU) reads it. Drop
+         ! this update self once compute_fpg_fpi is also GPU-ified.
+         !$acc update self(sminn_to_plant)
 
          ! sum up N fluxes to immobilization
          call perf_timer_start('sum_immobilization')
@@ -944,6 +993,7 @@ contains
   ! NH4 and NO3). f_loss is f_nit_vr for NH4, f_denit_vr for NO3.
   pure function compute_residual_smin_vr( &
        smin_vr, actual_immob_vr, smin_to_plant_vr, f_loss_vr, dt) result(residual_smin_vr)
+    !$acc routine seq
     real(r8) :: residual_smin_vr
     real(r8), intent(in) :: smin_vr, actual_immob_vr, smin_to_plant_vr, f_loss_vr, dt
     residual_smin_vr = max(smin_vr - (actual_immob_vr + smin_to_plant_vr + f_loss_vr ) * dt, 0._r8)
@@ -954,6 +1004,7 @@ contains
   ! (used for both NH4 and NO3).
   pure function distribute_residual_to_plant( &
        smin_to_plant_vr, residual_smin_vr, residual_plant_ndemand, residual_smin, dt) result(smin_to_plant_vr_new)
+    !$acc routine seq
     real(r8) :: smin_to_plant_vr_new
     real(r8), intent(in) :: smin_to_plant_vr, residual_smin_vr, residual_plant_ndemand, residual_smin, dt
     smin_to_plant_vr_new = smin_to_plant_vr + residual_smin_vr * &
