@@ -367,11 +367,9 @@ contains
          !$acc&            sum_no3_demand, sum_no3_demand_scaled,   &
          !$acc&            nlimit_nh4, nlimit_no3,                  &
          !$acc&            fpi_nh4_vr, fpi_no3_vr,                  &
-         !$acc&            sminn_to_plant,                          &
          !$acc&            residual_plant_ndemand,                  &
          !$acc&            residual_smin_nh4, residual_smin_no3,    &
-         !$acc&            residual_smin_nh4_vr, residual_smin_no3_vr, &
-         !$acc&            actual_immob, potential_immob)           &
+         !$acc&            residual_smin_nh4_vr, residual_smin_no3_vr) &
          !$acc&     copyout(actual_immob_nh4_vr, f_nit_vr,          &
          !$acc&             actual_immob_no3_vr,                    &
          !$acc&             f_denit_vr,                             &
@@ -380,7 +378,10 @@ contains
          !$acc&             actual_immob_vr,                        &
          !$acc&             smin_nh4_to_plant_vr,                   &
          !$acc&             smin_no3_to_plant_vr,                   &
-         !$acc&             sminn_to_plant_vr)                      &
+         !$acc&             sminn_to_plant_vr,                      &
+         !$acc&             sminn_to_plant,                         &
+         !$acc&             actual_immob, potential_immob,          &
+         !$acc&             fpg, fpi)                               &
          !$acc&     copy(supplement_to_sminn_vr)
 
          ! sum up total mineral N pools.
@@ -721,14 +722,11 @@ contains
          end do
          call perf_timer_stop('sum_immobilization')
 
-         ! sminn_to_plant, actual_immob, potential_immob were modified
-         ! on device; compute_fpg_fpi (still CPU) reads them. Drop this
-         ! update self once compute_fpg_fpi is also GPU-ified.
-         !$acc update self(sminn_to_plant, actual_immob, potential_immob)
-
-
-
+         ! Per-c, naturally parallel: each iteration writes its own
+         ! fpg(c) and fpi(c) from per-c inputs.
          call perf_timer_start('compute_fpg_fpi')
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             ! calculate the fraction of potential growth that can be
@@ -1029,6 +1027,7 @@ contains
   ! Used for fpg (sminn_to_plant / plant_ndemand) and fpi (actual_immob /
   ! potential_immob) — both naturally return 1 when there's no demand.
   pure function compute_fraction_or_one(numerator, denominator) result(frac)
+    !$acc routine seq
     real(r8) :: frac
     real(r8), intent(in) :: numerator, denominator
     if (denominator > 0.0_r8) then
