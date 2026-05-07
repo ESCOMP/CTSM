@@ -155,8 +155,7 @@ Job output is written to `./sbgc_gpu.o<jobid>` (gitignored). For an
 interactive shell instead, just submit `qsub` directly:
 `qsub -I -A ucsg0003 -q develop -l select=1:ncpus=1:ngpus=1 -l walltime=00:05:00`.
 
-**Reading the speedup numbers** (mainly relevant once Step 5
-parallel directives are added):
+**Reading the speedup numbers**:
 - *CPU OpenMP vs CPU serial* — measures how much pure parallelism
   on the host alone buys you.
 - *GPU vs CPU OpenMP* — the honest "directives-only" GPU win:
@@ -164,8 +163,28 @@ parallel directives are added):
 - *GPU vs CPU serial* — the headline number (combines both effects).
   Easier to communicate, less informative on its own.
 
-Until parallel directives land in Step 5, all three targets are
-functionally equivalent and produce identical timings.
+Step 5 (OpenACC directives on every canonical-path loop) is complete.
+Measured per-loop wall-clock for `--fast` (8000 columns × 10 levels
+× 100 calls), per the `INNER_TIMING=1` table:
+
+| Loop | serial | OpenMP (`-mp`) | GPU |
+|------|--------|----------------|-----|
+| `accum_sminn_tot`        | 318 µs | (slower — overhead) | varies |
+| `compute_nuptake_prof`   | 710 µs | (slower)            | ~21 µs |
+| `main_competition`       | 2.93 ms | 6.92 ms            | 19 µs |
+| `sum_sminn_to_plant`     | 57 µs  | 361 µs              | 21 µs |
+| `residual_uptake_nh4`    | 806 µs | 1241 µs             | 47 µs |
+| `residual_uptake_no3`    | 264 µs | 616 µs              | 44 µs |
+| `sum_immobilization`     | 102 µs | 614 µs              | 23 µs |
+| `compute_fpg_fpi`        | 24 µs  | 72 µs               | 11 µs |
+| **Total per call**       | 5.61 ms | 12.13 ms           | 5.56 ms |
+
+OpenMP is consistently slower than serial at this problem size — the
+parallel-region launch overhead per kernel exceeds the parallelization
+gain on 8000 columns × 10 levels. Individual GPU kernels show 2× to
+174× speedups, but the total per-call time barely beats serial because
+the host-device data-transfer overhead and the not-yet-GPU-ified
+`mimics_decomp` block (only exercised in `--all` configs) dominate.
 
 ### Disabling the built-in timing
 
@@ -300,3 +319,47 @@ git commit -m "Regenerate SoilBiogeochemCompetition baseline_checksum_fast.txt"
   are passed as such here. `dzsoi_decomp` is `allocatable` in CTSM
   (declared as assumed-shape `intent(in)` here, which accepts
   allocatable / pointer / regular contiguous arrays).
+
+### Status after Step 5
+
+Every canonical-path loop in the `use_nitrif_denitrif=.true.` branch
+of `SoilBiogeochemCompetition` is a GPU kernel. A single `!$acc data`
+region opens just after `init_sminn_tot` and closes at the bottom of
+the branch. One `!$acc update self(sum_*_demand_scaled)` after
+`sum_sminn_to_plant` keeps the still-CPU `mimics_decomp` block fed
+(that block only fires in `--all` configs that exercise MIMICS).
+
+The data-clause discipline that came out of debugging Step 5c is
+written up in `feedback_openacc_data_clause_review.md` (auto-loaded
+memory). The two failure modes to watch for at every staged-GPU
+substep:
+
+1. **`copyout` host-write clobber** — if any CPU loop in the data
+   region writes an array that's in `copyout(...)` (or `copy(...)`),
+   the end-of-region D2H copy silently overwrites the host write.
+2. **`create` host-read of stale memory** — if any CPU loop in the
+   data region reads an array that's in `create(...)` and was written
+   by an earlier device kernel, the host reads uninitialized memory
+   unless an `!$acc update self(...)` runs first. This bug class can
+   produce *deterministic-but-wrong* checksums when the underlying
+   stack reuse is consistent across calls — don't trust "5 runs same
+   checksum" as proof of correctness.
+
+Walk both checks against every clause-listed array on every Step-5
+substep before committing.
+
+### Open work
+
+- The `mimics_decomp` block (lines ~530–560 in
+  `SoilBiogeochemCompetition.F90`) is still on the host. It only runs
+  in `--all` configs that use MIMICS, but it forces the surviving
+  `!$acc update self(sum_*_demand_scaled)` to stay live. GPU-ifying
+  it would let us delete that update self.
+- Total per-call GPU time is essentially tied with serial despite
+  some kernels running 100×+ faster. Two suspects: per-call data
+  transfers in/out of the `!$acc data` region, and the OpenACC kernel
+  launch overhead summed across ~10 small kernels per call. A
+  reasonable next step is to hoist the data region out to the
+  driver's iteration loop so the data-region open/close happens once
+  per timing run instead of once per call. That would also amortize
+  the kernel-launch cost across many iterations.
