@@ -326,15 +326,6 @@ contains
 
       else  !----------NITRIF_DENITRIF-------------!
 
-         ! Hoisted !$acc data region for read-only inputs that are constant
-         ! across all kernels in the canonical path. Inner kernels reference
-         ! these as 'present' so transfers happen once per call to this
-         ! routine (i.e. once per timestep in the real model), not once per
-         ! kernel. The copyin list grows as more kernels get OpenACC-ified.
-         !$acc data copyin(smin_nh4_vr, smin_no3_vr,             &
-         !$acc&            dzsoi_decomp, filter_bgc_soilc,       &
-         !$acc&            sminn_vr, nfixation_prof)
-
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
 
          ! init total mineral N pools
@@ -345,16 +336,47 @@ contains
          end do
          call perf_timer_stop('init_sminn_tot')
 
-         ! Inner data region scoped to the two kernels that use the
-         ! routine-local automatics sminn_tot and nuptake_prof. sminn_tot
-         ! was just initialized to zero on the host (init_sminn_tot
-         ! above); copyin brings those zeros to device. accum_sminn_tot
-         ! then accumulates into it on device, and compute_nuptake_prof
-         ! reads it on device — no host round-trip between the two
-         ! kernels. nuptake_prof is written on device and copied out at
-         ! region end so the host-side main_competition (still on CPU)
-         ! sees the final values.
-         !$acc data copyin(sminn_tot) copyout(nuptake_prof)
+         ! Single !$acc data region scoping all GPU kernels in this branch.
+         ! Starts here (sminn_tot just zeroed on host above) and runs to
+         ! the end of the branch. Clause meanings:
+         !  - copyin: read-only inputs that arrive from the host, including
+         !    sminn_tot (whose host zeros must reach the device).
+         !  - create: routine-local automatics computed and consumed
+         !    entirely on device (nuptake_prof; main_competition's
+         !    per-cell scratch).
+         !  - copyout: arrays the host reads after the GPU work in this
+         !    region completes.
+         !  - copy: arrays where both directions matter (host has values
+         !    that must arrive on device, AND device-updated values that
+         !    must come back).
+         ! For loops still on the host between the GPU kernels and the
+         ! end of this region, an explicit !$acc update self(...) after
+         ! main_competition syncs just the arrays those CPU loops need.
+         ! As subsequent steps GPU-ify those loops, the corresponding
+         ! arrays drop out of the !$acc update self list.
+         !$acc data copyin(smin_nh4_vr, smin_no3_vr,                &
+         !$acc&            dzsoi_decomp, filter_bgc_soilc,          &
+         !$acc&            landunit,                                &
+         !$acc&            sminn_vr, nfixation_prof,                &
+         !$acc&            plant_ndemand, potential_immob_vr,       &
+         !$acc&            pot_f_nit_vr, pot_f_denit_vr,            &
+         !$acc&            n2_n2o_ratio_denit_vr,                   &
+         !$acc&            sminn_tot)                               &
+         !$acc&     create(nuptake_prof,                            &
+         !$acc&            sum_nh4_demand, sum_nh4_demand_scaled,   &
+         !$acc&            sum_no3_demand, sum_no3_demand_scaled,   &
+         !$acc&            nlimit_nh4, nlimit_no3,                  &
+         !$acc&            fpi_nh4_vr, fpi_no3_vr,                  &
+         !$acc&            smin_nh4_to_plant_vr,                    &
+         !$acc&            smin_no3_to_plant_vr,                    &
+         !$acc&            sminn_to_plant_vr)                       &
+         !$acc&     copyout(actual_immob_nh4_vr, f_nit_vr,          &
+         !$acc&             actual_immob_no3_vr,                    &
+         !$acc&             f_denit_vr,                             &
+         !$acc&             f_n2o_nit_vr, f_n2o_denit_vr,           &
+         !$acc&             fpi_vr,                                 &
+         !$acc&             actual_immob_vr)                        &
+         !$acc&     copy(supplement_to_sminn_vr)
 
          ! sum up total mineral N pools.
          ! Parallel build (_OPENACC or _OPENMP): parallelize over fc,
@@ -395,14 +417,17 @@ contains
          end do
          call perf_timer_stop('compute_nuptake_prof')
 
-         !$acc end data
-
-         ! main column/vertical loop
+         ! main column/vertical loop.
+         ! Each (c,j) iteration runs the 5 sub-helpers in sequence: each
+         ! writes to its own (c,j) outputs, no inter-iteration dependency,
+         ! so collapse(2) is safe.
          call perf_timer_start('main_competition')
+         !$omp parallel do collapse(2) private(c, l)
+         !$acc parallel loop collapse(2) default(present) private(c, l)
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
-               l = landunit(c)
+               l = landunit(c)  ! unused inside this loop; kept to mirror in-tree CTSM
 
                !  first compete for nh4
                call compete_nh4( &
@@ -456,6 +481,21 @@ contains
             end do
          end do
          call perf_timer_stop('main_competition')
+
+         ! Sync arrays back to host so the still-CPU loops below
+         ! (sum_sminn_to_plant, residual_uptake_*, sum_immobilization,
+         ! compute_fpg_fpi) read fresh device-computed values rather
+         ! than stale host-side ones. As each downstream loop becomes
+         ! a GPU kernel, drop the arrays it consumes from this list;
+         ! when all loops are GPU, delete the !$acc update self entirely.
+         !$acc update self(actual_immob_nh4_vr, f_nit_vr,           &
+         !$acc&            smin_nh4_to_plant_vr,                    &
+         !$acc&            actual_immob_no3_vr,                     &
+         !$acc&            smin_no3_to_plant_vr, f_denit_vr,        &
+         !$acc&            f_n2o_nit_vr, f_n2o_denit_vr,            &
+         !$acc&            sminn_to_plant_vr, fpi_vr,               &
+         !$acc&            actual_immob_vr,                         &
+         !$acc&            supplement_to_sminn_vr)
 
          ! sum up N fluxes to plant after initial competition
          call perf_timer_start('sum_sminn_to_plant')
@@ -653,6 +693,7 @@ contains
        potential_immob_vr, pot_f_nit_vr, smin_nh4_vr, &
        dt, compet_plant_nh4, compet_decomp_nh4, compet_nit, &
        decomp_method, mimics_decomp)
+    !$acc routine seq
     real(r8), intent(out) :: sum_nh4_demand, sum_nh4_demand_scaled
     integer , intent(out) :: nlimit_nh4
     real(r8), intent(out) :: fpi_nh4_vr, actual_immob_nh4_vr
@@ -729,6 +770,7 @@ contains
        potential_immob_vr, pot_f_denit_vr, smin_no3_vr, &
        dt, compet_plant_no3, compet_decomp_no3, compet_denit, &
        decomp_method, mimics_decomp)
+    !$acc routine seq
     real(r8), intent(out) :: sum_no3_demand, sum_no3_demand_scaled
     integer , intent(out) :: nlimit_no3
     real(r8), intent(out) :: fpi_no3_vr, actual_immob_no3_vr
@@ -809,6 +851,7 @@ contains
        f_n2o_nit_vr, f_n2o_denit_vr, &
        f_nit_vr, f_denit_vr, n2_n2o_ratio_denit_vr, &
        nitrif_n2o_loss_frac)
+    !$acc routine seq
     real(r8), intent(out) :: f_n2o_nit_vr, f_n2o_denit_vr
     real(r8), intent(in)  :: f_nit_vr, f_denit_vr, n2_n2o_ratio_denit_vr
     real(r8), intent(in)  :: nitrif_n2o_loss_frac
@@ -825,6 +868,7 @@ contains
        smin_no3_to_plant_vr, &
        potential_immob_vr, plant_ndemand, nuptake_prof, &
        carbon_only)
+    !$acc routine seq
     real(r8), intent(inout) :: fpi_nh4_vr, supplement_to_sminn_vr
     real(r8), intent(inout) :: actual_immob_nh4_vr, smin_nh4_to_plant_vr
     real(r8), intent(inout) :: sminn_to_plant_vr
@@ -856,6 +900,7 @@ contains
        fpi_no3_vr, fpi_nh4_vr, &
        smin_no3_to_plant_vr, smin_nh4_to_plant_vr, &
        actual_immob_no3_vr, actual_immob_nh4_vr)
+    !$acc routine seq
     real(r8), intent(out) :: fpi_vr, sminn_to_plant_vr, actual_immob_vr
     real(r8), intent(in)  :: fpi_no3_vr, fpi_nh4_vr
     real(r8), intent(in)  :: smin_no3_to_plant_vr, smin_nh4_to_plant_vr
