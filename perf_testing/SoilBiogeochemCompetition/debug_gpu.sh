@@ -32,6 +32,7 @@ echo "=== nvidia-smi ==="
 nvidia-smi || echo "(nvidia-smi failed)"
 echo "=== ./driver $driver_args ==="
 ./driver $driver_args
+# nsys profile -t cuda -o sbgcc_profile_report ./driver $driver_args
 echo "=== exit status: \$? ==="
 EOF
 )
