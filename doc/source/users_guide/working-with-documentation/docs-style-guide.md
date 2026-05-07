@@ -1,4 +1,4 @@
-(docs-style-guide-section)=
+(ctsm-docs-style-guide)=
 
 # Documentation style guide
 
