@@ -51,6 +51,8 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Figure Vegetation fluxes and pools` Vegetation fluxes and pools.
 
+- :numref:`Figure Carbon costs of N fixation as a function of soil temperature` Carbon costs of N fixation as a function of soil temperature.
+  
 - :numref:`Figure annual phenology cycle` Example of annual phenology cycle for seasonal deciduous.
 
 - :numref:`Figure Schematic of decomposition model in CLM` Schematic of decomposition model in CLM.
