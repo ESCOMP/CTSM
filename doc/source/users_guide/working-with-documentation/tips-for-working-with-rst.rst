@@ -193,6 +193,26 @@ Becomes:
 
 See `the Sphinx documentation <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-literalinclude>`_ for more options to the ``literalinclude`` directive.
 
+
+reStructuredText: Text superscripts and subscripts
+--------------------------------------------------------------
+
+Note that these instructions apply to text (i.e., not in inline or block math).
+
+**Superscripts**
+
+- Incorrect: ``Fe:sup:`3+``` becomes Fe:sup:`3+`
+- Incorrect: ``Fe :sup:`3+``` becomes Fe :sup:`3+` (note extraneous space)
+- Correct: ``Fe\ :sup:`3+``` becomes Fe\ :sup:`3+`
+
+**Subscripts**
+
+- Incorrect: ``CO:sub:`2``` becomes CO:sub:`2`
+- Incorrect: ``CO :sub:`2``` becomes CO :sub:`2` (note extraneous space)
+- Correct: ``CO\ :sub:`2``` becomes CO\ :sub:`2`
+
+
+
 reStructuredText: Common error messages and how to handle them
 --------------------------------------------------------------
 

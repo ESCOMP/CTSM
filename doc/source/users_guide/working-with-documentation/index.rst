@@ -16,6 +16,7 @@ Working with CTSM Documentation
    docs-style-guide.md
    tips-for-working-with-markdown.md
    tips-for-working-with-rst.rst
+   converting-between-md-and-rst.md
    common-docs-errors.md
    building-docs-multiple-versions.rst
    building-docs-original-wiki.md

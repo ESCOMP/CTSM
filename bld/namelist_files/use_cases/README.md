@@ -30,13 +30,10 @@ Present day options (uses default present-day simulation year -- which right now
 
 Where
 
-yyyy      = Simulation year (such as 1850 or 2000).
-yyyy-yyyy = Range of simulation years to run over (i.e.. 1850-2000).
-yyyy-PD   = Range of simulation years to run over until present day (i.e.. 2018-2024).
-$ssp_rcp  = Shared Socieconomic Pathway (SSP) Representative concentration pathway (RCP) description string
-            for future scenarios:
-            SSP#-#.# (for example: SSP5-8.5, SSP1-2.6, SSP4-6.0
-            [can be blank for historical cases].
-$desc     = Description of anything else -- alpha-numeric.
-            Should start with an underscore ("_") if not by itself 
-            (for _transient and _control).
+yyyy      = Simulation year (such as 1850 or 2000)  
+yyyy-yyyy = Range of simulation years to run over (i.e.. 1850-2000)  
+yyyy-PD   = Range of simulation years to run over until present day (i.e.. 2018-2024)  
+$ssp_rcp  = Shared Socieconomic Pathway (SSP) Representative concentration pathway (RCP) description string for future scenarios:  
+            SSP#-#.# (e.g., SSP5-8.5, SSP1-2.6, SSP4-6.0) [can be blank for historical cases]  
+$desc     = Description of anything else -- alpha-numeric; should start with an underscore ("_") if not by itself (for _transient and _control)  
+
