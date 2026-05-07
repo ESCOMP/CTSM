@@ -517,15 +517,13 @@ contains
          end do
          call perf_timer_stop('sum_sminn_to_plant')
 
-         ! Sync arrays back to host so the still-CPU loops between
-         ! here and the next !$acc update self read fresh
-         ! device-computed values: only the mimics_decomp block now,
-         ! which reads sum_*_demand_scaled. As more loops become GPU
-         ! kernels, drop arrays they consume from this list; when all
-         ! loops are GPU, delete the !$acc update self entirely.
-         !$acc update self(sum_nh4_demand_scaled, sum_no3_demand_scaled)
-
          if (decomp_method == mimics_decomp) then
+            ! mimics block reads sum_*_demand_scaled on host. The else
+            ! branch doesn't, so the D2H transfer is gated on entering
+            ! the mimics path — saves a wasted transfer on every
+            ! canonical (non-MIMICS) call. Drop the update self
+            ! entirely once the mimics block is also GPU-ified.
+            !$acc update self(sum_nh4_demand_scaled, sum_no3_demand_scaled)
             do j = 1, nlevdecomp
                do fc=1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
