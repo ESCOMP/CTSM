@@ -6,7 +6,9 @@
  Spinning up the Satellite Phenology Model
 ===========================================
 
-To spin-up the CLM60SP model you generally need to run CLM60SP for a few decades starting from arbitrary initial conditions, the main goal being to ensure that the turbulent fluxes and soil water and temperature are stable (minimal trends). You then use the final restart file resulting from that simulation as initial conditions in other simulations.  Alternatively, you can also start from an initial file that is typically already provided for you as part of the selected compset. Generally, this will allow for shorter spinup times if your simulation configuration is similar to the one run to generate the default initial file.
+The spin-up of a land surface model is generally defined as an adjustment process as the model approaches equilibrium in its state variables (:ref:`Yang et al. 1995<Yangetal1995>`). This is usually accomplished by forcing the model with repeated years of identical atmospheric forcing until the model state at year ``n+1`` is the same as that at year ``n`` within some defined threshold in the state variables. 
+
+To spin-up the CLM60SP model you generally need to run CLM60SP for a few cycles of repeated atmospheric forcing starting from arbitrary initial conditions, the main goal being to ensure that the turbulent fluxes and soil water and temperature have reached equilibrium (minimal trends). You then use the final restart file resulting from that simulation as initial conditions in other simulations.  Alternatively, you can also start from an initial file that is typically already provided for you as part of the selected compset. Generally, this will allow for shorter spinup times if your simulation configuration is similar to the one run to generate the default initial file.
 
 The following steps illustrate how to setup and run a 50 year CLM60SP spinup from arbitrary initial conditions using the ``I2000Clm60SpCrujra`` compset and ``f09_t232`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
 ::
@@ -25,7 +27,7 @@ The following steps illustrate how to setup and run a 50 year CLM60SP spinup fro
    ./case.build
    ./case.submit
 
-Setting ``CLM_FORCE_COLDSTART=on`` forces the model to use arbitrary initial conditions (see Section :numref:`Initialization` for a description of these initial conditions).  This will result in ``finidat=' '`` in the ``lnd_in`` namelist. Spinups are generally started at year 1 (``RUN_STARTDATE=0001-01-01``). Here we've chosen to loop over years 1991-2000 (``DATM_YR_START=1991``, ``DATM_YR_END=2000``) of the atmospheric forcing (10 years total), align model year 1 (``DATM_YR_ALIGN=1``) with the first year of atmospheric forcing, and run for 50 years (``STOP_OPTION=nyears``, ``STOP_N=50``).
+Setting ``CLM_FORCE_COLDSTART=on`` forces the model to use arbitrary initial conditions (see Section :numref:`Initialization` for a description of these initial conditions).  This will result in ``finidat=' '`` in the ``lnd_in`` namelist. Spinups are generally started at year 1 (``RUN_STARTDATE=0001-01-01``). Here we've chosen to loop over years 1991-2000 (``DATM_YR_START=1991``, ``DATM_YR_END=2000``) of the atmospheric forcing (10 years total), align model year 1 (``DATM_YR_ALIGN=1``) with the first year of atmospheric forcing, and run for 50 years (``STOP_OPTION=nyears``, ``STOP_N=50``). Ten years of atmospheric forcing was chosen to introduce some interannual variability in the forcing, e.g., to increase the chances of the model being forced by wet and dry years.
 
 The spinup stability script available in the CLM checkout at ``tools/contrib/SpinupStability_SP_v10.ncl`` can be used to assess the stability or equilibrium of key model variables. Key settings in that script for this example simulation are
 ::
@@ -33,7 +35,7 @@ The spinup stability script available in the CLM checkout at ``tools/contrib/Spi
    caseid = "Clm60SP_ctsm54030_1deg_CRUJRA2024_fini_2000"
    subper = 10
 
-The ``subper`` setting tells the script how many years of atmospheric forcing were repeated.
+The ``subper`` setting tells the script how many years of atmospheric forcing were repeated, thus the equilibrium state of the model in this example is evaluated every 10 years.
 
 :numref:`Figure CLM60SP spinup plot for arbitrary initial conditions` shows spinup behavior for this simulation. Variables are plotted every 10 years, hence five points are plotted.  These include FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), FPSN (photosynthesis), H2OSOI (soil water at layer 8 which is about 1 meter), TSOI (soil temperature at layer 10 which is about 3 meters), and TWS (total water storage). The speed at which these variables reach a specified equilibrium state (denoted by falling within the dotted lines) varies by variable, TWS generally takes the longest to equilibrium.  The plot in the lower left denotes the percent of land area that is not in TWS equilibrium. The equilibrium thresholds are fairly arbitrary for the SP configuration and can be chosen by the user.  The current settings are
 ::

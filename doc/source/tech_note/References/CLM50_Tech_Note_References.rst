@@ -1688,6 +1688,10 @@ Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dyn
 
 Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell, 2012: Toward a mechanistic modeling of nitrogen limitation on vegetation dynamics. PloS one, 7:e37914.
 
+.. _Yangetal1995:
+
+Yang, Z.-L., R.E. Dickinson, A. Henderson-Sellers, and A.J. Pitman, 1995. Preliminary study of spin-up processes in land surface models with the first stage data of Project for Intercomparison of Land Surface Parameterization Schemes Phase 1(a). J. Geophys. Res. 100:16,553-16,578.
+
 .. _Yang1998:
 
 Yang, Z.-L. 1998. Technical note of a 10-layer soil moisture and temperature model. Unpublished manuscript.
