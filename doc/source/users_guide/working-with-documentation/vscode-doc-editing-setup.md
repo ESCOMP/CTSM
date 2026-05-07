@@ -27,7 +27,7 @@ You will need to provide the path to your Python binary in various VS Code setti
 This setup will work only if you've opened the top level of a CTSM checkout as a [VS Code workspace](https://code.visualstudio.com/docs/editing/workspaces/workspaces).
 ```
 
-Open VS Code's settings. You're going to change a few things, but note that VS Code can have up to three tabs (representing "scopes") across the top of the Settings page: User, Remote \[SSH: remotename], and Workspace. Below, we'll explain which setting should be set in which scope(s). Keep in mind that scopes going left to right get more specific, and a setting in a later (rightward) scope will always override the same setting in an earlier (leftward) scope.
+Open VS Code's settings. (To restrict the list to only settings related to this setup, you can access the Esbonio settings via the gear icon on its item in the Extensions menu.) You're going to change a few things, but note that VS Code can have up to three tabs (representing "scopes") across the top of the Settings page: User, Remote \[SSH: remotename], and Workspace. Below, we'll explain which setting should be set in which scope(s). Keep in mind that scopes going left to right get more specific, and a setting in a later (rightward) scope will always override the same setting in an earlier (leftward) scope.
 
 ### Build command
 `Esbonio > Sphinx: Build Command` in the Settings GUI: This is an annoying one. We want to tell it to use `sphinx-build doc/source ${defaultBuildDir} -c doc/doc-builder`, but each word there has to be its own element in a list.
