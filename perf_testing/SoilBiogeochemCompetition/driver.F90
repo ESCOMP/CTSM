@@ -33,7 +33,9 @@ program SoilBiogeochemCompetition_driver
   !-----------------------------------------------------------------------
 
   use SoilBiogeochemCompetition_mod, only : r8, SoilBiogeochemCompetition
+#ifdef INNER_TIMING
   use perf_timers_mod              , only : perf_timer_print, perf_timer_dump_csv
+#endif
 
   implicit none
 

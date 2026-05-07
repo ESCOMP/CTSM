@@ -49,7 +49,9 @@ contains
        potential_immob_vr, actual_immob_vr,                 &
        ! 3D arrays
        pmnf_decomp_cascade, p_decomp_cn_gain)
+#ifdef INNER_TIMING
     use perf_timers_mod, only : perf_timer_start, perf_timer_stop
+#endif
     !
     ! !ARGUMENTS:
     integer , intent(in) :: begc, endc                                  ! column index range (was bounds%begc:bounds%endc)
@@ -329,12 +331,16 @@ contains
          ! column loops to resolve plant/heterotroph/nitrifier/denitrifier competition for mineral N
 
          ! init total mineral N pools
+#ifdef INNER_TIMING
          call perf_timer_start('init_sminn_tot')
+#endif
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             sminn_tot(c) = 0.
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('init_sminn_tot')
+#endif
 
          ! Single !$acc data region scoping all GPU kernels in this branch.
          ! Starts here (sminn_tot just zeroed on host above) and runs to
@@ -392,7 +398,9 @@ contains
          ! CPU-serial: original loop order (j outer, fc inner) is more
          ! cache-friendly because smin_no3_vr(c,j) etc. are column-major.
          ! Body and end-do's are shared; only the loop opening differs.
+#ifdef INNER_TIMING
          call perf_timer_start('accum_sminn_tot')
+#endif
 #if defined(_OPENACC) || defined(_OPENMP)
          !$omp parallel do private(c)
          !$acc parallel loop default(present)
@@ -407,12 +415,16 @@ contains
                call accum_sminn_tot(sminn_tot(c), smin_no3_vr(c,j), smin_nh4_vr(c,j), dzsoi_decomp(j))
             end do
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('accum_sminn_tot')
+#endif
 
          ! define N uptake profile for initial vertical distribution of plant N uptake, assuming plant seeks N from where it is most abundant.
          ! Each (c,j) writes to its own nuptake_prof(c,j); no reduction —
          ! safe to parallelize both loops together via collapse(2).
+#ifdef INNER_TIMING
          call perf_timer_start('compute_nuptake_prof')
+#endif
          !$omp parallel do collapse(2) private(c)
          !$acc parallel loop collapse(2) default(present)
          do j = 1, nlevdecomp
@@ -421,13 +433,17 @@ contains
                call compute_nuptake_prof(nuptake_prof(c,j), sminn_tot(c), sminn_vr(c,j), nfixation_prof(c,j))
             end do
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('compute_nuptake_prof')
+#endif
 
          ! main column/vertical loop.
          ! Each (c,j) iteration runs the 5 sub-helpers in sequence: each
          ! writes to its own (c,j) outputs, no inter-iteration dependency,
          ! so collapse(2) is safe.
+#ifdef INNER_TIMING
          call perf_timer_start('main_competition')
+#endif
          !$omp parallel do collapse(2) private(c, l)
          !$acc parallel loop collapse(2) default(present) private(c, l)
          do j = 1, nlevdecomp
@@ -486,7 +502,9 @@ contains
                     actual_immob_no3_vr(c,j), actual_immob_nh4_vr(c,j))
             end do
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('main_competition')
+#endif
 
          ! sum up N fluxes to plant after initial competition.
          ! Init: each (c) writes its own sminn_to_plant(c) — naturally
@@ -494,7 +512,9 @@ contains
          ! sminn_to_plant(c); same race pattern as accum_sminn_tot —
          ! parallelize over fc, serialize j inside each thread so each
          ! thread owns a unique c. CPU-serial keeps j outer for cache.
+#ifdef INNER_TIMING
          call perf_timer_start('sum_sminn_to_plant')
+#endif
          !$omp parallel do private(c)
          !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
@@ -515,7 +535,9 @@ contains
                call accum_dz_weighted(sminn_to_plant(c), sminn_to_plant_vr(c,j), dzsoi_decomp(j))
             end do
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('sum_sminn_to_plant')
+#endif
 
          if (decomp_method == mimics_decomp) then
             ! mimics block reads sum_*_demand_scaled on host. The else
@@ -563,7 +585,9 @@ contains
          ! within each thread (fc-outer / j-inner under parallel builds).
          ! Re-sum: same race pattern as accum_sminn_tot — fc-outer / j-inner
          ! to keep the per-c sminn_to_plant accumulation race-free.
+#ifdef INNER_TIMING
          call perf_timer_start('residual_uptake_nh4')
+#endif
          !$omp parallel do private(c)
          !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
@@ -622,14 +646,18 @@ contains
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
             end do
+#ifdef INNER_TIMING
             call perf_timer_stop('residual_uptake_nh4')
+#endif
 
             !
             ! and now do second pass for no3
             ! Same parallelization pattern as residual_uptake_nh4:
             ! init is per-c (naturally parallel); main work and re-sum
             ! are fc-outer / j-inner under parallel builds.
+#ifdef INNER_TIMING
             call perf_timer_start('residual_uptake_no3')
+#endif
             !$omp parallel do private(c)
             !$acc parallel loop default(present) private(c)
             do fc=1,num_bgc_soilc
@@ -688,14 +716,18 @@ contains
                   sminn_to_plant(c) = sminn_to_plant(c) + (sminn_to_plant_vr(c,j)) * dzsoi_decomp(j)
                end do
             end do
+#ifdef INNER_TIMING
             call perf_timer_stop('residual_uptake_no3')
+#endif
 
          ! sum up N fluxes to immobilization.
          ! Init: per-c, naturally parallel. Accumulation: dz-weighted
          ! sum over j into actual_immob(c) and potential_immob(c) —
          ! same race pattern as accum_sminn_tot, fc-outer / j-inner
          ! under parallel builds.
+#ifdef INNER_TIMING
          call perf_timer_start('sum_immobilization')
+#endif
          !$omp parallel do private(c)
          !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
@@ -718,11 +750,15 @@ contains
                call accum_dz_weighted(potential_immob(c), potential_immob_vr(c,j), dzsoi_decomp(j))
             end do
          end do
+#ifdef INNER_TIMING
          call perf_timer_stop('sum_immobilization')
+#endif
 
          ! Per-c, naturally parallel: each iteration writes its own
          ! fpg(c) and fpi(c) from per-c inputs.
+#ifdef INNER_TIMING
          call perf_timer_start('compute_fpg_fpi')
+#endif
          !$omp parallel do private(c)
          !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
@@ -733,7 +769,9 @@ contains
             fpg(c) = compute_fraction_or_one(sminn_to_plant(c), plant_ndemand(c))
             fpi(c) = compute_fraction_or_one(actual_immob(c),   potential_immob(c))
          end do ! end of column loops
+#ifdef INNER_TIMING
          call perf_timer_stop('compute_fpg_fpi')
+#endif
 
          !$acc end data
 
