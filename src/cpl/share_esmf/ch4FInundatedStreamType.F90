@@ -352,6 +352,7 @@ contains
 
    ! Read ch4finundated namelist
    if (masterproc) then
+      write(iulog,*) 'Reading ', namelist_name, ' namelist from file: ', trim(NLFilename)
       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
       call shr_nl_find_group_name(nu_nml, namelist_name, status=nml_error)
       if (nml_error == 0) then
@@ -372,9 +373,9 @@ contains
    if (masterproc) then
       write(iulog,*) ' '
       write(iulog,*) namelist_name, ' stream settings:'
-      write(iulog,*) '  stream_fldFileName_ch4finundated = ',stream_fldFileName_ch4finundated
-      write(iulog,*) '  stream_meshfile_ch4finundated    = ',stream_meshfile_ch4finundated
-      write(iulog,*) '  ch4finundatedmapalgo             = ',ch4finundatedmapalgo
+      write(iulog,*) '  stream_fldFileName_ch4finundated = ',trim(stream_fldFileName_ch4finundated)
+      write(iulog,*) '  stream_meshfile_ch4finundated    = ',trim(stream_meshfile_ch4finundated)
+      write(iulog,*) '  ch4finundatedmapalgo             = ',trim(ch4finundatedmapalgo)
    endif
    this%stream_fldFileName_ch4finundated = stream_fldFileName_ch4finundated
    this%stream_meshfile_ch4finundated    = stream_meshfile_ch4finundated

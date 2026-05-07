@@ -1,0 +1,1 @@
+../test_subset_data_reg_amazon/domain.lnd.5x5pt-amazon_navy_TMP_c250508.nc

@@ -1,0 +1,1 @@
+../test_subset_data_reg_amazon/surfdata_TMP_amazon_hist_16pfts_CMIP6_2000_c250508.nc

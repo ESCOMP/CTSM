@@ -1,0 +1,167 @@
+module test_FATESFireFactory
+
+    ! Tests of FATESFireFactory
+  
+    use funit
+    use unittestSubgridMod, only : bounds
+    use FATESFireBase, only : fates_fire_base_type
+    use FATESFireFactoryMod
+    use shr_kind_mod , only : r8 => shr_kind_r8, CS => shr_kind_CS
+    use clm_varctl, only : iulog, fates_spitfire_mode, use_fates, use_fates_sp, use_fates_ed_st3
+  
+    implicit none
+  
+  @TestCase
+    type, extends(TestCase) :: TestFATESFireFactory
+       logical :: initialized = .false.
+       class(fates_fire_base_type), allocatable :: fates_fire_method
+     contains
+       procedure :: setUp
+       procedure :: tearDown
+       procedure :: FireFactInit
+       procedure :: turn_fire_emis_on
+    end type TestFATESFireFactory
+  
+  contains
+  
+    !-----------------------------------------------------------------------
+  
+    subroutine setUp(this)
+      use shr_log_mod, only : shr_log_setLogUnit
+      use ESMF, only : ESMF_Initialize
+      use shr_sys_mod, only : shr_sys_system
+      class(TestFATESFireFactory), intent(inout) :: this
+
+      call ESMF_Initialize()
+      use_fates = .true.
+      use_fates_sp = .false.
+      use_fates_ed_st3 = .false.
+      fates_spitfire_mode = no_fire
+      iulog = 6
+      call shr_log_setLogUnit(iulog)
+      this%initialized = .false.
+
+    end subroutine setUp
+    !-----------------------------------------------------------------------
+  
+    subroutine tearDown(this)
+      use shr_sys_mod, only : shr_sys_system
+      use shr_log_mod, only : shr_log_setLogUnit
+      class(TestFATESFireFactory), intent(inout) :: this
+
+      if ( this%initialized )then
+         call this%fates_fire_method%FireClean()
+         deallocate( this%fates_fire_method )
+      end if
+      this%initialized = .false.
+
+    end subroutine tearDown
+  
+    !-----------------------------------------------------------------------
+  
+    subroutine FireFactInit(this)
+      class(TestFATESFireFactory), intent(inout) :: this
+
+      call create_fates_fire_data_method(this%fates_fire_method)
+      call this%fates_fire_method%FireInit(bounds)
+      this%initialized = .true.
+
+    end subroutine FireFactInit
+
+    !-----------------------------------------------------------------------
+
+    subroutine turn_fire_emis_on(this)
+      use shr_fire_emis_mod, only : shr_fire_emis_readnl, shr_fire_emis_mechcomps_n
+      use shr_sys_mod, only : shr_sys_system
+      class(TestFATESFireFactory), intent(inout) :: this
+
+      ! NOTE!: This is bad that this can be done directly without having it done through a namelist, or setter!
+      shr_fire_emis_mechcomps_n = 2
+    end subroutine turn_fire_emis_on
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fates_spitfire_mode_bad_fails(this)
+      class(TestFATESFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      fates_spitfire_mode = -1
+      call this%FireFactInit( )
+      expected_msg = "ABORTED: Unknown option for namelist item fates_spitfire_mode:"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fates_spitfire_mode_bad_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fates_sp_case_with_fire_emis_fails(this)
+      use clm_varctl, only : use_fates_sp
+      class(TestFATESFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      use_fates_sp = .true.
+      call this%turn_fire_emis_on()
+      call this%FireFactInit( )
+      expected_msg = "ABORTED: Fire emission with FATES requires FATES to NOT be in Satellite Phenology (SP) mode"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fates_sp_case_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fates_st3_case_with_fire_emis_fails(this)
+      use clm_varctl, only : use_fates_ed_st3
+      class(TestFATESFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      use_fates_ed_st3 = .true.
+      call this%turn_fire_emis_on()
+      call this%FireFactInit( )
+      expected_msg = "ABORTED: Fire emission with FATES requires FATES to NOT be in Static Stand Structure mode"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fates_st3_case_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine fates_no_spitfire_case_with_fire_emis_fails(this)
+      class(TestFATESFireFactory), intent(inout) :: this
+      character(100) :: expected_msg
+
+      call this%turn_fire_emis_on()
+      fates_spitfire_mode = no_fire
+      call this%FireFactInit( )
+      expected_msg = "ABORTED: Having fire emissions on requires fates_spitfire_mode to be something besides no_fire (0)"
+      @assertExceptionRaised(expected_msg)
+
+    end subroutine fates_no_spitfire_case_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+    @Test
+    subroutine all_fates_spitfire_options_with_fire_emis_fails(this)
+      class(TestFATESFireFactory), intent(inout) :: this
+      integer, parameter :: noptions = anthro_suppression
+      integer :: i
+      character(100) :: expected_msg
+
+      do i = scalar_lightning, noptions
+          call this%setUp()
+          call this%turn_fire_emis_on()
+          fates_spitfire_mode = i
+          use_fates_sp = .false.
+          call this%FireFactInit( )
+          expected_msg = "ABORTED: Fire emission with FATES can NOT currently be turned on (see issue #1045)"
+          @assertExceptionRaised(expected_msg)
+          call this%tearDown()
+      end do
+
+    end subroutine all_fates_spitfire_options_with_fire_emis_fails
+
+    !-----------------------------------------------------------------------
+
+end module test_FATESFireFactory

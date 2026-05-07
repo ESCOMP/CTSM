@@ -232,7 +232,7 @@ class BaseCase:
         """
         if not os.path.exists(nc_fname) or self.overwrite:
             # mode 'w' overwrites file
-            xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF3_64BIT")
+            xr_ds.to_netcdf(path=nc_fname, mode="w", format="NETCDF4_CLASSIC")
         else:
             err_msg = (
                 "File "

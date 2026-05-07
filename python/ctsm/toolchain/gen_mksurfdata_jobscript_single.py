@@ -37,7 +37,7 @@ def base_get_parser(default_js_name="mksurfdata_jobscript_single.sh"):
 
     default_account = os.environ.get("ACCOUNT")
     if default_account is None:
-        default_account = "P93300641"
+        default_account = "P93300041"
     parser.add_argument(
         "--account",
         help="""account number (default: %(default)s)""",
@@ -266,7 +266,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
 
     check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
     runfile.write(f"{check} \n")
-    runfile.write("echo Successfully ran resolution\n")
+    runfile.write("echo Confirm completion of fsurdat/landuse generation in the .log file\n")
 
 
 def main():

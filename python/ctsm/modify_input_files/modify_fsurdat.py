@@ -199,7 +199,7 @@ class ModifyFsurdat:
             abort(errmsg)
 
         # mode 'w' overwrites file if it exists
-        self.file.to_netcdf(path=fsurdat_out, mode="w", format="NETCDF3_64BIT")
+        self.file.to_netcdf(path=fsurdat_out, mode="w", format="NETCDF4_CLASSIC")
         logger.info("Successfully created fsurdat_out: %s", fsurdat_out)
         self.file.close()
 
