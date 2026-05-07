@@ -370,7 +370,8 @@ contains
          !$acc&            sminn_to_plant,                          &
          !$acc&            residual_plant_ndemand,                  &
          !$acc&            residual_smin_nh4, residual_smin_no3,    &
-         !$acc&            residual_smin_nh4_vr, residual_smin_no3_vr) &
+         !$acc&            residual_smin_nh4_vr, residual_smin_no3_vr, &
+         !$acc&            actual_immob, potential_immob)           &
          !$acc&     copyout(actual_immob_nh4_vr, f_nit_vr,          &
          !$acc&             actual_immob_no3_vr,                    &
          !$acc&             f_denit_vr,                             &
@@ -517,13 +518,11 @@ contains
 
          ! Sync arrays back to host so the still-CPU loops between
          ! here and the next !$acc update self read fresh
-         ! device-computed values: the mimics_decomp block needs
-         ! sum_*_demand_scaled, and sum_immobilization needs
-         ! actual_immob_vr. As more loops become GPU kernels, drop
-         ! arrays they consume from this list; when all loops are
-         ! GPU, delete the !$acc update self entirely.
-         !$acc update self(actual_immob_vr,                         &
-         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled)
+         ! device-computed values: only the mimics_decomp block now,
+         ! which reads sum_*_demand_scaled. As more loops become GPU
+         ! kernels, drop arrays they consume from this list; when all
+         ! loops are GPU, delete the !$acc update self entirely.
+         !$acc update self(sum_nh4_demand_scaled, sum_no3_demand_scaled)
 
          if (decomp_method == mimics_decomp) then
             do j = 1, nlevdecomp
@@ -692,26 +691,40 @@ contains
             end do
             call perf_timer_stop('residual_uptake_no3')
 
-         ! sminn_to_plant was modified on device by the residual_uptake
-         ! kernels above; compute_fpg_fpi (still CPU) reads it. Drop
-         ! this update self once compute_fpg_fpi is also GPU-ified.
-         !$acc update self(sminn_to_plant)
-
-         ! sum up N fluxes to immobilization
+         ! sum up N fluxes to immobilization.
+         ! Init: per-c, naturally parallel. Accumulation: dz-weighted
+         ! sum over j into actual_immob(c) and potential_immob(c) —
+         ! same race pattern as accum_sminn_tot, fc-outer / j-inner
+         ! under parallel builds.
          call perf_timer_start('sum_immobilization')
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
          do fc=1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
             actual_immob(c) = 0._r8
             potential_immob(c) = 0._r8
          end do
+#if defined(_OPENACC) || defined(_OPENMP)
+         !$omp parallel do private(c)
+         !$acc parallel loop default(present) private(c)
+         do fc=1,num_bgc_soilc
+            c = filter_bgc_soilc(fc)
+            do j = 1, nlevdecomp
+#else
          do j = 1, nlevdecomp
             do fc=1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
+#endif
                call accum_dz_weighted(actual_immob(c),    actual_immob_vr(c,j),    dzsoi_decomp(j))
                call accum_dz_weighted(potential_immob(c), potential_immob_vr(c,j), dzsoi_decomp(j))
             end do
          end do
          call perf_timer_stop('sum_immobilization')
+
+         ! sminn_to_plant, actual_immob, potential_immob were modified
+         ! on device; compute_fpg_fpi (still CPU) reads them. Drop this
+         ! update self once compute_fpg_fpi is also GPU-ified.
+         !$acc update self(sminn_to_plant, actual_immob, potential_immob)
 
 
 
