@@ -4,4 +4,4 @@ nlevdecomp           10
 ndct                 8
 numfc                8000
 niters               100
-checksum               7.6777929984949291E+07
+checksum               7.6772246368780300E+07

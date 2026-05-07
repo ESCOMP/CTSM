@@ -495,7 +495,9 @@ contains
          !$acc&            f_n2o_nit_vr, f_n2o_denit_vr,            &
          !$acc&            sminn_to_plant_vr, fpi_vr,               &
          !$acc&            actual_immob_vr,                         &
-         !$acc&            supplement_to_sminn_vr)
+         !$acc&            supplement_to_sminn_vr,                  &
+         !$acc&            nlimit_nh4, nlimit_no3,                  &
+         !$acc&            sum_nh4_demand_scaled, sum_no3_demand_scaled)
 
          ! sum up N fluxes to plant after initial competition
          call perf_timer_start('sum_sminn_to_plant')
