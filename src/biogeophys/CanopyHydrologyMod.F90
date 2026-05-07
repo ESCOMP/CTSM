@@ -197,6 +197,7 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer  :: i     ! index of water tracer or bulk
+     integer :: rep
      real(r8) :: dtime ! land model time step (sec)
 
      real(r8) :: qflx_liq_above_canopy_patch(bounds%begp:bounds%endp)        ! liquid water input above canopy (rain plus irrigation) [mm/s]
@@ -246,6 +247,7 @@ contains
           qflx_liq_above_canopy = qflx_liq_above_canopy_patch(begp:endp), &
           forc_snow_patch       = forc_snow_patch(begp:endp))
 
+     do rep = 1, 100
      call BulkFlux_CanopyInterceptionAndThroughfall(bounds, num_nolakep, filter_nolakep, &
           ! Inputs
           patch                 = patch, &
@@ -261,6 +263,7 @@ contains
           qflx_intercepted_snow = b_waterflux_inst%qflx_intercepted_snow_patch(begp:endp), &
           qflx_intercepted_liq  = b_waterflux_inst%qflx_intercepted_liq_patch(begp:endp), &
           check_point_for_interception_and_excess = check_point_for_interception_and_excess(begp:endp))
+     end do
 
      ! Calculate canopy interception and throughfall for each tracer
      !
