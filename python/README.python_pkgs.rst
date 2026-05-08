@@ -18,7 +18,7 @@ environment)?
 - Are there other packages that are more stable or better maintained that would provide nearly the same level of value?
 - Tools that require extra packages should be done in a "contrib" type area out of the main part of tools (this would apply for
 advanced plotting capability for example)
-- We need to be able to reproduce working conda environments minimally on our test machines (currently cheyenne and izumi), but also
+- We need to be able to reproduce working conda environments minimally on our test machines (currently derecho and izumi), but also
 on any machine that we run CTSM on. If there is a machine that we can run CTSM on that we can't build the conda environments or run
 the tools on -- that needs to be fixed.
 - We need to tell the user how long to expect the conda environment to load, and give them options if the conda load is taking too
