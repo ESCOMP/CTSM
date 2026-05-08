@@ -567,7 +567,7 @@ contains
              (frac_veg_nosno(p) == 1 .and. (forc_snow(p) + qflx_liq_above_canopy(p)) > 0._r8)
         if (check_point_for_interception_and_excess(p)) then
            ! Coefficient of interception
-           if (use_clm5_fpi) then
+           if (.true.) then
               fpiliq = params_inst%interception_fraction * tanh(elai(p) + esai(p))
            else
               fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
