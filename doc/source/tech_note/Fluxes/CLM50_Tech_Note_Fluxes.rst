@@ -811,15 +811,13 @@ where :math:`N_{tree}` is the number of trees per m\ :sup:`2`, :math:`k_{A}` is 
 
 .. figure:: image1.png
 
- Figure Schematic diagram of sensible heat fluxes for (a)
- non-vegetated surfaces and (b) vegetated surfaces.
+ Schematic diagram of sensible heat fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces.
 
 .. _Figure Schematic diagram of latent heat fluxes:
 
 .. figure:: image2.png
 
- Figure Schematic diagram of water vapor fluxes for (a)
- non-vegetated surfaces and (b) vegetated surfaces.
+ Schematic diagram of water vapor fluxes for (a) non-vegetated surfaces and (b) vegetated surfaces.
 
 Equations :eq:`5.86` - :eq:`5.89` can be solved for the canopy air temperature :math:`T_{s}`
 
