@@ -42,10 +42,10 @@ Common doc build errors and how to handle them
 Common docs errors: doc-builder
 -------------------------------
 
-“RuntimeError: No compatible container software found: docker, podman”
+"RuntimeError: No compatible container software found: docker, podman"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You tried to build the documentation using our container (``./build_docs ... -d``) but didn’t have any software running that could handle the container. Try again after starting up container software according to the instructions for your platform:
+You tried to build the documentation using our container (``./build_docs ... -d``) but didn't have any software running that could handle the container. Try again after starting up container software according to the instructions for your platform:
 - {ref}\ ``bld-prev-docs-casper`` **(recommended)**
 - {ref}\ ``bld-prev-docs-mac``
 - {ref}\ ``bld-prev-docs-windows``

@@ -13,6 +13,7 @@ Working with CTSM Documentation
    bld-prev-docs-casper.md
    bld-prev-docs-mac.md
    bld-prev-docs-windows.md
+   vscode-doc-editing-setup.md
    docs-style-guide.md
    tips-for-working-with-markdown.md
    tips-for-working-with-rst.rst
