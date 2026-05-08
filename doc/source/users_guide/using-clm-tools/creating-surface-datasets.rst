@@ -12,11 +12,8 @@ This tool is intended to generate fsurdat files (surface datasets) and landuse f
 
 The subset_data tool allows users to make fsurdat files from existing fsurdat files when a mesh file is unavailable. Generally, users are encouraged to use the subset_data tool for generating regional and single-point fsurdat files.
 
-Building
---------
-
 Build Requirements
-^^^^^^^^^^^^^^^^^^
+------------------
 
 mksurfdata_esmf is a distributed memory parallel program (using Message Passing Interface -- MPI) that utilizes both ESMF (Earth System Modelling Framework) for regridding as well as PIO (Parallel I/O) and NetCDF output. As such, libraries must be built for the following:
 
