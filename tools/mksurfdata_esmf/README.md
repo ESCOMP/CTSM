@@ -1,90 +1,13 @@
 # Instructions for Using mksurfdata_esmf to Create Surface Datasets
-#### $CTSMROOT/tools/mksurfdata_esmf/README
+#### $CTSMROOT/tools/mksurfdata_esmf/README.md
 
 ## Table of contents
-1. [Purpose](#purpose)
-1. [Building](#building)
-1. [Running a Single Submission](#running-for-a-single-submission)
-1. [Running for Multiple Datasets](#running-for-the-generation-of-multiple-datasets)
-1. [Notes](#notes)
-
-<!-- ======= -->
-## Purpose
-<!-- ======= -->
-This tool is intended to generate fsurdat files (surface datasets) for the
-CTSM. It can generate global, regional, and single-point fsurdat files, as long
-as a mesh file is available for the grid.
-
-The subset_data tool allows users to make fsurdat files from existing fsurdat
-files when a mesh file is unavailable. Generally, users should consider the
-subset_data tool for generating regional and single-point fsurdat files.
-
-<!-- ======= -->
-## Building
-<!-- ======= -->
-
-<!-- ============= -->
-### Build Requirements
-<!-- ============= -->
-
-mksurfdata_esmf is a distributed memory parallel program (using Message Passing
-Interface -- MPI) that utilizes both ESMF (Earth System Modelling Framework)
-for regridding as well as PIO (Parallel I/O) and NetCDF output. As
-such, libraries must be built for the following:
-
-1. MPI
-2. NetCDF
-3. PIO
-4. ESMF
-
-In addition for the build: python, bash-shell, CMake and GNU-Make are required
-
-These libraries need to be built such that they can all work together in the
-same executable. Hence, the above order may be required in building them.
-
-CTSM submodules that are required are: cime and ccs_config. See [Building](#building-the-executable) on getting
-those. A python environment that includes particular packages is also required
-we demonstrate how to use the ctsm_pylib environment that we support in CTSM.
-
-Note, PNETCDF is an optional library that can be used, but is NOT required.
-
-#### Use cime to manage the build requirements
-
-See [IMPORTANT NOTE](important note-only-working-on-derecho-currently)
-
-For users working on cime machines you can use the build script to build the
-tool. On other machines you'll need to do a port to cime and tell how to build
-for that machine. That's talked about in the cime documentation.
-And you'll have to make some modifications to the build script.
-
-https://github.com/ESMCI/cime/wiki/Porting-Overview
-
-Machines that already run CTSM or CESM have been ported to cime. So if you can
-run the model on your machine, you will be able to build the tool there.
-
-To get a list of the machines that have been ported to cime: 
-
-``` shell
-# Assuming pwd is the tools/mksurfdata_esmf directory
-cd ../../cime/scripts  # or ../../../../cime/scripts for a CESM checkout
-./query_config --machines
-```
-
-#### NOTE:
-In addition to having a port to cime, the machine also needs to have PIO built
-and able to be referenced with the env variable PIO which will need to be in
-the porting instructions for the machine. An independent PIO library
-is available on supported CESM machines.
-
-<!-- ============================================== -->
-#### IMPORTANT NOTE: ONLY WORKING ON DERECHO CURRENTLY
-<!-- ============================================== -->
-
-
-> [!IMPORTANT]
-> Currently we have run and tested mksurfdata_esmf on Derecho. Please see this github issue about mksurfdata_esmf on other CESM machines:
-
-https://github.com/ESCOMP/CTSM/issues/2341
+1. Purpose NOW IN THE USER'S GUIDE https://escomp.github.io/CTSM/users_guide/using-clm-tools/creating-surface-datasets.html#mksurfdata-esmf-purpose
+2. Build Requirements NOW IN THE USER'S GUIDE https://escomp.github.io/CTSM/users_guide/using-clm-tools/creating-surface-datasets.html#build-requirements
+3. [Building the executable](#building-the-executable)
+4. [Running a Single Submission](#running-for-a-single-submission)
+5. [Running for Multiple Datasets](#running-for-the-generation-of-multiple-datasets)
+6. [Notes](#notes)
 
 <!-- ================== -->
 ### Building the executable
