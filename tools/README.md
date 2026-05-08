@@ -1,5 +1,5 @@
 # CTSM Tools for Preprocessing of Input Datasets or Postprocessing of History Output
-#### $CTSMROOT/tools/README
+#### $CTSMROOT/tools/README.md
 
 CTSM tools for analysis of CTSM history files -- or for creation or
 modification of CTSM input files.
@@ -35,7 +35,7 @@ II. Notes on building/running for each of the above tools:
 
     mkmapgrids and site_and_regional only contain scripts that do not need build files.
 
-    Some tools have copies of files from other directories -- see the README.filecopies
+    Some tools have copies of files from other directories -- see the README.filecopies.md
     file for more information on this.
 
     Tools may also have files with the directory name followed by namelist to provide sample namelists.
@@ -43,7 +43,7 @@ II. Notes on building/running for each of the above tools:
 	<directory>.namelist ------ Namelist to create a global file.
 
     These files are also used by the test scripts to test the tools (see the
-    README.testing) file.
+    README.testing.md) file.
 
 > [!NOTE]
 > Be sure to change the path of the datasets referenced by these namelists to
