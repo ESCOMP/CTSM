@@ -105,7 +105,6 @@ reStructuredText: Admonitions (e.g., warning, tip)
 `Admonitions <https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#admonitions-messages-and-warnings>`_ are rendered as special "call-out" boxes. The general syntax is:
 
 .. code-block:: reStructuredText
-
   .. admonition:: This is the title of a generic admonition
 
     It needs a title specified. Synonyms you can put in the ``{}`` instead of ``admonition`` include ``note`` and   ``seealso``; if you use one of those, you don't need to specify a title.
