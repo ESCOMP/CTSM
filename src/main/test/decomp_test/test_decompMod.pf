@@ -46,22 +46,7 @@ contains
 
     call set_decomp_info( ni=ni, nj=nj )
     call decompmod_allocate_gindex( ni*nj )
-    ! Fill the gi/gj arrays
-    call fill_gi_gj_arrays( ni, nj )
   end subroutine create_simpleSingleDecomp
-
-  subroutine fill_gi_gj_arrays( ni, nj )
-    integer, intent(in) :: ni, nj
-    integer :: i, j, g
-    g = 0
-    do j = 1, nj
-      do i = 1, ni
-        g = g + 1
-        procinfo%gi(g) = i
-        procinfo%gj(g) = j
-      end do
-    end do
-  end subroutine fill_gi_gj_arrays
 
   ! ========================================================================
   ! Begin tests
@@ -193,7 +178,7 @@ contains
     do j = 1, nj
       do i = 1, ni
         expect_g = expect_g + 1
-        g = procinfo%calc_global_index_fromij( expect_g )
+        g = procinfo%calc_global_index_fromij( i, j )
         @assertEqual(g, expect_g)
       end do
     end do
@@ -210,10 +195,11 @@ contains
     call decompmod_clean()
     call this%create_simpleSingleDecomp( ni=nj, nj=ni )
     expect_g = 0
-    do j = 1, nj
-      do i = 1, ni
+    ! Remember ni/nj is reversed here
+    do j = 1, ni
+      do i = 1, nj
         expect_g = expect_g + 1
-        g = procinfo%calc_global_index_fromij( expect_g )
+        g = procinfo%calc_global_index_fromij( i, j)
         @assertEqual(g, expect_g)
       end do
     end do

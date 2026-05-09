@@ -73,8 +73,6 @@ module decompMod
      integer :: nclumps              ! number of clumps for processor_type iam
      integer,pointer :: cid(:) => null()  ! clump indices
      integer,pointer :: ggidx(:) => null()   ! global vector index on the full 2D grid
-     integer,pointer :: gi(:) => null()   ! global index on the full 2D grid in "x" (longitude for structured)
-     integer,pointer :: gj(:) => null()   ! global index on the full 2D grid in "y" (latitudef or structured, 1 for unstructured)
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -187,58 +185,35 @@ contains
          return
       endif
       this%ggidx(:) = -1
-      allocate(this%gi(this%begg:this%endg), stat=ier)
-      if (ier /= 0) then
-         call shr_abort_abort(string='allocation error for this%gi', file=sourcefile, line=__LINE__)
-         return
-      endif
-      this%gi(:) = -1
-      allocate(this%gj(this%begg:this%endg), stat=ier)
-      if (ier /= 0) then
-         call shr_abort_abort(string='allocation error for this%gj', file=sourcefile, line=__LINE__)
-         return
-      endif
-      this%gj(:) = -1
 
   end subroutine AllocateAfterGCellSet
 
   !-----------------------------------------------------------------------
-  pure function calc_global_index_fromij( this, g ) result(global_index)
+  pure function calc_global_index_fromij( this, i, j ) result(global_index)
     ! Returns the full grid global vector index from the gridcell on this processor
     ! Make this a pure function so it can be called from endrun
+    ! TODO: This no longer uses anything from the processor_type object so could be moved out of the type
     ! !ARGUMENTS:
     class(processor_type), intent(in) :: this
-    integer, intent(in) :: g       ! gridcell index on this processor
+    integer, intent(in) :: i, j    ! i, and j index on the full global 2D grid
     integer :: global_index        ! function result, full vector index on the full global grid
 
     global_index = -1
-    if ( .not. associated(this%gi) )then
-       !write(iulog,*) 'WARNING: gi is not allocated yet'
-       return
-    end if
-    if ( .not. associated(this%gj) )then
-       !write(iulog,*) 'WARNING: gj is not allocated yet'
-       return
-    end if
-    if ( (g < this%begg) .or. (g > this%endg) ) then
-       !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
-       return
-    end if
     if ( (nglob_x < 1) .or. (nglob_y < 1) ) then
        !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
-    if ( (this%gi(g) < 1) .or. (this%gi(g) > nglob_x) ) then
-       !write(iulog,*) 'this%gi(g) = ', this%gi(g)
-       !write(iulog,*) 'WARNING: Global gi index is out of bounds'
+    if ( (i < 1) .or. (i > nglob_x) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Input global i value out of range'
        return
     end if
-    if ( (this%gj(g) < 1) .or. (this%gj(g) > nglob_y) ) then
-       !write(iulog,*) 'this%gj(g) = ', this%gj(g)
-       !write(iulog,*) 'WARNING: Global gj index is out of bounds'
+    if ( (j < 1) .or. (j > nglob_y) ) then
+       ! NOTE: Log output commented out so that the subroutine can be pure
+       !write(iulog,*) 'WARNING: Input global j value out of range'
        return
     end if
-    global_index = (this%gj(g)-1)*nglob_x + this%gi(g)
+    global_index = (j-1)*nglob_x + i
     if ( (global_index < 1) .or. (global_index > nglob_x*nglob_y) ) then
        !write(iulog,*) 'WARNING: global_index is out of bounds for this processor'
        return
@@ -918,14 +893,6 @@ contains
     if ( associated(procinfo%ggidx) )then
       deallocate(procinfo%ggidx)
       procinfo%ggidx => null()
-    end if
-    if ( associated(procinfo%gi) )then
-      deallocate(procinfo%gi)
-      procinfo%gi => null()
-    end if
-    if ( associated(procinfo%gj) )then
-      deallocate(procinfo%gj)
-      procinfo%gj => null()
     end if
     if ( associated(procinfo%cid) )then
       deallocate(procinfo%cid)
