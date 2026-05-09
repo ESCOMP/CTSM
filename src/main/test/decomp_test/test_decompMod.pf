@@ -129,7 +129,6 @@ contains
     @assertEqual(bounds%begg, 1)
     @assertEqual(bounds%endg, ni*nj)
     do g = bounds%begg, bounds%endg
-      write(*,*) 'g = ', g
       call procinfo%calc_globalxy_indices( g, i, j )
       @assertEqual(i, expect_i(g) )
       @assertEqual(j, expect_j(g) )
@@ -195,7 +194,6 @@ contains
       do i = 1, ni
         expect_g = expect_g + 1
         g = procinfo%calc_global_index_fromij( expect_g )
-        write(*,*) 'i = ', i, ' j = ', j, ' expect_g = ', expect_g, ' g = ', g
         @assertEqual(g, expect_g)
       end do
     end do
