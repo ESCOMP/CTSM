@@ -29,7 +29,7 @@ contains
   subroutine setUp(this)
     class(TestDecompMod), intent(inout) :: this
 
-    call this%create_simpleSingleDecomp()
+    call this%create_simpleSingleDecomp( ni=ni, nj=nj )
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -39,14 +39,20 @@ contains
 
   end subroutine tearDown
 
-  subroutine create_simpleSingleDecomp(this)
+  subroutine create_simpleSingleDecomp(this, ni, nj)
     use unittestSubgridMod, only : set_decomp_info
     class(TestDecompMod), intent(inout) :: this
-    integer :: i, j, g
+    integer, intent(in) :: ni, nj
 
     call set_decomp_info( ni=ni, nj=nj )
     call decompmod_allocate_gindex( ni*nj )
     ! Fill the gi/gj arrays
+    call fill_gi_gj_arrays( ni, nj )
+  end subroutine create_simpleSingleDecomp
+
+  subroutine fill_gi_gj_arrays( ni, nj )
+    integer, intent(in) :: ni, nj
+    integer :: i, j, g
     g = 0
     do j = 1, nj
       do i = 1, ni
@@ -55,8 +61,8 @@ contains
         procinfo%gj(g) = j
       end do
     end do
+  end subroutine fill_gi_gj_arrays
 
-  end subroutine create_simpleSingleDecomp
   ! ========================================================================
   ! Begin tests
   ! ========================================================================
@@ -182,6 +188,7 @@ contains
 
     integer :: expect_g
     integer :: i, j, g
+
     ! Expected indices is just the pattern on the simple 2D grid with no mask
     expect_g = 0
     do j = 1, nj
@@ -193,6 +200,26 @@ contains
       end do
     end do
   end subroutine test_calc_global_index_fromij
+
+  @Test
+  subroutine test_calc_global_index_fromij_reversed(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: expect_g
+    integer :: i, j, g
+
+    ! Clean the decomp, and then create a new one with ni and nj reversed
+    call decompmod_clean()
+    call this%create_simpleSingleDecomp( ni=nj, nj=ni )
+    expect_g = 0
+    do j = 1, nj
+      do i = 1, ni
+        expect_g = expect_g + 1
+        g = procinfo%calc_global_index_fromij( expect_g )
+        @assertEqual(g, expect_g)
+      end do
+    end do
+  end subroutine test_calc_global_index_fromij_reversed
 
   @Test
   subroutine test_calc_ijindices_from_full_global_index_fails(this)
