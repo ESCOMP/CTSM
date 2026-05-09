@@ -19,7 +19,7 @@ We first introduce the test scripts that work for all CESM components. The CIME 
 CTSM Fortran Unit Tests
 =======================
 
-.. include:: ../../../../src/README.unit_testing
+.. include:: ../../../../src/README.unit_testing.md
    :literal:
 
 CTSM Build-namelist Tests
