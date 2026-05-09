@@ -227,8 +227,6 @@ contains
     do n = procinfo%begg,procinfo%endg
         gindex_global(n-procinfo%begg+1) = procinfo%ggidx(n)    ! Change this to gindex_global when ready
         call procinfo%calc_globalxy_indices( n, lni, lnj, i, j )
-        procinfo%gi(n) = i
-        procinfo%gj(n) = j
     end do
 
     !---------------------------------------------------------------------
