@@ -168,6 +168,9 @@ contains
     !  as well as loops of size: ni*nj*nclumps, npes*nclumps, and ni*nj
     !  that was being done on each processor)
     !---------------------------------------------------------------------
+    ! TODO: Co-pilot claims that incorrect bounds on non-power-of-2 processor counts
+    !       Check if this is true or not, by checking various PE layouts
+    !       We do have various counts, include powers of 2 and 22, 43, 86, and 48 for Derecho and for Izumi
     call MPI_SCAN(procinfo%ncells, cell_id_offset, 1, MPI_INTEGER, &
                   MPI_SUM, mpicom, ier)
     if ( ier /= 0 )then
@@ -179,7 +182,6 @@ contains
     ! ---- Set begg and endg each clump on this processor ----
     do lc = 1, clump_pproc
        cid = procinfo%cid(lc)
-       clumps(cid)%ncells = clumps(cid)%ncells     ! This line will be removed
        if ( lc == 1 )then
           clumps(cid)%begg = procinfo%begg
        else
