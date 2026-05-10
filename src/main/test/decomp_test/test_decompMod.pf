@@ -5,6 +5,7 @@ module test_decompMod
   use funit
   use decompMod
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use unittestUtils  , only : endrun_msg
 
   implicit none
 
@@ -44,8 +45,20 @@ contains
     class(TestDecompMod), intent(inout) :: this
     integer, intent(in) :: ni, nj
 
+    integer :: g
+
     call set_decomp_info( ni=ni, nj=nj )
     call decompmod_allocate_gindex( ni*nj )
+    do g = 1, ni*nj
+      ! since no ocean points are masked out global and grc are identical
+      gindex_global(g) = g
+      gindex_grc(g) = g
+      ! Assume subgrid levels are all one per higher level, so everything is the same
+      gindex_lun(g) = g
+      gindex_col(g) = g
+      gindex_patch(g) = g
+    end do
+
   end subroutine create_simpleSingleDecomp
 
   ! ========================================================================
@@ -90,6 +103,62 @@ contains
     @assertEqual(bounds_proc%begg, bounds_clump%begg)
     @assertEqual(bounds_proc%endg, bounds_clump%endg)
   end subroutine test_proc_clump_bounds_equal
+
+  @Test
+  subroutine test_get_global_index(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g, n
+
+    do g = procinfo%begg, procinfo%endg
+       n = get_global_index(g, subgrid_level_lndgrid )
+       @assertEqual(n, g)
+       ! gridcell will be the same since no points are masked out as ocean
+       n = get_global_index(g, subgrid_level_gridcell)
+       @assertEqual(n, g)
+       ! Will be the same for all subgrid levels since they are all one to one
+       n = get_global_index(g, subgrid_level_landunit)
+       @assertEqual(n, g)
+       n = get_global_index(g, subgrid_level_column)
+       @assertEqual(n, g)
+       n = get_global_index(g, subgrid_level_patch)
+       @assertEqual(n, g)
+    end do
+  end subroutine test_get_global_index
+
+  @Test
+  subroutine test_get_global_index_bad_values_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    integer :: idx
+
+    ! First try with the flag that doesn't abort
+    idx = get_global_index(0, subgrid_level_lndgrid, donot_abort_on_badindex=.true. )
+    @assertEqual(idx, -1)
+    ! Now try so it will abort
+    idx = get_global_index(0, subgrid_level_lndgrid )
+    expected_msg = endrun_msg( 'subgrid_index out of bounds' )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine test_get_global_index_bad_values_fails
+
+  @Test
+  subroutine test_get_global_index_bad_subgrid_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    integer :: idx
+
+    ! First try with the flag that doesn't abort
+    idx = get_global_index(1, subgrid_level_unspecified, donot_abort_on_badindex=.true. )
+    @assertEqual(idx, -1)
+    ! Now try so it will abort
+    idx = get_global_index(1, subgrid_level_unspecified )
+    expected_msg = endrun_msg( 'subgrid_index out of bounds' )
+    @assertExceptionRaised(expected_msg)
+
+  end subroutine test_get_global_index_bad_subgrid_fails
 
   @Test
   subroutine test_calc_globalxy_indices(this)
