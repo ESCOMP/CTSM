@@ -214,7 +214,7 @@ contains
     @assertEqual(i, -1)
     @assertEqual(j, -1)
     ! If nglob_y is not set
-    nglob_x = -1
+    nglob_y = -1
     call procinfo%calc_globalxy_indices( g, i, j )
     @assertEqual(i, -1)
     @assertEqual(j, -1)
