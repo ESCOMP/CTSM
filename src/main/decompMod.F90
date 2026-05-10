@@ -84,7 +84,6 @@ module decompMod
      integer :: begCohort, endCohort ! beginning and ending cohort indices
   contains
      procedure, public :: InitAllocate              ! Allocate memory for processor_type arrays based on nclumps and proc totals
-     procedure, public :: AllocateAfterGCellSet     ! Allocate memory for rest of the processor_type arrays after the gridcell bounds are figured out
      procedure, public :: calc_global_index_fromij  ! Get the global index for the input grid i/j index on this processor
      procedure, public :: calc_globalxy_indices     ! Get the global i/j indices from the global vector grid index
   end type processor_type
@@ -170,17 +169,6 @@ contains
        procinfo%endp      = 0
        procinfo%endCohort = 0
   end subroutine InitAllocate
-
-  !-----------------------------------------------------------------------
-  subroutine AllocateAfterGCellSet( this )
-      ! Allocate memory for processor_type arrays after teh gridcell sizes are set
-      class(processor_type), intent(inout) :: this
-
-      integer :: ier ! error code
-      ! TODO: Remove the data, and only use the subroutine to calculate when needed
-      ! TODO: Remove this as it isn't needed anymore
-
-  end subroutine AllocateAfterGCellSet
 
   !-----------------------------------------------------------------------
   pure function calc_global_index_fromij( this, i, j ) result(global_index)

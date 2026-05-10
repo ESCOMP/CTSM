@@ -1,5 +1,6 @@
 module unittestSubgridMod
 
+
   ! Provides routines to aid with the setup of subgrid structure for unit tests that need
   ! it. 
   !
@@ -229,7 +230,6 @@ contains
        nglob_y = procinfo%ncells
     end if
 
-    call procinfo%AllocateAfterGCellSet()
     call clumps(:)%Init()
 
     ! Currently leaving cohort info unset because it isn't needed in any unit tests. We

@@ -313,7 +313,6 @@ contains
 
          ier = 0
          call decompmod_allocate_gindex( bounds%endg )
-         call procinfo%AllocateAfterGCellSet()
       end subroutine decompInit_lnd_gindex_global_allocate
 
       !------------------------------------------------------------------------------
