@@ -146,6 +146,22 @@ contains
 
   end subroutine test_get_global_index_bad_subgrid_fails
 
+
+  @Test
+  subroutine test_get_subgrid_level_gindex_for_lndgrid(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g, n
+    integer, pointer :: gindex(:) => NULL()
+
+    call get_subgrid_level_gindex(subgrid_level_lndgrid, gindex)
+    do g = procinfo%begg, procinfo%endg
+       n = gindex(g)
+       @assertEqual(n, g)
+       @assertEqual(g, procinfo%ggidx(g))
+    end do
+  end subroutine test_get_subgrid_level_gindex_for_lndgrid
+
   @Test
   subroutine test_calc_globalxy_indices(this)
     class(TestDecompMod), intent(inout) :: this
