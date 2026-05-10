@@ -266,6 +266,7 @@ contains
 
       !------------------------------------------------------------------------------
       subroutine decompInit_lnd_allocate( ier )
+         use decompMod, only : decompmod_allocate_clumps
          ! Allocate the temporary and long term variables set and used in decompInit_lnd
          integer, intent(out) :: ier ! error code
          !------------------------------------------------------------------------------
@@ -309,6 +310,7 @@ contains
       !------------------------------------------------------------------------------
 
       subroutine decompInit_lnd_gindex_global_allocate( bounds, ier )
+         use decompMod, only : decompmod_allocate_gindex
          ! Allocate gindex_global which requires that bounds gridcell begg to endg be set first
          integer, intent(out) :: ier ! error code
          type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
@@ -700,7 +702,7 @@ contains
     use clm_varctl             , only : use_fates
     use subgridMod             , only : subgrid_get_gcellinfo
     use decompMod              , only : bounds_type, get_proc_global, get_proc_bounds
-    use decompMod              , only : gindex_global
+    use decompMod              , only : gindex_global, nglob_x, nglob_y
     use decompMod              , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, gindex_Cohort
     use decompMod              , only : procinfo, clump_type, clumps, get_proc_global
     use LandunitType           , only : lun
