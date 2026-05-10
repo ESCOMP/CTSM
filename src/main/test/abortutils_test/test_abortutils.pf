@@ -1,6 +1,18 @@
 module test_abortutils
 
   ! Tests of abortutils
+  !
+  ! IMPORTANT NOTES: Limitations of these tests
+  !                  These tests cover the different options to endrun including failure modes.
+  !                  It does NOT verify the log output of write_point_context however.
+  !                  The test_decompMod.pf unit tests test the 2D calculation of global indices however.
+  !                  Other unit tests, exercise endrun calls in various ways so test actual endrun calls.
+  !
+  !                  WORK THAT COULD BE DONE:
+  !                  - Direct tests of write_point_context
+  !                  - Tests to verify the log output of write_point_context (would require mocking or log capture)
+  !                  - Tests using current examples of endrun calls
+  !
 
   use funit
   use abortutils

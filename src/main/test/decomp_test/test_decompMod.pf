@@ -1,6 +1,24 @@
 module test_decompMod
 
   ! Tests of decompMod
+  !
+  ! IMPORTANT NOTES: Limitations of these tests
+  !       These tests assume a simple single processor decomposition with single gridcells with no ocean points.
+  !       So it really only tests the basic gridcell setup and not much in regard to subgrid levels.
+  !       It also doesn't test using the actual decomposition initialization from decompInitMod.
+  !       And not all interfaces are tested here, just the ones that were refactored.
+  !
+  !       How the above is covered:
+  !       Running with full grids with ocean masks is accomplished in the system tests.
+  !       System test suites to run: aux_clm, decomp_init, uhr_decomp_init
+  !       decompInitMod has several ASSERT statements to ensure correct setup of the decomposition.
+  !
+  !       WORK THAT COULD BE DONE:
+  !       - Add tests for all the interfaces
+  !       - Add tests for decompInitMod (there was difficulty in getting decompInitMod added to
+  !         PF unit testing, because of the need for MPI and additional dependencies)
+  !       - Add tests for grids with ocean points and subgrid levels (system tests cover this though)
+  !
 
   use funit
   use decompMod
