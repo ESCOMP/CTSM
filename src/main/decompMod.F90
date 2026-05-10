@@ -72,7 +72,6 @@ module decompMod
   type processor_type
      integer :: nclumps              ! number of clumps for processor_type iam
      integer,pointer :: cid(:) => null()  ! clump indices
-     integer,pointer :: ggidx(:) => null()   ! global vector index on the full 2D grid
      integer :: ncells               ! number of gridcells in proc
      integer :: nlunits              ! number of landunits in proc
      integer :: ncols                ! number of columns in proc
@@ -179,12 +178,7 @@ contains
 
       integer :: ier ! error code
       ! TODO: Remove the data, and only use the subroutine to calculate when needed
-      allocate(this%ggidx(this%begg:this%endg), stat=ier)
-      if (ier /= 0) then
-         call shr_abort_abort(string='allocation error for this%ggidx', file=sourcefile, line=__LINE__)
-         return
-      endif
-      this%ggidx(:) = -1
+      ! TODO: Remove this as it isn't needed anymore
 
   end subroutine AllocateAfterGCellSet
 
@@ -267,11 +261,6 @@ contains
 
     i = -1
     j = -1
-    if ( .not. associated(this%ggidx) )then
-       ! NOTE: Log output commented out so that the subroutine can be pure
-       !write(iulog,*) 'WARNING: ggidx is not allocated yet'
-       return
-    end if
     if ( (g < this%begg) .or. (g > this%endg) ) then
        ! NOTE: Log output commented out so that the subroutine can be pure
        !write(iulog,*) 'WARNING: Input index g is out of bounds of this processor'
@@ -282,7 +271,10 @@ contains
        !write(iulog,*) 'WARNING: Global gridsize nglob_x/nglob_y is not set'
        return
     end if
-    global_index = this%ggidx(g)
+    if ( .not. associated(gindex_global) )then
+       return
+    end if
+    global_index = gindex_global(g)
     call calc_ijindices_from_full_global_index( global_index, i, j )
 
   end subroutine calc_globalxy_indices
@@ -890,10 +882,6 @@ contains
     ! Deallocate and set the pointers to null
     if ( allocated(clumps) )then
       deallocate(clumps)
-    end if
-    if ( associated(procinfo%ggidx) )then
-      deallocate(procinfo%ggidx)
-      procinfo%ggidx => null()
     end if
     if ( associated(procinfo%cid) )then
       deallocate(procinfo%cid)

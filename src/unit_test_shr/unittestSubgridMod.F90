@@ -247,9 +247,6 @@ contains
     gindex_col(:) = 0
     gindex_patch(:) = 0
 
-    do g = 1, procinfo%endg
-       procinfo%ggidx(g) = g
-    end do
     ! Set clump to procinfo
     clumps(1)%begg = procinfo%begg
     clumps(1)%endg = procinfo%endg

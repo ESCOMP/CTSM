@@ -158,7 +158,6 @@ contains
     do g = procinfo%begg, procinfo%endg
        n = gindex(g)
        @assertEqual(n, g)
-       @assertEqual(g, procinfo%ggidx(g))
     end do
   end subroutine test_get_subgrid_level_gindex_for_lndgrid
 

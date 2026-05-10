@@ -214,19 +214,13 @@ contains
                 write(iulog,*) ' iam, g = ', iam, g
                 call endrun(msg='g out of bounds for MPI_SCAN', file=sourcefile, line=__LINE__)
              end if
-             procinfo%ggidx(g) = ln
+             gindex_global(g-procinfo%begg+1) = ln
              g = g + 1
           end if
           end if
           end if
        end if
     end do
-    end do
-
-    ! ---- Get the global index for each gridcell and save the i,j incices for ach gridcell on this processor
-    do n = procinfo%begg,procinfo%endg
-        gindex_global(n-procinfo%begg+1) = procinfo%ggidx(n)    ! Change this to gindex_global when ready
-        call procinfo%calc_globalxy_indices( n, lni, lnj, i, j )
     end do
 
     !---------------------------------------------------------------------
