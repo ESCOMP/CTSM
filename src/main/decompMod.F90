@@ -624,6 +624,7 @@ contains
     call get_proc_bounds(bounds_proc, allow_call_from_threaded_region=.true.)
     beg_index = get_beg(bounds_proc, subgrid_level)
     end_index = get_end(bounds_proc, subgrid_level)
+    ! If beg_index is -1 it must be becasue the subgrid_level is not supported
     if (beg_index == -1) then
        write(iulog,*) 'get_global_index: subgrid_level not supported: ', subgrid_level
        if (abort_on_badindex) then
