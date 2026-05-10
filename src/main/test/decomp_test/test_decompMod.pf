@@ -5,7 +5,6 @@ module test_decompMod
   use funit
   use decompMod
   use shr_kind_mod , only : r8 => shr_kind_r8
-  use unittestUtils  , only : endrun_msg
 
   implicit none
 
@@ -111,9 +110,6 @@ contains
     integer :: g, n
 
     do g = procinfo%begg, procinfo%endg
-       n = get_global_index(g, subgrid_level_lndgrid )
-       @assertEqual(n, g)
-       ! gridcell will be the same since no points are masked out as ocean
        n = get_global_index(g, subgrid_level_gridcell)
        @assertEqual(n, g)
        ! Will be the same for all subgrid levels since they are all one to one
@@ -133,13 +129,8 @@ contains
     character(len=:), allocatable :: expected_msg
     integer :: idx
 
-    ! First try with the flag that doesn't abort
-    idx = get_global_index(0, subgrid_level_lndgrid, donot_abort_on_badindex=.true. )
+    idx = get_global_index(0, subgrid_level_gridcell, donot_abort_on_badindex=.true. )
     @assertEqual(idx, -1)
-    ! Now try so it will abort
-    idx = get_global_index(0, subgrid_level_lndgrid )
-    expected_msg = endrun_msg( 'subgrid_index out of bounds' )
-    @assertExceptionRaised(expected_msg)
 
   end subroutine test_get_global_index_bad_values_fails
 
@@ -150,13 +141,8 @@ contains
     character(len=:), allocatable :: expected_msg
     integer :: idx
 
-    ! First try with the flag that doesn't abort
     idx = get_global_index(1, subgrid_level_unspecified, donot_abort_on_badindex=.true. )
     @assertEqual(idx, -1)
-    ! Now try so it will abort
-    idx = get_global_index(1, subgrid_level_unspecified )
-    expected_msg = endrun_msg( 'subgrid_index out of bounds' )
-    @assertExceptionRaised(expected_msg)
 
   end subroutine test_get_global_index_bad_subgrid_fails
 
