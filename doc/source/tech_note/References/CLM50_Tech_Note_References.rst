@@ -11,6 +11,10 @@ Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting long-term pat
 
 Aber, J.D., Goodale, C.L., Ollinger, S.V., Smith, M.-L., Magill, A.H., Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen deposition altering the nitrogen status of northeastern forests? BioScience 53:375-389.
 
+.. _AinsworthRogers2007:
+
+Ainsworth, E. A. and Rogers, A. 2007. The response of photosynthesis and stomatal conductance to rising (CO2): mechanisms and environmental interactions, Plant Cell Environ. 30:258-270.
+
 .. _AlduchovandEskridge1996:
 
 Alduchov, O.A., and Eskridge, R.E. 1996. Improved Magnus form approximation of saturation vapor pressure. J. Appl. Meteor. 35:601-609.
@@ -83,6 +87,10 @@ Baird, A.J., Beckwith, C.W., Waldron, S. and Waddington, J.M., 2004. Ebullition 
 
 Baldocchi, D., et al. 2001. FLUXNET: A new tool to study the temporal and spatial variability of ecosystem-scale carbon dioxide, water vapor, and energy flux densities. Bull. Amer. Meteor. Soc. 82:2415-2433.
 
+.. _Balletal1987:
+
+Ball, J.T., Woodrow, I.E., and Berry, J.A. 1987. A model predicting stomatal conductance and its contribution to the control of photosynthesis under different environmental conditions. Dordrecht, The Netherlands, 221-224.
+
 .. _Barbottinetal2005:
 
 Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen remobilization during grain filling in wheat: Genotypic and environmental effects. Crop Sci. 45:1141-1150.
@@ -90,6 +98,11 @@ Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen rem
 .. _Batjes2006:
 
 Batjes, N.H., 2006. ISRIC-WISE derived soil properties on a 5 by 5 arc-minutes global grid. Report 2006/02 (available through : http://www.isric.org)
+
+.. _Bauerleetal2012:
+
+Bauerle, W.L., Oren, R., Way, D.A., Qian, S.S., Stoy, P.C., Thornton, P.E., Bowden, J.D., Hoffman, F.M., and Reynolds, R.F. 2012. Photoperiodic regulation of the seasonal pattern of photosynthetic capacity and the implications for carbon cycling. Proc. Natl. Acad. Sci. USA, 109:8612-8617.
+
 
 .. _Berger1978a:
 
@@ -246,6 +259,10 @@ Collatz, G.J., Ribas-Carbo, M., and Berry, J.A. 1992. Coupled photosynthesis-sto
 .. _Colmer2003:
 
 Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on internal aeration and radial oxygen loss from roots. Plant Cell and Environment 26:17-36.
+
+.. _ComstockEhleringer1986:
+
+Comstock, J. and Ehleringer, J.R. 1986. Photoperiod and photosynthetic capacity in *Lotus scoparius*. Plant Cell Environ. 9:609-612.
 
 .. _Comolaetal2019:
 
@@ -461,7 +478,7 @@ Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeoc
 
 .. _GaoOneill2020:
 
-Gao, J., and O’Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
+Gao, J., and O'Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
 
 .. _Garciaetal1988:
 
@@ -594,6 +611,10 @@ Hou, Z., Huang, M., Leung, L.R., Lin, G., and Ricciuto, D.M. 2012. Sensitivity o
 .. _Houltonetal2008:
 
 Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
+
+.. _Houltonetal2015:
+
+Houlton, B., Marklein, A. & Bai, E. Representation of nitrogen in climate change forecasts. Nature Clim Change 5, 398–401 (2015). https://doi.org/10.1038/nclimate2538
 
 .. _HuangLiang2006:
 
@@ -939,6 +960,10 @@ Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simul
 
 Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M., Zender, C.S., and Luo, C. 2006. Change in atmospheric mineral aerosols in response to climate: last glacial period, pre-industrial, modern and doubled CO\ :sub:`2` climates. J. Geophys. Res\ *.* 111:D10202. DOI:10.1029/2005JD006653.
 
+.. _Maireetal2012:
+
+Maire, V., Martre, P., Kattge, J., Gastal, F., Esser, G., Fontaine, S., and Soussana, F. 2012. The coordination of leaf photosynthesis links C and N fluxes in C3 plant species, PLos ONE, 7:e38245. doi:38310.31371/journal.pone.0038345.
+
 .. _MajasalmiBright2019:
 
 Majasalmi, T., and Bright, R.M. 2019. Evaluation of leaf-level optical properties employed in land surface models. Geosci. Model Dev. 12:3923-3938. https://doi.org/10.5194/gmd-12-3923-2019.
@@ -1040,9 +1065,17 @@ Negron-Juarez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q. 2015. Env
 
 Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical global vegetation classification in ecosystem function models. J. Veg. Sci. 7:337-346.
 
+.. _Nevisonetal2022:
+
+Nevison, C., Hess, P., Goodale, C., Zhu Q., and Vira, J. 2022. Nitrification, Denitrification, and Competition for Soil N: Evaluation of Two Earth System Models against Observations. Ecological Applications 32(4): e2528. doi:10.1002/eap.2528
+
 .. _Niinemetstal1998:
 
-Niinemets, U., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
+Niinemets, Ü., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
+
+.. _NiinetmetsTenhunen1997:
+
+Niinemets, Ü. and Tenhunen, J.D. 1997. A model separating leaf structural and biphysiological effects on carbon gain along light gradients for the shade-tolerant species *Acer saccharum*. Plant Cell Environ., 20:845-86.
 
 .. _Niuetal2005:
 
@@ -1404,9 +1437,18 @@ Smith, A.M.S., Wooster, M.J., Drake, N.A., Dipotso, F.M. and Perry, G.L.W., 2005
 
 Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. Plant, cell & environment 30.9, pp. 1126-1149.
 
+.. _Smith1937:
+
+Smith, E. 1937. The influence of light and carbon dioxide on photosynthesis. General Physiology, 20:807-830.
+
 .. _Sollins1982:
 
 Sollins, P., 1982. Input and decay of coarse woody debris in coniferous stands in western Oregon and Washington. Canadian Journal of Forest Research, 12: 18-28.
+
+
+.. _Songetal2013:
+
+Song, Y.H., Ito, S., and Imaizumi, T. 2013. Flowering time regulation: photoperiod- and temperature-sensing in leaves. Trends Plant Sci. 18:575–583.
 
 .. _SonGower1991:
 
@@ -1468,6 +1510,10 @@ Subin, Z.M., Murphy, L.N., Li, F., Bonfils, C. and Riley, W.J., 2012b. Boreal la
 
 Sun, Y., Gu, L., and Dickinson, R. E. 2012. A numerical issue in calculating the coupled carbon and water fluxes in a climate model, J. Geophys. Res., 117, D22103. DOI:10.1029/2012JD018059.
 
+.. _Suzukietal2001:
+
+Suzuki, Y., Makino, A. and Mae, T. 2001. Changes in the turnover of Rubisco and levels of mRNAs of rbcL and rbcS in rice leaves from emergence to senescence. Plant, Cell & Environment, 24:1353-1360. DOI:10.1046/j.0016-8025.2001.00789.x
+
 .. _Swensonetal2012:
 
 Swenson, S.C., Lawrence, D.M., and Lee, H. 2012. Improved Simulation of the Terrestrial Hydrological Cycle in Permafrost Regions by the Community Land Model. JAMES, 4, M08002. DOI:10.1029/2012MS000165.
@@ -1483,6 +1529,18 @@ Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface layer-based soi
 .. _SwensonLawrence2015:
 
 Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. WRR, 51, doi:10.1002/2015WR017582.
+
+.. _Swensonetal2019:
+
+Swenson, S.C., M. Clark, Y. Fan, D.M. Lawrence, and J. Perket. 2019. Representing intra-hillslope lateral subsurface flow in the community land model. JAMES, 11, doi:10.1002/2015WR017582.
+
+.. _Swensonetal2019b:
+
+Swenson, S.C., S.P. Burns, and D. M. Lawrence. 2019. The impact of biomass heat storage on the canopy energy balance and atmospheric stability in the community land model. JAMES, 11, https://doi.org/10.1029/2018MS001476.
+
+.. _SwensonLawrence2025:
+
+Swenson, S.C., and D. M. Lawrence. 2025. Development of a global representative hillslope data set for use in Earth system modelsA GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. JAMES, 17, https://doi.org/10.1029/2024MS004410.
 
 .. _TaWeiland1992:
 
@@ -1616,6 +1674,10 @@ Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea
 
 Vitousek, P.M., and Howarth, R.W. 1991. Nitrogen limitation on land and in the sea: How can it occur? Biogeochem. 13:87-115.
 
+.. _Walkeretal2014:
+
+Walker, A. P., Beckerman, A. P., Gu, L., Kattge, J., Cernusak, L. A., Domingues, T. F., Scales, J. C., Wohlfahrt, G., Wullschleger, S. D., and Woodward, F. I. 2014. The relationship of leaf photosynthetic traits - Vcmax and Jmax - to leaf nitrogen, leaf phosphorus, and specific leaf area: a meta-analysis and modeling study. Ecology and Evolution, 4:3218-3235.
+
 .. _Walteretal2001:
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
@@ -1680,6 +1742,10 @@ Wu, H., J. S. Kimball, N. Mantua, and J. Stanford, 2011: Automated upscaling of 
 
 Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler, 2012. A New Global River Network Database for Macroscale Hydrologic modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
 
+.. _Wullschleger1993:
+
+Wullschleger, S.D. 1993.  Biochemical limitations to carbon assimilation in C3 plants: a retrospective analysis of A/Ci curves from 109 species. J. Exp Bot. 44:907-920.
+
 .. _xiaodong2005:
 
 Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dynamics and patterns of eastern Eurasian forests. Journal of Biogeography 32.9, pp. 1641-1658.
@@ -1687,6 +1753,10 @@ Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dyn
 .. _Xuetal2012:
 
 Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell, 2012: Toward a mechanistic modeling of nitrogen limitation on vegetation dynamics. PloS one, 7:e37914.
+
+.. _Yangetal1995:
+
+Yang, Z.-L., R.E. Dickinson, A. Henderson-Sellers, and A.J. Pitman, 1995. Preliminary study of spin-up processes in land surface models with the first stage data of Project for Intercomparison of Land Surface Parameterization Schemes Phase 1(a). J. Geophys. Res. 100:16,553-16,578.
 
 .. _Yang1998:
 
