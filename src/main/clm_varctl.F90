@@ -384,7 +384,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   ! true => activate nvp model
-  logical, public :: use_nvp           = .true.
+  logical, public :: use_nvp           = .false.
 
   ! true => nvp can photosynthesize under snow
   logical, public :: use_nvp_undersnow = .true.
