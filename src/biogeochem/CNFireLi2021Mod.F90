@@ -14,7 +14,7 @@ module CNFireLi2021Mod
   ! (clm50fire), CRUNCEPv5, and climatological lightning data.
   !
   ! !USES:
-  use shr_kind_mod                       , only : r8 => shr_kind_r8, CL => shr_kind_CL
+  use shr_kind_mod                       , only : r8 => shr_kind_r8
   use shr_const_mod                      , only : SHR_CONST_PI,SHR_CONST_TKFRZ
   use shr_infnan_mod                     , only : shr_infnan_isnan
   use clm_varctl                         , only : iulog

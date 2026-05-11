@@ -2,6 +2,8 @@
 Functions for making crop calendar figures
 """
 
+# pylint: disable=abstract-class-instantiated
+
 import numpy as np
 
 # It's fine if these can't be imported. The script using these will handle it.
@@ -12,6 +14,11 @@ import matplotlib.colors as mcolors
 from matplotlib import cm
 import matplotlib.collections as mplcol
 
+# pylint: disable=abstract-class-instantiated
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 # Colormaps (maps)
 cropcal_colors = {
@@ -49,6 +56,7 @@ def make_map(
     ax,
     this_map,
     fontsize,
+    *,
     bounds=None,
     cbar=None,
     cbar_labelpad=4.0,

@@ -20,6 +20,7 @@ list(APPEND clm_sources
   column_varcon.F90
   decompMod.F90
   filterColMod.F90
+  FireMethodType.F90
   glc2lndMod.F90
   glcBehaviorMod.F90
   initSubgridMod.F90

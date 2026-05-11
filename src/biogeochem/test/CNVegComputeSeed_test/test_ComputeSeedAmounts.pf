@@ -92,6 +92,7 @@ contains
     real(r8), intent(out), optional :: seed_leaf_xfer
     real(r8), intent(out), optional :: seed_deadstem
 
+    real(r8) :: leafcn_t_evolving_patch(bounds%begp:bounds%endp)
     real(r8) :: leaf_patch(bounds%begp:bounds%endp)
     real(r8) :: leaf_storage_patch(bounds%begp:bounds%endp)
     real(r8) :: leaf_xfer_patch(bounds%begp:bounds%endp)
@@ -102,6 +103,7 @@ contains
     real(r8) :: seed_leaf_xfer_patch(bounds%begp:bounds%endp)
     real(r8) :: seed_deadstem_patch(bounds%begp:bounds%endp)
 
+    leafcn_t_evolving_patch(:) = 10._r8
     leaf_patch(:) = 0._r8
     leaf_patch(POI) = LEAF_POI
     leaf_storage_patch(:) = 0._r8
@@ -117,6 +119,7 @@ contains
 
     call ComputeSeedAmounts(bounds, &
          this%numf, this%filter, &
+         leafcn_t_evolving = leafcn_t_evolving_patch, &
          species = species, &
          leafc_seed = LEAFC_SEED, &
          deadstemc_seed = DEADSTEMC_SEED, &

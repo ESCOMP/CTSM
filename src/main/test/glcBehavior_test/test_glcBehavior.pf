@@ -170,7 +170,7 @@ contains
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
-         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_melt_behavior_str = ['remains_in_place'], &
          glacier_region_ice_runoff_behavior_str = ['melted'])
 
     @assertTrue(glc_behavior%ice_runoff_melted_grc(bounds%begg))

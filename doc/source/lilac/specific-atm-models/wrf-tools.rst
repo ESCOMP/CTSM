@@ -48,9 +48,15 @@ is described in here.
 
      ../../../configure --macros-format Makefile --mpilib mpi-serial
 
+.. todo::
+    Update the below, as domain files aren't needed with nuopc.
+
 5. Generate CTSM domain files using ``get_domain`` tool::
 
      ./gen_domain -m /glade/work/$USER/ctsm/nldas_grid/scrip/wrf2clm_mapping_noneg.nc -o wrf2clm_ocn_noneg -l wrf2clm_lnd_noneg
+
+.. todo::
+    Update the below, as ``mksurfdata.pl`` no longer exists.
 
 6. Create surface datasets in ``tools/mksurfdata_esmf``::
 

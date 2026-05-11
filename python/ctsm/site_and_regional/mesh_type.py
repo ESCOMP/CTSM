@@ -2,6 +2,7 @@
 This module includes the definition and functions for defining a Grid or Mesh.
 This enables creating ESMF mesh file (unstructured grid file)for valid 1D or 2D lats and lons.
 """
+
 import logging
 import argparse
 import datetime
@@ -24,7 +25,7 @@ class MeshType:
     """
 
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, center_lats, center_lons, mask=None, mesh_name=None, area=None):
+    def __init__(self, center_lats, center_lons, *, mask=None, mesh_name=None, area=None):
         """
         Construct a mesh object
 
@@ -217,6 +218,8 @@ class MeshType:
         elif self.lat_dims == 2:
             # -- 2D mask
             mask = np.ones(self.center_lats.shape, dtype=np.int8)
+        else:
+            raise NotImplementedError(f"self.lat_dims = {self.lat_dims}")
         # mask_da = da.from_array(mask)
         mask_da = mask
         self.mask = mask_da

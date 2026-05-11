@@ -1,0 +1,67 @@
+name: Run Python tests
+
+on:
+  push:
+    # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+  pull_request:
+    # Run on pull requests that change the listed files
+    paths:
+      - 'python/**'
+      - 'cime_config/SystemTests/**'
+      - 'cime_config/buildlib/**'
+      - 'cime_config/buildnml/**'
+
+jobs:
+  python-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      # Set up the conda environment
+      - uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      # Run Python unit tests check
+      - name: Run Python unit tests
+        run: |
+          cd python
+          conda run -n ctsm_pylib ./run_ctsm_py_tests -u
+
+  python-lint-and-black:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      # Set up the conda environment
+      - uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ctsm_pylib
+          environment-file: python/conda_env_ctsm_py.yml
+          channels: conda-forge
+          auto-activate-base: false
+
+      # Run pylint check
+      - name: Run pylint
+        run: |
+          cd python
+          conda run -n ctsm_pylib make lint
+
+      # Run black check
+      - name: Run black
+        # Run this step even if previous step(s) failed
+        if: success() || failure()
+        run: |
+          cd python
+          conda run -n ctsm_pylib make black

@@ -10,7 +10,7 @@ module PrigentRoughnessStreamType
   !       https://github.com/ESCOMP/CTSM/issues/2381
   ! Removing this version will remove testing code duplication.
   ! !USES
-  use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
+  use shr_kind_mod     , only : r8 => shr_kind_r8
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use clm_varctl       , only : iulog
   use abortutils       , only : endrun

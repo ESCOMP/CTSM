@@ -1,10 +1,29 @@
 #!/usr/bin/env bash
+set -e
 
-if [ -f doc-builder/build_docs ]; then
+if [ ! -f doc-builder/build_docs ]; then
+    script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+    ${script_dir}/../bin/git-fleximod update doc-builder
+fi
+
+# Check if --verbose or -V was passed
+verbose=false
+for arg in "$@"; do
+    case "$arg" in
+        --verbose|-V) verbose=true; break ;;
+    esac
+done
+
+if $verbose; then
     echo "Running: make fetch-images"
     make fetch-images
-    echo "Running: ./doc-builder/build_docs $@"
-    ./doc-builder/build_docs "$@"
 else
-    echo "Obtain doc-builder by running './bin/git-fleximod update --optional' from the top-level"
+    make fetch-images > /dev/null 2>&1
 fi
+
+if $verbose; then
+    echo "Running: ./doc-builder/build_docs $@"
+fi
+./doc-builder/build_docs "$@"
+
+exit 0

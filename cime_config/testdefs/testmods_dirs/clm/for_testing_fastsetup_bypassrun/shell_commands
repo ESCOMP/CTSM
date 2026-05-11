@@ -1,0 +1,28 @@
+#!/bin/bash
+./xmlchange CLM_FORCE_COLDSTART="on"
+
+# We use this testmod in a _Ln1 test; this requires forcing the ROF coupling frequency to same frequency as DATM
+./xmlchange ROF_NCPL='$ATM_NCPL'
+
+# Turn off ROF model when used with compsets that have them
+./xmlchange RTM_MODE='NULL'
+
+# Turn MEGAN off to run faster
+./xmlchange CLM_BLDNML_OPTS='--no-megan' --append
+
+# Use fast structure and NWP configuration for speed
+./xmlchange CLM_STRUCTURE="fast"
+./xmlchange CLM_CONFIGURATION="nwp"
+
+# Restarts aren't allowed for these tests, and turn off CPL history
+# First change in env_test.xml, then in the standard one so it won't complain there
+./xmlchange --force REST_OPTION="never" --file env_test.xml
+./xmlchange --force HIST_OPTION="never" --file env_test.xml
+./xmlchange REST_OPTION="never"
+./xmlchange HIST_OPTION="never"
+
+# Timer settings
+./xmlchange TIMER_DETAIL="2"
+./xmlchange SAVE_TIMING="TRUE"
+./xmlchange CHECK_TIMING="TRUE"
+./xmlchange ESMF_PROFILING_LEVEL="10"

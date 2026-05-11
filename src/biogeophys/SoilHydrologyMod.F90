@@ -40,7 +40,6 @@ module SoilHydrologyMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
   public :: SetFloodc            ! Apply gridcell flood water flux to non-lake columns
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
@@ -62,13 +61,13 @@ module SoilHydrologyMod
   type, private :: params_type
      real(r8) :: aq_sp_yield_min         ! Minimum aquifer specific yield (unitless)
      real(r8) :: n_baseflow              ! Drainage power law exponent (unitless)
+     real(r8) :: baseflow_scalar         ! Scalar multiplier for base flow rate ()
      real(r8) :: perched_baseflow_scalar ! Scalar multiplier for perched base flow rate (kg/m2/s)
      real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
   end type params_type
   type(params_type), public ::  params_inst
   
   !-----------------------------------------------------------------------
-  real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
   integer, private :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
@@ -190,71 +189,14 @@ contains
     call readNcdioScalar(ncid, 'aq_sp_yield_min', subname, params_inst%aq_sp_yield_min)
     ! Drainage power law exponent (unitless)
     call readNcdioScalar(ncid, 'n_baseflow', subname, params_inst%n_baseflow)
+    ! Scalar multiplier for base flow rate ()
+    call readNcdioScalar(ncid, 'baseflow_scalar', subname, params_inst%baseflow_scalar)
     ! Scalar multiplier for perched base flow rate (kg/m2/s)
     call readNcdioScalar(ncid, 'perched_baseflow_scalar', subname, params_inst%perched_baseflow_scalar)
     ! Soil ice impedance factor (unitless)
     call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
 
   end subroutine readParams
-
-  !-----------------------------------------------------------------------
-  subroutine soilHydReadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for soil hydrology
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'soilHydReadNML'
-    character(len=*), parameter :: nmlname = 'soilhydrology_inparm'
-    !-----------------------------------------------------------------------
-    namelist /soilhydrology_inparm/ baseflow_scalar
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=soilhydrology_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (baseflow_scalar, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=soilhydrology_inparm)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine soilhydReadNML
-
-
   
   !-----------------------------------------------------------------------
   subroutine SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -2391,7 +2333,7 @@ contains
             ! Non-hillslope columns
             ! baseflow is power law expression relative to bedrock layer
             if(zwt(c) <= zi(c,nbedrock(c))) then
-               qflx_latflow_out(c) = ice_imped_col(c) * baseflow_scalar &
+               qflx_latflow_out(c) = ice_imped_col(c) * params_inst%baseflow_scalar &
                     * tan(rpi/180._r8*col%topo_slope(c))* &
                     (zi(c,nbedrock(c)) - zwt(c))**(params_inst%n_baseflow)
             endif

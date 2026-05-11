@@ -5,14 +5,15 @@ module clm_varctl
   ! Module containing run control variables
   !
   ! !USES:
-  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CX
+  use shr_kind_mod, only: CS => SHR_KIND_CS
   use shr_sys_mod , only: shr_sys_abort ! cannot use endrun here due to circular dependency
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   public :: clm_varctl_set    ! Set variables
-  public :: cnallocate_carbon_only_set
-  public :: cnallocate_carbon_only
+  public :: allocate_carbon_only_set
+  public :: allocate_carbon_only
   !
   private
   save
@@ -21,7 +22,7 @@ module clm_varctl
   !
   integer , parameter, public ::  iundef = -9999999
   real(r8), parameter, public ::  rundef = -9999999._r8
-  integer , parameter, public ::  fname_len = SHR_KIND_CL   ! max length of file names in this module
+  integer , parameter, public ::  fname_len = SHR_KIND_CX   ! max length of file names in this module
   !----------------------------------------------------------
   !
   ! Run control variables
@@ -109,6 +110,7 @@ module clm_varctl
 
   character(len=fname_len), public :: finidat    = ' '        ! initial conditions file name
   character(len=fname_len), public :: fsurdat    = ' '        ! surface data file name
+  character(len=fname_len), public :: hillslope_file = ' '    ! hillslope data file name
   character(len=fname_len), public :: paramfile  = ' '        ! ASCII data file with PFT physiological constants
   character(len=fname_len), public :: nrevsn     = ' '        ! restart data file name for branch run
   character(len=fname_len), public :: fsnowoptics  = ' '      ! snow optical properties file name
@@ -237,6 +239,8 @@ module clm_varctl
   character(len=64), public :: snow_cover_fraction_method
   ! which snow thermal conductivity parameterization to use
   character(len=25), public :: snow_thermal_cond_method
+  character(len=25), public :: snow_thermal_cond_glc_method
+  character(len=25), public :: snow_thermal_cond_lake_method
 
   ! atmospheric CO2 molar ratio (by volume) (umol/mol)
   real(r8), public :: co2_ppmv     = 355._r8            !
@@ -288,7 +292,7 @@ module clm_varctl
   logical, public :: spinup_matrixcn = .false.  !.false.              ! true => use acc spinup
   logical, public :: hist_wrt_matrixcn_diag = .false.!.false.              ! true => use acc spinup
   ! SASU 
-  integer, public :: nyr_forcing  = 10   ! length of forcing years for the spin up. eg. if DATM_CLMNCEP_YR_START=1901;DATM_CLMNCEP_YR_END=1920, then nyr_forcing = 20
+  integer, public :: nyr_forcing  = 10   ! length of forcing years for the spin up. eg. if DATM_YR_START=1901;DATM_YR_END=1920, then nyr_forcing = 20
   integer, public :: nyr_SASU     = 1    ! length of each semi-analytic solution. eg. nyr_SASU=5, analytic solutions will be calculated every five years.
                                          ! nyr_SASU=1: the fastest SASU, but inaccurate; nyr_SASU=nyr_forcing(eg. 20): the lowest SASU but accurate
   integer, public :: iloop_avg    = -999 ! The restart file will be based on the average of all analytic solutions within the iloop_avg^th loop. 
@@ -321,15 +325,33 @@ module clm_varctl
 
   integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
-  integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
-                                                                        ! 2 => C+N+P (not enabled yet)
-                                                                        ! no others enabled
+  character(len=CS), public  :: fates_parteh_mode = ''                  ! FATES Plant Allocation Reactions and Transport Hypotheses
+                                                                        ! = carbon_only : Cycle carbon in FATES only
+                                                                        ! = carbon_nitrogen: Cycle both carbon and nitrogen
+                                                                        ! in FATES. FATES will cycle phosphorus as well,
+                                                                        ! to do this, FATES will generate synthetic uptake
+                                                                        ! conditions to make sure that phosphorus is saturated
+                                                                        ! in the plant stores
+                                                                        ! so clm needs fates_cnp_prescribed_puptake > 1
+                                                                        ! (recommended value 10) in the fates paramfile
+
   integer, public            :: fates_spitfire_mode = 0                
                                                                         ! 0 for no fire; 1 for constant ignitions;
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_managed_fire = .false.        ! true => turn on managed fire
+  integer, public            :: fates_lu_transition_logic = -9          ! controls logic around transition between land use classes 
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
   character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
+  character(len=256), public :: fates_stomatal_model = ''               ! stomatal conductance model, Ball-berry or Medlyn
+  character(len=256), public :: fates_stomatal_assimilation = ''        ! net or gross assimilation modes
+  character(len=256), public :: fates_leafresp_model = ''               ! Leaf maintenance respiration model, Ryan or Atkin
+  character(len=256), public :: fates_cstarvation_model = ''            ! linear or exponential function
+  character(len=256), public :: fates_regeneration_model = ''           ! default, TRS, or TRS without seed dynamics
+  character(len=256), public :: fates_radiation_model = ''              ! Norman or two-stream radiation model
+  character(len=256), public :: fates_hydro_solver = ''                 ! 1D Taylor, 2D Picard, 2D Newton
+  character(len=256), public :: fates_photosynth_acclimation = ''       ! nonacclimating, kumarathunge2019
+  character(len=256), public :: fates_electron_transport_model = ''     ! Johnson-Berry 2021 or Farquhar von Caemmerer and Berry 1980
   logical, public            :: use_fates_planthydro = .false.          ! true => turn on fates hydro
   logical, public            :: use_fates_cohort_age_tracking = .false. ! true => turn on cohort age tracking
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
@@ -337,6 +359,8 @@ module clm_varctl
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
+  logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
+
 
   ! FATES history dimension level
   ! fates can produce history at either the daily timescale (dynamics)
@@ -507,6 +531,7 @@ module clm_varctl
 
   logical, public :: use_lch4            = .true.
   logical, public :: use_nitrif_denitrif = .true.
+  logical, public :: use_nvmovement      = .false.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
   logical, public :: use_cn              = .false.
@@ -523,7 +548,7 @@ module clm_varctl
   !----------------------------------------------------------
   ! To retrieve namelist
   !----------------------------------------------------------
-  character(len=SHR_KIND_CL), public :: NLFilename_in ! Namelist filename
+  character(len=SHR_KIND_CX), public :: NLFilename_in ! Namelist filename
   !
   logical, private :: clmvarctl_isset = .false.
  !-----------------------------------------------------------------------
@@ -569,15 +594,15 @@ contains
 
   end subroutine clm_varctl_set
 
-  ! Set module carbon_only flag
-  subroutine cnallocate_carbon_only_set(carbon_only_in)
+  ! Set module carbon_only flag (applies to both CN and FATES)
+  subroutine allocate_carbon_only_set(carbon_only_in)
     logical, intent(in) :: carbon_only_in
     carbon_only = carbon_only_in
-  end subroutine cnallocate_carbon_only_set
+  end subroutine allocate_carbon_only_set
 
-  ! Get module carbon_only flag
-  logical function CNAllocate_Carbon_only()
-    cnallocate_carbon_only = carbon_only
-  end function CNAllocate_Carbon_only
+  ! Get module carbon_only flag (applies to both CN and FATES)
+  logical function Allocate_Carbon_only()
+    allocate_carbon_only = carbon_only
+  end function Allocate_Carbon_only
 
 end module clm_varctl

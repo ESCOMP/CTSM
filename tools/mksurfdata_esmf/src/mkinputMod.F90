@@ -342,6 +342,18 @@ contains
        call shr_sys_abort('nglcec must be at least 1')
     end if
 
+    ! Reorder user's mksrf_fgrid_mesh_nx and mksrf_fgrid_mesh_ny for 1D
+    ! cases if they set model-mesh-nx = 1 instead of model-mesh-ny = 1.
+    ! This way the follow-up if-statements works.
+    if (mksrf_fgrid_mesh_nx == 1) then
+       mksrf_fgrid_mesh_nx = mksrf_fgrid_mesh_ny
+       mksrf_fgrid_mesh_ny = 1
+       if (root_task) then
+          write(ndiag,'(a)') 'WARNING: The code reversed your mksrf_fgrid_mesh_nx and mksrf_fgrid_mesh_ny to '
+          write(ndiag,*) 'the expected by the code ', mksrf_fgrid_mesh_nx, mksrf_fgrid_mesh_ny
+       end if
+    end if
+
     if (mksrf_fgrid_mesh_ny == 1) then
        outnc_1d = .true.
        outnc_dims = 1

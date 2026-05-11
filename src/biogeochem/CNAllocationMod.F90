@@ -15,7 +15,7 @@ module CNAllocationMod
   use clm_varcon           , only : secspday
   use clm_varctl           , only : use_c13, use_c14, iulog
   use PatchType            , only : patch
-  use pftconMod            , only : pftcon, npcropmin
+  use pftconMod            , only : pftcon, is_prognostic_crop
   use CropType             , only : crop_type
   use CropType             , only : cphase_planted, cphase_leafemerge, cphase_grainfill
   use PhotosynthesisMod    , only : photosyns_type
@@ -23,6 +23,7 @@ module CNAllocationMod
   use CNVegCarbonStateType , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType  , only : cnveg_carbonflux_type
   use CNVegStateType       , only : cnveg_state_type
+  use CNVegNitrogenStateType, only: cnveg_nitrogenstate_type
   use CropReprPoolsMod     , only : nrepr
   use CNPhenologyMod       , only : CropPhase
   use CNSharedParamsMod    , only : use_fun
@@ -190,7 +191,7 @@ contains
        mr = leaf_mr(p) + froot_mr(p)
        if (woody(ivt(p)) == 1.0_r8) then
           mr = mr + livestem_mr(p) + livecroot_mr(p)
-       else if (ivt(p) >= npcropmin) then
+       else if (is_prognostic_crop(ivt(p))) then
           if (croplive(p)) then
              reproductive_mr_tot = 0._r8
              do k = 1, nrepr
@@ -433,7 +434,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine calc_allometry(num_soilp, filter_soilp, &
-       cnveg_carbonflux_inst, cnveg_state_inst)
+       cnveg_carbonflux_inst, cnveg_state_inst, cnveg_nitrogenstate_inst)
     !
     ! !DESCRIPTION:
     ! Calculate c_allometry and n_allometry terms based on allocation fractions
@@ -442,6 +443,7 @@ contains
     integer                         , intent(in)    :: num_soilp        ! number of soil patches in filter
     integer                         , intent(in)    :: filter_soilp(:)  ! filter for soil patches
     type(cnveg_carbonflux_type)     , intent(in)    :: cnveg_carbonflux_inst
+    type(cnveg_nitrogenstate_type)  , intent(in)    :: cnveg_nitrogenstate_inst
     type(cnveg_state_type)          , intent(inout) :: cnveg_state_inst
     !
     ! !LOCAL VARIABLES:
@@ -464,7 +466,7 @@ contains
          croot_stem  => pftcon%croot_stem                      ,  & ! Input:  allocation parameter: new coarse root C per new stem C (gC/gC)
          stem_leaf   => pftcon%stem_leaf                       ,  & ! Input:  allocation parameter: new stem c per new leaf C (gC/gC)
          flivewd     => pftcon%flivewd                         ,  & ! Input:  allocation parameter: fraction of new wood that is live (phloem and ray parenchyma) (no units)
-         leafcn      => pftcon%leafcn                          ,  & ! Input:  leaf C:N (gC/gN)
+         leafcn_t_evolving => cnveg_nitrogenstate_inst%leafcn_t_evolving_patch,  & ! Input:  leaf C:N (gC/gN)
          frootcn     => pftcon%frootcn                         ,  & ! Input:  fine root C:N (gC/gN)
          livewdcn    => pftcon%livewdcn                        ,  & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)
          deadwdcn    => pftcon%deadwdcn                        ,  & ! Input:  dead wood (xylem and heartwood) C:N (gC/gN)
@@ -498,12 +500,12 @@ contains
        end if
 
        f4   = flivewd(ivt(p))
-       if (ivt(p) >= npcropmin) then
+       if (is_prognostic_crop(ivt(p))) then
           g1 = 0.25_r8
        else
           g1 = grperc(ivt(p))
        end if
-       cnl  = leafcn(ivt(p))
+       cnl  = leafcn_t_evolving(p)
        cnfr = frootcn(ivt(p))
        cnlw = livewdcn(ivt(p))
        cndw = deadwdcn(ivt(p))
@@ -519,7 +521,7 @@ contains
           c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f3*(1._r8+f2))
           n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
                (f3*(1._r8-f4)*(1._r8+f2))/cndw
-       else if (ivt(p) >= npcropmin) then ! skip generic crops
+       else if (is_prognostic_crop(ivt(p))) then ! skip generic crops
           cng = graincn(ivt(p))
           f1 = aroot(p) / aleaf(p)
           f3 = astem(p) / aleaf(p)

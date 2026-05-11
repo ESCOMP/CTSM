@@ -181,7 +181,7 @@ def check_input_file(args, ds):
         logging.debug(
             "- %s exist in the provided netcdf file with dimension of %s.",
             args.lat_name,
-            len(ds[args.lat_name].dims).__str__(),
+            str(len(ds[args.lat_name].dims)),
         )
 
     if args.lon_name not in ds.coords and args.lon_name not in ds.variables:
@@ -191,7 +191,7 @@ def check_input_file(args, ds):
         logging.debug(
             "- %s exist in the provided netcdf file with dimension of %s.",
             args.lon_name,
-            len(ds[args.lon_name].dims).__str__(),
+            str(len(ds[args.lon_name].dims)),
         )
     if args.mask_name is not None:
         if args.mask_name not in ds.variables:

@@ -21,6 +21,9 @@ module fileutils
   public :: getavu        !Get next available Fortran unit number
   !-----------------------------------------------------------------------
 
+  character(len=*), parameter, private :: sourcefile = &
+  __FILE__
+
 contains
 
   !-----------------------------------------------------------------------
@@ -76,7 +79,7 @@ contains
           write(iulog,'(a)')'(GETFIL): full pathname is '//trim(fulpath)
           write(iulog,'(a)')'(GETFIL): local filename has zero length'
        end if
-       call shr_sys_abort
+       call shr_sys_abort('GETFIL: local filename has zero length', file=sourcefile, line=__LINE__)
     else
        if (masterproc) then
           write(iulog,'(a)')'(GETFIL): attempting to find local file ',trim(locfn)
@@ -105,7 +108,7 @@ contains
           write(iulog,'(a)')'(GETFIL): failed getting file from full path: '//fulpath
        end if
        if (iflag==0) then
-          call shr_sys_abort ('GETFIL: FAILED to get '//trim(fulpath))
+          call shr_sys_abort ('GETFIL: FAILED to get '//trim(fulpath), file=sourcefile, line=__LINE__)
        else
           RETURN
        endif
@@ -131,7 +134,7 @@ contains
 
     if (len_trim(locfn) == 0) then
        write(iulog,*)'(OPNFIL): local filename has zero length'
-       call shr_sys_abort
+       call shr_sys_abort('OPNFIL: local filename has zero length', file=sourcefile, line=__LINE__)
     endif
     if (form=='u' .or. form=='U') then
        ft = 'unformatted'
@@ -142,7 +145,7 @@ contains
     if (ioe /= 0) then
        write(iulog,*)'(OPNFIL): failed to open file ',trim(locfn),        &
             &     ' on unit ',iun,' ierr=',ioe
-       call shr_sys_abort
+       call shr_sys_abort('OPNFIL: failed to open '//trim(locfn), rc=ioe, file=sourcefile, line=__LINE__)
     else if ( masterproc )then
        write(iulog,*)'(OPNFIL): Successfully opened file ',trim(locfn),   &
             &     ' on unit= ',iun

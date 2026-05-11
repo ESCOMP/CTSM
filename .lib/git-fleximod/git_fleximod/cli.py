@@ -1,12 +1,44 @@
 from pathlib import Path
-import argparse
-from git_fleximod import utils
+import argparse, os, sys
 
-__version__ = "0.7.8"
+__version__ = "1.1.1"
+
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        # First print the default help message
+        super().print_help(file)
+
+        # Then append the contents of README.md
+        candidate_paths = [
+            Path(sys.prefix) / "share" / "git_fleximod" / "README.md",
+            Path(__file__).resolve().parent.parent / "README.md",  # fallback for dev
+        ]
+        for path in candidate_paths:
+            if os.path.exists(path):
+                with open(path) as f:
+                    print(f.read(), file=file)
+                    return
+        print("README.md not found.", file=file)
+
 
 def find_root_dir(filename=".gitmodules"):
-    """ finds the highest directory in tree
-    which contains a file called filename """
+    """
+    Finds the highest directory in tree which contains a file called filename.
+
+    >>> import tempfile, os
+    >>> cwd = os.getcwd()
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     subdir = Path(tmp) / 'subdir'
+    ...     subdir.mkdir()
+    ...     f = Path(tmp) / '.gitmodules'
+    ...     _ = f.write_text('')
+    ...     os.chdir(subdir)
+    ...     result = find_root_dir('.gitmodules') == str(tmp)
+    ...     os.chdir(cwd)
+    ...     result
+    True
+    """
     d = Path.cwd()
     root = Path(d.root)
     dirlist = []
@@ -28,7 +60,7 @@ def get_parser():
     description = """
     %(prog)s manages checking out groups of gitsubmodules with additional support for Earth System Models
     """
-    parser = argparse.ArgumentParser(
+    parser = CustomArgumentParser(
         description=description, formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -98,6 +130,13 @@ def get_parser():
         "the screen and log file. This flag can be "
         "used up to two times, increasing the "
         "verbosity level each time.",
+    )
+
+    parser.add_argument(
+        "--no-mods-details",
+        action="store_true",
+        default=False,
+        help="Suppress details on local mods in status output.",
     )
 
     parser.add_argument(

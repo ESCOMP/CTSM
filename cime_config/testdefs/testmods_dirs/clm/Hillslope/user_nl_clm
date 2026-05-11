@@ -6,6 +6,4 @@ hillslope_transmissivity_method = 'LayerSum'
 hillslope_pft_distribution_method = 'PftLowlandUpland'
 hillslope_soil_profile_method = 'Uniform'
 
-fsurdat = '$DIN_LOC_ROOT/lnd/clm2/testdata/surfdata_10x15_hist_2000_78pfts_c240216.synthetic_hillslopes.nc'
-
 use_ssre = .false.

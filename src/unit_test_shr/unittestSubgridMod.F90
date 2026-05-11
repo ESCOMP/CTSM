@@ -457,8 +457,12 @@ contains
     end do
 
     if (.not. found) then
+       ! We use a 'stop 1' here instead of shr_sys_abort because, in the context of pFUnit
+       ! testing, a shr_sys_abort will allow the code to continue (after raising a pFUnit
+       ! exception), which can lead to a cryptic error due to the return value from this
+       ! function being invalid, giving an array out of bounds error.
        print *, subname//' ERROR: cannot find a special landunit'
-       stop
+       stop 1
     end if
 
   end function get_ltype_special

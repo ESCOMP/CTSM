@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
-"""Unit tests for path_utils
-"""
+"""Unit tests for path_utils"""
 
 import unittest
 import tempfile
 import shutil
 import os
+from unittest import mock
 
-import six
-from six_additions import mock
 from ctsm import unit_testing
 from ctsm import path_utils
 
@@ -76,7 +74,7 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(ctsm_path)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
-            with six.assertRaisesRegex(self, RuntimeError, "Cannot find cime"):
+            with self.assertRaisesRegex(RuntimeError, "Cannot find cime"):
                 _ = path_utils.path_to_cime(standalone_only=True)
 
     def test_pathToCime_standaloneOnlyWithCimeInCesm(self):
@@ -88,7 +86,7 @@ class TestPathUtils(unittest.TestCase):
         ctsm_path, _ = self._make_cesm_dirs()
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
-            with six.assertRaisesRegex(self, RuntimeError, "Cannot find cime"):
+            with self.assertRaisesRegex(RuntimeError, "Cannot find cime"):
                 _ = path_utils.path_to_cime(standalone_only=True)
 
     def test_pathToCime_cimeInCesm(self):
@@ -111,8 +109,7 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(self._cime_path_in_cesm())
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
-            with six.assertRaisesRegex(
-                self,
+            with self.assertRaisesRegex(
                 RuntimeError,
                 "Cannot find cime.*don't seem to be within a CESM checkout",
             ):
@@ -125,9 +122,7 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(ctsm_path)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
-            with six.assertRaisesRegex(
-                self, RuntimeError, "Cannot find cime.*or within CESM checkout"
-            ):
+            with self.assertRaisesRegex(RuntimeError, "Cannot find cime.*or within CESM checkout"):
                 _ = path_utils.path_to_cime()
 
     def test_pathToCime_cimeInStandaloneAndCesm(self):
