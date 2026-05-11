@@ -40,7 +40,6 @@ contains
         use DustEmisZender2003, only : dust_emis_zender2003_type
         use DustEmisLeung2023 , only : dust_emis_leung2023_type
         use decompMod         , only : bounds_type
-        use shr_kind_mod      , only : CL => shr_kind_cl
         use shr_dust_emis_mod , only : is_dust_emis_zender, is_dust_emis_leung
         implicit none
         ! Arguments

@@ -13,18 +13,29 @@ from __future__ import print_function
 import os
 import tqdm
 
-import pandas as pd
+# pylint:disable=wrong-import-position
+from ctsm.site_and_regional.plumber2_shared import read_plumber2_sites_csv
 
 
 # Big ugly function to create usermod_dirs for each site
 def write_usermods(
-    lat, lon, site, start_year, end_year, start_date, start_year_actual, start_tod, atm_ncpl, stop_n
+    *,
+    lat,
+    lon,
+    site,
+    start_year,
+    end_year,
+    start_date,
+    start_year_actual,
+    start_tod,
+    atm_ncpl,
+    stop_n,
 ):
     """
     Write information to be added to user mods
     """
 
-    site_dir = os.path.join("../../cime_config/usermods_dirs/PLUMBER2/", site)
+    site_dir = os.path.join("../../cime_config/usermods_dirs/clm/PLUMBER2/", site)
 
     if not os.path.isdir(site_dir):
         os.makedirs(site_dir, exist_ok=True)
@@ -145,7 +156,7 @@ def main():
     """
 
     # For now we can just run the 'main' program as a loop
-    plumber2_sites = pd.read_csv("PLUMBER2_sites.csv", skiprows=4)
+    plumber2_sites = read_plumber2_sites_csv()
 
     for _, row in tqdm.tqdm(plumber2_sites.iterrows()):
         lat = row["Lat"]
@@ -160,16 +171,16 @@ def main():
         stop_n = 1 + end_year - start_year
 
         write_usermods(
-            lat,
-            lon,
-            site,
-            start_year,
-            end_year,
-            start_date,
-            start_year_actual,
-            start_tod,
-            atm_ncpl,
-            stop_n,
+            lat=lat,
+            lon=lon,
+            site=site,
+            start_year=start_year,
+            end_year=end_year,
+            start_date=start_date,
+            start_year_actual=start_year_actual,
+            start_tod=start_tod,
+            atm_ncpl=atm_ncpl,
+            stop_n=stop_n,
         )
 
 

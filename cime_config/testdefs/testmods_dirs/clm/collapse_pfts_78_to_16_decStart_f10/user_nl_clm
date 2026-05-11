@@ -1,2 +1,0 @@
-fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/surfdata_10x15_hist_1850_78pfts_c240216.nc'
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_10x15_SSP2-4.5_1850-2100_78pfts_c240216.nc'

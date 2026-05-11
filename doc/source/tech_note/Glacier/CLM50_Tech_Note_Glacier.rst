@@ -58,7 +58,7 @@ It is also possible to run CESM with an evolving ice sheet. In this case, CLM re
 Glacier regions and their behaviors
 -----------------------------------
 
-The world's glaciers and ice sheets are broken down into a number of different regions (four by default) that differ in three respects:
+The world's glaciers and ice sheets are broken down into a number of different regions (three by default) that differ in three respects:
 
 #. Whether the gridcell's glacier land unit contains:
 
@@ -80,7 +80,7 @@ The world's glaciers and ice sheets are broken down into a number of different r
 
    b. Ice runoff from snow capping is melted (generating a negative sensible heat flux) and runs off as liquid. This matches the behavior for non-glacier columns. This is appropriate in regions that have little iceberg calving in reality. This can be important to avoid unrealistic cooling of the ocean and consequent runaway sea ice growth.
 
-The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the standard CISM grid covers Greenland plus enough surrounding area to allow for ice sheet growth and to have a regular rectangular grid. We need to have the "replaced by ice" melt behavior within the CISM domain in order to compute SMB there, and we need virtual elevation classes in that domain in order to compute SMB for all elevation classes and to facilitate glacial advance and retreat in the two-way-coupled case. However, this domain is split into Greenland itself and areas outside Greenland so that ice runoff in the Canadian archipelago (which is inside the CISM domain) is melted before reaching the ocean, to avoid runaway sea ice growth in that region.
+The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM domain. (This treatment of the non-Greenland portion of the CISM domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
 
 .. _Table Glacier region behaviors:
 
@@ -93,13 +93,6 @@ The default behaviors for the world's glacier and ice sheet regions are describe
  | Greenland     | Virtual       | Replaced by   | Remains ice   |
  |               |               | ice           |               |
  +---------------+---------------+---------------+---------------+
- | Inside        | Virtual       | Replaced by   | Melted        |
- | standard CISM |               | ice           |               |
- | grid but      |               |               |               |
- | outside       |               |               |               |
- | Greenland     |               |               |               |
- | itself        |               |               |               |
- +---------------+---------------+---------------+---------------+
  | Antarctica    | Multiple      | Replaced by   | Remains ice   |
  |               |               | ice           |               |
  +---------------+---------------+---------------+---------------+
@@ -109,14 +102,18 @@ The default behaviors for the world's glacier and ice sheet regions are describe
 
 .. note::
 
- In regions that have both the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors (by default, this is just the region inside the standard CISM grid but outside Greenland itself): During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). We recommend that you limit the portion of the globe with both of these behaviors combined, in order to avoid having too large of an impact of this non-physical behavior.
+   It is possible to have non-virtual, non-SMB-computing areas within the CISM domain (as is the case for the portion of CISM's Greenland domain outside of Greenland itself). However, these areas will send 0 SMB and will not be able to adjust to CISM-dictated changes in glacier area. Therefore, it is best to set up the glacier regions and their behaviors so that as much of the CISM domain as possible is covered by virtual, SMB-computing areas.
+
+.. note::
+
+   The combination of the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors results in particularly non-physical behavior: During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). The net result is zero runoff but a positive sensible heat flux generated from glacial melt. Because of how physically unrealistic this is, CLM does not allow this combination of behaviors.
 
 .. _Multiple elevation class scheme:
 
 Multiple elevation class scheme
 -------------------------------
 
-The glacier land unit contains multiple columns based on surface elevation. These are known as elevation classes, and the land unit is referred to as *glacier\_mec*. (As described in section :numref:`Glacier regions`, some regions have only a single elevation class, but they are still referred to as *glacier\_mec* land units.) The default is to have 10 elevation classes whose lower limits are 0, 200, 400, 700, 1000, 1300, 1600, 2000, 2500, and 3000 m. Each column is characterized by a fractional area and surface elevation that are read in during model initialization, and then possibly overridden by CISM as the run progresses. Each *glacier\_mec* column within a grid cell has distinct ice and snow temperatures, snow water content, surface fluxes, and SMB.
+The glacier land unit contains multiple columns based on surface elevation. These are known as elevation classes, and the land unit is referred to as *glacier\_mec*. (As described in section :numref:`Glacier regions`, some regions have only a single elevation class, but they are still referred to as *glacier\_mec* land units.) The default is to have 10 elevation classes whose lower limits are 0, 200, 400, 700, 1000, 1300, 1600, 2000, 2500, and 3000 m. Each column is characterized by a fractional area and surface elevation that are read in during model initialization, and then possibly overridden by CISM as the run progresses. Each *glacier\_mec* column within a grid cell has distinct ice and snow temperatures, snow water content, surface fluxes, and SMB. In CLM6 users can optionally specify using :ref:`Sturm et al. (1997)<Sturmetal1997>` or :ref:`Jordan (1991)<Jordan1991>` parameterizations for snow thermal conductivity over glacier land units (see Chapter :numref:`rst_Soil and Snow Temperatures`), with Sturm (1997) set as the default.
 
 The atmospheric surface temperature, potential temperature, specific humidity, density, and pressure are downscaled from the atmosphere's mean grid cell elevation to the *glacier\_mec* column elevation using a specified lapse rate (typically 6.0 deg/km) and an assumption of uniform relative humidity. Longwave radiation is downscaled by assuming a linear decrease in downwelling longwave radiation with increasing elevation (0.032 W m\ :sup:`-2` m\ :sup:`-1`, limited to 0.5 - 1.5 times the gridcell mean value, then normalized to conserve gridcell total energy) :ref:`(Van Tricht et al., 2016)<VanTrichtetal2016>`. Total precipitation is partitioned into rain vs. snow as described in Chapter :numref:`rst_Surface Characterization, Vertical Discretization, and Model Input Requirements`. The partitioning of precipitation is based on the downscaled temperature, allowing rain to fall at lower elevations while snow falls at higher elevations.
 

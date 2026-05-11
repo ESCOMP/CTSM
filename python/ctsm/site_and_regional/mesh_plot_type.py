@@ -1,6 +1,7 @@
 """
 This module extends the mesh type for advanced plotting
 """
+
 import logging
 
 import numpy as np
@@ -24,7 +25,7 @@ class MeshPlotType(MeshType):
     Extend mesh type with some advanced plotting capability
     """
 
-    def make_mesh_plot(self, plot_regional, plot_global):
+    def make_mesh_plot(self, plot_regional, plot_global, args):
         """
         Create plots for the ESMF mesh file
 
@@ -36,10 +37,10 @@ class MeshPlotType(MeshType):
             The path to write the ESMF meshfile global plot
         """
 
-        self.mesh_plot(plot_regional, regional=True)
-        self.mesh_plot(plot_global, regional=False)
+        self.mesh_plot(plot_regional, args, regional=True)
+        self.mesh_plot(plot_global, args, regional=False)
 
-    def mesh_plot(self, plot_file, regional):
+    def mesh_plot(self, plot_file, args, regional):
         """Make a plot of a mesh file in either a regional or global grid"""
         # -- regional settings
         if regional:
@@ -49,7 +50,7 @@ class MeshPlotType(MeshType):
             plot_type = "regional"
             line_width = 1
             marker = "x"
-            marker_size = 1
+            marker_size = 50
         # global settings
         else:
             fig = plt.figure(num=None, figsize=(15, 10), facecolor="w", edgecolor="k")
@@ -58,7 +59,9 @@ class MeshPlotType(MeshType):
             plot_type = "global"
             line_width = 0.5
             marker = "o"
-            marker_size = None
+            marker_size = 0.1
+        if args.no_center_coords:
+            marker_size = 0
 
         ax.add_feature(cfeature.COASTLINE, edgecolor="black")
         ax.add_feature(cfeature.BORDERS, edgecolor="black")
@@ -129,8 +132,9 @@ class MeshPlotType(MeshType):
                 *[(k, mpatches.Rectangle((0, 0), 1, 1, facecolor=v)) for k, v in lc_colors.items()]
             )
 
-            ax.legend(handles, labels)
+            if not args.no_center_coords:
+                ax.legend(handles, labels)
 
-        plt.savefig(plot_file, bbox_inches="tight")
+        plt.savefig(plot_file, bbox_inches="tight", dpi=args.dpi)
 
         logger.info("Successfully created %s plots for ESMF Mesh file : %s", plot_type, plot_file)

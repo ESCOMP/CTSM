@@ -49,7 +49,6 @@ contains
     ! local variables:
     type(var_desc_t)      :: pio_varid
     type(io_desc_t)       :: pio_iodesc
-    real(r8), allocatable :: elevclass_o(:)          ! elevation classes
     integer               :: rcode
     character(len=*), parameter :: subname = 'mkglcmecInit'
     !-----------------------------------------------------------------------
@@ -99,8 +98,6 @@ contains
             " to work with CLM: "
        call shr_sys_abort()
     end if
-
-    elevclass_o(:) = elevclass(:)
 
     if (root_task)  write(ndiag, '(a)') trim(subname)//" writing out GLC_MEC"
     rcode = pio_inq_varid(pioid_o, 'GLC_MEC', pio_varid)

@@ -251,12 +251,32 @@ contains
     expected_filter = col_filter_empty(bounds)
 
     call this%topo%Init(bounds)
-    ! Need icemask 0, because we can't have single_at_atm_topo inside the icemask
-    call this%do_UpdateTopo(glc_behavior, icemask_grc = grc_array(0._r8))
+    call this%do_UpdateTopo(glc_behavior, icemask_grc = grc_array(1._r8))
     filter = this%topo%DownscaleFilterc(bounds)
 
     @assertTrue(filter == expected_filter)
   end subroutine downscaleFilter_afterUpdate_doesNotContain_singleAtAtmTopo
+
+  @Test
+  subroutine downscaleFilter_afterUpdate_contains_vegInsideIcemaskAndVirtual(this)
+    ! We expect the downscaleFilter to contain vegetated points if they are both (1)
+    ! inside the icemask, and (2) in the 'virtual' region - because topo is updated in
+    ! that region.
+    class(TestTopo), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    type(filter_col_type) :: filter
+    type(filter_col_type) :: expected_filter
+
+    call setup_single_veg_patch(pft_type = 1)
+    glc_behavior = create_glc_behavior_all_virtual()
+    expected_filter = col_filter_from_index_array(bounds, [bounds%begc])
+
+    call this%topo%Init(bounds)
+    call this%do_UpdateTopo(glc_behavior, icemask_grc = grc_array(1._r8))
+    filter = this%topo%DownscaleFilterc(bounds)
+
+    @assertTrue(filter == expected_filter)
+  end subroutine downscaleFilter_afterUpdate_contains_vegInsideIcemaskAndVirtual
 
   @Test
   subroutine downscaleFilter_afterUpdate_doesNotContain_vegOutsideIcemask(this)
@@ -266,8 +286,6 @@ contains
     type(filter_col_type) :: expected_filter
 
     call setup_single_veg_patch(pft_type = 1)
-    ! Use 'virtual' behavior, to make sure that we're not accidentally trying to
-    ! downscale vegetation over virtual columns.
     glc_behavior = create_glc_behavior_all_virtual()
     expected_filter = col_filter_empty(bounds)
 
@@ -279,7 +297,10 @@ contains
   end subroutine downscaleFilter_afterUpdate_doesNotContain_vegOutsideIcemask
 
   @Test
-  subroutine downscaleFilter_afterUpdate_contains_vegInsideIcemask(this)
+  subroutine downscaleFilter_afterUpdate_doesNotContain_vegNonVirtual(this)
+    ! Since topo is only updated in the 'virtual' region, we expect the downscale filter
+    ! to NOT include vegetated points outside the 'virtual' region, because topo
+    ! shouldn't be updated for those vegetated points.
     class(TestTopo), intent(inout) :: this
     type(glc_behavior_type) :: glc_behavior
     type(filter_col_type) :: filter
@@ -287,14 +308,36 @@ contains
 
     call setup_single_veg_patch(pft_type = 1)
     glc_behavior = create_glc_behavior_all_multiple()
-    expected_filter = col_filter_from_index_array(bounds, [bounds%begc])
+    expected_filter = col_filter_empty(bounds)
 
     call this%topo%Init(bounds)
     call this%do_UpdateTopo(glc_behavior, icemask_grc = grc_array(1._r8))
     filter = this%topo%DownscaleFilterc(bounds)
 
     @assertTrue(filter == expected_filter)
-  end subroutine downscaleFilter_afterUpdate_contains_vegInsideIcemask
+  end subroutine downscaleFilter_afterUpdate_doesNotContain_vegNonVirtual
+
+  @Test
+  subroutine topo_changes_for_glcmecInsideIcemaskAndVirtual(this)
+    class(TestTopo), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    real(r8), parameter :: topo_orig = 7._r8
+    real(r8), parameter :: atm_topo = 23._r8
+
+    ! our column should get set to this:
+    real(r8), parameter :: glc_topo = 27._r8
+
+    call setup_single_ice_column(elev_class = 1)
+    glc_behavior = create_glc_behavior_all_virtual()
+    topo_glc_mec(:,:) = topo_orig
+
+    call this%topo%Init(bounds)
+    call this%do_UpdateTopo(glc_behavior, icemask_grc = grc_array(1._r8), &
+         atm_topo_grc = grc_array(atm_topo), &
+         glc_topo = glc_topo)
+
+    @assertEqual(glc_topo, this%topo%topo_col(bounds%begc))
+  end subroutine topo_changes_for_glcmecInsideIcemaskAndVirtual
 
   @Test
   subroutine topo_noChange_for_glcmecOutsideIcemask(this)
@@ -319,17 +362,17 @@ contains
   end subroutine topo_noChange_for_glcmecOutsideIcemask
 
   @Test
-  subroutine topo_changes_for_glcmecInsideIcemask(this)
+  subroutine topo_noChange_for_glcmecNonVirtual(this)
     class(TestTopo), intent(inout) :: this
     type(glc_behavior_type) :: glc_behavior
     real(r8), parameter :: topo_orig = 7._r8
-    real(r8), parameter :: atm_topo = 23._r8
 
-    ! our column should get set to this:
+    ! our column should NOT get set to either of these:
+    real(r8), parameter :: atm_topo = 23._r8
     real(r8), parameter :: glc_topo = 27._r8
 
     call setup_single_ice_column(elev_class = 1)
-    glc_behavior = create_glc_behavior_all_virtual()
+    glc_behavior = create_glc_behavior_all_multiple()
     topo_glc_mec(:,:) = topo_orig
 
     call this%topo%Init(bounds)
@@ -337,8 +380,8 @@ contains
          atm_topo_grc = grc_array(atm_topo), &
          glc_topo = glc_topo)
 
-    @assertEqual(glc_topo, this%topo%topo_col(bounds%begc))
-  end subroutine topo_changes_for_glcmecInsideIcemask
+    @assertEqual(topo_orig, this%topo%topo_col(bounds%begc))
+  end subroutine topo_noChange_for_glcmecNonVirtual
 
   @Test
   subroutine topo_changes_for_singleAtAtmTopo(this)

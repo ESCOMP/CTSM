@@ -220,6 +220,7 @@ contains
     real(r8)           :: perturbed_sand                ! temporary for paramfile implementation of +/- sand percentage
     real(r8)           :: residual_clay_frac            ! temporary for paramfile implementation of +/- residual clay percentage
     real(r8)           :: perturbed_residual_clay_frac  ! temporary for paramfile implementation of +/- residual clay percentage
+    real(r8)           :: dust_moist_fact               ! tuning factor for soil moisture effect on limiting dust emissions, used by Charlie Zender. Simone Tilmes suggested to change this parameter into a namelist variable for easier CESM tuning. dmleung added 30 Sep 2024
     integer            :: dimid                         ! dimension id
     logical            :: readvar 
     type(file_desc_t)  :: ncid                          ! netcdf id
@@ -708,17 +709,24 @@ contains
     ! Initialize threshold soil moisture, and mass fraction of clay as
     ! scaling coefficient of dust emission flux (kg/m2/s) in each DustEmisType
     ! module. See the comments in each function.
+    ! Zender suggested that threshold soil moisture is tunable (see comment
+    ! inside ThresholdSoilMoistZender2003). dmleung further add dust_moist_fact
+    ! ofr modelers to tune the threshold soil moisture. The resulting tuning 
+    ! factor is thus a = dust_moist_fact / (clay3d). dmleung 30 Sep 2024
     ! --------------------------------------------------------------------
 
     do c = begc,endc
        g = col%gridcell(c)
 
-       soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
+       !soilstate_inst%gwc_thr_col(c) = ThresholdSoilMoistZender2003( clay3d(g,1) )
        if ( is_dust_emis_leung() )then
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClayLeung2023( clay3d(g,1) )
+          dust_moist_fact = 1.0_r8   ! change this into a namelist variable later., currrently not used but could be in the future
        else
           soilstate_inst%mss_frc_cly_vld_col(c) = MassFracClay( clay3d(g,1) )
+          dust_moist_fact = 1.0_r8
        end if
+       soilstate_inst%gwc_thr_col(c) = dust_moist_fact * ThresholdSoilMoistZender2003( clay3d(g,1) )
 
     end do
 
@@ -739,9 +747,11 @@ contains
   ! Calculate the threshold gravimetric water content needed for dust emission, based on clay content
   ! This was the original equation with a = 1 / (%clay) being the tuning factor for soil
   ! moisture effect in Zender's 2003 dust emission scheme (only for top layer).
+  ! dmleung further added dust_moist_fact for more flexibility in tuning, so the tuning factor here
+  ! is a = dust_moist_fact / (%clay). dmleung added dust_moist_fact on 30 Sep 2024.
   !
   ! 0.17 and 0.14 are fitting coefficients in Fecan et al. (1999), and 0.01 is used to
-  ! convert surface clay fraction from percentage to fraction.
+  ! convert surface clay from percentage to fraction.
   ! The equation comes from Eq. 14 of Fecan et al. (1999; https://doi.org/10.1007/s00585-999-0149-7).
   !
   ! NOTE: dmleung 19 Feb 2024.

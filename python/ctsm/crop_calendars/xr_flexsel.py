@@ -1,11 +1,16 @@
 """
 Flexibly subset time(s) and/or vegetation type(s) from an xarray Dataset or DataArray.
 """
+
 import re
 import numpy as np
 import xarray as xr
 
 from ctsm.crop_calendars.cropcal_utils import vegtype_str2int, is_each_vegtype
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 
 def xr_flexsel(xr_object, patches1d_itype_veg=None, warn_about_seltype_interp=True, **kwargs):

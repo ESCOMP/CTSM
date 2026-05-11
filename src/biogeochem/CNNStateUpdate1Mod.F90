@@ -17,7 +17,7 @@ module CNNStateUpdate1Mod
   use SoilBiogeochemDecompCascadeConType, only : decomp_method, mimics_decomp, use_soil_matrixcn
   use CNSharedParamsMod               , only : use_matrixcn
   use clm_varcon                      , only : nitrif_n2o_loss_frac
-  use pftconMod                       , only : npcropmin, pftcon
+  use pftconMod                       , only : is_prognostic_crop, pftcon
   use decompMod                       , only : bounds_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
@@ -228,7 +228,7 @@ contains
                ns_veg%deadcrootn_xfer_patch(p) = ns_veg%deadcrootn_xfer_patch(p) - nf_veg%deadcrootn_xfer_to_deadcrootn_patch(p)*dt
             end if
 
-            if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+            if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
                ! lines here for consistency; the transfer terms are zero
                ns_veg%livestemn_patch(p)       = ns_veg%livestemn_patch(p)      + nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
                ns_veg%livestemn_xfer_patch(p)  = ns_veg%livestemn_xfer_patch(p) - nf_veg%livestemn_xfer_to_livestemn_patch(p)*dt
@@ -287,7 +287,7 @@ contains
                ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
             end if !not use_matrixcn
          end if 
-         if (ivt(p) >= npcropmin) then ! Beth adds retrans from froot
+         if (is_prognostic_crop(ivt(p))) then ! Beth adds retrans from froot
             !
             ! State update without the matrix solution
             !
@@ -391,7 +391,7 @@ contains
             end if ! not use_matrixcn
          end if
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_patch(p)*dt
             ns_veg%npool_patch(p)                 = ns_veg%npool_patch(p)              - nf_veg%npool_to_livestemn_storage_patch(p)*dt
             do k = 1, nrepr
@@ -452,7 +452,7 @@ contains
             ! NOTE: The equivalent changes for matrix code are in CNPhenology EBK (11/26/2019)
          end if  ! not use_matrixcn
 
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             ! lines here for consistency; the transfer terms are zero
 
             !

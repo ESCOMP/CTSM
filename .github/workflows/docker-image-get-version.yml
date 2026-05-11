@@ -1,0 +1,72 @@
+name: Get and check version specified in a Dockerfile
+
+on:
+  workflow_call:
+    inputs:
+      registry:
+        required: true  # Require any workflows calling this one to provide input
+        type: string
+        default: 'ghcr.io'  # Provide default so this workflow works standalone too
+      image_name:
+        required: true  # Require any workflows calling this one to provide input
+        type: string
+        default: 'escomp/ctsm/ctsm-docs'  # Provide default so this workflow works standalone too
+    outputs:
+      VERSION_TAG:
+        description: "Tag to be pushed to container registry"
+        value: ${{ jobs.get-check-version.outputs.VERSION_TAG }}
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Container registry'
+        required: false
+        type: string
+        default: 'ghcr.io'
+      image_name:
+        description: 'Image name'
+        required: false
+        type: string
+        default: 'escomp/ctsm/ctsm-docs'
+
+# There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
+jobs:
+  get-check-version:
+    name: Get version number from Dockerfile and check it
+    runs-on: ubuntu-latest
+    outputs:
+      VERSION_TAG: ${{ steps.get-check-version.outputs.version_tag }}
+    # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Get version number from Dockerfile and check it
+        id: get-check-version
+        run: |
+          set -e
+          set -o pipefail
+          set -u
+          VERSION="$(doc/ctsm-docs_container/get_version.sh)"
+          VERSION_TAG="${{ inputs.registry }}/${{ inputs.image_name }}:${VERSION}"
+
+          # Store the manifest inspect result and output
+          set +e
+          INSPECT_RESULT="$(docker manifest inspect "$VERSION_TAG" 2>&1)"
+          INSPECT_STATUS=$?
+          set -e
+
+          if [[ "${INSPECT_RESULT}" == *"schemaVersion"* ]]; then
+            echo "Tag $VERSION_TAG already exists!" >&2
+            exit 123
+          elif [[ "${INSPECT_RESULT}" != "manifest unknown" ]]; then
+            # "manifest unknown" means the tag doesn't exist, which is what we want
+            echo -e "Error checking manifest for $VERSION_TAG:\n${INSPECT_RESULT}" >&2
+            exit $INSPECT_STATUS
+          fi
+
+          echo "Setting version_tag to $VERSION_TAG"
+          echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT

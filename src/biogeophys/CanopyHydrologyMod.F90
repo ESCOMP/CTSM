@@ -49,6 +49,8 @@ module CanopyHydrologyMod
      real(r8) :: snow_canopy_storage_scalar ! Canopy-storage-of-snow parameter (kg/m2)
      real(r8) :: snowcan_unload_temp_fact   ! Temperature canopy snow unload scaling (C2 in Eq. 14, Roesch et al. 2001) (K*s)
      real(r8) :: snowcan_unload_wind_fact   ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
+     real(r8) :: interception_fraction      ! Fraction of intercepted precipitation (-)
+     real(r8) :: maximum_leaf_wetted_fraction ! Maximum fraction of leaf that may be wet (-)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -67,8 +69,6 @@ module CanopyHydrologyMod
   private :: BulkDiag_FracWet                            ! Determine fraction of vegetated surface that is wet
   !
   ! !PRIVATE DATA MEMBERS:
-  real(r8) :: interception_fraction ! Fraction of intercepted precipitation
-  real(r8) :: maximum_leaf_wetted_fraction ! Maximum fraction of leaf that may be wet
   logical, private :: use_clm5_fpi    = .false. ! use clm5 fpi equation
 
   character(len=*), parameter, private :: sourcefile = &
@@ -99,8 +99,6 @@ contains
     character(len=32) :: subname = 'CanopyHydrology_readnl'  ! subroutine name
     !-----------------------------------------------------------------------
     namelist /clm_canopyhydrology_inparm/ &
-         interception_fraction, &
-         maximum_leaf_wetted_fraction, &
          use_clm5_fpi
 
     ! ----------------------------------------------------------------------
@@ -125,15 +123,11 @@ contains
     end if
 
     ! Broadcast namelist variables read in
-    call shr_mpi_bcast(interception_fraction, mpicom)
-    call shr_mpi_bcast(maximum_leaf_wetted_fraction, mpicom)
     call shr_mpi_bcast(use_clm5_fpi, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '
        write(iulog,*) 'canopyhydrology settings:'
-       write(iulog,*) '  interception_fraction        = ',interception_fraction
-       write(iulog,*) '  maximum_leaf_wetted_fraction = ',maximum_leaf_wetted_fraction
        write(iulog,*) '  use_clm5_fpi                 = ',use_clm5_fpi
     endif
 
@@ -162,6 +156,10 @@ contains
     call readNcdioScalar(ncid, 'snowcan_unload_temp_fact', subname, params_inst%snowcan_unload_temp_fact)
     ! Wind canopy snow unload scaling (modifies 1.56e5, where 1.56e5 is C3 in Eq. 15, Roesch et al. 2001) (-)
     call readNcdioScalar(ncid, 'snowcan_unload_wind_fact', subname, params_inst%snowcan_unload_wind_fact)
+    ! Fraction of intercepted precipitation (-)
+    call readNcdioScalar(ncid, 'interception_fraction', subname, params_inst%interception_fraction)
+    ! Maximum fraction of leaf that may be wet (-)
+    call readNcdioScalar(ncid, 'maximum_leaf_wetted_fraction', subname, params_inst%maximum_leaf_wetted_fraction)
 
    end subroutine readParams
 
@@ -535,7 +533,7 @@ contains
         if (check_point_for_interception_and_excess(p)) then
            ! Coefficient of interception
            if (use_clm5_fpi) then
-              fpiliq = interception_fraction * tanh(elai(p) + esai(p))
+              fpiliq = params_inst%interception_fraction * tanh(elai(p) + esai(p))
            else
               fpiliq = 0.25_r8*(1._r8 - exp(-0.5_r8*(elai(p) + esai(p))))
            end if
@@ -1170,7 +1168,7 @@ contains
            if (h2ocan > 0._r8) then
               vegt    = frac_veg_nosno(p)*(elai(p) + esai(p))
               fwet(p) = (h2ocan / (vegt * params_inst%liq_canopy_storage_scalar))**0.666666666666_r8
-              fwet(p) = min (fwet(p),maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
+              fwet(p) = min (fwet(p),params_inst%maximum_leaf_wetted_fraction)   ! Check for maximum limit of fwet
               if (snocan(p) > 0._r8) then
                  fcansno(p) = (snocan(p) / (vegt * params_inst%snow_canopy_storage_scalar))**0.15_r8 ! must match snocanmx 
                  fcansno(p) = min (fcansno(p),1.0_r8)

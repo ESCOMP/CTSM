@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-"""System tests for fsurdat_modifier
-
-"""
+"""System tests for fsurdat_modifier"""
 
 import os
 import re

@@ -9,6 +9,8 @@ module LakeTemperatureMod
   !
   ! !USES
   use shr_kind_mod      , only : r8 => shr_kind_r8
+  use abortutils        , only : endrun
+  use shr_log_mod       , only : errMsg => shr_log_errMsg
   use decompMod         , only : bounds_type
   use ch4Mod            , only : ch4_type
   use EnergyFluxType    , only : energyflux_type
@@ -19,6 +21,7 @@ module LakeTemperatureMod
   use WaterFluxBulkType     , only : waterfluxbulk_type
   use WaterStateBulkType    , only : waterstatebulk_type
   use WaterDiagnosticBulkType    , only : waterdiagnosticbulk_type
+  use clm_varctl        , only : iulog
   use ColumnType        , only : col                
   use PatchType         , only : patch                
   !    
@@ -117,7 +120,7 @@ contains
     use clm_time_manager   , only : get_step_size_real
     use clm_varcon         , only : hfus, cpliq, cpice, tkwat, tkice, denice
     use clm_varcon         , only : vkc, grav, denh2o, tfrz, cnfac
-    use clm_varctl         , only : iulog, use_lch4
+    use clm_varctl         , only : use_lch4
     !
     ! !ARGUMENTS:
     type(bounds_type)      , intent(in)    :: bounds	  
@@ -1085,6 +1088,7 @@ contains
      use clm_varcon  , only : denh2o, denice, tfrz, tkwat, tkice, tkair
      use clm_varcon  , only : cpice,  cpliq, thk_bedrock, csol_bedrock
      use clm_varpar  , only : nlevsno, nlevsoi, nlevgrnd
+     use clm_varctl  , only : snow_thermal_cond_lake_method
      !
      ! !ARGUMENTS:
      type(bounds_type)      , intent(in)  :: bounds  
@@ -1181,7 +1185,20 @@ contains
              ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
              if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then
                 bw = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/dz(c,j)
-                thk(c,j) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
+                select case (snow_thermal_cond_lake_method)
+                case ('Jordan1991')
+                   thk(c,j) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
+                case ('Sturm1997')
+                   if (bw <= 156) then 
+                      thk(c,j) = 0.023 + 0.234*(bw/1000) 
+                   else
+                      thk(c,j) = 0.138 - 1.01*(bw/1000) +(3.233*((bw/1000)*(bw/1000))) 
+                   end if
+                case default
+                   write(iulog,*) ' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
+                   call endrun(msg=errMsg(sourcefile, __LINE__))
+                end select
+
              end if
 
           end do

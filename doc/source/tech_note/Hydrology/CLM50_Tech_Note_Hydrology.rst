@@ -87,7 +87,7 @@ and
 
    W_{can,sno}^{intr} =W_{can,sno}^{n} +q_{intr,\, ice} \Delta t\ge 0
 
-are the the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
+are the canopy liquid water and snow water equivalent after accounting for interception, :math:`W_{can,\,liq}^{n}` and :math:`W_{can,\,sno}^{n}` are the canopy liquid and snow water from the previous time step, and :math:`W_{can,\,liq}^{max }` and :math:`W_{can,\,snow}^{max }` (kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) are the maximum amounts of liquid water and snow the canopy can hold. They are defined by
 
 .. math::
    :label: 7.10
@@ -196,7 +196,7 @@ while the fraction of the canopy that is dry and transpiring is
    0 &\qquad L+S = 0
    \end{array}\right\}.
 
-Similarly, the snow-covered fraction of the canopy is used for surface alebdo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
+Similarly, the snow-covered fraction of the canopy is used for surface albedo when intercepted snow is present (Chapter :numref:`rst_Surface Albedos`)
 
 .. math::
    :label: 7.23
@@ -598,7 +598,7 @@ where :math:`\left(r_{e,\, i} \right)_{j}` is the effective root fraction for th
 
 and :math:`\left(r_{i} \right)_{j}` is the fraction of roots in layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), :math:`\left(w_{i} \right)_{j}` is a soil dryness or plant wilting factor for layer :math:`i` (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`), and :math:`\left(\beta_{t} \right)_{j}` is a wetness factor for the total soil column for the :math:`j^{th}` PFT (Chapter :numref:`rst_Stomatal Resistance and Photosynthesis`).
 
-The soil water fluxes in :eq:`7.103`,, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
+The soil water fluxes in :eq:`7.103`, which are a function of :math:`\theta_{liq,\, i}` and :math:`\theta_{liq,\, i+1}` because of their dependence on hydraulic conductivity and soil matric potential, can be linearized about :math:`\theta` using a Taylor series expansion as
 
 .. math::
    :label: 7.108
@@ -923,7 +923,7 @@ Runoff from glaciers and snow-capped surfaces
 
 All surfaces are constrained to have a snow water equivalent :math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped columns, any addition of mass at the top (precipitation, dew/riping) is balanced by an equally large mass flux at the bottom of the snow column. This so-called capping flux is separated into solid :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}` runoff terms. The partitioning of these phases is based on the phase ratio in the bottom snow layer at the time of the capping, such that phase ratio in this layer is unaltered.
 
-The :math:`q_{snwcp,ice}` runoff is sent to the River Transport Model (RTM) (Chapter 11) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there.
+The :math:`q_{snwcp,ice}` runoff is sent to MOSART (Chapter :numref:`rst_MOSART`) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there.
 
 For snow-capped surfaces other than glaciers and lakes the :math:`q_{snwcp,liq}` runoff is assigned to the glaciers and lakes runoff term :math:`q_{rgwl}` (e.g. :math:`q_{rgwl} =q_{snwcp,liq}` ). For glacier surfaces the runoff term :math:`q_{rgwl}` is calculated from the residual of the water balance
 
@@ -939,4 +939,4 @@ where :math:`W_{b}^{n}` and :math:`W_{b}^{n+1}` are the water balances at the be
 
    W_{b} =W_{can} +W_{sno} +\sum _{i=1}^{N}\left(w_{ice,i} +w_{liq,i} \right) .
 
-Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_River Transport Model (RTM)`).
+Currently, glaciers are non-vegetated and :math:`E_{v} =W_{can} =0`. The contribution of lake runoff to :math:`q_{rgwl}` is described in section :numref:`Precipitation, Evaporation, and Runoff Lake`. The runoff term :math:`q_{rgwl}` may be negative for glaciers and lakes, which reduces the total amount of runoff available to the river routing model (Chapter :numref:`rst_MOSART`).

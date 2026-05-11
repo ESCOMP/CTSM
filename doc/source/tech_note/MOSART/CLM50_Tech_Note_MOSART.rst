@@ -1,7 +1,7 @@
-.. _rst_River Transport Model (RTM):
+.. _rst_MOSART:
 
 Model for Scale Adaptive River Transport (MOSART)
-=================================================
+====================================================
 
 .. _Overview MOSART:
 
@@ -21,9 +21,9 @@ MOSART divides each spatial unit such as a lat/lon grid or watershed into three 
 
 .. _Figure MOSART conceptual diagram:
 
-.. figure:: mosart_diagram.png
-    :width: 800px
-    :height: 400px
+.. Figure:: mosart_diagram.png
+
+ MOSART conceptual diagram
 
 MOSART only routes positive runoff, although negative runoff can be generated occasionally by the land model (e.g., :math:`q_{gwl}`). Negative runoff in any runoff component including :math:`q_{sur}`, :math:`q_{sub}`, :math:`q_{gwl}` is not routed through MOSART, but instead is mapped directly from the spatial unit where it is generated at any time step to the coupler.
 

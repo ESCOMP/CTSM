@@ -100,6 +100,7 @@ This will bring in CIME and ccs_config which are required for building.
 
 ``` shell
 # Assuming pwd is the tools/mksurfdata_esmf directory
+setenv DEBUG TRUE  # only if debugging and your shell is tcsh (in bash use: export DEBUG=TRUE)
  ./gen_mksurfdata_build         # For machines with a cime build
 ```
 
@@ -178,6 +179,10 @@ for example try --res 1.9x2.5 --start-year 1850 --end-year 1850:
  make all  # ...or
  make all-subset
 ```
+
+ As of 2024/9/12 one needs to generate NEON and PLUMBER2 fsurdat files by
+ running ./neon_surf_wrapper and ./plumber2_surf_wrapper manually in the
+ /tools/site_and_regional directory.
 
 <!-- = -->
 ## NOTES
