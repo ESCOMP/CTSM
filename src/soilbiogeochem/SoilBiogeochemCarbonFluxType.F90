@@ -31,6 +31,7 @@ module SoilBiogeochemCarbonFluxType
      ! decomposition fluxes
      real(r8), pointer :: decomp_cpools_sourcesink_col              (:,:,:) ! change in decomposing c pools. Used to update concentrations concurrently with vertical transport (gC/m3/timestep)  
      real(r8), pointer :: c_overflow_vr                             (:,:,:) ! vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
+     real(r8), pointer :: c_overflow                                (:,:)   ! vertically-integrated C rejected by microbes that cannot process it (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_vr_col                  (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
@@ -141,6 +142,9 @@ contains
 
      allocate(this%c_overflow_vr(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
      this%c_overflow_vr(:,:,:) = nan
+
+     allocate(this%c_overflow(begc:endc,1:ndecomp_cascade_transitions))
+     this%c_overflow(:,:) = nan
 
      allocate(this%decomp_cascade_hr_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))        
      this%decomp_cascade_hr_vr_col(:,:,:)= spval
@@ -307,6 +311,8 @@ contains
                 ptr_col=data2dptr, default='inactive')
         end do
 
+        this%c_overflow(begc:endc,:)                        = spval
+        this%c_overflow_vr(begc:endc,:,:)                   = spval
         this%decomp_cascade_hr_col(begc:endc,:)             = spval
         this%decomp_cascade_hr_vr_col(begc:endc,:,:)        = spval
         this%decomp_cascade_ctransfer_col(begc:endc,:)      = spval
@@ -316,6 +322,27 @@ contains
         do l = 1, ndecomp_cascade_transitions
 
            ! output the vertically integrated fluxes only as  default
+           !-- C overflow (ONLY c12 FOR NOW)
+           data1dptr => this%c_overflow(:,l)
+           ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+           ii = 0
+           do jj = 1, ndecomp_cascade_transitions
+              if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+           end do
+           if ( ii == 1 ) then
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_COVERFLOW'
+           else
+              fieldname = &
+                   trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_COVERFLOW_'//&
+                   trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))
+           endif
+           longname =  'C overflow from '//&
+                trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+           call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
+                avgflag='A', long_name=longname, &
+                ptr_col=data1dptr, default='inactive')
+
            !-- HR fluxes
            data1dptr => this%decomp_cascade_hr_col(:,l)
            ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
@@ -352,6 +379,29 @@ contains
 
            ! output the vertically resolved fluxes 
            if ( nlevdecomp_full > 1 ) then  
+              !-- C overflow (ONLY c12 FOR NOW)
+              data2dptr => this%c_overflow_vr(:,:,l)
+              ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
+              ii = 0
+              do jj = 1, ndecomp_cascade_transitions
+                 if ( decomp_cascade_con%cascade_donor_pool(jj) == decomp_cascade_con%cascade_donor_pool(l) ) ii = ii+1
+              end do
+              if ( ii == 1 ) then
+                 fieldname = &
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))&
+                      //'_COVERFLOW'//trim(vr_suffix)
+              else
+                 fieldname = &
+                      trim(decomp_cascade_con%decomp_pool_name_history(decomp_cascade_con%cascade_donor_pool(l)))//'_COVERFLOW_'//&
+                      trim(decomp_cascade_con%decomp_pool_name_short(decomp_cascade_con%cascade_receiver_pool(l)))&
+                      //trim(vr_suffix)
+              endif
+              longname =  'C overflow from '//&
+                   trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
+              call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
+                   avgflag='A', long_name=longname, &
+                   ptr_col=data2dptr, default='inactive')
+
               !-- HR fluxes
               data2dptr => this%decomp_cascade_hr_vr_col(:,:,l)
               ! check to see if there are multiple pathways that include respiration, and if so, note that in the history file
@@ -469,8 +519,6 @@ contains
            call hist_addfld2d (fname='HR_vr', units='gC/m^3/s', type2d='levsoi', &
                 avgflag='A', long_name='total vertically resolved heterotrophic respiration', &
                 ptr_col=data2dptr)
-        
-           ! WW TODO is this where I can add overflow_vr fluxes to history?
         endif
 
      end if
