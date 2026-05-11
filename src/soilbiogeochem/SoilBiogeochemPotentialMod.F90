@@ -104,7 +104,6 @@ contains
     real(r8):: p_decomp_npool_gain_sum(1:ndecomp_pools)  ! total potential N gain by receiver pool (only microbial pools)
     real(r8):: decomp_nc_loss_donor  ! N:C ratio of donor pool
     real(r8):: p_decomp_cn_diff_ratio  ! relative change in receiver pool C:N
-    real(r8):: adjusted_c_to_mic  ! relative change in receiver pool C:N
     real(r8):: p_decomp_npool_loss  ! potential N flux out of donor pool
     real(r8):: ratio                                        !temporary variable
     !-----------------------------------------------------------------------
@@ -130,7 +129,6 @@ contains
          decomp_npools_vr                 => soilbiogeochem_nitrogenstate_inst%decomp_npools_vr_col                , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) N pools
 
          decomp_cpools_vr                 => soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col                  , & ! Input:  [real(r8) (:,:,:) ]  (gC/m3)  vertically-resolved decomposing (litter, cwd, soil) c pools
-         c_overflow_vr                    => soilbiogeochem_carbonflux_inst%c_overflow_vr                          , & ! Output: [real(r8) (:,:,:)] (gC/m3/s) vertically-resolved C rejected by microbes that cannot process it
 
          potential_immob_vr               => soilbiogeochem_nitrogenflux_inst%potential_immob_vr_col               , & ! Output: [real(r8) (:,:)   ]                                                  
          gross_nmin_vr                    => soilbiogeochem_nitrogenflux_inst%gross_nmin_vr_col                    , & ! Output: [real(r8) (:,:)   ]                                                  
@@ -200,7 +198,6 @@ contains
                      endif
                   else   ! CWD -> litter OR mimics_decomp is true
                      pmnf_decomp_cascade(c,j,k) = 0._r8
-                     c_overflow_vr(c,j,k) = 0._r8
 
                      if (decomp_method == mimics_decomp) then
                         ! N:C ratio of donor pools (N:C instead of C:N because
@@ -274,33 +271,18 @@ contains
                       cascade_receiver_pool(k) == i_oli_mic) then
                      if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
                          decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
-                        ! if p_decomp_cn_diff_ratio < 0  N mineralization
-                        !                           > 0  immobilization
-                        !! Easier here if p_decomp_cn_diff_ratio < 0 
-                        !!     then calculate C supply for each N flux to meet cn_col demands
-                        !!     and extra C goes to overflow respiration
-                        !! This approcah this would be on a per flux basis
-                        !!    Alternatively could sum all C and N fluxes into microbes and then balance stoich
-                        !!    but this would have to take place outside of k loop
-                        p_decomp_cn_diff_ratio =  &
+                        ! if p_decomp_cn_diff < 0  N mineralization
+                        !                     > 0  immobilization
+                        ! "min" in next line turns off immobilization flux
+                        p_decomp_cn_diff_ratio = min(0.0_r8,  &
                            (p_decomp_cn_gain(c,j,cascade_receiver_pool(k)) - &
-                            cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k))
-                        
-                        ! Actual amount of N that's mineralized or that would be need to be immobilized
-                        !   negative=mineralization: add to the DIN pool
-                        !   positive=immobilizaiton: compete for N with plants to see how much we get
-                        ! WW Overflow respiration calculation requires positive ratio to be active
-                        ! TODO may need to think about how we track actual immobilization fluxes too? 
-                        if (p_decomp_cn_diff_ratio <= 0._r8) then
-                          pmnf_decomp_cascade(c,j,k) = p_decomp_cn_diff_ratio * p_decomp_npool_gain(c,j,k)
-                          c_overflow_vr(c,j,k) = 0.0_r8
-                        else
-                          ! Assumes each flux into MIC must be in stoichiometric ballance
-                          ! Could also sum at all C fluxes into MIC and then maintain stoichiometry
-                          pmnf_decomp_cascade(c,j,k) = 0._r8
-                          adjusted_c_to_mic = p_decomp_npool_gain(c,j,k) * cn_col(c,cascade_receiver_pool(k))
-                          c_overflow_vr(c,j,k) =  p_decomp_cpool_gain(c,j,k) - adjusted_c_to_mic
-                        end if
+                            cn_col(c,cascade_receiver_pool(k))) / cn_col(c,cascade_receiver_pool(k)))
+                        ! Actual amount of N that's mineralized or that would
+                        ! need to be immobilized
+                        ! negative=mineralization: add to the DIN pool
+                        ! positive=immobilizaiton: compete for N with plants to
+                        !                          see how much we get
+                        pmnf_decomp_cascade(c,j,k) = p_decomp_cn_diff_ratio * p_decomp_npool_gain(c,j,k)
                      end if  ! donors donating (decomp_cpools_vr & decomp_k > 0)
                   end if  ! microbes receiving
                end do  ! transitions loop

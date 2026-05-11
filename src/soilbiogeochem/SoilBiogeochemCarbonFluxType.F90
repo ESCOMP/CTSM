@@ -469,8 +469,6 @@ contains
            call hist_addfld2d (fname='HR_vr', units='gC/m^3/s', type2d='levsoi', &
                 avgflag='A', long_name='total vertically resolved heterotrophic respiration', &
                 ptr_col=data2dptr)
-        
-           ! WW TODO is this where I can add overflow_vr fluxes to history?
         endif
 
      end if
