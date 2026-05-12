@@ -937,14 +937,16 @@ contains
          end do
       end do
 
-      ! [PORTED by Hui Tang: NVP-soil interface conductivity when NVP at layer 0 — nvpc filter]
-      ! The standard loop above uses j >= snl(c)+1; when snl=0 this starts at j=1 and
-      ! skips j=0. Compute tk(c,0) explicitly here for NVP cases with or without snow.
+      ! [PORTED by Hui Tang: NVP-soil interface conductivity when NVP at layer 0]
+      ! Use jbot_sno(c)==-1 directly (not filter_nvpc) so this runs on the first
+      ! timestep before filter_nvpc has been built by setNVPcFilter.
       if (use_nvp) then
-         do fc = 1, num_nvpc
-            c = filter_nvpc(fc)
-            tk(c,0) = thk(c,0)*thk(c,1)*(z(c,1)-z(c,0)) &
-                 /(thk(c,0)*(z(c,1)-zi(c,0))+thk(c,1)*(zi(c,0)-z(c,0)))
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%jbot_sno(c) == -1) then
+               tk(c,0) = thk(c,0)*thk(c,1)*(z(c,1)-z(c,0)) &
+                    /(thk(c,0)*(z(c,1)-zi(c,0))+thk(c,1)*(zi(c,0)-z(c,0)))
+            end if
          end do
       end if
 
@@ -1016,18 +1018,22 @@ contains
          end do
       end do
 
-      ! [PORTED by Hui Tang: NVP layer heat capacity at j=0 — nvpc filter]
-      ! Soil-style formula: dry matrix + pore water/ice contributions.
-      !   cv = csol_nvp*(1-watsat_nvp)*dz  +  cpliq*h2osoi_liq  +  cpice*h2osoi_ice
+      ! [PORTED by Hui Tang: NVP layer heat capacity at j=0]
+      ! Use jbot_sno(c)==-1 directly (not filter_nvpc) so this runs on the first
+      ! timestep before filter_nvpc has been built by setNVPcFilter.
       if (use_nvp) then
-         do fc = 1, num_nvpc
-            c = filter_nvpc(fc)
-            cv(c,0) = max(thin_sfclayer, &
-                 csol_nvp*(1._r8 - watsat_nvp)*dz(c,0) &
-                 + cpliq*h2osoi_liq(c,0) + cpice*h2osoi_ice(c,0))
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%jbot_sno(c) == -1) then
+               cv(c,0) = max(thin_sfclayer, &
+                    csol_nvp*(1._r8 - watsat_nvp)*dz(c,0) &
+                    + cpliq*h2osoi_liq(c,0) + cpice*h2osoi_ice(c,0))
+            end if
          end do
       end if
 
+      print *, "cv(:,:)=", cv
+      
       call t_stopf( 'SoilThermProp' )
 
     end associate
