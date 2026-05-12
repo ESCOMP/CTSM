@@ -356,9 +356,9 @@ contains
            qflx_evap=qflx_ev_soil(c)
         endif
 
-        ! [PORTED by Hui Tang: compute effective NVP area (not blocked by surface water,
-        !  but snow does not block — water percolates through to NVP layer beneath snow)]
-        if (use_nvp) then
+        ! [PORTED by Hui Tang: NVP area fraction — zero when NVP buried under snow (snl < -1);
+        !  buried NVP receives no direct surface water and NVPWaterBalance returns zero fluxes]
+        if (use_nvp .and. snl(c) >= -1) then
            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)))
         else
            frac_nvp_eff = 0._r8
