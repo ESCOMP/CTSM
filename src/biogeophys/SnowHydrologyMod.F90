@@ -22,7 +22,7 @@ module SnowHydrologyMod
   use abortutils      , only : endrun
   use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
   use clm_varpar      , only : nlevsno, nlevsoi, nlevgrnd, nlevmaxurbgrnd
-  use clm_varctl      , only : iulog, use_subgrid_fluxes
+  use clm_varctl      , only : iulog, use_subgrid_fluxes, use_nvp  ! [PORTED by Hui Tang: use_nvp for NVP layer guard]
   use clm_varcon      , only : h2osno_max, hfus, denh2o, denice, rpi, spval, tfrz
   use clm_varcon      , only : cpice, cpliq
   use atm2lndType     , only : atm2lnd_type
@@ -2218,7 +2218,8 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
        l = col%landunit(c)
-       do j = msn_old(c)+1,0
+       ! [PORTED by Hui Tang: stop at j=-1 when NVP at j=0, so snow is never merged into NVP]
+       do j = msn_old(c)+1, merge(-1, 0, use_nvp .and. col%jbot_sno(c) == -1)
           ! use 0.01 to avoid runaway ice buildup
           if (h2osoi_ice_bulk(c,j) <= .01_r8) then
              if (j < 0 .or. (ltype(l) == istsoil .or. urbpoi(l) .or. ltype(l) == istcrop)) then
@@ -2321,6 +2322,8 @@ contains
     do j = -nlevsno+1,0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
+          ! [PORTED by Hui Tang: skip NVP layer j=0 — NVP water is not snow water]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           if (j >= snl(c)+1) then
              do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
                 associate(w => water_inst%bulk_and_tracers(wi))
@@ -2372,7 +2375,12 @@ contains
                 end associate
              end do
 
-             snl(c) = 0
+             ! [PORTED by Hui Tang: preserve NVP slot in snl when all snow is gone]
+             if (use_nvp .and. col%jbot_sno(c) == -1) then
+                snl(c) = -1
+             else
+                snl(c) = 0
+             end if
              h2osno_total(c) = h2osno_no_layers_bulk(c)
 
              mss_bcphi(c,:) = 0._r8
@@ -2411,7 +2419,8 @@ contains
           msn_old(c) = snl(c)
           mssi(c) = 1
 
-          do i = msn_old(c)+1,0
+          ! [PORTED by Hui Tang: stop at i=-1 when NVP at j=0, so NVP is never combined with snow]
+          do i = msn_old(c)+1, merge(-1, 0, use_nvp .and. col%jbot_sno(c) == -1)
              if ((frac_sno_eff(c)*dz(c,i) < dzminloc(mssi(c))) .or. &
                   ((h2osoi_ice_bulk(c,i) + h2osoi_liq_bulk(c,i))/(frac_sno_eff(c)*dz(c,i)) < 50._r8)) then
                 if (i == snl(c)+1) then
@@ -2685,6 +2694,9 @@ contains
        c = filter_snowc(fc)
 
        msno = abs(snl(c))
+       ! [PORTED by Hui Tang: when NVP occupies j=0, snl encodes -(N_snow+1).
+       !  Exclude the NVP slot from msno so snow compaction stops at j=-1.]
+       if (use_nvp .and. col%jbot_sno(c) == -1) msno = msno - 1
 
        ! Now traverse layers from top to bottom in a dynamic way, as the total
        ! number of layers (msno) may increase during the loop.
@@ -2838,13 +2850,28 @@ contains
           k = k+1
        end do loop_layers
 
-       snl(c) = -msno
+       ! [PORTED by Hui Tang: restore NVP layer slot in snl after compaction]
+       ! snl encodes -(N_snow+1) when NVP is active (j=0 reserved for NVP).
+       if (use_nvp .and. col%jbot_sno(c) == -1) then
+          snl(c) = -(msno + 1)
+       else
+          snl(c) = -msno
+       end if
+
+       ! [PORTED by Hui Tang: NVP debug print — j=0 water after compaction]
+       if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == 1) &
+          write(iulog,'(A,I4,A,I4,A,2ES14.6)') '[NVP DBG] DivSnow END c=',c, &
+          ' snl=',snl(c),' ice0/liq0=', &
+          water_inst%bulk_and_tracers(i_bulk)%waterstate_inst%h2osoi_ice_col(c,0), &
+          water_inst%bulk_and_tracers(i_bulk)%waterstate_inst%h2osoi_liq_col(c,0)
 
     end do loop_snowcolumns
 
     do j = -nlevsno+1,0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
+          ! [PORTED by Hui Tang: skip NVP layer j=0 — it is not a snow layer]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           if (j >= snl(c)+1) then
              if (is_lake) then
                 dz(c,j) = dzsno(c,j-snl(c))
