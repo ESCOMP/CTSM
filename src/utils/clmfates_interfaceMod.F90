@@ -1814,8 +1814,13 @@ module CLMFatesInterfaceMod
                      this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
                      this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
                 col%frac_nvp(c) = col%frac_nvp(c) + &
-                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) * &
-                     this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+                     this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp) !* &
+                     !this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+                print*, 'frac_nvp=', col%frac_nvp(c), &
+                this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp), &
+                this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp),&
+                c,ifp
+
              end do
              ! [PORTED by Hui Tang: pass thermo instances only when present (normal timestep)]
              if (present(temperature_inst) .and. present(waterstatebulk_inst)) then
