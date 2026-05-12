@@ -31,7 +31,7 @@ module SoilBiogeochemCarbonFluxType
      ! decomposition fluxes
      real(r8), pointer :: decomp_cpools_sourcesink_col              (:,:,:) ! change in decomposing c pools. Used to update concentrations concurrently with vertical transport (gC/m3/timestep)  
      real(r8), pointer :: c_overflow_vr                             (:,:,:) ! vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
-     real(r8), pointer :: c_overflow                                (:,:)   ! vertically-integrated C rejected by microbes that cannot process it (gC/m3/s)
+     real(r8), pointer :: c_overflow                                (:,:)   ! vertically-integrated C rejected by microbes that cannot process it (gC/m2/s)
      real(r8), pointer :: decomp_cascade_hr_vr_col                  (:,:,:) ! vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
      real(r8), pointer :: decomp_cascade_hr_col                     (:,:)   ! vertically-integrated (diagnostic) het. resp. from decomposing C pools (gC/m2/s)
      real(r8), pointer :: decomp_cascade_ctransfer_vr_col           (:,:,:) ! vertically-resolved C transferred along deomposition cascade (gC/m3/s)
