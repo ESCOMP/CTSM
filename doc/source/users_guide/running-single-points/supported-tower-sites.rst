@@ -8,7 +8,7 @@ Supported tower sites for single-point runs
 
 CTSM has functionality within the ``run_tower`` tool for running single-point cases at particular supported tower sites using forcing data from those sites.
 
-This tool was developed as a collaboration between NCAR's modeling capabilities and NEON's measurement network that could drive scientific discovery at the confluence of geosciences and biological sciences. The tool was then expanded to include PLUMBER sites to support a wider variety of ecological research projects.
+This tool was developed as a collaboration between NCAR's modeling capabilities and NEON's measurement network that could drive scientific discovery at the confluence of geosciences and biological sciences. The tool was then expanded to include PLUMBER2 sites to support a wider variety of ecological research projects.
 
 Broadly, this tool can be used to probe questions such as:
 
@@ -21,7 +21,7 @@ Broadly, this tool can be used to probe questions such as:
 General Information on Running Supported Tower Sites
 ====================================================
 
-The ``run_tower`` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER) tower sites. It will do the following:
+The ``run_tower`` capability allows users to run Community Land Model (CLM) simulations at NEON and PLUMBER2 tower sites in a streamlined manner by setting up the appropriate model configurations, datasets, and initial conditions. This script can run for one or more (NEON or PLUMBER2) tower sites. It will do the following:
 
     1) Create a generic base case for cloning.
     2) Make the case for the specific neon or plumber site(s).
@@ -65,28 +65,28 @@ The tower simulations generate two types of files:
 2) ``h1a`` Variables that are recorded every 30 minutes. Values are aggregated into one file for each day of the simulation. Each file includes 48 data points for selected variables.
 
 =========================================
-PLUMBER Tower Single Point Simulations
+PLUMBER2 Tower Single Point Simulations
 =========================================
 
-.. note:: A few important notes regarding the PLUMBER tower site simulations are that the default run type is ``ad``; additionally, PLUMBER cases all start in different years.
+.. note:: A few important notes regarding the PLUMBER2 tower site simulations are that the default run type is ``ad``; additionally, PLUMBER2 cases all start in different years.
 
-Currently, the ``run_tower`` tool supports running CTSM at PLUMBER 2 sites using forcing data from the PLUMBER2 projects. Detailed site information is provided in `Ukkola et al. 2022 <https://doi.org/10.5194/essd-14-449-2022>`_ , and the description of the experiment and its results is provided in `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_.
+Currently, the ``run_tower`` tool supports running CTSM at PLUMBER2 sites using forcing data from the PLUMBER2 projects. Detailed site information is provided in `Ukkola et al. 2022 <https://doi.org/10.5194/essd-14-449-2022>`_ , and the description of the experiment and its results is provided in `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_.
 Information on the specific sites can be found `here <https://researchdata.edu.au/plumber2-forcing-evaluation-surface-models/1656048>`_.
 
-Currently supported PLUMBER Sites can be found by running ``run_tower --help``. Keep in mind that the experiment was designed to run 170 sites; however, Abramowitz et al., identified different issues with the sites (e.g., sites with precipitation reported in one unit while the metadata informed of a different unit), and most of the article only uses 156 sites.
+Currently supported PLUMBER2 Sites can be found by running ``run_tower --help``. Keep in mind that the experiment was designed to run 170 sites; however, Abramowitz et al., identified different issues with the sites (e.g., sites with precipitation reported in one unit while the metadata informed of a different unit), and most of the article only uses 156 sites.
 
-To run CTSM at a PLUMBER site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this:
+To run CTSM at a PLUMBER2 site, change directories to where the run_tower tool is located, and then run the ``run_tower`` command. You can also add any additional arguments as described by the ``help`` options. These steps will look something like this:
 ::
 
     > cd CTSM/tools/site_and_regional
     > run_tower --plumber-sites AR-SLu
 
 
-The output for a PLUMBER case will be set up similarly to the output for a NEON case, as described above.
+The output for a PLUMBER2 case will be set up similarly to the output for a NEON case, as described above.
 
 ## Notes 
 
-A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
+A few points regarding the PLUMBER2 simulations using the ``run_tower`` tool:
 
 1) By default, the tools call for surfdata files in a default location. These might not be available for all sites or all machines. Users can create their own surfdata files, using tools/site_and_regional/plumber2_usermods. 
 2) It is suggested to use the flags related to setup-only to examine how the site files are being configured before running the simulations.
@@ -97,7 +97,7 @@ A few points regarding the PLUMBER 2 simulations using the ``run_tower`` tool:
 
 3) It is suggested to change `baseflow_scalar` to 0" in the user's paramfile to avoid issues with the baseflow at the wetland sites.
 4) Currently, the tool is designed only for cases with active biochemistry. For SP simulations, it is recommended to review the usermods in detail and adjust them as needed. Key items to be considered include the variables to save. 
-5) Combining these notes, an example of running a PLUMBER site would look like this:
+5) Combining these notes, an example of running a PLUMBER2 site would look like this:
 
 :: 
 
@@ -136,7 +136,7 @@ At the moment, these modifications are not included in the tool; however, users 
 
 ### A practical example
 
-Here is an example of running a PLUMBER site with the ``run_tower`` tool, including the notes mentioned above
+Here is an example of running a PLUMBER2 site with the ``run_tower`` tool, including the notes mentioned above
 
 :: 
     > cd CTSM/tools/site_and_regional
