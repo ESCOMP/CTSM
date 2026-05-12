@@ -83,7 +83,7 @@ contains
     use clm_varpar           , only : nlevgrnd
     use clm_varcon           , only : cpair, vkc, grav, denice, denh2o, tfrz
     use clm_varcon           , only : beta_param, nu_param, meier_param3
-    use clm_varctl           , only : use_lch4, z0param_method, use_nvp
+    use clm_varctl           , only : use_lch4, z0param_method, use_nvp, iulog
     use landunit_varcon      , only : istsoil, istcrop
     use QSatMod              , only : QSat
     use SurfaceResistanceMod , only : do_soilevap_beta,do_soil_resistance_sl14
@@ -487,7 +487,9 @@ contains
          eflx_sh_soil(p)   = -raih*(thm(p)-t_soisno(c,1))
          eflx_sh_h2osfc(p) = -raih*(thm(p)-t_h2osfc(c))
          ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground, analogous to snow/h2osfc]
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+         ! Zero when NVP is buried under snow (snl < -1): the snow surface controls the energy balance.
+         ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
+         if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
             eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
          else
             eflx_sh_nvp(p) = 0._r8
@@ -499,12 +501,18 @@ contains
          qflx_evap_soi(p)  = -raiw*dqh(p)
          qflx_evap_tot(p)  = qflx_evap_soi(p)
 
+         print *, "qflx_evap_tot=", qflx_evap_soi(p), raiw, dqh(p)
+
          ! compute latent heat fluxes individually
          qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
          qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
          qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
          ! [PORTED by Hui Tang: NVP evaporation flux for bare ground, analogous to snow/h2osfc]
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+         ! Zero when NVP is buried under snow (snl < -1): qflx_ev_nvp_col drives ev_nvp_eff in
+         ! NVPWaterBalance_Column; a non-zero value here when NVP is covered would add water to
+         ! qflx_evap_tot_col without removing it from any tracked water store, causing errh2o.
+         ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
+         if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
             qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
          else
             qflx_ev_nvp(p) = 0._r8
