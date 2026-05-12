@@ -429,6 +429,8 @@ contains
     real(r8) :: q01            ! Darcy flux NVP→soil (+down, -up) [mm s-1]
     real(r8) :: h2osoi_net     ! h2osoi_liq(c,0) after infl and evap [kg m-2]
     real(r8) :: satfrac        ! NVP effective saturation fraction [-]
+    ! [PORTED by Hui Tang: effective NVP evap flux — zeroed when NVP is buried under snow]
+    real(r8) :: ev_nvp_eff     ! evap flux applied to NVP water [mm/s]; 0 when buried
 
     associate( &
          qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col, &
@@ -508,9 +510,21 @@ contains
         ! Darcy flux: q = K * (grad_psi + gravity), positive = downward
         q01 = K_interface * ((psi_nvp - smp_soil1) / dz_iface_mm + 1.0_r8)
 
+        ! --- Atmosphere evap/condensation: only applies when NVP is exposed ---
+        ! [PORTED by Hui Tang: qflx_ev_nvp_col is computed from qg_nvp=qg_soil even when
+        !  NVP is buried under snow (frac_sno_eff=1 → frac_nvp_eff=0 → qg unchanged).
+        !  This flux is NOT included in qflx_evap_tot_col (which tracks only the blended
+        !  qg-based flux), so applying it to h2osoi_liq(c,0) creates an untracked water
+        !  source that breaks errh2o. When snow covers NVP (snl < -1), zero the flux.]
+        if (col%snl(c) < -1) then
+           ev_nvp_eff = 0._r8
+        else
+           ev_nvp_eff = qflx_ev_nvp_col(c)
+        end if
+
         ! --- Update h2osoi_liq(c,0): add infl, subtract evap; cannot go negative ---
         h2osoi_net = h2osoi_liq(c,0) &
-             + (qflx_nvp_infl_col(c) - qflx_ev_nvp_col(c)) * dtime        ! [kg m-2]
+             + (qflx_nvp_infl_col(c) - ev_nvp_eff) * dtime                 ! [kg m-2]
         h2osoi_net = max(0._r8, h2osoi_net)
 
         if (q01 >= 0._r8) then
