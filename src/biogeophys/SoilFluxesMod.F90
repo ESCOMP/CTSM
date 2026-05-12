@@ -10,7 +10,7 @@ module SoilFluxesMod
   use decompMod		, only : bounds_type
   use abortutils	, only : endrun
   use perf_mod		, only : t_startf, t_stopf
-  use clm_varctl	, only : iulog
+  use clm_varctl	, only : iulog, use_nvp  ! [PORTED by Hui Tang: use_nvp for NVP snow-burial guard]
   use clm_varpar	, only : nlevsno, nlevgrnd, nlevurb
   use atm2lndType	, only : atm2lnd_type
   use CanopyStateType   , only : canopystate_type
@@ -222,7 +222,14 @@ contains
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) + tinc(c)*cgrndl(p)
             ! [PORTED by Hui Tang: apply linearization correction to NVP evaporation diagnostic]
-            qflx_ev_nvp(p) = qflx_ev_nvp(p) + tinc(c)*cgrndl(p)
+            ! Skip when NVP is buried under snow (snl < -1): qflx_ev_nvp was zeroed in
+            ! BareGroundFluxesMod/CanopyFluxesMod and must remain zero to avoid a water
+            ! balance error (non-zero qflx_ev_nvp_col with no corresponding water removal).
+            if (use_nvp .and. col%snl(c) < -1) then
+               qflx_ev_nvp(p) = 0._r8
+            else
+               qflx_ev_nvp(p) = qflx_ev_nvp(p) + tinc(c)*cgrndl(p)
+            end if
          endif
       end do
 
