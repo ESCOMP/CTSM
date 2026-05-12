@@ -1322,6 +1322,8 @@ contains
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
+       write(iulog, *) '    use_nvp= ', use_nvp
+       write(iulog, *) '    use_nvp_undersnow= ', use_nvp_undersnow
        write(iulog, *) '    use_fates_managed_fire= ', use_fates_managed_fire
     end if
   end subroutine control_print

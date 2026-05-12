@@ -823,7 +823,8 @@ sub setup_cmdl_fates_mode {
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		      "use_fates_managed_fire"
+                      "use_fates_managed_fire",
+                      "use_nvp", "use_nvp_undersnow", "nvp_rad_model_ground"
                    );
 
        # dis-allow fates specific namelist items with non-fates runs
@@ -4887,7 +4888,8 @@ sub setup_logic_fates {
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                        "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		       "use_fates_managed_fire"
+                       "use_fates_managed_fire",
+                       "use_nvp", "use_nvp_undersnow", "nvp_rad_model_ground"
                     );
 
         foreach my $var ( @list ) {
@@ -4910,6 +4912,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_nvp');
 
         my $suplnitro = $nl->get_value('suplnitro');
         my $parteh_mode = $nl->get_value('fates_parteh_mode');
