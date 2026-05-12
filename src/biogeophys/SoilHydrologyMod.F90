@@ -2057,13 +2057,13 @@ contains
      ! Calculate subsurface drainage
      !
      ! !USES:
-     use clm_time_manager , only : get_step_size
+     use clm_time_manager , only : get_step_size, get_nstep  ! [NVP DBG]
      use clm_varpar       , only : nlevsoi, nlevgrnd, nlayer, nlayert
-     use clm_varctl       , only : nhillslope
+     use clm_varctl       , only : nhillslope, iulog, use_nvp  ! [NVP DBG]
      use clm_varcon       , only : pondmx, watmin,rpi, secspday
      use column_varcon    , only : icol_road_perv
      use abortutils       , only : endrun
-     use GridcellType     , only : grc  
+     use GridcellType     , only : grc
      use landunit_varcon  , only : istsoil, istcrop
      use clm_varctl       , only : use_hillslope_routing
 
@@ -2505,6 +2505,12 @@ contains
           qflx_ice_runoff_xs(c) = xs1(c) / dtime
        end do
 
+       ! [NVP DBG: print soil liq j=1..6 before watmin floor in SubsurfaceLateralFlow]
+       if (use_nvp .and. get_nstep() <= 3) then
+          write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] SubLatFlow before watmin nstep=', get_nstep(), &
+               (h2osoi_liq(bounds%begc,j), j=1,6)
+       end if
+
        ! Limit h2osoi_liq to be greater than or equal to watmin.
        ! Get water needed to bring h2osoi_liq equal watmin from lower layer.
        ! If insufficient water in soil layers, get from aquifer water
@@ -2515,7 +2521,7 @@ contains
              if (h2osoi_liq(c,j) < watmin) then
                 xs(c) = watmin - h2osoi_liq(c,j)
                 ! deepen water table if water is passed from below zwt layer
-                if(j == jwt(c)) then 
+                if(j == jwt(c)) then
                    zwt(c) = zwt(c) + xs(c)/eff_porosity(c,j)/1000._r8
                 endif
              else
@@ -2551,11 +2557,17 @@ contains
           ! Needed in case there is no water to be found
           h2osoi_liq(c,j) = h2osoi_liq(c,j) + xs(c)
           ! Instead of removing water from aquifer where it eventually
-          ! shows up as excess drainage to the ocean, take it back out of 
+          ! shows up as excess drainage to the ocean, take it back out of
           ! drainage
 
           qflx_rsub_sat(c) = qflx_rsub_sat(c) - xs(c)/dtime
        end do
+
+       ! [NVP DBG: print soil liq j=1..6 after watmin floor — confirms this is the 0.01/layer source]
+       if (use_nvp .and. get_nstep() <= 3) then
+          write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] SubLatFlow after  watmin nstep=', get_nstep(), &
+               (h2osoi_liq(bounds%begc,j), j=1,6)
+       end if
 
 
        do fc = 1, num_hydrologyc

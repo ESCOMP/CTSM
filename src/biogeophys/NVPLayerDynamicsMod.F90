@@ -462,6 +462,8 @@ contains
 
         ! --- Water input to NVP from precipitation / snowmelt ---
         qflx_nvp_infl_col(c) = frac_nvp_eff * qflx_rain_plus_snomelt(c)   ! [mm/s]
+        print *, "qflx_nvp_infl_col=", frac_nvp_eff, frac_h2osfc, qflx_rain_plus_snomelt(c),qflx_nvp_infl_col
+
 
         ! --- NVP volumetric water content (clamped to valid range) ---
         ! [PORTED by Hui Tang: initialise eff_porosity and vol_ice on every branch — they are

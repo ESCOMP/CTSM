@@ -25,6 +25,7 @@ module TotalWaterAndHeatMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
+  use clm_varctl         , only : iulog, use_nvp  ! [PORTED by Hui Tang: use_nvp for NVP debug prints]
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -266,6 +267,8 @@ contains
          snocan_patch(bounds%begp:bounds%endp), &
          snocan_col(bounds%begc:bounds%endc))
 
+    write(iulog,*) '[NVP DBG] snocan_patch=', snocan_patch
+
     do fc = 1, num_nolakec
        c = filter_nolakec(fc)
 
@@ -275,14 +278,33 @@ contains
        ! where FATES hydraulics is not turned on, this total_plant_stored_h2o is
        ! non-changing, and is set to 0 for a trivial solution.
 
+       write(iulog,*) '[NVP DBG] ComputeLiqIceMass c=',c,' j=',j, &
+             ' cum_liq=',liquid_mass(c),' cum_ice=',ice_mass(c), &
+             ' total_plant_stored_h2o=', total_plant_stored_h2o(c)
+       
        liquid_mass(c) = liquid_mass(c) + liqcan_col(c) + total_plant_stored_h2o(c)
        ice_mass(c) = ice_mass(c) + snocan_col(c)
-
        ice_mass(c) = ice_mass(c) + h2osno_no_layers(c)
-       do j = snl(c)+1,0
+       
+
+
+       ! [PORTED by Hui Tang: when NVP occupies j=0, stop at j=-1 so NVP water is not
+       !  counted as snow mass. The loop snl(c)+1..0 with snl=-4 would otherwise include j=0.]
+       !do j = snl(c)+1, merge(-1, 0, use_nvp .and. col%jbot_sno(c) == -1)
+       do j = snl(c)+1, 0
           liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
           ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j)
+          ! [PORTED by Hui Tang: NVP debug — print each layer's water contribution to water mass]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == bounds%begc) &
+             write(iulog,*) '[NVP DBG] ComputeLiqIceMass c=',c,' j=',j, &
+             ' liq=',h2osoi_liq(c,j),' ice=',h2osoi_ice(c,j), &
+             ' cum_liq=',liquid_mass(c),' cum_ice=',ice_mass(c)
        end do
+       ! [PORTED by Hui Tang: NVP debug — print h2osno_no_layers and h2osfc after snow loop]
+       if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == bounds%begc) &
+          write(iulog,*) '[NVP DBG] ComputeLiqIceMass c=',c,' snl=',snl(c), &
+          ' h2osno_no_layers=',h2osno_no_layers(c),' h2osfc=',h2osfc(c), &
+          ' liqcan=',liqcan_col(c),' snocan=',snocan_col(c)
 
        if (col%hydrologically_active(c)) then
           ! It's important to exclude non-hydrologically-active points, because some of
@@ -311,6 +333,12 @@ contains
          waterstate_inst, &
          liquid_mass = liquid_mass(bounds%begc:bounds%endc), &
          ice_mass = ice_mass(bounds%begc:bounds%endc))
+
+    ! [PORTED by Hui Tang: NVP debug — print total liquid_mass and ice_mass after all contributions]
+    if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+       write(iulog,*) '[NVP DBG] ComputeLiqIceMass TOTAL c=',bounds%begc, &
+       ' liquid_mass=',liquid_mass(bounds%begc),' ice_mass=',ice_mass(bounds%begc), &
+       ' total=',liquid_mass(bounds%begc)+ice_mass(bounds%begc)
 
     if (subtract_dynbal_baselines) then
        ! Subtract baselines set in initialization
@@ -384,6 +412,9 @@ contains
           if (has_h2o) then
              liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,j)
              ice_mass(c) = ice_mass(c) + h2osoi_ice(c,j) + excess_ice(c,j)
+             write(iulog,*) '[NVP DBG] ComputeLiqIceMass c=',c,' j=',j, &
+             ' cum_liq=',liquid_mass(c),' cum_ice=',ice_mass(c), h2osoi_ice(c,j), excess_ice(c,j)
+
           end if
        end do
     end do
@@ -688,7 +719,10 @@ contains
        j = 1
        heat_ice(c) = heat_ice(c) + &
             TempToHeat(temp = t_soisno(c,j), cv = (h2osno_no_layers(c)*cpice))
-       do j = snl(c)+1,0
+
+       ! [PORTED by Hui Tang: stop at j=-1 when NVP at j=0 — NVP heat tracked separately]                                                                                                               
+       !do j = snl(c)+1, merge(-1, 0, use_nvp .and. col%jbot_sno(c) == -1)
+       do j = snl(c)+1, 0
           call AccumulateLiquidWaterHeat( &
                temp = t_soisno(c,j), &
                h2o = h2osoi_liq(c,j), &

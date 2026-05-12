@@ -461,7 +461,7 @@ contains
      !
      ! !USES:
      use clm_varcon        , only : spval
-     use clm_varctl        , only : use_soil_moisture_streams
+     use clm_varctl        , only : use_soil_moisture_streams, use_nvp  ! [PORTED by Hui Tang: use_nvp for NVP debug print]
      use clm_time_manager  , only : get_step_size_real, get_nstep
      use clm_time_manager  , only : get_nstep_since_startup_or_lastDA_restart_or_pause
      use CanopyStateType   , only : canopystate_type
@@ -588,6 +588,15 @@ contains
 
           ! add qflx_drain_perched and qflx_flood
           if (col%active(c)) then
+
+             ! [PORTED by Hui Tang: NVP debug — print j=0 water and all wb flux terms for c==1]
+             if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == 1) then
+                write(iulog,*) '[NVP DBG] WBal c=',c,' snl=',col%snl(c), &
+                   ' ice0=',waterstate_inst%h2osoi_ice_col(c,0), &
+                   ' liq0=',waterstate_inst%h2osoi_liq_col(c,0), &
+                   ' snwcp_liq=', qflx_snwcp_liq(c)*dtime, &
+                   ' snwcp_ice=', qflx_snwcp_ice(c)*dtime
+             end if
 
              errh2o_col(c) = endwb_col(c) - begwb_col(c) &
                   - (forc_rain_col(c)        &

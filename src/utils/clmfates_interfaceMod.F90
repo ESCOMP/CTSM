@@ -1798,6 +1798,10 @@ module CLMFatesInterfaceMod
              dleaf_patch(p) = this%fates(nc)%bc_out(s)%dleaf_pa(ifp)
           end do ! veg patch
 
+          write(iulog,'(a,2i6,3f10.5)') '[DBG NVP patch] c, npatch, wt_ed(bg), sum(wt_ed_veg), areacheck:', &
+               c, npatch, patch%wt_ed(col%patchi(c)), &
+               sum(patch%wt_ed(col%patchi(c)+1:col%patchi(c)+npatch)), areacheck
+
           ! [PORTED by Hui Tang: aggregate NVP patch geometry to column, then update layer state]
           ! nvp_dz_pa(ifp)   = mean NVP thickness where NVP is present within patch [m]
           ! nvp_frac_pa(ifp) = fraction of patch covered by NVP [0-1]
@@ -1822,6 +1826,9 @@ module CLMFatesInterfaceMod
                 c,ifp
 
              end do
+             write(iulog,'(a,i6,3f10.5)') '[DBG NVP wtcol] c, frac_nvp, wt_ed(bg), sum(wt_ed_veg):', &
+                  c, col%frac_nvp(c), patch%wt_ed(col%patchi(c)), &
+                  sum(patch%wt_ed(col%patchi(c)+1:col%patchi(c)+npatch))
              ! [PORTED by Hui Tang: pass thermo instances only when present (normal timestep)]
              if (present(temperature_inst) .and. present(waterstatebulk_inst)) then
                 call UpdateNVPLayer(c, temperature_inst, waterstatebulk_inst)

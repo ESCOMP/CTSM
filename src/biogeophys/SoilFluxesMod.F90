@@ -402,6 +402,8 @@ contains
 
          eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
          if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
+         
+         print *, "qflx_evap_veg=", qflx_evap_veg(p), qflx_evap_soi(p)
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
 
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)

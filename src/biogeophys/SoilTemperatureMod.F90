@@ -380,6 +380,13 @@ contains
 
       ! Set up right-hand side vecor (vector r).
 
+      print *, "hs_h2osfc=", hs_h2osfc
+      print *, "c_h2osfc=", c_h2osfc
+      print *, "h2osfc=", h2osfc
+      print *, "frac_h2osfc=", frac_h2osfc
+      print *, "thin_sfclayer=", thin_sfclayer
+
+
       call SetRHSVec(bounds, num_nolakec, filter_nolakec, &
            dtime,                                         &
            hs_h2osfc( begc:endc ),                        &
@@ -439,7 +446,9 @@ contains
       call t_startf( 'SoilTempBandDiag')
 
       ! Solve the system
-      print*, "tvector_before=", tvector 
+      print*, "bmatrix=", bmatrix(begc:endc, :, :)
+      print*, "rvector=", rvector(begc:endc, :)
+      print*, "tvector=", tvector(begc:endc, :)
       print*, "nvp_layer_active=", col%nvp_layer_active, snl
 
       call BandDiagonal(bounds, -nlevsno, nlevmaxurbgrnd, jtop(begc:endc), jbot(begc:endc), &
@@ -770,6 +779,20 @@ contains
          tksatu       =>    soilstate_inst%tksatu_col	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, saturated soil [W/m-K]
          thk          =>    soilstate_inst%thk_col             & ! Output: [real(r8) (:,:) ]  thermal conductivity of each layer  [W/m-K] 
          )
+
+      ! [NVP DBG: NaN check for NVP layer j=0 entering SoilThermProp — only fires on actual NaN]
+      if (use_nvp) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (snl(c) < 0) then
+               if (h2osoi_liq(c,0) /= h2osoi_liq(c,0) .or. h2osoi_ice(c,0) /= h2osoi_ice(c,0)) then
+                  write(iulog,*) '[NVP DBG] SoilThermProp NaN in h2osoi at j=0 c=', c, ' snl=', snl(c)
+                  write(iulog,*) '  h2osoi_liq(c,:) = ', h2osoi_liq(c,:)
+                  write(iulog,*) '  h2osoi_ice(c,:) = ', h2osoi_ice(c,:)
+               end if
+            end if
+         end do
+      end if
 
       ! Thermal conductivity of soil from Farouki (1981)
 
@@ -2394,12 +2417,12 @@ contains
           fn_h2osfc(c) = 0.0_r8
           rt(c,1)      = t_h2osfc(c)
        else
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
+          ! surface water layer has two coefficients
+          dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
-       fn_h2osfc(c)=tk_h2osfc(c)*(t_soisno(c,1)-t_h2osfc(c))/dzm
-       rt(c,1)= t_h2osfc(c) +  (dtime/c_h2osfc(c)) &
-            *( hs_h2osfc(c) - dhsdT(c)*t_h2osfc(c) + cnfac*fn_h2osfc(c) )!rhs for h2osfc
+          fn_h2osfc(c)=tk_h2osfc(c)*(t_soisno(c,1)-t_h2osfc(c))/dzm
+          rt(c,1)= t_h2osfc(c) +  (dtime/c_h2osfc(c)) &
+               *( hs_h2osfc(c) - dhsdT(c)*t_h2osfc(c) + cnfac*fn_h2osfc(c) )!rhs for h2osfc
        end if
 
     enddo
@@ -3115,18 +3138,18 @@ end subroutine SetMatrix_Snow
        if (c_h2osfc(c) <= thin_sfclayer) then
           bmatrix_ssw(c,3,0) = 1.0_r8   ! diagonal = 1; off-diagonals already 0 from init
        else
-       ! surface water layer has two coefficients
-       dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
+          ! surface water layer has two coefficients
+          dzm=(0.5*dz_h2osfc(c)+col%z(c,1))
 
-       bmatrix_ssw(c,3,0)= 1._r8+(1._r8-cnfac)*(dtime/c_h2osfc(c)) &
-            *tk_h2osfc(c)/dzm -(dtime/c_h2osfc(c))*dhsdT(c) !interaction from atm
+          bmatrix_ssw(c,3,0)= 1._r8+(1._r8-cnfac)*(dtime/c_h2osfc(c)) &
+               *tk_h2osfc(c)/dzm -(dtime/c_h2osfc(c))*dhsdT(c) !interaction from atm
 
-       bmatrix_ssw_soil(c,2,0)= -(1._r8-cnfac)*(dtime/c_h2osfc(c))*tk_h2osfc(c)/dzm !flux to top soil layer
+          bmatrix_ssw_soil(c,2,0)= -(1._r8-cnfac)*(dtime/c_h2osfc(c))*tk_h2osfc(c)/dzm !flux to top soil layer
 
-       ! top soil layer has sub coef shifted to 2nd super diagonal
-       if ( frac_h2osfc(c) /= 0.0_r8 )then
-          bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
-               * tk_h2osfc(c)/dzm !flux from h2osfc
+          ! top soil layer has sub coef shifted to 2nd super diagonal
+          if ( frac_h2osfc(c) /= 0.0_r8 )then
+             bmatrix_soil_ssw(c,4,1)=  - frac_h2osfc(c) * (1._r8-cnfac) * fact(c,1) &
+                  * tk_h2osfc(c)/dzm !flux from h2osfc
           end if
        end if
     enddo

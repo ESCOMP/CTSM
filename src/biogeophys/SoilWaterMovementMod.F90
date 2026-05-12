@@ -261,7 +261,8 @@ contains
     use ColumnType        , only : col
     use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
     use clm_varcon        , only : denh2o, denice
-    use clm_varctl,  only : use_flexibleCN   
+    use clm_varctl,       only : use_flexibleCN, iulog
+    use clm_time_manager, only : get_nstep  ! [NVP DBG]
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds                ! bounds
@@ -293,6 +294,15 @@ contains
       h2osoi_vol         =>    waterstatebulk_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
       h2osoi_liq         =>    waterstatebulk_inst%h2osoi_liq_col          & ! Output: [real(r8) (:,:) ] liquid water (kg/m2)
     )      
+
+
+    ! [NVP DBG: print qflx_infl and first 6 soil liq layers entering solver, nstep<=3 only]
+    if (get_nstep() <= 3) then
+       write(iulog,'(a,i0,a,es11.4)') '[NVP DBG] SoilWater entry nstep=', get_nstep(), &
+            ' qflx_infl=', waterfluxbulk_inst%qflx_infl_col(bounds%begc)
+       write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] SoilWater entry liq(1:6) nstep=', get_nstep(), &
+            (h2osoi_liq(bounds%begc,j), j=1,6)
+    end if
 
     select case(soilwater_movement_method)
 
@@ -327,6 +337,11 @@ contains
        call endrun(subname // ':: a SoilWater implementation must be specified!')          
 
     end select
+    
+    ! [NVP DBG: print first 6 soil liq layers after solver]
+    if (get_nstep() <= 3) &
+       write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] SoilWater exit  nstep=', get_nstep(), &
+            (h2osoi_liq(bounds%begc,j), j=1,6)
 
     if (use_flexibleCN) then
        !a work around of the negative liquid water. Jinyun Tang, Jan 14, 2015
@@ -1232,6 +1247,12 @@ contains
                  dqodw2(c,1:nlayers))
 
             ! RHS of system of equations
+            print *, "qflx_rootsoi_col=", qflx_rootsoi_col
+            print *, "vwc_liq=", vwc_liq
+            print *, "qin=", qin
+            print *, "qout=", qout
+            print *, "dt_dz=", dt_dz  
+               
             call compute_RHS_moisture_form(c, nlayers, &           
                  qflx_rootsoi_col(c,1:nlayers), &
                  vwc_liq(c,1:nlayers), &
@@ -1282,7 +1303,12 @@ contains
 
                ! get a copy of the residual vector
                rhs(1:nlayers) = rmx(filter_hydrologyc(fc),1:nlayers)
-
+               
+               print *, "rhs0=", rhs(1:nlayers)
+               print *, "dlow0=", dlow
+               print *, "diag0=", diag
+               print *, "dUpp0=", dUpp
+               
                ! call the lapack tri-diagonal solver
                call dgtsv(nlayers,   & ! intent(in):    [integer]       number of state variables
                           1,         & ! intent(in):    [integer]       number of columns of the matrix B
@@ -1296,6 +1322,8 @@ contains
                     msg = subname // ':: problem with the lapack solver')
 
                ! save the iteration increment
+               print *, "rhs1=", rhs(1:nlayers)
+               print *, "dwat=", dwat
                dwat(filter_hydrologyc(fc),1:nlayers) = rhs(1:nlayers)
 
             endif  ! solution method for the tridiagonal solution
@@ -1357,6 +1385,7 @@ contains
             ! **********
 
             ! Renew the mass of liquid water
+            
             do j = 1, nlayers
                h2osoi_liq(c,j) = h2osoi_liq(c,j) + dwat(c,j) * (m_to_mm * dz(c,j))
             end do

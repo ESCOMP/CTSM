@@ -283,8 +283,18 @@ contains
 
       ! Determine the change of snow mass and the snow water onto soil
 
+      ! [PORTED by Hui Tang: NVP debug — j=0 state entering HydrologyNoDrainage]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] HydroNoDrain BEG c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
+
       call SnowWater(bounds, num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
            atm2lnd_inst, aerosol_inst, water_inst)
+
+      ! [PORTED by Hui Tang: NVP debug — j=0 state after SnowWater]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after SnowWater c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
 
       ! TODO(wjs, 2019-08-30) Eventually move this down, merging this with later tracer
       ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this
@@ -320,6 +330,14 @@ contains
               b_waterstate_inst, b_waterdiagnostic_inst, soilstate_inst, temperature_inst)
       end if
 
+      ! [PORTED by Hui Tang: NVP debug — j=0 state and NVP fluxes after NVPWaterBalance_Column]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after NVPWaterBal c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0), &
+         ' ev_nvp=', b_waterflux_inst%qflx_ev_nvp_col(bounds%begc), &
+         ' nvp_drain=', b_waterflux_inst%qflx_nvp_drain_col(bounds%begc), &
+         ' nvp_infl=', b_waterflux_inst%qflx_nvp_infl_col(bounds%begc)
+
       call SetQflxInputs(bounds, num_hydrologyc, filter_hydrologyc, &
            b_waterflux_inst, b_waterdiagnostic_inst)
 
@@ -353,10 +371,22 @@ contains
       if ( use_fates ) then
          call clm_fates%ComputeRootSoilFlux(bounds, num_hydrologyc, filter_hydrologyc, soilstate_inst, b_waterflux_inst)
       end if
-      
+     
+      ! [NVP DBG: print soil liq/ice/T for j=1..6 before SoilWater; nstep<=3 to avoid log flood]
+      if (use_nvp .and. get_nstep() <= 3) then
+         write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] before SoilWater nstep=', get_nstep(), &
+              (h2osoi_liq(bounds%begc,j), j=1,6)
+         write(iulog,'(a,6(1x,f7.2))') '[NVP DBG] before SoilWater t_soisno(1:6)=', &
+              (t_soisno(bounds%begc,j), j=1,6)
+      end if
       call SoilWater(bounds, num_hydrologyc, filter_hydrologyc, num_urbanc, filter_urbanc, &
            soilhydrology_inst, soilstate_inst, b_waterflux_inst, b_waterstate_inst, temperature_inst, &
            canopystate_inst, energyflux_inst, soil_water_retention_curve)
+      ! [NVP DBG: print soil liq after SoilWater to see if it introduces the liquid]
+      if (use_nvp .and. get_nstep() <= 3) then
+         write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] after  SoilWater nstep=', get_nstep(), &
+              (h2osoi_liq(bounds%begc,j), j=1,6)
+      end if
 
       if (use_vichydro) then
          ! mapping soilmoist from CLM to VIC layers for runoff calculations
@@ -368,15 +398,26 @@ contains
          call WaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               soilhydrology_inst, soilstate_inst, temperature_inst, b_waterstate_inst, &
               b_waterflux_inst)
+         ! [NVP DBG: print soil liq after WaterTable]
+         if (use_nvp .and. get_nstep() <= 3) then
+            write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] after  WaterTable nstep=', get_nstep(), &
+                 (h2osoi_liq(bounds%begc,j), j=1,6)
+         end if
       else
 
          call PerchedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-              temperature_inst, b_waterstate_inst, b_waterflux_inst) 
+              temperature_inst, b_waterstate_inst, b_waterflux_inst)
 
          call ThetaBasedWaterTable(bounds, num_hydrologyc, filter_hydrologyc, &
               num_urbanc, filter_urbanc, soilhydrology_inst, soilstate_inst, &
-              b_waterstate_inst, b_waterflux_inst) 
+              b_waterstate_inst, b_waterflux_inst)
+
+         ! [NVP DBG: print soil liq after PerchedWaterTable+ThetaBasedWaterTable]
+         if (use_nvp .and. get_nstep() <= 3) then
+            write(iulog,'(a,i0,6(1x,es11.4))') '[NVP DBG] after  WaterTable(perched) nstep=', get_nstep(), &
+                 (h2osoi_liq(bounds%begc,j), j=1,6)
+         end if
 
       end if
 
@@ -384,6 +425,11 @@ contains
            num_urbanc, filter_urbanc,&
            soilhydrology_inst, soilstate_inst, &
            b_waterstate_inst, b_waterdiagnostic_inst, b_waterflux_inst)
+
+      ! [PORTED by Hui Tang: NVP debug — j=0 state after RenewCondensation]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after RenewCond c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
 
       ! BUG(wjs, 2019-09-16, ESCOMP/ctsm#762) This is needed so that we can test the
       ! tracerization of the following snow stuff without having tracerized everything
@@ -403,9 +449,19 @@ contains
            scf_method, &
            temperature_inst, b_waterstate_inst, b_waterdiagnostic_inst, atm2lnd_inst)
 
+      ! [PORTED by Hui Tang: NVP debug — j=0 state after SnowCompaction]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after SnowCompact c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
+
       ! Combine thin snow elements
       call CombineSnowLayers(bounds, num_snowc, filter_snowc, &
            aerosol_inst, temperature_inst, water_inst)
+
+      ! [PORTED by Hui Tang: NVP debug — j=0 state after CombineSnowLayers]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after CombineSnow c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
 
       ! Divide thick snow elements
       call DivideSnowLayers(bounds, num_snowc, filter_snowc, &

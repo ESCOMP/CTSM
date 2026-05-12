@@ -1716,6 +1716,21 @@ contains
          waterfluxbulk_inst%qflx_ev_nvp_patch(bounds%begp:bounds%endp), &
          waterfluxbulk_inst%qflx_ev_nvp_col(bounds%begc:bounds%endc))
 
+    if (use_nvp) then
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          if (col%nvp_layer_active(c)) then
+             associate(p_bg => col%patchi(c), p_vf => col%patchf(c))
+             write(iulog,'(a,i6,5f12.6)') '[DBG NVP flux] c, frac_nvp, wtcol_bg, qflx_ev_nvp_bg, qflx_ev_nvp_veg(wtd sum), qflx_ev_nvp_col:', &
+                  c, col%frac_nvp(c), patch%wtcol(p_bg), &
+                  waterfluxbulk_inst%qflx_ev_nvp_patch(p_bg), &
+                  sum(waterfluxbulk_inst%qflx_ev_nvp_patch(p_bg+1:p_vf) * patch%wtcol(p_bg+1:p_vf)), &
+                  waterfluxbulk_inst%qflx_ev_nvp_col(c)
+             end associate
+          end if
+       end do
+    end if
+
     ! Averaging for patch water flux variables
 
     call p2c (bounds, num_nolakec, filter_nolakec, &

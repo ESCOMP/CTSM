@@ -2693,6 +2693,13 @@ contains
     loop_snowcolumns: do fc = 1, num_snowc
        c = filter_snowc(fc)
 
+       ! [PORTED by Hui Tang: NVP debug print — j=0 water before compaction]
+       if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == 1) &
+          write(iulog,'(A,I4,A,I4,A,2ES14.6)') '[NVP DBG] DivSnow BEG c=',c, &
+          ' snl=',snl(c),' ice0/liq0=', &
+          water_inst%bulk_and_tracers(i_bulk)%waterstate_inst%h2osoi_ice_col(c,0), &
+          water_inst%bulk_and_tracers(i_bulk)%waterstate_inst%h2osoi_liq_col(c,0)
+
        msno = abs(snl(c))
        ! [PORTED by Hui Tang: when NVP occupies j=0, snl encodes -(N_snow+1).
        !  Exclude the NVP slot from msno so snow compaction stops at j=-1.]
