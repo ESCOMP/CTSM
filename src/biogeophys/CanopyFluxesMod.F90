@@ -1563,7 +1563,8 @@ bioms:   do f = 1, fn
          ! [PORTED by Hui Tang: NVP individual latent heat flux, analogous to snow/h2osfc]
          ! qflx_evap_soi already includes NVP because qg(c) blends NVP in SurfaceHumidityMod.
          ! This is the diagnostic breakdown of the NVP contribution.
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8) then
+         ! Zero when NVP is buried under snow (snl < -1) — same guard as BareGroundFluxesMod.
+         if (use_nvp .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
             delq_nvp = wtalq(p)*qg_nvp(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
             qflx_ev_nvp(p) = forc_rho(c)*wtgq(p)*delq_nvp
          else
