@@ -53,7 +53,19 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
    # Now run normally
    > ./case.submit
 
-Save the last restart file from this simulation to use in the next step.
+While this simulation progresses, use SpinupStability_BGC_v11.ncl to assess whether the simulation is approaching equilibrium. When the simulation ends, save the last restart file for use in the SASU_spinup step.
+
+Using the SpinupStability.ncl scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In CLM's /tools/contrib directory there are three versions of this .ncl script:
+- SpinupStability_BGC_v11.ncl for Bgc and BgcCrop compsets run on 2D lat/lon grids.
+- SpinupStability_BGC_v12_SE.ncl for Bgc, BgcCrop, or Fates compsets run on certain spectral element grids (currently ne120, ne30, ne16).
+- SpinupStability_SP_v10.ncl for Sp compsets run on 2D lat/lon grids.
+
+To run one of these scripts on derecho, one loads ncl (module load ncl) and submits with `ncl SpinupStability_BGC_v11`, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
+
+One of the settings that may not be intuitive at first glance is `annual_hist`. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while pSASU generates monthly history, so set this to "False".
 
 .. _eg-sasu-spinup:
 
@@ -84,7 +96,7 @@ Save the last restart file from this step and use it as the ``finidat`` file for
 
 
 Example: pSASU_spinup Simulation for |version|-BGC
-------------------------------------------------------------------
+--------------------------------------------------
 ::
 
    > cd cime/scripts
