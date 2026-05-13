@@ -9,19 +9,23 @@ directories as well.
 I. Files that are IDENTICAL:
 
    1. cesm_share files copied that should be identical to share/src:
-
+```
        shr_kind_mod.F90
        shr_const_mod.F90
        shr_string_mod.F90
        shr_file_mod.F90
-       
+```
 II. Files with differences
 
    1. cesm_share files copied with differences:
 
-       shr_sys_mod.F90 - Remove mpi abort and reference to shr_mpi_mod.F90.
+```
+       shr_sys_mod.F90  # Remove mpi abort and reference to shr_mpi_mod.F90
+```
 
    2. Files in mksurfdata_esmf
-
+```
        mkvarpar.F90
        nanMod.F90
+```
+
