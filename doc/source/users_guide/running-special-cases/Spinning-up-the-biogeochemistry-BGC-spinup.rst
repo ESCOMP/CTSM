@@ -10,7 +10,7 @@ To get the |version|-BGC model to a steady state, you start it from arbitrary in
 
 .. _Figure BGC AD spinup plot for 1850:
 
-.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_AD_Spinup-0.jpg
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_AD_Spinup-0.png
 
  BGC AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
@@ -18,7 +18,7 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
 .. _Figure BGC SASU spinup plot for 1850:
 
-.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_SASU_Spinup-0.jpg
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_SASU_Spinup-0.png
 
  BGC SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
@@ -26,7 +26,7 @@ After this you continue in standard mode for about 160 years. We refer to this a
 
 .. _Figure BGC pSASU spinup plot for 1850:
 
-.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.jpg
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.png
 
  BGC pSASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
@@ -64,7 +64,7 @@ In CLM's /tools/contrib directory there are three versions of this .ncl script:
 - SpinupStability_BGC_v12_SE.ncl for Bgc, BgcCrop, or Fates compsets run on certain spectral element grids (currently ne120, ne30, ne16).
 - SpinupStability_SP_v10.ncl for Sp compsets run on 2D lat/lon grids.
 
-To run one of these scripts on derecho, one loads ncl (module load ncl) and submits with `ncl SpinupStability_BGC_v11`, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
+To run one of these scripts on derecho, one loads ncl (module load ncl) and submits with `ncl SpinupStability_BGC_v11.ncl`, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
 
 One of the settings that may not be intuitive at first glance is `annual_hist`. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while pSASU generates monthly history, so set this to "False".
 
