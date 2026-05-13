@@ -6,14 +6,14 @@ Carbon and Nitrogen Allocation
 Introduction
 -----------------
 
-The carbon and nitrogen allocation routines in CLM determine the fate of newly assimilated carbon, coming from the calculation of photosynthesis, and available mineral nitrogen, coming from plant uptake of mineral nitrogen in the soil or being drawn out of plant reserves. A significant change to CLM5 relative to prior versions is that allocation of carbon and nitrogen proceed independently rather than in a sequential manner.
+The carbon and nitrogen allocation routines in CLM determine the fate of newly assimilated carbon, coming from the calculation of photosynthesis, and available mineral nitrogen, coming from plant uptake of mineral nitrogen in the soil or being drawn out of plant reserves. CLM6 follows the allocation approach applied in CLM5.
 
 Carbon Allocation for Maintenance Respiration Costs
 --------------------------------------------------------
 
-Allocation of available carbon on each time step is prioritized, with first priority given to the demand for carbon to support maintenance respiration of live tissues (section 13.7). Second priority is to replenish the internal plant carbon pool that supports maintenance respiration during times when maintenance respiration exceeds photosynthesis (e.g. at night, during winter for perennial vegetation, or during periods of drought stress) (Sprugel et al., 1995). Third priority is to support growth of new tissues, including allocation to storage pools from which new growth will be displayed in subsequent time steps.
+Allocation of available carbon on each time step is prioritized, with first priority given to the demand for carbon to support maintenance respiration of live tissues (Chapter :numref:`rst_Plant Respiration`). Second priority is to replenish the internal plant carbon pool that supports maintenance respiration during times when maintenance respiration exceeds photosynthesis (e.g. at night, during winter for perennial vegetation, or during periods of drought stress) (:ref:`Sprugel et al. (1995) <Sprugeletal1995>`). Third priority is to support growth of new tissues, including allocation to storage pools from which new growth will be displayed in subsequent time steps.
 
-The total maintenance respiration demand (:math:`CF_{mr}`, gC m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of tissue mass and nitrogen concentration, and temperature (section 13.7) The carbon supply to support this demand is composed of fluxes allocated from carbon assimilated in the current timestep (:math:`CF_{GPP,mr}`, gC m\ :sup:`-2` s\ :sup:`-1` and from a storage pool that is drawn down when total demand exceeds photosynthesis ( :math:`CF_{xs,mr}`, gC m\ :sup:`-2` s\ :sup:`-1`):
+The total maintenance respiration demand (:math:`CF_{mr}`, gC m\ :sup:`-2` s\ :sup:`-1`) is calculated as a function of tissue mass and nitrogen concentration, and temperature (Chapter :numref:`rst_Plant Respiration`). The carbon supply to support this demand is composed of fluxes allocated from carbon assimilated in the current timestep (:math:`CF_{GPP,mr}`, gC m\ :sup:`-2` s\ :sup:`-1`) and from a storage pool that is drawn down when total demand exceeds photosynthesis (:math:`CF_{xs,mr}`, gC m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
    :label: 19.1
@@ -42,14 +42,14 @@ The storage pool that supplies carbon for maintenance respiration in excess of c
 
    CF_{GPP,xs} =\left\{\begin{array}{l} {CF_{GPP,xs,pot} \qquad \qquad \qquad {\rm for\; }CF_{GPP,xs,pot} \le CF_{GPP} -CF_{GPP,mr} } \\ {\max (CF_{GPP} -CF_{GPP,mr} ,0)\qquad {\rm for\; }CF_{GPP,xs,pot} >CF_{GPP} -CF_{GPP,mr} } \end{array}\right.
 
-where :math:`\tau_{xs}` is the time constant (currently set to 30 days) controlling the rate of replenishment of :math:`CS_{xs}`.
+where :math:`\tau_{xs}` is the time constant (currently set to 30 days) controlling the rate of replenishment of :math:`CS_{xs}`. The factor :math:`86400` (s day\ :sup:`-1`) converts :math:`\tau_{xs}` from days to seconds so that the flux is consistent with the per-second units used elsewhere.
 
 Note that these two top-priority carbon allocation fluxes (:math:`CF_{GPP,mr}` and :math:`CF_{GPP,xs}`) are not stoichiometrically associated with any nitrogen fluxes.
 
 Carbon and Nitrogen Stoichiometry of New Growth
 ----------------------------------------------------
 
-After accounting for the carbon cost of maintenance respiration, the remaining carbon flux from photosynthesis which can be allocated to new growth (:math:`CF_{avail}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
+After accounting for the carbon cost of maintenance respiration, the remaining carbon flux from photosynthesis which can be allocated to new growth (:math:`CF_{avail\_alloc}`, gC m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
    :label: 19.6
@@ -61,25 +61,31 @@ Potential allocation to new growth is calculated for all of the plant carbon and
 .. math::
    :label: 19.7
 
-   \begin{array}{l} {a_{1} ={\rm \; ratio\; of\; new\; fine\; root\; :\; new\; leaf\; carbon\; allocation}} \\ {a_{2} ={\rm \; ratio\; of\; new\; coarse\; root\; :\; new\; stem\; carbon\; allocation}} \\ {a_{3} ={\rm \; ratio\; of\; new\; stem\; :\; new\; leaf\; carbon\; allocation}} \\ {a_{4} ={\rm \; ratio\; new\; live\; wood\; :\; new\; total\; wood\; allocation}} \\ {g_{1} ={\rm ratio\; of\; growth\; respiration\; carbon\; :\; new\; growth\; carbon.\; }} \end{array}
+   \begin{aligned}
+     a_{1} &= \text{ratio of new fine root : new leaf carbon allocation} \\
+     a_{2} &= \text{ratio of new coarse root : new stem carbon allocation} \\
+     a_{3} &= \text{ratio of new stem : new leaf carbon allocation} \\
+     a_{4} &= \text{ratio of new live wood : new total wood allocation} \\
+     g_{1} &= \text{ratio of growth respiration carbon : new growth carbon}
+   \end{aligned}
 
-Parameters :math:`a_{1}`, :math:`a_{2}`, and :math:`a_{4}` are defined as constants for a given PFT (Table 13.1), while :math:`g_{l }` = 0.3 (unitless) is prescribed as a constant for all PFTs, based on construction costs for a range of woody and non-woody tissues (Larcher, 1995).
+Parameters :math:`a_{1}`, :math:`a_{2}`, and :math:`a_{4}` are defined as constants for a given PFT (:numref:`Table Allocation and CN ratio parameters`). The growth respiration coefficient :math:`g_{1}` = 0.3 (unitless) is prescribed as a constant for all PFTs, based on construction costs for a range of woody and non-woody tissues (:ref:`Larcher (1995) <Larcher1995>`).
 
 The model includes a dynamic allocation scheme for woody vegetation (parameter :math:`a_{3}` = -1, :numref:`Table Allocation and CN ratio parameters`), in which case the ratio for carbon allocation between new stem and new leaf increases with increasing net primary production (NPP), as
 
 .. math::
    :label: 19.8
 
-   a_{3} =\frac{2.7}{1+e^{-0.004NPP_{ann} -300} } -0.4
+   a_{3} = \frac{2.7}{1 + e^{-0.004 (NPP_{ann} - 300)}} - 0.4
 
-where :math:`NPP_{ann}` is the annual sum of NPP from the previous year. This mechanism has the effect of increasing woody allocation in favorable growth environments (Allen et al., 2005; Vanninen and Makela, 2005) and during the phase of stand growth prior to canopy closure (Axelsson and Axelsson, 1986).
+where :math:`NPP_{ann}` is the annual sum of NPP from the previous year. This mechanism has the effect of increasing woody allocation in favorable growth environments (:ref:`Allen et al. (2005) <Allenetal2005>`; :ref:`Vanninen and Makela (2005) <VanninenMakela2005>`) and during the phase of stand growth prior to canopy closure (:ref:`Axelsson and Axelsson (1986) <AxelssonAxelsson1986>`).
 
 .. _Table Allocation and CN ratio parameters:
 
-.. table:: Allocation and target carbon\:nitrogen ratio parameters
+.. table:: Allocation and target carbon:nitrogen ratio parameters
 
  +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
- | Plant functional type            | :math:`a_{1}`         | :math:`a_{2}`         | :math:`a_{3}`         | :math:`a_{4}`         |  :math:`Target CN_{leaf}` |  :math:`Target CN_{fr}` | :math:`Target CN_{lw}`  | :math:`Target CN_{dw}`  |
+ | Plant functional type            | :math:`a_{1}`         | :math:`a_{2}`         | :math:`a_{3}`         | :math:`a_{4}`         | Target :math:`CN_{leaf}`  | Target :math:`CN_{fr}`  | Target :math:`CN_{lw}`  | Target :math:`CN_{dw}`  |
  +==================================+=======================+=======================+=======================+=======================+===========================+=========================+=========================+=========================+
  | NET Temperate                    | 1                     | 0.3                   | -1                    | 0.1                   | 35                        | 42                      | 50                      | 500                     |
  +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
@@ -102,6 +108,7 @@ where :math:`NPP_{ann}` is the annual sum of NPP from the previous year. This me
  | BDS temperate                    | 1                     | 0.3                   | 0.2                   | 0.5                   | 25                        | 42                      | 50                      | 500                     |
  +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
  | BDS boreal                       | 1                     | 0.3                   | 0.2                   | 0.1                   | 25                        | 42                      | 50                      | 500                     |
+ +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
  | C\ :sub:`3` arctic grass         | 1                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
  +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
  | C\ :sub:`3` grass                | 2                     | 0                     | 0                     | 0                     | 25                        | 42                      | 0                       | 0                       |
@@ -137,16 +144,23 @@ where :math:`NPP_{ann}` is the annual sum of NPP from the previous year. This me
  | Switchgrass I                    | 2                     | 0                     | 0                     | 1                     | 25                        | 42                      | 50                      | 500                     |
  +----------------------------------+-----------------------+-----------------------+-----------------------+-----------------------+---------------------------+-------------------------+-------------------------+-------------------------+
 
+PFT name abbreviations: NET = Needleleaf Evergreen Tree, NDT = Needleleaf Deciduous Tree, BET = Broadleaf Evergreen Tree, BDT = Broadleaf Deciduous Tree, BES = Broadleaf Evergreen Shrub, BDS = Broadleaf Deciduous Shrub. The "R" and "I" suffixes on crop PFT names denote rainfed and irrigated management, respectively.
+
 Carbon to nitrogen ratios are defined for different tissue types as follows:
 
 .. math::
    :label: 19.9
 
-   \begin{array}{l} {CN_{leaf} = {\rm \; C:N\; for\; leaf}} \\ {CN_{fr} = {\rm \; C:N\; for\; fine\; root}} \\ {CN_{lw} = {\rm \; C:N\; for\; live\; wood\; (in\; stem\; and\; coarse\; root)}} \\ {CN_{dw} = {\rm \; C:N\; for\; dead\; wood\; (in\; stem\; and\; coarse\; root)}} \end{array}
+   \begin{aligned}
+     CN_{leaf} &= \text{C:N for leaf} \\
+     CN_{fr}   &= \text{C:N for fine root} \\
+     CN_{lw}   &= \text{C:N for live wood (in stem and coarse root)} \\
+     CN_{dw}   &= \text{C:N for dead wood (in stem and coarse root)}
+   \end{aligned}
 
 where all C:N parameters are defined as constants for a given PFT (:numref:`Table Allocation and CN ratio parameters`).
 
-Given values for the parameters in and, total carbon and nitrogen allocation to new growth ( :math:`CF_{alloc}`, gC m\ :sup:`-2` s\ :sup:`-1`, and :math:`NF_{alloc}`, gN m\ :sup:`-2` s\ :sup:`-1`, respectively) can be expressed as functions of new leaf carbon allocation (:math:`CF_{GPP,leaf}`, gC m\ :sup:`-2` s\ :sup:`-1`):
+Given values for the parameters in :eq:`19.7` and :eq:`19.9`, total carbon and nitrogen allocation to new growth (:math:`CF_{alloc}`, gC m\ :sup:`-2` s\ :sup:`-1`, and :math:`NF_{alloc}`, gN m\ :sup:`-2` s\ :sup:`-1`, respectively) can be expressed as functions of new leaf carbon allocation (:math:`CF_{GPP,leaf}`, gC m\ :sup:`-2` s\ :sup:`-1`):
 
 .. math::
    :label: 19.10
@@ -165,7 +179,7 @@ where
 
    N_{allom} =\left\{\begin{array}{l} {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } +\frac{a_{3} a_{4} \left(1+a_{2} \right)}{CN_{lw} } +} \\ {\qquad \frac{a_{3} \left(1-a_{4} \right)\left(1+a_{2} \right)}{CN_{dw} } \qquad {\rm for\; woody\; PFT}} \\ {\frac{1}{CN_{leaf} } +\frac{a_{1} }{CN_{fr} } \qquad \qquad \qquad {\rm for\; non-woody\; PFT.}} \end{array}\right.
 
-Since the C:N stoichiometry for new growth allocation is defined, from Eq., as :math:`C_{allom}`/ :math:`N_{allom}`, the total carbon available for new growth allocation (:math:`CF_{avail\_alloc}`) can be used to calculate the total plant nitrogen demand for new growth ( :math:`NF_{plant\_demand}`, gN m\ :sup:`-2` s\ :sup:`-1`) as:
+Since the C:N stoichiometry for new growth allocation is defined, from :eq:`19.10` together with :eq:`19.11` and :eq:`19.12`, as :math:`C_{allom} / N_{allom}`, the total carbon available for new growth allocation (:math:`CF_{avail\_alloc}`) can be used to calculate the total plant nitrogen demand for new growth (:math:`NF_{plant\_demand}`, gN m\ :sup:`-2` s\ :sup:`-1`) as:
 
 .. math::
    :label: 19.13
@@ -239,7 +253,7 @@ There are two carbon pools associated with each plant tissue – one which repre
 
    CF_{alloc,deadcroot\_ stor} =CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)\left(1-f_{cur} \right).
 
-Nitrogen allocation
+Nitrogen Allocation
 -----------------------------------------
 
 The total flux of nitrogen to be allocated is given by the FUN model (Chapter :numref:`rst_FUN`). This gives a total N to be allocated within a given timestep, :math:`N_{supply}`. The total N allocated for a given tissue :math:`i` is the minimum between the supply and the demand:
@@ -247,7 +261,7 @@ The total flux of nitrogen to be allocated is given by the FUN model (Chapter :n
 .. math::
    :label: 19.26
 
-   NF_{alloc,i} = min \left( NF_{demand, i}, NF_{supply, i} \right)
+   NF_{alloc,i} = \min \left( NF_{demand,i},\, NF_{supply,i} \right)
 
 The demand for each tissue, calculated for the tissue to remain on stoichiometry during growth, is:
 
@@ -309,7 +323,7 @@ The demand for each tissue, calculated for the tissue to remain on stoichiometry
 .. math::
    :label: 19.38
 
-   NF_{demand,deadcroot\_ stor} =\frac{CF_{alloc,leaf} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
+   NF_{demand,deadcroot\_ stor} =\frac{CF_{alloc,leaf\_ tot} a_{2} a_{3} \left(1-a_{4} \right)}{CN_{dw} } \left(1-f_{cur} \right).
 
 After each pool's demand is calculated, the total plant N demand is then the sum of each individual pool :math:`i` corresponding to each tissue:
 
@@ -323,4 +337,4 @@ and the total supply for each tissue :math:`i` is the product of the fractional 
 .. math::
    :label: 19.40
 
-   NF_{alloc,i} = N_{uptake} NF_{demand,i} / NF_{demand,tot}
+   NF_{alloc,i} = N_{uptake} \, \frac{NF_{demand,i}}{NF_{demand,tot}}
