@@ -290,7 +290,7 @@ Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Pa
 
 .. _Daietal2001:
 
-Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at http://climate.eas.gatech.edu/dai/clmdoc.pdf].
+Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at https://journals.ametsoc.org/view/journals/bams/84/8/bams-84-8-1013.xml].
 
 .. _Daietal2003:
 
@@ -406,7 +406,7 @@ Fécan, F., Marticorena, B. and Bergametti, G., 1998, December. Parametrization 
 
 .. _FeddemaKauffman2016:
 
-Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://svn-iam-thesis-release.cgd.ucar.edu/urban_properties/. doi:10.5065/D6R78CMT.
+Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://zenodo.org/records/15501878. doi:10.5065/zrph-dq73
 
 .. _Ferrari1999:
 
@@ -1139,7 +1139,7 @@ Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community
 
 .. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001596. 
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001586. 
 
 .. _Olson1963:
 

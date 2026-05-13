@@ -354,7 +354,7 @@ the following files to your WRF run directory::
 
 Now run WRF-CTSM. On derecho this means submitting a batch job to PBS (Pro workload management system).
 Please check NCAR CISL's `instructions on running a batch job on derecho.
-<https://www2.cisl.ucar.edu/resources/computational-systems/derecho/running-jobs/submitting-jobs-pbs>`__
+<https://ncar-hpc-docs.readthedocs.io/en/latest/pbs/>`__
 
 A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
 
