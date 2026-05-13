@@ -343,7 +343,7 @@ contains
     this%t_grnd_u_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_U', units='K',  &
          avgflag='A', long_name='Urban ground temperature', &
-         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans', default='inactive')
+         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans')
 
     this%t_lake_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
@@ -373,7 +373,7 @@ contains
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
          avgflag='A', long_name='Rural 2m air temperature', &
-         ptr_patch=this%t_ref2m_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_r_patch, set_spec=spval)
 
     this%t_ref2m_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
@@ -388,27 +388,27 @@ contains
     this%t_ref2m_min_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_R', units='K',  &
          avgflag='A', long_name='Rural daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval)
 
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
          avgflag='A', long_name='Rural daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval)
 
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
          avgflag='A', long_name='Urban 2m air temperature', &
-         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval)
 
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
          avgflag='A', long_name='Urban daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval)
 
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval)
 
     if (use_biomass_heat_storage) then 
        this%t_stem_patch(begp:endp) = spval
@@ -1414,7 +1414,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use clm_time_manager , only : is_doy_in_interval, get_curr_calday
-    use pftconMod        , only : npcropmin
+    use pftconMod        , only : is_prognostic_crop
     use CropType, only : crop_type
     !
     ! !ARGUMENTS
@@ -1485,7 +1485,7 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       if (stream_gdd20_seasons_tt .and. patch%itype(p) >= npcropmin) then
+       if (stream_gdd20_seasons_tt .and. is_prognostic_crop(patch%itype(p))) then
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then

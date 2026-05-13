@@ -20,7 +20,7 @@ from ctsm.crop_calendars.cropcal_module import (  # pylint: disable=wrong-import
 
 logger = logging.getLogger(__name__)
 
-OUTPUT_FORMAT = "NETCDF3_CLASSIC"
+OUTPUT_FORMAT = "NETCDF4_CLASSIC"
 
 
 def _file_missing(filepath, descriptor):

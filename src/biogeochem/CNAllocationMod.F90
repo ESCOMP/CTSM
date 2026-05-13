@@ -15,7 +15,7 @@ module CNAllocationMod
   use clm_varcon           , only : secspday
   use clm_varctl           , only : use_c13, use_c14, iulog
   use PatchType            , only : patch
-  use pftconMod            , only : pftcon, npcropmin
+  use pftconMod            , only : pftcon, is_prognostic_crop
   use CropType             , only : crop_type
   use CropType             , only : cphase_planted, cphase_leafemerge, cphase_grainfill
   use PhotosynthesisMod    , only : photosyns_type
@@ -191,7 +191,7 @@ contains
        mr = leaf_mr(p) + froot_mr(p)
        if (woody(ivt(p)) == 1.0_r8) then
           mr = mr + livestem_mr(p) + livecroot_mr(p)
-       else if (ivt(p) >= npcropmin) then
+       else if (is_prognostic_crop(ivt(p))) then
           if (croplive(p)) then
              reproductive_mr_tot = 0._r8
              do k = 1, nrepr
@@ -500,7 +500,7 @@ contains
        end if
 
        f4   = flivewd(ivt(p))
-       if (ivt(p) >= npcropmin) then
+       if (is_prognostic_crop(ivt(p))) then
           g1 = 0.25_r8
        else
           g1 = grperc(ivt(p))
@@ -521,7 +521,7 @@ contains
           c_allometry(p) = (1._r8+g1a)*(1._r8+f1+f3*(1._r8+f2))
           n_allometry(p) = 1._r8/cnl + f1/cnfr + (f3*f4*(1._r8+f2))/cnlw + &
                (f3*(1._r8-f4)*(1._r8+f2))/cndw
-       else if (ivt(p) >= npcropmin) then ! skip generic crops
+       else if (is_prognostic_crop(ivt(p))) then ! skip generic crops
           cng = graincn(ivt(p))
           f1 = aroot(p) / aleaf(p)
           f3 = astem(p) / aleaf(p)

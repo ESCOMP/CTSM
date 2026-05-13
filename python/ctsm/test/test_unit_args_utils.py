@@ -17,6 +17,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm.args_utils import plon_type, plat_type
+from ctsm.args_utils import comma_separated_list
 from ctsm import unit_testing
 
 # pylint: disable=invalid-name
@@ -116,6 +117,48 @@ class TestArgsPlat(unittest.TestCase):
         """
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "Latitude.*should be between"):
             _ = plat_type(-91)
+
+
+class TestArgsCommaSeparatedList(unittest.TestCase):
+    """
+    Test comma_separated_list argparse helper
+    """
+
+    def setUp(self):
+        self.orig_argv = sys.argv
+
+    def tearDown(self):
+        sys.argv = self.orig_argv
+
+    def test_comma_separated_list_1(self):
+        """
+        Test comma_separated_list with one item in list
+        """
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--list-arg", type=comma_separated_list)
+        sys.argv = ["scriptname", "--list-arg", "abc"]
+        args = parser.parse_args()
+        self.assertEqual(["abc"], args.list_arg)
+
+    def test_comma_separated_list_1plus(self):
+        """
+        Test comma_separated_list with one item in list but a comma too
+        """
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--list-arg", type=comma_separated_list)
+        sys.argv = ["scriptname", "--list-arg", "abc,"]
+        args = parser.parse_args()
+        self.assertEqual(["abc", ""], args.list_arg)
+
+    def test_comma_separated_list_2(self):
+        """
+        Test comma_separated_list with two items in list
+        """
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--list-arg", type=comma_separated_list)
+        sys.argv = ["scriptname", "--list-arg", "abc,def"]
+        args = parser.parse_args()
+        self.assertEqual(["abc", "def"], args.list_arg)
 
 
 if __name__ == "__main__":
