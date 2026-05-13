@@ -25,7 +25,7 @@ and :numref:`wrf-set-ctsm-runtime-options`.
 
   This section assumes use of a machine that has been ported to CIME.
   If CIME is not ported to your machine, please see `instructions on porting CIME
-  <https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html#porting>`_.
+  <https://esmci.github.io/cime/versions/master/html/ccs/model-configuration/support-a-new-machine.html>`_.
 
   In this example we assume NCAR's ``derecho`` HPC system in particular.
 

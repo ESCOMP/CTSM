@@ -6,7 +6,7 @@
  Customizing CLM's Configuration
 ********************************
 
-The section of the |cesmrelease| Quickstart `CESM Create a Case <https://escomp.github.io/CESM/release-cesm2/quickstart.html#create-a-case>`_ gives instructions on creating a case. Also see a similar section in the CIME User's Guide `CIME Create a case <https://esmci.github.io/cime/versions/master/html/users_guide/create-a-case.html>`_. What is of interest here is how to customize your use of CLM for the case that you created.
+The section of the |cesmrelease| Quickstart `CESM Create a Case <https://escomp.github.io/CESM/release-cesm2/quickstart.html#create-a-case>`_ gives instructions on creating a case. Also see a similar section in the CIME User's Guide `CIME Create a case <https://esmci.github.io/cime/versions/master/html/ccs/creating-a-case.html>`_. What is of interest here is how to customize your use of CLM for the case that you created.
 
 For CLM when ``preview_namelist``, ``case.build``, or ``case.run`` are called there are two steps that take place:
 
