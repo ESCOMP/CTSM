@@ -1,7 +1,7 @@
-===============================================================
+==============================================================
 Tag name: ctsm5.4.039
 Originator(s): mvdebolskiy (Matvey Debolskiy, University of Oslo, matvey.debolskiy@geo.uio.no)
-Date: Mon May 14 04:00:00 PM MDT 2026
+Date: Thu May 14 01:07:45 PM MDT 2026
 One-line Summary: Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
 
 Purpose and description of changes
@@ -40,7 +40,7 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho - PASS
+    derecho - OK (2 expected fails)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
@@ -10319,7 +10319,7 @@ Answer changes
 --------------
 
 Changes answers relative to baseline:
- sb
+
   Summarize any changes to answers, i.e.,
     - what code configurations: FATES mode
     - what platforms/compilers: ALL
