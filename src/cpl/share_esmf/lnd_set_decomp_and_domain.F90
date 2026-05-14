@@ -241,6 +241,9 @@ contains
              n = 1 + (g - begg)
              ldomain%frac(g) = dataptr1d(n)
           end do
+          ! Destroy the memory for the above ESMF objects that can be released
+          call from_readmesh_destroy_esmf_objects(rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
        else
           ! ASSUME that land fraction is identical to land mask in this case
           do g = begg, endg
@@ -258,9 +261,8 @@ contains
 
     end if
 
-    ! Deallocate local pointer memory including ESMF objects
-    call from_readmesh_dealloc( rc )
-    if (chkerr(rc,__LINE__,u_FILE_u)) return
+    ! Deallocate local pointer memory
+    call from_readmesh_dealloc( )
 
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
 
@@ -270,7 +272,8 @@ contains
     contains
     !===============================================================================
 
-    subroutine from_readmesh_dealloc( rc )
+
+    subroutine from_readmesh_destroy_esmf_objects(rc)
        use ESMF, only : ESMF_FieldRedistRelease, ESMF_DistGridDestroy, ESMF_FieldDestroy, ESMF_MeshDestroy
        integer, intent(out) :: rc ! ESMF return code to indicate deallocate was successful
 
@@ -278,10 +281,6 @@ contains
 
        rc = ESMF_SUCCESS
 
-       if ( associated(lndfrac_loc_input) ) deallocate(lndfrac_loc_input)
-       deallocate(gindex_lnd)
-       deallocate(gindex_ocn)
-       deallocate(gindex_ctsm)
        ! Destroy or release all of the ESMF objects
        call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, noGarbage=no_esmf_garbage, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
@@ -299,6 +298,16 @@ contains
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        call  ESMF_MeshDestroy( mesh_lndinput, noGarbage=no_esmf_garbage, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    end subroutine from_readmesh_destroy_esmf_objects
+
+    !-------------------------------------------------------------------------------
+    subroutine from_readmesh_dealloc( )
+
+       if ( associated(lndfrac_loc_input) ) deallocate(lndfrac_loc_input)
+       if ( associated(gindex_lnd) ) deallocate(gindex_lnd)
+       if ( associated(gindex_ocn) ) deallocate(gindex_ocn)
+       if ( associated(gindex_ctsm) ) deallocate(gindex_ctsm)
 
     end subroutine from_readmesh_dealloc
 
