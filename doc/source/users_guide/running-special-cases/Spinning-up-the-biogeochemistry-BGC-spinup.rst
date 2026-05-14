@@ -80,7 +80,8 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd SASU_spinup
    # Copy the last restart files from the AD_spinup case into your run directory
-   > cp /scratch/archive/AD_spinup/rest/0401-01-01-00000/* /scratch/SASU_spinup/run
+   # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
+   > cp archive/AD_spinup/rest/0401-01-01-00000/* SASU_spinup/run
    # Runtype should already be startup, but this will ensure it
    > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
@@ -108,7 +109,8 @@ Example: Normal mode simulation for CLM-BGC-Crop
    > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd pSASU_spinup
    # Copy the last restart files from the SASU_spinup case into your run directory
-   > cp /scratch/archive/SASU_spinup/rest/0351-01-01-00000/* /scratch/pSASU_spinup/run
+   # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
+   > cp archive/SASU_spinup/rest/0351-01-01-00000/* pSASU_spinup/run
    # Runtype should already be startup, but this will ensure it
    > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
