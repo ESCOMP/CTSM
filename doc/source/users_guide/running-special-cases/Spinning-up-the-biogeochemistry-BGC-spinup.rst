@@ -65,7 +65,7 @@ In CLM's /tools/contrib directory there are three versions of this .ncl script:
 - SpinupStability_BGC_v12_SE.ncl for Bgc, BgcCrop, or Fates compsets run on certain spectral element grids (currently ne120, ne30, ne16).
 - SpinupStability_SP_v10.ncl for Sp compsets run on 2D lat/lon grids. See section :numref:`spinning-up-sp` for helpful pointers about this script that may also apply to the BGC-Crop versions.
 
-To run one of these scripts on derecho, one loads ncl (module load ncl) and submits with ``ncl SpinupStability_BGC_v11.ncl``, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
+To run one of these scripts on derecho, one loads ncl (``module load ncl``) and submits with ``ncl SpinupStability_BGC_v11.ncl``, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
 
 One of the settings that may not be intuitive at first glance is ``annual_hist``. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while normal mode generates monthly history, so set this to "False".
 
