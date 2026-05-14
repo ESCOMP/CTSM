@@ -43,9 +43,8 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
    > cd AD_spinup
    # Change accelerated spinup mode
    > ./xmlchange CLM_ACCELERATED_SPINUP="on"
-   # Now setup
+   # Now setup and build
    > ./case.setup
-   # Now build
    > ./case.build
    # The following sets RESUBMIT to 7 times and
    # STOP_DATE, STOP_N, and STOP_OPTION to Jan/1/0401, 50, "nyears" in env_run.xml (you could also modify these with an editor)
@@ -79,6 +78,10 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    > cd cime/scripts
    > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd SASU_spinup
+   # Change accelerated spinup mode
+   > ./xmlchange CLM_ACCELERATED_SPINUP="sasu"
+   > Now setup
+   > ./case.setup
    # Copy the last restart files from the AD_spinup case into your run directory
    # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
    > cp archive/AD_spinup/rest/0401-01-01-00000/* SASU_spinup/run
@@ -86,8 +89,6 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
    > echo ' finidat = "AD_spinup.clm2.r.0401-01-01-00000.nc"' > user_nl_clm
-   # Now setup
-   > ./case.setup
    > Now build
    > ./case.build
    # The following sets RESUBMIT to 6 times and
@@ -108,6 +109,10 @@ Example: Normal mode simulation for CLM-BGC-Crop
    > cd cime/scripts
    > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd pSASU_spinup
+   # Change accelerated spinup mode
+   > ./xmlchange CLM_ACCELERATED_SPINUP="off"
+   > Now setup
+   > ./case.setup
    # Copy the last restart files from the SASU_spinup case into your run directory
    # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
    > cp archive/SASU_spinup/rest/0351-01-01-00000/* pSASU_spinup/run
@@ -115,8 +120,6 @@ Example: Normal mode simulation for CLM-BGC-Crop
    > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
    > echo ' finidat = "SASU_spinup.clm2.r.0351-01-01-00000.nc"' > user_nl_clm
-   # Now setup
-   > ./case.setup
    > Now build
    > ./case.build
    # The following sets RESUBMIT to 3 times and
