@@ -62,4 +62,4 @@ where :math:`T_{leaf}` denotes the leaf temperature and :math:`C_{C3AG}` is the 
 .. math::
    :label: C3 arctic grass parameter
 
-   C_{C3AG} = 95 + 9.5 e^{0.53 (288.15-T_{240})}
+   C_{C3AG} = 95 + 9.49 e^{0.53 (288.15-T_{240})}
