@@ -25,7 +25,7 @@ where the LDF activity factor (:math:`\gamma _{P\_ LDF}` ) is specified as a fun
 
 The values for each emission factor :math:`\epsilon _{i,\, j}` are now available for each of the plant functional types in the CLM and each chemical compound. This information is provided in an external file, allowing for more frequent and easier updates.
 
-The impact of drought on isoprene emissions is based on the theory proposed by Potosnak et al. (2014). Specifically, isoprene emissions are expected to increase under mild to moderate drought because drought raises leaf temperature, which stimulates isoprene emissions. Under severe drought, however, isoprene emissions are inhibited because substrate supply becomes constrained. Because the effect of leaf temperature is already represented by the leaf temperature activity factor :math:`\gamma _{T}` and its influence on isoprene emissions, only the inhibitory effect of severe drought (substrate supply impact, :math:`\gamma _{sub}` ) is parameterized as:
+The impact of drought on isoprene emissions is based on the theory proposed by :ref:`Potosnak et al. (2014) <Potosnaketal2014>`. Specifically, isoprene emissions are expected to increase under mild to moderate drought because drought raises leaf temperature, which stimulates isoprene emissions. Under severe drought, however, isoprene emissions are inhibited because substrate supply becomes constrained. Because the effect of leaf temperature is already represented by the leaf temperature activity factor :math:`\gamma _{T}` and its influence on isoprene emissions, only the inhibitory effect of severe drought (substrate supply impact, :math:`\gamma _{sub}` ) is parameterized as:
 
 .. math::
    :label: drought factor
