@@ -39,7 +39,7 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case AD_spinup -res f19_g17 -compset I1850Clm60BgcCrop
+   > ./create_newcase -case AD_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd AD_spinup
    # Change accelerated spinup mode
    > ./xmlchange CLM_ACCELERATED_SPINUP="on"
@@ -77,7 +77,7 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop
+   > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd SASU_spinup
    # Copy the last restart files from the AD_spinup case into your run directory
    > cp /scratch/archive/AD_spinup/rest/0401-01-01-00000/* /scratch/SASU_spinup/run
@@ -105,7 +105,7 @@ Example: Normal mode simulation for CLM-BGC-Crop
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop
+   > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd pSASU_spinup
    # Copy the last restart files from the SASU_spinup case into your run directory
    > cp /scratch/archive/SASU_spinup/rest/0351-01-01-00000/* /scratch/pSASU_spinup/run
