@@ -57,7 +57,7 @@ In addition, a dynamic temperature response curve for C3AG depends on recent tem
 
    \gamma_{T\_C3AG} = E_{opt\_C3AG} e^{(C_{C3AG}/R (1/303.15 - 1/T_{leaf}))}
 
-where :math:`T_{leaf}` denotes the leaf temperature and :math:`C_{C3AG}` is the parameter controlling the isoprene temperature response of C3AG and changes varies with :math `T_{240}` as:
+where :math:`T_{leaf}` denotes the leaf temperature and :math:`C_{C3AG}` is the parameter controlling the isoprene temperature response of C3AG and changes varies with :math:`T_{240}` as:
 
 .. math::
    :label: C3 arctic grass parameter
