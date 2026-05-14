@@ -22,7 +22,7 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
  BGC-Crop SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-After this you continue in standard mode for about 160 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop normal mode plot for 1850` shows spinup behavior for an 1850 BGC-Crop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
+After this you continue in standard mode for 200 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop normal mode plot for 1850` shows spinup behavior for an 1850 BGC-Crop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
 
 .. _Figure BGC-Crop normal mode spinup plot for 1850:
 
