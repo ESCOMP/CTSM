@@ -34,7 +34,7 @@ The impact of drought on isoprene emissions is based on the theory proposed by :
 
 where :math:`a_1=-7.4463` and :math:`b_1=3.2552` are empirical parameters (described in :ref:`Wang et al., 2022 <Wangetal2022>`).
 
-Compared with Guenther et al. (2012), updates have been made to represent isoprene emissions from high-latitude plants, specifically boreal broadleaf deciduous shrubs (BBDS) and C3 Arctic grass (C3AG), in order to account for acclimation processes. These updates are based on leaf-enclosure and in situ measurements conducted at Toolik Field Station in Alaska, USA (:ref:Wang et al., 2024a, 2024b <Wangetal2024a>`).
+Compared with Guenther et al. (2012), updates have been made to represent isoprene emissions from high-latitude plants, specifically boreal broadleaf deciduous shrubs (BBDS) and C3 Arctic grass (C3AG), in order to account for acclimation processes. These updates are based on leaf-enclosure and in situ measurements conducted at Toolik Field Station in Alaska, USA (:ref:`Wang et al., 2024a, 2024b <Wangetal2024a>`).
 For BBDS, the isoprene emission factor is adjusted according to the mean temperature of the previous day as:
 
 .. math::
