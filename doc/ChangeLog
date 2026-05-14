@@ -1,3 +1,73 @@
+==============================================================
+Tag name: ctsm5.4.039
+Originator(s): mvdebolskiy (Matvey Debolskiy, University of Oslo, matvey.debolskiy@geo.uio.no)
+Date: Thu May 14 01:07:45 PM MDT 2026
+One-line Summary: Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
+
+Purpose and description of changes
+----------------------------------
+
+FATES allows for the ability to initialize seedling by density or DBH.  Prior to this change,
+the user would update the `fates_recruit_init_density` parameter to use a negative value to
+initalize by DBH.  This pull request removes this global switch behavior and creates a namelist
+option for the user.  The FATES parameter file and behavior has been updated to include a new
+parameter for users to set the initial DBH by plant functional type.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist option to control FATES:
+      use_fates_dbh_init
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Sets the default for use_fates_dbh_init to false
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+   Adds fates_recruit_init_dbh to the FATES parameter file
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   - Note that this option currently is only applicable with use_fates_nocomp
+
+Changes to tests or testing:
+   Added test module FatesColdNoCompInitDbh
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (baseline comparison against fates-sci.1.92.4_api.45.0.0-ctsm5.4.037)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.92.4_api.45.0.0 -> sci.1.92.5_api.46.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/3910
+https://github.com/NGEET/fates/pull/1550
+
+===============================================================
 ===============================================================
 Tag name: ctsm5.4.038
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
