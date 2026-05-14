@@ -50,6 +50,8 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
    # The following sets RESUBMIT to 7 times and
    # STOP_DATE, STOP_N, and STOP_OPTION to Jan/1/0401, 50, "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=7,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=04010101
+   # The following makes sure that we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    # Now run
    > ./case.submit
 
@@ -90,6 +92,8 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    # The following sets RESUBMIT to 6 times and
    # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=6,STOP_OPTION=nyears,STOP_N=50
+   # The following makes sure that we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    > Now run
    > ./case.submit
 
@@ -116,6 +120,8 @@ Example: Normal mode simulation for CLM-BGC-Crop
    # The following sets RESUBMIT to 3 times and
    # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=3,STOP_OPTION=nyears,STOP_N=50
+   # The following makes sure that we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    > Now run
    > ./case.submit
 
