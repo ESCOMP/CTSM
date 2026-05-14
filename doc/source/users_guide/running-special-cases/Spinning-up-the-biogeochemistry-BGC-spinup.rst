@@ -22,13 +22,13 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
  BGC-Crop SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-After this you continue in standard mode for about 160 years. We refer to this as the post-SASU or pSASU phase (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop pSASU spinup plot for 1850` shows spinup behavior for an 1850 BGC-Crop pSASU case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
+After this you continue in standard mode for about 160 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop normal mode plot for 1850` shows spinup behavior for an 1850 BGC-Crop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
 
-.. _Figure BGC-Crop pSASU spinup plot for 1850:
+.. _Figure BGC-Crop normal mode spinup plot for 1850:
 
 .. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.png
 
- BGC-Crop pSASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
+ BGC-Crop normal mode plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
 As an alternative to spinning up, one may start from a default initial file that is setup as part of the selected compset. When the simulation's spatial resolution is identical to the initial file's resolution, it may still take 10 or more years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a new equilibrium state due to the different atmospheric forcing. Similarly, it may take 10 or more years for these variables to reach a new equilibrium when switching atmospheric CO2 from 1850 to a present-day value.
 
@@ -50,7 +50,7 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
    # The following sets RESUBMIT to 7 times and
    # STOP_DATE, STOP_N, and STOP_OPTION to Jan/1/0401, 50, "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=7,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=04010101
-   # Now run normally
+   # Now run
    > ./case.submit
 
 While this simulation progresses, use SpinupStability_BGC_v11.ncl to assess whether the simulation is approaching equilibrium. When the simulation ends, save the last restart file for use in the SASU_spinup step.
@@ -66,7 +66,7 @@ In CLM's /tools/contrib directory there are three versions of this .ncl script:
 
 To run one of these scripts on derecho, one loads ncl (module load ncl) and submits with ``ncl SpinupStability_BGC_v11.ncl``, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
 
-One of the settings that may not be intuitive at first glance is ``annual_hist``. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while pSASU generates monthly history, so set this to "False".
+One of the settings that may not be intuitive at first glance is ``annual_hist``. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while normal mode generates monthly history, so set this to "False".
 
 .. _eg-sasu-spinup:
 
@@ -90,13 +90,13 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    # The following sets RESUBMIT to 6 times and
    # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=6,STOP_OPTION=nyears,STOP_N=50
-   > Now run as normal
+   > Now run
    > ./case.submit
 
-Save the last restart file from this step and use it as the ``finidat`` file for the pSASU step. Save the restart file from the end of the pSASU simulation to use as a "finidat" file for future simulations.
+Save the last restart file from this step and use it as the ``finidat`` file for the normal mode simulation. Save the restart file from the end of the normal mode simulation to use as a "finidat" file for future simulations.
 
 
-Example: pSASU_spinup Simulation for CLM-BGC-Crop
+Example: Normal mode simulation for CLM-BGC-Crop
 --------------------------------------------------
 ::
 
@@ -116,6 +116,6 @@ Example: pSASU_spinup Simulation for CLM-BGC-Crop
    # The following sets RESUBMIT to 3 times and
    # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=3,STOP_OPTION=nyears,STOP_N=50
-   > Now run as normal
+   > Now run
    > ./case.submit
 
