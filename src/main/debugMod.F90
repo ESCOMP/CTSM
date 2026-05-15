@@ -7,6 +7,7 @@ module debugMod
   !
   ! !USES:
 #include "shr_assert.h"
+  use abortutils       , only : endrun
   use decompMod        , only : subgrid_level_gridcell, subgrid_level_landunit
   use decompMod        , only : subgrid_level_column, subgrid_level_patch
   use decompMod        , only : get_global_index
@@ -15,25 +16,85 @@ module debugMod
   implicit none
   private
   !
-  ! !PUBLIC MEMBER FUNCTIONS:
+  ! !PUBLIC MEMBER SUBROUTINES AND FUNCTIONS:
+  public :: debugMod_init
   public :: do_debug_patch
   public :: do_debug_column
   public :: do_debug_landunit
   public :: do_debug_gridcell
   !
-  ! !PRIVATE TYPES:
+  ! !PRIVATE MEMBER DATA:
 
   ! Global indices for objects to debug.
-  ! When merging to a CTSM branch, these must always be < 1!!
-  integer, parameter :: debug_p = -999
-  integer, parameter :: debug_c = -999
-  integer, parameter :: debug_l = -999
-  integer, parameter :: debug_g = -999
+  integer :: debug_p
+  integer :: debug_c
+  integer :: debug_l
+  integer :: debug_g
 
   character(len=*), parameter, private :: sourcefile = __FILE__
   !-----------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine debugMod_init()
+    !
+    ! Handle namelist variables
+    !
+    ! !USES:
+    use clm_varctl       , only : iulog
+    use spmdMod          , only : masterproc, mpicom
+    use controlMod       , only : NLFilename
+    use clm_nlUtilsMod   , only : find_nlgroup_name
+    use shr_mpi_mod      , only : shr_mpi_bcast
+    !
+    ! !LOCAL VARIABLES:
+    integer                 :: nu_nml                     ! unit for namelist file
+    integer                 :: nml_error                  ! namelist i/o error flag
+    integer :: nml_debug
+    !-----------------------------------------------------------------------
+
+    namelist /debug/                  &
+         debug_p, &
+         debug_c, &
+         debug_l, &
+         debug_g
+
+    ! Default namelist variable values
+    debug_p = -999
+    debug_c = -999
+    debug_l = -999
+    debug_g = -999
+
+    ! Read namelist
+    if (masterproc) then
+       open( newunit=nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, 'debug', status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=debug,iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun('ERROR reading debug namelist')
+          end if
+       else
+          call endrun('ERROR finding debug namelist')
+       end if
+       close(nu_nml)
+
+       ! Print values
+       write(iulog,*)
+       write(iulog,*) 'Debug settings:'
+       write(iulog, '(a,i8)') '  debug_p = ', debug_p
+       write(iulog, '(a,i8)') '  debug_c = ', debug_c
+       write(iulog, '(a,i8)') '  debug_l = ', debug_l
+       write(iulog, '(a,i8)') '  debug_g = ', debug_g
+    endif
+    call shr_mpi_bcast(debug_p, mpicom)
+    call shr_mpi_bcast(debug_c, mpicom)
+    call shr_mpi_bcast(debug_l, mpicom)
+    call shr_mpi_bcast(debug_g, mpicom)
+
+
+  end subroutine debugMod_init
 
   !-----------------------------------------------------------------------
   function do_debug_patch(i_local, i_global) result(do_debug)

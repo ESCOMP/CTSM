@@ -2797,4 +2797,13 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_original_tillage_phases>.false.</use_original_tillage_phases>
 <max_tillage_depth>0.26d00</max_tillage_depth>
 
+<!-- =========================================  -->
+<!-- Defaults for debug                         -->
+<!-- =========================================  -->
+
+<debug_p>-999</debug_p>
+<debug_c>-999</debug_c>
+<debug_l>-999</debug_l>
+<debug_g>-999</debug_g>
+
 </namelist_defaults>
