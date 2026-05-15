@@ -24,7 +24,7 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
 After this you continue in standard mode for 200 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop normal mode plot for 1850` shows spinup behavior for an 1850 BGC-Crop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
 
-.. _Figure BGC-Crop normal mode spinup plot for 1850:
+.. _Figure BGC-Crop normal mode plot for 1850:
 
 .. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.png
 
