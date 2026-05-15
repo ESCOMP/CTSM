@@ -7,18 +7,9 @@ module debugMod
   !
   ! !USES:
 #include "shr_assert.h"
-  use shr_kind_mod     , only : r8 => shr_kind_r8, CL=>shr_kind_CL
-  use decompMod        , only : bounds_type, get_proc_clumps, get_clump_bounds
-  use decompMod        , only : bounds_level_proc
   use decompMod        , only : subgrid_level_gridcell, subgrid_level_landunit
   use decompMod        , only : subgrid_level_column, subgrid_level_patch
   use decompMod        , only : get_global_index
-  use spmdMod          , only : masterproc, mpicom
-  use abortutils       , only : endrun
-  use shr_log_mod      , only : errMsg => shr_log_errMsg
-  use clm_time_manager , only : timemgr_restart_io, get_nstep, get_curr_date
-  use clm_varctl       , only : iulog
-  use clm_varcon       , only : nameg, namel, namec, namep
   !
   ! !PUBLIC TYPES:
   implicit none
