@@ -35,7 +35,7 @@ module debugMod
   ! Global indices for objects to debug.
   ! When merging to a CTSM branch, these must always be < 1!!
   integer, parameter :: debug_p = -999
-  integer, parameter :: debug_c = 2787
+  integer, parameter :: debug_c = -999
   integer, parameter :: debug_l = -999
   integer, parameter :: debug_g = -999
 
