@@ -25,10 +25,10 @@ module debugMod
   private
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-!   public :: do_debug_patch
+  public :: do_debug_patch
   public :: do_debug_column
-!   public :: do_debug_landunit
-!   public :: do_debug_gridcell
+  public :: do_debug_landunit
+  public :: do_debug_gridcell
   !
   ! !PRIVATE TYPES:
 
