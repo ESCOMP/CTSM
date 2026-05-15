@@ -68,8 +68,8 @@ check_if_runable () {
 main() {
    # If under a casedirectory get a few variables for later use
    if [ -f xmlquery ]; then
-      SRCDIR=$(./xmlquery SRCROOT --value || echo "null")
-      check_error $? "Trouble getting SRCROOT from case"
+      SRCDIR=$(./xmlquery COMP_ROOT_DIR_LND --value || echo "null")
+      check_error $? "Trouble getting COMP_ROOT_DIR_LND from case"
       DEBUG=0
    # otherwise if this is being run in the testmod directory for debugging
    else
