@@ -43,14 +43,14 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
    > cd AD_spinup
    # Change accelerated spinup mode
    > ./xmlchange CLM_ACCELERATED_SPINUP="on"
-   # Now setup and build
+   # Now setup
    > ./case.setup
-   > ./case.build
-   # The following sets RESUBMIT to 7 times and
-   # STOP_DATE, STOP_N, and STOP_OPTION to Jan/1/0401, 50, "nyears" in env_run.xml (you could also modify these with an editor)
-   > ./xmlchange RESUBMIT=7,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=04010101
-   # The following makes sure that we run with MOSART off
+   # The following makes sure we run with MOSART off
    > ./xmlchange MOSART_MODE=NULL
+   # Now build
+   > ./case.build
+   # The following sets RESUBMIT to 7 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   > ./xmlchange RESUBMIT=7,STOP_N=50,STOP_OPTION=nyears
    # Now run
    > ./case.submit
 
@@ -78,24 +78,21 @@ Example: SASU_spinup Simulation for CLM-BGC-Crop
    > cd cime/scripts
    > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd SASU_spinup
-   # Change accelerated spinup mode
-   > ./xmlchange CLM_ACCELERATED_SPINUP="sasu"
+   # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
+   > ./xmlchange CLM_ACCELERATED_SPINUP="sasu",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
    # Now setup
    > ./case.setup
    # Copy the last restart files from the AD_spinup case into your run directory
    # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
    > cp archive/AD_spinup/rest/0401-01-01-00000/* SASU_spinup/run
-   # Runtype should already be startup, but this will ensure it
-   > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
    > echo ' finidat = "AD_spinup.clm2.r.0401-01-01-00000.nc"' > user_nl_clm
+   # The following makes sure we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    # Now build
    > ./case.build
-   # The following sets RESUBMIT to 6 times and
-   # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   # The following sets RESUBMIT to 6 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=6,STOP_OPTION=nyears,STOP_N=50
-   # The following makes sure that we run with MOSART off
-   > ./xmlchange MOSART_MODE=NULL
    # Now run
    > ./case.submit
 
@@ -109,24 +106,21 @@ Example: Normal mode simulation for CLM-BGC-Crop
    > cd cime/scripts
    > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
    > cd pSASU_spinup
-   # Change accelerated spinup mode
-   > ./xmlchange CLM_ACCELERATED_SPINUP="off"
+   # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
+   > ./xmlchange CLM_ACCELERATED_SPINUP="off",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
    # Now setup
    > ./case.setup
    # Copy the last restart files from the SASU_spinup case into your run directory
    # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
    > cp archive/SASU_spinup/rest/0351-01-01-00000/* pSASU_spinup/run
-   # Runtype should already be startup, but this will ensure it
-   > ./xmlchange RUN_TYPE=startup
    # Set finidat to the restart file copied in the previous step
    > echo ' finidat = "SASU_spinup.clm2.r.0351-01-01-00000.nc"' > user_nl_clm
+   # The following makes sure we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    # Now build
    > ./case.build
-   # The following sets RESUBMIT to 3 times and
-   # STOP_N to 50 and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   # The following sets RESUBMIT to 3 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
    > ./xmlchange RESUBMIT=3,STOP_OPTION=nyears,STOP_N=50
-   # The following makes sure that we run with MOSART off
-   > ./xmlchange MOSART_MODE=NULL
    # Now run
    > ./case.submit
 
