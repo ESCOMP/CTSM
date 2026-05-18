@@ -66,6 +66,7 @@ Changes answers relative to baseline: Yes
        - LMWG_dev issue number(s):
  https://github.com/NCAR/LMWG_dev/issues/164
  https://github.com/NCAR/LMWG_dev/issues/167
+ Not changing finidat files in the defaults at this time due to various non-standard things in these test simulations.
 
 Other details
 -------------
