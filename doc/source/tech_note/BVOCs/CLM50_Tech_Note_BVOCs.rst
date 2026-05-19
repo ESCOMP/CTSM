@@ -48,7 +48,7 @@ For C3AG, the isoprene emission factor responds over a longer timescale of 10 da
 .. math::
    :label: C3 arctic grass adjustment factor
 
-   \text{For C3AG:} E_{opt\_g} = e^{0.217 (T_{240}-288.15)}
+   \text{For C3AG:} E_{opt\_g} = e^{0.12 (T_{240}-288.15)}
 
 In addition, a dynamic temperature response curve for C3AG depends on recent temperature history as:
 
