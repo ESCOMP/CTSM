@@ -380,4 +380,4 @@ and the total supply for each tissue :math:`i` is the product of the fractional 
 .. math::
    :label: 19.40
 
-   NF_{alloc,i} = N_{uptake} \, \frac{NF_{demand,i}}{NF_{demand,tot}}
+   NF_{supply,i} = N_{uptake} \, \frac{NF_{demand,i}}{NF_{demand,tot}}
