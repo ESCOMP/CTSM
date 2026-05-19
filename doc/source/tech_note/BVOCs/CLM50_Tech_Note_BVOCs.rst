@@ -40,7 +40,7 @@ For BBDS, the isoprene emission factor is adjusted according to the mean tempera
 .. math::
    :label: boreal shrub adjustment factor
 
-   For BBDS: E_{opt} = 7.9 e^{0.22 (T_{24}-297.15)}
+   \text{For BBDS:} E_{opt} = 7.9 e^{0.22 (T_{24}-297.15)}
 
 where :math:`T_{24}` denotes the mean air temperature of the preceding day (Wang et al., 2024a).
 For C3AG, the isoprene emission factor responds over a longer timescale of 10 days (Wang et al., 2024b) and is parameterized as a function of the mean air temperature over the preceding 10 days (:math:`T_{240}`):
@@ -48,14 +48,14 @@ For C3AG, the isoprene emission factor responds over a longer timescale of 10 da
 .. math::
    :label: C3 arctic grass adjustment factor
 
-   For C3AG: E_{opt\_g} = e^{0.22 (T_{240}-288.15)}
+   \text{For C3AG:} E_{opt\_g} = e^{0.22 (T_{240}-288.15)}
 
 In addition, a dynamic temperature response curve for C3AG depends on recent temperature history as:
 
 .. math::
    :label: C3 arctic grass leaf temperature factor
 
-   For C3AG: \gamma_{T\_g} = E_{opt\_g} e^{(C_{g}/R (1/303.15 - 1/T_{leaf}))}
+   \text{For C3AG:} \gamma_{T\_g} = E_{opt\_g} e^{(C_{g}/R (1/303.15 - 1/T_{leaf}))}
 
 where :math:`T_{leaf}` denotes the leaf temperature, :math:`R` is the gas constant (ct3 in code, 0.00831 kJ/mol) and :math:`C_{g}` is the parameter controlling the isoprene temperature response of C3AG and changes varies with :math:`T_{240}` as:
 
