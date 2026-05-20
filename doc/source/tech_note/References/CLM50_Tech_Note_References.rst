@@ -912,10 +912,6 @@ Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrol
 
 Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
 
-.. _LipscombSacks2012:
-
-Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation and user's guide. 46 pp. [Available online at http://www.cesm.ucar.edu/models/cesm1.1/cism/].
-
 .. _lischke2006:
 
 Lischke, H. et al., 2006. TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale. Ecological Modelling 199.4, pp. 409-420. 41
