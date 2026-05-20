@@ -2264,9 +2264,10 @@ sub setup_logic_params_file {
   # get param data
   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
 
+  $nl_flags->{'use_hillslope'} = $nl->get_value('use_hillslope');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile',
               'phys'=>$nl_flags->{'phys'},
-              'use_hillslope'=>$nl->get_value('use_hillslope'),
+              'use_hillslope'=>$nl_flags->{'use_hillslope'},
               'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
               'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
 }
