@@ -1237,6 +1237,10 @@ Pomeroy, J. W., D. M. Gray, K. R. Shook, B. Toth, R. L. H. Essery, A. Pietroniro
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global monthly irrigated and rainfed crop areas around the year 2000: A new high-resolution data set for agricultural and hydrological modeling. Global Biogeochem. Cycles. 24, GB1011. DOI:10.1029/2008GB003435.
 
+.. _Potosnaketal2014:
+
+Potosnak, M. J., LeStourgeon, L., Pallardy, S. G., Hosman, K. P., Gu, L., Karl, T., et al. (2014). Observed and modeled ecosystem isoprene fluxes from an oak-dominated temperate forest and the influence of drought stress. Atmospheric Environment, 84, 314–322. http://www.sciencedirect.com/science/article/pii/S1352231013009059
+
 .. _Pressetal1992:
 
 Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
@@ -1526,6 +1530,18 @@ Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface layer-based soi
 
 Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. WRR, 51, doi:10.1002/2015WR017582.
 
+.. _Swensonetal2019:
+
+Swenson, S.C., M. Clark, Y. Fan, D.M. Lawrence, and J. Perket. 2019. Representing intra-hillslope lateral subsurface flow in the community land model. JAMES, 11, doi:10.1002/2015WR017582.
+
+.. _Swensonetal2019b:
+
+Swenson, S.C., S.P. Burns, and D. M. Lawrence. 2019. The impact of biomass heat storage on the canopy energy balance and atmospheric stability in the community land model. JAMES, 11, https://doi.org/10.1029/2018MS001476.
+
+.. _SwensonLawrence2025:
+
+Swenson, S.C., and D. M. Lawrence. 2025. Development of a global representative hillslope data set for use in Earth system modelsA GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. JAMES, 17, https://doi.org/10.1029/2024MS004410.
+
 .. _TaWeiland1992:
 
 Ta, C.T. and Weiland, R.T. 1992. Nitrogen partitioning in maize during ear development. Crop Sci. 32:443-451.
@@ -1666,6 +1682,22 @@ Walker, A. P., Beckerman, A. P., Gu, L., Kattge, J., Cernusak, L. A., Domingues,
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
 
+.. _WangZeng2009:
+
+Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+
+.. _Wangetal2022:
+
+Wang, H., Lu, X., Seco, R., Stavrakou, T., Karl, T., Jiang, X., et al. 2022. Modeling Isoprene Emission Response to Drought and Heatwaves Within MEGAN Using Evapotranspiration Data and by Coupling With the Community Land Model. Journal of Advances in Modeling Earth Systems, 14, e2022MS003174. https://doi.org/10.1029/2022MS003174.
+
+.. _Wangetal2024a:
+
+Wang, H., Welch, A., Nagalingam, S., Leong, C., Kittitananuvong, P., Barsanti, K. C., et al. 2024a. Arctic Heatwaves Could Significantly Influence the Isoprene Emissions From Shrubs. Geophysical Research Letters, 51, e2023GL107599. https://doi.org/10.1029/2023GL107599.
+
+.. _Wangetal2024b:
+
+Wang, H., Welch, A. M., Nagalingam, S., Leong, C., Czimczik, C. I., Tang, J., et al. 2024b. High temperature sensitivity of Arctic isoprene emissions explained by sedges. Nature Communications, 15(1), 6144. https://doi.org/10.1038/s41467-024-49960-0.
+
 .. _Waniaetal2009:
 
 Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafrost into a dynamic global vegetation model: 2. Evaluation and sensitivity of vegetation and carbon cycle processes. Global Biogeochem. Cycles 23.
@@ -1673,10 +1705,6 @@ Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafros
 .. _Waniaetal2010:
 
 Wania, R., Ross, I. and Prentice, I.C. 2010. Implementation and evaluation of a new methane model within a dynamic global vegetation model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions 3:1-59.
-
-.. _WangZeng2009:
-
-Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
 
 .. _weng2014:
 
@@ -1737,6 +1765,10 @@ Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dyn
 .. _Xuetal2012:
 
 Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell, 2012: Toward a mechanistic modeling of nitrogen limitation on vegetation dynamics. PloS one, 7:e37914.
+
+.. _Yangetal1995:
+
+Yang, Z.-L., R.E. Dickinson, A. Henderson-Sellers, and A.J. Pitman, 1995. Preliminary study of spin-up processes in land surface models with the first stage data of Project for Intercomparison of Land Surface Parameterization Schemes Phase 1(a). J. Geophys. Res. 100:16,553-16,578.
 
 .. _Yang1998:
 
