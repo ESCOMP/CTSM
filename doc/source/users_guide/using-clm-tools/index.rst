@@ -20,5 +20,5 @@ Using CLM tools
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
    observational-sites-datasets.rst
-   cprnc.rst
+   compare-history-files.md
    paramfile-tools.md
