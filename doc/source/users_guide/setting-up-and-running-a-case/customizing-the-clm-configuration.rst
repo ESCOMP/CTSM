@@ -18,7 +18,7 @@ When customizing your case at the ``case.setup`` step you are able to modify the
 
 There are five different types of customization for the configuration that we will discuss: |version| in |cesmrelease| build-time options, |version| in |cesmrelease| run-time options, User Namelist, other noteworthy |cesmrelease| configuration items, the CLM ``configure`` script options, and the CLM ``build-namelist`` script options.
 
-Information on all of the CLM script, configuration, build and run items is found under ``$CTSMROOT/cime_config/config_component.xml``. See `CLM CASEROOT Variable Definitions <http://www.cesm.ucar.edu/models/cesm2/component_settings/clm4_5_input.html>`_.
+Information on all of the CLM script, configuration, build and run items is found under ``$CTSMROOT/cime_config/config_component.xml``. See `CLM CASEROOT Variable Definitions <https://docs.cesm.ucar.edu/models/cesm2/settings/current/clm5_0_input.html>`_.
 
 ================================
  CLM Script configuration items

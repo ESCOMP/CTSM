@@ -35,7 +35,7 @@ There is a rich and diverse set of people that use the CESM, and often it is use
 The CLM web pages
 -----------------
 
-The main `CLM web page <http://www.cgd.ucar.edu/tss/clm/>`_ contains information on the CLM, its history, developers, as well as downloads for previous model versions. Some other links are available at the `CESM2 land component webpage <http://www.cesm.ucar.edu/models/cesm2/land>`. There are also documentation text files in the `$CTSMROOT/doc directory <https://github.com/ESCOMP/CTSM/tree/master/doc>`_ that give some quick information on using CLM.
+The main `CLM web page <https://www.cesm.ucar.edu/models/clm>`_ contains information on the CLM, its history, developers, as well as downloads for previous model versions. Some other links are available at the `CESM2 land component webpage <http://www.cesm.ucar.edu/models/cesm2/land>`. There are also documentation text files in the `$CTSMROOT/doc directory <https://github.com/ESCOMP/CTSM/tree/master/doc>`_ that give some quick information on using CLM.
 
 Also note that several of the XML database files can help with namelist options, namelist defaults, or compsets. For the most recent release:
 
