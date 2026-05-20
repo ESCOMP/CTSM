@@ -6,7 +6,7 @@ Dynamic Global Vegetation and FATES
 What has changed
 ^^^^^^^^^^^^^^^^^^^^
 
-- Deprecation of the dynamic global vegetation model (DGVM): The CLM5.0 model contains the legacy 'CNDV' code, which runs the CLM biogeochemistry model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM5 and is no longer scientifically supported.
+- Deprecation of the dynamic global vegetation model (DGVM): The current CLM model version contains the legacy 'CNDV' code, which runs the CLM biogeochemistry model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM6 and is no longer scientifically supported.
 
 - Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5.
 
@@ -33,17 +33,15 @@ Currently, FATES can be run in several different "reduced complexity modes", whe
 
 3. **Fixed Biogeography Mode**: this mode turns off prognostic spatial changes in the distribution of vegetation and instead, the model uses input data to determine which PFTs are present at any given gridcell. The patch area for each PFT is derived from the input CLM surface dataset. However, please note that the PFTs in the FATES parameter file do not always map one-to-one with the CLM PFTs on the surface dataset. See the FATES parameter *fates_hlm_pft_map* on the FATES parameter file for the correct mapping of FATES to CLM PFTs.
 
-Note that there are different combinations of no-competition and fixed biogeography mode that will result in different behaviors. See the `FATES documentation<https://fates-users-guide.readthedocs.io/en/latest/user/namelist-options.html>`_ for these options.
+Note that there are different combinations of no-competition and fixed biogeography mode that will result in different behaviors. See the `FATES namelist documentation <https://fates-users-guide.readthedocs.io/en/latest/user/namelist-options.html>`_ for these options.
 
 Scientifically Supported CLM-FATES Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We currently scientifally support CLM-FATES run in `carbon-only mode<https://fates-users-guide.readthedocs.io/en/latest/user/PARTEH-Modes.html>`_, and with either SP or no-competition + fixed biogeography mode.
+We currently scientifally support CLM-FATES run in `carbon-only mode <https://fates-users-guide.readthedocs.io/en/latest/user/PARTEH-Modes.html>`_, and with either SP or no-competition + fixed biogeography mode.
 
 
 Further reading
 ^^^^^^^^^^^^^^^^^^^^
 
-For more information about FATES, including a Users Guide and Technical Note, please see the `FATES documentation`_.
-
-.. _FATES documentation: https://fates-users-guide.readthedocs.io/en/latest/index.html
+For more information about FATES, including a Users Guide and Technical Note, please see the `FATES documentation <https://fates-users-guide.readthedocs.io/en/latest/index.html>`_.
