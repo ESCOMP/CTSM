@@ -290,7 +290,7 @@ Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Pa
 
 .. _Daietal2001:
 
-Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at http://climate.eas.gatech.edu/dai/clmdoc.pdf].
+Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at https://journals.ametsoc.org/view/journals/bams/84/8/bams-84-8-1013.xml].
 
 .. _Daietal2003:
 
@@ -406,7 +406,7 @@ Fécan, F., Marticorena, B. and Bergametti, G., 1998, December. Parametrization 
 
 .. _FeddemaKauffman2016:
 
-Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://svn-iam-thesis-release.cgd.ucar.edu/urban_properties/. doi:10.5065/D6R78CMT.
+Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://zenodo.org/records/15501878. doi:10.5065/zrph-dq73
 
 .. _Ferrari1999:
 
@@ -622,7 +622,7 @@ Huang, M., and Liang, X. 2006. On the assessment of the impact of reducing param
 
 .. _Hugeliusetal2012:
 
-Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (http://dev1.geo.su.se/bbcc/dev/ncscd/).
+Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (https://essd.copernicus.org/articles/5/3/2013/essd-5-3-2013.html).
 
 .. _Huntetal1988:
 
@@ -912,10 +912,6 @@ Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrol
 
 Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
 
-.. _LipscombSacks2012:
-
-Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation and user's guide. 46 pp. [Available online at http://www.cesm.ucar.edu/models/cesm1.1/cism/].
-
 .. _lischke2006:
 
 Lischke, H. et al., 2006. TreeMig: a forest-landscape model for simulating spatio-temporal patterns from stand to landscape scale. Ecological Modelling 199.4, pp. 409-420. 41
@@ -1139,7 +1135,7 @@ Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community
 
 .. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001596. 
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001586. 
 
 .. _Olson1963:
 
@@ -1672,7 +1668,7 @@ Vionnet, V., E. Brun, S. Morin, A. Boone, S. Faroux, P. Le Moigne, E. Martin, an
 
 .. _Viovy2011:
 
-Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea.fr/data/p529viov/cruncep/readme.htm. Data available at http://dods.extra.cea.fr/store/p529viov/cruncep/V4\_1901\_2011/].
+Viovy, N. 2011. CRUNCEP dataset. [Description available at https://rda.ucar.edu/datasets/d314003/ Data available at https://rda.ucar.edu/datasets/d314003/dataaccess/].
 
 .. _VitousekHowarth1991:
 
