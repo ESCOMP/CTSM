@@ -503,7 +503,7 @@ Like other datasets, if you want to use a given initial condition file to be use
 Other noteworthy configuration items
 ------------------------------------
 
-For running "I" cases there are several other noteworthy configuration items that you may want to work with. Most of these involve settings for the DATM, but one ``CCSM_CO2_PPMV`` applies to all models. The list of DATM settings is (**link currently broken**). If you are running a B, E, or F case that doesn't use the DATM obviously the DATM_* settings will not be used. All of the settings below are in your ``env_build.xml`` and ``env_run.xml`` files
+For running "I" cases there are several other noteworthy configuration items that you may want to work with. Most of these involve settings for the DATM, but one ``CCSM_CO2_PPMV`` applies to all models. The list of DATM settings is `here <https://escomp.github.io/CDEPS/versions/master/html/datm.html>`_, although note that the values there are currently out of date. If you are running a B, E, or F case that doesn't use the DATM obviously the DATM_* settings will not be used. All of the settings below are in your ``env_build.xml`` and ``env_run.xml`` files
 ::
 
    CCSM_CO2_PPMV

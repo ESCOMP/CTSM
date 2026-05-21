@@ -11,7 +11,7 @@ When running "I" compsets with CLM you use the DATM model to give atmospheric fo
 1. **DATM Main Namelist and Stream Namelist group** (``datm_in``)
 2. **DATM stream files**
 
-The Data Model Documentation (**link currently broken**) gives the details of all the options for the data models and for DATM specifically. It goes into detail on all namelist items both for DATM and for DATM streams. So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. But, we will talk about a few of the different options that are relevant for running with CLM. All of the options for changing the namelists or stream files is done by editing the ``user_nl_datm`` file.
+The `Data Model Documentation <https://escomp.github.io/CDEPS/versions/master/html/datm.html>`_ gives the details of all the options for the data models and for DATM specifically, although note that the values there are currently out of date. It goes into detail on all namelist items both for DATM and for DATM streams. So here we won't list ALL of the DATM namelist options, nor go into great details about stream files. But, we will talk about a few of the different options that are relevant for running with CLM. All of the options for changing the namelists or stream files is done by editing the ``user_nl_datm`` file.
 
 Because, they aren't useful for work with CLM we will NOT discuss any of the options for the main DATM namelist. Use the DATM Users Guide at the link above to find details of that. For the streams namelist we will discuss three items:
 
