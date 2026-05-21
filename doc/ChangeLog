@@ -1,4 +1,62 @@
 ===============================================================
+Tag name: ctsm5.4.041
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu May 21 14:33:36 MDT 2026
+One-line Summary: Merge b4b-dev 2026-05-21
+
+Purpose and description of changes
+----------------------------------
+
+Regular biweekly merge of b4b-dev to master. Includes the following PRs:
+- [ESCOMP/CTSM Pull Request #3199: Update documentation for generating fsurdat/landuse files by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/3199)
+- [ESCOMP/CTSM Pull Request #4007: Improve ctsm_pylib docs by samsrabin](https://github.com/ESCOMP/CTSM/pull/4007)
+- [ESCOMP/CTSM Pull Request #3999: Revision of Section 1.5.6 Spinning up the Satellite Phenology Model in user's guide for CLM6 by olyson](https://github.com/ESCOMP/CTSM/pull/3999)
+- [ESCOMP/CTSM Pull Request #3947: Technote updates for Hillslope Hydrology, biomass heat storage, and Methane model by swensosc](https://github.com/ESCOMP/CTSM/pull/3947)
+- [ESCOMP/CTSM Pull Request #3909: updated BVOC documentation by lkemmons](https://github.com/ESCOMP/CTSM/pull/3909)
+- [ESCOMP/CTSM Pull Request #4020: CN allocation tech notes improvements by huiqi-wang](https://github.com/ESCOMP/CTSM/pull/4020)
+- [ESCOMP/CTSM Pull Request #4033: Remove table in CN Pools and link to table in CN Allocation by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/4033)
+- [ESCOMP/CTSM Pull Request #4036: User's Guide: Delete "Building the CLM tools*" sections. by samsrabin](https://github.com/ESCOMP/CTSM/pull/4036)
+- [ESCOMP/CTSM Pull Request #3223: Fix broken documentation links by adrifoster](https://github.com/ESCOMP/CTSM/pull/3223)
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [ESCOMP/CTSM Issue #1718: User's Guide: How to use the new mksurfdata_esmf tool](https://github.com/ESCOMP/CTSM/issues/1718)
+- [ESCOMP/CTSM Issue #3478: Update and delete outdated docs for creating input data](https://github.com/ESCOMP/CTSM/issues/3478)
+- [ESCOMP/CTSM Issue #3075: Improve ctsm_pylib documentation](https://github.com/ESCOMP/CTSM/issues/3075)
+- [ESCOMP/CTSM Issue #3976: User's Guide update: Section 1.5.6 Sp spin-ups](https://github.com/ESCOMP/CTSM/issues/3976)
+- [ESCOMP/CTSM Issue #3735: Document the biomass heat storage parameterization in the technical note](https://github.com/ESCOMP/CTSM/issues/3735)
+- [ESCOMP/CTSM Issue #3872: Review 2.26. Methane Model](https://github.com/ESCOMP/CTSM/issues/3872)
+- [ESCOMP/CTSM Issue #3876: Review 2.30. Biogenic Volatile Organic Compounds (BVOCs)](https://github.com/ESCOMP/CTSM/issues/3876)
+- [ESCOMP/CTSM Issue #3866: Review 2.20. C and N Allocation; and make updates](https://github.com/ESCOMP/CTSM/issues/3866)
+- [ESCOMP/CTSM Issue #3863: Review 2.17. CN Pools; and update](https://github.com/ESCOMP/CTSM/issues/3863)
+- [ESCOMP/CTSM Issue #2767: Broken external links in Tech Note and User's Guide](https://github.com/ESCOMP/CTSM/issues/2767)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation: Lots. See lists of PRs and issues above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #4040: ctsm5.4.041: b4b-dev merge 2026-05-21 by samsrabin](https://github.com/ESCOMP/CTSM/pull/4040)
+- See also list of PRs in "Purpose and description of changes" above.
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.040
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Wed May 20 04:13:57 PM MDT 2026
