@@ -63,13 +63,13 @@ Asner, G.P., Wessman, C.A., Schimel, D.S., and Archer, S. 1998. Variability in l
 
 Axelsson, E., and Axelsson, B. 1986. Changes in carbon allocation patterns in spruce and pine trees following irrigation and fertilization. Tree Phys. 2:189-204.
 
-.. _Atkin2016:
+.. _Atkinetal2015:
 
-Atkin OK, Bloomfield KJ, Reich PB, Tjoelker MG, Asner GP, Bonal D et al (2015) Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
+Atkin O.K., Bloomfield K.J., Reich P.B., Tjoelker M.G., Asner G.P., Bonal D. et al. 2015. Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
 
-.. _Atkin2017:
+.. _Atkinetal2017:
 
-Leaf Respiration in Terrestrial Biosphere Models. In Plant Respiration: Metabolic Fluxes and Carbon Balance, Advances in Photosynthesis and Respiration 43, G. Tcherkez, J. Ghashghaie (eds.) Springer International Publishing AG 2017
+Atkin O.K., Abdul Bahar N., Bloomfield K., Griffin K.L., Heskel M.A., Huntingford C., Martinez-de la Torre A., Turnbull, M.H. 2017. Leaf Respiration in Terrestrial Biosphere Models. In Plant Respiration: Metabolic Fluxes and Carbon Balance, Advances in Photosynthesis and Respiration 43, G. Tcherkez, J. Ghashghaie (eds.) Springer International Publishing AG 2017
 
 .. _BadgerandDirmeyer2015:
 
