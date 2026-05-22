@@ -220,6 +220,10 @@ Castillo, G., Kendra, C., Levis, S., and Thornton, P. 2012. Evaluation of the ne
 
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and methane emissions from natural wetlands: Application of a process-based model. J. Geophys. Res. 101(D9):14,399-14,414.
 
+.. _Chenetal2023:
+
+Chen, Y., Hall, J., van Wees, D., Andela, N., Hantson, S., Giglio, L., van der Werf, G.R., Morton, D.C., Randerson, J.T. 2023. Multi-decadal trends and variability in burned area from the fifth version of the Global Fire Emissions Database (GFED5). Earth Syst. Sci. Data 15:5227-5259.
+
 .. _Chengetal2019:
 
 Cheng, Y. et al., 2019. Parameterizing perennial bioenergy crops in Version 5 of the Community Land Model Based on Site‐Level Observations in the Central Midwestern United States. Journal of Advances in Modeling Earth Systems, 2(2013), 1–24. https://doi.org/10.1029/2019MS001719
@@ -503,10 +507,6 @@ Ghimire, B., W. J. Riley, C. D. Koven, M. Mu, and J. T. Randerson, 2016: Represe
 .. _Gholzetal1985:
 
 Gholz, H.L., Perry, C.S., Cropper, W.P., Jr. and Hendry, L.C., 1985. Litterfall, decomposition, and nitrogen and phosphorous dynamics in a chronosequence of slash pine (*Pinus elliottii*) plantations. Forest Science, 31: 463-478.
-
-.. _Giglioetal2006:
-
-Giglio, L., Csiszar, I., and Justice, C.O. 2006. Global distribution and seasonality of active fires as observed with the Terra and Aqua Moderate Resolution Imaging Spectroradiometer (MODIS) sensors. J. Geophys. Res. 111:G02016. DOI:10.1029/2005JG000142.
 
 .. _GlobalSoilDataTask2000:
 
@@ -824,10 +824,6 @@ Lee, H., Swenson, S.C., Slater A.G. and Lawrence D.M., 2014. Effects of excess g
 
 Lehner, B., Verdin, K. and Jarvis, A., 2008. New global hydrograhy derived from spaceborne elevation data. Eos Trans., AGU, 89, 93 – 94.
 
-.. _LePageetal2010:
-
-Le Page, Y., van der Werf, G.R., Morton, D.C., and Pereira, J.M.C. 2010. Modeling fire-driven deforestation potential in Amazonia under current and projected climate conditions. J. Geophys. Res. 115:G03012. DOI:10.1029/2009JG001190.
-
 .. _Lerman1979:
 
 Lerman, A., 1979. Geochemical processes: Water and sediment environments. John Wiley and Sons, New York, N.Y.
@@ -880,6 +876,14 @@ Li, F., Zeng, X. D., and Levis, S. 2012b. Corrigendum to "A process-based fire p
 
 Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 
+.. _Lietal2019:
+
+Li, F., Val Martin, M., Andreae, M.O., Arneth, A., Hantson, S., Kaiser, J.W., Lasslop, G., Yue, C., Bachelet, D., Forrest, M., Kluzek, E., Liu, X., Mangeon, S., Melton, J.R., Ward, D.S., Darmenov, A., Hickler, T., Ichoku, C., Magi, B.I., Sitch, S., van der Werf, G.R., Wiedinmyer, C., Rabin, S.S. 2019. Historical (1700-2012) global multi-model estimates of the fire emissions from the Fire Modeling Intercomparison Project (FireMIP). Atmos. Chem. Phys. 19:12545-12567.
+
+.. _Lietal2024b:
+
+Li, F. et al. 2024. Quantifying the role of fire in the Earth system: Improved global fire modeling in Earth system models. AGU Fall Meeting 2024, Washington, D.C., USA, 9-13 December 2024, GC41E-01. https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1529786.
+
 .. _LiLawrence2017:
 
 Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing ecosystems. J. Clim. 30: 1894-1908.
@@ -900,7 +904,7 @@ Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and N. Voisin. 201
 
 Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the Anthropocene: An earth system modeling approach, J. Adv. Model. Earth Syst., 7, doi:10.1002/2015MS000471.
 
-.. _Lietal2024:
+.. _Lietal2024a:
 
 Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
 
@@ -1156,10 +1160,6 @@ Owen, P.R. 1964. Saltation of uniform grains in air. J. Fluid Mech\ *.* 20:225-2
 .. _Ozdoganetal2010:
 
 Ozdogan, M., Rodell, M., Beaudoing, H.K., and Toll, D.L. 2010. Simulating the effects of irrigation over the United States in a land surface model based on satellite-derived agricultural data. Journal of Hydrometeorology 11:171-184.
-
-.. _Pageetal2002:
-
-Page, S.E., Siegert, F., Rieley, J.O., Boehm, H-D.V., Jaya, A., and Limin, S. 2002. The amount of carbon released from peat and forest fires in Indonesia in 1997. Nature 420:61-65.
 
 .. _Panofskyetal1977:
 
