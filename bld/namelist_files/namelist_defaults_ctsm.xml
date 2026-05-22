@@ -600,9 +600,10 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <!-- ================================================================== -->
 <!-- The default filenames are given relative to the root directory
      for the CLM2 data in the CESM distribution -->
-<!-- Plant function types (relative to {csmdata}) -->
-<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c260303.nc</paramfile>
-<paramfile phys="clm6_0" lnd_tuning_mode="clm6_0_cam7.0">lnd/clm2/paramdata/ctsm60-cam70_params.c260305.nc</paramfile>
+<!-- CLM parameter files (relative to {csmdata}) -->
+<paramfile phys="clm6_0" >lnd/clm2/paramdata/ctsm60_params.c260518.nc</paramfile>
+<paramfile phys="clm6_0" lnd_tuning_mode="clm6_0_cam7.0">lnd/clm2/paramdata/ctsm60-cam70_params.c260518.nc</paramfile>
+<paramfile phys="clm6_0" use_hillslope=".true.">lnd/clm2/paramdata/ctsm60-HH_params.c260518.nc</paramfile>
 <paramfile phys="clm5_0" >lnd/clm2/paramdata/clm50_params.c260305.nc</paramfile>
 <paramfile phys="clm4_5" >lnd/clm2/paramdata/clm45_params.c260305.nc</paramfile>
 
@@ -2715,6 +2716,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_ed_st3               use_fates=".true.">.false.</use_fates_ed_st3>
 <use_fates_ed_prescribed_phys   use_fates=".true.">.false.</use_fates_ed_prescribed_phys>
 <use_fates_inventory_init       use_fates=".true.">.false.</use_fates_inventory_init>
+<use_fates_dbh_init             use_fates=".true.">.false.</use_fates_dbh_init>
 <use_fates_sp                   use_fates=".true.">.false.</use_fates_sp>
 <use_fates_lupft                use_fates=".true.">.false.</use_fates_lupft>
 <use_fates_potentialveg         use_fates=".true.">.false.</use_fates_potentialveg>

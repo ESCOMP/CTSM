@@ -15,7 +15,6 @@ Using CLM tools
    :maxdepth: 2
 
    what-are-the-clm-tools.rst
-   building-the-clm-tools.rst
    using-ctsm-pylib.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
