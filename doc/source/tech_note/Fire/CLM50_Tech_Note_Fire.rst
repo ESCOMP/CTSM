@@ -136,7 +136,7 @@ The influence of topography on fires:
    f_{topo} =\left\{\begin{array}{cc}
    {0.004} & {elevation>2500m} \\
    {1} & {else}
-   \end{array}\right. 
+   \end{array}\right.
 
 This indicates reduced burnability above 2500 m. It can be removed if CLM accounts in the future for the intense light exposure of Arctic C\ :sub:`3` grasses on plateaus, leading to greater carbon allocation to fine roots than to leaves and to reduced infiltration.
 
@@ -246,8 +246,7 @@ The continuity factor is the fractional coverage (0 to 1) of natural vegetation 
 
    F_{c} =f_{natveg} =1 - f_{urban} - f_{lake} - f_{cropland} - f_{baresoil}
 
-where :math:`f_{urban}`, :math:`f_{lake}`, :math:`f_{cropland}`, and :math:`f_{baresoil}` are factional coverage of urban, lake, cropland, 
-and bare soil.
+where :math:`f_{urban}`, :math:`f_{lake}`, :math:`f_{cropland}`, and :math:`f_{baresoil}` are factional coverage of urban, lake, cropland, and bare soil.
 
 
 .. _Fire impact:
