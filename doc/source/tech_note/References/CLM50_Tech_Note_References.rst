@@ -1161,6 +1161,10 @@ Owen, P.R. 1964. Saltation of uniform grains in air. J. Fluid Mech\ *.* 20:225-2
 
 Ozdogan, M., Rodell, M., Beaudoing, H.K., and Toll, D.L. 2010. Simulating the effects of irrigation over the United States in a land surface model based on satellite-derived agricultural data. Journal of Hydrometeorology 11:171-184.
 
+.. _Pageetal2002:
+
+Page, S.E., Siegert, F., Rieley, J.O., Boehm, H-D.V., Jaya, A., and Limin, S. 2002. The amount of carbon released from peat and forest fires in Indonesia in 1997. Nature 420:61-65.
+
 .. _Panofskyetal1977:
 
 Panofsky, H.A., Tennekes, H., Lenschow, D.H. and Wyngaard, J.C., 1977. The characteristics of turbulent velocity components in the surface layer under convective conditions. Boundary-Layer Meteorology, 11(3), pp.355-361. DOI:10.1007/BF02186086.
