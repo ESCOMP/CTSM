@@ -24,6 +24,7 @@ module BareGroundFluxesMod
   use LandunitType         , only : lun                
   use ColumnType           , only : col                
   use PatchType            , only : patch                
+  use clm_varctl           , only : use_fates
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -303,8 +304,13 @@ contains
          p = filter_noexposedvegp(f)
          c = patch%column(p)
          if (use_nvp .and. col%nvp_layer_active(c)) then
-            write(iulog,'(a,2i6,2l2,2f10.5)') '[DBG noexposedvegp] p, c, is_bg, is_veg, wtcol, frac_nvp:', &
-                 p, c, patch%is_bareground(p), patch%is_veg(p), patch%wtcol(p), col%frac_nvp(c)
+            ! SSR debug: I'm adding the "if use_fates" wrapper because of previous "Reference to undefined
+            !   POINTER PATCH%IS_VEG" errors below. Not sure if this ever might have happened here.
+            write(iulog,'(a,2i6,l2,2f10.5)') '[DBG noexposedvegp] p, c, is_bg, wtcol, frac_nvp:', &
+                 p, c, patch%is_bareground(p), patch%wtcol(p), col%frac_nvp(c)
+            if (use_fates) then
+               write(iulog,'(a,l2)') '[DBG noexposedvegp] is_veg ', patch%is_veg(p)
+            end if
          end if
          btran(p) = 0._r8     
          t_veg(p) = forc_t(c) 
@@ -493,8 +499,14 @@ contains
          ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground, analogous to snow/h2osfc]
          ! Zero when NVP is buried under snow (snl < -1): the snow surface controls the energy balance.
          ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
-         if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
-            eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+         ! SSR debug: I'm adding the "if use_fates" wrapper because of previous "Reference to undefined
+         !   POINTER PATCH%IS_VEG" errors here. Not sure if this is going to help. It might be because
+         !   patch%is_veg is only allocated when using FATES, which is why I'm trying this, but use_nvp
+         !   should not ever be true if not using FATES.
+         if (use_fates) then
+            if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
+               eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+            end if
          else
             eflx_sh_nvp(p) = 0._r8
          end if
@@ -516,8 +528,14 @@ contains
          ! NVPWaterBalance_Column; a non-zero value here when NVP is covered would add water to
          ! qflx_evap_tot_col without removing it from any tracked water store, causing errh2o.
          ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
-         if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
-            qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+         ! SSR debug: I'm adding the "if use_fates" wrapper because of previous "Reference to undefined
+         !   POINTER PATCH%IS_VEG" errors above. Not sure if this is going to help. It might be because
+         !   patch%is_veg is only allocated when using FATES, which is why I'm trying this, but use_nvp
+         !   should not ever be true if not using FATES.
+         if (use_fates) then
+            if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
+               qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+            end if
          else
             qflx_ev_nvp(p) = 0._r8
          end if
