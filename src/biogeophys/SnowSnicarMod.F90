@@ -735,8 +735,11 @@ contains
 
 
             ! Set local aerosol array (snow layers only; NVP layer 0 already zeroed above)
+            ! [PORTED by Hui Tang: use snl_btm (not min(snl_btm,0)-1) so that with NVP active
+            !  (snl_btm=-1) layer -1 (bottom snow) is included; min()-1 gave -2, skipping layer -1,
+            !  leaving mss_cnc_aer_lcl(-1,:) stale and corrupting g(-1) past 1 -> tau_star < 0 -> SIGFPE]
             do j=1,sno_nbr_aer
-               mss_cnc_aer_lcl(snl_top:min(snl_btm,0)-1,j) = mss_cnc_aer_in(c_idx,snl_top:min(snl_btm,0)-1,j)
+               mss_cnc_aer_lcl(snl_top:snl_btm,j) = mss_cnc_aer_in(c_idx,snl_top:snl_btm,j)
                if (.not. nvp_active) then
                   mss_cnc_aer_lcl(0,j) = mss_cnc_aer_in(c_idx,0,j)
                end if
