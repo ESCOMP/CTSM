@@ -79,7 +79,8 @@ contains
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
     real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
-    real(r8) :: evaporation_demand                                   ! evaporative demand 
+    real(r8) :: evaporation_demand                                   ! evaporative demand
+    real(r8) :: heat_store_diag                                      ! [PORTED by Hui Tang: errsoi diagnostic - heat storage sum]
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -97,6 +98,9 @@ contains
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
+         ! [PORTED by Hui Tang: NVP errsoi fix - solar by layer and NVP sensible heat]
+         sabg_lyr                => solarabs_inst%sabg_lyr_patch            , & ! Input:  [real(r8) (:,:) ]  solar radiation absorbed per snow/soil layer (W/m**2)
+         eflx_sh_nvp             => energyflux_inst%eflx_sh_nvp_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from NVP (W/m**2) [+ to atm]
 
          emg                     => temperature_inst%emg_col                , & ! Input:  [real(r8) (:)   ]  ground emissivity                       
 !         emv                     => temperature_inst%emv_patch              , & ! Input:  [real(r8) (:)   ]  vegetation emissivity
@@ -403,7 +407,6 @@ contains
          eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
          if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
          
-         print *, "qflx_evap_veg=", qflx_evap_veg(p), qflx_evap_soi(p)
          qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
 
          eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
@@ -473,6 +476,66 @@ contains
                    - (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
             end if
          end do
+      end do
+
+      ! [PORTED by Hui Tang: NVP errsoi fix]
+      ! When NVP is active (snl=0, jbot_sno=-1), layer j=0 is the atmospheric boundary of
+      ! the soil column but is skipped by the loops above (condition j>=snl+1=1 fails for j=0).
+      ! Two corrections are needed:
+      !  (1) Add j=0 heat storage (the NVP layer temperature change).
+      !  (2) Replace the LHS boundary flux: eflx_soil_grnd uses the soil-surface (j=1)
+      !      terms, but the actual top-of-column boundary is the NVP surface (j=0).
+      !      We add (eflx_gnet_nvp - eflx_soil_grnd) to swap in the NVP surface budget.
+      !      eflx_gnet_nvp = sabg_lyr(p,0) + dlrad + (1-frac_veg_nosno)*emg*forc_lwrad
+      !                     - emg*sb*tssbef(c,0)^4 - (eflx_sh_nvp + qflx_ev_nvp*htvp)
+      !      tssbef(c,0) is the pre-update NVP temperature, matching what SoilTemperatureMod
+      !      used in the BC when it computed lwrad_emit_nvp.
+      if (use_nvp) then
+         do fp = 1, num_nolakep
+            p = filter_nolakep(fp)
+            c = patch%column(p)
+            if (col%nvp_layer_active(c) .and. col%snl(c) == 0) then
+               errsoi_patch(p) = errsoi_patch(p) &
+                    - (t_soisno(c,0) - tssbef(c,0)) / fact(c,0)
+               errsoi_patch(p) = errsoi_patch(p) &
+                    + (sabg_lyr(p,0) + dlrad(p) &
+                    +  (1 - frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                    -  emg(c)*sb*tssbef(c,0)**4 &
+                    -  (eflx_sh_nvp(p) + qflx_ev_nvp(p)*htvp(c))) &
+                    - eflx_soil_grnd(p)
+            end if
+         end do
+      end if
+
+      ! [PORTED by Hui Tang: errsoi diagnostic - decompose terms when error is large]
+      do fp = 1, num_nolakep
+         p = filter_nolakep(fp)
+         c = patch%column(p)
+         if (abs(errsoi_patch(p)) > 0.5_r8) then
+            heat_store_diag = 0._r8
+            do j = -nlevsno+1, nlevgrnd
+               if (col%itype(c) /= icol_sunwall .and. col%itype(c) /= icol_shadewall &
+                    .and. col%itype(c) /= icol_roof) then
+                  if (j >= col%snl(c)+1 .and. j < 1) heat_store_diag = heat_store_diag + &
+                       frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+                  if (j >= 1) heat_store_diag = heat_store_diag + &
+                       (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+               end if
+            end do
+            write(iulog,*) '[ERRSOI DBG] p=',p,' c=',c,' snl=',col%snl(c)
+            write(iulog,*) '  errsoi_patch     =', errsoi_patch(p)
+            write(iulog,*) '  eflx_soil_grnd   =', eflx_soil_grnd(p)
+            write(iulog,*) '  xmf (phase chg)  =', xmf(c)
+            write(iulog,*) '  xmf_h2osfc       =', xmf_h2osfc(c)
+            write(iulog,*) '  heat_store_sum   =', heat_store_diag
+            write(iulog,*) '  eflx_h2osfc_snow =', eflx_h2osfc_to_snow_col(c)
+            write(iulog,*) '  frac_h2osfc_term =', &
+                 frac_h2osfc(c)*(t_h2osfc(c)-t_h2osfc_bef(c))*(c_h2osfc(c)/dtime)
+            write(iulog,*) '  expected_errsoi  =', &
+                 eflx_soil_grnd(p) - xmf(c) - xmf_h2osfc(c) - heat_store_diag &
+                 + eflx_h2osfc_to_snow_col(c) &
+                 - frac_h2osfc(c)*(t_h2osfc(c)-t_h2osfc_bef(c))*(c_h2osfc(c)/dtime)
+         end if
       end do
 
       call t_stopf('bgp2_loop_3')

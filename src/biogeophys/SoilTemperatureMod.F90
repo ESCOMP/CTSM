@@ -845,8 +845,7 @@ contains
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0) .AND. &
                 .NOT. (use_nvp .AND. jbot_sno(c) == -1 .AND. j == 0)) then
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
-               print *, 'bw=', bw(c,j), h2osoi_ice(c,j), h2osoi_liq(c,j),dz(c,j)
-               
+
                l = col%landunit(c)
 
                ! Select method over glacier land unit 
@@ -1055,8 +1054,6 @@ contains
          end do
       end if
 
-      print *, "cv(:,:)=", cv
-      
       call t_stopf( 'SoilThermProp' )
 
     end associate
