@@ -422,6 +422,9 @@ contains
     real(r8):: smr                                ! accumulator for rdif gaussian integration
     real(r8):: smt                                ! accumulator for tdif gaussian integration
     real(r8):: exp_min                            ! minimum exponential value
+    ! [PORTED by Hui Tang: resonance guard for Delta-Eddington denominator (lm*mu=1 singularity)]
+    real(r8):: denom_dir                          ! denominator (1 - lm^2*mu_not^2) for direct-beam alp/gam
+    real(r8):: denom_dif                          ! denominator (1 - lm^2*mu^2) for Gaussian-loop alp/gam
 
     integer :: ng  ! gaussian integration index
     integer, parameter :: ngmax = 8  ! max gaussian integration index
@@ -1145,6 +1148,21 @@ contains
                       ws = omega_star(i)
                       gs = g_star(i)
 
+                      ! [DEBUG by Hui Tang: diagnose SIGFPE at line 1151]
+                      ! Fires when ws~1 (lm->0, div-by-zero) or lm*mu_not~1 (resonance).
+                      if (ws > 0.9999_r8 .or. &
+                          c3*(c1-ws)*(c1-ws*gs)*mu_not*mu_not > 0.9_r8) then
+                         write(iulog,'(A,3(1X,I6),4(1X,A,ES14.6))') &
+                              'SNICAR_SIGFPE_DIAG col/layer/band:', c_idx, i, bnd_idx, &
+                              ' ws=', ws, ' gs=', gs, ' ts=', ts, ' mu_not=', mu_not
+                         write(iulog,'(A,2(1X,I6),3(1X,A,ES14.6),A,I8,2(1X,A,ES14.6))') &
+                              'SNICAR_SIGFPE_INPUTS snl/flg:', snl_lcl, flg_slr_in, &
+                              ' h2osno_ice(-1)=', h2osno_ice_lcl(-1), &
+                              ' h2osno_ice(0)=', h2osno_ice_lcl(0), &
+                              ' tau(i)=', tau(i), ' snw_rds(i)=', snw_rds_lcl(i), &
+                              ' omega(i)=', omega(i), ' g(i)=', g(i)
+                         call flush(iulog)
+                      end if
                       ! Delta-Eddington solution expressions, Eq. 50: Briegleb and Light 2007
                       lm = sqrt(c3*(c1-ws)*(c1 - ws*gs))
                       ue = c1p5*(c1 - ws*gs)/lm
@@ -1161,12 +1179,20 @@ contains
 
                       ! Delta-Eddington solution expressions
                       ! Eq. 50: Briegleb and Light 2007; alpha and gamma for direct radiation
-                      alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu_not*mu_not))
-                      gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/(c1-lm*lm*mu_not*mu_not))
-                      apg = alp + gam
-                      amg = alp - gam
-                      rdir(i) = apg*rdif_a(i) +  amg*(tdif_a(i)*trnlay(i) - c1)
-                      tdir(i) = apg*tdif_a(i) + (amg* rdif_a(i)-apg+c1)*trnlay(i)
+                      ! [PORTED by Hui Tang: skip direct-beam alp/gam at lm*mu_not~1 resonance;
+                      !  fall back to rdif_a/tdif_a as limiting approximation to keep values physical]
+                      denom_dir = c1 - lm*lm*mu_not*mu_not
+                      if (abs(denom_dir) >= 1.e-4_r8) then
+                         alp = cp75*ws*mu_not*((c1 + gs*(c1-ws))/denom_dir)
+                         gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu_not*mu_not)/denom_dir)
+                         apg = alp + gam
+                         amg = alp - gam
+                         rdir(i) = apg*rdif_a(i) +  amg*(tdif_a(i)*trnlay(i) - c1)
+                         tdir(i) = apg*tdif_a(i) + (amg*rdif_a(i)-apg+c1)*trnlay(i)
+                      else
+                         rdir(i) = rdif_a(i)
+                         tdir(i) = tdif_a(i)*trnlay(i)
+                      end if
 
                       ! recalculate rdif,tdif using direct angular integration over rdir,tdir,
                       ! since Delta-Eddington rdif formula is not well-behaved (it is usually
@@ -1178,13 +1204,17 @@ contains
                       smr = c0
                       smt = c0
                       ! gaussian angles for the AD integral
+                      ! [PORTED by Hui Tang: skip any Gaussian angle where lm*mu~1 (resonance);
+                      !  clamping the denominator instead would make rdr/tdr huge and cause downstream NaN]
                       do ng=1,ngmax
                          mu  = difgauspt(ng)
                          gwt = difgauswt(ng)
+                         denom_dif = c1 - lm*lm*mu*mu
+                         if (abs(denom_dif) < 1.e-4_r8) cycle
                          swt = swt + mu*gwt
                          trn = max(exp_min, exp(-ts/mu))
-                         alp = cp75*ws*mu*((c1 + gs*(c1-ws))/(c1 - lm*lm*mu*mu))
-                         gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu*mu)/(c1-lm*lm*mu*mu))
+                         alp = cp75*ws*mu*((c1 + gs*(c1-ws))/denom_dif)
+                         gam = cp5*ws*((c1 + c3*gs*(c1-ws)*mu*mu)/denom_dif)
                          apg = alp + gam
                          amg = alp - gam
                          rdr = apg*R1 + amg*T1*trn - amg
@@ -1192,8 +1222,11 @@ contains
                          smr = smr + mu*rdr*gwt
                          smt = smt + mu*tdr*gwt
                       enddo      ! ng
-                      rdif_a(i) = smr/swt
-                      tdif_a(i) = smt/swt
+                      if (swt > c0) then
+                         rdif_a(i) = smr/swt
+                         tdif_a(i) = smt/swt
+                      end if
+                      ! if swt==0 (all angles resonant — pathological): keep initial R1/T1 values
 
                       ! homogeneous layer
                       rdif_b(i) = rdif_a(i)
