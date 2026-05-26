@@ -252,7 +252,7 @@ The black carbon and organic carbon deposition rates described in Table 2.3 are 
 
    D_{oc,\, hphob} =D_{oc,\, dryhphob}
 
-Deposited particles are assumed to be instantly mixed within the surface snow layer (black carbon and dust can be either internally or externally mixed with snow grains; sections :numref:`Snow Albedo`) and are added after the inter-layer water fluxes are computed (section :numref:`Water Content`) so that some aerosol is in the top layer after deposition and is not immediately washed out before radiative calculations are done. Particle masses are then redistributed each time step based on meltwater drainage through the snow column (section :numref:`Water Content`) and snow layer combination and subdivision (section :numref:`Snow Layer Combination and Subdivision`). The change in mass of each of the particle species :math:`\Delta m_{sp,\, i}` (kg m\ :sup:`-2`) is
+Deposited particles are assumed to be instantly mixed within the surface snow layer (black carbon and dust can be either internally or externally mixed with snow grains; section :numref:`Snow Albedo`) and are added after the inter-layer water fluxes are computed (section :numref:`Water Content`) so that some aerosol is in the top layer after deposition and is not immediately washed out before radiative calculations are done. Particle masses are then redistributed each time step based on meltwater drainage through the snow column (section :numref:`Water Content`) and snow layer combination and subdivision (section :numref:`Snow Layer Combination and Subdivision`). The change in mass of each of the particle species :math:`\Delta m_{sp,\, i}` (kg m\ :sup:`-2`) is
 
 .. math::
    :label: 8.38
