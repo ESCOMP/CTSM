@@ -1164,7 +1164,7 @@ contains
                               ' h2osno_ice(0)=', h2osno_ice_lcl(0), &
                               ' tau(i)=', tau(i), ' snw_rds(i)=', snw_rds_lcl(i), &
                               ' omega(i)=', omega(i), ' g(i)=', g(i)
-                         call flush(iulog)
+                         call shr_sys_flush(iulog)
                       end if
                       ! Delta-Eddington solution expressions, Eq. 50: Briegleb and Light 2007
                       lm = sqrt(c3*(c1-ws)*(c1 - ws*gs))
