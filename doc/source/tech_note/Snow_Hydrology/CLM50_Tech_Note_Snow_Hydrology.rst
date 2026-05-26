@@ -30,7 +30,7 @@ The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup
 
       \text{Water equivalent} = \text{Ice equivalent} \times \frac{\rho_\text{ice}}{\rho_\text{liq}}
 
-Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The following two sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snowpack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater scavenging. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
+Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). Sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snowpack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater scavenging. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
 
 .. _Snow Covered Area Fraction:
 
