@@ -125,7 +125,7 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 
 - :numref:`Table Respiration fractions for Century-based structure` Respiration fractions for litter and SOM pools for Century-based structure
 
-- :numref:`Table PFT-specific combustion completeness and fire mortality factors` PFT-specific combustion completeness and fire mortality factors.
+- :numref:`Table PFT-specific fire parameters` PFT-specific fire parameters.
 
 - :numref:`Table Methane Parameter descriptions`  Parameter descriptions and sensitivity analysis ranges applied in the methane model.
 
