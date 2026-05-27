@@ -1235,7 +1235,7 @@ Petrescu, A.M.R. et al. 2010. Modeling regional to global CH4 emissions of borea
 
 .. _Picardetal2016:
 
-Picard, G., Libois, Q., & Arnaud, L. (2016). Refinement of the ice ab‐sorption spectrum in the visible using radiance profile measurements in Antarctic snow. The Cryosphere, 10(6), 2655–2672.
+Picard, G., Libois, Q., & Arnaud, L. (2016). Refinement of the ice absorption spectrum in the visible using radiance profile measurements in Antarctic snow. The Cryosphere, 10(6), 2655–2672.
 
 .. _pfeiffer2013:
 
