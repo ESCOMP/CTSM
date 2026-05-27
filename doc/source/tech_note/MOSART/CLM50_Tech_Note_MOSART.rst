@@ -32,7 +32,7 @@ In MOSART, the travel velocities of water across hillslopes, sub-network and mai
 .. math::
    :label: 14.1
 
-   V = \frac{R^{\frac{2}{3}} S_{f}}{n}
+   V = \frac{R^{\frac{2}{3}} S_{f}^{\frac{1}{2}}}{n}
 
 where :math:`V` is the travel velocity (m s :sup:`-1` ), :math:`R` is the hydraulic radius (m). :math:`S_{f}` is the friction slope that accounts for the effects of gravity, friction, inertia and other forces on the water. If the channel slope is steep enough, the gravity force dominates over the others so one can approximate :math:`S_{f}` by the channel bed slope :math:`S`, which is the key assumption underpinning the kinematic wave method. :math:`n` is the Manning's roughness coefficient, which is mainly controlled by surface roughness and sinuosity of the flow path.
 
@@ -41,7 +41,7 @@ If the water surface is sufficiently large or the water depth :math:`h` is suffi
 .. math::
    :label: 14.2
 
-   R_{h} = h_{h}
+   R_{h} = h_{h} \\
    R_{t} = h_{t}
 
 Here :math:`R_{h}` (m) and :math:`R_{t}` (m) are hydraulic radius for hillslope and sub-network channel routing respectively, and :math:`h_{h}` (m) and :math:`h_{t}` (m) are water depth during hillslope and sub-network channel routing respectively.
@@ -60,9 +60,9 @@ For hillslopes, sub-network and main channels, a common continuity equation can 
 .. math::
    :label: 14.4
 
-   \frac{dS}{dt} = Q_{in} - Q_{out} + R
+   \frac{dS}{dt} = Q_{in} - Q_{out} + R - IR
 
-where :math:`Q_{in}` (m :sup:`3` s :sup:`-1` ) is the main channel flow from the upstream grid(s) into the main channel of the current grid, which is zero for hillslope and sub-network routing. :math:`Q_{out}` (m :sup:`3` s :sup:`-1` ) is the outflow rate from hillslope into the sub-network, from the sub-network into the main channel, or from the current main channel to the main channel of its downstream grid (if not the outlet grid) or ocean (if the current grid is the basin outlet). :math:`R` (m :sup:`3` s :sup:`-1` ) is a source term, which could be the surface runoff generation rate for hillslopes, or lateral inflow (from hillslopes) into sub-network channel or water-atmosphere exchange fluxes such as precipitation and evaporation. It is assumed that surface runoff is generated uniformly across all the hillslopes. Currently, MOSART does not exchange water with the atmosphere or return water to the land model so its function is strictly to transport water from runoff generation through the hillslope, tributaries, and main channels to the basin outlets.
+where :math:`Q_{in}` (m :sup:`3` s :sup:`-1` ) is the main channel flow from the upstream grid(s) into the main channel of the current grid, which is zero for hillslope and sub-network routing. :math:`Q_{out}` (m :sup:`3` s :sup:`-1` ) is the outflow rate from hillslope into the sub-network, from the sub-network into the main channel, or from the current main channel to the main channel of its downstream grid (if not the outlet grid) or ocean (if the current grid is the basin outlet). :math:`R` (m :sup:`3` s :sup:`-1` ) is a source term, which could be the surface runoff generation rate for hillslopes, or lateral inflow (from hillslopes) into sub-network channel or water-atmosphere exchange fluxes such as precipitation and evaporation. It is assumed that surface runoff is generated uniformly across all the hillslopes. :math:`IR` is water abstraction via irrigation demand only from main channel (i.e., :math:`IR` = 0 for hillslope and sub-network). Currently, MOSART does not exchange water with the atmosphere, but returns water from a main channel to the land model based on irrigation demand if irrigation opition is actived in the land model.
 
 .. _Numerical Solution MOSART:
 
