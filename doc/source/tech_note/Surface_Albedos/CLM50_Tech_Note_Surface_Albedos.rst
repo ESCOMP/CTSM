@@ -539,7 +539,7 @@ The adding-doubling two-stream solution requires the following bulk optical prop
 
    g=\frac{\sum _{1}^{k}g_{k} \omega _{k} \tau _{k}  }{\sum _{1}^{k}\omega _{k} \tau _{k}  }
 
-For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are pre-computed offline with Mie Theory by assuming lognormal size distribution for each constituent and applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. The extinction optical depth for each constituent depends on its mass extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
+For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sup:`-1`) are pre-computed offline with Mie Theory by assuming lognormal size distribution for each constituent and applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. The extinction optical depth for each constituent depends on its mass extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
 
 .. math::
    :label: 3.65
