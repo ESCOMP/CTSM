@@ -3275,4 +3275,28 @@ Toggle to use original (Graham et al. 2021) tillage logic, with bug for seasons 
 Maximum depth to till soil (m). Default 0.26; original (Graham et al., 2021) value was unintentionally 0.32.
 </entry>
 
+<!-- ========================================================================================  -->
+<!-- Namelist items controlling debug                                                          -->
+<!-- ========================================================================================  -->
+
+<entry id="debug_p" type="integer" category="clm_debug"
+       group="debug" valid_values="" value="-999">
+Global index of patch to debug.
+</entry>
+
+<entry id="debug_c" type="integer" category="clm_debug"
+       group="debug" valid_values="" value="-999">
+Global index of column to debug.
+</entry>
+
+<entry id="debug_l" type="integer" category="clm_debug"
+       group="debug" valid_values="" value="-999">
+Global index of landunit to debug.
+</entry>
+
+<entry id="debug_g" type="integer" category="clm_debug"
+       group="debug" valid_values="" value="-999">
+Global index of gridcell to debug.
+</entry>
+
 </namelist_definition>

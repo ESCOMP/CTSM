@@ -183,6 +183,7 @@ contains
     use FATESFireFactoryMod           , only : scalar_lightning
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
+    use debugMod                      , only : debugMod_init
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -308,6 +309,9 @@ contains
     call t_startf('clm_decompInit_glcp')
     call decompInit_glcp(ni, nj, glc_behavior)
     call t_stopf('clm_decompInit_glcp')
+
+    ! Initialize debugMod early so we can use its functions as soon as possible
+    call debugMod_init()
 
     if (use_hillslope) then
        ! Initialize hillslope properties
