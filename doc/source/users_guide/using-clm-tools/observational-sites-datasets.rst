@@ -6,9 +6,6 @@
 Observational Sites Datasets
 *******************************
 
-.. todo::
-    Update this.
+There are two ways to customize datasets for a particular observational site. The first is to customize the input to the tools that create the dataset, and the second is to overwrite the default data after you've created a given dataset. Depending on the tool it might be easier to do it one way or the other. Files that you may customize include ``fatmlndfrc``, ``fsurdat``, ``faerdep`` (for DATM), and ``stream_fldfilename_ndep``. To generate custom ``fsurdat`` files, you may modify the inputs needed by the ``mksurfdata_esmf`` tool. Also see :ref:`generic_single_point_runs` for relevant information pertaining to single-point simuations.
 
-There are two ways to customize datasets for a particular observational site. The first is to customize the input to the tools that create the dataset, and the second is to overwrite the default data after you've created a given dataset. Depending on the tool it might be easier to do it one way or the other. In Table :numref:`reqd-files-table` we list the files that are most likely to be customized and the way they might be customized. Of those files, the ones you are most likely to customize are: ``fatmlndfrc``, ``fsurdat``, ``faerdep`` (for DATM), and ``stream_fldfilename_ndep``. Note ``mksurfdata_esmf`` as documented previously has options to overwrite the vegetation and soil types. For more information on this also see :ref:`generic_single_point_runs`.
-
-Another aspect of customizing your input datasets is customizing the input atmospheric forcing datasets; see :ref:`generic_single_point_runs` for more information on this.
+Another aspect of customizing your input datasets is customizing the input atmospheric forcing datasets; see :ref:`generic_single_point_runs` for information on this.
