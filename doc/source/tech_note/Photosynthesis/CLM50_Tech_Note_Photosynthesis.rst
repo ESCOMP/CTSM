@@ -3,12 +3,10 @@
 Stomatal Resistance and Photosynthesis
 =========================================
 
-Summary of CLM5.0 updates relative to the CLM4.5
------------------------------------------------------
+History
+-------
 
-We describe here the complete photosynthesis and stomatal conductance parameterizations that appear in CLM5.0. Corresponding information for CLM4.5 appeared in the CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`).
-
-CLM5 includes the following new changes to photosynthesis and stomatal conductance:
+We describe here the complete photosynthesis and stomatal conductance parameterizations that appear in CLM6.0. In this version relative to CLM5, we have changed numerous parameter values, but have kept the algorithm unchanged. In CLM5 relative to CLM4.5, this section included the following updates:
 
 - Default stomatal conductance calculation uses the Medlyn conductance model
 
@@ -28,7 +26,7 @@ Leaf stomatal resistance, which is needed for the water vapor flux (Chapter :num
 Stomatal resistance
 -----------------------
 
-CLM5 calculates stomatal conductance using the Medlyn stomatal conductance model (:ref:`Medlyn et al. 2011<Medlynetal2011>`). Previous versions of CLM calculated leaf stomatal resistance using the Ball-Berry conductance model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface. Leaf stomatal resistance is:
+Since CLM5 the model has calculated stomatal conductance using the Medlyn stomatal conductance model (:ref:`Medlyn et al. 2011<Medlynetal2011>`). Previous versions of CLM calculated leaf stomatal resistance using the Ball-Berry conductance model as described by :ref:`Collatz et al. (1991)<Collatzetal1991>` and implemented in global climate models (:ref:`Sellers et al. 1996<Sellersetal1996>`). The Medlyn model calculates stomatal conductance (i.e., the inverse of resistance) based on net leaf photosynthesis, the leaf-to-air vapor pressure difference, and the CO\ :sub:`2` concentration at the leaf surface. Leaf stomatal resistance is:
 
 .. math::
    :label: 9.1
