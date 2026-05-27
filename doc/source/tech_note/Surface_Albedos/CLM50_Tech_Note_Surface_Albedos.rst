@@ -520,9 +520,9 @@ Albedos associated with CLM soil colors were updated for CLM4 using the procedur
 Snow Albedo
 ^^^^^^^^^^^^^^^^^
 
-Snow albedo and solar absorption within each snow layer are simulated with the Snow, Ice, and Aerosol Radiative Model (SNICAR), which incorporates a two-stream radiative transfer solution from :ref:`Toon et al. (1989) <Toonetal1989>`. Albedo and the vertical absorption profile depend on solar zenith angle, albedo of the substrate underlying snow, mass concentrations of atmospheric-deposited aerosols (black carbon, mineral dust, and organic carbon), and ice effective grain size (:math:`r_{e}`), which is simulated with a snow aging routine described in section :numref:`Snow Aging`. Representation of impurity mass concentrations within the snowpack is described in section :numref:`Black and organic carbon and mineral dust within snow`. Implementation of SNICAR in CLM is also described somewhat by :ref:`Flanner and Zender (2005) <FlannerZender2005>` and :ref:`Flanner et al. (2007) <Flanneretal2007>`.
+Snow albedo and solar absorption within each snow layer are simulated with the Snow, Ice, and Aerosol Radiative Model (SNICAR-ADv3; :ref:`Flanner et al., 2021 <Flanneretal2021>`), which incorporates an adding-doubling radiative transfer solution (:ref:`Dang et al., 2019 <Dangetal2019>`; :ref:`Briegleb and Light, 2007 <BrieglebLight2007>`; Note that the original SNICAR uses the tri-diagonal matrix two-stream radiative transfer solution from :ref:`Toon et al., 1989 <Toonetal1989>`). Snow albedo and the vertical light absorption profile depend on solar zenith angle, albedo of the substrate underlying snow, mass concentrations of atmospheric-deposited aerosols (black carbon, mineral dust, and organic carbon), snow layer thickness, snow density, and ice effective grain size (:math:`r_{e}`) that is simulated with a snow aging routine described in section :numref:`Snow Aging`. Representation of impurity mass concentrations within the snowpack is described in section :numref:`Black and organic carbon and mineral dust within snow`. Implementation of SNICAR-ADv3 in CTSM/CLM is described by :ref:`He et al. (2024) <Heetal2024>`, while the original SNICAR implementation is described by :ref:`Flanner and Zender (2005) <FlannerZender2005>`, and :ref:`Flanner et al. (2007) <Flanneretal2007>`.
 
-The two-stream solution requires the following bulk optical properties for each snow layer and spectral band: extinction optical depth (:math:`\tau`), single-scatter albedo (:math:`\omega`), and scattering asymmetry parameter (*g*). The snow layers used for radiative calculations are identical to snow layers applied elsewhere in CLM, except for the case when snow mass is greater than zero but no snow layers exist. When this occurs, a single radiative layer is specified to have the column snow mass and an effective grain size of freshly-fallen snow (section :numref:`Snow Aging`). The bulk optical properties are weighted functions of each constituent *k*, computed for each snow layer and spectral band as
+The adding-doubling two-stream solution requires the following bulk optical properties for each snow layer and spectral band: extinction optical depth (:math:`\tau`), single-scatter albedo (:math:`\omega`), and scattering asymmetry parameter (*g*). The snow layers used for radiative calculations are identical to snow layers applied elsewhere in CLM, except for the case when snow mass is greater than zero but no snow layers exist. When this occurs, a single radiative layer is specified to have the column snow mass and an effective grain size of freshly-fallen snow (section :numref:`Snow Aging`). For aerosols externally mixed with snow grains, the bulk optical properties are weighted functions of each constituent *k*, computed for each snow layer and spectral band as
 
 .. math::
    :label: 3.62
@@ -539,14 +539,16 @@ The two-stream solution requires the following bulk optical properties for each 
 
    g=\frac{\sum _{1}^{k}g_{k} \omega _{k} \tau _{k}  }{\sum _{1}^{k}\omega _{k} \tau _{k}  }
 
-For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are computed offline with Mie Theory, e.g., applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. The extinction optical depth for each constituent depends on its mass extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
+For each constituent (ice, two black carbon species, two organic carbon species, and four dust species), :math:`\omega`, *g*, and the mass extinction cross-section :math:`\psi` (m\ :sup:`2` kg\ :sub:`-1`) are pre-computed offline with Mie Theory by assuming lognormal size distribution for each constituent and applying the computational technique from :ref:`Bohren and Huffman (1983) <BohrenHuffman1983>`. The extinction optical depth for each constituent depends on its mass extinction cross-section and layer mass, :math:`w _{k}` (kg\ m\ :sup:`-1`) as
 
 .. math::
    :label: 3.65
 
    \tau _{k} =\psi _{k} w_{k}
 
-The two-stream solution (:ref:`Toon et al. (1989) <Toonetal1989>`) applies a tri-diagonal matrix solution to produce upward and downward radiative fluxes at each layer interface, from which net radiation, layer absorption, and surface albedo are easily derived. Solar fluxes are computed in five spectral bands, listed in :numref:`Table Spectral bands and weights used for snow radiative transfer`. Because snow albedo varies strongly across the solar spectrum, it was determined that four bands were needed to accurately represent the near-infrared (NIR) characteristics of snow, whereas only one band was needed for the visible spectrum. Boundaries of the NIR bands were selected to capture broad radiative features and maximize accuracy and computational efficiency. We partition NIR (0.7-5.0 :math:`\mu` m) surface downwelling flux from CLM according to the weights listed in :numref:`Table Spectral bands and weights used for snow radiative transfer`, which are unique for diffuse and direct incident flux. These fixed weights were determined with offline hyperspectral radiative transfer calculations for an atmosphere typical of mid-latitude winter (:ref:`Flanner et al. (2007) <Flanneretal2007>`). The tri-diagonal solution includes intermediate terms that allow for easy interchange of two-stream techniques. We apply the Eddington solution for the visible band (following :ref:`Wiscombe and Warren 1980 <WiscombeWarren1980>`) and the hemispheric mean solution ((:ref:`Toon et al. (1989) <Toonetal1989>`) for NIR bands. These choices were made because the Eddington scheme works well for highly scattering media, but can produce negative albedo for absorptive NIR bands with diffuse incident flux. Delta scalings are applied to :math:`\tau`, :math:`\omega`, and :math:`g` (:ref:`Wiscombe and Warren 1980 <WiscombeWarren1980>`) in all spectral bands, producing effective values (denoted with :math:`*`) that are applied in the two-stream solution
+Compared to the original SNICAR implementation, the SNICAR-ADv3 implementation includes two new features: nonspherical snow grain shape (:ref:`He et al., 2017 <Heetal2017>`) and aerosol-snow internal mixing for black carbon (BC) and dust (:ref:`He et al., 2017 <Heetal2017>`; :ref:`He et al., 2019 <Heetal2019>`). The original SNICAR assumes spherical snow grains, which however may not be a realistic representation since nonspherical snow grains are ubiquitous in reality. Thus, in SNICAR-ADv3, four typical snow grain shapes representative of real‐world observations, including sphere, spheroid, hexagonal plate/column, and fractal snowflake are used. The :ref:`He et al. (2017) <Heetal2017>` parameterizations are used to quantify snow grain nonsphericity impacts on snow asymmetry factor (*g*) before the calculation of bulk optical properties (equation :eq:`3.64`). Snow extinction optical depth (:math:`\tau`) and single-scattering albedo (:math:`\omega`) are not modified. The default snow grain shape is set to hexagonal plate/column (:ref:`Flanner et al., 2021 <Flanneretal2021>`). The snow grain shape can be controlled via namelist option (:ref:`He et al., 2024 <Heetal2024>`). For BC internal mixing with snow grain, the original SNICAR assumes BC‐snow external mixing, with hydrophilic BC treated as coated BC. However, in reality BC can also be internally mixed with snow grains. The :ref:`He et al. (2017) <Heetal2017>` parameterizations are used to quantify BC-snow internal mixing effects on snow single-scattering albedo (:math:`\omega`), with no changes in snow extinction optical depth (:math:`\tau`) and asymmetry factor (*g*) due to neglibile impacts. The hydrophilic BC is no longer treated as coated BC because sulfate coating on the BC particle surface is dissolvable into water during wet deposition. The hydrophilic BC is hence treated as internally mixed with snow grains. For dust-snow internal mixing, the :ref:`He et al. (2019) <Heetal2019>` parameterizations are used to quantify its impact on snow single-scattering albedo (:math:`\omega`), with no changes in snow extinction optical depth (:math:`\tau`) and asymmetry factor (*g*). Currently, dust-snow internal mixing (if activated) applies to all dust size bins. Both BC-snow and dust-snow internal/external mixing can be controlled by namelist options (:ref:`He et al., 2024 <Heetal2024>`). By default, BC and dust are externally mixed with snow grains, and it is recommended not to activate both internal mixing together which has not been fully tested.
+   
+The original SNICAR two-stream solution (:ref:`Toon et al., 1989 <Toonetal1989>`) applies a tri-diagonal matrix solution to produce upward and downward radiative fluxes at each layer interface, from which net radiation, layer absorption, and surface albedo are easily derived. The SNICAR-ADv3 instead uses a more accurate adding-doubling radiative transfer solution (:ref:`Dang et al., 2019 <Dangetal2019>`; :ref:`Briegleb and Light, 2007 <BrieglebLight2007>`). Solar fluxes are computed in either five spectral bands (default) listed in :numref:`Table Spectral bands and weights used for snow radiative transfer` or 480 hyperspectral bands (from 200 nm to 5000 nm with 10-nm spectral resolution; :ref:`Flanner et al., 2021 <Flanneretal2021>`). Because snow albedo varies strongly across the solar spectrum, it was determined that at least four bands were needed to accurately represent the near-infrared (NIR) characteristics of snow, whereas only one band was needed for the visible spectrum, which is why the five bands are used by default to achieve a balance between computational time and accuracy. Boundaries of the four NIR bands were selected to capture broad radiative features and maximize accuracy and computational efficiency. The 480-band capability can be used via namelist option (:ref:`He et al., 2024 <Heetal2024>`). We partition NIR (0.7-5.0 :math:`\mu` m) surface downwelling flux from CLM according to the weights from six typical atmospheric conditions (:ref:`Flanner et al., 2021 <Flanneretal2021>`), including Mid‐latitude winter, Mid‐latitude summer, Sub‐Arctic winter, Sub‐Arctic summer, Summit (Greenland), and High mountain, which are unique for diffuse and direct incident flux and can be selected via namelist options (:ref:`He et al., 2024 <Heetal2024>`). By default, the mid‐latitude winter downward solar spectrum (:numref:`Table Spectral bands and weights used for snow radiative transfer`) is used. These prescribed weights were determined with offline hyperspectral atmospheric radiative transfer calculations. The radiative transfer solution includes intermediate terms that allow for easy interchange of two-stream techniques. We apply the delta-Eddington solution to the layer bulk optical properties following :ref:`Briegleb and Light (2007) <BrieglebLight2007>`. Specifically, Delta scalings are applied to :math:`\tau`, :math:`\omega`, and :math:`g` in all spectral bands, producing effective values (denoted with :math:`*`) that are applied in the two-stream solution.
 
 .. math::
    :label: 3.66
@@ -561,7 +563,7 @@ The two-stream solution (:ref:`Toon et al. (1989) <Toonetal1989>`) applies a tri
 .. math::
    :label: 3.68
 
-   g^{*} =\frac{g}{1+g}
+   g^{*} =\frac{g-g^{2}}{1-g^{2}}
 
 .. _Table Spectral bands and weights used for snow radiative transfer:
 
@@ -572,18 +574,18 @@ The two-stream solution (:ref:`Toon et al. (1989) <Toonetal1989>`) applies a tri
  +=========================================================+======================+==================+
  | Band 1: 0.3-0.7\ :math:`\mu`\ m (visible)               | (1.0)                | (1.0)            |
  +---------------------------------------------------------+----------------------+------------------+
- | Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.586            |
+ | Band 2: 0.7-1.0\ :math:`\mu`\ m (near-IR)               | 0.494                | 0.634            |
  +---------------------------------------------------------+----------------------+------------------+
- | Band 3: 1.0-1.2\ :math:`\mu`\ m (near-IR)               | 0.181                | 0.202            |
+ | Band 3: 1.0-1.2\ :math:`\mu`\ m (near-IR)               | 0.180                | 0.186            |
  +---------------------------------------------------------+----------------------+------------------+
- | Band 4: 1.2-1.5\ :math:`\mu`\ m (near-IR)               | 0.121                | 0.109            |
+ | Band 4: 1.2-1.5\ :math:`\mu`\ m (near-IR)               | 0.123                | 0.094            |
  +---------------------------------------------------------+----------------------+------------------+
- | Band 5: 1.5-5.0\ :math:`\mu`\ m (near-IR)               | 0.204                | 0.103            |
+ | Band 5: 1.5-5.0\ :math:`\mu`\ m (near-IR)               | 0.203                | 0.086            |
  +---------------------------------------------------------+----------------------+------------------+
 
-Under direct-beam conditions, singularities in the radiative approximation are occasionally approached in spectral bands 4 and 5 that produce unrealistic conditions (negative energy absorption in a layer, negative albedo, or total absorbed flux greater than incident flux). When any of these three conditions occur, the Eddington approximation is attempted instead, and if both approximations fail, the cosine of the solar zenith angle is adjusted by 0.02 (conserving incident flux) and a warning message is produced. This situation occurs in only about 1 in 10 :sup:`6` computations of snow albedo. After looping over the five spectral bands, absorption fluxes and albedo are averaged back into the bulk NIR band used by the rest of CLM.
+Under direct-beam conditions, the two-stream approximations become poor for large solar zenith angle, which is mostly contributed by the errors of near-IR band calculations, especially for optically thick snowpacks. To improve the performance of two-stream algorithms, the :ref:`Dang et al. (2019) <Dangetal2019>` parameterization that corrects the underestimated near-IR snow albedo at large solar zenith angles (>75deg) is used for NIR bands (:ref:`He et al., 2024 <Heetal2024>`).
 
-Soil albedo (or underlying substrate albedo), which is defined for visible and NIR bands, is a required boundary condition for the snow radiative transfer calculation. Currently, the bulk NIR soil albedo is applied to all four NIR snow bands. With ground albedo as a lower boundary condition, SNICAR simulates solar absorption in all snow layers as well as the underlying soil or ground. With a thin snowpack, penetrating solar radiation to the underlying soil can be quite large and heat cannot be released from the soil to the atmosphere in this situation. Thus, if the snowpack has total snow depth less than 0.1 m (:math:`z_{sno} < 0.1`) and there are no explicit snow layers, the solar radiation is absorbed by the top soil layer. If there is a single snow layer, the solar radiation is absorbed in that layer. If there is more than a single snow layer, 75% of the solar radiation is absorbed in the top snow layer, and 25% is absorbed in the next lowest snow layer. This prevents unrealistic soil warming within a single timestep.
+Soil albedo (or underlying substrate albedo), which is defined for visible and NIR bands, is a required boundary condition for the snow radiative transfer calculation. Currently, the bulk NIR soil albedo is applied to all four NIR snow bands. With ground albedo as a lower boundary condition, SNICAR-ADv3 simulates solar absorption in all snow layers as well as the underlying soil or ground. With a thin snowpack, penetrating solar radiation to the underlying soil can be quite large and heat cannot be released from the soil to the atmosphere in this situation. Thus, if the snowpack has total snow depth less than 0.1 m (:math:`z_{sno} < 0.1`) and there are no explicit snow layers, the solar radiation is absorbed by the top soil layer. If there is a single snow layer, the solar radiation is absorbed in that layer. If there is more than a single snow layer, 75% of the solar radiation is absorbed in the top snow layer, and 25% is absorbed in the next lowest snow layer. This prevents unrealistic soil warming within a single timestep.
 
 The radiative transfer calculation is performed twice for each column containing a mass of snow greater than :math:`1 \times 10^{-30}` kg\ m\ :sup:`-2` (excluding lake and urban columns); once each for direct-beam and diffuse incident flux. Absorption in each layer :math:`i` of pure snow is initially recorded as absorbed flux per unit incident flux on the ground (:math:`S_{sno,\, i}` ), as albedos must be calculated for the next timestep with unknown incident flux. The snow absorption fluxes that are used for column temperature calculations are
 
@@ -599,7 +601,7 @@ This weighting is performed for direct-beam and diffuse, visible and NIR fluxes.
 Snowpack Optical Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Ice optical properties for the five spectral bands are derived offline and stored in a namelist-defined lookup table for online retrieval (see CLM5.0 User's Guide). Mie properties are first computed at fine spectral resolution (470 bands), and are then weighted into the five bands applied by CLM according to incident solar flux, :math:`I^{\downarrow } (\lambda )`. For example, the broadband mass-extinction cross section (:math:`\bar{\psi }`) over wavelength interval :math:`\lambda _{1}` to :math:`\lambda _{2}` is
+Ice optical properties for the five or 480 spectral bands are derived offline based on Mie calculations and stored in a namelist-defined lookup table for online retrieval (:ref:`He et al., 2024 <Heetal2024>`). The ice refractive index used in Mie calculation follows the updates in (:ref:`Flanner et al., 2021 <Flanneretal2021>`), which is a compilation of the :ref:`Picard et al. (2016) <Picardetal2016>` and :ref:`Warren and Brandt (2008) <WarrenBrandt2008>` datasets. Mie properties are first computed at fine spectral resolution (480 bands from 200 nm to 5000 nm with 10-nm spectral resolution), and are then weighted into the five bands according to incident solar flux, :math:`I^{\downarrow } (\lambda )`, under six different atmospheric conditions (section :numref:`Snow Albedo`). For example, the broadband mass-extinction cross section (:math:`\bar{\psi }`) over wavelength interval :math:`\lambda _{1}` to :math:`\lambda _{2}` is
 
 .. math::
    :label: 3.70
@@ -613,9 +615,9 @@ Broadband single-scatter albedo (:math:`\bar{\omega }`) is additionally weighted
 
    \bar{\omega }=\frac{\int _{\lambda _{1} }^{\lambda _{2} }\omega (\lambda )I^{\downarrow } ( \lambda )\alpha _{sno} (\lambda ){\rm d}\lambda }{\int _{\lambda _{1} }^{\lambda _{2} }I^{\downarrow } ( \lambda )\alpha _{sno} (\lambda ){\rm d}\lambda }
 
-Inclusion of this additional albedo weight was found to improve accuracy of the five-band albedo solutions (relative to 470-band solutions) because of the strong dependence of optically-thick snowpack albedo on ice grain single-scatter albedo (:ref:`Flanner et al. (2007) <Flanneretal2007>`). The lookup tables contain optical properties for lognormal distributions of ice particles over the range of effective radii: 30\ :math:`\mu`\ m :math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution. Single-scatter albedos for the end-members of this size range are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`.
+Inclusion of this additional albedo weight was found to improve accuracy of the five-band albedo solutions (relative to 480-band solutions) because of the strong dependence of optically-thick snowpack albedo on ice grain single-scatter albedo (:ref:`Flanner et al., 2007 <Flanneretal2007>`). The lookup tables contain optical properties for lognormal distributions of ice particles over the range of effective radii: 30\ :math:`\mu`\ m :math:`< r _{e} < \text{1500} \mu \text{m}`, at 1 :math:`\mu` m resolution. Single-scatter albedos for the end-members of this size range are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`.
 
-Optical properties for black carbon are described in :ref:`Flanner et al. (2007) <Flanneretal2007>`. Single-scatter albedo, mass extinction cross-section, and asymmetry parameter values for all snowpack species, in the five spectral bands used, are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`, :numref:`Table Mass extinction values`, and :numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice`. These properties were also derived with Mie Theory, using various published sources of indices of refraction and assumptions about particle size distribution. Weighting into the five CLM spectral bands was determined only with incident solar flux, as in equation :eq:`3.69`.
+Optical properties for black carbon, organic carbon, and mineral dust are described in :ref:`Flanner et al. (2021) <Flanneretal2021>`. Three types of dust can be selected via namelist options (:ref:`He et al., 2024 <Heetal2024>`), including Saharan dust (default), Colorado dust, and Greenland dust, due to their substantially different optical properties. Single-scatter albedo, mass extinction cross-section, and asymmetry parameter values for all snowpack species under diffuse radiation with the default atmospheric condition (mid-latitude winter), in the five spectral bands used, are listed in :numref:`Table Single-scatter albedo values used for snowpack impurities and ice`, :numref:`Table Mass extinction values`, and :numref:`Table Asymmetry scattering parameters used for snowpack impurities and ice`. These properties were also derived with Mie Theory, using various published sources of indices of refraction and assumptions about particle size distribution (:ref:`Flanner et al., 2021 <Flanneretal2021>`). Weighting into the five CLM spectral bands was determined using the 480-band values with incident solar flux under six different atmospheric conditions (section :numref:`Snow Albedo`), as in equation :eq:`3.70`.
 
 .. _Table Single-scatter albedo values used for snowpack impurities and ice:
 
@@ -624,25 +626,25 @@ Optical properties for black carbon are described in :ref:`Flanner et al. (2007)
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
  +================================================================+==========+==========+==========+==========+==========+
- | Hydrophilic black carbon                                       | 0.516    | 0.434    | 0.346    | 0.276    | 0.139    |
+ | Hydrophilic black carbon                                       | 0.366    | 0.302    | 0.252    | 0.217    | 0.152    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic black carbon                                       | 0.288    | 0.187    | 0.123    | 0.089    | 0.040    |
+ | Hydrophobic black carbon                                       | 0.366    | 0.302    | 0.252    | 0.217    | 0.152    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophilic organic carbon                                     | 0.997    | 0.994    | 0.990    | 0.987    | 0.951    |
+ | Hydrophilic organic carbon                                     | 0.772    | 0.990    | 0.987    | 0.983    | 0.971    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic organic carbon                                     | 0.963    | 0.921    | 0.860    | 0.814    | 0.744    |
+ | Hydrophobic organic carbon                                     | 0.772    | 0.990    | 0.987    | 0.983    | 0.971    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 1                                                         | 0.979    | 0.994    | 0.993    | 0.993    | 0.953    |
+ | Dust 1                                                         | 0.945    | 0.991    | 0.992    | 0.992    | 0.983    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 2                                                         | 0.944    | 0.984    | 0.989    | 0.992    | 0.983    |
+ | Dust 2                                                         | 0.870    | 0.976    | 0.989    | 0.992    | 0.991    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 3                                                         | 0.904    | 0.965    | 0.969    | 0.973    | 0.978    |
+ | Dust 3                                                         | 0.802    | 0.948    | 0.965    | 0.974    | 0.984    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 4                                                         | 0.850    | 0.940    | 0.948    | 0.953    | 0.955    |
+ | Dust 4                                                         | 0.730    | 0.913    | 0.943    | 0.954    | 0.965    |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 0.9999   | 0.9999   | 0.9992   | 0.9938   | 0.9413   |
+ | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 0.9999   | 0.9999   | 0.9993   | 0.9954   | 0.9510   |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 0.9998   | 0.9960   | 0.9680   | 0.8730   | 0.5500   |
+ | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 0.9998   | 0.9963   | 0.9678   | 0.8735   | 0.5492   |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 
 .. _Table Mass extinction values:
@@ -652,25 +654,25 @@ Optical properties for black carbon are described in :ref:`Flanner et al. (2007)
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
  +================================================================+==========+==========+==========+==========+==========+
- | Hydrophilic black carbon                                       | 25369    | 12520    | 7739     | 5744     | 3527     |
+ | Hydrophilic black carbon                                       | 12389    | 7971     | 5744     | 4654     | 3155     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic black carbon                                       | 11398    | 5923     | 4040     | 3262     | 2224     |
+ | Hydrophobic black carbon                                       | 12389    | 7971     | 5744     | 4654     | 3155     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophilic organic carbon                                     | 37774    | 22112    | 14719    | 10940    | 5441     |
+ | Hydrophilic organic carbon                                     | 4933     | 1390     | 628      | 375      | 143      |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic organic carbon                                     | 3289     | 1486     | 872      | 606      | 248      |
+ | Hydrophobic organic carbon                                     | 4933     | 1390     | 628      | 375      | 143      |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 1                                                         | 2687     | 2420     | 1628     | 1138     | 466      |
+ | Dust 1                                                         | 2543     | 2242     | 1469     | 1013     | 458      |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 2                                                         | 841      | 987      | 1184     | 1267     | 993      |
+ | Dust 2                                                         | 803      | 950      | 1144     | 1205     | 1000     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 3                                                         | 388      | 419      | 400      | 397      | 503      |
+ | Dust 3                                                         | 369      | 399      | 378      | 380      | 488      |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 4                                                         | 197      | 203      | 208      | 205      | 229      |
+ | Dust 4                                                         | 188      | 193      | 197      | 197      | 212      |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 55.7     | 56.1     | 56.3     | 56.6     | 57.3     |
+ | Ice (:math:`r _{e}` = 30 :math:`\mu` m)                        | 55.7     | 56.1     | 56.4     | 56.7     | 57.2     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 1.09     | 1.09     | 1.09     | 1.09     | 1.1      |
+ | Ice (:math:`r _{e}` = 1500 :math:`\mu` m)                      | 1.09     | 1.09     | 1.09     | 1.09     | 1.09     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
 
 .. _Table Asymmetry scattering parameters used for snowpack impurities and ice:
@@ -680,23 +682,23 @@ Optical properties for black carbon are described in :ref:`Flanner et al. (2007)
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Species                                                        | Band 1   | Band 2   | Band 3   | Band 4   | Band 5   |
  +================================================================+==========+==========+==========+==========+==========+
- | Hydrophilic black carbon                                       | 0.52     | 0.34     | 0.24     | 0.19     | 0.10     |
+ | Hydrophilic black carbon                                       | 0.44     | 0.34     | 0.28     | 0.24     | 0.18     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic black carbon                                       | 0.35     | 0.21     | 0.15     | 0.11     | 0.06     |
+ | Hydrophobic black carbon                                       | 0.44     | 0.34     | 0.28     | 0.24     | 0.18     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophilic organic carbon                                     | 0.77     | 0.75     | 0.72     | 0.70     | 0.64     |
+ | Hydrophilic organic carbon                                     | 0.58     | 0.47     | 0.39     | 0.34     | 0.25     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Hydrophobic organic carbon                                     | 0.62     | 0.57     | 0.54     | 0.51     | 0.44     |
+ | Hydrophobic organic carbon                                     | 0.58     | 0.47     | 0.39     | 0.34     | 0.25     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 1                                                         | 0.69     | 0.72     | 0.67     | 0.61     | 0.44     |
+ | Dust 1                                                         | 0.71     | 0.72     | 0.67     | 0.62     | 0.48     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 2                                                         | 0.70     | 0.65     | 0.70     | 0.72     | 0.70     |
+ | Dust 2                                                         | 0.73     | 0.66     | 0.71     | 0.74     | 0.73     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 3                                                         | 0.79     | 0.75     | 0.68     | 0.63     | 0.67     |
+ | Dust 3                                                         | 0.82     | 0.76     | 0.68     | 0.63     | 0.67     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Dust 4                                                         | 0.83     | 0.79     | 0.77     | 0.76     | 0.73     |
+ | Dust 4                                                         | 0.87     | 0.80     | 0.78     | 0.76     | 0.73     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
- | Ice (:math:`r _{e}` = 30\ :math:`\mu`\ m)                      | 0.88     | 0.88     | 0.88     | 0.88     | 0.90     |
+ | Ice (:math:`r _{e}` = 30\ :math:`\mu`\ m)                      | 0.88     | 0.88     | 0.88     | 0.88     | 0.89     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
  | Ice (:math:`r _{e}` = 1500\ :math:`\mu`\ m)                    | 0.89     | 0.90     | 0.90     | 0.92     | 0.97     |
  +----------------------------------------------------------------+----------+----------+----------+----------+----------+
