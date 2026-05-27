@@ -174,7 +174,7 @@ Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite 
 
 .. _BrieglebLight2007:
 
-Briegleb, B. P. and Light, B.: A Delta-Eddington multiple scat- tering parameterization for solar radiation in the sea ice com- ponent of the Community Climate System Model, NCAR/TN- 472+STR, National Center for Atmospheric Research, 108 pp., 2007
+Briegleb, B. P. and Light, B.: A Delta-Eddington multiple scattering parameterization for solar radiation in the sea ice component of the Community Climate System Model, NCAR/TN- 472+STR, National Center for Atmospheric Research, 108 pp., 2007
 
 .. _Brownetal1997:
 
