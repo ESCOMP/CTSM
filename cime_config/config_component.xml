@@ -300,6 +300,7 @@ Caveats:
     <default_value>constant</default_value>
     <values>
       <value compset="_CAM"        >diagnostic</value>
+      <value compset="E_CAM70"     >prognostic</value>
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
