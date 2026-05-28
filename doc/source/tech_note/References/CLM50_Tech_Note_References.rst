@@ -172,6 +172,10 @@ Bonan, G.B., Williams, M., Fisher, R.A., and Oleson, K.W. 2014. Modeling stomata
 
 Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite data. Global Change Biology 6.7, pp. 709-725.
 
+.. _BrieglebLight2007:
+
+Briegleb, B. P. and Light, B.: A Delta-Eddington multiple scattering parameterization for solar radiation in the sea ice component of the Community Climate System Model, NCAR/TN- 472+STR, National Center for Atmospheric Research, 108 pp., 2007
+
 .. _Brownetal1997:
 
 Brown J., Ferrians O. J. Jr, Heginbottom J. A. and Melnikov E. S. 1997.  Circum-Arctic Map of Permafrost and Ground-Ice Conditions (Boulder, CO: National Snow and Ice Data Center) version 2, DOI: 10.3133/cp45
@@ -312,6 +316,10 @@ Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from contin
 
 Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025.
 
+.. _Dangetal2019:
+
+Dang, C., Zender, C. S., & Flanner, M. G. (2019). Intercomparison and improvement of two‐stream shortwave radiative transfer schemes in Earth system models for a unified treatment of cryospheric surfaces. The Cryosphere, 13(9), 2325–2343.
+
 .. _Darmenovaetal2009:
 
 Darmenova, K., Sokolik, I.N., Shao, Y., Marticorena, B. and Bergametti, G., 2009. Development of a physically based dust emission module within the Weather Research and Forecasting (WRF) model: Assessment of dust emission parameterizations and input parameters for source regions in Central and East Asia. Journal of Geophysical Research: Atmospheres, 114(D14). DOI:10.1029/2008JD011236.
@@ -448,6 +456,10 @@ Flanner, M.G., and Zender, C.S. 2006. Linking snowpack microphysics and albedo e
 
 Flanner, M.G., Zender, C.S., Randerson, J.T., and Rasch, P.J. 2007. Present day climate forcing and response from black carbon in snow. J. Geophys. Res. 112:D11202. DOI:10.1029/2006JD008003.
 
+.. _Flanneretal2021:
+
+Flanner, M. G., Arnheim, J. B., Cook, J. M., Dang, C., He, C., Huang, X., Singh, D., Skiles, S. M., Whicker, C. A., and Zender, C. S.: SNICAR-ADv3: a community tool for modeling spectral snow albedo, Geosci. Model Dev., 14, 7673–7704, 2021
+
 .. _Flatauetal1992:
 
 Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation vapor pressure. J. Appl. Meteor. 31:1507-1513.
@@ -571,6 +583,18 @@ Hastings, D.A., Dunbar, P.K., Elphingstone, G.M., Bootz, M., Murakami, H., Maruy
 .. _Hauseretal2023:
 
 Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.  DOI:10.1029/2023GL105493
+
+.. _Heetal2017:
+
+He, C., Takano, Y., Liou, K. N., Yang, P., Li, Q., & Chen, F. (2017). Impact of snow grain shape and black carbon–snow internal mixing on snow optical properties: Parameterizations for climate models. Journal of Climate, 30(24), 10019–10036.
+
+.. _Heetal2019:
+
+He, C., Liou, K. N., Takano, Y., Chen, F., & Barlage, M. (2019). Enhanced snow absorption and albedo reduction by dust‐snow internal mixing: Modeling and parameterization. Journal of Advances in Modeling Earth Systems, 11(11), 3755–3776.
+
+.. _Heetal2024:
+
+He, C., Flanner, M., Lawrence, D. M., & Gu, Y. (2024). New features and enhancements in community land model (CLM5) snow albedo modeling: Description, sensitivity, and evaluation. Journal of Advances in Modeling Earth Systems, 16, e2023MS003861.
 
 .. _Healdetal2008:
 
@@ -1209,6 +1233,10 @@ Peterson, D.L. and K.C. Ryan, 1986. Modeling postfire conifer mortality for long
 
 Petrescu, A.M.R. et al. 2010. Modeling regional to global CH4 emissions of boreal and arctic wetlands. Global Biogeochemical Cycles, 24(GB4009).
 
+.. _Picardetal2016:
+
+Picard, G., Libois, Q., & Arnaud, L. (2016). Refinement of the ice absorption spectrum in the visible using radiance profile measurements in Antarctic snow. The Cryosphere, 10(6), 2655–2672.
+
 .. _pfeiffer2013:
 
 Pfeiffer, M., A. Spessa, and J.O. Kaplan, 2013. A model for global biomass burning in preindustrial time: LPJ-LMfire (v1. 0). Geoscientific Model Development 6.3, pp. 643-685.
@@ -1709,6 +1737,10 @@ Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafros
 .. _Waniaetal2010:
 
 Wania, R., Ross, I. and Prentice, I.C. 2010. Implementation and evaluation of a new methane model within a dynamic global vegetation model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions 3:1-59.
+
+.. _WarrenBrandt2008:
+
+Warren, S. G., & Brandt, R. E. (2008). Optical constants of ice from the ultraviolet to the microwave: A revised compilation. Journal of Geophysical Research, 113(D14), D14220.
 
 .. _weng2014:
 
