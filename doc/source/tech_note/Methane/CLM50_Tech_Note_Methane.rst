@@ -14,6 +14,8 @@ Methane Model Structure and Flow
 
 The driver routine for the methane biogeochemistry calculations controls the initialization of boundary conditions, inundation, and impact of redox conditions; calls to routines to calculate CH\ :sub:`4` production, oxidation, transport through aerenchyma, ebullition, and the overall mass balance (for unsaturated and saturated soils and, if desired, lakes); resolves changes to CH\ :sub:`4` calculations associated with a changing inundated fraction; performs a mass balance check; and calculates the average column CH\ :sub:`4` production, oxidation, and exchanges with the atmosphere.
 
+Default history includes a short list of methane-related fields. One can set namelist parameter ``hist_wrtch4diag = .true.`` to obtain a list of methane-related fields that is longer by about 20. Alternatively one may use namelist fincl statements to add individual fields of interest to history.
+
 .. _Governing Mass-Balance Relationship:
 
 Governing Mass-Balance Relationship
