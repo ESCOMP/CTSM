@@ -172,6 +172,10 @@ Bonan, G.B., Williams, M., Fisher, R.A., and Oleson, K.W. 2014. Modeling stomata
 
 Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite data. Global Change Biology 6.7, pp. 709-725.
 
+.. _BrieglebLight2007:
+
+Briegleb, B. P. and Light, B.: A Delta-Eddington multiple scattering parameterization for solar radiation in the sea ice component of the Community Climate System Model, NCAR/TN- 472+STR, National Center for Atmospheric Research, 108 pp., 2007
+
 .. _Brownetal1997:
 
 Brown J., Ferrians O. J. Jr, Heginbottom J. A. and Melnikov E. S. 1997.  Circum-Arctic Map of Permafrost and Ground-Ice Conditions (Boulder, CO: National Snow and Ice Data Center) version 2, DOI: 10.3133/cp45
@@ -219,6 +223,10 @@ Castillo, G., Kendra, C., Levis, S., and Thornton, P. 2012. Evaluation of the ne
 .. _Caoetal1996:
 
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and methane emissions from natural wetlands: Application of a process-based model. J. Geophys. Res. 101(D9):14,399-14,414.
+
+.. _Chenetal2023:
+
+Chen, Y., Hall, J., van Wees, D., Andela, N., Hantson, S., Giglio, L., van der Werf, G.R., Morton, D.C., Randerson, J.T. 2023. Multi-decadal trends and variability in burned area from the fifth version of the Global Fire Emissions Database (GFED5). Earth Syst. Sci. Data 15:5227-5259.
 
 .. _Chengetal2019:
 
@@ -290,7 +298,7 @@ Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Pa
 
 .. _Daietal2001:
 
-Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at http://climate.eas.gatech.edu/dai/clmdoc.pdf].
+Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at https://journals.ametsoc.org/view/journals/bams/84/8/bams-84-8-1013.xml].
 
 .. _Daietal2003:
 
@@ -307,6 +315,10 @@ Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from contin
 .. _Damseauxetal2025:
 
 Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025.
+
+.. _Dangetal2019:
+
+Dang, C., Zender, C. S., & Flanner, M. G. (2019). Intercomparison and improvement of two‐stream shortwave radiative transfer schemes in Earth system models for a unified treatment of cryospheric surfaces. The Cryosphere, 13(9), 2325–2343.
 
 .. _Darmenovaetal2009:
 
@@ -406,7 +418,7 @@ Fécan, F., Marticorena, B. and Bergametti, G., 1998, December. Parametrization 
 
 .. _FeddemaKauffman2016:
 
-Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://svn-iam-thesis-release.cgd.ucar.edu/urban_properties/. doi:10.5065/D6R78CMT.
+Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://zenodo.org/records/15501878. doi:10.5065/zrph-dq73
 
 .. _Ferrari1999:
 
@@ -443,6 +455,10 @@ Flanner, M.G., and Zender, C.S. 2006. Linking snowpack microphysics and albedo e
 .. _Flanneretal2007:
 
 Flanner, M.G., Zender, C.S., Randerson, J.T., and Rasch, P.J. 2007. Present day climate forcing and response from black carbon in snow. J. Geophys. Res. 112:D11202. DOI:10.1029/2006JD008003.
+
+.. _Flanneretal2021:
+
+Flanner, M. G., Arnheim, J. B., Cook, J. M., Dang, C., He, C., Huang, X., Singh, D., Skiles, S. M., Whicker, C. A., and Zender, C. S.: SNICAR-ADv3: a community tool for modeling spectral snow albedo, Geosci. Model Dev., 14, 7673–7704, 2021
 
 .. _Flatauetal1992:
 
@@ -503,10 +519,6 @@ Ghimire, B., W. J. Riley, C. D. Koven, M. Mu, and J. T. Randerson, 2016: Represe
 .. _Gholzetal1985:
 
 Gholz, H.L., Perry, C.S., Cropper, W.P., Jr. and Hendry, L.C., 1985. Litterfall, decomposition, and nitrogen and phosphorous dynamics in a chronosequence of slash pine (*Pinus elliottii*) plantations. Forest Science, 31: 463-478.
-
-.. _Giglioetal2006:
-
-Giglio, L., Csiszar, I., and Justice, C.O. 2006. Global distribution and seasonality of active fires as observed with the Terra and Aqua Moderate Resolution Imaging Spectroradiometer (MODIS) sensors. J. Geophys. Res. 111:G02016. DOI:10.1029/2005JG000142.
 
 .. _GlobalSoilDataTask2000:
 
@@ -572,6 +584,18 @@ Hastings, D.A., Dunbar, P.K., Elphingstone, G.M., Bootz, M., Murakami, H., Maruy
 
 Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.  DOI:10.1029/2023GL105493
 
+.. _Heetal2017:
+
+He, C., Takano, Y., Liou, K. N., Yang, P., Li, Q., & Chen, F. (2017). Impact of snow grain shape and black carbon–snow internal mixing on snow optical properties: Parameterizations for climate models. Journal of Climate, 30(24), 10019–10036.
+
+.. _Heetal2019:
+
+He, C., Liou, K. N., Takano, Y., Chen, F., & Barlage, M. (2019). Enhanced snow absorption and albedo reduction by dust‐snow internal mixing: Modeling and parameterization. Journal of Advances in Modeling Earth Systems, 11(11), 3755–3776.
+
+.. _Heetal2024:
+
+He, C., Flanner, M., Lawrence, D. M., & Gu, Y. (2024). New features and enhancements in community land model (CLM5) snow albedo modeling: Description, sensitivity, and evaluation. Journal of Advances in Modeling Earth Systems, 16, e2023MS003861.
+
 .. _Healdetal2008:
 
 Heald, C.L., Henze, D.K., Horowitz, L.W., Feddema, J., Lamarque, J.-F., Guenther, A., Hess, P.G., Vitt, F., Seinfeld, J.H., Goldstein, A.H., and Fung, I. 2008. Predicted change in global secondary organic aerosol concentrations in response to future climate, emissions, and land use change. J. Geophys. Res. 113:D05211. DOI:10.1029/2007JD009092.
@@ -622,7 +646,7 @@ Huang, M., and Liang, X. 2006. On the assessment of the impact of reducing param
 
 .. _Hugeliusetal2012:
 
-Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (http://dev1.geo.su.se/bbcc/dev/ncscd/).
+Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (https://essd.copernicus.org/articles/5/3/2013/essd-5-3-2013.html).
 
 .. _Huntetal1988:
 
@@ -824,10 +848,6 @@ Lee, H., Swenson, S.C., Slater A.G. and Lawrence D.M., 2014. Effects of excess g
 
 Lehner, B., Verdin, K. and Jarvis, A., 2008. New global hydrograhy derived from spaceborne elevation data. Eos Trans., AGU, 89, 93 – 94.
 
-.. _LePageetal2010:
-
-Le Page, Y., van der Werf, G.R., Morton, D.C., and Pereira, J.M.C. 2010. Modeling fire-driven deforestation potential in Amazonia under current and projected climate conditions. J. Geophys. Res. 115:G03012. DOI:10.1029/2009JG001190.
-
 .. _Lerman1979:
 
 Lerman, A., 1979. Geochemical processes: Water and sediment environments. John Wiley and Sons, New York, N.Y.
@@ -880,6 +900,14 @@ Li, F., Zeng, X. D., and Levis, S. 2012b. Corrigendum to "A process-based fire p
 
 Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Earth system – Part 1: Improved global fire modeling in the Community Earth System Model (CESM1). Biogeosciences 10:2293-2314.
 
+.. _Lietal2019:
+
+Li, F., Val Martin, M., Andreae, M.O., Arneth, A., Hantson, S., Kaiser, J.W., Lasslop, G., Yue, C., Bachelet, D., Forrest, M., Kluzek, E., Liu, X., Mangeon, S., Melton, J.R., Ward, D.S., Darmenov, A., Hickler, T., Ichoku, C., Magi, B.I., Sitch, S., van der Werf, G.R., Wiedinmyer, C., Rabin, S.S. 2019. Historical (1700-2012) global multi-model estimates of the fire emissions from the Fire Modeling Intercomparison Project (FireMIP). Atmos. Chem. Phys. 19:12545-12567.
+
+.. _Lietal2024b:
+
+Li, F. et al. 2024. Quantifying the role of fire in the Earth system: Improved global fire modeling in Earth system models. AGU Fall Meeting 2024, Washington, D.C., USA, 9-13 December 2024, GC41E-01. https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1529786.
+
 .. _LiLawrence2017:
 
 Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing ecosystems. J. Clim. 30: 1894-1908.
@@ -900,7 +928,7 @@ Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and N. Voisin. 201
 
 Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the Anthropocene: An earth system modeling approach, J. Adv. Model. Earth Syst., 7, doi:10.1002/2015MS000471.
 
-.. _Lietal2024:
+.. _Lietal2024a:
 
 Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
 
@@ -911,10 +939,6 @@ Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrol
 .. _lichstein2011:
 
 Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
-
-.. _LipscombSacks2012:
-
-Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation and user's guide. 46 pp. [Available online at http://www.cesm.ucar.edu/models/cesm1.1/cism/].
 
 .. _lischke2006:
 
@@ -1139,7 +1163,7 @@ Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community
 
 .. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001596. 
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001586. 
 
 .. _Olson1963:
 
@@ -1209,6 +1233,10 @@ Peterson, D.L. and K.C. Ryan, 1986. Modeling postfire conifer mortality for long
 
 Petrescu, A.M.R. et al. 2010. Modeling regional to global CH4 emissions of boreal and arctic wetlands. Global Biogeochemical Cycles, 24(GB4009).
 
+.. _Picardetal2016:
+
+Picard, G., Libois, Q., & Arnaud, L. (2016). Refinement of the ice absorption spectrum in the visible using radiance profile measurements in Antarctic snow. The Cryosphere, 10(6), 2655–2672.
+
 .. _pfeiffer2013:
 
 Pfeiffer, M., A. Spessa, and J.O. Kaplan, 2013. A model for global biomass burning in preindustrial time: LPJ-LMfire (v1. 0). Geoscientific Model Development 6.3, pp. 643-685.
@@ -1240,6 +1268,10 @@ Pomeroy, J. W., D. M. Gray, K. R. Shook, B. Toth, R. L. H. Essery, A. Pietroniro
 .. _Portmannetal2010:
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global monthly irrigated and rainfed crop areas around the year 2000: A new high-resolution data set for agricultural and hydrological modeling. Global Biogeochem. Cycles. 24, GB1011. DOI:10.1029/2008GB003435.
+
+.. _Potosnaketal2014:
+
+Potosnak, M. J., LeStourgeon, L., Pallardy, S. G., Hosman, K. P., Gu, L., Karl, T., et al. (2014). Observed and modeled ecosystem isoprene fluxes from an oak-dominated temperate forest and the influence of drought stress. Atmospheric Environment, 84, 314–322. http://www.sciencedirect.com/science/article/pii/S1352231013009059
 
 .. _Pressetal1992:
 
@@ -1668,7 +1700,7 @@ Vionnet, V., E. Brun, S. Morin, A. Boone, S. Faroux, P. Le Moigne, E. Martin, an
 
 .. _Viovy2011:
 
-Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea.fr/data/p529viov/cruncep/readme.htm. Data available at http://dods.extra.cea.fr/store/p529viov/cruncep/V4\_1901\_2011/].
+Viovy, N. 2011. CRUNCEP dataset. [Description available at https://rda.ucar.edu/datasets/d314003/ Data available at https://rda.ucar.edu/datasets/d314003/dataaccess/].
 
 .. _VitousekHowarth1991:
 
@@ -1682,6 +1714,22 @@ Walker, A. P., Beckerman, A. P., Gu, L., Kattge, J., Cernusak, L. A., Domingues,
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
 
+.. _WangZeng2009:
+
+Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+
+.. _Wangetal2022:
+
+Wang, H., Lu, X., Seco, R., Stavrakou, T., Karl, T., Jiang, X., et al. 2022. Modeling Isoprene Emission Response to Drought and Heatwaves Within MEGAN Using Evapotranspiration Data and by Coupling With the Community Land Model. Journal of Advances in Modeling Earth Systems, 14, e2022MS003174. https://doi.org/10.1029/2022MS003174.
+
+.. _Wangetal2024a:
+
+Wang, H., Welch, A., Nagalingam, S., Leong, C., Kittitananuvong, P., Barsanti, K. C., et al. 2024a. Arctic Heatwaves Could Significantly Influence the Isoprene Emissions From Shrubs. Geophysical Research Letters, 51, e2023GL107599. https://doi.org/10.1029/2023GL107599.
+
+.. _Wangetal2024b:
+
+Wang, H., Welch, A. M., Nagalingam, S., Leong, C., Czimczik, C. I., Tang, J., et al. 2024b. High temperature sensitivity of Arctic isoprene emissions explained by sedges. Nature Communications, 15(1), 6144. https://doi.org/10.1038/s41467-024-49960-0.
+
 .. _Waniaetal2009:
 
 Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafrost into a dynamic global vegetation model: 2. Evaluation and sensitivity of vegetation and carbon cycle processes. Global Biogeochem. Cycles 23.
@@ -1690,9 +1738,9 @@ Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafros
 
 Wania, R., Ross, I. and Prentice, I.C. 2010. Implementation and evaluation of a new methane model within a dynamic global vegetation model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions 3:1-59.
 
-.. _WangZeng2009:
+.. _WarrenBrandt2008:
 
-Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+Warren, S. G., & Brandt, R. E. (2008). Optical constants of ice from the ultraviolet to the microwave: A revised compilation. Journal of Geophysical Research, 113(D14), D14220.
 
 .. _weng2014:
 
