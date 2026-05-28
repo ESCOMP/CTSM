@@ -153,6 +153,8 @@ where, if ${T}_{2m}$ - ${T}_{f}$ takes on values outside the above ranges within
 
 #### Leaf emergence
 
+The "leaf emergence" phase is the period of vegetative growth between when the leaves first emerge from the soil to when filling of the reproductive organ begins.
+
 According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($GDD_{T_{soi} }$ ), which is tracked since planting, reaches 1 to 5% of ${GDD}_{mat}$ (see Phase 2 % ${GDD}_{mat}$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $GDD_{T_{soi} }$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $GDD_{T_{{\rm 2m}} }$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
 
 (grain fill)=
