@@ -375,7 +375,7 @@ where :math:`\tilde{c}_{v}` is the volumetric heat capacity (J m\ :sup:`-3` K\ :
 
    \frac{d}{dt} \sum _{j=1}^{N}\left[\tilde{c}_{v,j} (t)\left(T_{j} -T_{f} \right)+L_{j} (t)\right] \Delta z_{j} =G+\left(1-\beta \right)\vec{S}_{g}
 
-where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Heat Capacities Lake`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing eq. to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in eq..
+where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Heat Capacities Lake`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing equation :eq:`12.27` to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in equation :eq:`12.27'
 
 .. _Boundary Conditions Lake:
 
@@ -439,7 +439,7 @@ where
 
    N^{2} =\frac{g}{\rho _{i} } \frac{\partial \rho }{\partial z}
 
-and :math:`g` is the acceleration due to gravity (m s\ :sup:`-2`) (:numref:`Table Physical Constants`), :math:`\rho _{i}` is the density of water (kg m\ :sup:`-3`), and :math:`\frac{\partial \rho }{\partial z}` is approximated as :math:`\frac{\rho _{i+1} -\rho _{i} }{z_{i+1} -z_{i} }`. Note that because here, *z* is increasing downwards (unlike in :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`), eq. contains no negative sign; this is a correction from CLM4. The density of water is (:ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`)
+and :math:`g` is the acceleration due to gravity (m s\ :sup:`-2`) (:numref:`Table Physical Constants`), :math:`\rho _{i}` is the density of water (kg m\ :sup:`-3`), and :math:`\frac{\partial \rho }{\partial z}` is approximated as :math:`\frac{\rho _{i+1} -\rho _{i} }{z_{i+1} -z_{i} }`. Note that because here, *z* is increasing downwards (unlike in :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`), equation :eq:`12.33` contains no negative sign; this is a correction from CLM4. The density of water is (:ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`)
 
 .. math::
    :label: 12.34
@@ -453,7 +453,7 @@ The enhanced diffusivity :math:`K_{ed}` is given by (:ref:`Fang and Stefan 1996<
 
    K_{ed} =1.04\times 10^{-8} \left(N^{2} \right)^{-0.43} ,N^{2} \ge 7.5\times 10^{-5} {\rm s}^{2}
 
-where :math:`N^{2}` \ is calculated as in eq. except for the minimum value imposed in.
+where :math:`N^{2}` \ is calculated as in equation :eq:`12.33` except for the minimum value imposed in.
 
 The thermal conductivity for the liquid water portion of lake body layer *i*, :math:`\tau _{liq,i}` (W m\ :sup:`-1` K\ :sup:`-1`) is given by
 
@@ -612,7 +612,7 @@ If freezing occurs, :math:`Q_{avail}` is again given by equation :eq:`12.47`, bu
 
    M=\max \left\{-M_{liq} ,\frac{Q_{avail} }{H_{fus} } \right\}
 
-where :math:`M_{liq}` is the mass of water in the layer: :math:`\left(1-I_{i} \right)\rho _{liq} \Delta z_{i}` for a lake body layer, or the soil / snow water content state variable (:math:`w_{liq}` ). The heat remainder :math:`Q_{rem}` is given by eq. and will be negative or zero. Finally, :math:`M_{liq}` is adjusted downwards by :math:`-M` and the temperature is reset according to eq..
+where :math:`M_{liq}` is the mass of water in the layer: :math:`\left(1-I_{i} \right)\rho _{liq} \Delta z_{i}` for a lake body layer, or the soil / snow water content state variable (:math:`w_{liq}` ). The heat remainder :math:`Q_{rem}` is given by equation :eq:`12.49` and will be negative or zero. Finally, :math:`M_{liq}` is adjusted downwards by :math:`-M` and the temperature is reset according to equation :eq:`12.50`
 
 In the presence of nonzero snow water :math:`W_{sno}` without resolved snow layers over an unfrozen top lake layer, the available energy in the top lake layer :math:`\left(T_{1} -T_{f} \right)c_{v,1}` is used to melt the snow. Similar to above, :math:`W_{sno}` is either completely melted and the remainder of heat returned to the top lake layer, or the available heat is exhausted and the top lake layer is set to freezing. The snow thickness is adjusted downwards in proportion to the amount of melt, maintaining constant density.
 
