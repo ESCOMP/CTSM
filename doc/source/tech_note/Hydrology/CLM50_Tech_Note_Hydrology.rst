@@ -118,7 +118,7 @@ Canopy snow unloading from wind speed :math:`u` and above-freezing temperatures 
 
    q_{unl,\, tot} =\min \left( q_{unl,\, wind} +q_{unl,\, temp} ,W_{can,\, sno} \right)
 
-where :math: `f_{unl,wind,sno}` is a fraction of snow unloaded from canopy due to wind. The canopy liquid water and snow water equivalent are updated as
+where :math:`f_{unl,wind,sno}` is a fraction of snow unloaded from canopy due to wind. The canopy liquid water and snow water equivalent are updated as
 
 .. math::
    :label: 7.15
@@ -170,7 +170,7 @@ The total rate of liquid and solid precipitation reaching the ground is then
 .. math::
    :label: 7.20
 
-   q_{grnd,ice} =q_{thru,\, ice} +q_{drip,\, ice} +q_{unl,\, tot} .
+   q_{grnd,ice} =q_{thru,\, ice} +q_{drip,\, ice} +q_{unl,\, tot}
 
 Solid precipitation reaching the soil or snow surface, :math:`q_{grnd,\, ice} \Delta t`, is added immediately to the snow pack (Chapter :numref:`rst_Snow Hydrology`). The liquid part, :math:`q_{grnd,\, liq} \Delta t` is added after surface fluxes (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`) have been determined.
 
@@ -181,11 +181,16 @@ The wetted fraction of the canopy (stems plus leaves), which is required for sur
 
    f_{wet} =
    \left\{\begin{array}{lr}
-   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le 1 & \qquad L+S > 0 \\
+   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le f_{wet}^{max } & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}
 
-while the fraction of the canopy that is dry and transpiring is
+.. math::
+   :label: 7.200
+
+   W_{can} = W_{can,\, liq} + W_{can,\, sno}
+
+where :math:`f_{wet}^{max }` is the maximum wetted fraction of the canopy, an adjustable parameter. Default value is :math:`f_{wet}^{max }` = 0.05. The fraction of the canopy that is dry and transpiring is
 
 .. math::
    :label: 7.22
