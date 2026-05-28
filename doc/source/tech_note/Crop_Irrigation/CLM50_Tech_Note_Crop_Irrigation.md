@@ -370,7 +370,7 @@ Notes:
 
 ### Allocation
 
-Allocation changes based on the crop phenology phases phenology (section {numref}`Phenology`). Simulated C assimilation begins every year upon leaf emergence in phase 2 and ends with harvest at the end of phase 3; therefore, so does the allocation of such C to the crop's leaf, live stem, fine root, and reproductive pools.
+Allocation changes based on the crop phenology phase (section {numref}`Phenology`). Simulated C assimilation begins every year upon leaf emergence in phase 2 and ends with harvest at the end of phase 3; therefore, so does the allocation of such C to the crop's leaf, live stem, fine root, and reproductive pools.
 
 Typically, C:N ratios in plant tissue vary throughout the growing season and tend to be lower during early growth stages and higher in later growth stages. In order to account for this seasonal change, two sets of C:N ratios are established in CLM for the leaf, stem, and fine root of crops: one during the leaf emergence phase (phenology phase 2), and a second during grain fill phase (phenology phase 3). This modified C:N ratio approach accounts for the nitrogen retranslocation that occurs during the grain fill phase (phase 3) of crop growth. Leaf, stem, and root C:N ratios for phase 2 are calculated using the standard CLM carbon and nitrogen allocation scheme (Chapter {numref}`rst_CN Allocation`), which provides a target C:N value ({numref}`Table Crop allocation parameters`) and allows C:N to vary through time. During grain fill (phase 3) of the crop growth cycle, a portion of the nitrogen in the plant tissues is moved to a storage pool to fulfill nitrogen demands of organ (reproductive pool) development, such that the resulting C:N ratio of the plant tissue is reflective of measurements at harvest. All C:N ratios were determined by calibration process, through comparisons of model output versus observations of plant carbon throughout the growing season.
 
@@ -552,9 +552,9 @@ where $n$ is set to 20 fertilizer application days and 86400 is the number of se
 
 Biological N fixation for soybeans is calculated by the fixation and uptake of nitrogen module (Chapter {numref}`rst_FUN`) and is the same as N fixation in natural vegetation. Unlike natural vegetation, where a fraction of each PFT are N fixers, all soybeans are treated as N fixers.
 
-(latitude-vary-base-tempereature-for-growing-degree-days)=
+(latitude-vary-base-temperature-for-growing-degree-days)=
 
-#### Latitudinal variation in base growth tempereature
+#### Latitudinal variation in base growth temperature
 
 For most crops, $GDD_{T_{{\rm 2m}} }$ (growing degree days since planting) is the same in all locations. However, for both rainfed and irrigated spring wheat and sugarcane, the calculation of $GDD_{T_{{\rm 2m}} }$ allows for latitudinal variation:
 
