@@ -318,7 +318,7 @@ The fluxes of momentum, sensible heat, and water vapor are solved for simultaneo
 
 where the last term on the right side of equation :eq:`12.23` is the change in saturated specific humidity due to the change in :math:`T_{g}` between iterations.
 
-#. Saturated specific humidity :math:`q_{sat}^{T_{g} }` and its derivative :math:`\frac{dq_{sat}^{T_{g} } }{dT_{g} }` are updated for :math:`T_{g}^{n+1}` (section :numref:`Monin-Obukhov Similarity Theory`).
+14. Saturated specific humidity :math:`q_{sat}^{T_{g} }` and its derivative :math:`\frac{dq_{sat}^{T_{g} } }{dT_{g} }` are updated for :math:`T_{g}^{n+1}` (section :numref:`Monin-Obukhov Similarity Theory`).
 
 #. Virtual potential temperature scale :math:`\theta _{v*}` (equation :eq:`5.17`)
 
