@@ -464,34 +464,34 @@ The following equations illustrate how this works. Subscript $p$ refers to eithe
 
 $$
 CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) * biofuel\_harvfrac
+  \right) \times biofuel\_harvfrac
 $$ (25.9)
 
 $$
 CF_{p,removed\_residue} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) * (1 - biofuel\_harvfrac) * crop\_residue\_removal\_frac
+  \right) \times (1 - biofuel\_harvfrac) \times crop\_residue\_removal\_frac
 $$ (harv_c_to_removed_residue)
 
 $$
 CF_{p,litter} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) * \left( 1-biofuel\_harvfrac  \right) * \left( 1-crop\_residue\_removal\_frac  \right) +CF_{p,alloc}
+  \right) \times \left( 1-biofuel\_harvfrac  \right) \times \left( 1-crop\_residue\_removal\_frac  \right) +CF_{p,alloc}
 $$ (25.11)
 
 with corresponding nitrogen fluxes:
 
 $$
 NF_{p,biofuel} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) * biofuel\_harvfrac
+  \right) \times biofuel\_harvfrac
 $$ (25.12)
 
 $$
 NF_{p,removed\_residue} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) * \left( 1 - biofuel\_harvfrac \right) * crop\_residue\_removal\_frac
+  \right) \times \left( 1 - biofuel\_harvfrac \right) \times crop\_residue\_removal\_frac
 $$ (harv_n_to_removed_residue)
 
 $$
 NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) *  \left( 1-biofuel\_harvfrac  \right) *  \left( 1-crop\_residue\_removal\_frac  \right)
+  \right) \times  \left( 1-biofuel\_harvfrac  \right) \times  \left( 1-crop\_residue\_removal\_frac  \right)
 $$ (25.14)
 
 where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and $biofuel\_harvfrac$ is the harvested fraction of leaf/livestem for biofuel feedstocks.
@@ -499,7 +499,7 @@ where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is
 Annual food crop yields (g dry matter m{sup}`-2`) can be calculated by saving the GRAINC_TO_FOOD_ANN variable once per year, then postprocessing with Equation {eq}`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 
 $$
-\text{Grain yield} = \frac{GRAINC\_TO\_FOOD\_ANN)*0.85}{0.45}
+\text{Grain yield} = \frac{GRAINC\_TO\_FOOD\_ANN) \times 0.85}{0.45}
 $$ (25.15)
 
 (table crop allocation parameters)=
