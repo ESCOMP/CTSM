@@ -619,6 +619,10 @@ Keller, M., Palace, M., Asner, G.P., Pereira, R., Jr. and Silva, J.N.M., 2004. C
 
 Kellner, E., Baird, A.J., Oosterwoud, M., Harrison, K. and Waddington, J.M., 2006. Effect of temperature and atmospheric pressure on methane (CH4) ebullition from near-surface peats. Geophys. Res. Lett. 33. DOI:10.1029/2006GL027509.
 
+.. _Khatiwala2024:
+
+Khatiwala, S., 2024. Efficient spin-up of Earth System Models using sequence acceleration. Science Advances 10, eadn2839.
+
 .. _Kimballetal1997:
 
 Kimball, J.S., Thornton, P.E., White, M.A. and Running, S.W. 1997. Simulating forest productivity and surface-atmosphere exchange in the BOREAS study region. Tree Physiology 17:589-599.
@@ -670,6 +674,10 @@ Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T., Lenters, J.D.,
 .. _KucharikBrye2003:
 
 Kucharik, C.J., and Brye, K.R. 2003. Integrated BIosphere Simulator (IBIS) yield and nitrate loss predictions for Wisconsin maize receiving varied amounts of nitrogen fertilizer. Journal of Environmental Quality 32: 247–268.
+
+.. _KykerSnowmanetal2020:
+
+Kyker-Snowman, E., Wieder, W.R., Frey, S.D., Grandy, A.S., 2020. Stoichiometrically coupled carbon and nitrogen cycling in the MIcrobial-MIneral Carbon Stabilization model version 1.0 (MIMICS-CN v1. 0). Geoscientific Model Development 13, 4413-4434.
 
 .. _Laddetal2992:
 
@@ -1532,9 +1540,17 @@ White, M.A., Thornton, P.E., and Running, S.W. 1997. A continental phenology mod
 
 White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000. Parameterization and sensitivity analysis of the Biome-BGC terrestrial ecosystem model: net primary production controls. Earth Interactions 4:1-85.
 
+.. _Wiederetal2014:
+
+Wieder, W., Grandy, A., Kallenbach, C., Bonan, G., 2014. Integrating microbial physiology and physio-chemical principles in soils with the MIcrobial-MIneral Carbon Stabilization (MIMICS) model. Biogeosciences 11, 3899-3917.
+
 .. _Wiederetal2015:
 
 Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects of model structural uncertainty on carbon cycle projections: biological nitrogen fixation as a case study. Environmental Research Letters, 10(4), 044016.
+
+.. _Wiederetal2015b:
+
+Wieder, W., Grandy, A., Kallenbach, C., Taylor, P., Bonan, G., 2015. Representing life in the Earth system with soil microbial functional traits in the MIMICS model. Geoscientific Model Development 8, 1789-1808.
 
 .. _Williamsetal1996:
 
