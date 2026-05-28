@@ -51,7 +51,7 @@ Note that there are different combinations of no-competition and fixed biogeogra
 Scientifically Supported CLM-FATES Configurations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We currently scientifally support CLM-FATES run in `carbon-only mode <https://fates-users-guide.readthedocs.io/en/latest/user/PARTEH-Modes.html>`_, and with either SP or no-competition + fixed biogeography mode.
+We currently scientifally support CLM-FATES run in `carbon-only mode <https://fates-users-guide.readthedocs.io/en/latest/user/PARTEH-Modes.html>`_, and with either SP or no-competition + fixed biogeography mode. Carbon and nitrogen capabilities are currently enabled, but are still being scientifically tested. C-N mode can be turned on using the CLM namelist variable ``fates_parteh_mode = 2``, as opposed to the default ``fates_parteh_mode = 1``.
 
 
 Further reading
