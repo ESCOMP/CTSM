@@ -60,9 +60,9 @@ For hillslopes, sub-network and main channels, a common continuity equation can 
 .. math::
    :label: 14.4
 
-   \frac{dS}{dt} = Q_{in} - Q_{out} + R - IR
+   \frac{dS}{dt} = Q_{in} - Q_{out} + R - I
 
-where :math:`Q_{in}` (m :sup:`3` s :sup:`-1` ) is the main channel flow from the upstream grid(s) into the main channel of the current grid, which is zero for hillslope and sub-network routing. :math:`Q_{out}` (m :sup:`3` s :sup:`-1` ) is the outflow rate from hillslope into the sub-network, from the sub-network into the main channel, or from the current main channel to the main channel of its downstream grid (if not the outlet grid) or ocean (if the current grid is the basin outlet). :math:`R` (m :sup:`3` s :sup:`-1` ) is a source term, which could be the surface runoff generation rate for hillslopes, or lateral inflow (from hillslopes) into sub-network channel or water-atmosphere exchange fluxes such as precipitation and evaporation. It is assumed that surface runoff is generated uniformly across all the hillslopes. :math:`IR` is water abstraction via irrigation demand only from main channel (i.e., :math:`IR` = 0 for hillslope and sub-network). Currently, MOSART does not exchange water with the atmosphere, but returns water from a main channel to the land model based on irrigation demand if irrigation opition is actived in the land model.
+where :math:`Q_{in}` (m :sup:`3` s :sup:`-1` ) is the main channel flow from the upstream grid(s) into the main channel of the current grid, which is zero for hillslope and sub-network routing. :math:`Q_{out}` (m :sup:`3` s :sup:`-1` ) is the outflow rate from hillslope into the sub-network, from the sub-network into the main channel, or from the current main channel to the main channel of its downstream grid (if not the outlet grid) or ocean (if the current grid is the basin outlet). :math:`R` (m :sup:`3` s :sup:`-1` ) is a source term, which could be the surface runoff generation rate for hillslopes, or lateral inflow (from hillslopes) into sub-network channel or water-atmosphere exchange fluxes such as precipitation and evaporation. It is assumed that surface runoff is generated uniformly across all the hillslopes. :math:`I` is water abstraction via irrigation demand only from main channel (i.e., :math:`I` = 0 for hillslope and sub-network). Currently, MOSART does not exchange water with the atmosphere, but returns water from a main channel to the land model based on irrigation demand if irrigation opition is actived in the land model.
 
 .. _Numerical Solution MOSART:
 
@@ -111,15 +111,4 @@ MOSART is supported by a comprehensive, global hydrography dataset at 0.5 ° res
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
  | :math:`n_{h}`           | \-            | Manning's roughness coefficient for overland flow routing                                                                          |
  +-------------------------+---------------+------------------------------------------------------------------------------------------------------------------------------------+
-
-Difference between CLM5.0 and CLM4.5
--------------------------------------
-
-1. Routing methods: RTM, a linear reservoir method, is used in CLM4.5 for river routing, whilst in CLM5.0, MOSART is an added option for river routing based on the more physically-based kinematic wave method.
-
-2. Runoff treatment: In RTM runoff is routed regardless of its sign so negative streamflow can be simulated at times. MOSART routes only non-negative runoff and always produces positive streamflow, which is important for future extensions to model riverine heat and biogeochemical fluxes.
-
-3. Input parameters: RTM in CLM4.5 only requires one layer of a spatially varying variable of channel velocity, whilst MOSART in CLM5.0 requires 13 parameters that are all available globally at 0.5 ° resolution.
-
-4. Outputs: RTM only produces streamflow simulation, whilst MOSART additionally simulates the time-varying channel velocities, channel water depth, and channel surface water variations.
 
