@@ -180,7 +180,7 @@ These equations assume that absorptivity equals emissivity. The emissivity of th
 
    \varepsilon _{g} =\varepsilon _{soi} \left(1-f_{sno} \right)+\varepsilon _{sno} f_{sno}
 
-where :math:`\varepsilon _{soi} =0.96` for soil, :math:`\varepsilon _{sno} =0.97` (same for glacier), and :math:`f_{sno}` is the fraction of ground covered by snow (section :numref:`Snow Covered Area Fraction`). The vegetation emissivity is
+where :math:`\varepsilon _{soi} =0.96` for soil, :math:`\varepsilon _{sno} =0.97` for snow, which is also the same for glacier, and :math:`f_{sno}` is the fraction of ground covered by snow (section :numref:`Snow Covered Area Fraction`). The vegetation emissivity is
 
 .. math::
    :label: 4.20
