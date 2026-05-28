@@ -1012,6 +1012,20 @@ The bare soil turbulent transfer coefficient is
 
 where the kinematic viscosity of air :math:`\upsilon =1.5\times 10^{-5}` m\ :sup:`2` s\ :sup:`-1` and :math:`a=0.13`.
 
+When biomass heat storage is active, an empirical under-canopy wind speed is used in the calculation of the aerodynamic resistances to heat and moisture
+
+.. math::
+   :label: 5.116b
+
+   r_{ah} ^{{'} } =r_{aw} ^{{'} } =\frac{1}{C_{s} U_{uc} }
+
+where
+
+.. math::
+   :label: 5.117b
+
+   U_{uc} =\min \left(0.4, \frac{0.3 \ V_{a}}{u_{*}} \right) \ .
+
 The leaf boundary layer resistance :math:`r_{b}`  is
 
 .. math::
