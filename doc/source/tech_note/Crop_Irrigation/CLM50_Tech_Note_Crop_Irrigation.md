@@ -12,7 +12,7 @@ Groups developing Earth System Models generally account for the human footprint 
 
 AgroIBIS is a state-of-the-art land surface model with options to simulate dynamic vegetation ({ref}`Kucharik et al. 2000 <Kuchariketal2000>`) and interactive crop management ({ref}`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop management parameterizations from AgroIBIS (March 2003 version) were coupled as a proof-of-concept to the Community Land Model version 3 \[CLM3.0, {ref}`Oleson et al. (2004) <Olesonetal2004>` \] (not published), then coupled to the CLM3.5 ({ref}`Levis et al. 2009 <Levisetal2009>`) and later released to the community with CLM4CN ({ref}`Levis et al. 2012 <Levisetal2012>`), and CLM4.5BGC. Additional updates after the release of CLM4.5 were available by request ({ref}`Levis et al. 2016 <Levisetal2016>`), and those are now incorporated into CLM5 and later.
 
-With interactive crop management and, therefore, a more accurate representation of agricultural landscapes, we hope to improve the CLM's simulated biogeophysics and biogeochemistry. These advances may improve fully coupled simulations with the Community Earth System Model (CESM), while helping human societies answer questions about changing food, energy, and water resources in response to climate, environmental, land use, and land management change (e.g., {ref}`Kucharik and Brye 2003 <KucharikBrye2003>`; {ref}`Lobell et al. 2006 <Lobelletal2006>`). As implemented here, the crop model uses the same physiology as the natural vegetation but with uses different crop-specific parameter values, phenology, and allocation, as well as fertilizer and irrigation management.
+With interactive crop management and, therefore, a more accurate representation of agricultural landscapes, we hope to improve CLM's simulated biogeophysics and biogeochemistry. These advances may improve fully coupled simulations with the Community Earth System Model (CESM), while helping human societies answer questions about changing food, energy, and water resources in response to climate, environmental, land use, and land management change (e.g., {ref}`Kucharik and Brye 2003 <KucharikBrye2003>`; {ref}`Lobell et al. 2006 <Lobelletal2006>`). As implemented here, the crop model uses the same physiology as the natural vegetation but with uses different crop-specific parameter values, phenology, and allocation, as well as fertilizer and irrigation management.
 
 (crop-plant-functional-types)=
 
@@ -603,7 +603,7 @@ Tillage is represented as an enhancement of the decomposition rate coefficient; 
 
 ## The irrigation model
 
-The CLM includes the option to irrigate cropland areas that are equipped for irrigation. The application of irrigation responds dynamically to the soil moisture conditions simulated by the CLM. This irrigation algorithm is based loosely on the implementation of {ref}`Ozdogan et al. (2010) <Ozdoganetal2010>`.
+CLM includes the option to irrigate cropland areas that are equipped for irrigation. The application of irrigation responds dynamically to the simulated soil moisture conditions. This irrigation algorithm is based loosely on the implementation of {ref}`Ozdogan et al. (2010) <Ozdoganetal2010>`.
 
 When irrigation is enabled, the crop areas of each grid cell are divided into irrigated and rainfed fractions according to a dataset of areas equipped for irrigation ({ref}`Portmann et al. 2010 <Portmannetal2010>`). Irrigated and rainfed crops are placed on separate soil columns, so that irrigation is only applied to the soil beneath irrigated crops.
 
