@@ -111,7 +111,9 @@ Phase 1 starts at planting and ends with leaf emergence, phase 2 continues from 
 
 #### Planting
 
-All crops must meet the following requirements between the minimum planting date and the maximum planting date (for the northern hemisphere) in {numref}`Table Crop phenology parameters`:
+Each crop can be planted in each gridcell once per year, in the "sowing window." This is, by default, defined for each crop in each gridcell, with the start and end of the window drawn from the input files `stream_fldFileName_swindow_start` and `stream_fldFileName_swindow_end`, respectively. These sowing windows are centered on the sowing dates developed for phase 3 of the Inter-Sectoral Impacts Model Intercomparison Project's Agriculture sector runs ({ref}`Jägermeyr et al., 2021 <jägermeyretal2021>`, {ref}`Rabin et al., 2023 <rabinetal2023>`). The widths of the sowing windows are based on the original sowing windows from the `min_NH_planting_date`, `max_NH_planting_date`, `min_SH_planting_date`, and `max_SH_planting_date` parameters, which remain on the parameter file but are ignored by default (i.e., unless you set `cropcals_rx = .false.` in `user_nl_clm`). See {ref}`running-with-custom-crop-calendars`.
+
+To be planted, a crop patch must meet the following requirements sometime within its sowing window:
 
 $$
 \begin{array}{c}
@@ -121,7 +123,7 @@ $$
 \end{array}
 $$ (25.1)
 
-where ${T}_{10d}$ is the 10-day running mean of ${T}_{2m}$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $T_{2m}^{\min }$ (the daily minimum of ${T}_{2m}$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), ${GDD}_{8}$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). ${GDD}_{8}$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the ${GDD}_{8}$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as ${GDD}_{8} > 0$. In the southern hemisphere (SH) the NH requirements apply 6 months later.
+where ${T}_{10d}$ is the 10-day running mean of ${T}_{2m}$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $T_{2m}^{\min }$ (the daily minimum of ${T}_{2m}$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), ${GDD}_{8}$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). ${GDD}_{8}$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the ${GDD}_{8}$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as ${GDD}_{8} > 0$.
 
 At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (${CN}_{leaf}$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary for the crop to reach vegetative and physiological maturity, ${GDD}_{mat}$, according to the following AgroIBIS rules:
 
@@ -193,28 +195,6 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{
      - 77, 78
      - 71, 72
      - 73, 74
-   * - :math:`Date_{planting}^{min}`
-     - April 1
-     - April 1
-     - May 1
-     - April 1
-     - Janurary 1
-     - Janurary 1
-     - March 20
-     - April 15
-     - April 1
-     - April 1
-   * - :math:`Date_{planting}^{max}`
-     - June 15
-     - June 15
-     - June 15
-     - May 31
-     - Feburary 28
-     - March 31
-     - April 15
-     - June 31
-     - June 15
-     - June 15
    * - :math:`T_{p}`\(K)
      - 283.15
      - 280.15
@@ -373,7 +353,6 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{
 
 Notes:
 
-- $Date_{planting}^{min}$ and $Date_{planting}^{max}$ are the minimum and maximum planting dates (defining the "sowing window") in the Northern Hemisphere; the corresponding dates in the Southern Hemisphere are shifted by 6 months. (See Sect. {numref}`Planting`.) These parameters can also be set with more geographic variation via input map stream files `stream_fldFileName_swindow_start` and `stream_fldFileName_swindow_end`.
 - $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
 - $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
 - $GDD_{mat}$ is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.

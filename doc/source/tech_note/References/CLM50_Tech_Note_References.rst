@@ -684,6 +684,10 @@ Jacksonetal1996: E., and Schulze, E. D. 1996. A global analysis of root distribu
 
 Jackson, T.L., Feddema, J.J., Oleson, K.W., Bonan, G.B., and Bauer, J.T. 2010. Parameterization of urban characteristics for global climate modeling. Annals of the Association of American Geographers. 100:848-865.
 
+.. _Jägermeyretal2021:
+
+Jägermeyr, J., Müller, C., Minoli, S., Ray, D., & Siebert, S. (2021). GGCMI Phase 3 crop calendar [Data set]. Zenodo. https://doi.org/10.5281/zenodo.5062513. See also: https://www.isimip.org/gettingstarted/input-data-bias-adjustment/details/115/
+
 .. _JenkinsonColeman2008:
 
 Jenkinson, D. and Coleman, K. 2008. The turnover of organic carbon in subsoils. Part 2. Modelling carbon turnover. European Journal of Soil Science 59:400-413.
@@ -1296,6 +1300,10 @@ Purves, D.W. et al.,  2008. Predicting and understanding forest dynamics using a
 .. _Qianetal2006:
 
 Qian, T et al.,  2006. Simulation of global land surface conditions from 1948 to 2004: Part I: Forcing data and evaluations. J. Hydrometeorology 7, pp. 953-975.
+
+.. _Rabinetal2023:
+
+Rabin, S., Sacks, W., Lombardozzi, D., Xia, L. & Robock, A., 2023. Observation-based sowing dates and cultivars significantly affect yield and irrigation for some crops in the Community Land Model (CLM5). Geosci. Model Dev. 16, 7253–7273 (2023). DOI 10.5194/gmd-16-7253-2023. https://gmd.copernicus.org/articles/16/7253/2023/
 
 .. _RamankuttyFoley1998:
 
