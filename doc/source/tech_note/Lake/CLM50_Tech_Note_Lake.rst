@@ -31,7 +31,7 @@ For direct radiation, the albedo *a* for lakes with ground temperature :math:`{T
 
    a=\frac{0.5}{\cos z+0.15}
 
-where *z* is the zenith angle. For diffuse radiation, the expression in eq. is integrated over the full sky to yield *a* = 0.10.
+where *z* is the zenith angle. For diffuse radiation, the expression in equation :eq:`12.1` is integrated over the full sky to yield *a* = 0.10.
 
 For frozen lakes without resolved snow layers, the albedo at cold temperatures *a*\ :sub:`0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
 
@@ -293,7 +293,7 @@ The fluxes of momentum, sensible heat, and water vapor are solved for simultaneo
 
 #. Heat of vaporization / sublimation :math:`\lambda` \ (equation :eq:`12.8`)
 
-#. Thermal conductivity :math:`\lambda _{T}` \ (above)
+#. Thermal conductivity :math:`\lambda _{T}` \ (described above after equation :eq:`12.13`)
 
 #. Friction velocity :math:`u_{*}` (equations :eq:`5.32`, :eq:`5.33`, :eq:`5.34`, :eq:`5.35`)
 
@@ -375,7 +375,7 @@ where :math:`\tilde{c}_{v}` is the volumetric heat capacity (J m\ :sup:`-3` K\ :
 
    \frac{d}{dt} \sum _{j=1}^{N}\left[\tilde{c}_{v,j} (t)\left(T_{j} -T_{f} \right)+L_{j} (t)\right] \Delta z_{j} =G+\left(1-\beta \right)\vec{S}_{g}
 
-where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Heat Capacities Lake`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing equation :eq:`12.27` to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in equation :eq:`12.27'
+where :math:`\tilde{c}_{v,j} (t)`\ is the volumetric heat capacity of the *j*\ th layer (section :numref:`Heat Capacities Lake`), :math:`L_{j} (t)`\ is the latent heat of fusion per unit volume of the *j*\ th layer (proportional to the mass of liquid water present), and the right-hand side represents the net influx of energy to the lake system. Note that :math:`\tilde{c}_{v,j} (t)` can only change due to phase change (except for changing snow layer mass, which, apart from energy required to melt snow, represents an untracked energy flux in the land model, along with advected energy associated with water flows in general), and this is restricted to occur at :math:`T_{j} =T_{f}` \ in the snow-lake-soil system, allowing equation :eq:`12.27` to be precisely enforced and justifying the exclusion of :math:`c_{v,j}` from the time derivative in equation :eq:`12.27`.
 
 .. _Boundary Conditions Lake:
 
@@ -423,7 +423,7 @@ The wind-driven eddy diffusion coefficient :math:`\kappa _{e,\, i}` (m\ :sup:`2`
 
    \kappa _{e,\, i} =\Bigg\{\begin{array}{rr} {\frac{kw^{*} z_{i} }{P_{0} \left(1+37Ri^{2} \right)} \exp \left(-k^{*} z_{i} \right)\qquad T_{g} >T_{f} } \\ {0\qquad T_{g} \le T_{f} } \end{array}
 
-where :math:`P_{0} =1` is the neutral value of the turbulent Prandtl number, :math:`z_{i}` is the node depth (m), the surface friction velocity (m s\ :sup:`-1`) is :math:`w^{*} =0.0012u_{2}`, and :math:`k^{*}` varies with latitude :math:`\phi` as :math:`k^{*} =6.6u_{2}^{-1.84} \sqrt{\left|\sin \phi \right|}`. For the bottom layer, :math:`\kappa _{e,\, N_{levlak} } =\kappa _{e,N_{levlak} -1\, }`. As in :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`, the 2-m wind speed :math:`u_{2}` (m s\ :sup:`-1`) (eq. ) is used to evaluate :math:`w^{*}` and :math:`k^{*}` rather than the 10-m wind used by :ref:`Henderson-Sellers (1985) <Henderson-Sellers1985>`.
+where :math:`P_{0} =1` is the neutral value of the turbulent Prandtl number, :math:`z_{i}` is the node depth (m), the surface friction velocity (m s\ :sup:`-1`) is :math:`w^{*} =0.0012u_{2}`, and :math:`k^{*}` varies with latitude :math:`\phi` as :math:`k^{*} =6.6u_{2}^{-1.84} \sqrt{\left|\sin \phi \right|}`. For the bottom layer, :math:`\kappa _{e,\, N_{levlak} } =\kappa _{e,N_{levlak} -1\, }`. As in :ref:`Hostetler and Bartlein (1990)<HostetlerBartlein1990>`, the 2-m wind speed :math:`u_{2}` (m s\ :sup:`-1`) (equation :eq:`12.28`) is used to evaluate :math:`w^{*}` and :math:`k^{*}` rather than the 10-m wind used by :ref:`Henderson-Sellers (1985) <Henderson-Sellers1985>`.
 
 The Richardson number is
 
@@ -453,7 +453,7 @@ The enhanced diffusivity :math:`K_{ed}` is given by (:ref:`Fang and Stefan 1996<
 
    K_{ed} =1.04\times 10^{-8} \left(N^{2} \right)^{-0.43} ,N^{2} \ge 7.5\times 10^{-5} {\rm s}^{2}
 
-where :math:`N^{2}` \ is calculated as in equation :eq:`12.33` except for the minimum value imposed in.
+where :math:`N^{2}` \ is calculated as in equation :eq:`12.33` except for the minimum value imposed by equation :eq:`12.35`.
 
 The thermal conductivity for the liquid water portion of lake body layer *i*, :math:`\tau _{liq,i}` (W m\ :sup:`-1` K\ :sup:`-1`) is given by
 
@@ -552,7 +552,7 @@ where superscripts *n* + 1 and *n* denote values at the end and beginning of the
 :math:`F_{i}` (W m\ :sup:`-2`) is the downward heat flux at the bottom of layer *i*, and
 :math:`\phi _{i}` is the solar radiation absorbed in layer *i*.
 
-Eq. is solved using the semi-implicit Crank-Nicholson Method, resulting in a tridiagonal system of equations:
+Equation :eq:`12.44` is solved using the semi-implicit Crank-Nicholson Method, resulting in a tridiagonal system of equations:
 
 .. math::
    :label: 12.45
@@ -697,7 +697,7 @@ Lake Hydrology
 Overview
 ^^^^^^^^^^^^^^
 
-Hydrology is done similarly to other impervious non-vegetated columns (e.g., glaciers) where snow layers may be resolved but infiltration into the permanent ground is not allowed. The water mass of lake columns is currently maintained constant, aside from overlying snow. The water budget is balanced with :math:`q_{rgwl}` (eq.; kg m\ :sup:`-2` s\ :sup:`-1`), a generalized runoff term for impervious land units that may be negative.
+Hydrology is done similarly to other impervious non-vegetated columns (e.g., glaciers) where snow layers may be resolved but infiltration into the permanent ground is not allowed. The water mass of lake columns is currently maintained constant, aside from overlying snow. The water budget is balanced with :math:`q_{rgwl}` (kg m\ :sup:`-2` s\ :sup:`-1`), a generalized runoff term for impervious land units that may be negative (see section :numref:`rst_Hydrology` for more information about :math:`q_{rgwl}`).
 
 There are some modifications to the soil and snow parameterizations as compared with the soil in vegetated land units, or the snow overlying other impervious columns. The soil can freeze or thaw, with the allowance for frost heave (or the initialization of excess ice) (sections :numref:`Eddy Diffusivity and Thermal Conductivities` and :numref:`Phase Change Lake`), but no air-filled pore space is allowed in the soil. To preserve numerical stability in the lake model (which uses a slightly different surface flux algorithm than over other non-vegetated land units), two changes are made to the snow model. First, dew or frost is not allowed to be absorbed by a top snow layer which has become completely melted during the timestep. Second, because occasional instabilities occurred during model testing when the Courant–Friedrichs–Lewy (CFL) condition was violated, due to the explicit time-stepping integration of the surface flux solution, resolved snow layers must be a minimum of :math:`s_{\min }` = 4 cm thick rather than 1 cm when the default timestep of 1800 s is used.
 
