@@ -112,9 +112,9 @@ The RuBP carboxylase (Rubisco) limited rate of carboxylation :math:`A_{c}` (:mat
 .. math::
    :label: 9.3
 
-   A_{c} =\left\{\begin{array}{l} {\frac{V_{c\max } \left(c_{i} -\Gamma _{*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
+   A_{c} =\left\{\begin{array}{l} {\frac{\beta_{t} V_{c\max } \left(c_{i} -\Gamma _{*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\beta_{t} V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
-The maximum rate of carboxylation allowed by the capacity to regenerate RuBP (i.e., the light-limited rate) :math:`A_{j}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
+where :math:`\beta_{t} = \beta_{t,sun}` is the transpiration water stress for sunlit leaves and :math:`\beta_{t} = \beta_{t,sha}` for shaded leaves (Eqs. :eq:`beta_t_sun`, :eq:`beta_t_sha`). The maximum rate of carboxylation allowed by the capacity to regenerate RuBP (i.e., the light-limited rate) :math:`A_{j}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
    :label: 9.4
