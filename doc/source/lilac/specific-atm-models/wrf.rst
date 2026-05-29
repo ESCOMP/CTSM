@@ -25,7 +25,7 @@ and :numref:`wrf-set-ctsm-runtime-options`.
 
   This section assumes use of a machine that has been ported to CIME.
   If CIME is not ported to your machine, please see `instructions on porting CIME
-  <https://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html#porting>`_.
+  <https://esmci.github.io/cime/versions/master/html/ccs/model-configuration/support-a-new-machine.html>`_.
 
   In this example we assume NCAR's ``derecho`` HPC system in particular.
 
@@ -171,7 +171,7 @@ skip to section :numref:`wrf-set-ctsm-runtime-options`.
 
 Get WPS from this website::
 
-    https://www2.mmm.ucar.edu/wrf/users/download/wrf-regist_or_download.php
+    https://www2.mmm.ucar.edu/wrf/users/download/get_source.html
 
 New users must complete a registration form in this step.
 
@@ -354,7 +354,7 @@ the following files to your WRF run directory::
 
 Now run WRF-CTSM. On derecho this means submitting a batch job to PBS (Pro workload management system).
 Please check NCAR CISL's `instructions on running a batch job on derecho.
-<https://www2.cisl.ucar.edu/resources/computational-systems/derecho/running-jobs/submitting-jobs-pbs>`__
+<https://ncar-hpc-docs.readthedocs.io/en/latest/pbs/>`__
 
 A simple PBS script to run WRF-CTSM on ``derecho`` looks like this:
 
