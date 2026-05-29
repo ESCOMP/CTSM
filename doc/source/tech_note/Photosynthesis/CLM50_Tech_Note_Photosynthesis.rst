@@ -144,7 +144,7 @@ where :math:`J_{\max }` is the maximum potential rate of electron transport (:ma
 
    I_{PSII} =0.5\Phi _{PSII} (4.6\phi )
 
-where :math:`\Phi _{PSII}` is the quantum yield of photosystem II, and the term 0.5 arises because one photon is absorbed by each of the two photosystems to move one electron. Parameter values are :math:`\Theta _{PSII}` \ = 0.7 and :math:`\Phi _{PSII}` \ = 0.85. In calculating :math:`A_{j}` (for both C\ :sub:`3` and C\ :sub:`4` plants), :math:`\phi =\phi ^{sun}` for sunlit leaves and :math:`\phi =\phi ^{sha}` for shaded leaves.
+where :math:`\Phi _{PSII}` is the quantum yield of photosystem II, and the term 0.5 arises because one photon is absorbed by each of the two photosystems to move one electron. Parameter values are :math:`\Theta _{PSII}` \ = 0.7 and :math:`\Phi _{PSII} = 1 - f_{nps} = 0.85`, where :math:`f_{nps}` is the fraction of light absorbed by non-photosynthetic pigment. In calculating :math:`A_{j}` (for both C\ :sub:`3` and C\ :sub:`4` plants), :math:`\phi =\phi ^{sun}` for sunlit leaves and :math:`\phi =\phi ^{sha}` for shaded leaves.
 
 The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992) <Collatzetal1991>`. The actual gross photosynthesis rate, :math:`A`, is given by the smaller root of the equations
 
