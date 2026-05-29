@@ -1032,14 +1032,14 @@ where the kinematic viscosity of air :math:`\upsilon =1.5\times 10^{-5}` m\ :sup
 When biomass heat storage is active, an empirical under-canopy wind speed is used in the calculation of the aerodynamic resistances to heat and moisture
 
 .. math::
-   :label: 5.116b
+   :label: eq_rah_raw
 
    r_{ah} ^{{'} } =r_{aw} ^{{'} } =\frac{1}{C_{s} U_{uc} }
 
 where
 
 .. math::
-   :label: 5.117b
+   :label: eq_under_canopy_wind_speed
 
    U_{uc} =\min \left(0.4, \frac{0.3 \ V_{a}}{u_{*}} \right) \ .
 
