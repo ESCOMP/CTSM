@@ -1773,6 +1773,7 @@ Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects
 .. _Wiederetal2015b:
 
 Wieder, W., Grandy, A., Kallenbach, C., Taylor, P., Bonan, G., 2015. Representing life in the Earth system with soil microbial functional traits in the MIMICS model. Geoscientific Model Development 8, 1789-1808.
+
 .. _Wiederetal2019:
 
 Wieder, W.R., Lawrence, D.M., Fisher, R.A., Bonan, G.B., Cheng, S.J., Goodale, C.L., Grandy, A.S., Koven, C.D., Lombardozzi, D.L., Oleson, K.W. and Thomas, R.Q., 2019. Beyond static benchmarking: Using experimental manipulations to evaluate land model assumptions. Global Biogeochemical Cycles, 33(10), 1289-1309. DOI:10.1029/2018GB006141
