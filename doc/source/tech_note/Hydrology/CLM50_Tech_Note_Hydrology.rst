@@ -186,7 +186,7 @@ The wetted fraction of the canopy (stems plus leaves), which is required for sur
    \end{array}\right\}
 
 .. math::
-   :label: 7.200
+   :label: W_can_calc
 
    W_{can} = W_{can,\, liq} + W_{can,\, sno}
 
@@ -528,7 +528,7 @@ The soil organic matter properties implicitly account for the standard observed 
    \psi_{sat,om} = min(10.3 - 0.2\times z_{i} / zsapric, 10.1).
 
 .. math::
-   :label: 7.89b
+   :label: sat_hydraulic_conductivity_organic
 
    k_{sat,om} = max(0.28 - 0.2799\times z_{i} / zsapric, k_{sat,\, \min } \left[z_{h,\, i} \right]).
 
