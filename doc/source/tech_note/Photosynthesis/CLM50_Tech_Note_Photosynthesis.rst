@@ -10,7 +10,7 @@ We describe here the complete photosynthesis and stomatal conductance parameteri
 
 - Default stomatal conductance calculation uses the Medlyn conductance model
 
-- :math:`V_{c,max}` and :math:`J_{max}` at 25 :sup:`\o`\ C: are now prognostic, and predicted via optimality by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+- :math:`V_{c,max}` and :math:`J_{max}` at 25\ :sup:`\o`\ C: are now prognostic, and predicted via optimality by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
 - Leaf N concentration and the fraction of leaf N in Rubisco used to calculate :math:`V_{cmax25}` are determined by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
 
@@ -103,14 +103,14 @@ Photosynthesis
 Photosynthesis in C\ :sub:`3` plants is based on the model of :ref:`Farquhar et al. (1980)<Farquharetal1980>`. Photosynthesis in C\ :sub:`4` plants is based on the model of :ref:`Collatz et al. (1992)<Collatzetal1992>`. :ref:`Bonan et al. (2011)<Bonanetal2011>` describe the implementation, modified here. In its simplest form, leaf net photosynthesis after accounting for respiration (:math:`R_{d}` ) is
 
 .. math::
-   :label: 9.2
+   :label: leaf_net_psn
 
    A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d} .
 
 The RuBP carboxylase (Rubisco) limited rate of carboxylation :math:`A_{c}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
 .. math::
-   :label: 9.3
+   :label: rubisco_lim_rate_of_carboxylation
 
    A_{c} =\left\{\begin{array}{l} {\frac{\beta_{t} V_{c\max } \left(c_{i} -\Gamma _{*} \right)}{c_{i} +K_{c} \left(1+{o_{i} \mathord{\left/ {\vphantom {o_{i}  K_{o} }} \right.} K_{o} } \right)} \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {\beta_{t} V_{c\max } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}\qquad \qquad c_{i} -\Gamma _{*} \ge 0.
 
@@ -153,21 +153,13 @@ The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992) <
 
    \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array} .
 
-Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis. :math:`A_{n} =A-R_{d}`.
+Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis. Now we can write Eq. :eq:`leaf_net_psn` as :math:`A_{n} = A - \beta_{t} R_{d}` with :math:`\beta_{t}` as defined in Eq. :eq:`rubisco_lim_rate_of_carboxylation` to account for the effect of water stress on respiration.
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25 °C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`. :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`, and :math:`R_{d}` also vary with temperature.
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25°C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 
-:math:`J_{\max 25}`  at 25 :sup:`\o`\ C: is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`)
+:math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`, and :math:`R_{d}` also vary with temperature. :math:`J_{\max 25}` at 25\ :sup:`\o`\ C is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`).
 
-Parameter values at 25 :sup:`\o`\ C are calculated from :math:`V_{c\max }` \ at 25
-:sup:`\o`\ C:, including:
-:math:`T_{p25} =0.167V_{c\max 25}`, and
-:math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`) and
-:math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`).
-
-For C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`.
-
-However, when the biogeochemistry is active (the default mode), :math:`R_{d25}` is calculated from leaf nitrogen as described in (Chapter :numref:`rst_Plant Respiration`)
+Parameter values at 25\ :sup:`\o`\ C are calculated from :math:`V_{c\max }` \ at 25\ :sup:`\o`\ C, including: :math:`T_{p25} =0.167V_{c\max 25}`, :math:`R_{d25} =0.015V_{c\max 25}` (C\ :sub:`3`), and :math:`R_{d25} =0.025V_{c\max 25}` (C\ :sub:`4`). For C\ :sub:`4` plants, :math:`k_{p25} =20000\; V_{c\max 25}`. However, in active biogeochemistry mode (default), :math:`R_{d25}` is calculated from leaf nitrogen (see Chapter :numref:`rst_Plant Respiration`)
 
 The parameters :math:`V_{c\max 25}`, :math:`J_{\max 25}`, :math:`T_{p25}`, :math:`k_{p25}`, and :math:`R_{d25}` are scaled over the canopy for sunlit and shaded leaves (section :numref:`Canopy scaling`). In C\ :sub:`3` plants, these are adjusted for leaf temperature, :math:`T_{v}` (K), as:
 
@@ -244,7 +236,7 @@ In the model, acclimation is implemented as in :ref:`Kattge and Knorr (2007) <Ka
 
    \begin{array}{l} {\Delta S=668.39-1.07(T_{10} -T_{f} )\qquad \qquad {\rm for\; }V_{c\max } } \\ {\Delta S=659.70-0.75(T_{10} -T_{f} )\qquad \qquad {\rm for\; }J_{\max } } \end{array}
 
-The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`J_{\max }` to increase with warmer temperatures. Additionally, the ratio :math:`J_{\max 25} /V_{c\max 25}` at 25 °C decreases with growth temperature as
+The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`J_{\max }` to increase with warmer temperatures. Additionally, the ratio :math:`J_{\max 25} /V_{c\max 25}` at 25°C decreases with growth temperature as
 
 .. math::
    :label: 9.16
@@ -268,7 +260,7 @@ When LUNA is on, the :math:`V_{c\max 25}` for sun leaves is scaled to the shaded
    {J_{\max 25 sha}}  & {=} & {J_{\max 25 sun}  \frac{i_{v,sha}}{i_{v,sun}}}  \\
    {T_{p sha}}        & {=} & {T_{p sun}        \frac{i_{v,sha}}{i_{v,sun}}}  \end{array}
 
-Where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as
+where :math:`i_{v,sun}` and :math:`i_{v,sha}` are the leaf-to-canopy scaling coefficients of the twostream radiation model, calculated as
 
 .. math::
    :label: 9.18
@@ -285,7 +277,7 @@ When LUNA is off, scaling defaults to the mechanism used in CLM4.5.
 Numerical implementation
 ----------------------------
 
-The CO\ :sub:`2` partial pressure at the leaf surface, :math:`c_{s}` (Pa), and the vapor pressure at the leaf surface, :math:`e_{s}` (Pa), needed for the stomatal resistance model in equation :eq:`9.1`, and the internal leaf CO\ :sub:`2` partial pressure :math:`c_{i}` (Pa), needed for the photosynthesis model in equations :eq:`9.3`-:eq:`9.5`, are calculated assuming there is negligible capacity to store CO\ :sub:`2` and water vapor at the leaf surface so that
+The CO\ :sub:`2` partial pressure at the leaf surface, :math:`c_{s}` (Pa), and the vapor pressure at the leaf surface, :math:`e_{s}` (Pa), needed for the stomatal resistance model in equation :eq:`9.1`, and the internal leaf CO\ :sub:`2` partial pressure :math:`c_{i}` (Pa), needed for the photosynthesis model in equations :eq:`rubisco_lim_rate_of_carboxylation`-:eq:`9.5`, are calculated assuming there is negligible capacity to store CO\ :sub:`2` and water vapor at the leaf surface so that
 
 .. math::
    :label: 9.19
