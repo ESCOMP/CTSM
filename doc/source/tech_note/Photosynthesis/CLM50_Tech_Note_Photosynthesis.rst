@@ -105,7 +105,7 @@ Photosynthesis in C\ :sub:`3` plants is based on the model of :ref:`Farquhar et 
 .. math::
    :label: leaf_net_psn
 
-   A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d} .
+   A_{n} =\min \left(A_{c} ,A_{j} ,A_{p} \right)-R_{d}
 
 The RuBP carboxylase (Rubisco) limited rate of carboxylation :math:`A_{c}` (:math:`\mu` \ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`) is
 
@@ -126,7 +126,7 @@ The product-limited rate of carboxylation for C\ :sub:`3` plants and the PEP car
 .. math::
    :label: 9.5
 
-   A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}.
+   A_{p} =\left\{\begin{array}{l} {3T_{p\qquad } \qquad \qquad {\rm for\; C}_{{\rm 3}} {\rm \; plants}} \\ {k_{p} \frac{c_{i} }{P_{atm} } \qquad \qquad \qquad {\rm for\; C}_{{\rm 4}} {\rm \; plants}} \end{array}\right\}
 
 In these equations, :math:`c_{i}` is the internal leaf CO\ :sub:`2` partial pressure (Pa) and :math:`o_{i} =0.20P_{atm}` is the O\ :sub:`2` partial pressure (Pa). :math:`K_{c}` and :math:`K_{o}` are the Michaelis-Menten constants (Pa) for CO\ :sub:`2` and O\ :sub:`2`. :math:`\Gamma _{*}` (Pa) is the CO\ :sub:`2` compensation point. :math:`V_{c\max }` is the maximum rate of carboxylation (µmol m\ :sup:`-2` s\ :sup:`-1`, Chapter :numref:`rst_Photosynthetic Capacity`) and :math:`J_{x}` is the electron transport rate (µmol m\ :sup:`-2` s\ :sup:`-1`). :math:`T_{p}` is the triose phosphate utilization rate (µmol m\ :sup:`-2` s\ :sup:`-1`), taken as :math:`T_{p} =0.167V_{c\max }` so that :math:`A_{p} =0.5V_{c\max }` for C\ :sub:`3` plants (as in :ref:`Collatz et al. 1992 <Collatzetal1992>`). For C\ :sub:`4` plants, the light-limited rate :math:`A_{j}` varies with :math:`\phi` in relation to the quantum efficiency (:math:`\alpha =0.05` mol CO\ :sub:`2` mol\ :sup:`-1` photon). :math:`\phi` is the absorbed photosynthetically active radiation (W m\ :sup:`-2`) (section :numref:`Solar Fluxes`), which is converted to photosynthetic photon flux assuming 4.6 :math:`\mu` \ mol photons per joule. :math:`k_{p}` is the initial slope of C\ :sub:`4` CO\ :sub:`2` response curve.
 
@@ -151,9 +151,11 @@ The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992) <
 .. math::
    :label: 9.8
 
-   \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array} .
+   \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array}
 
-Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis. Now we can write Eq. :eq:`leaf_net_psn` as :math:`A_{n} = A - \beta_{t} R_{d}` with :math:`\beta_{t}` as defined in Eq. :eq:`rubisco_lim_rate_of_carboxylation` to account for the effect of water stress on respiration.
+Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis.
+
+Now we write Eq. :eq:`leaf_net_psn` as :math:`A_{n} = A - \beta_{t} R_{d}` with :math:`\beta_{t}` as defined in Eq. :eq:`rubisco_lim_rate_of_carboxylation` to account for the effect of water stress on respiration.
 
 The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25°C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 
@@ -178,7 +180,7 @@ and
 .. math::
    :label: 9.11
 
-   f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}  .
+   f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}
 
 :numref:`Table Temperature dependence parameters for C3 photosynthesis` lists parameter values for :math:`\Delta H_{a}` and :math:`\Delta H_{d}`. :math:`\Delta S` is calculated separately for :math:`V_{c\max }` and :math:`J_{max }` to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d` (:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`). Because :math:`T_{p}` as implemented here varies with :math:`V_{c\max }`, :math:`T_{p}` uses the same temperature parameters as :math:`V_{c\max}`. For C\ :sub:`4` plants,
 
@@ -241,7 +243,7 @@ The effect is to cause the temperature optimum of :math:`V_{c\max }` and :math:`
 .. math::
    :label: 9.16
 
-   J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} ).
+   J_{\max 25} /V_{c\max 25} =2.59-0.035(T_{10} -T_{f} )
 
 In these acclimation functions, :math:`T_{10}` is the 10-day mean air temperature (K) and :math:`T_{f}` is the freezing point of water (K). For lack of data, :math:`T_{p}` acclimates similar to :math:`V_{c\max }`. Acclimation is restricted over the temperature range :math:`T_{10} -T_{f} \ge` 11°C and :math:`T_{10} -T_{f} \le` 35°C.
 
@@ -315,7 +317,7 @@ In terms of conductance with :math:`g_{s} =1/r_{s}` and :math:`g_{b} =1/r_{b}`
 .. math::
    :label: 9.36
 
-   e_{s} =\frac{e_{a} g_{b} +e_{i} g_{s} }{g_{b} +g_{s} } .
+   e_{s} =\frac{e_{a} g_{b} +e_{i} g_{s} }{g_{b} +g_{s} }
 
 Substitution of equation :eq:`9.36` into equation :eq:`9.1` gives an expression for the stomatal resistance (:math:`r_{s}`) as a function of photosynthesis (:math:`A_{n}` )
 
