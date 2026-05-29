@@ -1,6 +1,5 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.042   slevis 05/22/2026 Get hillslope_fsat_equals_zero .true. for use_hillslope
        ctsm5.4.041 samrabin 05/21/2026 Merge b4b-dev 2026-05-21
        ctsm5.4.040 multiple 05/20/2026 Paramfile updates
        ctsm5.4.039 multiple 05/14/2026 Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
