@@ -1395,7 +1395,7 @@ The numerical solution for vegetation temperature and the fluxes of momentum, se
 
       \Delta _{2} =\overrightarrow{S}_{v} -\overrightarrow{L}_{v} -\frac{\partial \overrightarrow{L}_{v} }{\partial T_{v} } \Delta T_{v} -H_{v} -\frac{\partial H_{v} }{\partial T_{v} } \Delta T_{v} -\lambda E_{v} -\frac{\partial \lambda E_{v} }{\partial T_{v} } \Delta T_{v}
 
-where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error :math:`\Delta _{2}` is added to the sensible heat flux later.
+   where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error :math:`\Delta _{2}` is added to the sensible heat flux later.
 
 #. Water vapor flux :math:`E_{v}` (:eq:`5.133` )
 
@@ -1408,7 +1408,7 @@ where :math:`\Delta T_{v} =1{\rm \; or\; }-1`. The error :math:`\Delta _{2}` is 
 
       \Delta _{3} =\max \left(0,\, E_{v} -E_{v}^{t} -\frac{W_{can} }{\Delta t} \right).
 
-The error :math:`\lambda \Delta _{3}` is added to the sensible heat flux later.
+   The error :math:`\lambda \Delta _{3}` is added to the sensible heat flux later.
 
 #. Sensible heat flux :math:`H_{v}` (:eq:`5.135` ). The three energy error terms, :math:`\Delta _{1}`, :math:`\Delta _{2}`, and :math:`\lambda \Delta _{3}` are also added to the sensible heat flux.
 
@@ -1422,7 +1422,11 @@ The error :math:`\lambda \Delta _{3}` is added to the sensible heat flux later.
 
 #. Specific humidity difference :math:`q_{atm} -q_{s}`
 
-#. Potential temperature scale :math:`\theta _{*} =\frac{\theta _{*} }{\theta _{atm} -\theta _{s} } \left(\theta _{atm} -\theta _{s} \right)` where :math:`\frac{\theta _{*} }{\theta _{atm} -\theta _{s} }` was calculated earlier in the iteration #. Humidity scale :math:`q_{*} =\frac{q_{*} }{q_{atm} -q_{s} } \left(q_{atm} -q_{s} \right)` where :math:`\frac{q_{*} }{q_{atm} -q_{s} }` was calculated earlier in the iteration #. Virtual potential temperature scale :math:`\theta _{v*}` (:eq:`5.17` )
+#. Potential temperature scale :math:`\theta _{*} =\frac{\theta _{*} }{\theta _{atm} -\theta _{s} } \left(\theta _{atm} -\theta _{s} \right)` where :math:`\frac{\theta _{*} }{\theta _{atm} -\theta _{s} }` was calculated earlier in the iteration
+
+#. Humidity scale :math:`q_{*} =\frac{q_{*} }{q_{atm} -q_{s} } \left(q_{atm} -q_{s} \right)` where :math:`\frac{q_{*} }{q_{atm} -q_{s} }` was calculated earlier in the iteration
+
+#. Virtual potential temperature scale :math:`\theta _{v*}` (:eq:`5.17` )
 
 #. Wind speed including the convective velocity, :math:`V_{a}` (:eq:`5.24` )
 
