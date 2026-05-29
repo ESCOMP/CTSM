@@ -6,13 +6,14 @@ module clm_varctl
   !
   ! !USES:
   use shr_kind_mod, only: r8 => shr_kind_r8, SHR_KIND_CX
+  use shr_kind_mod, only: CS => SHR_KIND_CS
   use shr_sys_mod , only: shr_sys_abort ! cannot use endrun here due to circular dependency
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   public :: clm_varctl_set    ! Set variables
-  public :: cnallocate_carbon_only_set
-  public :: cnallocate_carbon_only
+  public :: allocate_carbon_only_set
+  public :: allocate_carbon_only
   !
   private
   save
@@ -324,13 +325,22 @@ module clm_varctl
 
   integer, public            :: fates_seeddisp_cadence = iundef         ! 0 => no seed dispersal
                                                                         ! 1, 2, 3 => daily, monthly, or yearly dispersal
-  integer, public            :: fates_parteh_mode = -9                  ! 1 => carbon only
-                                                                        ! 2 => C+N+P (not enabled yet)
-                                                                        ! no others enabled
+  character(len=CS), public  :: fates_parteh_mode = ''                  ! FATES Plant Allocation Reactions and Transport Hypotheses
+                                                                        ! = carbon_only : Cycle carbon in FATES only
+                                                                        ! = carbon_nitrogen: Cycle both carbon and nitrogen
+                                                                        ! in FATES. FATES will cycle phosphorus as well,
+                                                                        ! to do this, FATES will generate synthetic uptake
+                                                                        ! conditions to make sure that phosphorus is saturated
+                                                                        ! in the plant stores
+                                                                        ! so clm needs fates_cnp_prescribed_puptake > 1
+                                                                        ! (recommended value 10) in the fates paramfile
+
   integer, public            :: fates_spitfire_mode = 0                
                                                                         ! 0 for no fire; 1 for constant ignitions;
                                                                         ! > 1 for external data (lightning and/or anthropogenic ignitions)
                                                                         ! see bld/namelist_files/namelist_definition_clm4_5.xml for details
+  logical, public            :: use_fates_managed_fire = .false.        ! true => turn on managed fire
+  integer, public            :: fates_lu_transition_logic = -9          ! controls logic around transition between land use classes 
   logical, public            :: use_fates_tree_damage = .false.         ! true => turn on tree damage module
   character(len=256), public :: fates_harvest_mode = ''                 ! five different harvest modes; see namelist definition
   character(len=256), public :: fates_stomatal_model = ''               ! stomatal conductance model, Ball-berry or Medlyn
@@ -347,6 +357,7 @@ module clm_varctl
   logical, public            :: use_fates_ed_st3   = .false.            ! true => static stand structure
   logical, public            :: use_fates_ed_prescribed_phys = .false.  ! true => prescribed physiology
   logical, public            :: use_fates_inventory_init = .false.      ! true => initialize fates from inventory
+  logical, public            :: use_fates_dbh_init = .false.            ! true => initialize cohorts with dbh instead of density (nocomp only)
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
   logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
@@ -521,6 +532,7 @@ module clm_varctl
 
   logical, public :: use_lch4            = .true.
   logical, public :: use_nitrif_denitrif = .true.
+  logical, public :: use_nvmovement      = .false.
   logical, public :: use_extralakelayers = .false.
   logical, public :: use_vichydro        = .false.
   logical, public :: use_cn              = .false.
@@ -583,15 +595,15 @@ contains
 
   end subroutine clm_varctl_set
 
-  ! Set module carbon_only flag
-  subroutine cnallocate_carbon_only_set(carbon_only_in)
+  ! Set module carbon_only flag (applies to both CN and FATES)
+  subroutine allocate_carbon_only_set(carbon_only_in)
     logical, intent(in) :: carbon_only_in
     carbon_only = carbon_only_in
-  end subroutine cnallocate_carbon_only_set
+  end subroutine allocate_carbon_only_set
 
-  ! Get module carbon_only flag
-  logical function CNAllocate_Carbon_only()
-    cnallocate_carbon_only = carbon_only
-  end function CNAllocate_Carbon_only
+  ! Get module carbon_only flag (applies to both CN and FATES)
+  logical function Allocate_Carbon_only()
+    allocate_carbon_only = carbon_only
+  end function Allocate_Carbon_only
 
 end module clm_varctl

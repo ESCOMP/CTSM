@@ -52,6 +52,10 @@ _ENV_LILAC_TEMPLATE = """
       <type>logical</type>
       <valid_values>TRUE,FALSE</valid_values>
     </entry>
+    <entry id="CLM_NDEP_FROM_CPL" value="FALSE">
+      <type>logical</type>
+      <valid_values>TRUE,FALSE</valid_values>
+    </entry>
   </group>
 </file>
 """

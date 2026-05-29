@@ -14,6 +14,7 @@ Step 4: matrix Spinup off
 """
 
 import shutil, glob, os, sys
+from pathlib import Path
 from datetime import datetime
 
 if __name__ == "__main__":
@@ -205,9 +206,9 @@ class SSPMATRIXCN(SystemTestsCommon):
             restdir = os.path.join(rest_r, rundate)
             os.mkdir(restdir)
             rpoint = os.path.join(restdir, "rpointer.clm." + rundate)
-            os.mknod(rpoint)
+            Path.touch(rpoint)
             rpoint = os.path.join(restdir, "rpointer.cpl." + rundate)
-            os.mknod(rpoint)
+            Path.touch(rpoint)
 
     def run_phase(self):
         "Run phase"

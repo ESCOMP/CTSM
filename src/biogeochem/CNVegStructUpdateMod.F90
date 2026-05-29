@@ -38,7 +38,7 @@ contains
     !
     ! !USES:
     use pftconMod        , only : noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod        , only : npcropmin 
+    use pftconMod        , only : is_prognostic_crop
     use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
@@ -127,6 +127,7 @@ contains
          peaklai            =>  cnveg_state_inst%peaklai_patch          , & ! Output: [integer  (:) ] 1: max allowed lai; 0: not at max                  
 
          harvdate           =>  crop_inst%harvdate_patch                , & ! Input:  [integer  (:) ] harvest date                                       
+         max_tlai           =>  crop_inst%max_tlai_patch                , & ! Output: [real(r8) (:) ] maximum total projected leaf area seen this season
 
          ! *** Key Output from CN***
          tlai               =>  canopystate_inst%tlai_patch             , & ! Output: [real(r8) (:) ] one-sided leaf area index, no burying by snow      
@@ -232,7 +233,7 @@ contains
 
                hbot(p) = max(0._r8, min(3._r8, htop(p)-1._r8))
 
-            else if (ivt(p) >= npcropmin) then ! prognostic crops
+            else if (is_prognostic_crop(ivt(p))) then ! prognostic crops
 
                if (tlai(p) >= laimx(ivt(p))) peaklai(p) = 1 ! used in CNAllocation
 
@@ -259,6 +260,9 @@ contains
                htmx(p) = max(htmx(p), htop(p))
                htop(p) = max(0.05_r8, max(htmx(p),htop(p)))
                hbot(p) = 0.02_r8
+
+               ! Maximum LAI seen this season
+               max_tlai(p) = max(max_tlai(p), tlai(p))
 
             else ! generic crops and ...
 

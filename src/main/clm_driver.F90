@@ -13,8 +13,8 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_cropcal_streams
+  use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -30,6 +30,7 @@ module clm_driver
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
+  use BalanceCheckMod        , only : EnergyBalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -118,6 +119,8 @@ contains
     use laiStreamMod          , only : lai_advance
     use FATESFireFactoryMod   , only : scalar_lightning
     use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    use shr_log_mod, only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -408,6 +411,14 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
+    if ( use_cn )then
+       ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
+       ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
+       ! NOTE: These calls need to happen outside loops over nclumps (as streams are not threadsafe).
+       ! TODO: This should probably be moved to CNVegetationFacade in the InterpFileInputs subroutine
+       if ( use_c14 ) call C14BombSpike(bounds_proc)
+       if ( use_c13 ) call C13TimeSeries(bounds_proc, atm2lnd_inst)
+    end if
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -812,6 +823,12 @@ contains
 
        if (irrigate) then
 
+          if (use_fates) then
+             call endrun(msg=' ERROR: Can not have ' // &
+                             'use_fates = .true. and irrigate = .true. ' // &
+                             'Set one of them to .false. in your user_nl_clm. ' // &
+                             errMsg(sourcefile, __LINE__))
+          endif
           ! ============================================================================
           ! Determine irrigation needed for future time steps
           ! ============================================================================
@@ -1157,7 +1174,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
           call t_stopf('EcosysDynPostDrainage')
        end if
 
@@ -1172,7 +1189,8 @@ contains
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_carbonstate_inst)
+               soilbiogeochem_carbonstate_inst, &
+               solarabs_inst, energyflux_inst, temperature_inst)
 
 
           if( is_beg_curr_day() ) then
@@ -1261,26 +1279,29 @@ contains
           call t_stopf('ch4')
        end if
 
+       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
+            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
+
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
+
+       ! This is only relevant to  fates two stream to not break sun fraction calculations
+       ! on the second timestep after start from finidat or for hybrid run.
+       ! The first clause is to maintain b4b with base, but is not necessary.
        
-       if (.not.doalb) then
-
-
-          if(use_fates) then
-             ! During branch runs and non continue_run restarts, the doalb flag
-             ! does not trigger correctly for fates runs (and non-fates?), and thus
-             ! the zenith angles are not calculated and ready when radiation scattering
-             ! needs to occur.
+       if (use_fates .and. .not.doalb ) then
+          if ( (is_cold_start .and. get_nstep() == 1) .or. & 
+              ((fates_radiation_model == 'twostream') .and. (get_nstep()== 1) .and. (.not.use_fates_sp) &
+                .and. (.not.is_cold_start) .and. (nsrest == nsrStartup)) ) then
              call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
              call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
                   water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
                   surfalb_inst)
-          end if
-          
-       else
+          endif
+       endif
 
+       if (doalb) then
           ! Albedos for non-urban columns
           call t_startf('surfalb')
           call SurfaceAlbedo(bounds_clump,                      &

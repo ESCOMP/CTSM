@@ -1,6 +1,8 @@
 # $CTSMROOT/README.NUOPC_driver
 
-CTSM now by default uses the NUOPC based CMEPS driver!
+In CTSM5.2 CTSM by default started using the NUOPC based CMEPS driver. And in CTSM5.4
+the MCT (Model Coupling Toolkit) option was removed. This README gives information on
+converting from using the MCT driver to the NUOPC one.
 
 
 ## What's new?

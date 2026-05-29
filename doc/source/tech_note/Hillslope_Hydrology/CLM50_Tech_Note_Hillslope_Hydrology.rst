@@ -47,7 +47,7 @@ Downscaling of incoming solar radiation uses topographic slope :math:`\alpha` an
 
    S_{column} = S_{gridcell} \frac{cosz_{column}}{cosz_{gridcell}} ,
 
-Other meteorological inputs, e.g. temperature and precipitation, can be adjusted using elevation‐based downscaling.  For such variables, the gridcell-level value is modified by an anomly defined by the lapse rate :math:`\lambda`
+Other meteorological inputs, e.g. temperature and precipitation, can be adjusted using elevation‐based downscaling.  For such variables, the gridcell-level value is modified by an anomaly defined by the lapse rate :math:`\lambda`
 
 .. math::
    :label: hh.eqn.4

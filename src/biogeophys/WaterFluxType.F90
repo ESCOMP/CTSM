@@ -578,7 +578,7 @@ contains
          units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('Urban total runoff'), &
-         ptr_col=this%qflx_runoff_u_col, set_nourb=spval, c2l_scale_type='urbanf', default='inactive')
+         ptr_col=this%qflx_runoff_u_col, set_nourb=spval, c2l_scale_type='urbanf')
 
     this%qflx_runoff_r_col(begc:endc) = spval
     call hist_addfld1d ( &
