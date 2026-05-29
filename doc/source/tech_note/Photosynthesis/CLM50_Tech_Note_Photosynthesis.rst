@@ -33,9 +33,9 @@ Since CLM5 the model has calculated stomatal conductance using the Medlyn stomat
 
    \frac{1}{r_{s} } =g_{s} = g_{o} + 1.6(1 + \frac{g_{1} }{\sqrt{D_{s}}}) \frac{A_{n} }{{c_{s} \mathord{\left/ {\vphantom {c_{s}  P_{atm} }} \right.} P_{atm} } }
 
-where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2` :math:`\mu`\ mol\ :sup:`-1`), :math:`g_{o}` is the minimum stomatal conductance (:math:`\mu` mol m :sup:`-2` s\ :sup:`-1`), :math:`A_{n}` is leaf net photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa) where :math:`e_{i}` is the saturation vapor pressure (Pa) evaluated at the leaf temperature :math:`T_{v}`, and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa). :math:`g_{1}` is a plant functional type dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`) and is the same as those used in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`).
+where :math:`r_{s}` is leaf stomatal resistance (s m\ :sup:`2` :math:`\mu`\ mol\ :sup:`-1`), :math:`A_{n}` is leaf net photosynthesis (:math:`\mu`\ mol CO\ :sub:`2` m\ :sup:`-2` s\ :sup:`-1`), :math:`c_{s}` is the CO\ :sub:`2` partial pressure at the leaf surface (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`D_{s}=(e_{i}-e{_s})/1000` is the leaf-to-air vapor pressure difference at the leaf surface (kPa) where :math:`e_{i}` is the saturation vapor pressure (Pa) evaluated at the leaf temperature :math:`T_{v}`, and :math:`e_{s}` is the vapor pressure at the leaf surface (Pa). :math:`g_{o}` is plant functional type (pft)-dependent minimum stomatal conductance (:math:`\mu` mol m :sup:`-2` s\ :sup:`-1`) and :math:`g_{1}` is a pft-dependent parameter (:numref:`Table Plant functional type (PFT) stomatal conductance parameters`) with same values originally as in the CABLE model (:ref:`de Kauwe et al. 2015 <deKauwe2015>`) but most values have been replaced in CLM6.
 
-The value for :math:`g_{o}=100` :math:`\mu` mol m :sup:`-2` s\ :sup:`-1` for C\ :sub:`3` and C\ :sub:`4` plants. Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded (:math:`A^{sha}`) leaves to give :math:`r_{s}^{sun}` and :math:`r_{s}^{sha}`. Additionally, soil water influences stomatal resistance through plant hydraulic stress, detailed in the :ref:`rst_Plant Hydraulics` chapter.
+Photosynthesis is calculated for sunlit (:math:`A^{sun}`) and shaded (:math:`A^{sha}`) leaves to give :math:`r_{s}^{sun}` and :math:`r_{s}^{sha}`. Additionally, soil water influences stomatal resistance through plant hydraulic stress, detailed in the :ref:`rst_Plant Hydraulics` chapter.
 
 Resistance is converted from units of s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` to s m\ :sup:`-1` as: 1 s m\ :sup:`-1` = :math:`1\times 10^{-9} R_{gas} \frac{\theta _{atm} }{P_{atm} }` :math:`\mu` mol\ :sup:`-1` m\ :sup:`2` s, where :math:`R_{gas}` is the universal gas constant (J K\ :sup:`-1` kmol\ :sup:`-1`) (:numref:`Table Physical constants`) and :math:`\theta _{atm}` is the atmospheric potential temperature (K).
 
@@ -43,57 +43,59 @@ Resistance is converted from units of s m\ :sup:`2` :math:`\mu` mol\ :sup:`-1` t
 
 .. table:: Plant functional type (PFT) stomatal conductance parameters.
 
- +----------------------------------+-------------------+
- | PFT                              |  g\ :sub:`1`      |
- +==================================+===================+
- | NET Temperate                    |        2.35       |
- +----------------------------------+-------------------+
- | NET Boreal                       |        2.35       |
- +----------------------------------+-------------------+
- | NDT Boreal                       |        2.35       |
- +----------------------------------+-------------------+
- | BET Tropical                     |        4.12       |
- +----------------------------------+-------------------+
- | BET temperate                    |        4.12       |
- +----------------------------------+-------------------+
- | BDT tropical                     |        4.45       |
- +----------------------------------+-------------------+
- | BDT temperate                    |        4.45       |
- +----------------------------------+-------------------+
- | BDT boreal                       |        4.45       |
- +----------------------------------+-------------------+
- | BES temperate                    |        4.70       |
- +----------------------------------+-------------------+
- | BDS temperate                    |        4.70       |
- +----------------------------------+-------------------+
- | BDS boreal                       |        4.70       |
- +----------------------------------+-------------------+
- | C\ :sub:`3` arctic grass         |        2.22       |
- +----------------------------------+-------------------+
- | C\ :sub:`3` grass                |        5.25       |
- +----------------------------------+-------------------+
- | C\ :sub:`4` grass                |        1.62       |
- +----------------------------------+-------------------+
- | Temperate Corn                   |        1.79       |
- +----------------------------------+-------------------+
- | Spring Wheat                     |        5.79       |
- +----------------------------------+-------------------+
- | Temperate Soybean                |        5.79       |
- +----------------------------------+-------------------+
- | Cotton                           |        5.79       |
- +----------------------------------+-------------------+
- | Rice                             |        5.79       |
- +----------------------------------+-------------------+
- | Sugarcane                        |        1.79       |
- +----------------------------------+-------------------+
- | Tropical Corn                    |        1.79       |
- +----------------------------------+-------------------+
- | Tropical Soybean                 |        5.79       |
- +----------------------------------+-------------------+
- | Miscanthus                       |        1.79       |
- +----------------------------------+-------------------+
- | Switchgrass                      |        1.79       |
- +----------------------------------+-------------------+
+ +----------------------------------+-------------+------------------+
+ | PFT                              | g\ :sub:`o` | g\ :sub:`1`      |
+ +==================================+=============+==================+
+ | NET Temperate                    | 110.93      |       2.35       |
+ +----------------------------------+-------------+------------------+
+ | NET Boreal                       | 12500       |       2.57       |
+ +----------------------------------+-------------+------------------+
+ | NDT Boreal                       | 1.00        |       2.09       |
+ +----------------------------------+-------------+------------------+
+ | BET Tropical                     | 1733.21     |       3.50       |
+ +----------------------------------+-------------+------------------+
+ | BET temperate                    | 102.24      |       4.12       |
+ +----------------------------------+-------------+------------------+
+ | BDT tropical                     | 97.56       |       2.85       |
+ +----------------------------------+-------------+------------------+
+ | BDT temperate                    | 100.40      |       4.45       |
+ +----------------------------------+-------------+------------------+
+ | BDT boreal                       | 99.73       |       5.05       |
+ +----------------------------------+-------------+------------------+
+ | BES temperate                    | 100.00      |       4.38       |
+ +----------------------------------+-------------+------------------+
+ | BDS temperate                    | 100.00      |       4.70       |
+ +----------------------------------+-------------+------------------+
+ | BDS boreal                       | 100.00      |       4.70       |
+ +----------------------------------+-------------+------------------+
+ | C\ :sub:`3` arctic grass         | 100.00      |       3.78       |
+ +----------------------------------+-------------+------------------+
+ | C\ :sub:`3` grass                | 5063.54     |       8.32       |
+ +----------------------------------+-------------+------------------+
+ | C\ :sub:`4` grass                | 100.00      |       1.62       |
+ +----------------------------------+-------------+------------------+
+ | C\ :sub:`3` crop                 | 5063.54     |       9.17       |
+ +----------------------------------+-------------+------------------+
+ | Temperate Corn                   | 100.00      |       1.79       |
+ +----------------------------------+-------------+------------------+
+ | Spring Wheat                     | 100.00      |       5.79       |
+ +----------------------------------+-------------+------------------+
+ | Temperate Soybean                | 100.00      |       5.79       |
+ +----------------------------------+-------------+------------------+
+ | Cotton                           | 100.00      |       5.79       |
+ +----------------------------------+-------------+------------------+
+ | Rice                             | 100.00      |       5.79       |
+ +----------------------------------+-------------+------------------+
+ | Sugarcane                        | 100.00      |       1.79       |
+ +----------------------------------+-------------+------------------+
+ | Tropical Corn                    | 100.00      |       1.79       |
+ +----------------------------------+-------------+------------------+
+ | Tropical Soybean                 | 100.00      |       5.79       |
+ +----------------------------------+-------------+------------------+
+ | Miscanthus                       | 100.00      |       1.79       |
+ +----------------------------------+-------------+------------------+
+ | Switchgrass                      | 100.00      |       1.79       |
+ +----------------------------------+-------------+------------------+
 
 .. _Photosynthesis:
 
