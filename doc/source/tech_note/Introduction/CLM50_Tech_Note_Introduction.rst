@@ -55,10 +55,6 @@ P. O. Box 3000, Boulder, Colorado 80307-300
   
 - :numref:`Figure annual phenology cycle` Example of annual phenology cycle for seasonal deciduous.
 
-- :numref:`Figure Schematic of decomposition model in CLM` Schematic of decomposition model in CLM.
-
-- :numref:`Figure Pool structure` Pool structure, transitions, respired fractions, and turnover times for the 2 alternate soil decomposition models included in CLM.
-
 - :numref:`Figure Methane Schematic` Schematic representation of biological and physical processes integrated in CLM that affect the net CH4 surface flux.
 
 - :numref:`Figure Schematic of land cover change` Schematic of land cover change impacts on CLM carbon pools and fluxes.
@@ -116,10 +112,6 @@ P. O. Box 3000, Boulder, Colorado 80307-300
 - :numref:`Table MOSART Parameters` List of parameters in the global hydrography dataset.
 
 - :numref:`Table Allocation and CN ratio parameters` Allocation and carbon:nitrogen ratio parameters
-
-- :numref:`Table Decomposition rate constants` Decomposition rate constants for litter and SOM pools, C:N ratios, and acceleration parameters for the CLM-CN decomposition pool structure.
-
-- :numref:`Table Respiration fractions for litter and SOM pools` Respiration fractions for litter and SOM pools
 
 - :numref:`Table Turnover times` Turnover times, C:N ratios, and acceleration parameters for the Century-based decomposition cascade.
 
