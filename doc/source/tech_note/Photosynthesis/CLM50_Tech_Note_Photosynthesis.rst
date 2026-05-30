@@ -155,7 +155,7 @@ The model uses co-limitation as described by :ref:`Collatz et al. (1991, 1992) <
 
    \begin{array}{rcl} {\Theta _{cj} A_{i}^{2} -\left(A_{c} +A_{j} \right)A_{i} +A_{c} A_{j} } & {=} & {0} \\ {\Theta _{ip} A^{2} -\left(A_{i} +A_{p} \right)A+A_{i} A_{p} } & {=} & {0} \end{array}
 
-Values are :math:`\Theta _{cj} =0.98` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants; and :math:`\Theta _{cj} =0.80`\ and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants. :math:`A_{i}` is the intermediate co-limited photosynthesis.
+Values are :math:`\Theta _{cj} =0.9393` and :math:`\Theta _{ip} =0.95` for C\ :sub:`3` plants, :math:`\Theta _{cj} =0.80` and :math:`\Theta _{ip} =0.95` for C\ :sub:`4` plants, and :math:`\Theta _{cj} =0.98` for C\ :sub:`3` non-generic crops. :math:`A_{i}` is the intermediate co-limited photosynthesis.
 
 Now we write Eq. :eq:`leaf_net_psn` as :math:`A_{n} = A - \beta_{t} R_{d}` with :math:`\beta_{t}` as defined in Eq. :eq:`rubisco_lim_rate_of_carboxylation` to account for the effect of water stress on respiration.
 
