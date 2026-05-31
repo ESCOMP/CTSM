@@ -6,6 +6,8 @@ $$\newcommand{\gddacctwom}{GDD_{\ttwom}}$$
 $$\newcommand{\gddzero}{GDD_0}$$
 $$\newcommand{\gddeight}{GDD_8}$$
 $$\newcommand{\gddten}{GDD_{10}}$$
+$$\newcommand{\parambaset}{T_\textrm{base}}$$
+$$\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$$
 
 (rst_crops and irrigation)=
 
@@ -239,7 +241,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
      - 50
      - 50
      - 50
-   * - base temperature for GDD (°C)
+   * - :math:`parambaset` (°C)
      - 8
      - 0
      - 10
@@ -366,10 +368,11 @@ Notes:
 
 - $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
 - $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
+- $\parambaset$ is the minimum temperature for accumulating growing degree-days.
 - $\gddmat$ is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.
 - $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $\gddmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
 - $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddmat$.
-- $z_{top}^{\max }$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
+- $\paramztopmx$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
 - SLA is specific leaf area (see Chapter {numref}`rst_Photosynthetic Capacity`).
 - $\chi _{L}$ is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. (See Sect. {numref}`Canopy Radiative Transfer`.)
 - grperc is the growth respiration factor (see Sect. {numref}`Growth Respiration`).
@@ -540,12 +543,12 @@ Crop heights at the top and bottom of the canopy, ${z}_{top}$ and ${z}_{bot}$ (m
 
 $$
 \begin{array}{l}
-{z_{top} =z_{top}^{\max } \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\
+{z_{top} = \paramztopmx \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\
 {z_{bot} =0.02{\rm m}}
 \end{array}
 $$ (25.16)
 
-where $z_{top}^{\max }$ is the maximum top-of-canopy height of the crop ({numref}`Table Crop phenology parameters`) and $L_{\max }$ is the maximum leaf area index ({numref}`Table Crop allocation parameters`).
+where $\paramztopmx$ is the maximum top-of-canopy height of the crop ({numref}`Table Crop phenology parameters`) and $L_{\max }$ is the maximum leaf area index ({numref}`Table Crop allocation parameters`).
 
 (interactive-fertilization)=
 
@@ -574,12 +577,12 @@ For most crops, $\gddacctwom$ (growing degree days since planting) is the same i
 $$
 latitudinal\ variation\ in\ base\ T = \left\{
 \begin{array}{lr}
-baset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
-baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0
+\parambaset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
+\parambaset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0
 \end{array} \right\}
 $$ (25.18)
 
-where $baset$ is the *base temperature for GDD* (7{sup}`th` row) in {numref}`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
+where $\parambaset$ is the *base temperature for GDD* (7{sup}`th` row) in {numref}`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
 
 (separate-reproductive-pool)=
 
