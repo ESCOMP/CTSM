@@ -1,3 +1,12 @@
+<!-- Define math macros here -->
+$$\newcommand{\gddmat}{GDD_\textrm{mat}}$$
+$$\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$$
+$$\newcommand{\ttwom}{T_\textrm{2m}}$$
+$$\newcommand{\gddacctwom}{GDD_{\ttwom}}$$
+$$\newcommand{\gddzero}{GDD_0}$$
+$$\newcommand{\gddeight}{GDD_8}$$
+$$\newcommand{\gddten}{GDD_{10}}$$
+
 (rst_crops and irrigation)=
 
 # Crops and Irrigation
@@ -119,35 +128,35 @@ $$
 \begin{array}{c}
 {T_{10d} >T_{p} } \\
 {T_{10d}^{\min } >T_{p}^{\min } }  \\
-{GDD_{8} \ge GDD_{\min } }
+{\gddeight \ge GDD_{\min } }
 \end{array}
 $$ (25.1)
 
-where ${T}_{10d}$ is the 10-day running mean of ${T}_{2m}$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $T_{2m}^{\min }$ (the daily minimum of ${T}_{2m}$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), ${GDD}_{8}$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). ${GDD}_{8}$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the ${GDD}_{8}$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as ${GDD}_{8} > 0$.
+where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeight$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeight$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeight$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeight > 0$.
 
-At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (${CN}_{leaf}$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary for the crop to reach vegetative and physiological maturity, ${GDD}_{mat}$, according to the following AgroIBIS rules:
+At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (${CN}_{leaf}$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary for the crop to reach vegetative and physiological maturity, $\gddmat$, according to the following AgroIBIS rules:
 
 $$
 \begin{array}{lll}
-GDD_{{\rm mat}}^{{\rm corn,sugarcane}} =0.85 GDD_{{\rm 8}} & {\rm \; \; \; and\; \; \; }& 950 <GDD_{{\rm mat}}^{{\rm corn,sugarcane}} <1850{}^\circ {\rm days} \\
-GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} =GDD_{{\rm 0}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm spring\ wheat,cotton}} <1700{}^\circ {\rm days} \\
-GDD_{{\rm mat}}^{{\rm temp.soy}} =GDD_{{\rm 10}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm temp.soy}} <1900{}^\circ {\rm days} \\
-GDD_{{\rm mat}}^{{\rm rice}} =GDD_{{\rm 0}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm rice}} <2100{}^\circ {\rm days} \\
-GDD_{{\rm mat}}^{{\rm trop.soy}} =GDD_{{\rm 10}} & {\rm \; \; \; and\; \; \; } & GDD_{{\rm mat}}^{{\rm trop.soy}} <2100{}^\circ {\rm days}
+\gddmat^{{\rm corn,sugarcane}} = 0.85 \gddeight & {\rm \; \; \; and\; \; \; }& 950 <\gddmat^{{\rm corn,sugarcane}} <1850{}^\circ {\rm days} \\
+\gddmat^{{\rm spring\ wheat,cotton}} = \gddzero & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm spring\ wheat,cotton}} <1700{}^\circ {\rm days} \\
+\gddmat^{{\rm temp.soy}} = \gddten & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm temp.soy}} <1900{}^\circ {\rm days} \\
+\gddmat^{{\rm rice}} = \gddzero & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm rice}} <2100{}^\circ {\rm days} \\
+\gddmat^{{\rm trop.soy}} = \gddten & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm trop.soy}} <2100{}^\circ {\rm days}
 \end{array}
 $$ (25.2)
 
-where ${GDD}_{0}$, ${GDD}_{8}$, and ${GDD}_{10}$ are the 20-year running mean growing degree-days tracked from April through September (NH) over 0°C, 8°C, and 10°C, respectively, with maximum daily increments of 26 degree-days (for ${GDD}_{0}$) or 30 degree-days (for ${GDD}_{8}$ and ${GDD}_{10}$). Equation {eq}`25.3` shows how we calculate ${GDD}_{0}$, ${GDD}_{8}$, and ${GDD}_{10}$ for each model timestep:
+where $\gddzero$, $\gddeight$, and $\gddten$ are the 20-year running mean growing degree-days tracked from April through September (NH) over 0°C, 8°C, and 10°C, respectively, with maximum daily increments of 26 degree-days (for $\gddzero$) or 30 degree-days (for $\gddeight$ and $\gddten$). Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
 
 $$
 \begin{array}{lll}
-GDD_{{\rm 0}} =GDD_{0} +T_{2{\rm m}} -T_{f} & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days} \\
-GDD_{{\rm 8}} =GDD_{8} +T_{2{\rm m}} -T_{f} -8 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days} \\
-GDD_{{\rm 10}} =GDD_{10} +T_{2{\rm m}} -T_{f} -10 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}
+\gddzero =\gddzero +T_{2{\rm m}} -T_{f} & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days} \\
+\gddeight =\gddeight +T_{2{\rm m}} -T_{f} -8 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days} \\
+\gddten =\gddten +T_{2{\rm m}} -T_{f} -10 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}
 \end{array}
 $$ (25.3)
 
-where, if ${T}_{2m}$ - ${T}_{f}$ takes on values outside the above ranges within a day, then it equals the minimum or maximum value in the range for that day. ${T}_{f}$ is the freezing temperature of water and equals 273.15 K, ${T}_{2m}$ is the 2-m air temperature in units of K, and $GDD$ is in units of degree-days.
+where, if $\ttwom$ - ${T}_{f}$ takes on values outside the above ranges within a day, then it equals the minimum or maximum value in the range for that day. ${T}_{f}$ is the freezing temperature of water and equals 273.15 K, $\ttwom$ is the 2-m air temperature in units of K, and $GDD$ is in units of degree-days.
 
 (leaf-emergence)=
 
@@ -155,19 +164,19 @@ where, if ${T}_{2m}$ - ${T}_{f}$ takes on values outside the above ranges within
 
 The "leaf emergence" phase is the period of vegetative growth between when the leaves first emerge from the soil to when filling of the reproductive organ begins.
 
-According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($GDD_{T_{soi} }$ ), which is tracked since planting, reaches 1 to 5% of ${GDD}_{mat}$ (see $h_{lfemerg}$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $GDD_{T_{soi} }$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $GDD_{T_{{\rm 2m}} }$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
+According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddmat$ (see $h_{lfemerg}$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
 
 (grain fill)=
 
 #### Grain fill
 
-The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $GDD_{T_{soi} }$ but for 2-m air temperature, $GDD_{T_{{\rm 2m}} }$, must reach a heat unit threshold, $h_{grain}$, of 40 to 65% of ${GDD}_{mat}$ (see {numref}`Table Crop phenology parameters`). For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane), the ${GDD}_{mat}$ is based on an empirical function and ranges between 950 and 1850. The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $h_{grain}$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane), the $\gddmat$ is based on an empirical function and ranges between 950 and 1850. The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
 
 (harvest)=
 
 #### Harvest
 
-Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{{\rm 2m}} }$ reaches 100% of ${GDD}_{mat}$ or the number of days past planting reaches a crop-specific maximum ({numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
+Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddmat$ or the number of days past planting reaches a crop-specific maximum ({numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
 
 (table crop phenology parameters)=
 
@@ -241,7 +250,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{
      - 10
      - 8
      - 8
-   * - :math:`{GDD}_{mat}` (degree-days)
+   * - :math:`\gddmat` (degree-days)
      - 950-1850
      - ≤ 1700
      - ≤ 1900
@@ -252,7 +261,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{
      - ≤ 2100
      - 950-1850
      - 950-1850
-   * - :math:`h_{lfemerg}` (% :math:`{GDD}_{mat}`)
+   * - :math:`h_{lfemerg}` (% :math:`\gddmat`)
      - 3%
      - 5%
      - 3%
@@ -263,7 +272,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $GDD_{T_{
      - 3%
      - 3%
      - 3%
-   * - :math:`h_{grainfill}` (% :math:`{GDD}_{mat}`)
+   * - :math:`h_{grainfill}` (% :math:`\gddmat`)
      - 65%
      - 60%
      - 50%
@@ -357,9 +366,9 @@ Notes:
 
 - $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
 - $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
-- $GDD_{mat}$ is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.
-- $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $GDD_{mat}$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
-- $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $GDD_{mat}$.
+- $\gddmat$ is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.
+- $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $\gddmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
+- $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddmat$.
 - $z_{top}^{\max }$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
 - SLA is specific leaf area (see Chapter {numref}`rst_Photosynthetic Capacity`).
 - $\chi _{L}$ is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. (See Sect. {numref}`Canopy Radiative Transfer`.)
@@ -386,8 +395,8 @@ each C pool are defined as:
 
 $$
 \begin{array}{l} {a_{repr} =0} \\
-{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} }, 1\right)} \\
-{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{GDD_{T_{{\rm 2m}} } }{h_{grain}} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
+{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{\gddacctwom }{\gddmat }, 1\right)} \\
+{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{\gddacctwom }{h_{grain}} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (eq-lfemerg-allocations)
 
@@ -402,10 +411,10 @@ The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg
 $$
 \begin{array}{ll}
 a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\
-a_{leaf} =a_{leaf} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h_{grain}}{GDD_{{\rm mat}} d_{L} -h_{grain}} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h_{grain}}{GDD_{{\rm mat}} d_{L} -h_{grain}} \le 1 \\
+a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \le 1 \\
  \\
 a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le a_{livestem}^{f} \quad {\rm else} \\
-a_{livestem} =a_{livestem} \left(1-\frac{GDD_{T_{{\rm 2m}} } -h_{grain}}{GDD_{{\rm mat}} d_{L} -h_{grain}} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{GDD_{T_{{\rm 2m}} } -h_{grain}}{GDD_{{\rm mat}} d_{L} -h_{grain}} \le 1 \\
+a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \le 1 \\
  \\
 a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
 \end{array}
@@ -560,7 +569,7 @@ Biological N fixation for soybeans is calculated by the fixation and uptake of n
 
 #### Latitudinal variation in base growth temperature
 
-For most crops, $GDD_{T_{{\rm 2m}} }$ (growing degree days since planting) is the same in all locations. However, for both rainfed and irrigated spring wheat and sugarcane, the calculation of $GDD_{T_{{\rm 2m}} }$ allows for latitudinal variation:
+For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for both rainfed and irrigated spring wheat and sugarcane, the calculation of $\gddacctwom$ allows for latitudinal variation:
 
 $$
 latitudinal\ variation\ in\ base\ T = \left\{
@@ -570,7 +579,7 @@ baset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0
 \end{array} \right\}
 $$ (25.18)
 
-where $baset$ is the *base temperature for GDD* (7{sup}`th` row) in {numref}`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow $GDD_{T_{{\rm 2m}} }$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
+where $baset$ is the *base temperature for GDD* (7{sup}`th` row) in {numref}`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
 
 (separate-reproductive-pool)=
 
