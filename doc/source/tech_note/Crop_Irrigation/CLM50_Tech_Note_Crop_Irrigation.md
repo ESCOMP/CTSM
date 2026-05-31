@@ -385,7 +385,7 @@ each C pool are defined as:
 
 $$
 \begin{array}{l} {a_{repr} =0} \\
-{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} )\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } {\rm \; \; \; where\; \; \; }\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} } \le 1} \\
+{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} }, 1\right)} \\
 {a_{leaf} =(1-a_{froot} )\cdot \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{GDD_{T_{{\rm 2m}} } }{h} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (25.4)
