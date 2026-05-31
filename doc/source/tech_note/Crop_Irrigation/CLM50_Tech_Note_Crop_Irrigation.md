@@ -396,7 +396,7 @@ where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final
 
 #### Grain fill
 
-The calculation of $a_{froot}$ remains the same from phase 2 to phase 3. During grain fill (phase 3), other allocation coefficients change to:
+The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg-allocations)) to phase 3. During grain fill (phase 3), other allocation coefficients change to:
 
 $$
 \begin{array}{ll}
