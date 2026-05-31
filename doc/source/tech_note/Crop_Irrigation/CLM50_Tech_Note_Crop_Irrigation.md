@@ -1,21 +1,21 @@
 <!-- Define math macros here -->
-$$\newcommand{\gddmat}{GDD_\textrm{mat}}$$
-$$\newcommand{\gddmatbl}{\gddmat^\textrm{bl}}$$
-$$\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$$
-$$\newcommand{\ttwom}{T_\textrm{2m}}$$
-$$\newcommand{\gddacctwom}{GDD_{\ttwom}}$$
-$$\newcommand{\gddzero}{GDD_0}$$
-$$\newcommand{\gddeight}{GDD_8}$$
-$$\newcommand{\gddten}{GDD_{10}}$$
-$$\newcommand{\gddx}{GDD_x}$$
-$$\newcommand{\gddzerorun}{\overline{\gddzero}^\textrm{20yr}}$$
-$$\newcommand{\gddeightrun}{\overline{\gddeight}^\textrm{20yr}}$$
-$$\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$$
-$$\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$$
-$$\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$$
-$$\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$$
-$$\newcommand{\parambaset}{T_\textrm{base}}$$
-$$\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$$
+$\newcommand{\gddmat}{GDD_\textrm{mat}}$
+$\newcommand{\gddmatbl}{\gddmat^\textrm{bl}}$
+$\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$
+$\newcommand{\ttwom}{T_\textrm{2m}}$
+$\newcommand{\gddacctwom}{GDD_{\ttwom}}$
+$\newcommand{\gddzero}{GDD_0}$
+$\newcommand{\gddeight}{GDD_8}$
+$\newcommand{\gddten}{GDD_{10}}$
+$\newcommand{\gddx}{GDD_x}$
+$\newcommand{\gddzerorun}{\overline{\gddzero}^\textrm{20yr}}$
+$\newcommand{\gddeightrun}{\overline{\gddeight}^\textrm{20yr}}$
+$\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$
+$\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$
+$\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$
+$\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$
+$\newcommand{\parambaset}{T_\textrm{base}}$
+$\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$
 
 (rst_crops and irrigation)=
 
