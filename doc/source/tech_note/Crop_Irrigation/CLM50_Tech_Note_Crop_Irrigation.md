@@ -1,11 +1,19 @@
 <!-- Define math macros here -->
 $$\newcommand{\gddmat}{GDD_\textrm{mat}}$$
+$$\newcommand{\gddmatbl}{\gddmat^\textrm{bl}}$$
 $$\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$$
 $$\newcommand{\ttwom}{T_\textrm{2m}}$$
 $$\newcommand{\gddacctwom}{GDD_{\ttwom}}$$
 $$\newcommand{\gddzero}{GDD_0}$$
 $$\newcommand{\gddeight}{GDD_8}$$
 $$\newcommand{\gddten}{GDD_{10}}$$
+$$\newcommand{\gddx}{GDD_x}$$
+$$\newcommand{\gddzerorun}{\overline{\gddzero}^\textrm{20yr}}$$
+$$\newcommand{\gddeightrun}{\overline{\gddeight}^\textrm{20yr}}$$
+$$\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$$
+$$\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$$
+$$\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$$
+$$\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$$
 $$\newcommand{\parambaset}{T_\textrm{base}}$$
 $$\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$$
 
@@ -130,35 +138,50 @@ $$
 \begin{array}{c}
 {T_{10d} >T_{p} } \\
 {T_{10d}^{\min } >T_{p}^{\min } }  \\
-{\gddeight \ge GDD_{\min } }
+{\gddeightrun \ge GDD_{\min } }
 \end{array}
 $$ (25.1)
 
-where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeight$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeight$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeight$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeight > 0$.
+where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeightrun$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeightrun$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeightrun$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeightrun > 0$.
 
-At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (${CN}_{leaf}$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C). The model updates the average growing degree-days necessary for the crop to reach vegetative and physiological maturity, $\gddmat$, according to the following AgroIBIS rules:
+At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves (${CN}_{leaf}$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C).
 
-$$
-\begin{array}{lll}
-\gddmat^{{\rm corn,sugarcane}} = 0.85 \gddeight & {\rm \; \; \; and\; \; \; }& 950 <\gddmat^{{\rm corn,sugarcane}} <1850{}^\circ {\rm days} \\
-\gddmat^{{\rm spring\ wheat,cotton}} = \gddzero & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm spring\ wheat,cotton}} <1700{}^\circ {\rm days} \\
-\gddmat^{{\rm temp.soy}} = \gddten & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm temp.soy}} <1900{}^\circ {\rm days} \\
-\gddmat^{{\rm rice}} = \gddzero & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm rice}} <2100{}^\circ {\rm days} \\
-\gddmat^{{\rm trop.soy}} = \gddten & {\rm \; \; \; and\; \; \; } & \gddmat^{{\rm trop.soy}} <2100{}^\circ {\rm days}
-\end{array}
-$$ (25.2)
+#### Maturity requirement
+At planting, CLM determines how many growing degree-days will be needed for the crop to reach maturity and thus be harvested. By default (i.e., `cropcals_rx_adapt = .true.`), this is set according to two input files with PFT-specific maps:
+- `stream_fldfilename_cultivar_gdds` ($\gddmatbl$): the average growing-degree days to reach maturity in the "baseline" period.
+- `stream_fldFileName_gdd20_baseline` ($\gddxrunbl$): the means over the baseline period of $\gddzerorun$, $\gddeightrun$, and $\gddtenrun$.
 
-where $\gddzero$, $\gddeight$, and $\gddten$ are the 20-year running mean growing degree-days tracked from April through September (NH) over 0°C, 8°C, and 10°C, respectively, with maximum daily increments of 26 degree-days (for $\gddzero$) or 30 degree-days (for $\gddeight$ and $\gddten$). Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
+Maturity requirement, $\gddmat$, is then calculated as:
 
 $$
-\begin{array}{lll}
-\gddzero =\gddzero +T_{2{\rm m}} -T_{f} & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} \le 26{}^\circ {\rm days} \\
-\gddeight =\gddeight +T_{2{\rm m}} -T_{f} -8 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -8\le 30{}^\circ {\rm days} \\
-\gddten =\gddten +T_{2{\rm m}} -T_{f} -10 & \quad {\rm \; \; \; where\; \; \; } & 0 \le T_{2{\rm m}} -T_{f} -10\le 30{}^\circ {\rm days}
-\end{array}
+\gddmat = \max \left( 1,\ \gddmatbl \times \frac{\gddxrun}{\gddxrunbl} \right),
+$$ (gddmat-rx-adapt)
+
+where $x$ is 0 (wheat, cotton, and rice), 8 (corn, sugarcane, _Miscanthus_, and switchgrass), or 10 (soybean). This allows the maturity requirement to "adapt" over time, being lower in cool periods and higher in warm periods. The baseline period is the 1980-2009 growing seasons (i.e., seasons where planting occurred in those calendar years, inclusive); baseline values were calculated based on a half-degree, land-only run with CRU-JRA climate forcings (Rabin et al., in prep.). The minimum value of 1 avoids numeric issues when $\gddmat$ is in the denominator of a calculation.
+
+- **Check baseline period**
+
+If `cropcals_rx_adapt` is false but `cropcals_rx` is true, the calculation is just $\gddmat = \gddmatbl$.
+
+If both `cropcals_rx_adapt` and `cropcals_rx` are false, or if $\gddmatbl$ is negative, then CLM sets $\gddmat$ according to various crop-specific rules based on $\gddx$, the PFT-specific parameter `hybgdd`, and hard-coded minimum and maximum values.
+
+Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
+
+$$
+\gddx = \gddx + \frac{\max \left( \gddxdaymax,\ \min \left[ 0,\ \ttwom - 273.15 - x \right] \right)}{48} 
 $$ (25.3)
 
-where, if $\ttwom$ - ${T}_{f}$ takes on values outside the above ranges within a day, then it equals the minimum or maximum value in the range for that day. ${T}_{f}$ is the freezing temperature of water and equals 273.15 K, $\ttwom$ is the 2-m air temperature in units of K, and $GDD$ is in units of degree-days.
+where $\ttwom$ is the 2-m air temperature (K), 273.15 K is the freezing temperature of water, and $GDD$ is in units of °C-days. $\gddxdaymax$, the maximum daily growing degree-day accumulation, is 26°C for $x=0$ and 30°C for $x=8$ and $x=10$.
+
+- **Is there a pre-existing symbol for number of timesteps in a day that we could use instead of 48?**
+
+By default, the $\gddx$ values are set to zero at the beginning of the "$\gddx$ season" and then accumulated through its end: from April 1 through September 30 in the Northern Hemisphere and from October 1 through March 31 in the Southern Hemisphere. (Setting `stream_gdd20_seasons = .true.` would instead take those start and end dates from PFT-specific maps in the input files `stream_fldFileName_gdd20_season_start` and `stream_fldFileName_gdd20_season_end`, respectively; however, this is not scientifically supported.) At the end of each $\gddx$ season, the final value of $\gddx$ is incorporated into $\gddxrun$ like so:
+
+$$
+\gddxrun = \frac{\gddxrun \times \min(n-1, 19) + \gddx}{20},
+$$ (update-gddxrun)
+
+where $n$ is the number of years that $\gddxrun$ gas been calculated for. Note that this is not a true rolling 20-year mean, which would come with a memory cost in the simulation as a 20-member array would need to be saved for each PFT.
 
 (leaf-emergence)=
 
@@ -172,7 +195,7 @@ According to AgroIBIS, leaves may emerge when the growing degree-days of soil te
 
 #### Grain fill
 
-The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $h_{grain}$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). For crops with the C4 photosynthetic pathway (temperate and tropical corn, sugarcane), the $\gddmat$ is based on an empirical function and ranges between 950 and 1850. The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $h_{grain}$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
 
 (harvest)=
 
@@ -241,7 +264,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
      - 50
      - 50
      - 50
-   * - :math:`parambaset` (°C)
+   * - :math:`\parambaset` (°C)
      - 8
      - 0
      - 10
@@ -252,17 +275,6 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
      - 10
      - 8
      - 8
-   * - :math:`\gddmat` (degree-days)
-     - 950-1850
-     - ≤ 1700
-     - ≤ 1900
-     - ≤ 1700
-     - ≤ 2100
-     - 950-1850
-     - 950-1850
-     - ≤ 2100
-     - 950-1850
-     - 950-1850
    * - :math:`h_{lfemerg}` (% :math:`\gddmat`)
      - 3%
      - 5%
@@ -369,7 +381,6 @@ Notes:
 - $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
 - $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
 - $\parambaset$ is the minimum temperature for accumulating growing degree-days.
-- $\gddmat$ is the heat unit index, in units of accumulated growing degree-days, a crop needs to reach maturity.
 - $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $\gddmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
 - $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddmat$.
 - $\paramztopmx$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
