@@ -388,7 +388,7 @@ $$
 {a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{GDD_{T_{{\rm 2m}} } }{GDD_{{\rm mat}} }, 1\right)} \\
 {a_{leaf} =(1-a_{froot} )\cdot \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{GDD_{T_{{\rm 2m}} } }{h} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
-$$ (25.4)
+$$ (eq-lfemerg-allocations)
 
 where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final values of these coefficients ({numref}`Table Crop allocation parameters`), and $h$ is a heat unit threshold defined in section {numref}`Grain fill`. At a crop-specific maximum leaf area index, ${L}_{max}$ ({numref}`Table Crop allocation parameters`), carbon allocation is directed exclusively to the fine roots.
 
