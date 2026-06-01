@@ -570,7 +570,11 @@ contains
             ! layer mass of snow:
             snowmass = h2osoi_ice(c,j) + h2osoi_liq(c,j)
 
-            if (j >= snl(c)+1) then
+            ! [PORTED by Hui Tang: exclude NVP layer j=0 from aerosol snow calculation.
+            !  When NVP is active jbot_sno=-1 (bottom snow = j=-1); j=0 is NVP not snow.
+            !  Without this guard, j=0 satisfies j>=snl+1 and snowmass(j=0)≈0 → SIGFPE
+            !  divide-by-zero at the concentration lines below.]
+            if (j >= snl(c)+1 .and. j <= col%jbot_sno(c)) then
 
                mss_bctot(c,j)     = mss_bcpho(c,j) + mss_bcphi(c,j)
                mss_bc_col(c)      = mss_bc_col(c)  + mss_bctot(c,j)
