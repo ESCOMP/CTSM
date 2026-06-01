@@ -506,6 +506,8 @@ contains
          if (use_fates) then
             if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
                eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
+            else
+               eflx_sh_nvp(p) = 0._r8  ! [PORTED by Hui Tang: zero NVP sh flux when buried under snow or condition unmet]
             end if
          else
             eflx_sh_nvp(p) = 0._r8
@@ -535,6 +537,8 @@ contains
          if (use_fates) then
             if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
                qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+            else
+               qflx_ev_nvp(p) = 0._r8  ! [PORTED by Hui Tang: zero NVP ev flux when buried under snow or condition unmet]
             end if
          else
             qflx_ev_nvp(p) = 0._r8
