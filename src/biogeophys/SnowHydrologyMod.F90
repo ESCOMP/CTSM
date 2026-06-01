@@ -1168,13 +1168,23 @@ contains
          
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
+       ! [PORTED by Hui Tang: when NVP is active jbot_sno=-1; the bottom snow percolation
+       !  exits at j=-1 (into NVP), not j=0.  Use j=0 for non-NVP columns as before.]
+       do c = begc, endc
+          if (col%nvp_layer_active(c)) then
+             qflx_snow_percolation_bottom_tmp(c) = w%waterflux_inst%qflx_snow_percolation_col(c, -1)
+          else
+             qflx_snow_percolation_bottom_tmp(c) = w%waterflux_inst%qflx_snow_percolation_col(c, 0)
+          end if
+       end do
        call SumFlux_AddSnowPercolation(bounds, &
             num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
             ! Inputs
             frac_sno_eff                 = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
-            qflx_snow_percolation_bottom = w%waterflux_inst%qflx_snow_percolation_col(begc:endc, 0), &
+            qflx_snow_percolation_bottom = qflx_snow_percolation_bottom_tmp(begc:endc), &
             qflx_liq_grnd                = w%waterflux_inst%qflx_liq_grnd_col(begc:endc), &
             qflx_snomelt                 = w%waterflux_inst%qflx_snomelt_col(begc:endc), &
+            nvp_layer_active             = col%nvp_layer_active(begc:endc), &
             ! Outputs
             qflx_snow_drain              = w%waterflux_inst%qflx_snow_drain_col(begc:endc), &
             qflx_rain_plus_snomelt       = w%waterflux_inst%qflx_rain_plus_snomelt_col(begc:endc))
@@ -1324,7 +1334,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine BulkFlux_SnowPercolation(bounds, num_snowc, filter_snowc, &
-       dtime, snl, dz, frac_sno_eff, h2osoi_ice, h2osoi_liq, &
+       dtime, snl, jbot_sno, dz, frac_sno_eff, h2osoi_ice, h2osoi_liq, &
        qflx_snow_percolation)
     !
     ! !DESCRIPTION:
@@ -1340,6 +1350,9 @@ contains
 
     real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
     integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
+    ! [PORTED by Hui Tang: jbot_sno is 0 when no NVP, -1 when NVP occupies index 0;
+    !  used to stop percolation at the bottom snow layer and skip the NVP layer (j=0)]
+    integer  , intent(in)    :: jbot_sno( bounds%begc: )                 ! bottom index of active snow layers (0 or -1)
     real(r8) , intent(in)    :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
     real(r8) , intent(in)    :: frac_sno_eff( bounds%begc: )             ! eff. fraction of ground covered by snow (0 to 1)
     real(r8) , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
@@ -1401,7 +1414,12 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
-             if (j <= -1) then
+             ! [PORTED by Hui Tang: use jbot_sno(c) instead of hard-coded -1 so that the
+             !  NVP layer at j=0 is excluded when nvp_layer_active.
+             !  j < jbot_sno: interior snow layer — capacity-limited (next layer is also snow).
+             !  j == jbot_sno: bottom snow layer — uncapped gravity drainage (next is NVP or soil).
+             !  j > jbot_sno: NVP layer (only j=0 when nvp_layer_active) — zero; not a snow layer.]
+             if (j < jbot_sno(c)) then
                 ! No runoff over snow surface, just ponding on surface
                 if (eff_porosity(c,j) < params_inst%wimp .OR. eff_porosity(c,j+1) < params_inst%wimp) then
                    qflx_snow_percolation(c,j) = 0._r8
@@ -1412,9 +1430,12 @@ contains
                    qflx_snow_percolation(c,j) = min(qflx_snow_percolation(c,j),(1._r8-vol_ice(c,j+1) &
                         - vol_liq(c,j+1))*dz(c,j+1)*frac_sno_eff(c))
                 end if
-             else
+             else if (j == jbot_sno(c)) then
                 qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
                      - params_inst%ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_eff(c))
+             else
+                ! j > jbot_sno(c): NVP layer at j=0; not a snow layer
+                qflx_snow_percolation(c,j) = 0._r8
              end if
              qflx_snow_percolation(c,j) = (qflx_snow_percolation(c,j)*1000._r8)/dtime
           end if
@@ -1858,6 +1879,7 @@ contains
   subroutine SumFlux_AddSnowPercolation(bounds, &
        num_snowc, filter_snowc, num_nosnowc, filter_nosnowc, &
        frac_sno_eff, qflx_snow_percolation_bottom, qflx_liq_grnd, qflx_snomelt, &
+       nvp_layer_active, &
        qflx_snow_drain, qflx_rain_plus_snomelt)
     !
     ! !DESCRIPTION:
@@ -1874,6 +1896,10 @@ contains
     real(r8) , intent(in)    :: qflx_snow_percolation_bottom( bounds%begc: ) ! liquid percolation out of the bottom of the snow pack (mm H2O /s)
     real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )                ! liquid on ground after interception (mm H2O/s)
     real(r8) , intent(in)    :: qflx_snomelt( bounds%begc: )                 ! snow melt (mm H2O /s)
+    ! [PORTED by Hui Tang: when NVP occupies j=0, percolation from the bottom snow layer
+    !  (j=-1) goes to NVP, not the soil surface; exclude it from qflx_rain_plus_snomelt
+    !  to prevent bogus soil input and column water balance error]
+    logical  , intent(in)    :: nvp_layer_active( bounds%begc: )              ! .true. when NVP layer is active at j=0
 
     real(r8) , intent(inout) :: qflx_snow_drain( bounds%begc: )              ! drainage from snow pack from previous time step (mm H2O/s)
     real(r8) , intent(inout) :: qflx_rain_plus_snomelt( bounds%begc: )       ! rain plus snow melt falling on the soil (mm/s)
@@ -1894,9 +1920,16 @@ contains
     do fc = 1, num_snowc
        c = filter_snowc(fc)
 
+       ! Always register percolation as a snow drain (fixes snow balance)
        qflx_snow_drain(c) = qflx_snow_drain(c) + qflx_snow_percolation_bottom(c)
-       qflx_rain_plus_snomelt(c) = qflx_snow_percolation_bottom(c) &
-            + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+       if (nvp_layer_active(c)) then
+          ! Percolation exits j=-1 into NVP (j=0), not the soil surface; exclude from
+          ! qflx_rain_plus_snomelt so it is not double-counted as soil input / surface runoff.
+          qflx_rain_plus_snomelt(c) = (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+       else
+          qflx_rain_plus_snomelt(c) = qflx_snow_percolation_bottom(c) &
+               + (1.0_r8 - frac_sno_eff(c)) * qflx_liq_grnd(c)
+       end if
     end do
 
     do fc = 1, num_nosnowc
