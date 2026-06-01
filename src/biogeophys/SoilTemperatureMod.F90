@@ -2061,12 +2061,26 @@ contains
             ! [PORTED by Hui Tang: accumulate NVP surface BC and layer-0 solar absorption]
             ! NVP layer 0 is above soil layer 1 when active (jbot_sno=-1, snl=0).
             ! Its surface BC uses sabg_lyr(p,0) and NVP-specific turbulent/LW fluxes.
+            ! When snow covers NVP (snl<0), layer 0 is an internal snow layer in the
+            ! tridiagonal solver; the main loop (do j=lyr_top,1) already accumulates
+            ! sabg_lyr_col(c,0), so we must NOT add it again here or it is double-counted.
             if (col%nvp_layer_active(c)) then
                eflx_gnet_nvp = sabg_lyr(p,0) + dlrad(p) &
                     + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_nvp(c) &
                     - (eflx_sh_nvp(p) + qflx_ev_nvp(p)*htvp(c))
                hs_nvp(c)     = hs_nvp(c)     + eflx_gnet_nvp * patch%wtcol(p)
-               sabg_lyr_col(c,0) = sabg_lyr_col(c,0) + sabg_lyr(p,0) * patch%wtcol(p)
+               ! [PORTED by Hui Tang: only accumulate sabg_lyr_col(c,0) here when there is
+               !  no snow (snl==0). When snow covers NVP (snl<0), the do j=lyr_top,1 loop
+               !  above already added sabg_lyr(p,0); adding it again would double-count it,
+               !  causing errsoi = -sabg_lyr(p,0).]
+               if (snl(c) == 0) then
+                  sabg_lyr_col(c,0) = sabg_lyr_col(c,0) + sabg_lyr(p,0) * patch%wtcol(p)
+               end if
+               ! [DBG NVP sabg] solar absorbed by NVP and total surface energy flux
+               write(iulog,*) '[DBG NVP sabg] p=', p, ' c=', c, &
+                    ' sabg_lyr(p,0)=', sabg_lyr(p,0), &
+                    ' eflx_gnet_nvp=', eflx_gnet_nvp, &
+                    ' hs_nvp(c)=', hs_nvp(c)
             end if
          else
 
@@ -2992,6 +3006,17 @@ contains
               else !if ( j == 0)
                  bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
               end if
+           ! [PORTED by Hui Tang: NVP top-layer BC in SetMatrix_Snow]
+           ! With snl=0, condition j>=snl+1=j>=1 never fires for j=0, leaving
+           ! bmatrix_snow(c,:,-1) all zeros -> singular matrix (dgbsv info=1).
+           ! Explicitly set the NVP surface BC here: j=0 is the top of the system
+           ! with no layer above and coupled to soil j=1 below.
+           else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
+              dzp = z(c,j+1) - z(c,j)
+              bmatrix_snow(c,4,j-1) = 0._r8
+              bmatrix_snow(c,3,j-1) = 1._r8 + (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp &
+                   - fact(c,j)*dhsdT(c)
+              bmatrix_snow_soil(c,1,j-1) = -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
            end if
         enddo
       end do
@@ -3114,15 +3139,25 @@ end subroutine SetMatrix_Snow
                 (col%itype(c) == icol_road_perv)   .or. &
                 (.not. lun%urbpoi(l))) then
 
-                if (j == col%snl(c)+1) then
+                ! [PORTED by Hui Tang: exclude NVP — when NVP active, j=1 is interior not top]
+                if (j == col%snl(c)+1 .and. .not. (use_nvp .and. col%jbot_sno(c) == -1)) then
                    dzp     = z(c,j+1)-z(c,j)
                    if (j /= 1) then
                       bmatrix_soil(c,4,j) = 0._r8
-                    else 
+                    else
                       bmatrix_soil_snow(c,5,j) = 0._r8
                    end if
                    bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                    bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                ! [PORTED by Hui Tang: j=1 below NVP is interior — full conduction coupling to NVP at j=0]
+                ! frac_sno_eff=0 when snl=0 so the standard snow/soil branch would give zero coupling;
+                ! NVP is always fully present above j=1, so use full conductance (no dhsdT term).
+                else if (j == 1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. col%snl(c) == 0) then
+                   dzm     = (z(c,j)-z(c,j-1))
+                   dzp     = (z(c,j+1)-z(c,j))
+                   bmatrix_soil(c,2,j) =   -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                   bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
+                   bmatrix_soil_snow(c,5,j) = -(1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
                 else if (j == 1) then
                    ! this is the snow/soil interface layer
                    dzm     = (z(c,j)-z(c,j-1))
