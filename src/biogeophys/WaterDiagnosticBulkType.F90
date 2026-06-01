@@ -234,9 +234,9 @@ contains
     allocate(this%wf_col                 (begc:endc))                     ; this%wf_col                 (:)   = nan
     allocate(this%wf2_col                (begc:endc))                     ; this%wf2_col                (:)   = nan
     allocate(this%fwet_patch             (begp:endp))                     ; this%fwet_patch             (:)   = nan
-    ! [PORTED by Hui Tang: allocate nvp (moss/lichen) column wet fraction and VWC, initialized to 0]
-    allocate(this%fwet_nvp_col           (begc:endc))                     ; this%fwet_nvp_col           (:)   = 0.0_r8
-    allocate(this%vwc_nvp_col            (begc:endc))                     ; this%vwc_nvp_col            (:)   = 0.0_r8
+    ! [PORTED by Hui Tang: allocate nvp (moss/lichen) column wet fraction and VWC, initialized to 0.6]
+    allocate(this%fwet_nvp_col           (begc:endc))                     ; this%fwet_nvp_col           (:)   = 0.6_r8
+    allocate(this%vwc_nvp_col            (begc:endc))                     ; this%vwc_nvp_col            (:)   = 0.6_r8
     allocate(this%fcansno_patch          (begp:endp))                     ; this%fcansno_patch          (:)   = nan
     allocate(this%fdry_patch             (begp:endp))                     ; this%fdry_patch             (:)   = nan
     allocate(this%qflx_prec_intr_patch   (begp:endp))                     ; this%qflx_prec_intr_patch   (:)   = nan
@@ -1023,7 +1023,7 @@ contains
             units='proportion', &
             interpinic_flag='interp', readvar=readvar, data=this%fwet_nvp_col)
        if (flag == 'read' .and. .not. readvar) then
-          this%fwet_nvp_col(bounds%begc:bounds%endc) = 0.0_r8
+          this%fwet_nvp_col(bounds%begc:bounds%endc) = 0.6_r8
        end if
     end if
 
