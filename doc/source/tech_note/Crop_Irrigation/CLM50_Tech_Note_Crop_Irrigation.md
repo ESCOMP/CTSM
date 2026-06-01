@@ -122,7 +122,7 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 
 ### Phenology
 
-CLM includes evergreen, seasonally deciduous (responding to changes in day length), and stress deciduous (responding to changes in temperature and/or soil moisture) phenology algorithms (Chapter {numref}`rst_Vegetation Phenology and Turnover`). CLM uses the AgroIBIS crop phenology algorithm, consisting of three distinct phases.
+CLM uses the AgroIBIS crop phenology algorithm, consisting of three distinct phases.
 
 Phase 1 starts at planting and ends with leaf emergence, phase 2 continues from leaf emergence to the beginning of grain fill, and phase 3 starts from the beginning of grain fill and ends with physiological maturity and harvest.
 
