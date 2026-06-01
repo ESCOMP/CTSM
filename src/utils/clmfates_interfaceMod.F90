@@ -2863,7 +2863,7 @@ module CLMFatesInterfaceMod
    type(temperature_type),           intent(in)    :: temperature_inst
    type(waterdiagnosticbulk_type),   intent(in)    :: waterdiagnosticbulk_inst
 
-   integer  :: s, c, p, ifp
+   integer  :: s, c, p, ifp, g
    real(r8) :: dtime
 
    call t_startf('fates_nvp_psn')
@@ -2881,6 +2881,7 @@ module CLMFatesInterfaceMod
 
          do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
             p = ifp + col%patchi(c)
+            g = patch%gridcell(p)
 
             ! Re-enable processing for all patches (reset from 3 → 2)
             this%fates(nc)%bc_in(s)%filter_photo_pa(ifp) = 2
@@ -2892,6 +2893,12 @@ module CLMFatesInterfaceMod
             ! [PORTED by Hui Tang: NVP-specific inputs — column quantities broadcast to patch]
             this%fates(nc)%bc_in(s)%t_nvp_pa(ifp)    = temperature_inst%t_nvp_col(c)
             this%fates(nc)%bc_in(s)%fwet_nvp_pa(ifp) = waterdiagnosticbulk_inst%fwet_nvp_col(c)
+
+            ! [PORTED by Hui Tang: dayl_factor_pa — CanopyFluxesMod is never called for NVP
+            !  columns, so dayl_factor_pa is never set there; compute it here directly from
+            !  gridcell daylength following the same formula as CanopyFluxesMod line 840.]
+            this%fates(nc)%bc_in(s)%dayl_factor_pa(ifp) = &
+                 min(1._r8, max(0.01_r8, (grc%dayl(g)**2) / (grc%max_dayl(g)**2)))
 
          end do
       end do
