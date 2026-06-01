@@ -209,6 +209,10 @@ contains
        ! --- Grow/shrink (active→active): T and h2osoi are per unit ground area,
        !     so no adjustment is needed when dz_nvp changes. ---
 
+       ! [PORTED by Hui Tang: per-CLM-timestep phase change for j=0 is handled in
+       !  SoilTemperatureMod::Phasechange (runs before SoilFluxes so xmf is correct).
+       !  The FATES-dynamics-frequency melt block that was here is removed.]
+
     end if
 
   end subroutine UpdateNVPLayer
@@ -482,8 +486,17 @@ contains
         frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc))
 
         ! --- Water input to NVP from precipitation / snowmelt ---
-        qflx_nvp_infl_col(c) = frac_nvp_eff * qflx_rain_plus_snomelt(c)   ! [mm/s]
-        print *, "qflx_nvp_infl_col=", frac_nvp_eff, frac_h2osfc, qflx_rain_plus_snomelt(c),qflx_nvp_infl_col
+        ! [PORTED by Hui Tang: when snow is present (snl < 0), snow percolation into NVP is
+        !  already applied to h2osoi_liq(c,0) by UpdateState_SnowPercolation (adds
+        !  qflx_snow_percolation_col(c,-1)*dtime to h2osoi_liq(c,0)). qflx_rain_plus_snomelt
+        !  equals qflx_snow_percolation_col(c,0) = NVP outflow, not inflow; using it here
+        !  would double-count. When no snow (snl=0), qflx_rain_plus_snomelt = rain + snowmelt
+        !  is the correct NVP inflow from the nosnowc branch of SumFlux_AddSnowPercolation.]
+        if (col%snl(c) < 0) then
+           qflx_nvp_infl_col(c) = 0._r8
+        else
+           qflx_nvp_infl_col(c) = frac_nvp_eff * qflx_rain_plus_snomelt(c)   ! [mm/s]
+        end if
 
 
         ! --- NVP volumetric water content (clamped to valid range) ---
