@@ -356,9 +356,12 @@ contains
            qflx_evap=qflx_ev_soil(c)
         endif
 
-        ! [PORTED by Hui Tang: NVP area fraction — zero when NVP buried under snow (snl < -1);
-        !  buried NVP receives no direct surface water and NVPWaterBalance returns zero fluxes]
-        if (use_nvp .and. snl(c) >= -1) then
+        ! [PORTED by Hui Tang: NVP area fraction — use real frac_nvp whenever NVP layer is
+        !  active (nvp_layer_active), including when buried under multiple snow layers.
+        !  When snow is present, qflx_top_soil includes qflx_snow_percolation(c,-1) which
+        !  already enters NVP via UpdateState_SnowPercolation; applying frac_nvp here prevents
+        !  that flux from also reaching qflx_in_soil for the NVP-covered fraction.]
+        if (use_nvp .and. col%nvp_layer_active(c)) then
            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)))
         else
            frac_nvp_eff = 0._r8
@@ -369,8 +372,18 @@ contains
              (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
+        if (use_nvp .and. col%nvp_layer_active(c)) then
+           if (snl(c) >= -1) then
+               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)- fsno))
+           else
+               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)))
+           end if
+        else
+           frac_nvp_eff = 0._r8
+        end if
+
         ! remove evaporation from bare-soil fraction only (snow and NVP evap handled separately)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c) - frac_nvp_eff)*qflx_evap
+        qflx_in_soil(c) = qflx_in_soil(c) - max(0._r8, 1.0_r8 - fsno - frac_h2osfc(c) - frac_nvp_eff)*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do
