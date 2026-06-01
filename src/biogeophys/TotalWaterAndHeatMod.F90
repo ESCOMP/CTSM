@@ -300,6 +300,15 @@ contains
              ' liq=',h2osoi_liq(c,j),' ice=',h2osoi_ice(c,j), &
              ' cum_liq=',liquid_mass(c),' cum_ice=',ice_mass(c)
        end do
+       ! [PORTED by Hui Tang: when NVP is active and snl=0, the loop above (j=snl+1..0 = 1..0)
+       !  is an empty range in Fortran, so j=0 (NVP layer) water is never counted.
+       !  AccumulateSoilLiqIceMassNonLake also starts at j=1, so NVP is fully absent
+       !  from the water balance when snow is gone. Explicitly include it here.]
+       if (col%nvp_layer_active(c) .and. snl(c) == 0) then
+          liquid_mass(c) = liquid_mass(c) + h2osoi_liq(c,0)
+          ice_mass(c)    = ice_mass(c)    + h2osoi_ice(c,0)
+       end if
+
        ! [PORTED by Hui Tang: NVP debug — print h2osno_no_layers and h2osfc after snow loop]
        if (use_nvp .and. col%jbot_sno(c) == -1 .and. c == bounds%begc) &
           write(iulog,*) '[NVP DBG] ComputeLiqIceMass c=',c,' snl=',snl(c), &
