@@ -1374,7 +1374,9 @@ contains
          fact             =>    temperature_inst%fact_col           , &
          
          imelt            =>    temperature_inst%imelt_col          , & ! Output: [integer  (:,:) ] flag for melting (=1), freezing (=2), Not=0 (new)
-         t_soisno         =>    temperature_inst%t_soisno_col         & ! Output: [real(r8) (:,:) ] soil temperature [K]              
+         t_soisno         =>    temperature_inst%t_soisno_col       , & ! Output: [real(r8) (:,:) ] soil temperature [K]
+         ! [PORTED by Hui Tang: t_nvp_col synced after NVP phase change modifies t_soisno(c,0)]
+         t_nvp_col        =>    temperature_inst%t_nvp_col            & ! Inout:  [real(r8) (:)   ] NVP temperature [K]
          )
 
       ! Get step size
@@ -1425,6 +1427,19 @@ contains
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
             if (j >= snl(c)+1) then
+               ! [PORTED by Hui Tang: NVP at j=0 — phase change identification (buried case, snl<0)]
+               ! NVP has no supercooled water; treat like snow (plain tfrz threshold).
+               ! The energy loop handles hm/T-correction for j=0 as an interior layer
+               ! (else branch: hm = -frac_sno_eff*tinc/fact ≈ -tinc/fact when frac_sno_eff≈1).
+               if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
+                  if (h2osoi_ice(c,0) > 0._r8 .and. t_soisno(c,0) > tfrz) then
+                     imelt(c,0) = 1 ; tinc(c,0) = tfrz - t_soisno(c,0) ; t_soisno(c,0) = tfrz
+                  end if
+                  if (h2osoi_liq(c,0) > 0._r8 .and. t_soisno(c,0) < tfrz) then
+                     imelt(c,0) = 2 ; tinc(c,0) = tfrz - t_soisno(c,0) ; t_soisno(c,0) = tfrz
+                  end if
+                  cycle
+               end if
 
                ! Melting identification
                ! If ice exists above melt point, melt some to liquid.
@@ -1445,7 +1460,33 @@ contains
          end do   ! end of column-loop
       enddo   ! end of level-loop
 
-      !-- soil layers   --------------------------------------------------- 
+      ! [PORTED by Hui Tang: NVP phase change identification — active case (snl=0)]
+      ! When snl=0 the snow loop runs j=snl+1=1 to 0, never reaching j=0.
+      ! Initialise wice0/wliq0/wmass0/imelt/tinc for j=0 and identify melt/freeze here.
+      if (use_nvp) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%jbot_sno(c) == -1 .and. col%snl(c) == 0) then
+               wice0(c,0)   = h2osoi_ice(c,0)
+               wliq0(c,0)   = h2osoi_liq(c,0)
+               wexice0(c,0) = 0._r8
+               wmass0(c,0)  = wice0(c,0) + wliq0(c,0)
+               imelt(c,0)   = 0
+               hm(c,0)      = 0._r8
+               xm(c,0)      = 0._r8
+               xm2(c,0)     = 0._r8
+               tinc(c,0)    = 0._r8
+               if (wice0(c,0) > 0._r8 .and. t_soisno(c,0) > tfrz) then
+                  imelt(c,0) = 1 ; tinc(c,0) = tfrz - t_soisno(c,0) ; t_soisno(c,0) = tfrz
+               end if
+               if (wliq0(c,0) > 0._r8 .and. t_soisno(c,0) < tfrz) then
+                  imelt(c,0) = 2 ; tinc(c,0) = tfrz - t_soisno(c,0) ; t_soisno(c,0) = tfrz
+               end if
+            end if
+         end do
+      end if
+
+      !-- soil layers   ---------------------------------------------------
       do j = 1,nlevmaxurbgrnd             
          do fc = 1,num_nolakec
             c = filter_nolakec(fc)
@@ -1532,7 +1573,15 @@ contains
                      else if (j == 1) then
                         hm(c,j) = (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) &
                              *dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
-                     else ! non-interfacial snow/soil layers                   
+                     else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
+                        ! [PORTED by Hui Tang: NVP j=0 phase-change energy correction]
+                        ! cv(c,0) is per unit COLUMN area (unlike snow layers where cv is
+                        ! per unit snow area scaled by frac_sno).  Using the standard snow
+                        ! formula hm=-frac_sno_eff*tinc/fact understates hm by frac_sno_eff,
+                        ! causing xmf to miss (1-frac_sno_eff)*tinc/fact of latent heat and
+                        ! leaving a residual errsoi of that magnitude during phase-change events.
+                        hm(c,0) = -tinc(c,0) / fact(c,0)
+                     else ! non-interfacial snow/soil layers
                         if(j < 1) then
                            hm(c,j) = - frac_sno_eff(c)*(tinc(c,j)/fact(c,j))
                         else
@@ -1631,6 +1680,10 @@ contains
                         else
                            if(j > 0) then
                               t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr
+                           else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
+                              ! [PORTED by Hui Tang: NVP j=0 T-correction — cv(c,0) is per unit
+                              ! column area so no frac_sno_eff division; mirrors the hm fix above]
+                              t_soisno(c,0) = t_soisno(c,0) + fact(c,0)*heatr
                            else
                               if(frac_sno_eff(c) > 0._r8) t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr
                            endif
@@ -1650,14 +1703,18 @@ contains
                         xmf(c) = xmf(c) + hfus*(wice0(c,j)-h2osoi_ice(c,j))/dtime
                      endif
                      
-                     if (imelt(c,j) == 1 .AND. j < 1) then
+                     ! [PORTED by Hui Tang: exclude NVP (j=0, jbot_sno=-1) — NVP melt/freeze
+                     !  is not snow melt/freeze and must not feed qflx_snomelt/qflx_snofrz]
+                     if (imelt(c,j) == 1 .AND. j < 1 .AND. &
+                          .NOT. (use_nvp .AND. col%jbot_sno(c) == -1 .AND. j == 0)) then
                         qflx_snomelt_lyr(c,j) = max(0._r8,(wice0(c,j)-h2osoi_ice(c,j)))/dtime
                         qflx_snomelt(c)       = qflx_snomelt(c) + qflx_snomelt_lyr(c,j)
                         snomelt_accum(c)      = snomelt_accum(c) + qflx_snomelt_lyr(c,j) * dtime * 1.e-3_r8
                      endif
 
                      ! layer freezing mass flux (positive):
-                     if (imelt(c,j) == 2 .AND. j < 1) then
+                     if (imelt(c,j) == 2 .AND. j < 1 .AND. &
+                          .NOT. (use_nvp .AND. col%jbot_sno(c) == -1 .AND. j == 0)) then
                         qflx_snofrz_lyr(c,j) = max(0._r8,(h2osoi_ice(c,j)-wice0(c,j)))/dtime
                         qflx_snofrz(c)       = qflx_snofrz(c) + qflx_snofrz_lyr(c,j)
                      endif
@@ -1671,6 +1728,54 @@ contains
          end do   ! end of column-loop
       enddo   ! end of level-loop
 
+
+      ! [PORTED by Hui Tang: NVP phase change energy — active case (snl=0)]
+      ! Active NVP (j=0, snl=0) is the top layer of the thermal domain but is not reached
+      ! by the energy loop (condition j >= snl+1=1 fails for j=0). Apply the top-layer
+      ! energy formula: hm = dhsdT*tinc - tinc/fact (no frac_sno_eff since snl=0).
+      ! The residual-heat T correction mirrors the top-soil-layer formula.
+      if (use_nvp) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%jbot_sno(c) == -1 .and. col%snl(c) == 0 .and. imelt(c,0) > 0) then
+               hm(c,0) = dhsdT(c)*tinc(c,0) - tinc(c,0)/fact(c,0)
+               ! Tridiagonal error check (mirrors standard Phasechange logic)
+               if (imelt(c,0) == 1 .and. hm(c,0) < 0._r8) then
+                  hm(c,0) = 0._r8 ; imelt(c,0) = 0
+               end if
+               if (imelt(c,0) == 2 .and. hm(c,0) > 0._r8) then
+                  hm(c,0) = 0._r8 ; imelt(c,0) = 0
+               end if
+               if (imelt(c,0) > 0 .and. abs(hm(c,0)) > 0._r8) then
+                  xm(c,0) = hm(c,0) * dtime / hfus
+                  heatr = 0._r8
+                  if (xm(c,0) > 0._r8) then                          ! melting
+                     h2osoi_ice(c,0) = max(0._r8, wice0(c,0) - xm(c,0))
+                     heatr = hm(c,0) - hfus*(wice0(c,0)-h2osoi_ice(c,0))/dtime
+                  else if (xm(c,0) < 0._r8) then                     ! freezing
+                     h2osoi_ice(c,0) = min(wmass0(c,0), wice0(c,0) - xm(c,0))
+                     heatr = hm(c,0) - hfus*(wice0(c,0)-h2osoi_ice(c,0))/dtime
+                  end if
+                  h2osoi_liq(c,0) = max(0._r8, wmass0(c,0) - h2osoi_ice(c,0))
+                  if (abs(heatr) > 0._r8) then
+                     ! Top-layer T correction (no frac_sno_eff or frac_h2osfc for NVP)
+                     t_soisno(c,0) = t_soisno(c,0) + fact(c,0)*heatr &
+                          / (1._r8 - fact(c,0)*dhsdT(c))
+                  end if
+                  if (h2osoi_liq(c,0)*h2osoi_ice(c,0) > 0._r8) t_soisno(c,0) = tfrz
+                  xmf(c) = xmf(c) + hfus*(wice0(c,0)-h2osoi_ice(c,0))/dtime
+               end if
+            end if
+         end do
+      end if
+
+      ! [PORTED by Hui Tang: sync t_nvp_col after NVP phase change may have modified t_soisno(c,0)]
+      if (use_nvp) then
+         do fc = 1, num_nolakec
+            c = filter_nolakec(fc)
+            if (col%jbot_sno(c) == -1) t_nvp_col(c) = t_soisno(c,0)
+         end do
+      end if
 
       ! Needed for history file output
 
