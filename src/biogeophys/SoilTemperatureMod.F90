@@ -380,12 +380,6 @@ contains
 
       ! Set up right-hand side vecor (vector r).
 
-      print *, "hs_h2osfc=", hs_h2osfc
-      print *, "c_h2osfc=", c_h2osfc
-      print *, "h2osfc=", h2osfc
-      print *, "frac_h2osfc=", frac_h2osfc
-      print *, "thin_sfclayer=", thin_sfclayer
-
 
       call SetRHSVec(bounds, num_nolakec, filter_nolakec, &
            dtime,                                         &
@@ -446,17 +440,12 @@ contains
       call t_startf( 'SoilTempBandDiag')
 
       ! Solve the system
-      print*, "bmatrix=", bmatrix(begc:endc, :, :)
-      print*, "rvector=", rvector(begc:endc, :)
-      print*, "tvector=", tvector(begc:endc, :)
-      print*, "nvp_layer_active=", col%nvp_layer_active, snl
 
       call BandDiagonal(bounds, -nlevsno, nlevmaxurbgrnd, jtop(begc:endc), jbot(begc:endc), &
            num_nolakec, filter_nolakec, nband, bmatrix(begc:endc, :, :), &
            rvector(begc:endc, :), tvector(begc:endc, :))
       call t_stopf( 'SoilTempBandDiag')
 
-      print*, "tvector_after=", tvector
       
       ! return temperatures to original array
 
@@ -606,10 +595,12 @@ contains
          do fc = 1, num_nvpc                        ! [PORTED: override for NVP-active columns]
             c = filter_nvpc(fc)
             t_nvp_col(c) = t_soisno(c,0)
+            ! [DBG NVP sabg] NVP temperature after tridiagonal solver
+            write(iulog,*) '[DBG NVP sabg] T: c=', c, &
+                 ' t_soisno(c,0)=', t_soisno(c,0), &
+                 ' t_nvp_col(c)=', t_nvp_col(c)
          end do
       end if
-
-      print *, "t_nvp_col=", t_nvp_col, t_soisno(c,:)
 
       do fc = 1,num_nolakec
          c = filter_nolakec(fc)

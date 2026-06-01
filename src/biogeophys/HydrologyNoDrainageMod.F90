@@ -466,15 +466,33 @@ contains
       ! Divide thick snow elements
       call DivideSnowLayers(bounds, num_snowc, filter_snowc, &
            aerosol_inst, temperature_inst, water_inst, is_lake=.false.)
+           
+      ! [PORTED by Hui Tang: NVP debug — j=0 state before ZeroEmptySnow]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] before ZeroEmptySnow c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
 
       ! Set empty snow layers to zero
       call ZeroEmptySnowLayers(bounds, num_snowc, filter_snowc, &
            col, water_inst, temperature_inst)
        
+      ! [PORTED by Hui Tang: NVP debug — j=0 state after ZeroEmptySnow]
+      if (use_nvp .and. col%jbot_sno(bounds%begc) == -1) &
+         write(iulog,*) '[NVP DBG] after ZeroEmptySnow c=1 snl=', col%snl(bounds%begc), &
+         ' ice0=', h2osoi_ice(bounds%begc,0), ' liq0=', h2osoi_liq(bounds%begc,0)
+       
       ! Build new snow filter
+      write(iulog,*) '[NVP DBG] before snowfilter c=1 snl=', col%snl(bounds%begc), &
+         ' num_snowc=', num_snowc, ' filter_snowc=', filter_snowc, &
+         ' num_nosnowc=', num_nosnowc, ' filter_nosnowc=', filter_nosnowc
 
       call BuildSnowFilter(bounds, num_nolakec, filter_nolakec, &
            num_snowc, filter_snowc, num_nosnowc, filter_nosnowc)
+           
+      write(iulog,*) '[NVP DBG] after snowfilter c=1 snl=', col%snl(bounds%begc), &
+         ' num_snowc=', num_snowc, ' filter_snowc=', filter_snowc, &
+         ' num_nosnowc=', num_nosnowc, ' filter_nosnowc=', filter_nosnowc
+          
 
       ! TODO(wjs, 2019-09-16) Eventually move this down, merging this with later tracer
       ! consistency checks. If/when we remove calls to TracerConsistencyCheck from this

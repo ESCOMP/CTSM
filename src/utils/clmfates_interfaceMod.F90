@@ -2901,6 +2901,10 @@ module CLMFatesInterfaceMod
                  min(1._r8, max(0.01_r8, (grc%dayl(g)**2) / (grc%max_dayl(g)**2)))
 
          end do
+         ! [DBG NVP sabg] column-level NVP inputs to photosynthesis
+         write(iulog,*) '[DBG NVP sabg] psn: c=', c, &
+              ' t_nvp_col=', temperature_inst%t_nvp_col(c), &
+              ' fwet_nvp_col=', waterdiagnosticbulk_inst%fwet_nvp_col(c)
       end do
 
       dtime = get_step_size_real()
