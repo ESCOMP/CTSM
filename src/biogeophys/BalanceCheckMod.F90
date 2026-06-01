@@ -26,6 +26,7 @@ module BalanceCheckMod
   use Waterlnd2atmType   , only : waterlnd2atm_type
   use WaterBalanceType   , only : waterbalance_type
   use WaterFluxType      , only : waterflux_type
+  use WaterFluxBulkType  , only : waterfluxbulk_type  ! [PORTED by Hui Tang: needed to access qflx_nvp_drain_col]
   use WaterType          , only : water_type
   use TotalWaterAndHeatMod, only : ComputeWaterMassNonLake, ComputeWaterMassLake
   use GridcellType       , only : grc                
@@ -502,6 +503,8 @@ contains
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
+     ! [PORTED by Hui Tang: typed pointer to access qflx_nvp_drain_col for NVP snow balance correction]
+     type(waterfluxbulk_type), pointer :: waterfluxbulk_ptr
 
      real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow
 
@@ -560,6 +563,15 @@ contains
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
           qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col  & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
           )
+
+       ! [PORTED by Hui Tang: resolve the polymorphic waterflux_inst to its bulk concrete type so
+       !  that qflx_nvp_drain_col can be read for the NVP snow-balance correction below.
+       !  waterfluxbulk_ptr is null() if waterflux_inst is not a waterfluxbulk_type (safe fallback).]
+       waterfluxbulk_ptr => null()
+       select type(waterflux_inst)
+       type is (waterfluxbulk_type)
+          waterfluxbulk_ptr => waterflux_inst
+       end select
 
        ! Get step size and time step
        dtime = get_step_size_real()
@@ -801,7 +813,24 @@ contains
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
                 endif
 
+                ! [PORTED by Hui Tang: when NVP is active, h2osno includes h2osoi_liq(c,0) (NVP),
+                !  but qflx_nvp_drain_col (NVP→soil drainage) is not a registered snow sink.
+                !  Add it here so the balance closes. Signed: positive=NVP drains to soil (sink),
+                !  negative=soil absorbs into NVP (source, reduces snow_sinks). Both cases correct.]
+                !if (associated(waterfluxbulk_ptr) .and. col%nvp_layer_active(c)) then
+                !   snow_sinks(c) = snow_sinks(c) + waterfluxbulk_ptr%qflx_nvp_drain_col(c)
+                !end if
+
                 errh2osno(c) = (h2osno_total(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
+
+                ! [PORTED by Hui Tang: CalculateTotalH2osno excludes j=0 (NVP) from h2osno_total,
+                !  so liquid that percolated from the bottom snow layer into the NVP layer this
+                !  timestep is absent from both h2osno_total and snow_sinks.  Add h2osoi_liq(c,0)
+                !  directly to close the balance.]
+                !if (col%nvp_layer_active(c)) then
+                !   errh2osno(c) = errh2osno(c) + waterstate_inst%h2osoi_liq_col(c,0)   # Not working, as old and new status of NVP liq water is needed.
+                !end if
+
              else
                 snow_sources(c) = 0._r8
                 snow_sinks(c) = 0._r8
