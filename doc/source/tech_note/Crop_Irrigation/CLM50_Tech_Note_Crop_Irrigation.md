@@ -206,7 +206,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
 (table crop phenology parameters)=
 
 ```{eval-rst}
-.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (`BgcCrop` component sets). Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (``BgcCrop`` component sets). Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`. Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively.
    :header-rows: 1
 
    * - \
