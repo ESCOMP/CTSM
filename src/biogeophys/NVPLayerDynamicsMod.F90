@@ -170,9 +170,14 @@ contains
        if (.not. was_active .and. now_active) then
           ! --- Appear: initialise layer-0 thermodynamic state from soil layer 1 ---
           ! Temperature inherits from layer 1 to avoid spurious heat flux.
-          ! h2osoi starts at zero; FATES provides moisture via its own hydrology.
+          ! [PORTED by Hui Tang: initialise NVP liquid to 0.6 * dz * denh2o (volumetric
+          !  water content = 0.6) instead of 0; mirrors FATES-soil cold-start convention.
+          !  NOTE: with use_nvp_undersnow=.true. (default) this branch runs only once
+          !  (cold start). With use_nvp_undersnow=.false. it also runs on spring
+          !  reactivation — in that case the water is unphysical, but that config is
+          !  non-default and not the current use case.]
           temperature_inst%t_soisno_col(c,0)  = temperature_inst%t_soisno_col(c,1)
-          waterstate_inst%h2osoi_liq_col(c,0) = 0._r8
+          waterstate_inst%h2osoi_liq_col(c,0) = 0.6_r8 * col%dz(c,0) * denh2o
           waterstate_inst%h2osoi_ice_col(c,0) = 0._r8
 
        else if (was_active .and. .not. now_active) then
