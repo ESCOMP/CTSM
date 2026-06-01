@@ -377,7 +377,8 @@ contains
     associate(snl => col%snl) 
 
       this%h2osfc_col(bounds%begc:bounds%endc) = 0._r8
-      ! [PORTED by Hui Tang: initialize nvp (moss/lichen) water content to 0]
+      ! [PORTED by Hui Tang: h2onvp_col diagnostic; actual h2osoi_liq(c,0) is set in
+      !  NVPLayerDynamicsMod UpdateNVPLayer appear branch (vwc=0.6)]
       this%h2onvp_col(bounds%begc:bounds%endc) = 0._r8
       this%snocan_patch(bounds%begp:bounds%endp) = 0._r8
       this%liqcan_patch(bounds%begp:bounds%endp) = 0._r8
@@ -920,6 +921,8 @@ contains
        h2osno_total(c) = this%h2osno_no_layers_col(c)
 
        do j = col%snl(c)+1, 0
+          ! [PORTED by Hui Tang: NVP at layer 0 is not snow; exclude from SWE total]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           h2osno_total(c) = &
                h2osno_total(c) + &
                this%h2osoi_ice_col(c,j) + &
@@ -965,6 +968,8 @@ contains
        end if
 
        do j = -nlevsno+1, col%snl(c)
+          ! [PORTED by Hui Tang: NVP layer at j=0 legitimately holds water when snl=0]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           ice_bad = (this%h2osoi_ice_col(c,j) /= 0._r8 .and. this%h2osoi_ice_col(c,j) /= spval)
           liq_bad = (this%h2osoi_liq_col(c,j) /= 0._r8 .and. this%h2osoi_liq_col(c,j) /= spval)
           if (ice_bad .or. liq_bad) then
