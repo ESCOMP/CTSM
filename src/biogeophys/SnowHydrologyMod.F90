@@ -944,8 +944,14 @@ contains
     do fc = 1, snowpack_initialized_filterc%num
        c = snowpack_initialized_filterc%indices(fc)
 
-       h2osoi_ice(c,0) = h2osno_no_layers(c)
-       h2osoi_liq(c,0) = 0._r8
+       ! [PORTED by Hui Tang: when NVP occupies layer 0, place first snow ice at layer -1]
+       if (use_nvp .and. col%jbot_sno(c) == -1) then
+          h2osoi_ice(c,-1) = h2osno_no_layers(c)
+          h2osoi_liq(c,-1) = 0._r8
+       else
+          h2osoi_ice(c,0) = h2osno_no_layers(c)
+          h2osoi_liq(c,0) = 0._r8
+       end if
        h2osno_no_layers(c) = 0._r8
     end do
 
@@ -994,17 +1000,28 @@ contains
     do fc = 1, snowpack_initialized_filterc%num
        c = snowpack_initialized_filterc%indices(fc)
 
-       snl(c) = -1
-       dz(c,0) = snow_depth(c)
-       z(c,0) = -0.5_r8*dz(c,0)
-       zi(c,-1) = -dz(c,0)
-       ! Currently, the water temperature for the precipitation is simply set
-       ! as the surface air temperature
-       t_soisno(c,0) = min(tfrz, forc_t(c))
-
-       ! This value of frac_iceold makes sense together with the state initialization:
-       ! h2osoi_ice is non-zero, while h2osoi_liq is zero.
-       frac_iceold(c,0) = 1._r8
+       ! [PORTED by Hui Tang: when NVP occupies layer 0, place first snow layer at index -1
+       !  so that dz/z/zi/t/frac_iceold for the NVP slot are preserved intact.]
+       if (use_nvp .and. col%jbot_sno(c) == -1) then
+          snl(c) = -2
+          dz(c,-1) = snow_depth(c)
+          z(c,-1) = -(dz(c,0) + 0.5_r8*dz(c,-1))
+          zi(c,-2) = -(dz(c,0) + dz(c,-1))
+          ! zi(c,-1) = -dz(c,0) is already set by UpdateNVPLayer
+          t_soisno(c,-1) = min(tfrz, forc_t(c))
+          frac_iceold(c,-1) = 1._r8
+       else
+          snl(c) = -1
+          dz(c,0) = snow_depth(c)
+          z(c,0) = -0.5_r8*dz(c,0)
+          zi(c,-1) = -dz(c,0)
+          ! Currently, the water temperature for the precipitation is simply set
+          ! as the surface air temperature
+          t_soisno(c,0) = min(tfrz, forc_t(c))
+          ! This value of frac_iceold makes sense together with the state initialization:
+          ! h2osoi_ice is non-zero, while h2osoi_liq is zero.
+          frac_iceold(c,0) = 1._r8
+       end if
 
        snomelt_accum(c) = 0._r8
     end do
@@ -1043,6 +1060,8 @@ contains
     integer  :: g                                                  ! gridcell loop index
     integer  :: c, j, fc, l                                        ! do loop/array indices
     real(r8) :: dtime                                              ! land model time step (sec)
+    ! [PORTED by Hui Tang: per-column bottom percolation flux; uses j=-1 when NVP active, j=0 otherwise]
+    real(r8) :: qflx_snow_percolation_bottom_tmp(bounds%begc:bounds%endc)
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1081,6 +1100,7 @@ contains
          ! Inputs
          dtime                 = dtime, &
          snl                   = col%snl(begc:endc), &
+         jbot_sno              = col%jbot_sno(begc:endc), &
          dz                    = col%dz(begc:endc,:), &
          frac_sno_eff          = b_waterdiagnostic_inst%frac_sno_eff_col(begc:endc), &
          h2osoi_ice            = b_waterstate_inst%h2osoi_ice_col(begc:endc,:), &
@@ -1978,6 +1998,8 @@ contains
           c = filter_snowc(fc)
           g = col%gridcell(c)
           if (j >= snl(c)+1) then
+             ! [PORTED by Hui Tang: NVP at layer 0 is not snow; skip compaction for NVP layer]
+             if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
 
              wx = (h2osoi_ice(c,j) + h2osoi_liq(c,j))
              void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o)&
@@ -2243,7 +2265,11 @@ contains
              end if
 
              if (j < 0) then
-                dz(c,j+1) = dz(c,j+1) + dz(c,j)
+                ! [PORTED by Hui Tang: do not extend NVP layer when dissolving the bottom
+                !  snow layer (j=-1) into it; only merge dz for true snow-on-snow cases]
+                if (.not. (use_nvp .and. col%jbot_sno(c) == -1 .and. j+1 == 0)) then
+                   dz(c,j+1) = dz(c,j+1) + dz(c,j)
+                end if
 
                 mss_bcphi(c,j+1) = mss_bcphi(c,j+1)  + mss_bcphi(c,j)
                 mss_bcpho(c,j+1) = mss_bcpho(c,j+1)  + mss_bcpho(c,j)
@@ -2301,6 +2327,9 @@ contains
                 end do
              end if
              snl(c) = snl(c) + 1
+             ! [PORTED by Hui Tang: after dissolving the last snow layer above NVP,
+             !  snl=-1 must be reset to 0; NVP is not a snow layer (jbot_sno=-1 tracks it)]
+             if (use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) == -1) snl(c) = 0
           end if
        end do
     end do
@@ -2375,12 +2404,9 @@ contains
                 end associate
              end do
 
-             ! [PORTED by Hui Tang: preserve NVP slot in snl when all snow is gone]
-             if (use_nvp .and. col%jbot_sno(c) == -1) then
-                snl(c) = -1
-             else
-                snl(c) = 0
-             end if
+             ! [PORTED by Hui Tang: NVP occupies layer 0 but is not a snow layer; jbot_sno=-1
+             !  tracks the NVP slot.  snl=0 is correct for "no real snow" regardless of NVP.]
+             snl(c) = 0
              h2osno_total(c) = h2osno_no_layers_bulk(c)
 
              mss_bcphi(c,:) = 0._r8
@@ -2426,8 +2452,10 @@ contains
                 if (i == snl(c)+1) then
                    ! If top node is removed, combine with bottom neighbor.
                    neibor = i + 1
-                else if (i == 0) then
-                   ! If the bottom neighbor is not snow, combine with the top neighbor.
+                else if (i == 0 .or. &
+                     (use_nvp .and. col%jbot_sno(c) == -1 .and. i == -1)) then
+                   ! If the bottom neighbor is not snow (soil or NVP), combine with top.
+                   ! [PORTED by Hui Tang: i==-1 is the bottom snow layer when NVP at 0]
                    neibor = i - 1
                 else
                    ! If none of the above special cases apply, combine with the thinnest neighbor
@@ -3002,6 +3030,12 @@ contains
     do j = -nlevsno+1,0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
+          ! [PORTED by Hui Tang: protect NVP layer at j=0 from being zeroed]
+          ! filter_snowc may include a column whose snl was -1 when the filter was built
+          ! but has since been set to 0 (last snow layer emptied). With snl=0, the
+          ! condition j<=snl gives 0<=0=.true., which would incorrectly zero the NVP
+          ! layer at j=0. Skip j=0 when the NVP layer is active.
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           if (j <= snl(c) .and. snl(c) > -nlevsno) then
              do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
                 associate(w => water_inst%bulk_and_tracers(wi))
