@@ -108,7 +108,7 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CESM_share
 [submodule "parallelio"]
 path = libraries/parallelio
 url = https://github.com/NCAR/ParallelIO
-fxtag = pio2_7_0
+fxtag = pio2_6_8
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NCAR/ParallelIO
