@@ -45,9 +45,9 @@ module NVPLayerDynamicsMod
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
   ! [PORTED by Hui Tang: soilstate for bidirectional NVP-soil Darcy flux]
   use SoilStateType          , only : soilstate_type
-  use clm_varcon             , only : cpliq, cpice, denh2o, roverg, tfrz, denice
+  use clm_varcon             , only : cpliq, cpice, denh2o, roverg, tfrz, denice, hfus, spval
   ! [PORTED by Hui Tang: use_nvp_undersnow flag to deactivate NVP when snow present]
-  use clm_varctl             , only : use_nvp_undersnow
+  use clm_varctl             , only : use_nvp_undersnow, iulog
   use QSatMod                , only : QSat
   ! [PORTED by Hui Tang: runtime-tunable NVP physics parameters]
   use NVPParamsMod
@@ -106,6 +106,22 @@ contains
 
     dz_nvp     = col%dz_nvp(c)
     was_active = col%nvp_layer_active(c)
+
+    ! [PORTED by Hui Tang: trace appear/disappear transitions in UpdateNVPLayer]
+    if (present(waterstate_inst)) then
+       write(iulog,'(a,i5,a,l1,2a,i8,3(a,f8.4))') &
+            '[DBG NVP update] c=', c, &
+            ' was_active=', was_active, ' pres_water=T', &
+            ' snl=', col%snl(c), &
+            ' dz_nvp=', dz_nvp, ' frac_nvp=', col%frac_nvp(c), &
+            ' ice0=', waterstate_inst%h2osoi_ice_col(c,0)
+    else
+       write(iulog,'(a,i5,a,l1,2a,i8,2(a,f8.4))') &
+            '[DBG NVP update] c=', c, &
+            ' was_active=', was_active, ' pres_water=F', &
+            ' snl=', col%snl(c), &
+            ' dz_nvp=', dz_nvp, ' frac_nvp=', col%frac_nvp(c)
+    end if
 
     if (col%frac_nvp(c) > nvp_frac_min .and. dz_nvp > 0._r8) then
 
