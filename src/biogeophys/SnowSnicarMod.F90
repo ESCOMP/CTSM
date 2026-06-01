@@ -716,7 +716,9 @@ contains
                if (nvp_tau_col(c_idx) > 0._r8) then
                   nvp_active  = .true.
                   nvp_tau_lcl = nvp_tau_col(c_idx)
-                  snl_btm     = -1
+                  ! [PORTED by Hui Tang: do NOT shift snl_btm to -1; keep snl_btm=0 so NVP layer 0
+                  !  is included in all RT solver loops (tau/omega/g, delta-Eddington, absorbed flux).
+                  !  Snow-grain-radius loops already guard layer 0 via merge(-1,snl_btm,nvp_active).]
                   ! Populate layer-0 local arrays for NVP (bypass snow grain-radius path):
                   ! Unit effective mass so tau_snw(0) = ext_cff_mss_snw_lcl(0) = nvp_tau_lcl
                   h2osno_ice_lcl(0) = 1._r8
@@ -735,11 +737,14 @@ contains
 
 
             ! Set local aerosol array (snow layers only; NVP layer 0 already zeroed above)
-            ! [PORTED by Hui Tang: use snl_btm (not min(snl_btm,0)-1) so that with NVP active
-            !  (snl_btm=-1) layer -1 (bottom snow) is included; min()-1 gave -2, skipping layer -1,
-            !  leaving mss_cnc_aer_lcl(-1,:) stale and corrupting g(-1) past 1 -> tau_star < 0 -> SIGFPE]
+            ! [PORTED by Hui Tang: use merge(-1,snl_btm,nvp_active) to stop the range-copy at -1
+            !  when NVP is active, so the zeroed NVP aerosols at layer 0 are not overwritten by
+            !  mss_cnc_aer_in(0,:) which holds stale snow values. Without this guard, g(0) could
+            !  exceed 1 -> tau_star < 0 -> SIGFPE. When NVP is inactive, snl_btm=0 so the merge
+            !  gives 0 and the original layer-0 snow aerosol copy is preserved.]
             do j=1,sno_nbr_aer
-               mss_cnc_aer_lcl(snl_top:snl_btm,j) = mss_cnc_aer_in(c_idx,snl_top:snl_btm,j)
+               mss_cnc_aer_lcl(snl_top:merge(-1,snl_btm,nvp_active),j) = &
+                   mss_cnc_aer_in(c_idx,snl_top:merge(-1,snl_btm,nvp_active),j)
                if (.not. nvp_active) then
                   mss_cnc_aer_lcl(0,j) = mss_cnc_aer_in(c_idx,0,j)
                end if
