@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3403;
+my $ntests = 3407;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1151,8 +1151,12 @@ my %failtest = (
                                      namelst=>"use_fun=TRUE",
                                      phys=>"clm6_0",
                                    },
-     "useFATESWOsuplnitro"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
-                                     namelst=>"suplnitro='NONE'",
+     "useFATESCwsuplnNONE"       =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"suplnitro='NONE', fates_parteh_mode='carbon_only'",
+                                     phys=>"clm6_0",
+                                   },
+     "useFATESCNwuse_fates_sp"   =>{ options=>"--bgc fates --envxml_dir . --no-megan",
+                                     namelst=>"use_fates_sp = TRUE, fates_parteh_mode='carbon_nitrogen'",
                                      phys=>"clm6_0",
                                    },
      "FATESwBothSpST3"           =>{ options=>"--bgc fates --envxml_dir . --no-megan",
@@ -1207,6 +1211,10 @@ my %failtest = (
                                      namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
+     "useFATESLUH2invalidlogic"  =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_luh=.true., fates_lu_transition_logic=0",
+                                     phys=>"clm6_0",
+                                   },
      "useMEGANwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -megan",
                                      namelst=>"",
                                      phys=>"clm4_5",
@@ -1230,6 +1238,10 @@ my %failtest = (
      "useFATESSPWONOCOMP"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_sp=T,use_fates_nocomp=F",
                                      phys=>"clm5_0",
+                                   },
+     "useFATESDBHInitWONoComp"   =>{ options=>"-bgc fates -envxml_dir . -no-megan",
+                                     namelst=>"use_fates_dbh_init=T,use_fates_nocomp=F",
+                                     phys=>"clm6_0",
                                    },
      "useFATESSPwithLUH"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"use_fates_sp=T,use_fates_luh=T",
@@ -1266,6 +1278,10 @@ my %failtest = (
      "useMeierwithFATES"         =>{ options=>"-bgc fates -envxml_dir . -no-megan",
                                      namelst=>"z0param_method=Meier2022",
                                      phys=>"clm5_0",
+                                   },
+     "FATES_w_irrig"              =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc fates -use_case 20thC_transient",
+                                     namelst=>"irrigate=T",
+                                     phys=>"clm6_0",
                                    },
      "noanthro_w_crop"            =>{ options=>"-envxml_dir . -res 0.9x1.25 -bgc bgc -crop -use_case 1850_noanthro_control",
                                      namelst=>"",

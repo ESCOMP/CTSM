@@ -365,7 +365,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     character(8)  :: vr_suffix
-    character(10) :: active
+    character(10) :: active_via_hist_wrtch4diag
     integer       :: begc,endc
     integer       :: begg,endg 
     real(r8), pointer :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
@@ -381,9 +381,9 @@ contains
     endif
 
     if (hist_wrtch4diag) then
-       active = "active"
+       active_via_hist_wrtch4diag = "active"
     else
-       active = "inactive"
+       active_via_hist_wrtch4diag = "inactive"
     end if
 
     this%finundated_col(begc:endc) = spval
@@ -466,196 +466,156 @@ contains
          avgflag='A', long_name='CH4 soil Concentration for non-inundated area', &
          ptr_col=this%conc_ch4_unsat_col, l2g_scale_type='veg', default='inactive')
 
-    if (hist_wrtch4diag) then
-       this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_PROD_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil production for inundated / lake area', &
-            ptr_col=this%ch4_prod_depth_sat_col)
-    end if
+    this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_PROD_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil production for inundated / lake area', &
+         ptr_col=this%ch4_prod_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_prod_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_PROD_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil production for non-inundated area', &
-            ptr_col=this%ch4_prod_depth_unsat_col)
-    end if
+    this%ch4_prod_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_PROD_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil production for non-inundated area', &
+         ptr_col=this%ch4_prod_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_oxid_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_OXID_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil oxidation for inundated / lake area', &
-            ptr_col=this%ch4_oxid_depth_sat_col)
-    end if
+    this%ch4_oxid_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_OXID_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil oxidation for inundated / lake area', &
+         ptr_col=this%ch4_oxid_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_oxid_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_OXID_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil oxidation for non-inundated area', &
-            ptr_col=this%ch4_oxid_depth_unsat_col)
-    end if
+    this%ch4_oxid_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_OXID_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil oxidation for non-inundated area', &
+         ptr_col=this%ch4_oxid_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_aere_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil aerenchyma loss for inundated / lake area '// &
-            ' (including transpiration flux if activated)', &
-            ptr_col=this%ch4_aere_depth_sat_col)
-    end if
+    this%ch4_aere_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil aerenchyma loss for inundated / lake area '// &
+         ' (including transpiration flux if activated)', &
+         ptr_col=this%ch4_aere_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_aere_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_AERE_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil aerenchyma loss for non-inundated area '// &
-            ' (including transpiration flux if activated)', &
-            ptr_col=this%ch4_aere_depth_unsat_col)
-    end if
+    this%ch4_aere_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_AERE_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil aerenchyma loss for non-inundated area '// &
+         ' (including transpiration flux if activated)', &
+         ptr_col=this%ch4_aere_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%o2_aere_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='O2_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='O2 aerenchyma diffusion into soil for inundated / lake area', &
-            ptr_col=this%o2_aere_depth_sat_col)
-    end if
+    this%o2_aere_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='O2_AERE_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='O2 aerenchyma diffusion into soil for inundated / lake area', &
+         ptr_col=this%o2_aere_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%o2_aere_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='O2_AERE_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='O2 aerenchyma diffusion into soil for non-inundated area', &
-            ptr_col=this%o2_aere_depth_unsat_col)
-    end if
+    this%o2_aere_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='O2_AERE_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='O2 aerenchyma diffusion into soil for non-inundated area', &
+         ptr_col=this%o2_aere_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       call hist_addfld2d (fname='O2_DECOMP_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='O2 consumption from HR and AR for inundated / lake area', &
-            ptr_col=this%o2_decomp_depth_sat_col)
-    end if
+    call hist_addfld2d (fname='O2_DECOMP_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='O2 consumption from HR and AR for inundated / lake area', &
+         ptr_col=this%o2_decomp_depth_sat_col, default=active_via_hist_wrtch4diag)
 
     this%o2_decomp_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
     call hist_addfld2d (fname='O2_DECOMP_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
          avgflag='A', long_name='O2 consumption from HR and AR for non-inundated area', &
-         ptr_col=this%o2_decomp_depth_unsat_col, default=active)
+         ptr_col=this%o2_decomp_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_tran_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_TRAN_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil loss from transpiration for inundated / lake area', &
-            ptr_col=this%ch4_tran_depth_sat_col)
-    end if
+    this%ch4_tran_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_TRAN_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil loss from transpiration for inundated / lake area', &
+         ptr_col=this%ch4_tran_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_tran_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_TRAN_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil loss from transpiration for non-inundated area', &
-            ptr_col=this%ch4_tran_depth_unsat_col)
-    end if
+    this%ch4_tran_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_TRAN_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil loss from transpiration for non-inundated area', &
+         ptr_col=this%ch4_tran_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_ebul_depth_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_EBUL_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil ebullition for inundated / lake area', &
-            ptr_col=this%ch4_ebul_depth_sat_col)
-    end if
+    this%ch4_ebul_depth_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_EBUL_DEPTH_SAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil ebullition for inundated / lake area', &
+         ptr_col=this%ch4_ebul_depth_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4_ebul_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4_EBUL_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
-            avgflag='A', long_name='CH4 soil ebullition for non-inundated area', &
-            ptr_col=this%ch4_ebul_depth_unsat_col)
-    end if
+    this%ch4_ebul_depth_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4_EBUL_DEPTH_UNSAT', units='mol/m3/s', type2d='levgrnd', &
+         avgflag='A', long_name='CH4 soil ebullition for non-inundated area', &
+         ptr_col=this%ch4_ebul_depth_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%o2stress_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='O2STRESS_SAT', units='unitless', type2d='levgrnd',  &
-            avgflag='A', long_name='Ratio of oxygen available to demanded for non-inundated area', &
-            ptr_col=this%o2stress_sat_col)
-    end if
+    this%o2stress_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='O2STRESS_SAT', units='unitless', type2d='levgrnd',  &
+         avgflag='A', long_name='Ratio of oxygen available to demanded for non-inundated area', &
+         ptr_col=this%o2stress_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%o2stress_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='O2STRESS_UNSAT', units='unitless', type2d='levgrnd',  &
-            avgflag='A', long_name='Ratio of oxygen available to demanded for inundated / lake area', &
-            ptr_col=this%o2stress_unsat_col)
-    end if
+    this%o2stress_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='O2STRESS_UNSAT', units='unitless', type2d='levgrnd',  &
+         avgflag='A', long_name='Ratio of oxygen available to demanded for inundated / lake area', &
+         ptr_col=this%o2stress_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4stress_unsat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4STRESS_UNSAT', units='unitless', type2d='levgrnd',  &
-            avgflag='A', long_name='Ratio of methane available to total potential sink for inundated / lake area', &
-            ptr_col=this%ch4stress_unsat_col)
-    end if
+    this%ch4stress_unsat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4STRESS_UNSAT', units='unitless', type2d='levgrnd',  &
+         avgflag='A', long_name='Ratio of methane available to total potential sink for inundated / lake area', &
+         ptr_col=this%ch4stress_unsat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%ch4stress_sat_col(begc:endc,1:nlevgrnd) = spval
-       call hist_addfld2d (fname='CH4STRESS_SAT', units='unitless', type2d='levgrnd',  &
-            avgflag='A', long_name='Ratio of methane available to total potential sink for non-inundated area', &
-            ptr_col=this%ch4stress_sat_col)
-    end if
+    this%ch4stress_sat_col(begc:endc,1:nlevgrnd) = spval
+    call hist_addfld2d (fname='CH4STRESS_SAT', units='unitless', type2d='levgrnd',  &
+         avgflag='A', long_name='Ratio of methane available to total potential sink for non-inundated area', &
+         ptr_col=this%ch4stress_sat_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%ch4_prod_depth_sat_col(begc:endc,1:nlevgrnd) = spval
        call hist_addfld2d (fname='CH4_PROD_DEPTH_LAKE', units='mol/m3/s', type2d='levgrnd', &
             avgflag='A', long_name='CH4 production in each soil layer, lake col. only', &
-            ptr_col=this%ch4_prod_depth_sat_col)
+            ptr_col=this%ch4_prod_depth_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%conc_ch4_sat_col(begc:endc,1:nlevgrnd) = spval
        call hist_addfld2d (fname='CONC_CH4_LAKE', units='mol/m3', type2d='levgrnd', &
             avgflag='A', long_name='CH4 Concentration each soil layer, lake col. only', &
-            ptr_col=this%conc_ch4_sat_col)
+            ptr_col=this%conc_ch4_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%conc_o2_sat_col(begc:endc,1:nlevgrnd) = spval
        call hist_addfld2d (fname='CONC_O2_LAKE', units='mol/m3', type2d='levgrnd', &
             avgflag='A', long_name='O2 Concentration each soil layer, lake col. only', &
-            ptr_col=this%conc_o2_sat_col)
+            ptr_col=this%conc_o2_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%ch4_surf_diff_sat_col(begc:endc) = spval
        call hist_addfld1d (fname='CH4_SURF_DIFF_LAKE', units='mol/m2/s',  &
             avgflag='A', long_name='diffusive surface CH4 flux, lake col. only (+ to atm)', &
-            ptr_col=this%ch4_surf_diff_sat_col)
+            ptr_col=this%ch4_surf_diff_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%ch4_surf_ebul_sat_col(begc:endc) = spval
        call hist_addfld1d (fname='CH4_SURF_EBUL_LAKE', units='mol/m2/s',  &
             avgflag='A', long_name='ebullition surface CH4 flux, lake col. only (+ to atm)', &
-            ptr_col=this%ch4_surf_ebul_sat_col)
+            ptr_col=this%ch4_surf_ebul_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag .and. allowlakeprod) then
+    if (allowlakeprod) then
        this%ch4_oxid_depth_sat_col(begc:endc,1:nlevgrnd) = spval
        call hist_addfld2d (fname='CH4_OXID_DEPTH_LAKE', units='mol/m2/s', type2d='levgrnd',  &
             avgflag='A', long_name='CH4 oxidation in each soil layer, lake col. only', &
-            ptr_col=this%ch4_oxid_depth_sat_col)
+            ptr_col=this%ch4_oxid_depth_sat_col, default=active_via_hist_wrtch4diag)
     end if
 
-    if (hist_wrtch4diag) then
-       this%layer_sat_lag_col(begc:endc,1:nlevgrnd) = spval
-       ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
-       ! from dynamic column adjustments. (We also exclude lakes here, because they don't
-       ! have any unsaturated area.)
-       call hist_addfld2d (fname='LAYER_SAT_LAG', units='unitless', type2d='levgrnd',  &
-            avgflag='A', long_name='lagged saturation status of layer in unsat. zone', &
-            ptr_col=this%layer_sat_lag_col, l2g_scale_type='veg')
-    end if
+    this%layer_sat_lag_col(begc:endc,1:nlevgrnd) = spval
+    ! Using l2g_scale_type='veg' to exclude mass in special landunits, which can arise
+    ! from dynamic column adjustments. (We also exclude lakes here, because they don't
+    ! have any unsaturated area.)
+    call hist_addfld2d (fname='LAYER_SAT_LAG', units='unitless', type2d='levgrnd',  &
+         avgflag='A', long_name='lagged saturation status of layer in unsat. zone', &
+         ptr_col=this%layer_sat_lag_col, l2g_scale_type='veg', default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%annavg_finrw_col(begc:endc) = spval
-       call hist_addfld1d (fname='ANNAVG_FINRW', units='unitless',  &
-            avgflag='A', long_name='annual average respiration-weighted FINUNDATED', &
-            ptr_col=this%annavg_finrw_col)
-    end if
+    this%annavg_finrw_col(begc:endc) = spval
+    call hist_addfld1d (fname='ANNAVG_FINRW', units='unitless',  &
+         avgflag='A', long_name='annual average respiration-weighted FINUNDATED', &
+         ptr_col=this%annavg_finrw_col, default=active_via_hist_wrtch4diag)
 
-    if (hist_wrtch4diag) then
-       this%sif_col(begc:endc) = spval
-       call hist_addfld1d (fname='SIF', units='unitless',  &
-            avgflag='A', long_name='seasonal inundation factor calculated for sat. CH4 prod. (non-lake)', &
-            ptr_col=this%sif_col)
-    end if
+    this%sif_col(begc:endc) = spval
+    call hist_addfld1d (fname='SIF', units='unitless',  &
+         avgflag='A', long_name='seasonal inundation factor calculated for sat. CH4 prod. (non-lake)', &
+         ptr_col=this%sif_col, default=active_via_hist_wrtch4diag)
 
     this%conc_o2_sat_col(begc:endc,1:nlevgrnd) = spval
     ! Using l2g_scale_type='veg_plus_lake' to exclude mass in non-lake special landunits,
