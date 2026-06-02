@@ -60,7 +60,7 @@ contains
          debug_l, &
          debug_g
 
-    ! Default namelist variable values
+    ! Default namelist variable values. Set to zero to ALWAYS debug.
     debug_p = -999
     debug_c = -999
     debug_l = -999
@@ -112,9 +112,10 @@ contains
     integer :: i  ! Global patch index
     !-----------------------------------------------------------------------
 
-    ! This makes it so that compilers should build this function as a simple boolean if we haven't
-    ! requested any patch to be debugged, which reduces performance cost in production runs.
-    if (debug_p < 1) then
+    ! This makes it so that compilers should build this function as a simple boolean in simple cases
+    if (debug_p == 0) then
+       do_debug = .true.
+    else if (debug_p < 0) then
        do_debug = .false.
        return
     end if
@@ -150,9 +151,10 @@ contains
     integer :: i  ! Global column index
     !-----------------------------------------------------------------------
 
-    ! This makes it so that compilers should build this function as a simple boolean if we haven't
-    ! requested any column to be debugged, which reduces performance cost in production runs.
-    if (debug_c < 1) then
+    ! This makes it so that compilers should build this function as a simple boolean in simple cases
+    if (debug_c == 0) then
+       do_debug = .true.
+    else if (debug_c < 0) then
        do_debug = .false.
        return
     end if
@@ -188,9 +190,10 @@ contains
     integer :: i  ! Global landunit index
     !-----------------------------------------------------------------------
 
-    ! This makes it so that compilers should build this function as a simple boolean if we haven't
-    ! requested any landunit to be debugged, which reduces performance cost in production runs.
-    if (debug_l < 1) then
+    ! This makes it so that compilers should build this function as a simple boolean in simple cases
+    if (debug_l == 0) then
+       do_debug = .true.
+    else if (debug_l < 0) then
        do_debug = .false.
        return
     end if
@@ -226,9 +229,10 @@ contains
     integer :: i  ! Global gridcell index
     !-----------------------------------------------------------------------
 
-    ! This makes it so that compilers should build this function as a simple boolean if we haven't
-    ! requested any gridcell to be debugged, which reduces performance cost in production runs.
-    if (debug_g < 1) then
+    ! This makes it so that compilers should build this function as a simple boolean in simple cases
+    if (debug_g == 0) then
+       do_debug = .true.
+    else if (debug_g < 0) then
        do_debug = .false.
        return
     end if

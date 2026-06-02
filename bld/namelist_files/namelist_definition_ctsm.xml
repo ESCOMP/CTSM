@@ -3273,22 +3273,22 @@ Maximum depth to till soil (m). Default 0.26; original (Graham et al., 2021) val
 
 <entry id="debug_p" type="integer" category="clm_debug"
        group="debug" valid_values="" value="-999">
-Global index of patch to debug.
+Global index of patch to debug. Set to zero to debug every patch; set to negative to debug none.
 </entry>
 
 <entry id="debug_c" type="integer" category="clm_debug"
        group="debug" valid_values="" value="-999">
-Global index of column to debug.
+Global index of column to debug. Set to zero to debug every column; set to negative to debug none.
 </entry>
 
 <entry id="debug_l" type="integer" category="clm_debug"
        group="debug" valid_values="" value="-999">
-Global index of landunit to debug.
+Global index of landunit to debug. Set to zero to debug every landunit; set to negative to debug none.
 </entry>
 
 <entry id="debug_g" type="integer" category="clm_debug"
        group="debug" valid_values="" value="-999">
-Global index of gridcell to debug.
+Global index of gridcell to debug. Set to zero to debug every gridcell; set to negative to debug none.
 </entry>
 
 </namelist_definition>
