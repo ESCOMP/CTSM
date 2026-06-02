@@ -476,7 +476,7 @@ contains
      integer               , intent(in)    :: filter_allc(:)  ! filter for all columns
      type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
      type(solarabs_type)   , intent(in)    :: solarabs_inst
-     class(waterflux_type) , intent(in)    :: waterflux_inst
+     class(waterflux_type) , intent(in), target    :: waterflux_inst
      class(waterstate_type), intent(in)    :: waterstate_inst
      type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
      class(waterbalance_type), intent(inout) :: waterbalance_inst
