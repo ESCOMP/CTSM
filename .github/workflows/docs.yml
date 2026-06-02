@@ -37,6 +37,17 @@ permissions:
   contents: read
 jobs:
 
+  link-checker:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check documentation links
+        run: |
+          .github/workflows/docs-check-links.sh
+        env:
+          # Use GITHUB_TOKEN to avoid rate limiting when checking GitHub links
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   test-build-docs:
     if: ${{ always() }}
     name: Without ctsm_pylib or container
