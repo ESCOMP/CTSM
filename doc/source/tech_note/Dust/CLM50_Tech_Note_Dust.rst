@@ -86,7 +86,7 @@ Another essential dust emission threshold is the impact/dynamic threshold :math:
 
    u_{\ast it} = B_{\ast it} u_{\ast ft0}
 
-where :math:`B_{*it} = 0.81` is a constant on Earth following :ref:`Kok et al. (2012)<Koketal2012>`. In Leung_2023, :math:`u_{*it}` does not depend on and increase with soil moisture. The above equations imply that :math:`u_{*it} \, < \, u_{*ft0} \le \, u_{*ft}`. This means that the winds need a bigger momentum to initiate saltation and dust emission but can reduce below :math:`u_{*ft}` and still maintain a weak dust emission flux. The emission flux goes to zero when :math:`u_{*s}` drops below :math:`u_{*it}`.
+where :math:`B_{\ast it} = 0.81` is a constant on Earth following :ref:`Kok et al. (2012)<Koketal2012>`. In Leung_2023, :math:`u_{\ast it}` does not depend on and increase with soil moisture. The above equations imply that :math:`u_{\ast it} \, < \, u_{\ast ft0} \le \, u_{\ast ft}`. This means that the winds need a bigger momentum to initiate saltation and dust emission but can reduce below :math:`u_{\ast ft}` and still maintain a weak dust emission flux. The emission flux goes to zero when :math:`u_{\ast s}` drops below :math:`u_{\ast it}`.
 
 .. _Dust Emission Flux:
 
