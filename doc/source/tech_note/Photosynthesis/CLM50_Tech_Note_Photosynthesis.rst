@@ -184,7 +184,7 @@ and
 
    f_{H} \left(T_{v} \right)=\frac{1+\exp \left(\frac{298.15\Delta S-\Delta H_{d} }{298.15\times 0.001R_{gas} } \right)}{1+\exp \left(\frac{\Delta ST_{v} -\Delta H_{d} }{0.001R_{gas} T_{v} } \right)}
 
-:numref:`Table Temperature dependence parameters for C3 photosynthesis` lists parameter values for :math:`\Delta H_{a}` and :math:`\Delta H_{d}`. :math:`\Delta S` is calculated separately for :math:`V_{c\max }` and :math:`J_{max }` to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d` (:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`). Because :math:`T_{p}` as implemented here varies with :math:`V_{c\max }`, :math:`T_{p}` uses the same temperature parameters as :math:`V_{c\max}`. For C\ :sub:`4` plants,
+:numref:`Table Temperature dependence parameters for C3 photosynthesis` lists parameter values for :math:`\Delta H_{a}` and :math:`\Delta H_{d}`. :math:`\Delta S` (entropy term) is calculated separately for :math:`V_{c\max }` and :math:`J_{max }` to allow for temperature acclimation of photosynthesis (see equation :eq:`9.16`), and :math:`\Delta S` is 490 J mol :sup:`-1` K :sup:`-1` for :math:`R_d` (:ref:`Bonan et al. 2011<Bonanetal2011>`, :ref:`Lombardozzi et al. 2015<Lombardozzietal2015>`). Because :math:`T_{p}` as implemented here varies with :math:`V_{c\max }`, :math:`T_{p}` uses the same temperature parameters as :math:`V_{c\max}`. For C\ :sub:`4` plants,
 
 .. math::
    :label: 9.12
