@@ -100,7 +100,7 @@ The total vertical mass emission flux of dust, :math:`F_{d}` (kg m\ :sup:`-2` s\
 
    F_{d} = \eta C_{tune} C_{d} f_{bare} f_{clay'} \frac{ \rho_{atm} (u^2_{\ast s} - u^2_{\ast it} ) }{ u^2_{\ast it} }  \left( \frac{ u_{\ast s} }{u_{\ast it} } \right) ^\kappa
 
-where :math:`C_{tune} = 0.05` is a constant, :math:`\eta` is the intermittency factor (we will derive it in section :numref:`Emission Intermittency Due To Turbulent Wind Fluctuations`), and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{*s} \, < \, u_{*it}`. :math:`\rho_{atm}` is surface air density from CAM (the atm model). 
+where :math:`C_{tune} = 0.05` is a constant, :math:`\eta` is the intermittency factor (we will derive it in section :numref:`Emission Intermittency Due To Turbulent Wind Fluctuations`), and :math:`F_{d}` is the total emission flux summed across modes/bins following a revised form of :ref:`Kok et al. (2014b)<Koketal2014b>`. The dust emission flux goes to zero when :math:`u_{\ast s} \, < \, u_{\ast it}`. :math:`\rho_{atm}` is surface air density from CAM (the atm model). 
 :math:`f_{clay'}` is a modified clay fraction term appeared earlier in :ref:`Zender et al. (2003)<Zenderetal2003>`. In Zender_2003 it is used to indicate the sandblasting efficiency. Zender limited this term to be capped at 0.2:
 
 .. math::
