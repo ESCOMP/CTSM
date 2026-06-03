@@ -159,7 +159,7 @@ Values are :math:`\Theta _{cj} =0.9393` and :math:`\Theta _{ip} =0.95` for C\ :s
 
 Now we write Eq. :eq:`leaf_net_psn` as :math:`A_{n} = A - \beta_{t} R_{d}` with :math:`\beta_{t}` as defined in Eq. :eq:`rubisco_lim_rate_of_carboxylation` to account for the effect of water stress on respiration.
 
-The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma` depend on temperature. Values at 25°C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{25} {\rm =42}.75\times 10^{-6} P_{atm}`.
+The parameters :math:`K_{c}`, :math:`K_{o}`, and :math:`\Gamma _{*}` depend on temperature. Values at 25°C are :math:`K_{c25} ={\rm 4}0{\rm 4}.{\rm 9}\times 10^{-6} P_{atm}`, :math:`K_{o25} =278.4\times 10^{-3} P_{atm}`, and :math:`\Gamma _{*25} {\rm =42}.75\times 10^{-6} P_{atm}`.
 
 :math:`V_{c\max }`, :math:`J_{\max }`, :math:`T_{p}`, :math:`k_{p}`, and :math:`R_{d}` also vary with temperature. :math:`J_{\max 25}` at 25\ :sup:`\o`\ C is calculated by the LUNA model (Chapter :numref:`rst_Photosynthetic Capacity`).
 
