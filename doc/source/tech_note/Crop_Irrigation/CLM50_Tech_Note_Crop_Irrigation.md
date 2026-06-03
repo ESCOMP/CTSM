@@ -414,7 +414,7 @@ $$
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (eq-lfemerg-allocations)
 
-where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final values of these coefficients, and $h_{grain}$ is the heat unit threshold to enter the grain-filling phase. At a crop-specific maximum leaf area index, ${L}_{max}$, carbon allocation is directed exclusively to the fine roots. See {numref}`Table Crop allocation parameters` for parameter values.
+where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final values of these coefficients, and $h_{grain}$ is the heat unit threshold to enter the grain-filling phase. At a crop-specific maximum leaf area index, ${L}_{max}$, carbon allocation is directed almost exclusively to the fine roots, with only 0.001% of carbon going to leaves. See {numref}`Table Crop allocation parameters` for parameter values.
 
 (grain fill to harvest)=
 
@@ -435,6 +435,8 @@ a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
 $$ (25.5)
 
 where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $d_{L}$, $d_{alloc}^{leaf}$ and $d_{alloc}^{stem}$ are leaf area index and leaf and stem allocation decline factors, $a_{leaf}^{f}$ and $a_{livestem}^{f}$ are final values of these allocation coefficients, and $h_{grain}$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
+
+As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, ${L}_{max}$, leaf allocation is reduced to 0.001%. The rest of the carbon that would have gone to leaves instead goes to the reproductive pool.
 
 (nitrogen-retranslocation-for-crops)=
 
