@@ -807,6 +807,8 @@ The stem surface area is
 
 where :math:`N_{tree}` is the number of trees per m\ :sup:`2`, :math:`k_{A}` is an adjustable parameter to account for the departure of tree area from a cylinder, :math:`D_{bh}` is the mean tree breast-height diameter (m), and :math:`h_{tree}` is the mean tree height (m).
 
+For plant functional types other than trees or shrubs, or if :math:`D_{bh} < 0.05`, :math:`A_{leaf} = 2 L + S` and :math:`A_{stem} = 0`.  Furthermore, for trees and shrubs, if :math:`L < 0.1`, :math:`A_{leaf} = 2 L + S`, where :math:`S` is the exposed stem area index (section :numref:`Phenology and vegetation burial by snow`).  This is intended to avoid small :math:`A_{leaf}` which leads to small leaf conductance and high leaf temperature which can trigger an error in the RRTMGP component of the atmospheric model.
+
 .. _Figure Schematic diagram of sensible heat fluxes:
 
 .. figure:: image1.png
