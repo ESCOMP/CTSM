@@ -201,7 +201,7 @@ The absorbed solar radiation :math:`\vec{S}_{g}`  is
 
    \vec{S}_{g} =\sum _{\Lambda }S_{atm} \, \downarrow _{\Lambda }^{\mu } \left(1-\alpha _{g,\, \Lambda }^{\mu } \right) +S_{atm} \, \downarrow _{\Lambda } \left(1-\alpha _{g,\, \Lambda } \right)
 
-where :math:`S_{atm} \, \downarrow _{\Lambda }^{\mu }` and :math:`S_{atm} \, \downarrow _{\Lambda }` are the incident direct beam and diffuse solar fluxes (W m\ :sup:`-2`) and :math:`\Lambda` denotes the visible (:math:`<` 0.7\ :math:`\mu {\rm m}`) and near-infrared (:math:`\ge` 0.7\ :math:`\mu {\rm m}`) wavebands (section :numref:`Atmospheric Coupling`), and :math:`\alpha _{g,\, \Lambda }^{\mu }` and :math:`\alpha _{g,\, \mu }` are the direct beam and diffuse lake albedos (section :numref:`rst_Surface Albedos`).
+where :math:`S_{atm} \, \downarrow _{\Lambda }^{\mu }` and :math:`S_{atm} \, \downarrow _{\Lambda }` are the incident direct beam and diffuse solar fluxes (W m\ :sup:`-2`) and :math:`\Lambda` denotes the visible (:math:`<` 0.7\ :math:`\mu {\rm m}`) and near-infrared (:math:`\ge` 0.7\ :math:`\mu {\rm m}`) wavebands (section :numref:`Atmospheric Coupling`), and :math:`\alpha _{g,\, \Lambda }^{\mu }` and :math:`\alpha _{g,\, \mu }` are the direct beam and diffuse lake albedos (section :numref:`Ground Albedos`).
 
 The net emitted longwave radiation is
 
