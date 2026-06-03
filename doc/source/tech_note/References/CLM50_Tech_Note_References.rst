@@ -887,6 +887,7 @@ Levis, S., Badger, A., Drewniak, B., Nevison, C., Ren, X. 2016. CLMcrop yields a
 :  _Liaoetal2023:
 
 Liao, C., Lu X., Huang Y., Tao F., Lawrence D.M, Koven C.D., Oleson K.W., Wieder W.R., Kluzek E., Huang X., Luo Y. 2023 . Matrix Approach to Accelerate Spin-Up of CLM5. Journal of Advances in Modeling Earth Systems, 15(8), e2023MS003625. doi:10.1029/2023MS003625.
+
 .. _Lietal2000:
 
 Li, C., Aber, J., Stange, F., Butterbach-Bahl, K. and Papen, H. 2000. A process-oriented model of N2O and NO emissions from forest soils: 1. Model development. J. Geophys. Res. 105(D4):4369-4384.
