@@ -1,6 +1,6 @@
 <!-- Define math macros here -->
-$\newcommand{\gddmat}{GDD_\textrm{mat}}$
-$\newcommand{\gddmatbl}{\gddmat^\textrm{bl}}$
+$\newcommand{\gddthreshmat}{GDD_\textrm{*mat}}$
+$\newcommand{\gddthreshmatbl}{\gddthreshmat^\textrm{bl}}$
 $\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$
 $\newcommand{\ttwom}{T_\textrm{2m}}$
 $\newcommand{\gddacctwom}{GDD_{\ttwom}}$
@@ -14,7 +14,8 @@ $\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$
 $\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$
 $\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$
 $\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$
-$\newcommand{\huigrain}{h_{grain}}$
+$\newcommand{\huithreshlfemerg}{h_\textrm{*lfemerg}}$
+$\newcommand{\huithreshgrain}{h_\textrm{*grain}}$
 $\newcommand{\parambaset}{T_\textrm{base}}$
 $\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$
 
@@ -149,22 +150,22 @@ At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain prod
 
 #### Maturity requirement
 At planting, CLM determines how many growing degree-days will be needed for the crop to reach maturity and thus be harvested. By default (i.e., `cropcals_rx_adapt = .true.`), this is set according to two input files with PFT-specific maps:
-- `stream_fldfilename_cultivar_gdds` ($\gddmatbl$): the average growing-degree days to reach maturity in the "baseline" period.
+- `stream_fldfilename_cultivar_gdds` ($\gddthreshmatbl$): the average growing-degree days to reach maturity in the "baseline" period.
 - `stream_fldFileName_gdd20_baseline` ($\gddxrunbl$): the means over the baseline period of $\gddzerorun$, $\gddeightrun$, and $\gddtenrun$.
 
-Maturity requirement, $\gddmat$, is then calculated as:
+Maturity requirement, $\gddthreshmat$, is then calculated as:
 
 $$
-\gddmat = \max \left( 1,\ \gddmatbl \times \frac{\gddxrun}{\gddxrunbl} \right),
+\gddthreshmat = \max \left( 1,\ \gddthreshmatbl \times \frac{\gddxrun}{\gddxrunbl} \right),
 $$ (gddmat-rx-adapt)
 
-where $x$ is 0 (wheat, cotton, and rice), 8 (corn, sugarcane, _Miscanthus_, and switchgrass), or 10 (soybean). This allows the maturity requirement to "adapt" over time, being lower in cool periods and higher in warm periods. The baseline period is the 1980-2009 growing seasons (i.e., seasons where planting occurred in those calendar years, inclusive); baseline values were calculated based on a half-degree, land-only run with CRU-JRA climate forcings (Rabin et al., in prep.). The minimum value of 1 avoids numeric issues when $\gddmat$ is in the denominator of a calculation.
+where $x$ is 0 (wheat, cotton, and rice), 8 (corn, sugarcane, _Miscanthus_, and switchgrass), or 10 (soybean). This allows the maturity requirement to "adapt" over time, being lower in cool periods and higher in warm periods. The baseline period is the 1980-2009 growing seasons (i.e., seasons where planting occurred in those calendar years, inclusive); baseline values were calculated based on a half-degree, land-only run with CRU-JRA climate forcings (Rabin et al., in prep.). The minimum value of 1 avoids numeric issues when $\gddthreshmat$ is in the denominator of a calculation.
 
 - **Check baseline period**
 
-If `cropcals_rx_adapt` is false but `cropcals_rx` is true, the calculation is just $\gddmat = \gddmatbl$.
+If `cropcals_rx_adapt` is false but `cropcals_rx` is true, the calculation is just $\gddthreshmat = \gddthreshmatbl$.
 
-If both `cropcals_rx_adapt` and `cropcals_rx` are false, or if $\gddmatbl$ is negative, then CLM sets $\gddmat$ according to various crop-specific rules based on $\gddx$, the PFT-specific parameter `hybgdd`, and hard-coded minimum and maximum values.
+If both `cropcals_rx_adapt` and `cropcals_rx` are false, or if $\gddthreshmatbl$ is negative, then CLM sets $\gddthreshmat$ according to various crop-specific rules based on $\gddx$, the PFT-specific parameter `hybgdd`, and hard-coded minimum and maximum values.
 
 Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
 
@@ -190,19 +191,19 @@ where $n$ is the number of years that $\gddxrun$ gas been calculated for. Note t
 
 The "leaf emergence" phase is the period of vegetative growth between when the leaves first emerge from the soil to when filling of the reproductive organ begins.
 
-According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddmat$ (see $h_{lfemerg}$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
+According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddthreshmat$ (see $h_{lfemerg}$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
 
 (grain fill)=
 
 #### Grain fill
 
-The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $\huigrain$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $\huithreshgrain$, of 40 to 65% of $\gddthreshmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
 
 (harvest)=
 
 #### Harvest
 
-Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddmat$ or the number of days past planting reaches a crop-specific maximum ({numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
+Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddthreshmat$ or the number of days past planting reaches a crop-specific maximum ({numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
 
 (table crop phenology parameters)=
 
@@ -276,7 +277,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
      - 10
      - 8
      - 8
-   * - :math:`h_{lfemerg}` (% :math:`\gddmat`)
+   * - :math:`\huithreshlfemerg` (% :math:`\gddthreshmat`)
      - 3%
      - 5%
      - 3%
@@ -287,7 +288,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
      - 3%
      - 3%
      - 3%
-   * - :math:`h_{grainfill}` (% :math:`\gddmat`)
+   * - :math:`\huithreshgrain` (% :math:`\gddthreshmat`)
      - 65%
      - 60%
      - 50%
@@ -382,8 +383,8 @@ Notes:
 - $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
 - $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
 - $\parambaset$ is the minimum temperature for accumulating growing degree-days.
-- $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $\gddmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
-- $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddmat$.
+- $h_{lfemerg}$ and $h_{grainfill}$ are, respectively, the threshold fractions of $\gddthreshmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3).
+- $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddthreshmat$.
 - $\paramztopmx$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
 - SLA is specific leaf area (see Chapter {numref}`rst_Photosynthetic Capacity`).
 - $\chi _{L}$ is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. (See Sect. {numref}`Canopy Radiative Transfer`.)
@@ -410,12 +411,12 @@ each C pool are defined as:
 
 $$
 \begin{array}{l} {a_{repr} =0} \\
-{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{\gddacctwom }{\gddmat }, 1\right)} \\
-{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{\gddacctwom }{\huigrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
+{a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{\gddacctwom }{\gddthreshmat }, 1\right)} \\
+{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{\gddacctwom }{\huithreshgrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (eq-lfemerg-allocations)
 
-where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final values of these coefficients, and $h_{grain}$ is the heat unit threshold to enter the grain-filling phase. At a crop-specific maximum leaf area index, ${L}_{max}$, carbon allocation is directed almost exclusively to the fine roots, with only 0.001% of carbon going to leaves. See {numref}`Table Crop allocation parameters` for parameter values.
+where $a_{leaf}^{i}$, $a_{froot}^{i}$, and $a_{froot}^{f}$ are initial and final values of these coefficients, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. At a crop-specific maximum leaf area index, ${L}_{max}$, carbon allocation is directed almost exclusively to the fine roots, with only 0.001% of carbon going to leaves. See {numref}`Table Crop allocation parameters` for parameter values.
 
 (grain fill to harvest)=
 
@@ -426,16 +427,16 @@ The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg
 $$
 \begin{array}{ll}
 a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\
-a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \le 1 \\
+a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom - \huithreshgrain}{\gddthreshmat d_{L} - \huithreshgrain} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{\gddacctwom - \huithreshgrain}{\gddthreshmat d_{L} - \huithreshgrain} \le 1 \\
  \\
 a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le a_{livestem}^{f} \quad {\rm else} \\
-a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \le 1 \\
+a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom - \huithreshgrain}{\gddthreshmat d_{L} - \huithreshgrain} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{\gddacctwom - \huithreshgrain}{\gddthreshmat d_{L} - \huithreshgrain} \le 1 \\
  \\
 a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
 \end{array}
 $$ (25.5)
 
-where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $d_{L}$, $d_{alloc}^{leaf}$ and $d_{alloc}^{stem}$ are leaf area index and leaf and stem allocation decline factors, $a_{leaf}^{f}$ and $a_{livestem}^{f}$ are final values of these allocation coefficients, and $\huigrain$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
+where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $d_{L}$, $d_{alloc}^{leaf}$ and $d_{alloc}^{stem}$ are leaf area index and leaf and stem allocation decline factors, $a_{leaf}^{f}$ and $a_{livestem}^{f}$ are final values of these allocation coefficients, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
 
 As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, ${L}_{max}$, leaf allocation is reduced to 0.001%. The rest of the carbon that would have gone to leaves instead goes to the reproductive pool.
 
