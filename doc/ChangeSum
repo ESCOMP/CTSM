@@ -1,5 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.041 samrabin 05/21/2026 Merge b4b-dev 2026-05-21
+       ctsm5.4.040 multiple 05/20/2026 Paramfile updates
+       ctsm5.4.039 multiple 05/14/2026 Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
+       ctsm5.4.038   slevis 05/07/2026 Merge b4b-dev to master
+       ctsm5.4.037 multiple 05/04/2026 Fix for FATES year-boundary restart issue
+       ctsm5.4.036 multiple 04/27/2026 Complete the FATES-CLM nitrogen coupling
        ctsm5.4.035     erik 04/26/2026 Merge b4b-dev to master
        ctsm5.4.034  afoster 04/22/2026 bug fix to the FATES land use driver input code
        ctsm5.4.033 glemieux 04/17/2026 Update fates tag with missing land use data check fix
