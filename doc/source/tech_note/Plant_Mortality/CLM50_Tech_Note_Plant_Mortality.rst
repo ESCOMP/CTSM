@@ -49,7 +49,7 @@ This section does not describe mechanistic mortality processes represented in th
 Implementation
 ----------------------------------------------
 
-Vegetation carbon and nitrogen dynamics are implemented using a matrix-based formulation (:ref:`Lu et al. 2020<Luetal2020>`, :ref:`Liao et al. 2023`<Liaoetal2023>), in which the evolution of vegetation pools is governed by a combination of process-specific transfer and turnover operators. Within this framework, mortality is represented as one component of the overall vegetation transfer system, alongside phenological turnover and fire-related processes.
+Vegetation carbon and nitrogen dynamics are implemented using a matrix-based formulation (:ref:`Lu et al. 2020<Luetal2020>`, :ref:`Liao et al. 2023<Liaoetal2023>`), in which the evolution of vegetation pools is governed by a combination of process-specific transfer and turnover operators. Within this framework, mortality is represented as one component of the overall vegetation transfer system, alongside phenological turnover and fire-related processes.
 
 The matrix formulation provides a compact representation of vegetation dynamics and organizes the bookkeeping of transfers among pools, but does not alter the underlying conceptual treatment of mortality as a proportional loss from vegetation pools.
 
