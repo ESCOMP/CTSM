@@ -855,6 +855,10 @@ Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations 
 
 Luo J, Hess P G, Hall S, et al. Agricultural emissions of reactive nitrogen gases from constrained simulations using the Community Land Model. Authorea Preprints, 2025.
 
+.. _Luetal2020:
+
+Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. Full implementation of matrix approach to biogeochemistry module of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), p.e2020MS002105.
+
 .. _Magilletal1997:
 
 Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simulated chronic nitrogen deposition. Ecological Applications, 7: 402-415.
