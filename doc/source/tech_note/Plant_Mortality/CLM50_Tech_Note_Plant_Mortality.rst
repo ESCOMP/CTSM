@@ -92,7 +92,7 @@ and similarly for nitrogen:
 
    NF_{i,mort} =NS_{i} m
 
-where :math:`CF_{i}` is carbon flux, :math:`CS_{i}` is carbon storage, :math:`NF_{i}` is nitrogen flux, :math:`NS_{i}` is nitrogen storage, for each vegetation pool :math:`i`, respectively.
+where :math:`CF_{i}` is carbon flux, :math:`CS_{i}` is carbon state variable (or pool), :math:`NF_{i}` is nitrogen flux, :math:`NS_{i}` is nitrogen state, for each vegetation pool :math:`i`, respectively.
 
 These fluxes are applied to all vegetation pools, including:
 
