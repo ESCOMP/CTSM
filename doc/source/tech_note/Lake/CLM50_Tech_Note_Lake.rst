@@ -19,30 +19,6 @@ External Data
 
 As discussed in :ref:`Subin et al. (2012a, b) <Subinetal2012a>`, the Global Lake and Wetland Database (:ref:`Lehner and Doll 2004<LehnerDoll2004>`) is currently used to prescribe lake fraction in each land model grid cell, for a total of 2.3 million km\ :sup:`-2`. As in :ref:`Subin et al. (2012a, b) <Subinetal2012a>`, the :ref:`Kourzeneva et al. (2012)<Kourzenevaetal2012>` global gridded dataset is currently used to estimate a mean lake depth in each grid cell, based on interpolated compilations of geographic information.
 
-.. _Surface Albedo Lake:
-
-Surface Albedo
-------------------
-
-For direct radiation, the albedo *a* for lakes with ground temperature :math:`{T}_{g}` (K) above freezing is given by (:ref:`Pivovarov, 1972<Pivovarov1972>`)
-
-.. math::
-   :label: 12.1
-
-   a=\frac{0.5}{\cos z+0.15}
-where *z* is the zenith angle. For diffuse radiation, the expression in equation :eq:`12.1` is integrated over the full sky to yield *a* = 0.10.
-
-For frozen lakes without resolved snow layers, the albedo at cold temperatures *a*\ :sub:`0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
-
-.. math::
-   :label: 12.2
-
-   a=a_{0} \left(1-x\right)+0.10x,x=\exp \left(-95\frac{T_{f} -T_{g} }{T_{f} } \right)
-
-where *a* is restricted to be no less than that given in :eq:`12.1`.
-
-For frozen lakes with resolved snow layers, the reflectance of the ice surface is fixed at *a*\ :sub:`0`, and the snow reflectance is calculated as over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`). These two reflectances are combined to obtain the snow-fraction-weighted albedo as in over non-vegetated surfaces (Chapter :numref:`rst_Surface Albedos`).
-
 .. _Surface Fluxes and Surface Temperature Lake:
 
 Surface Fluxes and Surface Temperature
