@@ -776,6 +776,10 @@ Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatolo
 
 Kucharik, C.J., J.M. Norman, and S.T. Gower, 1998. Measurements of branch area and adjusting leaf area index indirect measurements. Agricultural and Forest Meteorology 91.1, pp. 69-88.
 
+.. _kucharik2003:
+
+Kucharik, C.J., 2003. Evaluation of a Process-Based Agro-Ecosystem Model (Agro-IBIS) across the U.S. Corn Belt: Simulations of the Interannual Variability in Maize Yield. Earth Interactions 7, paper 14. DOI: 10.1175/1087-3562(2003)007<0001:EOAPAM>2.0.CO;2.
+
 .. _Kuchariketal2000:
 
 Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T., Lenters, J.D., Young-Molling, C., and Ramankutty, N. 2000. Testing the performance of a dynamic global ecosystem model: water balance, carbon balance, and vegetation structure. Global Biogeochem. Cycles 14: 795–825.
