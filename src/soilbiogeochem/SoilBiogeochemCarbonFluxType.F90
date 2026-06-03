@@ -275,7 +275,7 @@ contains
            this%c_overflow_hr_sum(begc:endc) = spval
            call hist_addfld1d (fname='COVERFLOW_HR_SUM', units='gC/m^2/s', &
                 avgflag='A', long_name='C overflow (already included in the heterotrophic respiration)', &
-                ptr_col=this%c_overflow_hr_sum)
+                ptr_col=this%c_overflow_hr_sum, default='inactive')
 
            this%michr_col(begc:endc) = spval
            call hist_addfld1d (fname='MICC_HR', units='gC/m^2/s', &
@@ -351,7 +351,7 @@ contains
                    trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
               call hist_addfld1d (fname=fieldname, units='gC/m^2/s',  &
                    avgflag='A', long_name=longname, &
-                   ptr_col=data1dptr)
+                   ptr_col=data1dptr, default='inactive')
            end if
 
            !-- HR fluxes
@@ -412,7 +412,7 @@ contains
                       trim(decomp_cascade_con%decomp_pool_name_long(decomp_cascade_con%cascade_donor_pool(l)))
                  call hist_addfld_decomp (fname=fieldname, units='gC/m^3/s',  type2d='levdcmp', &
                       avgflag='A', long_name=longname, &
-                      ptr_col=data2dptr)
+                      ptr_col=data2dptr, default='inactive')
               end if
 
               !-- HR fluxes
