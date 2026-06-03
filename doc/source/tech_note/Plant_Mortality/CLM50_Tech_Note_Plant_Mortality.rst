@@ -28,7 +28,7 @@ In CLM5, gap-phase mortality in non-FATES vegetation was commonly represented us
    +---------------------------------------------------+--------------------------------------+
    | BDT Temperate                                     | 0.0210684434513937                   |
    +---------------------------------------------------+--------------------------------------+
-   | BDT boreal                                        | 0.024                                |
+   | BDT Boreal                                        | 0.024                                |
    +---------------------------------------------------+--------------------------------------+
  
 PFT name abbreviations: NET = Needleleaf Evergreen Tree, NDT = Needleleaf Deciduous Tree, BET = Broadleaf Evergreen Tree, BDT = Broadleaf Deciduous Tree
