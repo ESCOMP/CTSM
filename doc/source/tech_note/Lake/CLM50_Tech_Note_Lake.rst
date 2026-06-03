@@ -30,7 +30,6 @@ For direct radiation, the albedo *a* for lakes with ground temperature :math:`{T
    :label: 12.1
 
    a=\frac{0.5}{\cos z+0.15}
-
 where *z* is the zenith angle. For diffuse radiation, the expression in equation :eq:`12.1` is integrated over the full sky to yield *a* = 0.10.
 
 For frozen lakes without resolved snow layers, the albedo at cold temperatures *a*\ :sub:`0` is 0.60 for visible and 0.40 for near infrared radiation. As the temperature at the ice surface, :math:`{T}_{g}`, approaches freezing [ :math:`{T}_{f}` (K) (:numref:`Table Physical Constants`)], the albedo is relaxed towards 0.10 based on :ref:`Mironov et al. (2010)<Mironovetal2010>`:
