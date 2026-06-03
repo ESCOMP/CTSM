@@ -816,7 +816,7 @@ sub setup_cmdl_fates_mode {
     } else {
        # dis-allow fates specific namelist items with non-fates runs
        my @list  = (  "fates_spitfire_mode", "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                      "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_fixed_biogeog",
+                      "use_fates_cohort_age_tracking","use_fates_inventory_init","use_fates_dbh_init","use_fates_fixed_biogeog",
                       "use_fates_nocomp","use_fates_sp","fates_inventory_ctrl_filename","fates_harvest_mode",
                       "fates_parteh_mode","use_fates_tree_damage","fates_seeddisp_cadence","use_fates_luh","fluh_timeseries",
                       "flandusepftdat","use_fates_potentialveg","use_fates_lupft","fates_history_dimlevel",
@@ -2266,6 +2266,7 @@ sub setup_logic_params_file {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'paramfile',
               'phys'=>$nl_flags->{'phys'},
+              'use_hillslope'=>$nl_flags->{'use_hillslope'},
               'lnd_tuning_mode'=>$nl_flags->{'lnd_tuning_mode'},
               'use_flexibleCN'=>$nl_flags->{'use_flexibleCN'} );
 }
@@ -3676,8 +3677,11 @@ sub setup_logic_hillslope {
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_transmissivity_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_pft_distribution_method' );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_soil_profile_method' );
+
+  $nl_flags->{'use_hillslope'} = $nl->get_value('use_hillslope');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_hillslope_routing', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'hillslope_fsat_equals_zero', 'use_hillslope'=>$nl_flags->{'use_hillslope'} );
+
   my $use_hillslope = $nl->get_value('use_hillslope');
   my $use_hillslope_routing = $nl->get_value('use_hillslope_routing');
   if ( (! &value_is_true($use_hillslope)) && &value_is_true($use_hillslope_routing) ) {
@@ -4896,7 +4900,7 @@ sub setup_logic_fates {
     if (&value_is_true( $nl_flags->{'use_fates'})  ) {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_paramfile', 'phys'=>$nl_flags->{'phys'});
         my @list  = (  "use_fates_planthydro", "use_fates_ed_st3", "use_fates_ed_prescribed_phys",
-                       "use_fates_inventory_init","fates_seeddisp_cadence","fates_history_dimlevel",
+                       "use_fates_inventory_init","use_fates_dbh_init","fates_seeddisp_cadence","fates_history_dimlevel",
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
@@ -4960,6 +4964,10 @@ sub setup_logic_fates {
                  $log->fatal_error("$var is required when use_fates_inventory_init is set" );
               }
            }
+        }
+        my $var = "use_fates_dbh_init";
+        if ( &value_is_true($nl->get_value($var)) && ( !&value_is_true($nl->get_value("use_fates_nocomp")))) {
+            $log->fatal_error("$var can only be .true. use_fates_nocomp is .true." );
         }
         # make sure that fates landuse x pft mode has the necessary run mode configurations
         my $var = "use_fates_lupft";

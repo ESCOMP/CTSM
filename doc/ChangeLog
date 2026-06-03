@@ -1,4 +1,282 @@
 ===============================================================
+Tag name: ctsm5.4.042
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Fri May 22 04:07:30 PM MDT 2026
+One-line Summary: Get hillslope_fsat_equals_zero .true. for use_hillslope
+
+Purpose and description of changes
+----------------------------------
+
+ hillslope_fsat_equals_zero was intended to be .true. for use_hillslope = .true. but was coming back false:
+ - First because of the lack of this line in CLMBuildNamelist.pm:
+   $nl_flags->{'use_hillslope'} = $nl->get_value('use_hillslope');
+ - And since ctsm5.4.040 due to the placement of said line in sub setup_logic_params_file, which is called after sub setup_logic_hillslope
+
+ Here I'm moving that line into sub setup_logic_hillslope, which fixes the problem without breaking anything else.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0 hillslope hydrology
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #4030 Bug: hillslope_fsat_equals_zero is .false. when use_hillslope = .true.
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Now get the correct hillslope_fsat_equals_zero for use_hillslope = .true..
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected failures)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: use_hillslope = .true.
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff
+
+ No simulations have been run with the bug-fix, yet.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4046
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.041
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Thu May 21 14:33:36 MDT 2026
+One-line Summary: Merge b4b-dev 2026-05-21
+
+Purpose and description of changes
+----------------------------------
+
+Regular biweekly merge of b4b-dev to master. Includes the following PRs:
+- [ESCOMP/CTSM Pull Request #3199: Update documentation for generating fsurdat/landuse files by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/3199)
+- [ESCOMP/CTSM Pull Request #4007: Improve ctsm_pylib docs by samsrabin](https://github.com/ESCOMP/CTSM/pull/4007)
+- [ESCOMP/CTSM Pull Request #3999: Revision of Section 1.5.6 Spinning up the Satellite Phenology Model in user's guide for CLM6 by olyson](https://github.com/ESCOMP/CTSM/pull/3999)
+- [ESCOMP/CTSM Pull Request #3947: Technote updates for Hillslope Hydrology, biomass heat storage, and Methane model by swensosc](https://github.com/ESCOMP/CTSM/pull/3947)
+- [ESCOMP/CTSM Pull Request #3909: updated BVOC documentation by lkemmons](https://github.com/ESCOMP/CTSM/pull/3909)
+- [ESCOMP/CTSM Pull Request #4020: CN allocation tech notes improvements by huiqi-wang](https://github.com/ESCOMP/CTSM/pull/4020)
+- [ESCOMP/CTSM Pull Request #4033: Remove table in CN Pools and link to table in CN Allocation by slevis-lmwg](https://github.com/ESCOMP/CTSM/pull/4033)
+- [ESCOMP/CTSM Pull Request #4036: User's Guide: Delete "Building the CLM tools*" sections. by samsrabin](https://github.com/ESCOMP/CTSM/pull/4036)
+- [ESCOMP/CTSM Pull Request #3223: Fix broken documentation links by adrifoster](https://github.com/ESCOMP/CTSM/pull/3223)
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- [ESCOMP/CTSM Issue #1718: User's Guide: How to use the new mksurfdata_esmf tool](https://github.com/ESCOMP/CTSM/issues/1718)
+- [ESCOMP/CTSM Issue #3478: Update and delete outdated docs for creating input data](https://github.com/ESCOMP/CTSM/issues/3478)
+- [ESCOMP/CTSM Issue #3075: Improve ctsm_pylib documentation](https://github.com/ESCOMP/CTSM/issues/3075)
+- [ESCOMP/CTSM Issue #3976: User's Guide update: Section 1.5.6 Sp spin-ups](https://github.com/ESCOMP/CTSM/issues/3976)
+- [ESCOMP/CTSM Issue #3735: Document the biomass heat storage parameterization in the technical note](https://github.com/ESCOMP/CTSM/issues/3735)
+- [ESCOMP/CTSM Issue #3872: Review 2.26. Methane Model](https://github.com/ESCOMP/CTSM/issues/3872)
+- [ESCOMP/CTSM Issue #3876: Review 2.30. Biogenic Volatile Organic Compounds (BVOCs)](https://github.com/ESCOMP/CTSM/issues/3876)
+- [ESCOMP/CTSM Issue #3866: Review 2.20. C and N Allocation; and make updates](https://github.com/ESCOMP/CTSM/issues/3866)
+- [ESCOMP/CTSM Issue #3863: Review 2.17. CN Pools; and update](https://github.com/ESCOMP/CTSM/issues/3863)
+- [ESCOMP/CTSM Issue #2767: Broken external links in Tech Note and User's Guide](https://github.com/ESCOMP/CTSM/issues/2767)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to documentation: Lots. See lists of PRs and issues above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #4040: ctsm5.4.041: b4b-dev merge 2026-05-21 by samsrabin](https://github.com/ESCOMP/CTSM/pull/4040)
+- See also list of PRs in "Purpose and description of changes" above.
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.040
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Wed May 20 04:13:57 PM MDT 2026
+One-line Summary: Paramfile updates
+
+Purpose and description of changes
+----------------------------------
+
+ Updating the clm6 paramfiles.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+[ ] clm4_5
+
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3659
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+ Changing two paramfiles and adding a new one for hillslope hydrology in namelist_defaults
+
+Contributors:
+ @wwieder @linniahawkins
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected failures)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: clm6
+    - what platforms/compilers: all
+    - nature of change: larger than roundoff, possibly climate changing
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below)
+       - LMWG_dev issue number(s):
+ https://github.com/NCAR/LMWG_dev/issues/164
+ https://github.com/NCAR/LMWG_dev/issues/167
+ Not changing finidat files in the defaults at this time due to various non-standard things in these test simulations.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4029
+
+===============================================================
+==============================================================
+Tag name: ctsm5.4.039
+Originator(s): mvdebolskiy (Matvey Debolskiy, University of Oslo, matvey.debolskiy@geo.uio.no)
+Date: Thu May 14 01:07:45 PM MDT 2026
+One-line Summary: Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
+
+Purpose and description of changes
+----------------------------------
+
+FATES allows for the ability to initialize seedling by density or DBH.  Prior to this change,
+the user would update the `fates_recruit_init_density` parameter to use a negative value to
+initalize by DBH.  This pull request removes this global switch behavior and creates a namelist
+option for the user.  The FATES parameter file and behavior has been updated to include a new
+parameter for users to set the initial DBH by plant functional type.
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   New namelist option to control FATES:
+      use_fates_dbh_init
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Sets the default for use_fates_dbh_init to false
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+   Adds fates_recruit_init_dbh to the FATES parameter file
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   - Note that this option currently is only applicable with use_fates_nocomp
+
+Changes to tests or testing:
+   Added test module FatesColdNoCompInitDbh
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (baseline comparison against fates-sci.1.92.4_api.45.0.0-ctsm5.4.037)
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   fates: sci.1.92.4_api.45.0.0 -> sci.1.92.5_api.46.0.0
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+https://github.com/ESCOMP/CTSM/pull/3910
+https://github.com/NGEET/fates/pull/1550
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.038
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Thu May  7 03:29:26 PM MDT 2026
