@@ -884,6 +884,10 @@ Levis, S., Bonan, G., Kluzek, E., Thornton, P., Jones, A., Sacks, W., and Kuchar
 
 Levis, S., Badger, A., Drewniak, B., Nevison, C., Ren, X. 2016. CLMcrop yields and water requirements: avoided impacts by choosing RCP 4.5 over 8.5. Climatic Change. DOI:10.1007/s10584-016-1654-9.
 
+.. _Liaoetal2023:
+
+Liao, C., Lu X., Huang Y., Tao F., Lawrence D.M, Koven C.D., Oleson K.W., Wieder W.R., Kluzek E., Huang X., Luo Y. 2023 . Matrix Approach to Accelerate Spin-Up of CLM5. Journal of Advances in Modeling Earth Systems, 15(8), e2023MS003625. doi:10.1029/2023MS003625.
+
 .. _Lietal2000:
 
 Li, C., Aber, J., Stange, F., Butterbach-Bahl, K. and Papen, H. 2000. A process-oriented model of N2O and NO emissions from forest soils: 1. Model development. J. Geophys. Res. 105(D4):4369-4384.
@@ -975,6 +979,10 @@ Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations 
 .. _Luoetal2025:
 
 Luo J, Hess P G, Hall S, et al. Agricultural emissions of reactive nitrogen gases from constrained simulations using the Community Land Model. Authorea Preprints, 2025.
+
+.. _Luetal2020:
+
+Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. Full implementation of matrix approach to biogeochemistry module of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), p.e2020MS002105.
 
 .. _Magilletal1997:
 
