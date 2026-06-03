@@ -14,6 +14,7 @@ $\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$
 $\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$
 $\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$
 $\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$
+$\newcommand{\huigrain}{h_{grain}}$
 $\newcommand{\parambaset}{T_\textrm{base}}$
 $\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$
 
@@ -195,7 +196,7 @@ According to AgroIBIS, leaves may emerge when the growing degree-days of soil te
 
 #### Grain fill
 
-The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $h_{grain}$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $\huigrain$, of 40 to 65% of $\gddmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
 
 (harvest)=
 
@@ -410,7 +411,7 @@ each C pool are defined as:
 $$
 \begin{array}{l} {a_{repr} =0} \\
 {a_{froot} =a_{froot}^{i} -(a_{froot}^{i} -a_{froot}^{f} ) \times {\rm min}\left(\frac{\gddacctwom }{\gddmat }, 1\right)} \\
-{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{\gddacctwom }{h_{grain}} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
+{a_{leaf} =(1-a_{froot} ) \times \frac{a_{leaf}^{i} (e^{-b} -e^{-b\frac{\gddacctwom }{\huigrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
 {a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (eq-lfemerg-allocations)
 
@@ -425,16 +426,16 @@ The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg
 $$
 \begin{array}{ll}
 a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le a_{leaf}^{f} \quad {\rm else} \\
-a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \le 1 \\
+a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \right)^{d_{alloc}^{leaf} } \ge a_{leaf}^{f} & {\rm where} \quad \frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \le 1 \\
  \\
 a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le a_{livestem}^{f} \quad {\rm else} \\
-a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{\gddacctwom -h_{grain}}{\gddmat d_{L} -h_{grain}} \le 1 \\
+a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \right)^{d_{alloc}^{stem} } \ge a_{livestem}^{f} & {\rm where} \quad \frac{\gddacctwom - \huigrain}{\gddmat d_{L} - \huigrain} \le 1 \\
  \\
 a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
 \end{array}
 $$ (25.5)
 
-where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $d_{L}$, $d_{alloc}^{leaf}$ and $d_{alloc}^{stem}$ are leaf area index and leaf and stem allocation decline factors, $a_{leaf}^{f}$ and $a_{livestem}^{f}$ are final values of these allocation coefficients, and $h_{grain}$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
+where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $d_{L}$, $d_{alloc}^{leaf}$ and $d_{alloc}^{stem}$ are leaf area index and leaf and stem allocation decline factors, $a_{leaf}^{f}$ and $a_{livestem}^{f}$ are final values of these allocation coefficients, and $\huigrain$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
 
 As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, ${L}_{max}$, leaf allocation is reduced to 0.001%. The rest of the carbon that would have gone to leaves instead goes to the reproductive pool.
 
