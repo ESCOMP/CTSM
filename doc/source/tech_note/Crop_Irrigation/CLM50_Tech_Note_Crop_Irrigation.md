@@ -542,7 +542,7 @@ $$ (25.15)
 
 (table crop allocation parameters)=
 
-```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). **TODO: Delete $\paramgraincn$? Not mentioned anywhere else on this page.**
+```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets).
 :header-rows: 1
 
 * - Parameter
