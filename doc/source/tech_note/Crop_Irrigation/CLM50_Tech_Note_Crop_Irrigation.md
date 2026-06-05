@@ -36,6 +36,10 @@ $\newcommand{\paramfstemcn}{\paramlivewdcn^\textrm{f}}$
 $\newcommand{\paramfrootcn}{CN_\textrm{froot}}$
 $\newcommand{\paramffrootcn}{\paramfrootcn^\textrm{f}}$
 $\newcommand{\paramgraincn}{CN_\textrm{grain}}$
+$\newcommand{\paramorgancn}{CN_\textrm{[organ]}}$
+$\newcommand{\paramforgancn}{\paramorgancn^\textrm{f}}$
+$\newcommand{\corgan}{C_\textrm{[organ]}}$
+$\newcommand{\norgan}{N_\textrm{[organ]}}$
 
 (rst_crops and irrigation)=
 
@@ -474,21 +478,13 @@ As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at
 
 #### Nitrogen retranslocation for crops
 
-Nitrogen retranslocation in crops occurs when nitrogen that was used for tissue growth of leaves, stems, and fine roots during the early growth season is remobilized and used for grain development ({ref}`Pollmer et al. 1979 <Pollmeretal1979>`, {ref}`Crawford et al. 1982 <Crawfordetal1982>`, {ref}`Simpson et al. 1983 <Simpsonetal1983>`, {ref}`Ta and Weiland 1992 <TaWeiland1992>`, {ref}`Barbottin et al. 2005 <Barbottinetal2005>`, {ref}`Gallais et al. 2006 <Gallaisetal2006>`, {ref}`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation for crops follows that of natural vegetation, is supplied in CLM by the soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems, roots, and organs. Nitrogen demand during organ development is fulfilled through retranslocation from leaves, stems, and roots. Nitrogen retranslocation is initiated at the beginning of the grain fill stage for all crops except soybean, for which retranslocation is after LAI decline. Nitrogen stored in the leaf and stem is moved into a storage retranslocation pool for all crops, and for wheat and rice, nitrogen in roots is also released into the retranslocation storage pool. The quantity of nitrogen mobilized depends on the C:N ratio of the plant tissue and is calculated as
+Nitrogen retranslocation in crops occurs when nitrogen that was used for tissue growth of leaves, stems, and fine roots during the early growth season is remobilized and used for grain development ({ref}`Pollmer et al. 1979 <Pollmeretal1979>`, {ref}`Crawford et al. 1982 <Crawfordetal1982>`, {ref}`Simpson et al. 1983 <Simpsonetal1983>`, {ref}`Ta and Weiland 1992 <TaWeiland1992>`, {ref}`Barbottin et al. 2005 <Barbottinetal2005>`, {ref}`Gallais et al. 2006 <Gallaisetal2006>`, {ref}`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation for crops follows that of natural vegetation, is supplied in CLM by the soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems, roots, and organs. Nitrogen demand during organ development is fulfilled through retranslocation from leaves, stems, and roots. Nitrogen retranslocation is initiated at the beginning of the grain fill stage for all crops except soybean, for which retranslocation is after LAI decline. Nitrogen stored in the leaf and stem is moved into a storage retranslocation pool for all crops, and for wheat and rice, nitrogen in roots is also released into the retranslocation storage pool. The quantity of nitrogen mobilized from an organ to the retranslocation pool is calculated as
 
 $$
-leaf\_ to\_ retransn=N_{leaf} -\frac{C_{leaf} }{\paramfleafcn}
-$$ (25.6)
+\norgan - \frac{\corgan}{\paramforgancn}
+$$ (n-from-organ-to-retrans-pool)
 
-$$
-stemn\_ to\_ retransn=N_{stem} -\frac{C_{stem} }{\paramfstemcn}
-$$ (25.7)
-
-$$
-frootn\_ to\_ retransn=N_{froot} -\frac{C_{froot} }{\paramffrootcn}
-$$ (25.8)
-
-where ${C}_{leaf}$, ${C}_{stem}$, and ${C}_{froot}$ is the carbon in the plant leaf, stem, and fine root, respectively, ${N}_{leaf}$, ${N}_{stem}$, and ${N}_{froot}$ is the nitrogen in the plant leaf, stem, and fine root, respectively, and $\paramfleafcn$, $\paramfstemcn$, and $\paramffrootcn$ is the post-grain fill C:N ratio of the leaf, stem, and fine root respectively ({numref}`Table Crop allocation parameters`). Since C:N measurements are often taken from mature crops, pre-grain development C:N ratios for leaves, stems, and roots in the model are optimized to allow maximum nitrogen accumulation for later use during organ development, and post-grain fill C:N ratios are assigned the same as crop residue. After nitrogen is moved into the retranslocated pool, the nitrogen in this pool is used to meet plant nitrogen demand by assigning the available nitrogen from the retranslocated pool equal to the plant nitrogen demand for each organ (${CN_{[organ]}^{f} }$ in {numref}`Table Crop allocation parameters`). Once the retranslocation pool is depleted, soil mineral nitrogen pool is used to fulfill plant nitrogen demands.
+where $\corgan$ and $\norgan$ are the carbon and nitrogen in the organ, respectively, and $\paramforgancn$ is the C:N ratio of the organ ({numref}`Table Crop allocation parameters`). Since C:N measurements are often taken from mature crops, pre-grain development C:N ratios for leaves, stems, and roots in the model are optimized to allow maximum nitrogen accumulation for later use during organ development, and post-grain fill C:N ratios are assigned the same as crop residue. After nitrogen is moved into the retranslocated pool, the nitrogen in this pool is used to meet plant nitrogen demand by assigning the available nitrogen from the retranslocated pool equal to the plant nitrogen demand for each organ ($\paramforgancn$ in {numref}`Table Crop allocation parameters`). Once the retranslocation pool is depleted, soil mineral nitrogen pool is used to fulfill plant nitrogen demands.
 
 (harvest to food and seed)=
 
