@@ -738,8 +738,6 @@ $$ (25.15)
   - 50  <!-- miscanthus -->
   - 50  <!-- switchgrass -->
 ```
-- Crop growth phases and corresponding variables are described throughout the text.
-- $\paramleafcn$, $\paramlivewdcn$, and $\paramgraincn$ are the target C:N ratios used during the leaf emergence phase (phase 2).
 - $\paramaleaff$ (parameter `aleaff`) is zero for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
 - $\paramdeclfact$ is 1.05 for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
 
