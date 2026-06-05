@@ -530,31 +530,209 @@ $$ (25.15)
 
 (table crop allocation parameters)=
 
-```{eval-rst}
-.. table:: Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (`BgcCrop` component sets). Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets).
+:header-rows: 1
 
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
- \                                            temperate corn  spring wheat  temperate soybean   cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
- IVT                                          17, 18          19, 20        23, 24              41, 42  61, 62  67, 68     75, 76         77, 78            71, 72            73, 74
- :math:`a_{leaf}^{i}`                         0.6             0.9           0.85                0.85    0.75    0.6        0.6            0.85              0.9               0.7
- :math:`{L}_{max}` (m :sup:`2`  m :sup:`-2`)  5               7             6                   6       7       5          5              6                 10                6.5
- :math:`a_{froot}^{i}`                        0.1             0.05          0.2                 0.2     0.1     0.1        0.1            0.2               0.11              0.14
- :math:`a_{froot}^{f}`                        0.05            0             0.2                 0.2     0       0.05       0.05           0.2               0.09              0.09
- :math:`a_{leaf}^{f}`                         0               0             0                   0       0       0          0              0                 0                 0
- :math:`a_{livestem}^{f}`                     0               0.05          0.3                 0.3     0.05    0          0              0.3               0                 0
- :math:`d_{L}`                                1.05            1.05          1.05                1.05    1.05    1.05       1.05           1.05              1.05              1.05
- :math:`d_{alloc}^{stem}`                     2               1             5                   5       1       2          2              5                 2                 2
- :math:`d_{alloc}^{leaf}`                     5               3             2                   2       3       5          5              2                 5                 5
- :math:`{CN}_{leaf}`                          25              20            20                  20      20      25         25             20                25                25
- :math:`{CN}_{stem}`                          50              50            50                  50      50      50         50             50                50                50
- :math:`{CN}_{froot}`                         42              42            42                  42      42      42         42             42                42                42
- :math:`CN^f_{leaf}`                          65              65            65                  65      65      65         65             65                65                65
- :math:`CN^f_{stem}`                          120             100           130                 130     100     120        120            130               120               120
- :math:`CN^f_{froot}`                         0               40            0                   0       40      0          0              0                 0                 0
- :math:`{CN}_{grain}`                         50              50            50                  50      50      50         50             50                50                50
- ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
+* - Parameter
+  - temperate corn
+  - spring wheat
+  - temperate soybean
+  - cotton
+  - rice
+  - sugarcane
+  - tropical corn
+  - tropical soybean
+  - miscanthus
+  - switchgrass
+* - PFT index (1-based)
+  - 17, 18  <!-- temperate corn -->
+  - 19, 20  <!-- spring wheat -->
+  - 23, 24  <!-- temperate soybean -->
+  - 41, 42  <!-- cotton -->
+  - 61, 62  <!-- rice -->
+  - 67, 68  <!-- sugarcane -->
+  - 75, 76  <!-- tropical corn -->
+  - 77, 78  <!-- tropical soybean -->
+  - 71, 72  <!-- miscanthus -->
+  - 73, 74  <!-- switchgrass -->
+* - $a_{leaf}^{i}$
+  - 0.6   <!-- temperate corn -->
+  - 0.9   <!-- spring wheat -->
+  - 0.85  <!-- temperate soybean -->
+  - 0.85  <!-- cotton -->
+  - 0.75  <!-- rice -->
+  - 0.6   <!-- sugarcane -->
+  - 0.6   <!-- tropical corn -->
+  - 0.85  <!-- tropical soybean -->
+  - 0.9   <!-- miscanthus -->
+  - 0.7   <!-- switchgrass -->
+* - ${L}_{max}$ (m{sup}`2`  m{sup}`-2`)
+  - 5    <!-- temperate corn -->
+  - 7    <!-- spring wheat -->
+  - 6    <!-- temperate soybean -->
+  - 6    <!-- cotton -->
+  - 7    <!-- rice -->
+  - 5    <!-- sugarcane -->
+  - 5    <!-- tropical corn -->
+  - 6    <!-- tropical soybean -->
+  - 10   <!-- miscanthus -->
+  - 6.5  <!-- switchgrass -->
+* - $a_{froot}^{i}$
+  - 0.1   <!-- temperate corn -->
+  - 0.05  <!-- spring wheat -->
+  - 0.2   <!-- temperate soybean -->
+  - 0.2   <!-- cotton -->
+  - 0.1   <!-- rice -->
+  - 0.1   <!-- sugarcane -->
+  - 0.1   <!-- tropical corn -->
+  - 0.2   <!-- tropical soybean -->
+  - 0.11  <!-- miscanthus -->
+  - 0.14  <!-- switchgrass -->
+* - $a_{froot}^{f}$
+  - 0.05  <!-- temperate corn -->
+  - 0     <!-- spring wheat -->
+  - 0.2   <!-- temperate soybean -->
+  - 0.2   <!-- cotton -->
+  - 0     <!-- rice -->
+  - 0.05  <!-- sugarcane -->
+  - 0.05  <!-- tropical corn -->
+  - 0.2   <!-- tropical soybean -->
+  - 0.09  <!-- miscanthus -->
+  - 0.09  <!-- switchgrass -->
+* - $a_{leaf}^{f}$
+  - 0  <!-- temperate corn -->
+  - 0  <!-- spring wheat -->
+  - 0  <!-- temperate soybean -->
+  - 0  <!-- cotton -->
+  - 0  <!-- rice -->
+  - 0  <!-- sugarcane -->
+  - 0  <!-- tropical corn -->
+  - 0  <!-- tropical soybean -->
+  - 0  <!-- miscanthus -->
+  - 0  <!-- switchgrass -->
+* - $a_{livestem}^{f}$
+  - 0     <!-- temperate corn -->
+  - 0.05  <!-- spring wheat -->
+  - 0.3   <!-- temperate soybean -->
+  - 0.3   <!-- cotton -->
+  - 0.05  <!-- rice -->
+  - 0     <!-- sugarcane -->
+  - 0     <!-- tropical corn -->
+  - 0.3   <!-- tropical soybean -->
+  - 0     <!-- miscanthus -->
+  - 0     <!-- switchgrass -->
+* - $d_{L}$
+  - 1.05  <!-- temperate corn -->
+  - 1.05  <!-- spring wheat -->
+  - 1.05  <!-- temperate soybean -->
+  - 1.05  <!-- cotton -->
+  - 1.05  <!-- rice -->
+  - 1.05  <!-- sugarcane -->
+  - 1.05  <!-- tropical corn -->
+  - 1.05  <!-- tropical soybean -->
+  - 1.05  <!-- miscanthus -->
+  - 1.05  <!-- switchgrass -->
+* - $d_{alloc}^{stem}$
+  - 2  <!-- temperate corn -->
+  - 1  <!-- spring wheat -->
+  - 5  <!-- temperate soybean -->
+  - 5  <!-- cotton -->
+  - 1  <!-- rice -->
+  - 2  <!-- sugarcane -->
+  - 2  <!-- tropical corn -->
+  - 5  <!-- tropical soybean -->
+  - 2  <!-- miscanthus -->
+  - 2  <!-- switchgrass -->
+* - $d_{alloc}^{leaf}$
+  - 5  <!-- temperate corn -->
+  - 3  <!-- spring wheat -->
+  - 2  <!-- temperate soybean -->
+  - 2  <!-- cotton -->
+  - 3  <!-- rice -->
+  - 5  <!-- sugarcane -->
+  - 5  <!-- tropical corn -->
+  - 2  <!-- tropical soybean -->
+  - 5  <!-- miscanthus -->
+  - 5  <!-- switchgrass -->
+* - ${CN}_{leaf}$
+  - 25  <!-- temperate corn -->
+  - 20  <!-- spring wheat -->
+  - 20  <!-- temperate soybean -->
+  - 20  <!-- cotton -->
+  - 20  <!-- rice -->
+  - 25  <!-- sugarcane -->
+  - 25  <!-- tropical corn -->
+  - 20  <!-- tropical soybean -->
+  - 25  <!-- miscanthus -->
+  - 25  <!-- switchgrass -->
+* - ${CN}_{stem}$
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
+* - ${CN}_{froot}$
+  - 42  <!-- temperate corn -->
+  - 42  <!-- spring wheat -->
+  - 42  <!-- temperate soybean -->
+  - 42  <!-- cotton -->
+  - 42  <!-- rice -->
+  - 42  <!-- sugarcane -->
+  - 42  <!-- tropical corn -->
+  - 42  <!-- tropical soybean -->
+  - 42  <!-- miscanthus -->
+  - 42  <!-- switchgrass -->
+* - $CN^f_{leaf}$
+  - 65  <!-- temperate corn -->
+  - 65  <!-- spring wheat -->
+  - 65  <!-- temperate soybean -->
+  - 65  <!-- cotton -->
+  - 65  <!-- rice -->
+  - 65  <!-- sugarcane -->
+  - 65  <!-- tropical corn -->
+  - 65  <!-- tropical soybean -->
+  - 65  <!-- miscanthus -->
+  - 65  <!-- switchgrass -->
+* - $CN^f_{stem}$
+  - 120  <!-- temperate corn -->
+  - 100  <!-- spring wheat -->
+  - 130  <!-- temperate soybean -->
+  - 130  <!-- cotton -->
+  - 100  <!-- rice -->
+  - 120  <!-- sugarcane -->
+  - 120  <!-- tropical corn -->
+  - 130  <!-- tropical soybean -->
+  - 120  <!-- miscanthus -->
+  - 120  <!-- switchgrass -->
+* - $CN^f_{froot}$
+  - 0   <!-- temperate corn -->
+  - 40  <!-- spring wheat -->
+  - 0   <!-- temperate soybean -->
+  - 0   <!-- cotton -->
+  - 40  <!-- rice -->
+  - 0   <!-- sugarcane -->
+  - 0   <!-- tropical corn -->
+  - 0   <!-- tropical soybean -->
+  - 0   <!-- miscanthus -->
+  - 0   <!-- switchgrass -->
+* - ${CN}_{grain}$
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
 ```
+
 
 Notes: Crop growth phases and corresponding variables are described throughout the text. ${CN}_{leaf}$, ${CN}_{stem}$, and ${CN}_{froot}$ are the target C:N ratios used during the leaf emergence phase (phase 2).
 
