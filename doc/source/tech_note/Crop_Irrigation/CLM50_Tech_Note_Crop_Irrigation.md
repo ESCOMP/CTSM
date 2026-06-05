@@ -739,7 +739,7 @@ $$ (25.15)
   - 50  <!-- switchgrass -->
 ```
 - $\paramaleaff$ (parameter `aleaff`) is zero for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
-- $\paramdeclfact$ is 1.05 for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+- $\paramdeclfact$ (parameter `declfact`) is 1.05 for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
 
 (other-features)=
 
