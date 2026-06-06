@@ -233,6 +233,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
 :header-rows: 1
 
 * - Parameter
+  - Variable
   - temperate corn
   - spring wheat
   - temperate soybean
@@ -244,6 +245,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - miscanthus
   - switchgrass
 * - IVT
+  - n/a
   - 17, 18  <!-- temperate corn -->
   - 19, 20  <!-- spring wheat -->
   - 23, 24  <!-- temperate soybean -->
@@ -255,6 +257,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 71, 72  <!-- miscanthus -->
   - 73, 74  <!-- switchgrass -->
 * - $T_{p}$ (K)
+  - ???
   - 283.15  <!-- temperate corn -->
   - 280.15  <!-- spring wheat -->
   - 286.15  <!-- temperate soybean -->
@@ -266,6 +269,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 283.15  <!-- miscanthus -->
   - 283.15  <!-- switchgrass -->
 * - $T_{p}^{ min }$ (K)
+  - ???
   - 279.15  <!-- temperate corn -->
   - 272.15  <!-- spring wheat -->
   - 279.15  <!-- temperate soybean -->
@@ -277,6 +281,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 279.15  <!-- miscanthus -->
   - 279.15  <!-- switchgrass -->
 * - ${GDD}_{min}$ (degree-days)
+  - ???
   - 50  <!-- temperate corn -->
   - 50  <!-- spring wheat -->
   - 50  <!-- temperate soybean -->
@@ -288,6 +293,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 50  <!-- miscanthus -->
   - 50  <!-- switchgrass -->
 * - $\parambaset$ (°C)
+  - ???
   - 8   <!-- temperate corn -->
   - 0   <!-- spring wheat -->
   - 10  <!-- temperate soybean -->
@@ -299,6 +305,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 8   <!-- miscanthus -->
   - 8   <!-- switchgrass -->
 * - $\huithreshlfemerg$ (% $\gddthreshmat$)
+  - ???
   - 3%  <!-- temperate corn -->
   - 5%  <!-- spring wheat -->
   - 3%  <!-- temperate soybean -->
@@ -310,6 +317,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 3%  <!-- miscanthus -->
   - 3%  <!-- switchgrass -->
 * - $\huithreshgrain$ (% $\gddthreshmat$)
+  - ???
   - 65%  <!-- temperate corn -->
   - 60%  <!-- spring wheat -->
   - 50%  <!-- temperate soybean -->
@@ -321,6 +329,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 40%  <!-- miscanthus -->
   - 40%  <!-- switchgrass -->
 * - Max. growing season length ($mxmat$)
+  - ???
   - 165  <!-- temperate corn -->
   - 150  <!-- spring wheat -->
   - 150  <!-- temperate soybean -->
@@ -332,6 +341,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 210  <!-- miscanthus -->
   - 210  <!-- switchgrass -->
 * - $z_{top}^{\max }$ (m)
+  - ???
   - 2.5   <!-- temperate corn -->
   - 1.2   <!-- spring wheat -->
   - 0.75  <!-- temperate soybean -->
@@ -343,6 +353,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 2.5   <!-- miscanthus -->
   - 2.5   <!-- switchgrass -->
 * - SLA (m {sup}`2` leaf g {sup}`-1` C)
+  - ???
   - 0.05   <!-- temperate corn -->
   - 0.035  <!-- spring wheat -->
   - 0.035  <!-- temperate soybean -->
@@ -354,6 +365,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 0.057  <!-- miscanthus -->
   - 0.049  <!-- switchgrass -->
 * - $\chi _{L}$ index
+  - ???
   - -0.5  <!-- temperate corn -->
   - -0.5  <!-- spring wheat -->
   - -0.5  <!-- temperate soybean -->
@@ -365,6 +377,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - -0.5  <!-- miscanthus -->
   - -0.5  <!-- switchgrass -->
 * - grperc
+  - ???
   - 0.11  <!-- temperate corn -->
   - 0.11  <!-- spring wheat -->
   - 0.11  <!-- temperate soybean -->
@@ -376,6 +389,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 0.11  <!-- miscanthus -->
   - 0.11  <!-- switchgrass -->
 * - flnr
+  - ???
   - 0.293  <!-- temperate corn -->
   - 0.41   <!-- spring wheat -->
   - 0.41   <!-- temperate soybean -->
@@ -387,6 +401,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 0.293  <!-- miscanthus -->
   - 0.293  <!-- switchgrass -->
 * - fcur
+  - ???
   - 1  <!-- temperate corn -->
   - 1  <!-- spring wheat -->
   - 1  <!-- temperate soybean -->
