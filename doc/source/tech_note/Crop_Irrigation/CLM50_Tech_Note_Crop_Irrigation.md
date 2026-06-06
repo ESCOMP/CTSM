@@ -229,175 +229,174 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
 
 (table crop phenology parameters)=
 
-```{eval-rst}
-.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (``BgcCrop`` component sets). Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`. Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively.
-   :header-rows: 1
+```{list-table} Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively.
+:header-rows: 1
 
-   * - \
-     - temperate corn
-     - spring wheat
-     - temperate soybean
-     - cotton
-     - rice
-     - sugarcane
-     - tropical corn
-     - tropical soybean
-     - miscanthus
-     - switchgrass
-   * - IVT
-     - 17, 18
-     - 19, 20
-     - 23, 24
-     - 41, 42
-     - 61, 62
-     - 67, 68
-     - 75, 76
-     - 77, 78
-     - 71, 72
-     - 73, 74
-   * - :math:`T_{p}`\(K)
-     - 283.15
-     - 280.15
-     - 286.15
-     - 294.15
-     - 294.15
-     - 294.15
-     - 294.15
-     - 294.15
-     - 283.15
-     - 283.15
-   * - :math:`T_{p}^{ min }`\(K)
-     - 279.15
-     - 272.15
-     - 279.15
-     - 283.15
-     - 283.15
-     - 283.15
-     - 283.15
-     - 283.15
-     - 279.15
-     - 279.15
-   * - :math:`{GDD}_{min}` (degree-days)
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-     - 50
-   * - :math:`\parambaset` (°C)
-     - 8
-     - 0
-     - 10
-     - 10
-     - 10
-     - 10
-     - 10
-     - 10
-     - 8
-     - 8
-   * - :math:`\huithreshlfemerg` (% :math:`\gddthreshmat`)
-     - 3%
-     - 5%
-     - 3%
-     - 3%
-     - 1%
-     - 3%
-     - 3%
-     - 3%
-     - 3%
-     - 3%
-   * - :math:`\huithreshgrain` (% :math:`\gddthreshmat`)
-     - 65%
-     - 60%
-     - 50%
-     - 50%
-     - 40%
-     - 65%
-     - 50%
-     - 50%
-     - 40%
-     - 40%
-   * - Max. growing season length (:math:`mxmat`)
-     - 165
-     - 150
-     - 150
-     - 160
-     - 150
-     - 300
-     - 160
-     - 150
-     - 210
-     - 210
-   * - :math:`z_{top}^{\max }` (m)
-     - 2.5
-     - 1.2
-     - 0.75
-     - 1.5
-     - 1.8
-     - 4
-     - 2.5
-     - 1
-     - 2.5
-     - 2.5
-   * - SLA (m :sup:`2` leaf g :sup:`-1` C)
-     - 0.05
-     - 0.035
-     - 0.035
-     - 0.035
-     - 0.035
-     - 0.05
-     - 0.05
-     - 0.035
-     - 0.057
-     - 0.049
-   * - :math:`\chi _{L}` index
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-     - -0.5
-   * - grperc
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-     - 0.11
-   * - flnr
-     - 0.293
-     - 0.41
-     - 0.41
-     - 0.41
-     - 0.41
-     - 0.293
-     - 0.293
-     - 0.41
-     - 0.293
-     - 0.293
-   * - fcur
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
-     - 1
+* - Parameter
+  - temperate corn
+  - spring wheat
+  - temperate soybean
+  - cotton
+  - rice
+  - sugarcane
+  - tropical corn
+  - tropical soybean
+  - miscanthus
+  - switchgrass
+* - IVT
+  - 17, 18  <!-- temperate corn -->
+  - 19, 20  <!-- spring wheat -->
+  - 23, 24  <!-- temperate soybean -->
+  - 41, 42  <!-- cotton -->
+  - 61, 62  <!-- rice -->
+  - 67, 68  <!-- sugarcane -->
+  - 75, 76  <!-- tropical corn -->
+  - 77, 78  <!-- tropical soybean -->
+  - 71, 72  <!-- miscanthus -->
+  - 73, 74  <!-- switchgrass -->
+* - $T_{p}$ (K)
+  - 283.15  <!-- temperate corn -->
+  - 280.15  <!-- spring wheat -->
+  - 286.15  <!-- temperate soybean -->
+  - 294.15  <!-- cotton -->
+  - 294.15  <!-- rice -->
+  - 294.15  <!-- sugarcane -->
+  - 294.15  <!-- tropical corn -->
+  - 294.15  <!-- tropical soybean -->
+  - 283.15  <!-- miscanthus -->
+  - 283.15  <!-- switchgrass -->
+* - $T_{p}^{ min }$ (K)
+  - 279.15  <!-- temperate corn -->
+  - 272.15  <!-- spring wheat -->
+  - 279.15  <!-- temperate soybean -->
+  - 283.15  <!-- cotton -->
+  - 283.15  <!-- rice -->
+  - 283.15  <!-- sugarcane -->
+  - 283.15  <!-- tropical corn -->
+  - 283.15  <!-- tropical soybean -->
+  - 279.15  <!-- miscanthus -->
+  - 279.15  <!-- switchgrass -->
+* - ${GDD}_{min}$ (degree-days)
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
+* - $\parambaset$ (°C)
+  - 8   <!-- temperate corn -->
+  - 0   <!-- spring wheat -->
+  - 10  <!-- temperate soybean -->
+  - 10  <!-- cotton -->
+  - 10  <!-- rice -->
+  - 10  <!-- sugarcane -->
+  - 10  <!-- tropical corn -->
+  - 10  <!-- tropical soybean -->
+  - 8   <!-- miscanthus -->
+  - 8   <!-- switchgrass -->
+* - $\huithreshlfemerg$ (% $\gddthreshmat$)
+  - 3%  <!-- temperate corn -->
+  - 5%  <!-- spring wheat -->
+  - 3%  <!-- temperate soybean -->
+  - 3%  <!-- cotton -->
+  - 1%  <!-- rice -->
+  - 3%  <!-- sugarcane -->
+  - 3%  <!-- tropical corn -->
+  - 3%  <!-- tropical soybean -->
+  - 3%  <!-- miscanthus -->
+  - 3%  <!-- switchgrass -->
+* - $\huithreshgrain$ (% $\gddthreshmat$)
+  - 65%  <!-- temperate corn -->
+  - 60%  <!-- spring wheat -->
+  - 50%  <!-- temperate soybean -->
+  - 50%  <!-- cotton -->
+  - 40%  <!-- rice -->
+  - 65%  <!-- sugarcane -->
+  - 50%  <!-- tropical corn -->
+  - 50%  <!-- tropical soybean -->
+  - 40%  <!-- miscanthus -->
+  - 40%  <!-- switchgrass -->
+* - Max. growing season length ($mxmat$)
+  - 165  <!-- temperate corn -->
+  - 150  <!-- spring wheat -->
+  - 150  <!-- temperate soybean -->
+  - 160  <!-- cotton -->
+  - 150  <!-- rice -->
+  - 300  <!-- sugarcane -->
+  - 160  <!-- tropical corn -->
+  - 150  <!-- tropical soybean -->
+  - 210  <!-- miscanthus -->
+  - 210  <!-- switchgrass -->
+* - $z_{top}^{\max }$ (m)
+  - 2.5   <!-- temperate corn -->
+  - 1.2   <!-- spring wheat -->
+  - 0.75  <!-- temperate soybean -->
+  - 1.5   <!-- cotton -->
+  - 1.8   <!-- rice -->
+  - 4     <!-- sugarcane -->
+  - 2.5   <!-- tropical corn -->
+  - 1     <!-- tropical soybean -->
+  - 2.5   <!-- miscanthus -->
+  - 2.5   <!-- switchgrass -->
+* - SLA (m {sup}`2` leaf g {sup}`-1` C)
+  - 0.05   <!-- temperate corn -->
+  - 0.035  <!-- spring wheat -->
+  - 0.035  <!-- temperate soybean -->
+  - 0.035  <!-- cotton -->
+  - 0.035  <!-- rice -->
+  - 0.05   <!-- sugarcane -->
+  - 0.05   <!-- tropical corn -->
+  - 0.035  <!-- tropical soybean -->
+  - 0.057  <!-- miscanthus -->
+  - 0.049  <!-- switchgrass -->
+* - $\chi _{L}$ index
+  - -0.5  <!-- temperate corn -->
+  - -0.5  <!-- spring wheat -->
+  - -0.5  <!-- temperate soybean -->
+  - -0.5  <!-- cotton -->
+  - -0.5  <!-- rice -->
+  - -0.5  <!-- sugarcane -->
+  - -0.5  <!-- tropical corn -->
+  - -0.5  <!-- tropical soybean -->
+  - -0.5  <!-- miscanthus -->
+  - -0.5  <!-- switchgrass -->
+* - grperc
+  - 0.11  <!-- temperate corn -->
+  - 0.11  <!-- spring wheat -->
+  - 0.11  <!-- temperate soybean -->
+  - 0.11  <!-- cotton -->
+  - 0.11  <!-- rice -->
+  - 0.11  <!-- sugarcane -->
+  - 0.11  <!-- tropical corn -->
+  - 0.11  <!-- tropical soybean -->
+  - 0.11  <!-- miscanthus -->
+  - 0.11  <!-- switchgrass -->
+* - flnr
+  - 0.293  <!-- temperate corn -->
+  - 0.41   <!-- spring wheat -->
+  - 0.41   <!-- temperate soybean -->
+  - 0.41   <!-- cotton -->
+  - 0.41   <!-- rice -->
+  - 0.293  <!-- sugarcane -->
+  - 0.293  <!-- tropical corn -->
+  - 0.41   <!-- tropical soybean -->
+  - 0.293  <!-- miscanthus -->
+  - 0.293  <!-- switchgrass -->
+* - fcur
+  - 1  <!-- temperate corn -->
+  - 1  <!-- spring wheat -->
+  - 1  <!-- temperate soybean -->
+  - 1  <!-- cotton -->
+  - 1  <!-- rice -->
+  - 1  <!-- sugarcane -->
+  - 1  <!-- tropical corn -->
+  - 1  <!-- tropical soybean -->
+  - 1  <!-- miscanthus -->
+  - 1  <!-- switchgrass -->
 ```
 
 Notes:
