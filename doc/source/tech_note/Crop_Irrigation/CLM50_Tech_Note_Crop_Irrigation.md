@@ -40,6 +40,9 @@ $\newcommand{\paramorgancn}{CN_\textrm{[organ]}}$
 $\newcommand{\paramforgancn}{\paramorgancn^\textrm{f}}$
 $\newcommand{\corgan}{C_\textrm{[organ]}}$
 $\newcommand{\norgan}{N_\textrm{[organ]}}$
+$\newcommand{\paramplantingtemp}{T_\textrm{p}}$
+$\newcommand{\paramminplantingtemp}{\paramplantingtemp^\textrm{min}}$
+$\newcommand{\paramgddmin}{GDD_\textrm{min}}$
 
 (rst_crops and irrigation)=
 
@@ -160,13 +163,13 @@ To be planted, a crop patch must meet the following requirements sometime within
 
 $$
 \begin{array}{c}
-{T_{10d} >T_{p} } \\
-{T_{10d}^{\min } >T_{p}^{\min } }  \\
-{\gddeightrun \ge GDD_{\min } }
+{T_{10d} > \paramplantingtemp} \\
+{T_{10d}^{\min } > \paramminplantingtemp}  \\
+{\gddeightrun \ge \paramgddmin}
 \end{array}
 $$ (25.1)
 
-where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). ${T}_{p}$ and $T_{p}^{\min }$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeightrun$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and ${GDD}_{min }$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeightrun$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeightrun$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeightrun > 0$.
+where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). $\paramplantingtemp$ and $\paramminplantingtemp$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeightrun$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and $\paramgddmin$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeightrun$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeightrun$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeightrun > 0$.
 
 At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves ($\paramleafcn$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C).
 
@@ -256,8 +259,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 77, 78  <!-- tropical soybean -->
   - 71, 72  <!-- miscanthus -->
   - 73, 74  <!-- switchgrass -->
-* - $T_{p}$ (K)
-  - ???
+* - $\paramplantingtemp$ (K)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `planting_temp`
   - 283.15  <!-- temperate corn -->
   - 280.15  <!-- spring wheat -->
   - 286.15  <!-- temperate soybean -->
@@ -268,8 +271,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 294.15  <!-- tropical soybean -->
   - 283.15  <!-- miscanthus -->
   - 283.15  <!-- switchgrass -->
-* - $T_{p}^{ min }$ (K)
-  - ???
+* - $\paramminplantingtemp$ (K)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `min_planting_temp`
   - 279.15  <!-- temperate corn -->
   - 272.15  <!-- spring wheat -->
   - 279.15  <!-- temperate soybean -->
@@ -280,8 +283,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 283.15  <!-- tropical soybean -->
   - 279.15  <!-- miscanthus -->
   - 279.15  <!-- switchgrass -->
-* - ${GDD}_{min}$ (degree-days)
-  - ???
+* - $\paramgddmin$ (degree-days)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `gddmin`
   - 50  <!-- temperate corn -->
   - 50  <!-- spring wheat -->
   - 50  <!-- temperate soybean -->
@@ -292,8 +295,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 50  <!-- tropical soybean -->
   - 50  <!-- miscanthus -->
   - 50  <!-- switchgrass -->
-* - $\parambaset$ (°C)
-  - ???
+* - $\parambaset$ (°C)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `baset`
   - 8   <!-- temperate corn -->
   - 0   <!-- spring wheat -->
   - 10  <!-- temperate soybean -->
@@ -304,8 +307,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 10  <!-- tropical soybean -->
   - 8   <!-- miscanthus -->
   - 8   <!-- switchgrass -->
-* - $\huithreshlfemerg$ (% $\gddthreshmat$)
-  - ???
+* - $\huithreshlfemerg$ (% $\gddthreshmat$)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `lfemerg`
   - 3%  <!-- temperate corn -->
   - 5%  <!-- spring wheat -->
   - 3%  <!-- temperate soybean -->
@@ -316,8 +319,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 3%  <!-- tropical soybean -->
   - 3%  <!-- miscanthus -->
   - 3%  <!-- switchgrass -->
-* - $\huithreshgrain$ (% $\gddthreshmat$)
-  - ???
+* - $\huithreshgrain$ (% $\gddthreshmat$)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `grnfill`
   - 65%  <!-- temperate corn -->
   - 60%  <!-- spring wheat -->
   - 50%  <!-- temperate soybean -->
@@ -328,20 +331,20 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 50%  <!-- tropical soybean -->
   - 40%  <!-- miscanthus -->
   - 40%  <!-- switchgrass -->
-* - Max. growing season length ($mxmat$)
-  - ???
+* - Max. growing season length  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `mxmat`
   - 165  <!-- temperate corn -->
   - 150  <!-- spring wheat -->
-  - 150  <!-- temperate soybean -->
-  - 160  <!-- cotton -->
-  - 150  <!-- rice -->
-  - 300  <!-- sugarcane -->
+  - 180  <!-- temperate soybean -->
+  - 225  <!-- cotton -->
+  - 180  <!-- rice -->
+  - 360  <!-- sugarcane -->
   - 160  <!-- tropical corn -->
   - 150  <!-- tropical soybean -->
   - 210  <!-- miscanthus -->
   - 210  <!-- switchgrass -->
-* - $z_{top}^{\max }$ (m)
-  - ???
+* - $\paramztopmx$ (m)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `ztopmx`
   - 2.5   <!-- temperate corn -->
   - 1.2   <!-- spring wheat -->
   - 0.75  <!-- temperate soybean -->
@@ -352,8 +355,8 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 1     <!-- tropical soybean -->
   - 2.5   <!-- miscanthus -->
   - 2.5   <!-- switchgrass -->
-* - SLA (m {sup}`2` leaf g {sup}`-1` C)
-  - ???
+* - SLA (m {sup}`2` leaf g {sup}`-1` C)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `slatop`
   - 0.05   <!-- temperate corn -->
   - 0.035  <!-- spring wheat -->
   - 0.035  <!-- temperate soybean -->
@@ -362,71 +365,19 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - 0.05   <!-- sugarcane -->
   - 0.05   <!-- tropical corn -->
   - 0.035  <!-- tropical soybean -->
-  - 0.057  <!-- miscanthus -->
-  - 0.049  <!-- switchgrass -->
-* - $\chi _{L}$ index
-  - ???
-  - -0.5  <!-- temperate corn -->
-  - -0.5  <!-- spring wheat -->
-  - -0.5  <!-- temperate soybean -->
-  - -0.5  <!-- cotton -->
-  - -0.5  <!-- rice -->
-  - -0.5  <!-- sugarcane -->
-  - -0.5  <!-- tropical corn -->
-  - -0.5  <!-- tropical soybean -->
-  - -0.5  <!-- miscanthus -->
-  - -0.5  <!-- switchgrass -->
-* - grperc
-  - ???
-  - 0.11  <!-- temperate corn -->
-  - 0.11  <!-- spring wheat -->
-  - 0.11  <!-- temperate soybean -->
-  - 0.11  <!-- cotton -->
-  - 0.11  <!-- rice -->
-  - 0.11  <!-- sugarcane -->
-  - 0.11  <!-- tropical corn -->
-  - 0.11  <!-- tropical soybean -->
-  - 0.11  <!-- miscanthus -->
-  - 0.11  <!-- switchgrass -->
-* - flnr
-  - ???
-  - 0.293  <!-- temperate corn -->
-  - 0.41   <!-- spring wheat -->
-  - 0.41   <!-- temperate soybean -->
-  - 0.41   <!-- cotton -->
-  - 0.41   <!-- rice -->
-  - 0.293  <!-- sugarcane -->
-  - 0.293  <!-- tropical corn -->
-  - 0.41   <!-- tropical soybean -->
-  - 0.293  <!-- miscanthus -->
-  - 0.293  <!-- switchgrass -->
-* - fcur
-  - ???
-  - 1  <!-- temperate corn -->
-  - 1  <!-- spring wheat -->
-  - 1  <!-- temperate soybean -->
-  - 1  <!-- cotton -->
-  - 1  <!-- rice -->
-  - 1  <!-- sugarcane -->
-  - 1  <!-- tropical corn -->
-  - 1  <!-- tropical soybean -->
-  - 1  <!-- miscanthus -->
-  - 1  <!-- switchgrass -->
+  - 0.035  <!-- miscanthus -->
+  - 0.035  <!-- switchgrass -->
 ```
 
 Notes:
 
-- $T_{p}$ and $T_{p}^{ min }$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
-- $GDD_{min}$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
+- $\paramplantingtemp$ and $\paramminplantingtemp$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
+- $\paramgddmin$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
 - $\parambaset$ is the minimum temperature for accumulating growing degree-days.
 - $\huithreshlfemerg$ and $\huithreshgrain$ are, respectively, the threshold fractions of $\gddthreshmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3). However, note the adjustment applied to $\huithreshgrain$ for some crops (Eq. {eq}`corn-huigrain-adjustment`).
-- $mxmat$ is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddthreshmat$.
+- `mxmat` is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddthreshmat$.
 - $\paramztopmx$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
 - SLA is specific leaf area (see Chapter {numref}`rst_Photosynthetic Capacity`).
-- $\chi _{L}$ is the leaf orientation index, equals -1 for vertical, 0 for random, and 1 for horizontal leaf orientation. (See Sect. {numref}`Canopy Radiative Transfer`.)
-- grperc is the growth respiration factor (see Sect. {numref}`Growth Respiration`).
-- flnr is the fraction of leaf N in the Rubisco enzyme (a.k.a. $N_{cb}$ in Sect. {numref}`Plant Nitrogen`).
-- fcur is the fraction of allocation that goes to currently displayed growth (i.e., that is not sent to storage). See Sect. {numref}`Carbon Allocation to New Growth`.
 
 (allocation)=
 
@@ -765,16 +716,16 @@ $$ (25.15)
 
 Leaf area index ($L$) is calculated as a function of specific leaf area (SLA, {numref}`Table Crop phenology parameters`) and leaf C. Stem area index ($S$) is equal to 0.1$L$ for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2$L$ for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the $S$ is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
 
-Crop heights at the top and bottom of the canopy, ${z}_{top}$ and ${z}_{bot}$ (m), come from the AgroIBIS formulation:
+Crop heights at the top and bottom of the canopy, $\paramztopmx$ and ${z}_{bot}$ (m), come from the AgroIBIS formulation:
 
 $$
 \begin{array}{l}
-{z_{top} = \paramztopmx \left(\frac{L}{L_{\max } -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{L_{\max } -1} \le 1} \\
+{z_{top} = \paramztopmx \left(\frac{L}{\paramlaimx -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{\paramlaimx -1} \le 1} \\
 {z_{bot} =0.02{\rm m}}
 \end{array}
 $$ (25.16)
 
-where $\paramztopmx$ is the maximum top-of-canopy height of the crop ({numref}`Table Crop phenology parameters`) and $L_{\max }$ is the maximum leaf area index ({numref}`Table Crop allocation parameters`).
+where $\paramztopmx$ is the maximum top-of-canopy height of the crop ({numref}`Table Crop phenology parameters`) and $\paramlaimx$ is the maximum leaf area index ({numref}`Table Crop allocation parameters`).
 
 (interactive-fertilization)=
 
