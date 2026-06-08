@@ -49,7 +49,7 @@ where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the fractions of interce
 
    f_{pi,\,ice} =\alpha_{sno} \ \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\} \ ,
 
-and :math:`L` and :math:`S` are the exposed leaf and stem area index, respectively (section :numref:`Phenology and vegetation burial by snow`), and the :math:`\alpha`\'s scale the fractional area of a leaf that collects water (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Default values of :math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1. Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into liquid and solid phases, reaching the ground (soil or snow surface) as
+:math:`L` and :math:`S` are the exposed leaf and stem area index, respectively (section :numref:`Phenology and vegetation burial by snow`), and the :math:`\alpha`\ coefficients scale the fractional area of a leaf that collects water (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Default values of :math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1. Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into liquid and solid phases, reaching the ground (soil or snow surface) as
 
 .. math::
    :label: 7.4
