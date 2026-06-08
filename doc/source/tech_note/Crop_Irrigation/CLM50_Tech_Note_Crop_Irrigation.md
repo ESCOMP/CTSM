@@ -77,7 +77,9 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 
 It should be noted that PFT-level history output merges all crop types into the actively managed crop type, so analysis of crop-specific output will require use of the land surface input dataset to remap the yields of each actively and inactively managed crop type. Otherwise, the actively managed crop type will include yields for that crop type and all inactively managed crop types that are using the same parameter set. Note that if a "pure" simulation of the actively-managed crop types is desired, the `mergetoclmpft` parameter of the other crop types should be set to something not simulated, such as 15 (C{sub}`3` unmanaged crops; see [](#set-paramfile)).
 
+```{warning}
 Enabling the inactive crop PFTs will cause the model to error due to certain logic in the code that does not yet handle those PFTs; see the related [GitHub issue](https://github.com/ESCOMP/CTSM/issues/3388).
+```
 
 (table crop plant functional types)=
 
