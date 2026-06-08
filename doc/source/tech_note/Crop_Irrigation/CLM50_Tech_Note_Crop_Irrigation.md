@@ -560,13 +560,11 @@ At a crop-specific maximum leaf area index, $\paramlaimx$, carbon allocation is 
 The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg-allocations)) to phase 3. During grain fill (phase 3), leaf and stem allocation coefficients change to:
 
 $$
-\begin{array}{ll}
-a_{organ} = a_{organ}^{i,3} & {\rm when} \quad a_{organ}^{i,3} \le \paramaorganf \quad {\rm else} \\
-\\
-a_{organ} = a_{organ} \left( 1 - \fracthrugrnfill \right)^{\paramallconso} \ge \paramaorganf & {\rm where} \quad \fracthrugrnfill \le 1 \\
-\\
-\end{array}
-$$ (25.5)
+\begin{aligned}
+x &= \min \left[1,\ \fracthrugrnfill \right] \\
+a_{organ} &= \min \left( a_{organ}^{i,3},\ \max \left[ \paramaorganf,\ a_{organ} \left( 1 - x \right)^{\paramallconso} \right] \right)
+\end{aligned}
+$$ (alloc-grnfill-leafstem)
 
 where $\textrm{organ}$ is either $\textrm{leaf}$ or $\textrm{stem}$, $a_{organ}^{i,3}$ (initial values) equals the last $a_{organ}$ calculated in phase 2, $\paramdeclfact$ and $\paramallconso$ are allocation decline factors, $\paramaorganf$ is the parameterized value of these allocation coefficients at maturity, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. (See {numref}`Table Crop allocation parameters` for parameter values.)
 
@@ -904,7 +902,7 @@ where $\parambaset$ is the *base temperature for GDD* (7{sup}`th` row) in {numre
 
 #### Separate reproductive pool
 
-One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation {eq}`25.5` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM, as allocation declines in stem, leaf, and root pools (see section {numref}`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
+One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation {eq}`alloc-grnfill-leafstem` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM, as allocation declines in stem, leaf, and root pools (see section {numref}`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
 
 (tillage)=
 
