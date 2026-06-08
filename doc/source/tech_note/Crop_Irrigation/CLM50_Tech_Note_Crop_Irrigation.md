@@ -47,6 +47,7 @@ $\newcommand{\paramminplantingtemp}{\paramplantingtemp^\textrm{min}}$
 $\newcommand{\paramgddmin}{GDD_\textrm{min}}$
 $\newcommand{\parambiofuelharvfrac}{\texttt{biofuel_harvfrac}}$
 $\newcommand{\paramcropresidueremovalfrac}{\texttt{crop_residue_removal_frac}}$
+$\newcommand{\fracthrugrnfill}{\frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain}}$
 
 (rst_crops and irrigation)=
 
@@ -562,7 +563,7 @@ $$
 \begin{array}{ll}
 a_{organ} = a_{organ}^{i,3} & {\rm when} \quad a_{organ}^{i,3} \le \paramaorganf \quad {\rm else} \\
 \\
-a_{organ} = a_{organ} \left( 1 - \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \right)^{\paramallconso} \ge \paramaorganf & {\rm where} \quad \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \le 1 \\
+a_{organ} = a_{organ} \left( 1 - \fracthrugrnfill \right)^{\paramallconso} \ge \paramaorganf & {\rm where} \quad \fracthrugrnfill \le 1 \\
 \\
 \end{array}
 $$ (25.5)
