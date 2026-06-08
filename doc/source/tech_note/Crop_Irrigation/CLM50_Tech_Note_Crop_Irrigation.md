@@ -72,7 +72,7 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 
 (table crop plant functional types)=
 
-```{list-table} Crop plant functional types (PFTs) included in CLM with managed crops on (BgcCrop component sets).
+```{list-table} Crop plant functional types (PFTs) included in CLM with managed crops on (BgcCrop component sets). IVT is the integer used to refer to each vegetation type in the FORTRAN code.
 :header-rows: 1
 
 * - IVT
