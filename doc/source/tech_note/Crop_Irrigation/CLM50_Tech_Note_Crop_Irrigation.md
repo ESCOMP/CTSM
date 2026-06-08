@@ -25,10 +25,12 @@ $\newcommand{\paramfleafi}{a_\textrm{leaf}^i}$  <!-- TODO: Should be f_ -->
 $\newcommand{\paramarooti}{a_\textrm{froot}^i}$
 $\newcommand{\paramarootf}{a_\textrm{froot}^f}$
 $\newcommand{\paramastemf}{a_\textrm{livestem}^f}$
+$\newcommand{\paramaorganf}{a_\textrm{organ}^f}$
 $\newcommand{\paramlaimx}{L_\textrm{max}}$
 $\newcommand{\paramdeclfact}{d_L}$
 $\newcommand{\paramallconsl}{d_\textrm{alloc}^\textrm{leaf}}$
 $\newcommand{\paramallconss}{d_\textrm{alloc}^\textrm{stem}}$
+$\newcommand{\paramallconso}{d_\textrm{alloc}^\textrm{organ}}$
 $\newcommand{\paramleafcn}{CN_\textrm{leaf}}$
 $\newcommand{\paramfleafcn}{\paramleafcn^\textrm{f}}$
 $\newcommand{\paramlivewdcn}{CN_\textrm{stem}}$
@@ -554,23 +556,26 @@ At a crop-specific maximum leaf area index, $\paramlaimx$, carbon allocation is 
 
 #### Grain fill
 
-The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg-allocations)) to phase 3. During grain fill (phase 3), other allocation coefficients change to:
+The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg-allocations)) to phase 3. During grain fill (phase 3), leaf and stem allocation coefficients change to:
 
 $$
 \begin{array}{ll}
-a_{leaf} =a_{leaf}^{i,3} & {\rm when} \quad a_{leaf}^{i,3} \le \paramaleaff \quad {\rm else} \\
-a_{leaf} =a_{leaf} \left(1-\frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \right)^{\paramallconsl } \ge \paramaleaff & {\rm where} \quad \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \le 1 \\
- \\
-a_{livestem} =a_{livestem}^{i,3} & {\rm when} \quad a_{livestem}^{i,3} \le \paramastemf \quad {\rm else} \\
-a_{livestem} =a_{livestem} \left(1-\frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \right)^{\paramallconss } \ge \paramastemf & {\rm where} \quad \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \le 1 \\
- \\
-a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
+a_{organ} = a_{organ}^{i,3} & {\rm when} \quad a_{organ}^{i,3} \le \paramaorganf \quad {\rm else} \\
+\\
+a_{organ} = a_{organ} \left( 1 - \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \right)^{\paramallconso} \ge \paramaorganf & {\rm where} \quad \frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain} \le 1 \\
+\\
 \end{array}
 $$ (25.5)
 
-where $a_{leaf}^{i,3}$ and $a_{livestem}^{i,3}$ (initial values) equal the last $a_{leaf}$ and $a_{livestem}$ calculated in phase 2, $\paramdeclfact$, $\paramallconsl$ and $\paramallconss$ are leaf area index and leaf and stem allocation decline factors, $\paramaleaff$ and $\paramastemf$ are final values of these allocation coefficients, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. See {numref}`Table Crop allocation parameters` for parameter values.
+where $\textrm{organ}$ is either $\textrm{leaf}$ or $\textrm{stem}$, $a_{organ}^{i,3}$ (initial values) equals the last $a_{organ}$ calculated in phase 2, $\paramdeclfact$ and $\paramallconso$ are allocation decline factors, $\paramaorganf$ is the parameterized value of these allocation coefficients at maturity, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. (See {numref}`Table Crop allocation parameters` for parameter values.)
 
-As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, $\paramlaimx$, leaf allocation is reduced to 0.001%. The rest of the carbon that would have gone to leaves instead goes to the reproductive pool.
+As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, $\paramlaimx$, leaf allocation is reduced to 0.001%.
+
+After allocation to fine roots, leaves, and stem, the rest of the carbon goes to the reproductive pool:
+
+$$
+a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
+$$ (alloc-grnfill-repr)
 
 (nitrogen-retranslocation-for-crops)=
 
