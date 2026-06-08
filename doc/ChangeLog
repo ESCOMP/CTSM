@@ -1,4 +1,138 @@
 ===============================================================
+Tag name: ctsm5.4.044
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Jun  8 03:09:27 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+  Bring latest b4b-dev to master.
+
+  Mostly updates to the documentation, especially the tech note.
+
+  Also update of submodules to almost the latest ones. This includes a few updates in cdeps to help with spinup. One specific update is to allow using the CO2 from the CPLHIST files for spinup cases. Also use daily files for CO2 CPLHIST rather than 3-hourly to sync with the change in CMEPS.
+
+  Also update the FATES parameter generation for testing
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  - Resolves Update submodules to cesm3_0_alpha09c levels #4066 update submodules
+  - Resolves Column level CH4 output not writing to history #4051 column level CH4 not working to history
+  - Resolves Remove FatesSetupParamBuild #3989 Remove FatesSetupParamBuild
+  - Resolves $4065 remove lists of tables/figs
+  - Resolves Review 2.24. Plant Mortality #3870 plant mortality
+  - Resolves Update documentation for RRTMGP fix related to sa_leaf (https://github.com/ESCOMP/CTSM/pull/3643) #3723 RRTMGP fix
+  - Improves Review 2.31. Dust Model #3877 dust
+  - Resolves Review 2.14. Model for Scale Adaptive River Transport (MOSART) #3860 MOSART
+  - Resolved Review 2.9. Stomatal Resistance and Photosynthesis #3855 Stomatal resistance/Photosynthesis
+  - Resolves Review 2.4. Radiative Fluxes #3850 Rad fluxes
+  - Resolves Review 2.3. Surface Albedos #3849 surface albedos
+  - Resolves Review 2.8. Snow Hydrology #3854 Snow hydrology
+  - Resolves Review 2.25. Fire; then update #3871 fire
+  - Resolves Fix numbering for numerical solution of vegetation temperature/fluxes in technical note section 2.5.3.2 #4025 numbering
+  - Resolves Review 2.12. Lake Model #3858 Lake
+  - Resolves Review 2.18. Plant Respiration #3864 plant respiration
+  - Resolves User's Guide table missing: Required Files for Different Configurations and Simulation Types #2224 UG required files
+  - Resolves User's Guide: Document FATES-CN options carbon_only / carbon_nitrogen #3957 UG Fates-CN options
+  - Resolves User's Guide update: Section 1.5.7 BgcCrop spin-ups #3975 BGC spinup
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Add cplhist option to DATM_CO2_TSERIES XML option
+
+Changes to documentation:
+  Many updates to the Tech Note
+  Some infrastructure updates
+  Some updates to the User's Guide
+
+Contributors:
+  @slevis-lmwg, @samsrabin @sy-li @nmizukami @olyson @dmleung @ekluzek @swensosc @katyarjay @mvdebolskiy @cenlinhe @adrifoster
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   Good news! The cime update from Sam R. fixes the permision problem we've been having on Izumi!
+
+Changes to tests or testing:
+   Remove FatesSetupParamBuild from testmods and includes as no longer needed with the JSON update
+   Use COMP_ROOT_DIR_LND rather than SRCROOT so can be run from a CESM/CAM checkout
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No bit-for-bit
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cime, cmeps, cdeps. share, doc-builder
+  cime to cime6.2.2
+  cmeps to cmeps1.1.47
+  cdeps to cdeps1.0.96
+  share to share1.1.20
+  doc-builder to v3.2.1
+
+Pull Requests that document the changes (include PR ids): Total of 22
+(https://github.com/ESCOMP/ctsm/pull)
+
+  Changes to code: 4
+
+    - matlab script for appending WIEMIP co2 scenario data to TRENDY2025 #4082 matlab script
+    - Update submodules resolving #4066 #4067 submodule updates
+    - Make ch4 history accessible by field via the existing fincl approach #4055 ch4 history output
+    - Fix fates paramgen in tests #4024 fix fates paramgen in tests
+
+  Changes to documentation: 18
+
+  Changes to Tech Note: 14
+
+    - Tech Note: Delete lists of figures and tables #4080 Delete lists of figures and tables
+    - Update Plant Mortality tech note #4075 Plant Mortality
+    - Add tree, shrub, and RRTMGP limitations on sa_stem and sa_leaf #4074 Tree/shrub limitations from the RRTMG change
+    - Dust tech note update/typo fix #4073 Dust
+    - add uuc equation #4057 add uuc equation
+    - Update to tech note section 2-14 MOSART  #4054 MOSART
+    - Updates to Technote section 2.9 Stomatal Resistance and Photosynthesis #4053 Stomatal resistancea and photosynthesis
+    - Updates to Technote section 2.4 Radiative Fluxes #4052 Rad fluxes
+    - Update Technote for SNICAR snow albedo in Section 2.3 #4049 SNICAR
+    - review Snow Hydrology Sect 2.8 in Technote #4048 Snow hydrology
+    - Updates to CLM50_Tech_Note_Fire.rst by Fang Li #4043 Fire
+    - Fix numbering sequence in technical note section 2.5.3.2 #4026 Fix equation numbering
+    - Revision of section 2.12 (Lake Model) in technical note for CLM6 #3997 Lake model
+    - 2.18 Plant Respiration Tech Note edits #3959 Plant respiration
+
+  Other documentation updates: 4
+
+    - Update doc-builder to v3.2 #4071 Update doc-builder
+    - Remove section 1.4.3.1 What are the required files? #4050 Users' Guide
+    - Update IMPORTANT_NOTES.md regarding fates_parteh_mode #4047 Just to IMPORTANT_NOTES
+    - b4b-dev: Update bgc spinup section #3998 BGC spinup
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.043
 Originator(s): wwieder (Will Wieder, UCAR/TSS)
 Date: Wed Jun  3 04:59:46 PM MDT 2026
