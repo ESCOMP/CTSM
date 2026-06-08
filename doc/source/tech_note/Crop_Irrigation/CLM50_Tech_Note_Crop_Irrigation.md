@@ -83,7 +83,7 @@ Enabling the inactive crop PFTs will cause the model to error due to certain log
 
 (table crop plant functional types)=
 
-```{list-table} Crop plant functional types (PFTs) included in CLM with managed crops on (BgcCrop component sets). IVT is the integer used to refer to each vegetation type in the FORTRAN code.
+```{list-table} Crop plant functional types (PFTs) included in CLM. IVT is the integer used to refer to each vegetation type in the FORTRAN code.
 :header-rows: 1
 
 * - IVT
@@ -91,10 +91,10 @@ Enabling the inactive crop PFTs will cause the model to error due to certain log
   - Simulated as
 * - 15
   - C{sub}`3` unmanaged rainfed crop
-  - n/a (off if managed crops on)
+  - (itself)
 * - 16
   - C{sub}`3` unmanaged irrigated crop
-  - n/a (off if managed crops on)
+  - (itself)
 * - 17
   - rainfed temperate corn
   - (itself)
