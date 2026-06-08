@@ -33,6 +33,7 @@ Print values for specific PFTs:
 tools/param_utils/query_paramfile -i paramfile.nc -p needleleaf_evergreen_temperate_tree,c4_grass medlynintercept medlynslope
 ```
 
+(set-paramfile)=
 ## `set_paramfile`
 **Purpose:** Change values of one or more parameters in a CTSM parameter file (netCDF format).
 
