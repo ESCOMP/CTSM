@@ -518,7 +518,7 @@ The soil organic matter properties implicitly account for the standard observed 
    \theta_{sat,om} = max(0.93 - 0.1\times z_{i} / zsapric, 0.83).
 
 .. math::
-   :label: 7.88
+   :label: hydr_cond_exponent_org
 
    B_{om} = min(2.7 + 9.3\times z_{i} / zsapric, 12.0).
 
