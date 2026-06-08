@@ -958,22 +958,27 @@ To conserve mass, irrigation is removed from river water storage (Chapter {numre
 
 (table irrigation parameters)=
 
-```{list-table} Irrigation parameters
+```{list-table} Irrigation parameters. Values in "Parameter" column are the associated namelist variable, if the value is not hard-coded in the model code.
 :header-rows: 1
 
-* - Parameter
+* - Symbol
+  - Parameter
   - Units
   - Value
 * - $f_{thresh}$
+  - `irrig_threshold_fraction`
   - Unitless
   - 1.0
 * - $z_{irrig}$
+  - `irrig_depth`
   - m
   - 0.6
 * - $\Psi_{target}$
+  - `irrig_target_smp`
   - mm
   - -3400
 * - $\Psi_{wilt}$
+  - (Hard-coded)
   - mm
   - -150000
 ```
