@@ -523,7 +523,7 @@ The soil organic matter properties implicitly account for the standard observed 
    B_{om} = min(2.7 + 9.3\times z_{i} / zsapric, 12.0).
 
 .. math::
-   :label: 7.89
+   :label: sat_matric_potential_org
 
    \psi_{sat,om} = min(10.3 - 0.2\times z_{i} / zsapric, 10.1).
 
