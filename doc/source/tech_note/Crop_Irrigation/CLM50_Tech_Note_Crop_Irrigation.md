@@ -588,11 +588,11 @@ where $\corgan$ and $\norgan$ are the carbon and nitrogen in the organ, respecti
 
 #### Harvest
 
-CLM splits live crop grain C and N between "food" and "seed" pools. In the former—more generally a "crop product" pool—C and N decay to the atmosphere over one year, similar to how the wood product pools work. The latter is used in the subsequent year to account for the C and N required for crop seeding.
+CLM splits live crop grain C and N between "food" and "seed" pools. In the former, C and N decay to the atmosphere over approximately one year. Specifically, $E = P^k$, where $E$ is the emissions in one timestep, $P$ is the product pool before emissions, and $k$ is a decay constant set to 0.0001296. The seed pool is used in the subsequent year to account for the C and N required for crop seeding.
 
-Live leaf and stem biomass at harvest is transferred to biofuel, removed residue, and/or litter pools.
+Live leaf and stem biomass at harvest is transferred to biofuel, removed residue, and/or litter pools. The harvested biofuel and removed residue pools (together, the "crop product" pool) emit their C and N to the atmosphere with a turnover time of approximately one year (as for the food pool above).
 
-For the biofuel crops Miscanthus and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool as described for "food" harvest above. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter `biofuel_harvfrac` (0-1).
+For the biofuel crops, _Miscanthus_ and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter `biofuel_harvfrac` (0-1).
 
 50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter `crop_residue_removal_frac` (0–1). The default 50% is derived from {ref}`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately.
 
