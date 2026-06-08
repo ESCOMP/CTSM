@@ -228,7 +228,7 @@ The grain fill phase (phase 3) begins in one of two ways. The first potential tr
 
 #### Harvest
 
-Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddthreshmat$ or the number of days past planting reaches a crop-specific maximum ({numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
+Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddthreshmat$ or the number of days past planting reaches a crop-specific maximum (`mxmat`; {numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
 
 (table crop phenology parameters)=
 
