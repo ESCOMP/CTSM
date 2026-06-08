@@ -75,74 +75,74 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 ```{eval-rst}
 .. table:: Crop plant functional types (PFTs) included in CLM with managed crops on (`BgcCrop` component sets).
 
- ===  ===========================  ================  ===========================
- IVT  Plant function types (PFTs)  Management Class  Crop Parameters Used
- ===  ===========================  ================  ===========================
-  15  c3 unmanaged rainfed crop    none              not applicable
-  16  c3 unmanaged irrigated crop  none              not applicable
-  17  rainfed temperate corn       active            rainfed temperate corn
-  18  irrigated temperate corn     active            irrigated temperate corn
-  19  rainfed spring wheat         active            rainfed spring wheat
-  20  irrigated spring wheat       active            irrigated spring wheat
-  21  rainfed winter wheat         inactive          rainfed spring wheat
-  22  irrigated winter wheat       inactive          irrigated spring wheat
-  23  rainfed temperate soybean    active            rainfed temperate soybean
-  24  irrigated temperate soybean  active            irrigated temperate soybean
-  25  rainfed barley               inactive          rainfed spring wheat
-  26  irrigated barley             inactive          irrigated spring wheat
-  27  rainfed winter barley        inactive          rainfed spring wheat
-  28  irrigated winter barley      inactive          irrigated spring wheat
-  29  rainfed rye                  inactive          rainfed spring wheat
-  30  irrigated rye                inactive          irrigated spring wheat
-  31  rainfed winter rye           inactive          rainfed spring wheat
-  32  irrigated winter rye         inactive          irrigated spring wheat
-  33  rainfed cassava              inactive          rainfed rice
-  34  irrigated cassava            inactive          irrigated rice
-  35  rainfed citrus               inactive          rainfed spring wheat
-  36  irrigated citrus             inactive          irrigated spring wheat
-  37  rainfed cocoa                inactive          rainfed rice
-  38  irrigated cocoa              inactive          irrigated rice
-  39  rainfed coffee               inactive          rainfed rice
-  40  irrigated coffee             inactive          irrigated rice
-  41  rainfed cotton               active            rainfed cotton
-  42  irrigated cotton             active            irrigated cotton
-  43  rainfed datepalm             inactive          rainfed cotton
-  44  irrigated datepalm           inactive          irrigated cotton
-  45  rainfed foddergrass          inactive          rainfed spring wheat
-  46  irrigated foddergrass        inactive          irrigated spring wheat
-  47  rainfed grapes               inactive          rainfed spring wheat
-  48  irrigated grapes             inactive          irrigated spring wheat
-  49  rainfed groundnuts           inactive          rainfed rice
-  50  irrigated groundnuts         inactive          irrigated rice
-  51  rainfed millet               inactive          rainfed tropical corn
-  52  irrigated millet             inactive          irrigated tropical corn
-  53  rainfed oilpalm              inactive          rainfed rice
-  54  irrigated oilpalm            inactive          irrigated rice
-  55  rainfed potatoes             inactive          rainfed spring wheat
-  56  irrigated potatoes           inactive          irrigated spring wheat
-  57  rainfed pulses               inactive          rainfed spring wheat
-  58  irrigated pulses             inactive          irrigated spring wheat
-  59  rainfed rapeseed             inactive          rainfed spring wheat
-  60  irrigated rapeseed           inactive          irrigated spring wheat
-  61  rainfed rice                 active            rainfed rice
-  62  irrigated rice               active            irrigated rice
-  63  rainfed sorghum              inactive          rainfed tropical corn
-  64  irrigated sorghum            inactive          irrigated tropical corn
-  65  rainfed sugarbeet            inactive          rainfed spring wheat
-  66  irrigated sugarbeet          inactive          irrigated spring wheat
-  67  rainfed sugarcane            active            rainfed sugarcane
-  68  irrigated sugarcane          active            irrigated sugarcane
-  69  rainfed sunflower            inactive          rainfed spring wheat
-  70  irrigated sunflower          inactive          irrigated spring wheat
-  71  rainfed miscanthus           active            rainfed miscanthus
-  72  irrigated miscanthus         active            irrigated miscanthus
-  73  rainfed switchgrass          active            rainfed switchgrass
-  74  irrigated switchgrass        active            irrigated switchgrass
-  75  rainfed tropical corn        active            rainfed tropical corn
-  76  irrigated tropical corn      active            irrigated tropical corn
-  77  rainfed tropical soybean     active            rainfed tropical soybean
-  78  irrigated tropical soybean   active            irrigated tropical soybean
- ===  ===========================  ================  ===========================
+ ===  ===========================  =============================
+ IVT  Plant function types (PFTs)  Simulated as
+ ===  ===========================  =============================
+  15  c3 unmanaged rainfed crop    n/a (off if managed crops on)
+  16  c3 unmanaged irrigated crop  n/a (off if managed crops on)
+  17  rainfed temperate corn       (itself)
+  18  irrigated temperate corn     (itself)
+  19  rainfed spring wheat         (itself)
+  20  irrigated spring wheat       (itself)
+  21  rainfed winter wheat         rainfed spring wheat
+  22  irrigated winter wheat       irrigated spring wheat
+  23  rainfed temperate soybean    (itself)
+  24  irrigated temperate soybean  (itself)
+  25  rainfed barley               rainfed spring wheat
+  26  irrigated barley             irrigated spring wheat
+  27  rainfed winter barley        rainfed spring wheat
+  28  irrigated winter barley      irrigated spring wheat
+  29  rainfed rye                  rainfed spring wheat
+  30  irrigated rye                irrigated spring wheat
+  31  rainfed winter rye           rainfed spring wheat
+  32  irrigated winter rye         irrigated spring wheat
+  33  rainfed cassava              rainfed rice
+  34  irrigated cassava            irrigated rice
+  35  rainfed citrus               rainfed spring wheat
+  36  irrigated citrus             irrigated spring wheat
+  37  rainfed cocoa                rainfed rice
+  38  irrigated cocoa              irrigated rice
+  39  rainfed coffee               rainfed rice
+  40  irrigated coffee             irrigated rice
+  41  rainfed cotton               (itself)
+  42  irrigated cotton             (itself)
+  43  rainfed datepalm             rainfed cotton
+  44  irrigated datepalm           irrigated cotton
+  45  rainfed foddergrass          rainfed spring wheat
+  46  irrigated foddergrass        irrigated spring wheat
+  47  rainfed grapes               rainfed spring wheat
+  48  irrigated grapes             irrigated spring wheat
+  49  rainfed groundnuts           rainfed rice
+  50  irrigated groundnuts         irrigated rice
+  51  rainfed millet               rainfed tropical corn
+  52  irrigated millet             irrigated tropical corn
+  53  rainfed oilpalm              rainfed rice
+  54  irrigated oilpalm            irrigated rice
+  55  rainfed potatoes             rainfed spring wheat
+  56  irrigated potatoes           irrigated spring wheat
+  57  rainfed pulses               rainfed spring wheat
+  58  irrigated pulses             irrigated spring wheat
+  59  rainfed rapeseed             rainfed spring wheat
+  60  irrigated rapeseed           irrigated spring wheat
+  61  rainfed rice                 (itself)
+  62  irrigated rice               (itself)
+  63  rainfed sorghum              rainfed tropical corn
+  64  irrigated sorghum            irrigated tropical corn
+  65  rainfed sugarbeet            rainfed spring wheat
+  66  irrigated sugarbeet          irrigated spring wheat
+  67  rainfed sugarcane            (itself)
+  68  irrigated sugarcane          (itself)
+  69  rainfed sunflower            rainfed spring wheat
+  70  irrigated sunflower          irrigated spring wheat
+  71  rainfed miscanthus           (itself)
+  72  irrigated miscanthus         (itself)
+  73  rainfed switchgrass          (itself)
+  74  irrigated switchgrass        (itself)
+  75  rainfed tropical corn        (itself)
+  76  irrigated tropical corn      (itself)
+  77  rainfed tropical soybean     (itself)
+  78  irrigated tropical soybean   (itself)
+ ===  ===========================  =============================
 ```
 
 (phenology)=
