@@ -513,7 +513,7 @@ The bulk soil layer saturated hydraulic conductivity is then computed as
 The soil organic matter properties implicitly account for the standard observed profile of organic matter properties as
 
 .. math::
-   :label: 7.87
+   :label: porosity_org
 
    \theta_{sat,om} = max(0.93 - 0.1\times z_{i} / zsapric, 0.83).
 
