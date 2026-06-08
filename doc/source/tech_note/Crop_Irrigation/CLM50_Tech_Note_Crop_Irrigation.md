@@ -43,6 +43,8 @@ $\newcommand{\norgan}{N_\textrm{[organ]}}$
 $\newcommand{\paramplantingtemp}{T_\textrm{p}}$
 $\newcommand{\paramminplantingtemp}{\paramplantingtemp^\textrm{min}}$
 $\newcommand{\paramgddmin}{GDD_\textrm{min}}$
+$\newcommand{\parambiofuelharvfrac}{\texttt{biofuel_harvfrac}}$
+$\newcommand{\paramcropresidueremovalfrac}{\texttt{crop_residue_removal_frac}}$
 
 (rst_crops and irrigation)=
 
@@ -590,50 +592,50 @@ CLM splits live crop grain C and N between "food" and "seed" pools. In the forme
 
 Live leaf and stem biomass at harvest is transferred to biofuel, removed residue, and/or litter pools.
 
-For the biofuel crops Miscanthus and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool as described for "food" harvest above. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter $biofuel\_harvfrac$ (0-1).
+For the biofuel crops Miscanthus and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool as described for "food" harvest above. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter `biofuel_harvfrac` (0-1).
 
-50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter $crop\_residue\_removal\_frac$ (0–1). The default 50% is derived from {ref}`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately.
+50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter `crop_residue_removal_frac` (0–1). The default 50% is derived from {ref}`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately.
 
 The following equations illustrate how this works. Subscript $p$ refers to either the leaf or live stem biomass pool.
 
 $$
 CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times biofuel\_harvfrac
+  \right) \times \parambiofuelharvfrac
 $$ (25.9)
 
 $$
 CF_{p,removed\_residue} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times (1 - biofuel\_harvfrac) \times crop\_residue\_removal\_frac
+  \right) \times (1 - \parambiofuelharvfrac) \times \paramcropresidueremovalfrac
 $$ (harv_c_to_removed_residue)
 
 $$
 CF_{p,litter} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times \left( 1-biofuel\_harvfrac  \right) \times \left( 1-crop\_residue\_removal\_frac  \right) +CF_{p,alloc}
+  \right) \times \left( 1-\parambiofuelharvfrac  \right) \times \left( 1-\paramcropresidueremovalfrac  \right) +CF_{p,alloc}
 $$ (25.11)
 
 with corresponding nitrogen fluxes:
 
 $$
 NF_{p,biofuel} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times biofuel\_harvfrac
+  \right) \times \parambiofuelharvfrac
 $$ (25.12)
 
 $$
 NF_{p,removed\_residue} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times \left( 1 - biofuel\_harvfrac \right) \times crop\_residue\_removal\_frac
+  \right) \times \left( 1 - \parambiofuelharvfrac \right) \times \paramcropresidueremovalfrac
 $$ (harv_n_to_removed_residue)
 
 $$
 NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
-  \right) \times  \left( 1-biofuel\_harvfrac  \right) \times  \left( 1-crop\_residue\_removal\_frac  \right)
+  \right) \times  \left( 1-\parambiofuelharvfrac  \right) \times  \left( 1-\paramcropresidueremovalfrac  \right)
 $$ (25.14)
 
-where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and $biofuel\_harvfrac$ is the harvested fraction of leaf/livestem for biofuel feedstocks.
+where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and `biofuel_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
 
-Annual food crop yields (g dry matter m{sup}`-2`) can be calculated by saving the GRAINC_TO_FOOD_ANN variable once per year, then postprocessing with Equation {eq}`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
+Annual food crop yields (g dry matter m{sup}`-2`) can be calculated by saving the `GRAINC_TO_FOOD_ANN` variable once per year, then postprocessing with Equation {eq}`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 
 $$
-\text{Grain yield} = \frac{GRAINC\_TO\_FOOD\_ANN) \times 0.85}{0.45}
+\text{Grain yield} = \frac{\texttt{GRAINC_TO_FOOD_ANN} \times 0.85}{0.45}
 $$ (25.15)
 
 (table crop allocation parameters)=
