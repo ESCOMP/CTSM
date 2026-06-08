@@ -958,20 +958,24 @@ To conserve mass, irrigation is removed from river water storage (Chapter {numre
 
 (table irrigation parameters)=
 
-```{eval-rst}
-.. table:: Irrigation parameters
+```{list-table} Irrigation parameters
+:header-rows: 1
 
- +--------------------------------------+-------------+
- | Parameter                            |             |
- +======================================+=============+
- | :math:`f_{thresh}`                   |  1.0        |
- +--------------------------------------+-------------+
- | :math:`z_{irrig}`       (m)          |  0.6        |
- +--------------------------------------+-------------+
- | :math:`\Psi_{target}`   (mm)         | -3400       |
- +--------------------------------------+-------------+
- | :math:`\Psi_{wilt}`     (mm)         | -150000     |
- +--------------------------------------+-------------+
+* - Parameter
+  - Units
+  - Value
+* - $f_{thresh}$
+  - Unitless
+  - 1.0
+* - $z_{irrig}$
+  - m
+  - 0.6
+* - $\Psi_{target}$
+  - mm
+  - -3400
+* - $\Psi_{wilt}$
+  - mm
+  - -150000
 ```
 
 % add a reference to surface data in chapter2
