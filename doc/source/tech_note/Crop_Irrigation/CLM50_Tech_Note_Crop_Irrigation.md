@@ -24,7 +24,7 @@ $\newcommand{\paramaleaff}{a_\textrm{leaf}^f}$
 $\newcommand{\paramfleafi}{a_\textrm{leaf}^i}$  <!-- TODO: Should be f_ -->
 $\newcommand{\paramarooti}{a_\textrm{froot}^i}$
 $\newcommand{\paramarootf}{a_\textrm{froot}^f}$
-$\newcommand{\paramastemf}{a_\textrm{livestem}^f}$
+$\newcommand{\paramastemf}{a_\textrm{stem}^f}$
 $\newcommand{\paramaorganf}{a_\textrm{organ}^f}$
 $\newcommand{\paramlaimx}{L_\textrm{max}}$
 $\newcommand{\paramdeclfact}{d_L}$
@@ -71,7 +71,7 @@ With interactive crop management and, therefore, a more accurate representation 
 
 To allow crops to coexist with natural vegetation in a grid cell, the vegetated land unit is separated into a naturally vegetated land unit and a managed crop land unit. Unlike the plant functional types (PFTs) in the naturally vegetated land unit, the managed crop PFTs in the managed crop land unit do not share soil columns and thus permit for differences in the land management between crops. Each crop type has a rainfed and an irrigated PFT that are on independent soil columns. Crop area distributions are defined as explained in Sects. {numref}`Surface Data` and {numref}`rst_Transient Landcover Change`; see Sect. {numref}`Surface Heterogeneity and Data Structure` for more information on land units and soil columns.
 
-CLM includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by {ref}`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by {ref}`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by {ref}`Cheng et al. (2019)<Chengetal2019>`. Sugarcane and tropical corn are both C{sub}`4` plants and are therefore represented using the temperate corn functional form—i.e., they differ in only a few parameters. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were originally developed for the Amazon Basin. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf & livestem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States ({ref}`Cheng et al., 2019<Chengetal2019>`).
+CLM includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by {ref}`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by {ref}`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by {ref}`Cheng et al. (2019)<Chengetal2019>`. Sugarcane and tropical corn are both C{sub}`4` plants and are therefore represented using the temperate corn functional form—i.e., they differ in only a few parameters. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were originally developed for the Amazon Basin. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf and stem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States ({ref}`Cheng et al., 2019<Chengetal2019>`).
 
 In addition, CLM's default list of plant functional types (PFTs) includes an irrigated and unirrigated unmanaged C{sub}`3` crop ({numref}`Table Crop plant functional types`) treated as a second C{sub}`3` grass. The unmanaged C{sub}`3` crop is only used when the crop model is not active and has grid cell coverage assigned from satellite data, and the unmanaged C{sub}`3` irrigated crop type is currently not used since irrigation requires the crop model to be active. The default list of PFTs also includes twenty-one inactive crop PFTs that do not yet have associated parameters required for active management. Each of the inactive crop types is simulated using the parameters of the spatially closest associated crop type that is most similar to the functional type (e.g., C{sub}`3` or C{sub}`4`), which is required to maintain similar phenological parameters based on temperature thresholds. Information detailing which parameters are used for each crop type is included in {numref}`Table Crop plant functional types`; this information can also be found in the parameter file (variable `mergetoclmpft`; see [](#query-paramfile)).
 
@@ -354,7 +354,7 @@ where $n$ is the number of years that $\gddxrun$ gas been calculated for. Note t
 
 The "leaf emergence" phase is the period of vegetative growth between when the leaves first emerge from the soil to when filling of the reproductive organ begins.
 
-According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddthreshmat$ (see $\huithreshlfemerg$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`.
+According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddthreshmat$ (see $\huithreshlfemerg$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`. Note that, since all represented crops are herbaceous, their stem biomass is all is live stem.
 
 (grain fill)=
 
@@ -521,7 +521,7 @@ Notes:
 
 ### Allocation
 
-Allocation changes based on the crop phenology phase (section {numref}`Phenology`). Simulated C assimilation begins every year upon leaf emergence in phase 2 and ends with harvest at the end of phase 3; therefore, so does the allocation of such C to the crop's leaf, live stem, fine root, and reproductive pools.
+Allocation changes based on the crop phenology phase (section {numref}`Phenology`). Simulated C assimilation begins every year upon leaf emergence in phase 2 and ends with harvest at the end of phase 3; therefore, so does the allocation of such C to the crop's leaf, stem, fine root, and reproductive pools.
 
 Typically, C:N ratios in plant tissue vary throughout the growing season and tend to be lower during early growth stages and higher in later growth stages. In order to account for this seasonal change, two sets of C:N ratios are established in CLM for the leaf, stem, and fine root of crops: one during the leaf emergence phase (phenology phase 2), and a second during grain fill phase (phenology phase 3). This modified C:N ratio approach accounts for the nitrogen retranslocation that occurs during the grain fill phase (phase 3) of crop growth. Leaf, stem, and root C:N ratios for phase 2 are calculated using the standard CLM carbon and nitrogen allocation scheme (Chapter {numref}`rst_CN Allocation`), which provides a target C:N value ({numref}`Table Crop allocation parameters`) and allows C:N to vary through time. During grain fill (phase 3) of the crop growth cycle, a portion of the nitrogen in the plant tissues is moved to a storage pool to fulfill nitrogen demands of organ (reproductive pool) development, such that the resulting C:N ratio of the plant tissue is reflective of measurements at harvest. All C:N ratios were determined by calibration process, through comparisons of model output versus observations of plant carbon throughout the growing season.
 
@@ -538,7 +538,7 @@ $$
 \begin{array}{l} {a_{repr} =0} \\
 {a_{froot} = \paramarooti -(\paramarooti - \paramarootf ) \times {\rm min}\left(\frac{\gddacctwom }{\gddthreshmat }, 1\right)} \\
 {a_{leaf} =(1-a_{froot} ) \times \frac{\paramfleafi (e^{-b} -e^{-b\frac{\gddacctwom }{\gddthreshgrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
-{a_{livestem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
+{a_{stem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
 $$ (eq-lfemerg-allocations)
 
 where $\paramfleafi$, $\paramarooti$, and $\paramarootf$ are initial and final values of these coefficients (respectively parameters `fleafi`, `arooti`, and `arootf`), and $\gddthreshgrain$ is the growing degree-day threshold to enter the grain-filling phase.
@@ -575,7 +575,7 @@ As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at
 After allocation to fine roots, leaves, and stem, the rest of the carbon goes to the reproductive pool:
 
 $$
-a_{repr} =1-a_{froot} -a_{livestem} -a_{leaf}
+a_{repr} =1-a_{froot} -a_{stem} -a_{leaf}
 $$ (alloc-grnfill-repr)
 
 (nitrogen-retranslocation-for-crops)=
@@ -602,7 +602,7 @@ For the biofuel crops, _Miscanthus_ and switchgrass, 70% of live leaf and stem b
 
 50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter `crop_residue_removal_frac` (0–1). The default 50% is derived from {ref}`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately.
 
-The following equations illustrate how this works. Subscript $p$ refers to either the leaf or live stem biomass pool.
+The following equations illustrate how this works. Subscript $p$ refers to either the leaf or stem biomass pool.
 
 $$
 CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
@@ -636,7 +636,7 @@ NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \ri
   \right) \times  \left( 1-\parambiofuelharvfrac  \right) \times  \left( 1-\paramcropresidueremovalfrac  \right)
 $$ (25.14)
 
-where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and `biofuel_harvfrac` is the harvested fraction of leaf/livestem for biofuel feedstocks.
+where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and `biofuel_harvfrac` is the harvested fraction of leaf/stem for biofuel feedstocks.
 
 Annual food crop yields (g dry matter m{sup}`-2`) can be calculated by saving the `GRAINC_TO_FOOD_ANN` variable once per year, then postprocessing with Equation {eq}`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
 
