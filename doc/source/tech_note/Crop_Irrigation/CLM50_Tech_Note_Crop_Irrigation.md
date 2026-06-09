@@ -83,12 +83,12 @@ Enabling the inactive crop PFTs will cause the model to error due to certain log
 
 (table crop plant functional types)=
 
-```{list-table} Crop plant functional types (PFTs) included in CLM. IVT is the integer used to refer to each vegetation type in the FORTRAN code.
+```{list-table} Crop plant functional types (PFTs) included in CLM. IVT is the integer used to refer to each vegetation type in the FORTRAN code. {{paramfile_disclaimer_md}}
 :header-rows: 1
 
 * - IVT
   - Plant functional type (PFT)
-  - Simulated as
+  - Simulated as (`mergetoclmpft`)
 * - 15
   - C{sub}`3` unmanaged rainfed crop
   - (itself)
@@ -370,7 +370,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
 
 (table crop phenology parameters)=
 
-```{list-table} Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively.
+```{list-table} Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively. {{paramfile_disclaimer_md}}
 :header-rows: 1
 
 * - Parameter
@@ -646,7 +646,7 @@ $$ (25.15)
 
 (table crop allocation parameters)=
 
-```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets).
+```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). {{paramfile_disclaimer_md}}
 :header-rows: 1
 
 * - Parameter
@@ -964,7 +964,7 @@ To conserve mass, irrigation is removed from river water storage (Chapter {numre
 
 (table irrigation parameters)=
 
-```{list-table} Irrigation parameters. Values in "Parameter" column are the associated namelist variable, if the value is not hard-coded in the model code.
+```{list-table} Irrigation parameters. Values in the "Parameter" column are the associated namelist variable, if the value is not hard-coded in the model code. {{nonparamfile_disclaimer_md}}
 :header-rows: 1
 
 * - Symbol
