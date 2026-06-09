@@ -1061,6 +1061,10 @@ Miller, J.R., Russell, G.L., and Caliri, G. 1994. Continental-scale river flow i
 
 Millington, R. and Quirk, J.P., 1961. Permeability of Porous Solids. Transactions of the Faraday Society 57:1200-1207.
 
+.. _Minallah2025:
+
+Minallah, S., Lipscomb, W. H., Leguy, G., and Zekollari, H. 2025. A framework for three-dimensional dynamic modeling of mountain glaciers in the Community Ice Sheet Model (CISM v2.2), Geosci. Model Dev., 18, 5467–5486, https://doi.org/10.5194/gmd-18-5467-2025. 
+
 .. _Mironovetal2010:
 
 Mironov, D. et al., 2010. Implementation of the lake parameterisation scheme FLake into the numerical weather prediction model COSMO. Boreal Environment Research 15:218-230.
