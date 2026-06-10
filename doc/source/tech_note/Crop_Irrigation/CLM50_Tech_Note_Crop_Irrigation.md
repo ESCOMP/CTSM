@@ -898,7 +898,7 @@ latitudinal\ variation\ in\ base\ T = \left\{
 \end{array} \right\}
 $$ (25.18)
 
-where $\parambaset$ is the *base temperature for GDD* (7{sup}`th` row) in {numref}`Table Crop phenology parameters`. Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
+where $\parambaset$ is the base temperature for GDD ({numref}`Table Crop phenology parameters`). Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
 
 (separate-reproductive-pool)=
 
