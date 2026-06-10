@@ -888,7 +888,7 @@ Biological N fixation for soybeans is calculated by the fixation and uptake of n
 
 #### Latitudinal variation in base growth temperature
 
-For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for both rainfed and irrigated spring wheat and sugarcane, the calculation of $\gddacctwom$ allows for latitudinal variation:
+For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for spring wheat and sugarcane, the calculation of $\gddacctwom$ allows for latitudinal variation:
 
 $$
 latitudinal\ variation\ in\ base\ T = \left\{
