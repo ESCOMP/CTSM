@@ -333,7 +333,7 @@ If both `cropcals_rx_adapt` and `cropcals_rx` are false, or if $\gddthreshmatbl$
 Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
 
 $$
-\gddx = \gddx + \frac{\max \left( \gddxdaymax,\ \min \left[ 0,\ \ttwom - 273.15 - x \right] \right)}{48} 
+\gddx = \gddx + \frac{\min \left( \gddxdaymax,\ \max \left[ 0,\ \ttwom - 273.15 - x \right] \right)}{48}
 $$ (25.3)
 
 where $\ttwom$ is the 2-m air temperature (K), 273.15 K is the freezing temperature of water, and $GDD$ is in units of °C-days. $\gddxdaymax$, the maximum daily growing degree-day accumulation, is 26°C for $x=0$ and 30°C for $x=8$ and $x=10$. The division by 48 is to adjust for the number of timesteps in a day.
