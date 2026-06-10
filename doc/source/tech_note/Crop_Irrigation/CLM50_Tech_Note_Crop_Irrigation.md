@@ -336,9 +336,7 @@ $$
 \gddx = \gddx + \frac{\max \left( \gddxdaymax,\ \min \left[ 0,\ \ttwom - 273.15 - x \right] \right)}{48} 
 $$ (25.3)
 
-where $\ttwom$ is the 2-m air temperature (K), 273.15 K is the freezing temperature of water, and $GDD$ is in units of °C-days. $\gddxdaymax$, the maximum daily growing degree-day accumulation, is 26°C for $x=0$ and 30°C for $x=8$ and $x=10$.
-
-- **Is there a pre-existing symbol for number of timesteps in a day that we could use instead of 48?**
+where $\ttwom$ is the 2-m air temperature (K), 273.15 K is the freezing temperature of water, and $GDD$ is in units of °C-days. $\gddxdaymax$, the maximum daily growing degree-day accumulation, is 26°C for $x=0$ and 30°C for $x=8$ and $x=10$. The division by 48 is to adjust for the number of timesteps in a day.
 
 By default, the $\gddx$ values are set to zero at the beginning of the "$\gddx$ season" and then accumulated through its end: from April 1 through September 30 in the Northern Hemisphere and from October 1 through March 31 in the Southern Hemisphere. (Setting `stream_gdd20_seasons = .true.` would instead take those start and end dates from PFT-specific maps in the input files `stream_fldFileName_gdd20_season_start` and `stream_fldFileName_gdd20_season_end`, respectively; however, this is not scientifically supported.) At the end of each $\gddx$ season, the final value of $\gddx$ is incorporated into $\gddxrun$ like so:
 
