@@ -71,7 +71,7 @@ With interactive crop management and, therefore, a more accurate representation 
 
 To allow crops to coexist with natural vegetation in a grid cell, the vegetated land unit is separated into a naturally vegetated land unit and a managed crop land unit. Unlike the plant functional types (PFTs) in the naturally vegetated land unit, the managed crop PFTs in the managed crop land unit do not share soil columns and thus permit for differences in the land management between crops. Each crop type has a rainfed and an irrigated PFT that are on independent soil columns. Crop area distributions are defined as explained in Sects. {numref}`Surface Data` and {numref}`rst_Transient Landcover Change`; see Sect. {numref}`Surface Heterogeneity and Data Structure` for more information on land units and soil columns.
 
-CLM includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, miscanthus, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by {ref}`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by {ref}`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by {ref}`Cheng et al. (2019)<Chengetal2019>`. Sugarcane and tropical corn are both C{sub}`4` plants and are therefore represented using the temperate corn functional form—i.e., they differ in only a few parameters. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were originally developed for the Amazon Basin. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. Miscanthus and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf and stem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States ({ref}`Cheng et al., 2019<Chengetal2019>`).
+CLM includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, _Miscanthus_, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by {ref}`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by {ref}`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by {ref}`Cheng et al. (2019)<Chengetal2019>`. Sugarcane and tropical corn are both C{sub}`4` plants and are therefore represented using the temperate corn functional form—i.e., they differ in only a few parameters. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were originally developed for the Amazon Basin. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. _Miscanthus_ and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf and stem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States ({ref}`Cheng et al., 2019<Chengetal2019>`).
 
 In addition, CLM's default list of plant functional types (PFTs) includes an irrigated and unirrigated unmanaged C{sub}`3` crop ({numref}`Table Crop plant functional types`) treated as a second C{sub}`3` grass. The unmanaged C{sub}`3` crop is only used when the crop model is not active and has grid cell coverage assigned from satellite data, and the unmanaged C{sub}`3` irrigated crop type is currently not used since irrigation requires the crop model to be active. The default list of PFTs also includes twenty-one inactive crop PFTs that do not yet have associated parameters required for active management. Each of the inactive crop types is simulated using the parameters of the spatially closest associated crop type that is most similar to the functional type (e.g., C{sub}`3` or C{sub}`4`), which is required to maintain similar phenological parameters based on temperature thresholds. Information detailing which parameters are used for each crop type is included in {numref}`Table Crop plant functional types`; this information can also be found in the parameter file (variable `mergetoclmpft`; see [](#query-paramfile)).
 
@@ -258,10 +258,10 @@ Enabling the inactive crop PFTs will cause the model to error due to certain log
   - irrigated sunflower
   - irrigated spring wheat
 * - 71
-  - rainfed miscanthus
+  - rainfed _Miscanthus_
   - (itself)
 * - 72
-  - irrigated miscanthus
+  - irrigated _Miscanthus_
   - (itself)
 * - 73
   - rainfed switchgrass
@@ -381,7 +381,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacct
   - sugarcane
   - tropical corn
   - tropical soybean
-  - miscanthus
+  - _Miscanthus_
   - switchgrass
 * - IVT
   - n/a
@@ -543,7 +543,7 @@ $$ (eq-lfemerg-allocations)
 
 where $\paramfleafi$, $\paramarooti$, and $\paramarootf$ are initial and final values of these coefficients (respectively parameters `fleafi`, `arooti`, and `arootf`), and $\gddthreshgrain$ is the growing degree-day threshold to enter the grain-filling phase.
 
-For most crops, $\gddthreshgrain$ is equal to $\gddthreshmat$ times the PFT parameter $\huithreshgrain$ (`grnfill`). However, for corn, sugarcane, miscanthus, and switchgrass, an adjustment is applied ({ref}`Kucharik 2003 <KucharikBrye2003>`; C.J. Kucharik, pers. comm.):
+For most crops, $\gddthreshgrain$ is equal to $\gddthreshmat$ times the PFT parameter $\huithreshgrain$ (`grnfill`). However, for corn, sugarcane, _Miscanthus_, and switchgrass, an adjustment is applied ({ref}`Kucharik 2003 <KucharikBrye2003>`; C.J. Kucharik, pers. comm.):
 
 $$
 \begin{aligned}
@@ -659,7 +659,7 @@ $$ (25.15)
   - sugarcane
   - tropical corn
   - tropical soybean
-  - miscanthus
+  - _Miscanthus_
   - switchgrass
 * - IVT
   - n/a
@@ -853,7 +853,7 @@ $$ (25.15)
 
 #### Physical Crop Characteristics
 
-Leaf area index ($L$) is calculated as a function of specific leaf area (SLA, {numref}`Table Crop phenology parameters`) and leaf C. Stem area index ($S$) is equal to 0.1$L$ for temperate and tropical corn, sugarcane, switchgrass, and miscanthus and 0.2$L$ for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the $S$ is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
+Leaf area index ($L$) is calculated as a function of specific leaf area (SLA, {numref}`Table Crop phenology parameters`) and leaf C. Stem area index ($S$) is equal to 0.1$L$ for temperate and tropical corn, sugarcane, switchgrass, and _Miscanthus_ and 0.2$L$ for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the $S$ is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
 
 Crop heights at the top and bottom of the canopy, $\paramztopmx$ and ${z}_{bot}$ (m), come from the AgroIBIS formulation:
 
@@ -870,7 +870,7 @@ where $\paramztopmx$ is the maximum top-of-canopy height of the crop ({numref}`T
 
 #### Interactive Fertilization
 
-CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that natural vegetation will not access the fertilizer applied to crops. Fertilizer in CLM is prescribed by crop functional types and varies spatially for each year based on the LUMIP land use and land cover change time series (LUH2 for historical and SSPs for future) ({ref}`Lawrence et al. 2016 <Lawrenceetal2016>`). One of two fields is used to prescribe industrial fertilizer based on the type of simulation. For non-transient simulations, annual fertilizer application in g N/m{sup}`2`/yr is specified on the land surface data set by the field CONST_FERTNITRO_CFT. In transient simulations, annual fertilizer application is specified on the land use time series file by the field FERTNITRO_CFT, which is also in g N/m{sup}`2`/yr. The values for both of these fields come from the LUMIP time series for each year. In addition to the industrial fertilizer, background manure fertilizer is specified on the parameter file by the field `manunitro`. For perennial bioenergy crops, little fertilizer (56kg/ha/yr) is applied to switchgrass and no fertilizer is applied to Miscanthus. Note these rates are only based on local land management practices at the University of Illinois Energy Farm located in Central Midwestern United States {ref}`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. Manure N is applied at a rate of 0.002 kg N/m{sup}`2`/yr. Because previous versions of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly to minimize N loss (primarily through denitrification) and maximize plant uptake. The current implementation of CLM inherits this legacy, although denitrification rates are slower in the current version of the model ({ref}`Koven et al. 2013 <Kovenetal2013>`). As such, fertilizer application begins during the leaf emergence phase of crop development (phase 2) and continues for 20 days, which helps reduce large losses of nitrogen from leaching and denitrification during the early stage of crop development. The 20-day period is chosen as an optimization to limit fertilizer application to the emergence stage. A fertilizer counter in seconds, $f$, is set as soon as the leaf emergence phase for crops initiates:
+CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that natural vegetation will not access the fertilizer applied to crops. Fertilizer in CLM is prescribed by crop functional types and varies spatially for each year based on the LUMIP land use and land cover change time series (LUH2 for historical and SSPs for future) ({ref}`Lawrence et al. 2016 <Lawrenceetal2016>`). One of two fields is used to prescribe industrial fertilizer based on the type of simulation. For non-transient simulations, annual fertilizer application in g N/m{sup}`2`/yr is specified on the land surface data set by the field CONST_FERTNITRO_CFT. In transient simulations, annual fertilizer application is specified on the land use time series file by the field FERTNITRO_CFT, which is also in g N/m{sup}`2`/yr. The values for both of these fields come from the LUMIP time series for each year. In addition to the industrial fertilizer, background manure fertilizer is specified on the parameter file by the field `manunitro`. For perennial bioenergy crops, little fertilizer (56kg/ha/yr) is applied to switchgrass and no fertilizer is applied to _Miscanthus_. Note these rates are only based on local land management practices at the University of Illinois Energy Farm located in Central Midwestern United States {ref}`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. Manure N is applied at a rate of 0.002 kg N/m{sup}`2`/yr. Because previous versions of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly to minimize N loss (primarily through denitrification) and maximize plant uptake. The current implementation of CLM inherits this legacy, although denitrification rates are slower in the current version of the model ({ref}`Koven et al. 2013 <Kovenetal2013>`). As such, fertilizer application begins during the leaf emergence phase of crop development (phase 2) and continues for 20 days, which helps reduce large losses of nitrogen from leaching and denitrification during the early stage of crop development. The 20-day period is chosen as an optimization to limit fertilizer application to the emergence stage. A fertilizer counter in seconds, $f$, is set as soon as the leaf emergence phase for crops initiates:
 
 $$
 f = n \times 86400
