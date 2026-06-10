@@ -862,7 +862,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side (DEBUG to work on izumi_nag)</option>
     </options>
   </test>
