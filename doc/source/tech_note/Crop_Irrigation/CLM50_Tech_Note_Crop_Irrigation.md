@@ -535,10 +535,12 @@ During phase 2, the allocation coefficients (fraction of available C) to
 each C pool are defined as:
 
 $$
-\begin{array}{l} {a_{repr} =0} \\
-{a_{froot} = \paramarooti -(\paramarooti - \paramarootf ) \times {\rm min}\left(\frac{\gddacctwom }{\gddthreshmat }, 1\right)} \\
-{a_{leaf} =(1-a_{froot} ) \times \frac{\paramfleafi (e^{-b} -e^{-b\frac{\gddacctwom }{\gddthreshgrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1} \\
-{a_{stem} =1-a_{repr} -a_{froot} -a_{leaf} } \end{array}
+\begin{aligned}
+a_{repr} &= 0 \\
+a_{froot} &= \paramarooti -(\paramarooti - \paramarootf ) \times {\rm min}\left(\frac{\gddacctwom }{\gddthreshmat }, 1\right) \\
+a_{leaf} &= (1-a_{froot} ) \times \frac{\paramfleafi (e^{-b} -e^{-b\frac{\gddacctwom }{\gddthreshgrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1 \\
+a_{stem} &= 1-a_{repr} - a_{froot} - a_{leaf}
+\end{aligned}
 $$ (eq-lfemerg-allocations)
 
 where $\paramfleafi$, $\paramarooti$, and $\paramarootf$ are initial and final values of these coefficients (respectively parameters `fleafi`, `arooti`, and `arootf`), and $\gddthreshgrain$ is the growing degree-day threshold to enter the grain-filling phase.
