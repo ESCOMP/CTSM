@@ -623,9 +623,22 @@ contains
          j = col%snl(c)+1
 
          if (.not. lun%urbpoi(l)) then
-            lw_grnd=(frac_sno_eff(c)*tssbef(c,col%snl(c)+1)**4 &
-                 +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
-                 +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
+            ! [PORTED by Hui Tang: NVP-aware lw_grnd for eflx_lwrad_out — mirror the eflx_soil_grnd
+            !  lw_grnd (lines ~387-390). Without this, eflx_lwrad_out emits the NVP fraction at soil
+            !  temperature tssbef(c,1) while eflx_soil_grnd emits it at NVP temperature tssbef(c,0),
+            !  leaving errseb = -emg*sb*frac_nvp_eff*(tssbef(c,1)**4 - tssbef(c,0)**4) (~-3 W/m2 at
+            !  partial snow cover). At full snow frac_nvp_eff=0 and this reduces to the standard form.]
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               lw_grnd = frac_sno_eff(c)                                    * tssbef(c,col%snl(c)+1)**4 &
+                    + frac_nvp_eff                                           * tssbef(c,0)**4 &
+                    + (1._r8 - frac_sno_eff(c) - frac_nvp_eff - frac_h2osfc(c)) * tssbef(c,1)**4 &
+                    + frac_h2osfc(c)                                         * t_h2osfc_bef(c)**4
+            else
+               lw_grnd=(frac_sno_eff(c)*tssbef(c,col%snl(c)+1)**4 &
+                    +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
+                    +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
+            end if
 
             eflx_lwrad_out(p) = ulrad(p) &
                  + (1-frac_veg_nosno(p))*(1.-emg(c))*forc_lwrad(c) &
