@@ -63,7 +63,7 @@ def write_usermods(
     # pylint: disable=line-too-long
     s_file.write(
         # TODO turn on following line after cdeps changes are added
-        #'./xmlchange PLUMBER2SITE='+site + '\n' \
+        './xmlchange PLUMBER2SITE='+site + '\n' \
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
         "./xmlchange DATM_YR_END=" + str(end_year) + "\n"
@@ -123,29 +123,6 @@ def write_usermods(
     # pylint: enable=line-too-long, anomalous-backslash-in-string
 
     s_file.close()
-
-    # add baseflow_scalar = 0 to user_nl_clm for wetland sites
-    wetland = [
-        "CZ-wet",
-        "DE-SfN",
-        "FI-Kaa",
-        "FI-Lom",
-        "RU-Che",
-        "SE-Deg",
-        "US-Los",
-        "US-Myb",
-        "US-Tw4",
-        "PL-wet",
-    ]
-    if any(x == site for x in wetland):
-        s_file = open(shell, "a")  # or 'a' to add text instead of truncate
-        s_file.write(
-            "\n"
-            "# set baseflow scalar to zero for wetland site \n"
-            'echo "baseflow_scalar = 0" >> user_nl_clm'
-        )
-        s_file.close()
-
 
 # End write_usermods function
 

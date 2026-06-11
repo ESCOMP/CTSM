@@ -54,6 +54,3 @@ if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
   fi 
 fi 
 
-
-# set baseflow scalar to zero for wetland site 
-echo "baseflow_scalar = 0" >> user_nl_clm

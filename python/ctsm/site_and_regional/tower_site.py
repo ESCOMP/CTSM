@@ -14,6 +14,7 @@ import re
 import shutil
 import sys
 import time
+import subprocess
 
 # Get the ctsm util tools and then the cime tools.
 _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "python"))
@@ -214,6 +215,9 @@ class TowerSite:
             case_path = case.get_value("CASEROOT")
 
             if setup_only:
+                # Required because we need to query the lnd_in for the base case in order
+                # to provide a modified parameter file for wetland sites
+                case.create_namelists()
                 return case_path
 
             print("---- base case build ------")
@@ -240,11 +244,12 @@ class TowerSite:
             return "none"
         return case.get_value("batch_query")
 
-    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
+    def modify_user_nl(self, base_case_root, case_root, run_type, rundir, site_lines=None):
         """
         Modify user namelist. If transient, include finidat in user_nl;
         Otherwise, adjust user_nl to include different mfilt, nhtfrq, and variables in hist_fincl1.
         """
+
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
         user_nl_lines = None
         if run_type == "transient":
@@ -261,6 +266,62 @@ class TowerSite:
                 "hist_nhtfrq = -8760",
                 "hist_empty_htapes = .true.",
             ] + site_lines
+
+        if user_nl_lines:
+            with open(user_nl_fname, "a") as nl_file:
+                for line in user_nl_lines:
+                    nl_file.write("{}\n".format(line))
+
+        # Change baseflow_scalar to 0 in parameter file for PLUMBER2 wetland sites
+        # We need to grep the lnd_in file for the parameter file so that we can modified it
+        # for baseflow_scalar = 0 for wetland sites.  We need to grep the base case since at
+        # this point the current site simulation, e.g., AD, has not yet had a namelist
+        # generated.
+
+        wetland = [
+            "CZ-wet",
+            "DE-SfN",
+            "FI-Kaa",
+            "FI-Lom",
+            "RU-Che",
+            "SE-Deg",
+            "US-Los",
+            "US-Myb",
+            "US-Tw4",
+            "PL-wet",
+        ]
+
+        site = self.name
+        user_nl_lines = None
+        if any(x == site for x in wetland):
+           # Get the current working directory
+           cwd = os.getcwd()
+
+           # Get the base case path of the lnd_in
+           src_paramfile = os.path.join(base_case_root, "CaseDocs/lnd_in")
+
+           # Create a grep command to query the parameter file from the base case
+           command = "grep paramfile" + " " + src_paramfile
+
+           # Grep for the parameter file string, get just the location of the parameter file
+           # and strip the apostrophe(s) from the string
+           paramfile = subprocess.run(command, shell=True, capture_output=True, text=True)
+           output_paramfile = paramfile.stdout.strip()
+           split_output_paramfile = output_paramfile.split('=')
+           clean_paramfile = split_output_paramfile[1].replace("'", "")
+
+           # Define a new parameter file that will go in the run directory
+           modified_paramfile = os.path.join(case_root, "run/modified_paramfile.nc")
+
+           # Set baseflow_scalar = 0 in the modified parameter file
+           os.system("ncap2 -s 'baseflow_scalar=0'" + " " + clean_paramfile + " " + modified_paramfile)
+
+           # Create a string with the modified parameter file for user_nl_clm
+           modified_paramfile_user_nl_line = "paramfile = " + "'" + modified_paramfile + "'"
+
+           user_nl_lines = [
+               modified_paramfile_user_nl_line,
+           ]
 
         if user_nl_lines:
             with open(user_nl_fname, "a") as nl_file:
@@ -484,7 +545,7 @@ class TowerSite:
                     setting_split = setting.split("=")
                     case.set_value(*setting_split)
 
-            self.modify_user_nl(case_root, run_type, rundir)
+            self.modify_user_nl(base_case_root, case_root, run_type, rundir)
 
             case.create_namelists()
 
