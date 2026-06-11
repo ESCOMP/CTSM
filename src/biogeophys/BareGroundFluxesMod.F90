@@ -578,14 +578,17 @@ contains
          eflx_sh_soil(p)   = -raih*(thm(p)-t_soisno(c,1))
          eflx_sh_h2osfc(p) = -raih*(thm(p)-t_h2osfc(c))
          ! [PORTED by Hui Tang: NVP sensible heat flux for bare ground, analogous to snow/h2osfc]
-         ! Zero when NVP is buried under snow (snl < -1): the snow surface controls the energy balance.
+         ! [PORTED by Hui Tang: gate on exposed NVP fraction (frac_nvp_eff>0) instead of the binary
+         !  snow-layer count snl>=-1, so partial snow cover keeps NVP sensible heat wherever NVP is
+         !  still exposed (frac_nvp > frac_sno_eff). frac_nvp_eff set above (line ~515, frac_sno_eff based).]
+         ! Zero when NVP is fully buried (frac_nvp_eff <= 0): the snow surface controls the energy balance.
          ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
          ! SSR debug: I'm adding the "if use_fates" wrapper because of previous "Reference to undefined
          !   POINTER PATCH%IS_VEG" errors here. Not sure if this is going to help. It might be because
          !   patch%is_veg is only allocated when using FATES, which is why I'm trying this, but use_nvp
          !   should not ever be true if not using FATES.
          if (use_fates) then
-            if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
+            if (use_nvp .and. patch%is_veg(p) .and. frac_nvp_eff > 0._r8) then
                eflx_sh_nvp(p) = -raih*(thm(p)-t_nvp_col(c))
             else
                eflx_sh_nvp(p) = 0._r8  ! [PORTED by Hui Tang: zero NVP sh flux when buried under snow or condition unmet]
