@@ -1168,10 +1168,16 @@ contains
          
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(w => water_inst%bulk_and_tracers(i))
-       ! [PORTED by Hui Tang: when NVP is active jbot_sno=-1; the bottom snow percolation
-       !  exits at j=-1 (into NVP), not j=0.  Use j=0 for non-NVP columns as before.]
+       ! [PORTED by Hui Tang: select bottom-of-snow percolation index.  Whenever the NVP
+       !  structural layer exists at j=0 (jbot_sno == -1), the bottom snow percolation
+       !  exits at j=-1 into NVP — regardless of whether NVP is exposed or buried.
+       !  Previously gated on col%nvp_layer_active(c) which is TRUE only when NVP is
+       !  exposed (snl=0); the buried-NVP case (snl<0, jbot_sno=-1) then incorrectly
+       !  picked qflx_snow_percolation_col(c,0), which carries the NVP→soil drainage
+       !  flux (a different physical process), causing systematic negative errh2osno.
+       !  Correct condition is jbot_sno==-1.]
        do c = begc, endc
-          if (col%nvp_layer_active(c)) then
+          if (col%jbot_sno(c) == -1) then
              qflx_snow_percolation_bottom_tmp(c) = w%waterflux_inst%qflx_snow_percolation_col(c, -1)
           else
              qflx_snow_percolation_bottom_tmp(c) = w%waterflux_inst%qflx_snow_percolation_col(c, 0)
@@ -1804,6 +1810,11 @@ contains
     do j = -nlevsno+1, 0
        do fc = 1, num_snowc
           c = filter_snowc(fc)
+          ! [PORTED by Hui Tang: skip NVP layer j=0 — its dz is a structural property set by
+          !  UpdateNVPLayer from FATES-derived nvp_dz, not a snow-water-content floor.  During
+          !  melt, snow percolation fills h2osoi_liq(c,0) and the standard floor below would
+          !  inflate dz(c,0), corrupting layer geometry until UpdateNVPLayer resets it.]
+          if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) cycle
           if (j >= snl(c)+1) then
              dz(c,j) = max(dz(c,j),h2osoi_liq(c,j)/denh2o + h2osoi_ice(c,j)/denice)
           end if
