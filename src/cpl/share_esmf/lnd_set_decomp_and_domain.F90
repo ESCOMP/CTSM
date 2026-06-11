@@ -21,6 +21,8 @@ module lnd_set_decomp_and_domain
   use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
   use perf_mod     , only : t_startf, t_stopf
+  use clm_shmem_mod, only : clm_shmem_alloc_i4_1d, clm_shmem_free, clm_shmem_fence
+  use clm_shmem_mod, only : clm_shmem_is_leader, clm_shmem_leader_allreduce_sum_i4
 
   implicit none
   private ! except
@@ -83,6 +85,7 @@ contains
     integer  , pointer     :: gindex_ocn(:)   ! global index space for just ocean points
     integer  , pointer     :: gindex_ctsm(:)  ! global index space for land and ocean points
     integer  , pointer     :: lndmask_glob(:)
+    integer                :: lndmask_win = -1 ! node-shared window handle for lndmask_glob (cmeps paths)
     real(r8) , pointer     :: lndfrac_glob(:)
     real(r8) , pointer     :: lndfrac_loc_input(:)
     real(r8) , pointer     :: dataptr1d(:)
@@ -131,7 +134,7 @@ contains
           ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
           ! Note that lndmask_glob and lndfrac_loc_input are allocated in lnd_set_lndmask_from_maskmesh
           call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, &
-               lndfrac_loc_input, rc)
+               lndmask_win, lndfrac_loc_input, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 #ifdef DEBUG
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
@@ -139,7 +142,7 @@ contains
 #endif
        else
           ! obtain land mask from land mesh file - assume that land frac is identical to land mask
-          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, rc)
+          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndmask_win, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     else if (trim(driver) == 'lilac') then
@@ -184,8 +187,14 @@ contains
        ldomain%mask(g) = lndmask_glob(gindex_lnd(n))
     end do
 
-    ! Deallocate global pointer memory
-    deallocate(lndmask_glob)
+    ! Deallocate global pointer memory.  The cmeps paths allocate lndmask_glob as
+    ! a per-node shared-memory window (clm_shmem_alloc_i4_1d), so it must be freed
+    ! with clm_shmem_free, not deallocate; the lilac path uses a plain allocate.
+    if (trim(driver) == 'cmeps') then
+       call clm_shmem_free(lndmask_glob, lndmask_win)
+    else
+       deallocate(lndmask_glob)
+    end if
 
     ! Generate a ctsm global index that includes both land and ocean points
     nocn = size(gindex_ocn)
@@ -423,7 +432,7 @@ contains
   end subroutine lnd_get_global_dims
 
   !===============================================================================
-  subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndfrac_loc, rc)
+  subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndmask_win, lndfrac_loc, rc)
 
     ! If the landfrac/landmask file does not exists then determine the
     ! land fraction and land mask on the land grid by mapping the mask
@@ -437,7 +446,8 @@ contains
     type(ESMF_Mesh)     , intent(in)  :: mesh_mask
     type(ESMF_VM)       , intent(in)  :: vm
     integer             , intent(in)  :: gsize
-    integer             , pointer     :: lndmask_glob(:)
+    integer             , pointer     :: lndmask_glob(:) ! node-shared global land mask
+    integer             , intent(out) :: lndmask_win     ! its shared-memory window handle
     real(r8)            , pointer     :: lndfrac_loc(:)
     integer             , intent(out) :: rc
 
@@ -449,7 +459,6 @@ contains
     type(ESMF_DistGrid)    :: distgrid_mask
     integer  , pointer     :: gindex_input(:) ! global index space for land and ocean points
     integer  , pointer     :: lndmask_loc(:)
-    integer  , pointer     :: itemp_glob(:)
     real(r8) , pointer     :: maskmask_loc(:) ! on ocean mesh
     real(r8) , pointer     :: maskfrac_loc(:) ! on land mesh
     real(r8) , pointer     :: dataptr1d(:)
@@ -475,7 +484,12 @@ contains
     klen = len_trim(flandfrac) - 3 ! remove the .nc
     flandfrac_status = flandfrac(1:klen)//'.status'
 
-    allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
+    ! Allocate the global land mask once per shared-memory node (not once per rank).
+    ! Leader zeroes it; the compute branch below fills disjoint local points on each
+    ! rank and sums across nodes (clm_shmem_leader_allreduce_sum_i4).
+    call clm_shmem_alloc_i4_1d(lndmask_glob, lndmask_win, gsize)
+    if (clm_shmem_is_leader()) lndmask_glob(:) = 0
+    call clm_shmem_fence(lndmask_win)
 
     ! Determine if lndfrac/lndmask file exists
     inquire(file=trim(flandfrac), exist=lexist)
@@ -558,11 +572,7 @@ contains
        do n = 1,lsize_lnd
           lndmask_glob(gindex_input(n)) = lndmask_loc(n)
        end do
-       allocate(itemp_glob(gsize))
-       call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
-            reduceflag=ESMF_REDUCE_SUM, rc=rc)
-       lndmask_glob(:) = int(itemp_glob(:))
-       deallocate(itemp_glob)
+       call clm_shmem_leader_allreduce_sum_i4(lndmask_glob, lndmask_win, gsize)
 
        ! deallocate memory
        deallocate(maskmask_loc)
@@ -573,13 +583,14 @@ contains
   end subroutine lnd_set_lndmask_from_maskmesh
 
   !===============================================================================
-  subroutine lnd_set_lndmask_from_lndmesh(mesh_lnd, vm, gsize, lndmask_glob, rc)
+  subroutine lnd_set_lndmask_from_lndmesh(mesh_lnd, vm, gsize, lndmask_glob, lndmask_win, rc)
 
     ! input/out variables
     type(ESMF_Mesh)     , intent(in)  :: mesh_lnd
     type(ESMF_VM)       , intent(in)  :: vm
     integer             , intent(in)  :: gsize
-    integer             , pointer     :: lndmask_glob(:)
+    integer             , pointer     :: lndmask_glob(:) ! node-shared global land mask
+    integer             , intent(out) :: lndmask_win     ! its shared-memory window handle
     integer             , intent(out) :: rc
 
     ! local variables:
@@ -587,7 +598,6 @@ contains
     integer             :: lsize
     integer , pointer   :: gindex(:)
     integer , pointer   :: lndmask_loc(:)
-    integer , pointer   :: itemp_glob(:)
     type(ESMF_DistGrid) :: distgrid
     type(ESMF_Array)    :: elemMaskArray
     !-------------------------------------------------------------------------------
@@ -611,19 +621,20 @@ contains
     ! Determine global landmask_glob - needed to determine the ctsm decomposition
     ! land frac, lats, lons and areas will be done below
     allocate(gindex(lsize))
-    allocate(itemp_glob(gsize))
     call ESMF_DistGridGet(distgrid, 0, seqIndexList=gindex, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
+    ! Allocate the global land mask once per shared-memory node (not once per rank)
+    ! and build it by summing each rank's disjoint local contributions across nodes
+    ! (the leader-only reduce replaces the all-rank ESMF_VMAllReduce; bit-for-bit).
+    call clm_shmem_alloc_i4_1d(lndmask_glob, lndmask_win, gsize)
+    if (clm_shmem_is_leader()) lndmask_glob(:) = 0
+    call clm_shmem_fence(lndmask_win)
 
     do n = 1,lsize
        lndmask_glob(gindex(n)) = lndmask_loc(n)
     end do
-    call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
-         reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndmask_glob(:) = int(itemp_glob(:))
-    deallocate(itemp_glob)
+    call clm_shmem_leader_allreduce_sum_i4(lndmask_glob, lndmask_win, gsize)
     deallocate(gindex)
     deallocate(lndmask_loc)
 
