@@ -25,6 +25,8 @@ module BareGroundFluxesMod
   use ColumnType           , only : col                
   use PatchType            , only : patch                
   use clm_varctl           , only : use_fates
+  ! [PORTED by Hui Tang: NVP surface resistance parameters for local rnvp computation]
+  use NVPParamsMod         , only : rnvp_min, rnvp_amp, rnvp_exp, rnvp_ice
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -141,6 +143,15 @@ contains
     real(r8) :: raw                              ! moisture resistance [s/m]
     real(r8) :: raih                             ! temporary variable [kg/m2/s]
     real(r8) :: raiw                             ! temporary variable [kg/m2/s]
+    ! [PORTED by Hui Tang: per-surface moisture conductances for NVP-aware LE partitioning]
+    real(r8) :: raiw_snow                        ! moisture conductance for snow surface [kg/m2/s]
+    real(r8) :: raiw_soil                        ! moisture conductance for bare soil [kg/m2/s]
+    real(r8) :: raiw_h2osfc                      ! moisture conductance for surface water [kg/m2/s]
+    real(r8) :: raiw_nvp                         ! moisture conductance for NVP surface [kg/m2/s]
+    real(r8) :: frac_nvp_eff                     ! effective NVP fraction (capped by 1-fsno-fh2osfc) [-]
+    real(r8) :: frac_soil                        ! bare soil fraction (1-fsno-fh2osfc-fnvp) [-]
+    real(r8) :: rnvp                             ! NVP surface evaporative resistance [s/m]
+    real(r8) :: satfrac_nvp                      ! NVP effective saturation fraction [-]
     real(r8) :: fm(bounds%begp:bounds%endp)      ! needed for BGC only to diagnose 10m wind speed
     real(r8) :: e_ref2m                          ! 2 m height surface saturated vapor pressure [Pa]
     real(r8) :: qsat_ref2m                       ! 2 m height surface saturated specific humidity [kg/kg]
@@ -163,8 +174,13 @@ contains
     associate(                                                                    & 
          dhsdt_canopy           => energyflux_inst%dhsdt_canopy_patch           , & ! Output: [real(r8) (:)   ]  change in heat storage of stem (W/m**2) [+ to atm]
          eflx_sh_stem           => energyflux_inst%eflx_sh_stem_patch           , & ! Output: [real(r8) (:)   ]  sensible heat flux from stems (W/m**2) [+ to atm]
-         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)                                                     
-         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers                                                  
+         soilresis              => soilstate_inst%soilresis_col                 , & ! Input:  [real(r8) (:,:) ]  evaporative soil resistance (s/m)
+         ! [PORTED by Hui Tang: surface area fractions for NVP-aware LE partitioning]
+         frac_sno_eff           => waterdiagnosticbulk_inst%frac_sno_eff_col    , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
+         ! [PORTED by Hui Tang: NVP wet fraction (= effective saturation) for local rnvp]
+         fwet_nvp_col           => waterdiagnosticbulk_inst%fwet_nvp_col        , & ! Input:  [real(r8) (:)   ]  NVP wet fraction (0 to 1)
+         snl                    => col%snl                                      , & ! Input:  [integer  (:)   ]  number of snow layers
          dz                     => col%dz                                       , & ! Input:  [real(r8) (:,:) ]  layer depth (m)                                                     
          zii                    => col%zii                                      , & ! Input:  [real(r8) (:)   ]  convective boundary height [m]                                        
 
@@ -453,12 +469,38 @@ contains
          forc_dewpoint = forc_dewpoint + tfrz
 
          !changed by K.Sakaguchi. Soilbeta is used for evaporation
-         if (dqh(p) > 0._r8) then  !dew  (beta is not applied, just like rsoil used to be) 
+         if (dqh(p) > 0._r8) then  !dew  (beta is not applied, just like rsoil used to be)
             if (t_grnd(c) > forc_dewpoint) then ! no dew
-               raiw = 0._r8 
+               raiw = 0._r8
             else                                ! dew
                raiw = forc_rho(c)/(raw)
-            end if 
+            end if
+            ! [PORTED by Hui Tang: per-surface moisture conductances for the dew branch.
+            !  Dew (condensation) deposits on every surface with aerodynamic resistance
+            !  only — no soil/NVP surface resistance is applied, consistent with the bulk
+            !  raiw above and the "beta is not applied" comment. Mirror the no-dew/dew
+            !  split: zero when no dew (t_grnd > dewpoint), aerodynamic-only otherwise.
+            !  Without this, raiw_nvp etc. retain stale values from the previous patch's
+            !  evaporation branch and corrupt the per-surface qflx_ev_* fluxes below (which
+            !  are consumed in SoilFluxes for the water-store partitioning and for the
+            !  area-weighted ground-evap total qflx_evap_grnd_eff). frac_nvp_eff is also
+            !  recomputed here because the qflx_ev_nvp and eflx_sh_nvp gates (frac_nvp_eff>0)
+            !  below depend on it.]
+            if (use_nvp) then
+               if (t_grnd(c) > forc_dewpoint) then ! no dew
+                  raiw_snow   = 0._r8
+                  raiw_h2osfc = 0._r8
+                  raiw_soil   = 0._r8
+                  raiw_nvp    = 0._r8
+               else                                ! dew
+                  raiw_snow   = forc_rho(c) / raw
+                  raiw_h2osfc = forc_rho(c) / raw
+                  raiw_soil   = forc_rho(c) / raw
+                  raiw_nvp    = forc_rho(c) / raw
+               end if
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, &
+                                  col%frac_nvp(c) - frac_sno_eff(c)))
+            end if
          else
             if(do_soilevap_beta())then
                if (t_grnd(c) > forc_dewpoint) then ! no dew
@@ -470,7 +512,46 @@ contains
             endif
             if(do_soil_resistance_sl14())then
                ! Swenson & Lawrence 2014 soil resistance is applied
-               raiw    = forc_rho(c)/(raw+soilresis(c))
+               if (use_nvp) then
+                  ! [PORTED by Hui Tang: soilresis applies only to bare soil patches.
+                  !  In NVP runs, soilresis becomes very large because NVP intercepts
+                  !  surface infiltration and dries soil layer 1; using a single bulk
+                  !  raiw then incorrectly throttles snow sublimation by ~40× during
+                  !  the spring melt season.  Compute per-surface raiw; these feed the
+                  !  per-surface qflx_ev_* fluxes below, which SoilFluxes consumes for the
+                  !  water-store partitioning and the area-weighted ground-evap total
+                  !  qflx_evap_grnd_eff.]
+                  raiw_snow   = forc_rho(c) / raw                          ! snow: aerodynamic only
+                  raiw_h2osfc = forc_rho(c) / raw                          ! open water: aerodynamic only
+                  raiw_soil   = forc_rho(c) / (raw + soilresis(c))         ! bare soil: SL14
+                  ! [PORTED by Hui Tang: compute NVP surface resistance locally to avoid
+                  !  cross-module state coupling that caused the compile error in commit
+                  !  16945c674 (reverted).  Same formula as NVPEvaporation in NVPLayerDynamicsMod:
+                  !    unfrozen: rnvp = rnvp_min + rnvp_amp * (1 - satfrac)^rnvp_exp
+                  !    frozen:   rnvp = rnvp_ice  (literature ice/snow resistance)
+                  !  satfrac taken from fwet_nvp_col (already a 0-1 effective saturation).
+                  !  When NVP is inactive (frac_nvp=0), raiw_nvp is irrelevant — flux gated
+                  !  by frac_nvp_eff weighting and the qflx_ev_nvp guard below.]
+                  if (t_soisno(c,0) >= tfrz) then
+                     satfrac_nvp = max(0._r8, min(1._r8, fwet_nvp_col(c)))
+                     rnvp = rnvp_min + rnvp_amp * (1._r8 - satfrac_nvp)**rnvp_exp
+                  else
+                     rnvp = rnvp_ice
+                  end if
+                  raiw_nvp    = forc_rho(c) / (raw + rnvp)                 ! NVP: aerodynamic + rnvp
+                  ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno_eff), cap = 1 - frac_h2osfc - frac_sno_eff]
+                  frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, &
+                                     col%frac_nvp(c) - frac_sno_eff(c)))
+                  frac_soil    = max(0._r8, &
+                                     1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                  ! Area-weighted aggregate raiw — used for cgrndl linearization and the
+                  ! qflx_evap_soi back-compat diagnostic. The per-surface ground-evap total
+                  ! is now built in SoilFluxes (qflx_evap_grnd_eff), not here.
+                  raiw = frac_sno_eff(c)*raiw_snow + frac_h2osfc(c)*raiw_h2osfc &
+                       + frac_nvp_eff   *raiw_nvp  + frac_soil      *raiw_soil
+               else
+                  raiw    = forc_rho(c)/(raw+soilresis(c))
+               endif
             endif
          end if
 
@@ -517,32 +598,42 @@ contains
          qflx_tran_veg(p)  = 0._r8
          qflx_evap_veg(p)  = 0._r8
          qflx_evap_soi(p)  = -raiw*dqh(p)
-         qflx_evap_tot(p)  = qflx_evap_soi(p)
-
-         print *, "qflx_evap_tot=", qflx_evap_soi(p), raiw, dqh(p)
 
          ! compute latent heat fluxes individually
-         qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
-         qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
-         qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
+         if (use_nvp) then
+            ! [PORTED by Hui Tang: per-surface raiw avoids soilresis cross-coupling]
+            qflx_ev_snow(p)   = -raiw_snow   * (forc_q(c) - qg_snow(c))
+            qflx_ev_soil(p)   = -raiw_soil   * (forc_q(c) - qg_soil(c))
+            qflx_ev_h2osfc(p) = -raiw_h2osfc * (forc_q(c) - qg_h2osfc(c))
+         else
+            qflx_ev_snow(p)   = -raiw*(forc_q(c) - qg_snow(c))
+            qflx_ev_soil(p)   = -raiw*(forc_q(c) - qg_soil(c))
+            qflx_ev_h2osfc(p) = -raiw*(forc_q(c) - qg_h2osfc(c))
+         end if
          ! [PORTED by Hui Tang: NVP evaporation flux for bare ground, analogous to snow/h2osfc]
-         ! Zero when NVP is buried under snow (snl < -1): qflx_ev_nvp_col drives ev_nvp_eff in
+         ! [PORTED by Hui Tang: gate on exposed NVP fraction (frac_nvp_eff>0) instead of snl>=-1, so
+         !  partial snow cover keeps NVP evaporation wherever NVP is still exposed (frac_nvp > frac_sno_eff).]
+         ! Zero when NVP is fully buried (frac_nvp_eff <= 0): qflx_ev_nvp_col drives ev_nvp_eff in
          ! NVPWaterBalance_Column; a non-zero value here when NVP is covered would add water to
          ! qflx_evap_tot_col without removing it from any tracked water store, causing errh2o.
          ! Only compute for the NVP veg patch (patch%is_veg), not the bareground gap patch.
-         ! SSR debug: I'm adding the "if use_fates" wrapper because of previous "Reference to undefined
-         !   POINTER PATCH%IS_VEG" errors above. Not sure if this is going to help. It might be because
-         !   patch%is_veg is only allocated when using FATES, which is why I'm trying this, but use_nvp
-         !   should not ever be true if not using FATES.
          if (use_fates) then
-            if (use_nvp .and. patch%is_veg(p) .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
-               qflx_ev_nvp(p) = -raiw*(forc_q(c) - qg_nvp(c))
+            if (use_nvp .and. patch%is_veg(p) .and. frac_nvp_eff > 0._r8) then
+               qflx_ev_nvp(p) = -raiw_nvp*(forc_q(c) - qg_nvp(c))
             else
                qflx_ev_nvp(p) = 0._r8  ! [PORTED by Hui Tang: zero NVP ev flux when buried under snow or condition unmet]
             end if
          else
             qflx_ev_nvp(p) = 0._r8
          end if
+
+         ! [PORTED by Hui Tang: removed the NVP per-surface qflx_evap_tot rebuild here — it was
+         !  dead code. SoilFluxes runs after BareGroundFluxes and unconditionally recomputes
+         !  qflx_evap_tot = qflx_evap_veg + qflx_evap_grnd_eff (SoilFluxesMod.F90 bgp2_loop_2),
+         !  and nothing reads qflx_evap_tot in between (driver consumes it only at clm_driver.F90
+         !  ~line 1753, after SoilFluxes). The per-surface area-weighting now lives in
+         !  qflx_evap_grnd_eff in SoilFluxesMod. Restored the original unconditional CLM line.]
+         qflx_evap_tot(p) = qflx_evap_soi(p)
 
          ! 2 m height air temperature
          t_ref2m(p) = thm(p) + temp1(p)*dth(p)*(1._r8/temp12m(p) - 1._r8/temp1(p))
