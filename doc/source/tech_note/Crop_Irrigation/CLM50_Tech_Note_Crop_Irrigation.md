@@ -300,11 +300,11 @@ Each crop can be planted in each gridcell once per year, in the "sowing window."
 To be planted, a crop patch must meet the following requirements sometime within its sowing window:
 
 $$
-\begin{array}{c}
-{T_{10d} > \paramplantingtemp} \\
-{T_{10d}^{\min } > \paramminplantingtemp}  \\
-{\gddeightrun \ge \paramgddmin}
-\end{array}
+\begin{align}
+T_{10d} &> \paramplantingtemp \\
+T_{10d}^{\min } &> \paramminplantingtemp  \\
+\gddeightrun &\ge \paramgddmin
+\end{align}
 $$ (25.1)
 
 where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). $\paramplantingtemp$ and $\paramminplantingtemp$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeightrun$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and $\paramgddmin$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeightrun$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeightrun$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeightrun > 0$.
