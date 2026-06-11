@@ -40,9 +40,14 @@ module WaterFluxBulkType
      ! [PORTED by Hui Tang: NVP (moss/lichen) ground evaporation flux]
      real(r8), pointer :: qflx_ev_nvp_patch        (:)   ! patch evaporation flux from NVP (mm H2O/s) [+ to atm]
      real(r8), pointer :: qflx_ev_nvp_col          (:)   ! col  evaporation flux from NVP (mm H2O/s) [+ to atm]
+     ! [PORTED by Hui Tang: diagnostic — effective NVP evap = frac_nvp_eff * qflx_ev_nvp_col,
+     !  i.e. the column-area-weighted flux actually removed from the NVP water balance.
+     !  History output only; not used by any physics.]
+     real(r8), pointer :: qflx_ev_nvp_eff_col      (:)   ! col effective NVP evap (mm H2O/s)
      ! [PORTED by Hui Tang: NVP water infiltration and drainage fluxes]
      real(r8), pointer :: qflx_nvp_infl_col        (:)   ! col water arriving at top of NVP layer (mm H2O/s) [diagnostic]
      real(r8), pointer :: qflx_nvp_drain_col       (:)   ! col drainage from NVP layer 0 to soil layer 1 (mm H2O/s)
+     real(r8), pointer :: qflx_nvp_to_snow_col     (:)   ! [PORTED by Hui Tang] col excess NVP ice (above pore capacity) pushed up into bottom snow layer (mm H2O/s)
 
      real(r8), pointer :: qflx_adv_col             (:,:) ! col advective flux across different soil layer interfaces [mm H2O/s] [+ downward]
      real(r8), pointer :: qflx_rootsoi_col         (:,:) ! col root and soil water exchange [mm H2O/s] [+ into root]
@@ -131,9 +136,11 @@ contains
     ! [PORTED by Hui Tang: allocate NVP evaporation flux arrays]
     allocate( this%qflx_ev_nvp_patch       (begp:endp))              ; this%qflx_ev_nvp_patch        (:)   = nan
     allocate( this%qflx_ev_nvp_col         (begc:endc))              ; this%qflx_ev_nvp_col          (:)   = nan
+    allocate( this%qflx_ev_nvp_eff_col     (begc:endc))              ; this%qflx_ev_nvp_eff_col      (:)   = nan
     ! [PORTED by Hui Tang: allocate NVP infiltration and drainage flux arrays]
     allocate( this%qflx_nvp_infl_col       (begc:endc))              ; this%qflx_nvp_infl_col        (:)   = nan
     allocate( this%qflx_nvp_drain_col      (begc:endc))              ; this%qflx_nvp_drain_col       (:)   = nan
+    allocate( this%qflx_nvp_to_snow_col    (begc:endc))              ; this%qflx_nvp_to_snow_col     (:)   = 0._r8  ! [PORTED by Hui Tang]
 
     allocate(this%qflx_drain_vr_col      (begc:endc,1:nlevsoi))      ; this%qflx_drain_vr_col        (:,:) = nan
     allocate(this%qflx_adv_col             (begc:endc,0:nlevsoi))    ; this%qflx_adv_col             (:,:) = nan
@@ -272,6 +279,12 @@ contains
             avgflag='A', long_name=this%info%lname('column evaporation flux from nvp (moss/lichen)'), &
             ptr_col=this%qflx_ev_nvp_col, c2l_scale_type='urbanf', default='inactive')
 
+       this%qflx_ev_nvp_eff_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('QFLX_EV_NVP_EFF_COL'), units='mm/s', &
+            avgflag='A', long_name=this%info%lname('effective nvp evaporation = frac_nvp_eff*qflx_ev_nvp_col'), &
+            ptr_col=this%qflx_ev_nvp_eff_col, c2l_scale_type='urbanf', default='inactive')
+
        this%qflx_nvp_infl_col(begc:endc) = spval
        call hist_addfld1d ( &
             fname=this%info%fname('QFLX_NVP_INFL'), units='mm/s', &
@@ -283,6 +296,13 @@ contains
             fname=this%info%fname('QFLX_NVP_DRAIN'), units='mm/s', &
             avgflag='A', long_name=this%info%lname('drainage from nvp (moss/lichen) layer to soil'), &
             ptr_col=this%qflx_nvp_drain_col, c2l_scale_type='urbanf', default='inactive')
+
+       ! [PORTED by Hui Tang: history for excess NVP ice routed to bottom snow layer]
+       this%qflx_nvp_to_snow_col(begc:endc) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('QFLX_NVP_TO_SNOW'), units='mm/s', &
+            avgflag='A', long_name=this%info%lname('excess nvp (moss/lichen) ice pushed into bottom snow layer'), &
+            ptr_col=this%qflx_nvp_to_snow_col, c2l_scale_type='urbanf', default='inactive')
     end if
 
   end subroutine InitBulkHistory
