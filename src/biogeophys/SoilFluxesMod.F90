@@ -79,9 +79,14 @@ contains
     real(r8) :: t_grnd0(bounds%begc:bounds%endc)                   ! t_grnd of previous time step
     real(r8) :: lw_grnd
     real(r8) :: frac_nvp_eff                                       ! [PORTED by Hui Tang: effective NVP fraction for LW weighting]
+    real(r8) :: frac_soil                                          ! [PORTED by Hui Tang: exposed bare-soil fraction (1-fsno-fh2osfc-fnvp)]
+    real(r8) :: qflx_evap_grnd_eff                                 ! [PORTED by Hui Tang: per-surface ground evap total for energy/diagnostic consistency]
     real(r8) :: evaporation_limit                                  ! top layer moisture available for evaporation
     real(r8) :: evaporation_demand                                   ! evaporative demand
     real(r8) :: heat_store_diag                                      ! [PORTED by Hui Tang: errsoi diagnostic - heat storage sum]
+    real(r8) :: wgt                                                  ! [PORTED by Hui Tang: errsoi per-layer diagnostic - applied frac weight]
+    real(r8) :: eflx_soil_grnd_nvp                                   ! [PORTED by Hui Tang: VERIFY-ONLY candidate NVP-consistent errsoi input flux (W/m2)]
+    real(r8) :: errsoi_test                                          ! [PORTED by Hui Tang: VERIFY-ONLY candidate errsoi residual using NVP-consistent input (W/m2)]
     !-----------------------------------------------------------------------
 
     associate(                                                                & 
@@ -180,11 +185,36 @@ contains
          ! flux corrections
 
          if (col%snl(c) < 0) then
-            t_grnd0(c) = frac_sno_eff(c) * tssbef(c,col%snl(c)+1) &
-                 + (1 - frac_sno_eff(c) - frac_h2osfc(c)) * tssbef(c,1) &
-                 + frac_h2osfc(c) * t_h2osfc_bef(c)
+            ! [PORTED by Hui Tang: Phase 1c RESTORE (2026-06-11) — NVP-weighted t_grnd0 for snl<0,
+            !  mirroring the BiogeophysPreFluxCalcsMod snl<0 restore. tinc = t_grnd - t_grnd0 must use
+            !  the NVP-weighted blend on both sides so the LW linearization emg*sb*t_grnd0^3*4*tinc in
+            !  eflx_soil_grnd matches the solve (which now applies the NVP surface flux at j=0).]
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+               t_grnd0(c) = frac_sno_eff(c) * tssbef(c,col%snl(c)+1) &
+                           + frac_nvp_eff    * tssbef(c,0) &
+                           + frac_soil       * tssbef(c,1) &
+                           + frac_h2osfc(c)  * t_h2osfc_bef(c)
+            else
+               t_grnd0(c) = frac_sno_eff(c) * tssbef(c,col%snl(c)+1) &
+                    + (1 - frac_sno_eff(c) - frac_h2osfc(c)) * tssbef(c,1) &
+                    + frac_h2osfc(c) * t_h2osfc_bef(c)
+            end if
          else
-            t_grnd0(c) = (1 - frac_h2osfc(c)) * tssbef(c,1) + frac_h2osfc(c) * t_h2osfc_bef(c)
+            ! [PORTED by Hui Tang: include NVP layer temperature in t_grnd0 for snl==0 NVP columns.
+            !  Mirrors BiogeophysPreFluxCalcsMod snl==0 branch so tinc = t_grnd - t_grnd0 is consistent.]
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+               t_grnd0(c) = frac_nvp_eff   * tssbef(c,0) &
+                           + frac_soil      * tssbef(c,1) &
+                           + frac_h2osfc(c) * t_h2osfc_bef(c)
+            else
+               t_grnd0(c) = (1 - frac_h2osfc(c)) * tssbef(c,1) + frac_h2osfc(c) * t_h2osfc_bef(c)
+            end if
          endif
 
          tinc(c) = t_grnd(c) - t_grnd0(c)
