@@ -2781,8 +2781,15 @@ contains
        ! number of layers (msno) may increase during the loop.
        ! Impose k < nlevsno; the special case 'k == nlevsno' is not relevant,
        ! as it is neither allowed to subdivide nor does it have layers below.
+       ! [PORTED by Hui Tang: when NVP occupies index j=0, the valid snow indices are only
+       !  -nlevsno+1 .. -1 (nlevsno-1 slots), because j=0 is reserved for the NVP layer. Cap the
+       !  subdivision at nlevsno-1 in that case so msno can reach at most nlevsno-1 and the later
+       !  reconstruction snl = -(msno+1) stays >= -nlevsno (i.e. snl+1 >= -nlevsno+1, in bounds).
+       !  Without this, a deep snowpack subdivides to msno=nlevsno -> snl=-(nlevsno+1) -> snl+1
+       !  one below the t_soisno lower bound (Fortran "Index '-12' below lower bound -11" crash).]
        k = 1
-       loop_layers: do while( k <= msno .and. k < nlevsno )
+       loop_layers: do while( k <= msno .and. &
+            k < nlevsno - merge(1, 0, use_nvp .and. col%jbot_sno(c) == -1) )
 
           ! Current layer is bottom layer
           if (k == msno) then
