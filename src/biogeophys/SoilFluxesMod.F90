@@ -421,8 +421,31 @@ contains
          g = patch%gridcell(p)
          j = col%snl(c)+1
 
+         ! [PORTED by Hui Tang: per-surface ground-evaporation total for energy/diagnostic
+         !  consistency under NVP. The bulk qflx_evap_soi = -raiw*dqh differs from the
+         !  area-weighted sum of the per-surface fluxes that actually remove water from each
+         !  store (snow/soil/h2osfc/NVP), because the raiw and qg blends are by area, not by
+         !  conductance. Drive the latent ENERGY (eflx_lh_tot, eflx_lh_grnd, and the latent
+         !  term of eflx_soil_grnd) and the evaporation diagnostic (qflx_evap_tot) from this
+         !  single per-surface sum so the energy leaving the column matches the water removed
+         !  from the stores. qflx_evap_soi is left unchanged for the soil/snow water-store
+         !  partitioning and capping above. The four fractions sum to 1 by construction
+         !  (frac_nvp_eff capped at 1-frac_sno_eff-frac_h2osfc), so the implicit-solve
+         !  linearization increment tinc*cgrndl carried in each per-surface flux aggregates to
+         !  the same value already added to qflx_evap_soi. For non-NVP / urban columns this
+         !  reduces exactly to qflx_evap_soi, leaving those paths bit-for-bit unchanged.]
+         if (use_nvp .and. col%nvp_layer_active(c)) then
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, &
+                               col%frac_nvp(c) - frac_sno_eff(c)))
+            frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+            qflx_evap_grnd_eff = frac_sno_eff(c)*qflx_ev_snow(p) + frac_h2osfc(c)*qflx_ev_h2osfc(p) &
+                               + frac_nvp_eff   *qflx_ev_nvp(p)  + frac_soil      *qflx_ev_soil(p)
+         else
+            qflx_evap_grnd_eff = qflx_evap_soi(p)
+         end if
+
          ! Ground heat flux
-         
+
          if (.not. lun%urbpoi(l)) then
             ! [PORTED by Hui Tang: fix lw_grnd for NVP — area-weighted LW emission including NVP]
             ! Standard formula uses frac_sno_eff/bare-soil/h2osfc fractions summing to 1.
@@ -447,7 +470,7 @@ contains
             eflx_soil_grnd(p) = ((1._r8- frac_sno_eff(c))*sabg_soil(p) + frac_sno_eff(c)*sabg_snow(p)) + dlrad(p) &
                  + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                  - emg(c)*sb*lw_grnd - emg(c)*sb*t_grnd0(c)**3*(4._r8*tinc(c)) &
-                 - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
+                 - (eflx_sh_grnd(p)+qflx_evap_grnd_eff*htvp(c))   ! [PORTED by Hui Tang: per-surface latent term]
             ! [PORTED by Hui Tang: NVP solar absorption in eflx_soil_grnd]
             ! SurfaceRadiationMod removes sabg_lyr(p,0) from sabg_soil (snl=0: line 781;
             ! snl<0: sabg_soil=sabg_lyr(p,1) only); add it back so NVP absorbed solar is
@@ -486,9 +509,10 @@ contains
          eflx_sh_tot(p) = eflx_sh_veg(p) + eflx_sh_grnd(p)
          if (.not. lun%urbpoi(l)) eflx_sh_tot(p) = eflx_sh_tot(p) + eflx_sh_stem(p)
          
-         qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_soi(p)
+         ! [PORTED by Hui Tang: use per-surface ground-evap total (= qflx_evap_soi for non-NVP)]
+         qflx_evap_tot(p) = qflx_evap_veg(p) + qflx_evap_grnd_eff
 
-         eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_soi(p)
+         eflx_lh_tot(p)= hvap*qflx_evap_veg(p) + htvp(c)*qflx_evap_grnd_eff
          if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
             eflx_lh_tot_r(p)= eflx_lh_tot(p)
             eflx_sh_tot_r(p)= eflx_sh_tot(p)
@@ -502,7 +526,7 @@ contains
          qflx_evap_can(p)  = qflx_evap_veg(p) - qflx_tran_veg(p)
          eflx_lh_vege(p)   = (qflx_evap_veg(p) - qflx_tran_veg(p)) * hvap
          eflx_lh_vegt(p)   = qflx_tran_veg(p) * hvap
-         eflx_lh_grnd(p)   = qflx_evap_soi(p) * htvp(c)
+         eflx_lh_grnd(p)   = qflx_evap_grnd_eff * htvp(c)   ! [PORTED by Hui Tang: per-surface latent term]
 
       end do
       call t_stopf('bgp2_loop_2')
