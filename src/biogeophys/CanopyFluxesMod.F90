@@ -47,6 +47,8 @@ module CanopyFluxesMod
   use ColumnType            , only : col                
   use PatchType             , only : patch                
   use EDTypesMod            , only : ed_site_type
+  ! [PORTED by Hui Tang: NVP surface resistance parameters for local rnvp computation]
+  use NVPParamsMod          , only : rnvp_min, rnvp_amp, rnvp_exp, rnvp_ice
   use SoilWaterRetentionCurveMod, only : soil_water_retention_curve_type
   use LunaMod               , only : Update_Photosynthesis_Capacity, Acc24_Climate_LUNA,Acc240_Climate_LUNA,Clear24_Climate_LUNA
   use NumericsMod           , only : truncate_small_values
@@ -320,6 +322,16 @@ contains
     real(r8) :: wtaq                                 ! latent heat conductance for air [m/s]
     real(r8) :: wtlq                                 ! latent heat conductance for leaf [m/s]
     real(r8) :: wtgq(bounds%begp:bounds%endp)        ! latent heat conductance for ground [m/s]
+    ! [PORTED by Hui Tang: per-surface ground latent conductances for NVP-aware LE partitioning.
+    !  Used only for post-iteration diagnostic fluxes; iterative wtgq stays bulk to keep
+    !  canopy energy balance solver bit-identical to non-NVP behaviour.]
+    real(r8) :: wtgq_snow                            ! snow surface latent conductance [m/s]
+    real(r8) :: wtgq_soil                            ! bare soil latent conductance [m/s]
+    real(r8) :: wtgq_h2osfc                          ! surface water latent conductance [m/s]
+    real(r8) :: wtgq_nvp                             ! NVP surface latent conductance [m/s]
+    real(r8) :: rnvp                                 ! NVP surface evaporative resistance [s/m]
+    real(r8) :: satfrac_nvp                          ! NVP effective saturation fraction [-]
+    real(r8) :: frac_soil                            ! bare soil fraction (1-fsno-fh2osfc-fnvp_eff) [-]
     real(r8) :: wtaq0(bounds%begp:bounds%endp)       ! normalized latent heat conductance for air [-]
     real(r8) :: wtlq0(bounds%begp:bounds%endp)       ! normalized latent heat conductance for leaf [-]
     real(r8) :: wtgq0                                ! normalized heat conductance for ground [-]
@@ -570,7 +582,9 @@ contains
          frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterdiagnosticbulk_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
          fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
-         frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
+         frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+         ! [PORTED by Hui Tang: NVP wet fraction (= effective saturation) for local rnvp]
+         fwet_nvp_col           => waterdiagnosticbulk_inst%fwet_nvp_col                 , & ! Input:  [real(r8) (:)   ]  NVP wet fraction (0 to 1)
          snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
          qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]
          qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]
@@ -1313,7 +1327,8 @@ bioms:   do f = 1, fn
             ! fractionate ground emitted longwave
             ! [PORTED by Hui Tang: include NVP layer in lw_grnd blend]
             if (use_nvp) then
-               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno(c) - frac_h2osfc(c)))
+               ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno), cap = 1 - frac_h2osfc - frac_sno]
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno(c), max(0._r8, col%frac_nvp(c) - frac_sno(c)))
             else
                frac_nvp_eff = 0._r8
             end if
@@ -1489,7 +1504,8 @@ bioms:   do f = 1, fn
          ! Energy balance check in canopy
          ! [PORTED by Hui Tang: include NVP in lw_grnd for energy balance check]
          if (use_nvp) then
-            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno(c) - frac_h2osfc(c)))
+            ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno), cap = 1 - frac_h2osfc - frac_sno]
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno(c), max(0._r8, col%frac_nvp(c) - frac_sno(c)))
          else
             frac_nvp_eff = 0._r8
          end if
@@ -1552,23 +1568,73 @@ bioms:   do f = 1, fn
 
          ! compute individual latent heat fluxes
          delq_snow = wtalq(p)*qg_snow(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
-         qflx_ev_snow(p) = forc_rho(c)*wtgq(p)*delq_snow
-
          delq_soil = wtalq(p)*qg_soil(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
-         qflx_ev_soil(p) = forc_rho(c)*wtgq(p)*delq_soil
-
          delq_h2osfc = wtalq(p)*qg_h2osfc(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
-         qflx_ev_h2osfc(p) = forc_rho(c)*wtgq(p)*delq_h2osfc
+
+         ! [PORTED by Hui Tang: per-surface ground latent conductances for NVP-aware LE.
+         !  Iterative wtgq(p) above used soilresis in series with raw(p,below_canopy);
+         !  applying that same throttling to snow/h2osfc/NVP suppresses sublimation by
+         !  ~40× in NVP runs (NVP intercepts surface infiltration → soil layer 1 dries
+         !  → soilresis blows up).  Recompute each surface's conductance with its own
+         !  resistance for the post-iteration diagnostic flux assignments, then rebuild
+         !  qflx_evap_soi from the area-weighted sum.  Iterative wtgq(p) is left
+         !  untouched so canopy energy balance convergence is bit-identical.]
+         if (use_nvp) then
+            ! Local NVP surface resistance (matches NVPLayerDynamicsMod::NVPEvaporation)
+            if (t_soisno(c,0) >= tfrz) then
+               satfrac_nvp = max(0._r8, min(1._r8, fwet_nvp_col(c)))
+               rnvp = rnvp_min + rnvp_amp * (1._r8 - satfrac_nvp)**rnvp_exp
+            else
+               rnvp = rnvp_ice
+            end if
+            wtgq_snow   = frac_veg_nosno(p) / raw(p,below_canopy)
+            wtgq_h2osfc = frac_veg_nosno(p) / raw(p,below_canopy)
+            wtgq_soil   = frac_veg_nosno(p) / (raw(p,below_canopy) + soilresis(c))
+            wtgq_nvp    = frac_veg_nosno(p) / (raw(p,below_canopy) + rnvp)
+            qflx_ev_snow(p)   = forc_rho(c) * wtgq_snow   * delq_snow
+            qflx_ev_soil(p)   = forc_rho(c) * wtgq_soil   * delq_soil
+            qflx_ev_h2osfc(p) = forc_rho(c) * wtgq_h2osfc * delq_h2osfc
+         else
+            qflx_ev_snow(p)   = forc_rho(c) * wtgq(p) * delq_snow
+            qflx_ev_soil(p)   = forc_rho(c) * wtgq(p) * delq_soil
+            qflx_ev_h2osfc(p) = forc_rho(c) * wtgq(p) * delq_h2osfc
+         end if
 
          ! [PORTED by Hui Tang: NVP individual latent heat flux, analogous to snow/h2osfc]
          ! qflx_evap_soi already includes NVP because qg(c) blends NVP in SurfaceHumidityMod.
          ! This is the diagnostic breakdown of the NVP contribution.
-         ! Zero when NVP is buried under snow (snl < -1) — same guard as BareGroundFluxesMod.
-         if (use_nvp .and. col%frac_nvp(c) > 0._r8 .and. col%snl(c) >= -1) then
+         ! [PORTED by Hui Tang: gate on exposed NVP fraction (frac_nvp_eff>0) instead of the binary
+         !  snow-layer count snl>=-1, so partial snow cover no longer erases NVP latent flux while
+         !  part of the column is snow-free. frac_nvp_eff uses frac_sno (Canopy's snow variable),
+         !  matching the qflx_evap_soi weighting below; computed here because it is not yet set.]
+         if (use_nvp) then
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno(c), max(0._r8, &
+                               col%frac_nvp(c) - frac_sno(c)))
+         else
+            frac_nvp_eff = 0._r8
+         end if
+         ! Zero when NVP is fully buried (frac_nvp_eff <= 0) — same guard as BareGroundFluxesMod.
+         if (use_nvp .and. frac_nvp_eff > 0._r8) then
             delq_nvp = wtalq(p)*qg_nvp(c)-wtlq0(p)*qsatl(p)-wtaq0(p)*forc_q(c)
-            qflx_ev_nvp(p) = forc_rho(c)*wtgq(p)*delq_nvp
+            qflx_ev_nvp(p) = forc_rho(c) * wtgq_nvp * delq_nvp
          else
             qflx_ev_nvp(p) = 0._r8
+         end if
+
+         ! [PORTED by Hui Tang: rebuild qflx_evap_soi from per-surface fluxes weighted
+         !  by area.  Without this, the bulk qflx_evap_soi (computed via bulk wtgq with
+         !  soilresis) throttles snow sublimation in NVP runs.  When use_nvp=.false.,
+         !  the original bulk value above is kept unchanged.]
+         if (use_nvp) then
+            ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno), cap = 1 - frac_h2osfc - frac_sno]
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno(c), max(0._r8, &
+                               col%frac_nvp(c) - frac_sno(c)))
+            frac_soil    = max(0._r8, &
+                               1._r8 - frac_sno(c) - frac_h2osfc(c) - frac_nvp_eff)
+            qflx_evap_soi(p) = frac_sno(c)    * qflx_ev_snow(p) &
+                             + frac_h2osfc(c) * qflx_ev_h2osfc(p) &
+                             + frac_nvp_eff   * qflx_ev_nvp(p) &
+                             + frac_soil      * qflx_ev_soil(p)
          end if
 
          ! 2 m height air temperature
