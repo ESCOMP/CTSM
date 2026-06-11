@@ -12,6 +12,7 @@ module clm_initializeMod
   use abortutils            , only : endrun
   use clm_varctl            , only : nsrest, nsrStartup, nsrContinue, nsrBranch
   use clm_varctl            , only : use_fates_sp, use_fates_bgc, use_fates
+  use clm_varctl            , only : use_nvp   ! [PORTED by Hui Tang: NVP cold-start ice override]
   use clm_varctl            , only : is_cold_start
   use clm_varctl            , only : iulog
   use clm_varctl            , only : use_lch4, use_cn, use_cndv, use_c13, use_c14, nhillslope
@@ -25,6 +26,7 @@ module clm_initializeMod
   use LandunitType          , only : lun           ! instance
   use ColumnType            , only : col           ! instance
   use PatchType             , only : patch         ! instance
+  use NVPLayerDynamicsMod   , only : NVPColdStartIce  ! [PORTED by Hui Tang: NVP cold-start ice override]
   use reweightMod           , only : reweight_wrapup
   use filterMod             , only : allocFilters, filter, filter_inactive_and_active
   use CLMFatesInterfaceMod  , only : CLMFatesGlobals1,CLMFatesGlobals2
@@ -760,6 +762,19 @@ contains
        call clm_fates%init_coldstart(water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, canopystate_inst, &
             soilstate_inst, soilbiogeochem_carbonflux_inst)
+
+       ! [PORTED by Hui Tang: override NVP layer-0 ice to its pore capacity at cold start.
+       !  Runs after init_coldstart has set the NVP geometry (nvp_layer_active, dz) and before
+       !  the first begwb, so the initial water balance reflects the cap (no first-step blip /
+       !  no discarded water). Inside the cold-start FATES guard above, so it is cold-start only.]
+       if (use_nvp) then
+          !$OMP PARALLEL DO PRIVATE (nc, bounds_clump)
+          do nc = 1,nclumps
+             call get_clump_bounds(nc, bounds_clump)
+             call NVPColdStartIce(bounds_clump, water_inst%waterstatebulk_inst)
+          end do
+          !$OMP END PARALLEL DO
+       end if
     end if
     
     ! topo_glc_mec was allocated in initialize1, but needed to be kept around through
