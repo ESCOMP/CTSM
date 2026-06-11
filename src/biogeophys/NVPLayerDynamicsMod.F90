@@ -448,27 +448,32 @@ contains
     real(r8) :: khydr_nvp      ! NVP unsaturated hydraulic conductivity [m s-1]
     real(r8) :: K_nvp_mms      ! khydr_nvp converted to mm/s
     real(r8) :: K_soil1        ! soil layer 1 hydraulic conductivity [mm/s]
-    real(r8) :: K_interface    ! harmonic-mean interface conductivity [mm/s]
+    real(r8) :: K_interface    ! interface conductivity (upstream-weighted) [mm/s]
+    real(r8) :: grad           ! [PORTED by Hui Tang] NVP-soil head gradient (matric+gravity); <0 = upward
     real(r8) :: psi_nvp        ! NVP van Genuchten matric potential [mm]
     real(r8) :: smp_soil1      ! soil layer 1 matric potential, prev. timestep [mm]
     real(r8) :: dz_iface_mm    ! distance between NVP and soil layer 1 centres [mm]
     real(r8) :: q01            ! Darcy flux NVP→soil (+down, -up) [mm s-1]
     real(r8) :: h2osoi_net     ! h2osoi_liq(c,0) after infl and evap [kg m-2]
     real(r8) :: satfrac        ! NVP effective saturation fraction [-]
-    ! [PORTED by Hui Tang: effective NVP evap flux — zeroed when NVP is buried under snow]
-    real(r8) :: ev_nvp_eff     ! evap flux applied to NVP water [mm/s]; 0 when buried
+    real(r8) :: max_ice_nvp    ! [PORTED by Hui Tang] max NVP ice = pore-space capacity [kg m-2]
+    real(r8) :: ice_excess     ! [PORTED by Hui Tang] NVP ice above pore capacity [kg m-2]
 
     associate( &
          qflx_rain_plus_snomelt => waterfluxbulk_inst%qflx_rain_plus_snomelt_col, &
          qflx_ev_nvp_col        => waterfluxbulk_inst%qflx_ev_nvp_col,            &
+         qflx_ev_nvp_eff_col    => waterfluxbulk_inst%qflx_ev_nvp_eff_col,        &  ! [PORTED by Hui Tang: diagnostic history output]
          qflx_nvp_infl_col      => waterfluxbulk_inst%qflx_nvp_infl_col,          &
          qflx_nvp_drain_col     => waterfluxbulk_inst%qflx_nvp_drain_col,         &
+         qflx_nvp_to_snow_col   => waterfluxbulk_inst%qflx_nvp_to_snow_col,       &  ! [PORTED by Hui Tang: excess NVP ice -> bottom snow layer]
          h2osoi_liq             => waterstate_inst%h2osoi_liq_col,                &
          h2osoi_ice             => waterstate_inst%h2osoi_ice_col,                &  ! [PORTED by Hui Tang: ice content for porosity reduction]
          h2onvp_col             => waterstate_inst%h2onvp_col,                    &  ! [PORTED by Hui Tang: sync diagnostic copy]
          smp_l                  => soilstate_inst%smp_l_col,                      &
          hk_l                   => soilstate_inst%hk_l_col,                       &
          frac_h2osfc_col        => waterdiagnosticbulk_inst%frac_h2osfc_col,      &
+         ! [PORTED by Hui Tang: snow fraction for snow-cover-aware frac_nvp_eff]
+         frac_sno_eff_col       => waterdiagnosticbulk_inst%frac_sno_eff_col,     &
          fwet_nvp_col           => waterdiagnosticbulk_inst%fwet_nvp_col,         &
          vwc_nvp_col            => waterdiagnosticbulk_inst%vwc_nvp_col,          &  ! [PORTED by Hui Tang: volumetric water content]
          t_nvp_col              => temperature_inst%t_nvp_col                     &  ! Input:  [real(r8) (:)   ] NVP (moss/lichen) temperature (Kelvin)
@@ -482,9 +487,14 @@ contains
            cycle
         end if
 
-        ! --- Effective NVP area: not covered by surface water ---
+        ! --- Effective NVP area: not covered by snow or surface water ---
+        ! [PORTED by Hui Tang: include frac_sno_eff_col so partial snow cover reduces
+        !  the effective NVP fraction used for both infiltration and evaporation.
+        !  Same convention as SoilFluxesMod, BareGroundFluxesMod, CanopyFluxesMod.]
         frac_h2osfc  = frac_h2osfc_col(c)
-        frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc))
+        ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno_eff), cap = 1 - frac_h2osfc - frac_sno_eff]
+        frac_nvp_eff = min(1._r8 - frac_h2osfc - frac_sno_eff_col(c), max(0._r8, &
+                           col%frac_nvp(c) - frac_sno_eff_col(c)))
 
         ! --- Water input to NVP from precipitation / snowmelt ---
         ! [PORTED by Hui Tang: when snow is present (snl < 0), snow percolation into NVP is
@@ -534,34 +544,50 @@ contains
         smp_soil1  = smp_l(c,1)                                            ! [mm]
         K_soil1    = hk_l(c,1)                                             ! [mm/s]
 
-        ! Harmonic-mean interface conductivity
-        if (K_nvp_mms + K_soil1 > 0._r8) then
-           K_interface = 2._r8 * K_nvp_mms * K_soil1 / (K_nvp_mms + K_soil1)
-        else
-           K_interface = 0._r8
-        end if
-
         ! Distance between layer centres [mm]
         dz_iface_mm = (0.5_r8 * col%dz(c,0) + 0.5_r8 * col%dz(c,1)) * 1000._r8
 
-        ! Darcy flux: q = K * (grad_psi + gravity), positive = downward
-        q01 = K_interface * ((psi_nvp - smp_soil1) / dz_iface_mm + 1.0_r8)
+        ! Head gradient (matric potential + gravity); negative = upward (capillary rise into NVP)
+        grad = (psi_nvp - smp_soil1) / dz_iface_mm + 1.0_r8
 
-        ! --- Atmosphere evap/condensation: only applies when NVP is exposed ---
-        ! [PORTED by Hui Tang: qflx_ev_nvp_col is computed from qg_nvp=qg_soil even when
-        !  NVP is buried under snow (frac_sno_eff=1 → frac_nvp_eff=0 → qg unchanged).
-        !  This flux is NOT included in qflx_evap_tot_col (which tracks only the blended
-        !  qg-based flux), so applying it to h2osoi_liq(c,0) creates an untracked water
-        !  source that breaks errh2o. When snow covers NVP (snl < -1), zero the flux.]
-        if (col%snl(c) < -1) then
-           ev_nvp_eff = 0._r8
+        ! [PORTED by Hui Tang: upstream-weighted interface conductivity. The harmonic mean collapses
+        !  to ~0 when the NVP layer is dry (K_nvp -> 0 in Mualem-van Genuchten), so a dry moss could
+        !  not draw water up despite strong suction. Use the SOURCE layer's conductivity for the flow
+        !  direction: upward (capillary rise) is supplied at the soil conductivity K_soil1; downward
+        !  drainage is limited by the NVP conductivity K_nvp_mms. Upward flux is still capped by the
+        !  available soil-layer-1 liquid below, so the soil is not over-drained.]
+        if (grad < 0._r8) then
+           K_interface = K_soil1       ! upward: soil supplies the water
         else
-           ev_nvp_eff = qflx_ev_nvp_col(c)
+           K_interface = K_nvp_mms     ! downward: NVP drains at its own conductivity
         end if
+
+        ! Darcy flux: q = K * (grad_psi + gravity), positive = downward
+        q01 = K_interface * grad
+
+        ! --- Atmosphere evap/condensation, scaled by effective NVP area ---
+        ! [PORTED by Hui Tang: qflx_ev_nvp_eff_col scales with frac_nvp_eff so partial
+        !  snow cover gracefully reduces the NVP evaporation contribution to the water
+        !  balance.  Replaces the prior binary snl<-1 check, which is now subsumed:
+        !  when NVP is deeply buried, frac_sno_eff_col → 1 → frac_nvp_eff → 0 →
+        !  qflx_ev_nvp_eff_col → 0 automatically.  Also exposed as history field
+        !  QFLX_EV_NVP_EFF_COL.  Same convention as the infiltration line above:
+        !  qflx_nvp_infl_col = frac_nvp_eff * qflx_rain_plus_snomelt.]
+        qflx_ev_nvp_eff_col(c) = frac_nvp_eff * qflx_ev_nvp_col(c)
+
+        ! [PORTED by Hui Tang: the NVP evaporation is now ALREADY in qflx_evap_tot_col — do NOT add
+        !  it here (would double-count). SoilFluxesMod builds qflx_evap_tot_patch from the per-surface
+        !  ground-evap total qflx_evap_grnd_eff, which contains frac_nvp_eff*qflx_ev_nvp_patch; the
+        !  clm_drv_patch2col p2c (driver line ~947, BEFORE HydrologyNoDrainage) then carries exactly
+        !  frac_nvp_eff*qflx_ev_nvp_col = qflx_ev_nvp_eff_col into qflx_evap_tot_col. That is the same
+        !  amount debited from h2osoi_liq(c,0) below, so the column water balance (BalanceCheckMod
+        !  errh2o) already conserves. (The prior explicit add was correct only while SoilFluxesMod
+        !  overwrote qflx_evap_tot_patch with the bulk qflx_evap_soi and dropped the moss evap; the
+        !  qflx_evap_grnd_eff change made that add redundant.)]
 
         ! --- Update h2osoi_liq(c,0): add infl, subtract evap; cannot go negative ---
         h2osoi_net = h2osoi_liq(c,0) &
-             + (qflx_nvp_infl_col(c) - ev_nvp_eff) * dtime                 ! [kg m-2]
+             + (qflx_nvp_infl_col(c) - qflx_ev_nvp_eff_col(c)) * dtime     ! [kg m-2]
         h2osoi_net = max(0._r8, h2osoi_net)
 
         if (q01 >= 0._r8) then
@@ -582,6 +608,31 @@ contains
               satfrac = (vol_liq - watsat_nvp) * denh2o * col%dz(c,0)     ! excess [kg m-2]
               qflx_nvp_drain_col(c) = qflx_nvp_drain_col(c) + satfrac / dtime
               h2osoi_liq(c,0)       = h2osoi_liq(c,0) - satfrac
+           end if
+        end if
+
+        ! --- Step 7: Ice pore-space cap — push excess frozen water up into the snow ---
+        ! [PORTED by Hui Tang: cap NVP ice at pore capacity (watsat_nvp*denice*dz). Frozen water
+        !  (refreezing meltwater / snow ice) must not accumulate beyond what the pore volume can
+        !  hold, which otherwise inflates cv(c,0) and breaks the soil energy balance (errsoi).
+        !  Excess ice is moved UP into the bottom snow layer (j=-1) as ice — energetically clean
+        !  (ice->ice, no phase change) — and recorded in qflx_nvp_to_snow_col so the snow balance
+        !  (errh2osno, BalanceCheckMod) books it as a snow source. When no snow layer exists
+        !  (snl=0, NVP exposed), fall back to draining the excess to soil layer 1.]
+        qflx_nvp_to_snow_col(c) = 0._r8
+        if (col%dz(c,0) > 0._r8) then
+           max_ice_nvp = watsat_nvp * denice * col%dz(c,0)               ! pore-space cap [kg m-2]
+           if (h2osoi_ice(c,0) > max_ice_nvp) then
+              ice_excess      = h2osoi_ice(c,0) - max_ice_nvp
+              h2osoi_ice(c,0) = max_ice_nvp
+              if (col%jbot_sno(c) == -1 .and. col%snl(c) <= -2) then
+                 ! snow present: move excess up into the bottom snow layer (j=-1), as ice
+                 h2osoi_ice(c,-1)        = h2osoi_ice(c,-1) + ice_excess
+                 qflx_nvp_to_snow_col(c) = ice_excess / dtime
+              else
+                 ! no snow layer to receive it: drain to soil layer 1 (fallback)
+                 qflx_nvp_drain_col(c)   = qflx_nvp_drain_col(c) + ice_excess / dtime
+              end if
            end if
         end if
 
