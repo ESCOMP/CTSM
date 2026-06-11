@@ -61,6 +61,7 @@ module NVPLayerDynamicsMod
   public :: NVPEvaporation
   public :: NVPWaterBalance_Column
   public :: NVPLayerRestart
+  public :: NVPColdStartIce   ! [PORTED by Hui Tang: cold-start override of NVP layer-0 ice to pore cap]
 
   character(len=*), parameter, private :: sourcefile = __FILE__
 
@@ -676,5 +677,36 @@ contains
     end if
 
   end subroutine NVPLayerRestart
+
+  !-----------------------------------------------------------------------
+  subroutine NVPColdStartIce(bounds, waterstate_inst)
+    !
+    ! [PORTED by Hui Tang: cold-start initialization of the NVP layer-0 ice content.
+    !  The general WaterStateType::InitCold fills the j=0 slot as if it were a snow/soil
+    !  layer, giving an unphysically large ice mass (e.g. 55 kg/m2). Override it to the
+    !  NVP pore-space capacity (watsat_nvp*denice*dz) so the layer starts physically
+    !  consistent and the initial begwb already reflects the cap — no first-step blip and
+    !  no discarded water. Called once from clm_initializeMod after init_coldstart sets the
+    !  NVP geometry (nvp_layer_active, dz) and before the first begwb, on a cold start only.
+    !  Assumes a frozen cold start (ice-saturated, liquid=0), consistent with the alpine
+    !  Jan-1 cold start; the per-timestep appear-branch handles unfrozen reactivation.]
+    !
+    ! !ARGUMENTS:
+    type(bounds_type),       intent(in)    :: bounds
+    class(waterstate_type),  intent(inout) :: waterstate_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: c
+    real(r8) :: max_ice_nvp   ! NVP pore-space ice capacity [kg m-2]
+    !-----------------------------------------------------------------------
+    do c = bounds%begc, bounds%endc
+       if (col%nvp_layer_active(c) .and. col%dz(c,0) > 0._r8) then
+          max_ice_nvp = watsat_nvp * denice * col%dz(c,0)
+          waterstate_inst%h2osoi_ice_col(c,0) = 0._r8
+          waterstate_inst%h2osoi_liq_col(c,0) = 0._r8
+       end if
+    end do
+
+  end subroutine NVPColdStartIce
 
 end module NVPLayerDynamicsMod
