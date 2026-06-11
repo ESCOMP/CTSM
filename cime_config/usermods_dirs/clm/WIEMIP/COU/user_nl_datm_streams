@@ -31,11 +31,11 @@
 !      <file>foo3</file>
 !   </datafiles>
 !------------------------------------------------------------------------
-co2tseries.cmip6_20tr:datafiles=/glade/derecho/scratch/slevis/temp_work/WIEMIP/co2/WIEMIP_1pctco2_FaIR_input_20260331_to_netcdf_20260420.nc
+co2tseries.cmip6_20tr:datafiles=/glade/derecho/scratch/slevis/temp_work/WIEMIP/co2/WIEMIP_1pctco2_FaIR_input_20260331_copied_to_fco2_datm_global_simyr_1750-2014_CMIP6_c180929.nc
 co2tseries.cmip6_20tr:year_first=1850
 co2tseries.cmip6_20tr:year_last=2000
 co2tseries.cmip6_20tr:year_align=1850
-co2tseries.cmip6_20tr:datavars=co2 Sa_co2diag
+co2tseries.cmip6_20tr:datavars=CO2 Sa_co2diag
 
 presaero.hist:year_first=1850
 presaero.hist:year_last=1850

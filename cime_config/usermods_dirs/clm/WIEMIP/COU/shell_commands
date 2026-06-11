@@ -4,9 +4,9 @@
 
 ./xmlchange CLM_ACCELERATED_SPINUP=off,CLM_FORCE_COLDSTART=off
 
-./xmlchange STOP_N=50,STOP_OPTION=nyears
+./xmlchange STOP_N=1,STOP_OPTION=nyears
 
-./xmlchange CONTINUE_RUN=FALSE,RESUBMIT=2
+./xmlchange CONTINUE_RUN=FALSE,RESUBMIT=0
 
-./xmlchange --subgroup case.run JOB_WALLCLOCK_TIME=12:00:00
+./xmlchange --subgroup case.run JOB_WALLCLOCK_TIME=01:00:00
 
