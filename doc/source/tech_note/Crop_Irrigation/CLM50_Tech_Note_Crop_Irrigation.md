@@ -888,14 +888,10 @@ Biological N fixation for soybeans is calculated by the fixation and uptake of n
 
 #### Latitudinal variation in base growth temperature
 
-For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for spring wheat and sugarcane, the calculation of $\gddacctwom$ allows for latitudinal variation:
+For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for spring wheat and sugarcane within 30° of the Equator, the calculation of $\gddacctwom$ allows for latitudinal variation:
 
 $$
-latitudinal\ variation\ in\ base\ T = \left\{
-\begin{array}{lr}
-\parambaset +12 - 0.4 \times latitude &\qquad 0 \le latitude \le 30 \\
-\parambaset +12 + 0.4 \times latitude &\qquad -30 \le latitude \le 0
-\end{array} \right\}
+\parambaset^{\prime} = \parambaset + 12 - 0.4 \times \mid latitude \mid
 $$ (25.18)
 
 where $\parambaset$ is the base temperature for GDD ({numref}`Table Crop phenology parameters`). Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
