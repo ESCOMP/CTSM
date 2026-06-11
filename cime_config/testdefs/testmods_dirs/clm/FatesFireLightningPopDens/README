@@ -17,9 +17,8 @@ CTSM datasets as of 2020/6/6. That dataset can be used with the
 following settings:
 
 fates_spitfire_mode = 3
-stream_fldfilename_lightng = '.../data_UCB/observed/CA_monthly_ignition_number_1980-2016/ignition_1980_to_2016_monthly_20190801.nc'
+stream_fldfilename_lightng = '/glade/work/slevis/data_UCB/observed/CA_monthly_ignition_number_1980-2016/ignition_1980_to_2016_monthly_20190801.nc'
 stream_year_first_lightng = 1980
 stream_year_last_lightng = 2016
 model_year_align_lightng = 1980
 
-where {...} = /fs/cgd/data0/slevis on izumi and /glade/work/slevis on cheyenne.
