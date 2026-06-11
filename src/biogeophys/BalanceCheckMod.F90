@@ -821,6 +821,14 @@ contains
                 !   snow_sinks(c) = snow_sinks(c) + waterfluxbulk_ptr%qflx_nvp_drain_col(c)
                 !end if
 
+                ! [PORTED by Hui Tang: excess NVP ice (above pore capacity) is pushed up into the
+                !  bottom snow layer (j=-1) in NVPWaterBalance_Column. That mass enters h2osno_total
+                !  (which excludes the NVP layer j=0) with no registered snow source, so book it
+                !  here as a snow source to keep errh2osno closed.]
+                if (associated(waterfluxbulk_ptr) .and. col%nvp_layer_active(c)) then
+                   snow_sources(c) = snow_sources(c) + waterfluxbulk_ptr%qflx_nvp_to_snow_col(c)
+                end if
+
                 errh2osno(c) = (h2osno_total(c) - h2osno_old(c)) - (snow_sources(c) - snow_sinks(c)) * dtime
 
                 ! [PORTED by Hui Tang: CalculateTotalH2osno excludes j=0 (NVP) from h2osno_total,
