@@ -257,13 +257,33 @@ contains
             qflx_ev_soil(p) = qflx_ev_soil(p) + tinc(c)*cgrndl(p)
             qflx_ev_h2osfc(p) = qflx_ev_h2osfc(p) + tinc(c)*cgrndl(p)
             ! [PORTED by Hui Tang: apply linearization correction to NVP evaporation diagnostic]
-            ! Skip when NVP is buried under snow (snl < -1): qflx_ev_nvp was zeroed in
+            ! Skip when NVP is fully buried (frac_nvp_eff <= 0): qflx_ev_nvp was zeroed in
             ! BareGroundFluxesMod/CanopyFluxesMod and must remain zero to avoid a water
             ! balance error (non-zero qflx_ev_nvp_col with no corresponding water removal).
-            if (use_nvp .and. col%snl(c) < -1) then
+            ! [PORTED by Hui Tang: gate on exposed NVP fraction instead of the binary snl<-1, so
+            !  partial snow cover keeps the correction wherever NVP is still exposed. frac_nvp_eff
+            !  (frac_sno_eff based, matching this module) is computed locally since it is not yet set.]
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, &
+                               col%frac_nvp(c) - frac_sno_eff(c)))
+            if (use_nvp .and. frac_nvp_eff <= 0._r8) then
                qflx_ev_nvp(p) = 0._r8
             else
-               qflx_ev_nvp(p) = qflx_ev_nvp(p) + tinc(c)*cgrndl(p)
+               ! [PORTED by Hui Tang: linearize qflx_ev_nvp with the NVP layer's OWN
+               !  temperature increment instead of the bulk tinc. tinc = t_grnd(post, NVP-weighted)
+               !  - t_grnd0(pre, soil-only) conflates the temporal increment with a soil-vs-NVP basis
+               !  difference (~frac_nvp_eff*(t_nvp-t_soil)); for the thin, thermally-decoupled moss
+               !  that spurious term is several K and can flip qflx_ev_nvp negative (unphysical dew in
+               !  summer). When NVP is active (jbot_sno=-1) layer 0 IS the NVP layer for ALL snow
+               !  states (snow bottoms at j=-1, not 0), so t_soisno(c,0)/tssbef(c,0) are the NVP
+               !  post/pre-solve temperatures (t_nvp_col = t_soisno(c,0), SoilTemperatureMod:597).
+               !  cgrndl (bulk raiw*dqgdT) is retained — only the increment is corrected. Non-NVP
+               !  columns keep the standard bulk tinc correction.]
+
+               ! The correct correction uses the NVP layer's own temperature increment and derivative:
+               ! qflx_ev_nvp += (t_soisno(c,0) − tssbef(c,0)) · cgrndl_nvp, where cgrndl_nvp = raiw_nvp·hr_nvp·qsatgdT_nvp.
+
+               qflx_ev_nvp(p) = qflx_ev_nvp(p) + (t_soisno(c,0) - tssbef(c,0))*cgrndl(p)
+
             end if
          endif
       end do
