@@ -17,7 +17,7 @@ module BiogeophysPreFluxCalcsMod
   use LandunitType            , only : lun
   use clm_varcon              , only : spval
   use clm_varpar              , only : nlevgrnd, nlevsno, nlevurb, nlevmaxurbgrnd
-  use clm_varctl              , only : use_fates, z0param_method, iulog
+  use clm_varctl              , only : use_fates, use_nvp, z0param_method, iulog
   use pftconMod               , only : pftcon, noveg
   use column_varcon           , only : icol_roof, icol_sunwall, icol_shadewall
   use landunit_varcon         , only : istsoil, istcrop, istice
@@ -257,6 +257,9 @@ contains
     integer  :: fp, p
     integer  :: j
     real(r8) :: avmuir       ! ir inverse optical depth per unit leaf area
+    ! [PORTED by Hui Tang: NVP t_grnd weighting]
+    real(r8) :: frac_nvp_eff_loc   ! exposed NVP area fraction (snow buries NVP)
+    real(r8) :: frac_soil_loc      ! bare-soil area fraction (residual after snow/NVP/h2osfc)
 
     character(len=*), parameter :: subname = 'CalcInitialTemperatureAndEnergyVars'
     !-----------------------------------------------------------------------
@@ -332,11 +335,38 @@ contains
 
        ! ground temperature is weighted average of exposed soil, snow, and h2osfc
        if (snl(c) < 0) then
-          t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-               + (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) * t_soisno(c,1) &
-               + frac_h2osfc(c) * t_h2osfc(c)
+          ! [PORTED by Hui Tang: Phase 1c RESTORE (2026-06-11) — NVP-weighted t_grnd for snl<0, now
+          !  that the thermal solve applies the exposed-NVP surface flux at j=0 for snl<0
+          !  (SetRHSVec_Snow/SetMatrix_Snow). eflx_sh_grnd = -raih*(thm-t_grnd) must carry the NVP
+          !  component so the errsoi accounting matches the per-surface flux the solve applies:
+          !  fse*sh_snow + frac_nvp_eff*sh_nvp + frac_soil*sh_soil + fh2o*sh_h2osfc. INVARIANT: keep
+          !  consistent with the SoilTemperatureMod j=0/j=1 surface BC and the t_grnd0 snl<0 branch.]
+          if (use_nvp .and. col%nvp_layer_active(c)) then
+             frac_nvp_eff_loc = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                    max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+             frac_soil_loc    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff_loc)
+             t_grnd(c) = frac_sno_eff(c)    * t_soisno(c,snl(c)+1) &
+                       + frac_nvp_eff_loc    * t_soisno(c,0) &
+                       + frac_soil_loc       * t_soisno(c,1) &
+                       + frac_h2osfc(c)      * t_h2osfc(c)
+          else
+             t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
+                  + (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) * t_soisno(c,1) &
+                  + frac_h2osfc(c) * t_h2osfc(c)
+          end if
        else
-          t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+          ! [PORTED by Hui Tang: include NVP layer temperature in t_grnd for snl==0 NVP columns.
+          !  frac_sno_eff=0 here, so formula reduces to min(1-frac_h2osfc, frac_nvp) for frac_nvp_eff.]
+          if (use_nvp .and. col%nvp_layer_active(c)) then
+             frac_nvp_eff_loc = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                    max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+             frac_soil_loc    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff_loc)
+             t_grnd(c) = frac_nvp_eff_loc * t_soisno(c,0) &
+                       + frac_soil_loc    * t_soisno(c,1) &
+                       + frac_h2osfc(c)   * t_h2osfc(c)
+          else
+             t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
+          end if
        end if
 
        ! Ground emissivity - only calculate for non-urban landunits 
