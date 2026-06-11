@@ -432,7 +432,8 @@ contains
             ! When snl=0: frac_sno_eff=0 so the snow term vanishes and the formula reduces to
             !   three terms (NVP + bare soil + water).
             if (use_nvp .and. col%nvp_layer_active(c)) then
-               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c)))
+               ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno_eff), cap = 1 - frac_h2osfc - frac_sno_eff]
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
                lw_grnd = frac_sno_eff(c)                                    * tssbef(c,col%snl(c)+1)**4 &
                     + frac_nvp_eff                                           * tssbef(c,0)**4 &
                     + (1._r8 - frac_sno_eff(c) - frac_nvp_eff - frac_h2osfc(c)) * tssbef(c,1)**4 &
