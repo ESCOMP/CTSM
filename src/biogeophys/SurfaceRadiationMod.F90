@@ -522,6 +522,11 @@ contains
      real(r8) :: cai(bounds%begp:bounds%endp,numrad) ! diffuse radiation absorbed by canopy (W/m**2)
      real(r8) :: dtime                               ! land model time step (sec)
      real(r8) :: sabg_snl_sum                        ! temporary, absorbed energy in all active snow layers [W/m2]
+     ! [PORTED by Hui Tang: partial-snow NVP blend locals]
+     real(r8) :: frac_nvp_eff_loc                    ! locally-computed exposed NVP area fraction
+     real(r8) :: f_exp_loc                           ! fraction of NVP area that is exposed (not snow-buried)
+     real(r8) :: sabg_nvp_beer                       ! Beer's law NVP absorption per unit column area [W/m2]
+     real(r8) :: sabg_sum_chk                        ! [PORTED by Hui Tang: sum(sabg_lyr) (+ sabg_nvp for snl==0) for the SNICAR conservation check]
      real(r8) :: absrad_pur                          ! temp: absorbed solar radiation by pure snow [W/m2]
      real(r8) :: absrad_bc                           ! temp: absorbed solar radiation without BC [W/m2]
      real(r8) :: absrad_oc                           ! temp: absorbed solar radiation without OC [W/m2]
@@ -592,6 +597,8 @@ contains
           sabg            =>    solarabs_inst%sabg_patch          , & ! Output: [real(r8) (:)   ] solar radiation absorbed by ground (W/m**2)
           sabg_pen        =>    solarabs_inst%sabg_pen_patch      , & ! Output: [real(r8) (:)   ] solar (rural) radiation penetrating top soisno layer (W/m**2)
           sabg_soil       =>    solarabs_inst%sabg_soil_patch     , & ! Output: [real(r8) (:)   ] solar radiation absorbed by soil (W/m**2)
+          sabg_nvp        =>    solarabs_inst%sabg_nvp_patch      , & ! [PORTED by Hui Tang: solar absorbed by exposed NVP moss surface (W/m**2)]
+          sabg_soil_bandloop =>  solarabs_inst%sabg_soil_bandloop_patch , & ! [PORTED by Hui Tang: band-loop ground absorption snapshot]
           sabg_snow       =>    solarabs_inst%sabg_snow_patch     , & ! Output: [real(r8) (:)   ] solar radiation absorbed by snow (W/m**2)
           sabg_lyr        =>    solarabs_inst%sabg_lyr_patch      , & ! Output: [real(r8) (:,:) ] absorbed radiative flux (patch,lyr) [W/m2]
           fsr_nir_d       =>    solarabs_inst%fsr_nir_d_patch     , & ! Output: [real(r8) (:)   ] reflected direct beam nir solar radiation (W/m**2)
@@ -638,7 +645,8 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col       & !Input:
+          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col      , & !Input:
+          frac_h2osfc     => waterdiagnosticbulk_inst%frac_h2osfc_col        & !Input:  [real(r8) (:)] fraction of ground covered by surface water (0 to 1)
 
           )
 
@@ -653,6 +661,8 @@ contains
           g = patch%gridcell(p)
 
           sabg_soil(p)  = 0._r8
+          sabg_soil_bandloop(p) = 0._r8   ! [PORTED by Hui Tang]
+          if (use_nvp) sabg_nvp(p) = 0._r8   ! [PORTED by Hui Tang: exposed-NVP surface solar]
           sabg_snow(p)  = 0._r8
           sabg(p)       = 0._r8
           sabv(p)       = 0._r8
@@ -755,6 +765,13 @@ contains
 
           sub_surf_abs_SW(p) = 0._r8
 
+          ! [PORTED by Hui Tang: snapshot the band-loop (albsod) ground absorption BEFORE the NVP
+          !  carve-out (CASE1, sabg_soil -= sabg_lyr0) and the SNICAR snow reassignment (CASE2,
+          !  sabg_soil = sabg_lyr(p,1)) overwrite sabg_soil. This raw value lumps NVP+soil absorption
+          !  for the exposed surface and is used only to build the diagnostic SABG tile in
+          !  SoilTemperatureMod (true exposed-surface absorption during melt). Diagnostic-only.]
+          sabg_soil_bandloop(p) = sabg_soil(p)
+
           ! CASE1: No snow layers: all energy is absorbed in top soil layer
           if (snl(c) == 0) then
              sabg_lyr(p,:) = 0._r8
@@ -770,15 +787,26 @@ contains
              !  use_nvp check with array access in one .and. dereferences a null pointer.]
              if (use_nvp) then
              if (col%nvp_layer_active(patch%column(p))) then
-                sabg_lyr(p,0) = 0._r8
+                ! [PORTED by Hui Tang: snl==0 — moss is fully exposed (no snow). The Beer's-law
+                !  absorption is the moss SURFACE solar -> store as sabg_nvp (analogous to sabg_soil),
+                !  carve it out of the soil layer/sabg_soil, and set the internal sabg_lyr(p,0)=0
+                !  (there is no snow above the moss, so no buried/SNICAR internal absorption).]
+                sabg_nvp(p) = 0._r8
                 do ib = 1, nband
-                   sabg_lyr(p,0) = sabg_lyr(p,0) + &
+                   sabg_nvp(p) = sabg_nvp(p) + &
                         surfalb_inst%fabd_nvp_col(c,ib) * trd(p,ib) + &
                         surfalb_inst%fabi_nvp_col(c,ib) * tri(p,ib)
                 end do
-                sabg_lyr(p,0) = max(0._r8, min(sabg_lyr(p,0), sabg_lyr(p,1)))
-                sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_lyr(p,0)
-                sabg_soil(p)  = sabg_soil(p)  - sabg_lyr(p,0)
+                sabg_nvp(p)   = max(0._r8, min(sabg_nvp(p), sabg_lyr(p,1)))
+                sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_nvp(p)
+                sabg_soil(p)  = sabg_soil(p)  - sabg_nvp(p)
+                ! [PORTED by Hui Tang (2026-06-12): keep sabg_lyr(p,0) = sabg_nvp so the SNICAR
+                !  energy-conservation guard (sum(sabg_lyr)==sabg_snow) is satisfied without special-
+                !  casing. This does NOT re-inject internal solar: the j=0 RHS internal term is
+                !  frac_sno_eff*sabg_lyr_col(c,0) = 0 for snl==0 (no snow), so the moss solar still
+                !  flows ONLY through hs_nvp (= frac_nvp_eff*sabg_nvp, thermostatted). The accounting
+                !  uses frac_nvp_eff*sabg_nvp (not sabg_lyr(p,0)).]
+                sabg_lyr(p,0) = sabg_nvp(p)
              end if
              end if  ! [PORTED by Hui Tang: close outer use_nvp guard]
 
@@ -858,14 +886,53 @@ contains
                    endif
                 endif
              endif
+             ! [PORTED by Hui Tang: partial-snow NVP blend — CASE2 (snl<0) with partially-exposed moss]
+             ! When snow is partial (frac_sno_eff < frac_nvp), fraction f_exp of the NVP is exposed
+             ! and receives unattenuated radiation via Beer's law (per column area, same formula as CASE1
+             ! weighted by f_exp).  The buried fraction (1-f_exp) receives SNICAR-attenuated radiation
+             ! that was set by the SNICAR loop above (per unit snow area); multiplying by frac_sno_eff
+             ! converts it to per column area.
+             ! Combined: sabg_lyr(p,0) = f_exp*beer_per_col + (1-f_exp)*frac_sno_eff*snicar_per_snow
+             ! [PORTED by Hui Tang (2026-06-11): SPLIT the moss solar into two un-weighted quantities,
+             !  exactly mirroring the soil pair (sabg_soil vs sabg_lyr(p,1)):
+             !    sabg_nvp(p)   = Beer's-law absorption = EXPOSED-moss SURFACE solar (full). The
+             !                    frac_nvp_eff exposure weighting is applied later in the thermal solve
+             !                    (hs_nvp, via nvp_exp*wtcol) — so NO f_exp here (it would double-count).
+             !    sabg_lyr(p,0) = SNICAR moss-layer absorption = BURIED-moss INTERNAL solar (left as set
+             !                    by the SNICAR loop above). The fse weighting is applied in the solve
+             !                    (fse*sabg_lyr_col(c,0)) — so NO fse pre-weighting here.
+             !  This replaces the old blend sabg_lyr(p,0)=f_exp*beer+(1-f_exp)*fse*snicar, which both
+             !  double-weighted the fractions AND put the exposed solar internally (no -dhsdT surface
+             !  thermostat) -> moss overheating.]
+             if (use_nvp) then
+             if (col%nvp_layer_active(c)) then
+                if (col%frac_nvp(c) > 0._r8) then
+                   sabg_nvp_beer = 0._r8
+                   do ib = 1, nband
+                      sabg_nvp_beer = sabg_nvp_beer + &
+                           surfalb_inst%fabd_nvp_col(c,ib) * trd(p,ib) + &
+                           surfalb_inst%fabi_nvp_col(c,ib) * tri(p,ib)
+                   end do
+                   sabg_nvp(p) = max(0._r8, sabg_nvp_beer)
+                end if
+             end if  ! [PORTED by Hui Tang: close nvp_layer_active guard]
+             end if  ! [PORTED by Hui Tang: close use_nvp guard]
           endif
 
           ! This situation should not happen:
-          if (abs(sum(sabg_lyr(p,:))-sabg_snow(p)) > 0.00001_r8) then
+          ! [PORTED by Hui Tang: skip endrun for NVP partial-snow — after the Beer's-law blend above,
+          !  sabg_lyr(p,0) is per column area, so sum(sabg_lyr) intentionally exceeds sabg_snow
+          !  (per snow area) when snl<0 and frac_sno_eff < frac_nvp]
+          ! [PORTED by Hui Tang (2026-06-12): sabg_lyr(p,0)=sabg_nvp for snl==0 (set above), so the
+          !  moss is in sum(sabg_lyr) and this check passes unchanged — no NVP special-casing needed.]
+          sabg_sum_chk = sum(sabg_lyr(p,:))
+          if (abs(sabg_sum_chk-sabg_snow(p)) > 0.00001_r8 .and. &
+               .not. (use_nvp .and. col%nvp_layer_active(c) .and. &
+                      snl(c) < 0 .and. frac_sno_eff(c) < col%frac_nvp(c))) then
              write(iulog,*)"SNICAR ERROR: Absorbed ground radiation not equal to summed snow layer radiation"
-             write(iulog,*)"Diff        = ",sum(sabg_lyr(p,:))-sabg_snow(p)
+             write(iulog,*)"Diff        = ",sabg_sum_chk-sabg_snow(p)
              write(iulog,*)"sabg_snow(p)= ",sabg_snow(p)
-             write(iulog,*)"sabg_sum(p) = ",sum(sabg_lyr(p,:))
+             write(iulog,*)"sabg_sum(p) = ",sabg_sum_chk
              write(iulog,*)"snl(c)      = ",snl(c)
              write(iulog,*)"flx_absdv1  = ",trd(p,1)*(1.-albgrd(c,1))
              write(iulog,*)"flx_absdv2  = ",sum(flx_absdv(c,:))*trd(p,1)
