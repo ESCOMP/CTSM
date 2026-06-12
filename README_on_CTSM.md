@@ -1,0 +1,160 @@
+$CTSMROOT/README                                          11/24/2025
+
+Community Terrestrial Systems Model (CTSM) science version 5.4 series -- source code, tools,
+offline-build and test scripts. This gives you everything you need
+to run CTSM with CESM with the CMEPS driver and CDEPS data models to provide CRUJRA or GSWP3 forcing data (some older options also available) in
+place of a modeled atmosphere.
+
+CMEPS is the Community Mediator for Earth Prediction Systems. And CDEPS is the
+Community Data Models for Earth Prediction System. They are both NUOPC based models
+used to drive the CESM (Community Earth System Model) of which CTSM is a component of.
+NUOPC is the National Unified Operational Prediction Capability a standard way of building
+coupled model systems. The NUOPC layer is based on the Earth System Modeling Framework (ESMF).
+
+For lists of current bugs (issues) and current development see the CTSM GitHub page:
+
+https://github.com/ESCOMP/CTSM
+
+For Code of Conduct (how to work with each other on the CTSM project):
+
+https://github.com/ESCOMP/CTSM?tab=coc-ov-file
+
+INFORMATION ON THE CMEPS DRIVER:
+- https://escomp.github.io/CMEPS
+- https://earthsystemmodeling.org/nuopc/
+
+IMPORTANT NOTE ON CESM CHECKOUT VERSUS A CTSM CHECKOUT:
+
+If this is the top level directory from making a clone of CTSM the 
+directory structure is a little bit different than if CTSM is from 
+a clone of the entire CESM. If this is part of CESM this directory
+will be under `components/clm` alongside other CESM component models.
+For a CTSM checkout this will be the top level directory.
+
+Other documentation will refer to `$CTSMROOT` and it means the directory
+that this file is at. CIMEROOT is the directory where "cime" is for
+this checkout. For a CESM checkout `$CIMEROOT` will be the "cime" directory
+beneath the top level directory. For a CTSM checkout `$CIMEROOT` will
+be `$CTSMROOT/cime`.
+
+IMPORTANT NOTE ABOUT (deprecated)
+
+Anything marked with (deprecated) is something is going to be removed in a future update.
+Often this means it will be replaced with something else.
+
+
+General directory structure ($CTSMROOT):
+
+- `doc`: Documentation of CTSM
+- `bld`: build-namelist scripts for CTSM
+- `src`: CTSM Source code
+- `lilac`: Lightweight Infrastructure for Land-Atmosphere Coupling (for coupling to a host atmosphere model)
+- `tools`: CTSM Offline tools to prepare input datasets and process output
+- `cime_config`: Configuration files of cime for compsets and CTSM settings
+- `bin/git-fleximod`: Script to manage the needed sub-component source directories (handled with git submodule)
+- `py_env_create`: Script to setup the python environment for CTSM python tools using conda
+- `python`: Python modules used in tools and testing and automated checking of ALL CTSM python scripts
+
+Directory structure only for a CTSM checkout:
+
+- `components`: Other active sub-components needed for CTSM to run (river routing and land-ice models)
+- `libraries`: CESM libraries: PIO (deprecated)
+- `share`: CESM shared code
+- `ccs_config`: CIME configure files (for grids, compsets, and machines) for CESM
+
+- `cime/scripts`: cesm/cime driver scripts
+
+- `components/cmeps`: CESM top level driver (for NUOPC driver [which is the default]) source code
+- `components/cdeps`: CESM top level data model shared code (for NUOPC driver)
+- `components/cism`: CESM Community land Ice Sheet Model
+- `components/mosart`: Model for Scale Adaptive River Transport
+- `components/mizuroute`: Reached based river transport model for water routing (allows both gridded river and Hydrologic Responce Unit river grids)
+- `components/rtm`: CESM River Transport Model
+
+Top level documentation ($CTSMROOT):
+
+- `README_on_CTSM.md`: This file
+- `README.md`: File that displays on github under https::/github.com/ESCOMP/CTSM.git
+- `README_GITFLEXIMOD.md`: Information on how to work with git-fleximod for CTSM
+- `README.CHECKLIST.new_case.md`: Information on starting a new case (i.e. simulation)
+- `WhatsNewInCTSM5.4.md`: Overview document of the changes between ctsm5.3 and ctsm5.4 (earlier versions in /doc)
+- `Copyright`: CESM Copyright file
+- `doc/UpdateChangeLog.pl`: Script to add documentation on a tag to the ChangeLog/ChangeSum files
+- `doc/ChangeLog`: Documents different CTSM versions
+- `doc/ChangeSum`: Summary documentation of different CTSM versions
+- `doc/design`: Software Engineering and code design document files
+
+Checklists for standard Software Engineering tasks
+
+- `./doc/README.CHECKLIST.master_tags.md`
+- `./bld/namelist_files/README.CHECKLIST.interpolating_initial_conditions.md`
+
+Documentation of Namelist Items: (view the following in a web browser)
+
+- `bld/namelist_files/namelist_definition_ctsm.xml`: Definition of all namelist items
+- `bld/namelist_files/namelist_defaults_ctsm.xml`: Default values
+
+Important files in main directories (under $CTSMROOT):
+=============================================================================================
+
+- `run_sys_tests`: Python script to send the standard CTSM testing off (submits the create_test test suite for several different compilers on the machines we do standard CTSM testing on)
+
+- `parse_cime.cs.status`: Script to parse test status files `cs.status.*` created by create_test (can be used along with run_sys_tests)
+- `doc/Quickstart.GUIDE`: Quick guide to using NUOPC scripts
+- `doc/IMPORTANT_NOTES.md`: Some important notes about this version of CTSM, configuration modes and namelist items that are not validated or functional
+- `doc/ChangeLog`: Detailed list of changes for each model version
+- `doc/ChangeSum`: Summary one-line list of changes for each model version
+- `doc/UsersGuide`: CTSM Users Guide
+
+- `bld/README`: Description of how to use the `build-namelist` scripts
+- `bld/build-namelist`: Lower level script to build CTSM namelists
+
+- `cime_config/buildnml`: Build the CTSM namelist for CIME
+- `cime_config/buildlib`: Build the CTSM library
+- `cime_config/config_compsets.xml`: Define CTSM compsets
+- `cime_config/config_component.xml`: Define CTSM XML settings
+- `cime_config/config_tests.xml`: Define CTSM specific tests 
+- `cime_config/config_pes.xml`: Define Processor layouts for various CTSM grids and compsets
+- `cime_config/testdefs`: Directory for specification of CTSM testing
+- `cime_config/testdefs/ExpectedTestFails.xml`: List of tests that are expected to fail
+- `cime_config/usermods_dirs/clm`: Directories of sets of user-modification subdirs; these are directories that add specific user modifications to simulations created using `cime/scripts/create_newcase --user-mods-dir clm/*`
+
+- `tools/mksurfdata_esmf`: Directory to build program to create surface dataset at any resolution
+- `tools/crop_calendars`: Tools to process and process and create crop calendar datasets for CTSM
+- `tools/modify_input_files`: Script to modify existing CTSM input datasets in standard ways
+- `tools/site_and_regional`: Scripts to create input datasets for single site and regional cases, primarily by modifying existing global datasets
+- `tools/contrib`: Miscellansous useful scripts for pre and post processing as well as case management of CTSM. These scripts are contributed by users and may not be as well tested or supported as other tools
+- `.vscode`: Suggested settings for using MS Visual Studio code with CTSM
+
+
+Source code directory structure:
+=============================================================================================
+
+- `src/biogeochem`: Biogeochemisty
+- `src/main`: Main control and high level code
+- `src/cpl`: Land model high level caps for NUOPC driver (and LILAC)
+- `src/biogeophys`: Biogeophysics (Hydrology)
+- `src/dyn_subgrid`: Dynamic land unit change
+- `src/init_interp`: Online interpolation
+- `scr/fates`: FATES (Functionally Assembled Terrestrial Ecosystem Simulator) ecosystem demography model and sub-directories
+- `src/utils`: Utility codes
+- `src/self_tests`: Internal testing (unit tests run as a part of a CTSM system test)
+- `src/unit_test_shr`: Unit test shared modules for unit testing
+src/unit_test_stubs Unit test stubs that replicate CTSM code simpler  
+
+QUICKSTART: using the NUOPC driver scripts
+=============================================================================================
+
+         cd $CIMEROOT/scripts
+         ./create_newcase            # get help on how to run create_newcase
+         ./create_newcase --case testI --res f09_t232 --compset I2000Clm60BgcCrop
+                                     # create new "I" case for default machine at 1.9x2.5_gx1v7 
+                                     # "I2000Clm60BgcCrop" case is clm6_0 physics, CDEPS, and inactive ice/ocn/glc
+                                     # and MOSART for river-routing
+         cd testI
+         ./case.setup                # create the $CASE.run file
+         ./case.build                # build model and create namelists
+         ./case.submit               # submit script
+                                     # (NOTE: ./xmlchange RESUBMIT=10 to set RESUBMIT to number
+                                     # #  of times to automatically resubmit -- 10 in this example)
+

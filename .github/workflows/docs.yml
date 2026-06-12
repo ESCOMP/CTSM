@@ -13,8 +13,8 @@ on:
       - '!doc/UpdateChangelog.pl'
       - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'src/README.unit_testing.md'
+      - 'tools/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   pull_request:
@@ -27,8 +27,8 @@ on:
       - '!doc/UpdateChangelog.pl'
       - '.github/workflows/docs-common.yml'
       # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'src/README.unit_testing.md'
+      - 'tools/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   workflow_dispatch:
@@ -61,4 +61,159 @@ jobs:
       - name: Build docs using Docker (Podman has trouble on GitHub runners)
         id: build-docs
         run: |
-          cd doc && ./build_docs -b ${PWD}/_build -c -d
+          set -o pipefail
+          mkdir -p build-logs
+          cd doc && PYTHONUNBUFFERED=1 ./build_docs -b ${PWD}/_build -c -d 2>&1 | tee >(sed -E $'s/\x1b\\[[0-9;]*[a-zA-Z]//g' > "${GITHUB_WORKSPACE}/build-logs/build.log")
+        # The tee writes build.log for the PR comment (posted by docs-pr-failure-post-comment.yml); the inner sed strips ANSI color codes that would otherwise render as garbage in the comment.
+        # PYTHONUNBUFFERED=1 because otherwise the teed log will be out of order
+
+      # The rest of the steps only trigger on failure of above build-docs step.
+      # They upload logs that will be used by the docs-pr-failure-post-comment.yml workflow.
+
+      - name: Record PR number on failure
+        if: failure() && steps.build-docs.outcome == 'failure' && github.event_name == 'pull_request'
+        run: |
+          mkdir -p build-logs
+          echo "${{ github.event.pull_request.number }}" > build-logs/pr_number.txt
+
+      - name: Upload logs on failure
+        if: failure() && steps.build-docs.outcome == 'failure'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: test-build-docs-container_failed
+          path: build-logs/
+
+  check-docs-style:
+    if: ${{ always() }}
+    name: Check documentation against style guide
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Disallow fake degree signs
+        if: always()
+        # Prevents anyone from using the masculine ordinal indicator, as well as superscript-o/O if
+        # preceded by a digit in
+        # - Markdown math style,
+        # - reStructuredText math style,
+        # - MyST text style, and
+        # - reStructuredText text style,
+        # with or without curly brackets and/or spaces.
+        #
+        # What follows is an explanation of the regex. Keep in mind that the superscript-o will
+        # match whether it's an uppercase O or lowercase o because of the -i flag to grep, so that's
+        # not handled in the regex.
+        #
+        # Markdown math style:
+        #   Markdown math superscripts look like $^o$. There can also be curly brackets, like
+        #   $^{o}$, which would allow you to put multiple characters (including spaces) in the
+        #   superscript. The preceding digit can be inside or outside the dollar signs, again with
+        #   or without spaces.
+        #
+        #   There are two regex patterns separated by |, to handle the cases where the preceding
+        #   digit is outside or inside the dollar signs, respectively:
+        #       [0-9]\s*\\$\s*\^\{?\s*o
+        #           [0-9]   Any digit
+        #           \s*     Any number of spaces, including none
+        #           \\$     A literal dollar sign
+        #           \s*     Any number of spaces, including none
+        #           \^      A literal caret
+        #           \{?     Optionally a literal left curly bracket
+        #           \s*     Any number of spaces, including none
+        #           o       Lowercase o
+        #       \\\$[0-9]+\s*\^\{?\s*o\s*\}?
+        #           \\\$    A literal dollar sign
+        #           [0-9]+  One or more digits
+        #           \s*     Any number of spaces, including none
+        #           \^      A literal caret
+        #           \{?     Optionally a literal left curly bracket
+        #           \s*     Any number of spaces, including none
+        #           o       Lowercase o
+        #           \s*     Any number of spaces, including none
+        #           \}?     Optionally a literal right curly bracket
+        #
+        # MyST text style:
+        #   MyST text superscripts look like {sup}`o`. Here's the regex:
+        #       [0-9]\s*\{sup}\`\s*o\`
+        #           [0-9]   Any digit
+        #           \s*     Any number of spaces, including none
+        #           \{      A literal left curly bracket
+        #           sup     The text "sup" designating the superscript role
+        #           \}      A literal right curly bracket
+        #           \`      A literal backtick
+        #           \s*     Any number of spaces, including none
+        #           o       Lowercase o
+        #           \`      A literal backtick
+        #
+        # reStructuredText text style
+        #   Similar to MyST text superscripts, but with colons instead of curly brackets: :sup:`o`.
+        #   Another difference is that spaces aren't allowed inside the backticks. Also, there has
+        #   to be a space preceding the first colon; this can be preceded by a backslash to avoid
+        #   putting an extraneous space in the rendered text. Here's the regex:
+        #       [0-9]\\\? :sup:\`o\`
+        #           [0-9]   Any digit
+        #           \\\?    Optionally a literal backslash
+        #             (A literal space)
+        #           :sup:   The text ":sup:" designating the superscript role
+        #           \`      A literal backtick
+        #           o       Lowercase o
+        #           \`      A literal backtick
+        #
+        # reStructuredText math style
+        #    Mostly the same as reStructuredText text superscripts, but with :math: instead of
+        #    :sup:. In addition, the superscript can optionally be in curly brackets. There can be
+        #    a space after the first backtick but not before the last one.
+        #
+        #   There are two regex patterns separated by |, to handle the cases where the preceding
+        #   digit is outside or inside the dollar signs, respectively:
+        #       [0-9]\\\? :math:\`\s*\^\{?\s*o\s*\}?\`
+        #           [0-9]   Any digit
+        #           \\\?    Optionally a literal backslash
+        #             (A literal space)
+        #           :math:  The text ":math:" designating the math role
+        #           \`      A literal backtick
+        #           \s*     Any number of spaces, including none
+        #           \^      A literal caret
+        #           \{?     Optionally a literal left curly bracket
+        #           \s*     Any number of spaces, including none
+        #           o       Lowercase o
+        #           \s*     Any number of spaces, including none
+        #           \}?     Optionally a literal right curly bracket
+        #           \`      A literal backtick
+        #       :math:\`\s*[0-9]+\s*\^\{?\s*o\s*\}?\`
+        #           :math:  The text ":math:" designating the math role
+        #           \`      A literal backtick
+        #           \s*     Any number of spaces, including none
+        #           [0-9]+  One or more digits
+        #           \s*     Any number of spaces, including none
+        #           \^      A literal caret
+        #           \{?     Optionally a literal left curly bracket
+        #           \s*     Any number of spaces, including none
+        #           o       Lowercase o
+        #           \s*     Any number of spaces, including none
+        #           \}?     Optionally a literal right curly bracket
+        #           \`      A literal backtick
+        run: |
+          set +e
+          instances_of_fake_degree_signs="$(grep -ionE "[0-9]\s*\\$\s*\^\{?\s*o|\\\$[0-9]+\s*\^\{?\s*o\s*\}?|[0-9]\s*\{sup}\`\s*o\`|[0-9]\\\? :sup:\`o\`|[0-9]\\\? :math:\`\s*\^\{?\s*o\s*\}?\`| :math:\`\s*[0-9]+\s*\^\{?\s*o\s*\}?\`|º" $(find doc -name "*.md" -or -name "*.rst"))"
+          set -e
+          if [[ "$instances_of_fake_degree_signs" ]] then
+            echo -e "Instances of superscript-o or masculine ordinal indicator (º) instead of degree sign (°):\n${instances_of_fake_degree_signs}"
+            echo -e "\nSee https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-style-guide.html"
+            exit 1
+          fi
+          exit 0
+
+      - name: Disallow curly apostrophes/quotes
+        if: always()
+        run: |
+          set +e
+          instances_of_curlies="$(grep -onE "“|”|‘|’" $(find doc -name "*.md" -or -name "*.rst"))"
+          set -e
+          if [[ "$instances_of_curlies" ]] then
+            echo -e "Instances of curly apostrophes and/or quote marks:\n${instances_of_curlies}"
+            exit 1
+          fi
+          exit 0
