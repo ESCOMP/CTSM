@@ -37,11 +37,11 @@ class NeonSite(TowerSite):
     def __init__(self, *args, **kwargs):
         super().__init__("NEON", *args, **kwargs)
 
-    def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
+    def modify_user_nl(self, base_case_root, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently
         if site_lines is None:
             site_lines = [
                 """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC',
                                  'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO',"""
             ]
-        super().modify_user_nl(case_root, run_type, rundir, site_lines)
+        super().modify_user_nl(base_case_root, case_root, run_type, rundir, site_lines)

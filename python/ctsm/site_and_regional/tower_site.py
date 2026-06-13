@@ -294,34 +294,32 @@ class TowerSite:
         site = self.name
         user_nl_lines = None
         if any(x == site for x in wetland):
-           # Get the current working directory
-           cwd = os.getcwd()
 
-           # Get the base case path of the lnd_in
-           src_paramfile = os.path.join(base_case_root, "CaseDocs/lnd_in")
+            # Get the base case path of the lnd_in
+            src_paramfile = os.path.join(base_case_root, "CaseDocs/lnd_in")
 
-           # Create a grep command to query the parameter file from the base case
-           command = "grep paramfile" + " " + src_paramfile
+            # Create a grep command to query the parameter file from the base case
+            command = "grep paramfile" + " " + src_paramfile
 
-           # Grep for the parameter file string, get just the location of the parameter file
-           # and strip the apostrophe(s) from the string
-           paramfile = subprocess.run(command, shell=True, capture_output=True, text=True)
-           output_paramfile = paramfile.stdout.strip()
-           split_output_paramfile = output_paramfile.split('=')
-           clean_paramfile = split_output_paramfile[1].replace("'", "")
+            # Grep for the parameter file string, get just the location of the parameter file
+            # and strip the apostrophe(s) from the string
+            paramfile = subprocess.run(command, shell=True, capture_output=True, text=True)
+            output_paramfile = paramfile.stdout.strip()
+            split_output_paramfile = output_paramfile.split('=')
+            clean_paramfile = split_output_paramfile[1].replace("'", "")
 
-           # Define a new parameter file that will go in the run directory
-           modified_paramfile = os.path.join(case_root, "run/modified_paramfile.nc")
+            # Define a new parameter file that will go in the run directory
+            modified_paramfile = os.path.join(case_root, "run/modified_paramfile.nc")
 
-           # Set baseflow_scalar = 0 in the modified parameter file
-           os.system("ncap2 -s 'baseflow_scalar=0'" + " " + clean_paramfile + " " + modified_paramfile)
+            # Set baseflow_scalar = 0 in the modified parameter file
+            os.system("ncap2 -s 'baseflow_scalar=0'" + " " + clean_paramfile + " " + modified_paramfile)
 
-           # Create a string with the modified parameter file for user_nl_clm
-           modified_paramfile_user_nl_line = "paramfile = " + "'" + modified_paramfile + "'"
+            # Create a string with the modified parameter file for user_nl_clm
+            modified_paramfile_user_nl_line = "paramfile = " + "'" + modified_paramfile + "'"
 
-           user_nl_lines = [
-               modified_paramfile_user_nl_line,
-           ]
+            user_nl_lines = [
+                modified_paramfile_user_nl_line,
+            ]
 
         if user_nl_lines:
             with open(user_nl_fname, "a") as nl_file:
