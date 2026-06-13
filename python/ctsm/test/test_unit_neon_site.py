@@ -98,6 +98,7 @@ class TestNeonSite(unittest.TestCase):
 
         # modify_user_nl parameters:
         case_root = self._tempdir
+        base_case_root = self._tempdir
         run_type = "ad"
         rundir = ""
 
