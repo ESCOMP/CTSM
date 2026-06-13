@@ -37,6 +37,7 @@ class NeonSite(TowerSite):
     def __init__(self, *args, **kwargs):
         super().__init__("NEON", *args, **kwargs)
 
+    # pylint: disable=too-many-positional-arguments
     def modify_user_nl(self, base_case_root, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently
         if site_lines is None:

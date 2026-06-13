@@ -244,6 +244,7 @@ class TowerSite:
             return "none"
         return case.get_value("batch_query")
 
+    # pylint: disable=too-many-positional-arguments
     def modify_user_nl(self, base_case_root, case_root, run_type, rundir, site_lines=None):
         """
         Modify user namelist. If transient, include finidat in user_nl;
