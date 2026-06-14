@@ -45,7 +45,7 @@ contains
     ! Update surface fluxes based on the new ground temperature
     !
     ! !USES:
-    use clm_time_manager , only : get_step_size_real
+    use clm_time_manager , only : get_step_size_real, get_nstep  ! [PORTED by Hui Tang: get_nstep for NVP SEB diagnostic]
     use clm_varcon       , only : hvap, cpair, grav, vkc, tfrz, sb 
     use landunit_varcon  , only : istsoil, istcrop
     use column_varcon    , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv
@@ -102,6 +102,7 @@ contains
          h2osoi_ice              => waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
          h2osoi_liq              => waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
+         sabg_nvp                => solarabs_inst%sabg_nvp_patch            , & ! [PORTED by Hui Tang: exposed-NVP moss surface solar (W/m2)]
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
          ! [PORTED by Hui Tang: NVP errsoi fix - solar by layer and NVP sensible heat]
@@ -467,7 +468,18 @@ contains
                     +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
             end if
 
-            eflx_soil_grnd(p) = ((1._r8- frac_sno_eff(c))*sabg_soil(p) + frac_sno_eff(c)*sabg_snow(p)) + dlrad(p) &
+
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               frac_nvp_eff = min(1._r8 - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               eflx_soil_grnd(p) = ((1._r8- frac_sno_eff(c))*sabg_soil(p) &
+                  + (frac_nvp_eff/col%frac_nvp(c))*sabg_nvp(p) &
+                  + frac_sno_eff(c)*sabg_snow(p)) + dlrad(p) &
+                  + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                  - emg(c)*sb*lw_grnd - emg(c)*sb*t_grnd0(c)**3*(4._r8*tinc(c)) &
+                  - (eflx_sh_grnd(p)+qflx_evap_grnd_eff*htvp(c))
+
+            else
+                eflx_soil_grnd(p) = ((1._r8- frac_sno_eff(c))*sabg_soil(p) + frac_sno_eff(c)*sabg_snow(p)) + dlrad(p) &
                  + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                  - emg(c)*sb*lw_grnd - emg(c)*sb*t_grnd0(c)**3*(4._r8*tinc(c)) &
                  - (eflx_sh_grnd(p)+qflx_evap_grnd_eff*htvp(c))   ! [PORTED by Hui Tang: per-surface latent term]
@@ -480,8 +492,37 @@ contains
             !   fabd_nvp = nvp_frac * (1 - exp(-k * lai_nvp))
             ! so sabg_lyr(p,0) = fabd_nvp * trd + fabi_nvp * tri is already per unit ground area.
             ! Applying frac_nvp_eff again would double-count the NVP coverage fraction.
-            if (use_nvp .and. col%nvp_layer_active(c)) then
-               eflx_soil_grnd(p) = eflx_soil_grnd(p) + sabg_lyr(p,0)
+               ! [PORTED by Hui Tang (2026-06-12): add the EXPOSED-moss SURFACE solar at frac_nvp_eff
+               !  weight, EXACTLY matching the solve: hs_nvp carries sabg_nvp*nvp_exp*wtcol =
+               !  sabg_nvp*frac_nvp_eff (the surface solar injected at j=0). The BURIED-moss internal
+               !  absorption sabg_lyr(p,0) is part of the SNICAR sum and is therefore ALREADY inside
+               !  frac_sno_eff*sabg_snow above (exactly as sabg_lyr(p,1) is for soil) — re-adding it
+               !  would double-count. For snl==0: frac_nvp_eff=frac_nvp, sabg_lyr(p,0)=0. Must mirror
+               !  sabg_chk in SoilTemperatureMod (errseb/errsoi consistency invariant).]
+               ! [PORTED by Hui Tang (2026-06-12): sabg_nvp is per-COLUMN (fabd_nvp carries nvp_frac), so
+               !  the EXPOSED-moss surface solar into the column is nvp_exp*sabg_nvp =
+               !  (frac_nvp_eff/frac_nvp)*sabg_nvp (was frac_nvp_eff*sabg_nvp, which double-counted the
+               !  coverage -> offline SABG vs FGR positive residual). Matches sabg_chk and the hs_nvp deposit.]
+            end if
+
+            ! [PORTED by Hui Tang: DEBUG (Bug B/C) — decompose eflx_soil_grnd for the NVP snow-covered
+            !  column to isolate the surface-energy-balance residual. Fires whenever any snow covers
+            !  the NVP layer (frac_sno_eff > 0): partial cover = spring/autumn Bug B (~-3 W/m2), full
+            !  cover (frac_sno_eff==1) = Bug C (~-61 W/m2 at autumn freeze-up, buried NVP). Compare
+            !  these ground terms with the column totals (eflx_sh_tot, eflx_lh_tot, eflx_lwrad_net) in
+            !  the BalanceCheck dump. Remove once both residuals are identified.]
+            if (use_nvp .and. col%nvp_layer_active(c) .and. frac_sno_eff(c) > 0._r8) then
+               write(iulog,*) '[NVP DBG SEB] nstep=', get_nstep(), ' c=', c, ' p=', p, &
+                    ' frac_sno_eff=', frac_sno_eff(c), ' frac_h2osfc=', frac_h2osfc(c)
+               write(iulog,*) '[NVP DBG SEB]   sw_grnd=', &
+                    (1._r8-frac_sno_eff(c))*sabg_soil(p) + frac_sno_eff(c)*sabg_snow(p), &
+                    ' sabg_lyr0=', sabg_lyr(p,0), ' dlrad=', dlrad(p)
+               write(iulog,*) '[NVP DBG SEB]   lw_in=', (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c), &
+                    ' lw_emit=', emg(c)*sb*lw_grnd, ' lw_lin=', emg(c)*sb*t_grnd0(c)**3*(4._r8*tinc(c))
+               write(iulog,*) '[NVP DBG SEB]   sh_grnd=', eflx_sh_grnd(p), &
+                    ' lh_grnd=', qflx_evap_grnd_eff*htvp(c), ' eflx_soil_grnd=', eflx_soil_grnd(p)
+               write(iulog,*) '[NVP DBG SEB]   t_grnd0=', t_grnd0(c), ' tinc=', tinc(c), &
+                    ' tssbef0=', tssbef(c,0), ' tssbef1=', tssbef(c,1)
             end if
 
             if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -537,10 +578,18 @@ contains
       do fp = 1,num_nolakep
          p = filter_nolakep(fp)
          c = patch%column(p)
+         ! [PORTED by Hui Tang: errsoi input UNIFIED to the bulk eflx_soil_grnd for both snl==0 and
+         ! snl<0 (2026-06-11, snl==0 3-way refactor). Previously snl==0 used an NVP-basis
+         ! eflx_soil_grnd_nvp because the snl==0 solve "collapsed" the whole surface into the NVP layer
+         ! j=0 (single NVP surface). Now the snl==0 solve uses the 3-way split (exposed moss at j=0
+         ! weight frac_nvp_eff, bare soil at j=1 weight frac_soil), so the matching errsoi is the
+         ! area-weighted bulk eflx_soil_grnd, whose lw_grnd / eflx_sh_grnd / qflx_evap_grnd_eff already
+         ! carry the NVP weighting via the NVP-weighted t_grnd. This is the same path snl<0 uses, so
+         ! the snow-appearance threshold is now continuous.]
          errsoi_patch(p) = eflx_soil_grnd(p) - xmf(c) - xmf_h2osfc(c) &
               - frac_h2osfc(c)*(t_h2osfc(c)-t_h2osfc_bef(c)) &
               *(c_h2osfc(c)/dtime)
-         errsoi_patch(p) =  errsoi_patch(p)+eflx_h2osfc_to_snow_col(c) 
+         errsoi_patch(p) =  errsoi_patch(p)+eflx_h2osfc_to_snow_col(c)
          ! For urban sunwall, shadewall, and roof columns, the "soil" energy balance check
          ! must include the heat flux from the interior of the building.
          if (col%itype(c)==icol_sunwall .or. col%itype(c)==icol_shadewall .or. col%itype(c)==icol_roof) then
@@ -648,6 +697,54 @@ contains
                  eflx_soil_grnd(p) - xmf(c) - xmf_h2osfc(c) - heat_store_diag &
                  + eflx_h2osfc_to_snow_col(c) &
                  - frac_h2osfc(c)*(t_h2osfc(c)-t_h2osfc_bef(c))*(c_h2osfc(c)/dtime)
+
+            ! [PORTED by Hui Tang: VERIFY-ONLY diagnostic — candidate NVP-consistent errsoi input.
+            !  Tests whether replacing eflx_soil_grnd's blended LW-emission + turbulent terms with the
+            !  NVP-specific fluxes that the temperature solve actually applied at j=0 (hs_nvp) closes
+            !  the energy balance. Solar (sabg_soil + sabg_lyr0) is kept as-is (already reconciled).
+            !    - LW emission : emg*sb*lw_grnd            -> emg*sb*tssbef(c,0)**4   (lwrad_emit_nvp)
+            !    - LW lineariz. : t_grnd0/tinc blended     -> NVP layer tssbef(c,0)/(t0-tbef0)
+            !    - sensible     : eflx_sh_grnd (corrected) -> eflx_sh_nvp + (t0-tbef0)*cgrnds
+            !    - latent       : qflx_evap_soi (corrected)-> qflx_ev_nvp (already tinc-corrected)
+            !  If errsoi_test ~ 0 across snow-free steps, promote this to the real errsoi input.
+            !  Pure diagnostic: changes NO physics. Remove after verification.]
+            if (use_nvp .and. col%nvp_layer_active(c) .and. col%snl(c) == 0) then
+               eflx_soil_grnd_nvp = sabg_soil(p) + sabg_lyr(p,0) + dlrad(p) &
+                    + (1._r8 - frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
+                    - emg(c)*sb*tssbef(c,0)**4 &
+                    - emg(c)*sb*tssbef(c,0)**3*4._r8*(t_soisno(c,0)-tssbef(c,0)) &
+                    - ( eflx_sh_nvp(p) + (t_soisno(c,0)-tssbef(c,0))*cgrnds(p) &
+                        + qflx_ev_nvp(p)*htvp(c) )
+               errsoi_test = eflx_soil_grnd_nvp - xmf(c) - xmf_h2osfc(c) - heat_store_diag &
+                    + eflx_h2osfc_to_snow_col(c) &
+                    - frac_h2osfc(c)*(t_h2osfc(c)-t_h2osfc_bef(c))*(c_h2osfc(c)/dtime)
+               write(iulog,*) '  [ERRSOI NVP TEST] nstep=', get_nstep(), ' c=', c, ' p=', p, &
+                    ' eflx_soil_grnd_nvp=', eflx_soil_grnd_nvp, &
+                    ' errsoi_test=', errsoi_test, ' (cur errsoi=', errsoi_patch(p), ')'
+            end if
+
+            ! [PORTED by Hui Tang: DEBUG — per-layer heat-storage decomposition to locate which
+            !  layer carries the errsoi residual (esp. June thin-snow melt-out where xmf=0 but
+            !  heat_store mismatches eflx_soil_grnd). 'wgt' is the weight actually applied in the
+            !  errsoi sum: snow layers (j<0) use frac_sno_eff, NVP j=0 and soil (j>=1) use 1.0
+            !  (cv per column area). 'term' = wgt*(t-tbef)/fact. Remove after fix.]
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               write(iulog,*) '  [ERRSOI LYR] frac_sno_eff=', frac_sno_eff(c)
+               do j = col%snl(c)+1, nlevgrnd
+                  if (j >= 1) then
+                     wgt = 1.0_r8
+                  else if (j == 0) then
+                     wgt = 1.0_r8   ! NVP j=0: full column-area weight (loop frac_sno_eff + correction)
+                  else
+                     wgt = frac_sno_eff(c)   ! snow layer: per-snow-area cv
+                  end if
+                  if (abs(wgt*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)) > 1.0_r8 .or. j <= 1) then
+                     write(iulog,*) '  [ERRSOI LYR] j=',j,' dT=',t_soisno(c,j)-tssbef(c,j), &
+                          ' fact=',fact(c,j),' wgt=',wgt,' term=', &
+                          wgt*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+                  end if
+               end do
+            end if
          end if
       end do
 
