@@ -75,6 +75,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_luh
    use clm_varctl        , only : use_fates_lupft
    use clm_varctl        , only : use_fates_potentialveg
+   use clm_varctl        , only : use_fates_interstitial_bareground
    use clm_varctl        , only : flandusepftdat
    use clm_varctl        , only : fates_seeddisp_cadence
    use clm_varctl        , only : fates_inventory_ctrl_filename
@@ -1726,15 +1727,18 @@ module CLMFatesInterfaceMod
           patch%is_bareground(col%patchi(c)) = .true.
           npatch = this%fates(nc)%sites(s)%youngest_patch%patchno
 
-          ! Precision errors on the canopy_fraction_pa sum, even small (e-12)
-          ! do exist, and can create potentially negetive bare-soil fractions
-          ! (ie -1e-12 or smaller). Even though this is effectively zero,
-          ! it can generate weird logic scenarios in the ctsm/elm code, so we
-          ! protext it here with a lower bound of 0.0_r8.
+          ! FATES sets the bareground fraction for the given site as the fraction
+          ! of the site that is not covered by the sum of the canopy. 
+          if (use_fates_interstitial_bareground) then
+             ! Precision errors on the patch_fraction sum, even small (e-12)
+             ! do exist, and can create potentially negetive bare-soil fractions
+             ! (ie -1e-12 or smaller). Even though this is effectively zero,
+             ! it can generate weird logic scenarios in the ctsm/elm code, so we
+             ! protext it here with a lower bound of 0.0_r8.
 
-          patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
-
-               1.0_r8-sum(this%fates(nc)%bc_out(s)%canopy_fraction_pa(1:npatch)))
+             patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
+                  1.0_r8-sum(this%fates(nc)%bc_out(s)%patch_fraction(1:npatch)))
+          end if
 
           patch%sp_pftorder_index(col%patchi(c)) = 0 !bg is the 0th patch in the SP FATES structure
 
@@ -1745,12 +1749,17 @@ module CLMFatesInterfaceMod
 
              p = ifp+col%patchi(c)
 
-             ! bc_out(s)%canopy_fraction_pa(ifp) is the area fraction
+             ! If FATES interstitial bareground is being counted in the
+             ! CLM bareground patch, then the 
+             ! bc_out(s)%patch_fraction(ifp) is the area fraction
              ! the site's total ground area that is occupied by the
              ! area footprint of the current patch's vegetation canopy
+             ! Otherwise this is the fraction of the site that the FATES patch
+             ! occupies including the interstitial bareground.
+             ! This logic check is handled on the FATES side.
 
              patch%is_veg(p) = .true.
-             patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%canopy_fraction_pa(ifp)
+             patch%wt_ed(p)  = this%fates(nc)%bc_out(s)%patch_fraction(ifp)
              areacheck = areacheck + patch%wt_ed(p)
 
              elai(p) = this%fates(nc)%bc_out(s)%elai_pa(ifp)
