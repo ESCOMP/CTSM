@@ -368,6 +368,8 @@ contains
     real(r8) :: albsfc          (bounds%begc:bounds%endc,numrad)                          ! albedo of surface underneath snow (col,bnd) 
     real(r8) :: albsnd(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (direct)
     real(r8) :: albsni(bounds%begc:bounds%endc,numrad)                                    ! snow albedo (diffuse)
+    real(r8) :: frac_nvp_eff_alb                                                          ! [PORTED by Hui Tang: exposed-moss column fraction for the ground-albedo blend]
+    real(r8) :: T_nvp                                                                     ! [PORTED by Hui Tang: per-moss-area transmittance exp(-k*lai) for the Beer-effective ground albedo]
     real(r8) :: albsnd_pur      (bounds%begc:bounds%endc,numrad)                          ! direct pure snow albedo (radiative forcing)
     real(r8) :: albsni_pur      (bounds%begc:bounds%endc,numrad)                          ! diffuse pure snow albedo (radiative forcing)
     real(r8) :: albsnd_bc       (bounds%begc:bounds%endc,numrad)                          ! direct snow albedo without BC (radiative forcing)
@@ -404,6 +406,7 @@ contains
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
           frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_eff  =>    waterdiagnosticbulk_inst%frac_sno_eff_col     , & !Input:
           fcansno       =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
           h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
           h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
@@ -855,6 +858,25 @@ contains
              ! because the order of SoilAlbedo and SNICAR_RT was switched for SNICAR.
              albgrd(c,ib) = albsod(c,ib)*(1._r8-frac_sno(c)) + albsnd(c,ib)*frac_sno(c)
              albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno(c)) + albsni(c,ib)*frac_sno(c)
+
+             ! [PORTED by Hui Tang (2026-06-13): blend the EXPOSED moss into the ground albedo so
+             !  sabg(p)=trd*(1-albgrd) carries it in BOTH snow regimes (replaces the snl==0-only in-FATES
+             !  gnd_alb blend). Perturbation form: replace frac_nvp_eff_alb of the snow-free ground with the
+             !  moss-area effective albedo. frac_nvp_eff_alb = max(0,frac_nvp-frac_sno) keeps the soil weight
+             !  (1-frac_sno)-frac_nvp_eff_alb >=0; reduces to frac_nvp at snl==0. Buried moss stays in SNICAR.
+             !  [PORTED by Hui Tang (2026-06-13): OPTION 2 — Beer-EFFECTIVE moss-area albedo (1st order):
+             !   1-alb_eff = (1-alb_nvp)*(1-albsoil*T_nvp), T_nvp=exp(-k*lai)=exp(-nvp_tau_col/frac_nvp).
+             !   The moss area then absorbs moss(Beer) + soil-under-moss; the carve-out subtracts the Beer
+             !   sabg_nvp, so the soil remainder is the PHYSICAL (1-alb_nvp)*T*(1-albsoil) transmitted solar,
+             !   not the inflated opaque value. alb_nvp_gnd_col is the moss SURFACE reflectance (bc_out lag).]
+             if (use_nvp .and. col%nvp_layer_active(c)) then
+                frac_nvp_eff_alb = min(1._r8 - frac_sno(c), max(0._r8, col%frac_nvp(c) - frac_sno(c)))
+                T_nvp = exp(-surfalb_inst%nvp_tau_col(c)/col%frac_nvp(c))   ! exp(-k*lai), per moss area
+                albgrd(c,ib) = albgrd(c,ib) + frac_nvp_eff_alb* &
+                     ( (1._r8 - (1._r8-surfalb_inst%alb_nvp_gnd_col(c))*(1._r8 - albsod(c,ib)*T_nvp)) - albsod(c,ib) )
+                albgri(c,ib) = albgri(c,ib) + frac_nvp_eff_alb* &
+                     ( (1._r8 - (1._r8-surfalb_inst%alb_nvp_gnd_col(c))*(1._r8 - albsoi(c,ib)*T_nvp)) - albsoi(c,ib) )
+             end if
 
              ! albedos for radiative forcing calculations:
              if (use_snicar_frc) then

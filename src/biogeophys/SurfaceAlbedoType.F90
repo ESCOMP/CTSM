@@ -46,6 +46,9 @@ module SurfaceAlbedoType
      real(r8), pointer :: nvp_tau_col          (:)   ! col NVP optical depth (k*LAI*frac) [-]
      real(r8), pointer :: nvp_omega_vis_col    (:)   ! col NVP single-scatter albedo VIS  [-]
      real(r8), pointer :: nvp_omega_nir_col    (:)   ! col NVP single-scatter albedo NIR  [-]
+     ! [PORTED by Hui Tang (2026-06-13): NVP moss ground reflectance (band-independent), from FATES
+     ! bc_out%alb_nvp_gnd_pa; blended into albsod in SurfaceAlbedoMod so sabg(p) carries the exposed moss.]
+     real(r8), pointer :: alb_nvp_gnd_col      (:)   ! col NVP moss ground reflectance    [-]
      real(r8), pointer :: albsod_col           (:,:) ! col soil albedo: direct  (col,bnd) [frc]                    
      real(r8), pointer :: albsoi_col           (:,:) ! col soil albedo: diffuse (col,bnd) [frc]                    
      real(r8), pointer :: albsnd_hst_col       (:,:) ! col snow albedo, direct , for history files (col,bnd) [frc] 
@@ -156,6 +159,7 @@ contains
        allocate(this%fabi_nvp_col    (begc:endc,numrad))       ; this%fabi_nvp_col       (:,:) = 0._r8
        ! [PORTED by Hui Tang: allocate NVP optical properties for SNICAR layer-0]
        allocate(this%nvp_tau_col       (begc:endc))            ; this%nvp_tau_col        (:)   = 0._r8
+       allocate(this%alb_nvp_gnd_col   (begc:endc))            ; this%alb_nvp_gnd_col    (:)   = 0._r8
        allocate(this%nvp_omega_vis_col (begc:endc))            ; this%nvp_omega_vis_col  (:)   = 0._r8
        allocate(this%nvp_omega_nir_col (begc:endc))            ; this%nvp_omega_nir_col  (:)   = 0._r8
     end if
