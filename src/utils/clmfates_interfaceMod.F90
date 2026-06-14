@@ -450,6 +450,7 @@ module CLMFatesInterfaceMod
      integer                                        :: pass_radiation_model
      integer                                        :: pass_electron_transport_model
      integer                                        :: pass_managed_fire
+     integer                                        :: pass_interstitial_bareground
 
      call t_startf('fates_globals2')
 
@@ -523,6 +524,13 @@ module CLMFatesInterfaceMod
         ! use_vertsoilc: Carbon soil layer profile is assumed to be on all the time now
         pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
+
+        if(use_fates_interstitial_bareground) then
+           pass_interstitial_bareground = 1
+        else
+           pass_interstitial_bareground = 0
+        end if
+        call set_fates_ctrlparms('use_fates_interstitial_bareground',ival=pass_interstitial_bareground)
 
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
