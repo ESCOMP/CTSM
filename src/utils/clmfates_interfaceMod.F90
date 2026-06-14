@@ -3044,6 +3044,7 @@ module CLMFatesInterfaceMod
     ! [PORTED by Hui Tang: NVP absorptance patch→col aggregation]
     integer                                    :: ib            ! band index
     integer                                    :: npatches_site ! patch count in site
+    real(r8)                                   :: nvp_frac_sum  ! [PORTED by Hui Tang: Σ nvp_frac_pa for coverage-weighted alb_nvp_gnd_col]
     ! [PORTED by Hui Tang: NVP Beer's law k now read from fates_params_default.json via nvp_extinction_coeff]
 
     call t_startf('fates_wrapcanopyradiation')
@@ -3159,6 +3160,21 @@ module CLMFatesInterfaceMod
              surfalb_inst%nvp_tau_col(c)       = surfalb_inst%nvp_tau_col(c)       / real(npatches_site, r8)
              surfalb_inst%nvp_omega_vis_col(c) = surfalb_inst%nvp_omega_vis_col(c) / real(npatches_site, r8)
              surfalb_inst%nvp_omega_nir_col(c) = surfalb_inst%nvp_omega_nir_col(c) / real(npatches_site, r8)
+          end if
+          ! [PORTED by Hui Tang (2026-06-13): NVP moss ground reflectance, COVERAGE-weighted mean over
+          !  patches. alb_nvp_gnd is an INTENSIVE reflectance (the value where moss exists), so it must
+          !  NOT be diluted by bare patches (which have alb_nvp_gnd_pa=0, nvp_frac_pa=0); the coverage is
+          !  supplied separately by nvp_frac_eff in the SurfaceAlbedoMod blend. =0 when no moss present.]
+          surfalb_inst%alb_nvp_gnd_col(c) = 0._r8
+          nvp_frac_sum = 0._r8
+          do ifp = 1, npatches_site
+             surfalb_inst%alb_nvp_gnd_col(c) = surfalb_inst%alb_nvp_gnd_col(c) + &
+                  this%fates(nc)%bc_out(s)%alb_nvp_gnd_pa(ifp) * &
+                  this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp)
+             nvp_frac_sum = nvp_frac_sum + this%fates(nc)%bc_out(s)%nvp_frac_pa(ifp)
+          end do
+          if (nvp_frac_sum > 1.e-5_r8) then
+             surfalb_inst%alb_nvp_gnd_col(c) = surfalb_inst%alb_nvp_gnd_col(c) / nvp_frac_sum
           end if
        end if
 
