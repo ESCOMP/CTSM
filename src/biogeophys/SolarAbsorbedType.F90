@@ -30,8 +30,16 @@ module SolarAbsorbedType
      real(r8), pointer :: par240x_z_patch        (:,:) ! 10-day running mean of maximum patch absorbed PAR for leaves in canopy layer (W/m**2)
      real(r8), pointer :: par24d_z_patch         (:,:) ! daily accumulated  absorbed PAR for leaves in canopy layer from midnight to current step(J/m**2) 
      real(r8), pointer :: par24x_z_patch         (:,:) ! daily max of patch absorbed PAR for  leaves in canopy layer from midnight to current step(W/m**2)
-     real(r8), pointer :: sabg_soil_patch        (:)   ! patch solar radiation absorbed by soil (W/m**2)       
-     real(r8), pointer :: sabg_snow_patch        (:)   ! patch solar radiation absorbed by snow (W/m**2)       
+     real(r8), pointer :: sabg_soil_patch        (:)   ! patch solar radiation absorbed by soil (W/m**2)
+     ! [PORTED by Hui Tang: exposed-NVP moss SURFACE-absorbed solar (Beer's law), analogous to
+     !  sabg_soil_patch for bare soil. Full (un-exposure-weighted) value; the frac_nvp_eff weighting
+     !  is applied in the thermal solve (hs_nvp). Paired with sabg_lyr_patch(:,0) = buried/SNICAR
+     !  internal moss absorption (analogous to sabg_lyr_patch(:,1) for soil).]
+     real(r8), pointer :: sabg_nvp_patch         (:)   ! patch solar absorbed by exposed NVP moss surface (W/m**2)
+     ! [PORTED by Hui Tang: band-loop (albsod) ground absorption snapshot, before the NVP carve-out /
+     !  SNICAR snow reassignment overwrite sabg_soil; used only to build the diagnostic SABG tile]
+     real(r8), pointer :: sabg_soil_bandloop_patch (:) ! patch band-loop soil/ground absorption (W/m**2)
+     real(r8), pointer :: sabg_snow_patch        (:)   ! patch solar radiation absorbed by snow (W/m**2)
      real(r8), pointer :: sabg_patch             (:)   ! patch solar radiation absorbed by ground (W/m**2)     
      real(r8), pointer :: sabg_chk_patch         (:)   ! patch fsno weighted sum (W/m**2)                                   
      real(r8), pointer :: sabg_lyr_patch         (:,:) ! patch absorbed radiation in each snow layer and top soil layer (pft,lyr) [W/m2]
@@ -130,6 +138,8 @@ contains
     allocate(this%sabg_lyr_patch         (begp:endp,-nlevsno+1:1)) ; this%sabg_lyr_patch         (:,:) = nan
     allocate(this%sabg_pen_patch         (begp:endp))              ; this%sabg_pen_patch         (:)   = nan
     allocate(this%sabg_soil_patch        (begp:endp))              ; this%sabg_soil_patch        (:)   = nan
+    allocate(this%sabg_nvp_patch         (begp:endp))              ; this%sabg_nvp_patch         (:)   = nan  ! [PORTED by Hui Tang]
+    allocate(this%sabg_soil_bandloop_patch(begp:endp))             ; this%sabg_soil_bandloop_patch(:)  = nan  ! [PORTED by Hui Tang]
     allocate(this%sabg_snow_patch        (begp:endp))              ; this%sabg_snow_patch        (:)   = nan
     allocate(this%sabg_chk_patch         (begp:endp))              ; this%sabg_chk_patch         (:)   = nan
     allocate(this%sabs_roof_dir_lun      (begl:endl,1:numrad))     ; this%sabs_roof_dir_lun      (:,:) = nan
