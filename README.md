@@ -65,3 +65,8 @@ Perturbed Parameter Experiment (PPE) Science team:
 - [Katie Dagon] (https://github.com/katiedagon)
 - [Daniel Kennedy] (https://github.com/djk2120)
 - [Linnea Hawkins] (https://github.com/linniahawkins)
+
+## Community resources
+
+- Unofficial, community-maintained AI-agent skill for onboarding new users (not an official ESCOMP resource): [earth-space-ai/ctsm-skill](https://github.com/earth-space-ai/ctsm-skill). It restructures the existing CTSM documentation for AI coding agents and defers to this repository as the source of truth.
+
