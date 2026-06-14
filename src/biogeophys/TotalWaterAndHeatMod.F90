@@ -26,6 +26,7 @@ module TotalWaterAndHeatMod
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use landunit_varcon    , only : istdlak, istsoil,istcrop,istwet,istice
   use clm_varctl         , only : iulog, use_nvp  ! [PORTED by Hui Tang: use_nvp for NVP debug prints]
+  use NVPParamsMod       , only : csol_nvp, watsat_nvp  ! [PORTED by Hui Tang: NVP solid heat capacity for heat(c)]
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -741,6 +742,17 @@ contains
           heat_ice(c) = heat_ice(c) + &
                TempToHeat(temp = t_soisno(c,j), cv = (h2osoi_ice(c,j)*cpice))
        end do
+
+       ! [PORTED by Hui Tang (2026-06-12): add the NVP-layer SOLID (dry-mass) heat content to heat(c).
+       !  The j=0 moss WATER is already counted in the loop above, but the moss SOLID was omitted
+       !  (AccumulateSoilHeatNonLake loops j>=1 only). dz(c,0)=col%dz_nvp = nvp_dz*frac_nvp*canopy_frac
+       !  already carries frac_nvp, so csol_nvp*(1-watsat_nvp)*dz(c,0) is the PER-COLUMN solid heat
+       !  content. This makes heat(c) consistent with the per-moss cv (=old_cv/frac_nvp), for which
+       !  frac_nvp*cv_moss = solid_percol + water — both terms now tracked. Closes the total-energy gap.]
+       if (use_nvp .and. col%jbot_sno(c) == -1) then
+          heat_dry_mass(c) = heat_dry_mass(c) + &
+               TempToHeat(temp = t_soisno(c,0), cv = (csol_nvp*(1._r8-watsat_nvp)*dz(c,0)))
+       end if
 
        if (col%hydrologically_active(c)) then
           ! NOTE(wjs, 2017-03-23) Water in the unconfined aquifer currently doesn't have
