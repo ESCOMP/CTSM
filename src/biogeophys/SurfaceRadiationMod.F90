@@ -482,7 +482,7 @@ contains
      use clm_varcon       , only : spval
      use landunit_varcon  , only : istsoil, istcrop 
      use clm_varctl       , only : use_subgrid_fluxes, use_snicar_frc, iulog, use_SSRE, do_sno_oc
-     use clm_time_manager , only : get_step_size_real, is_near_local_noon
+     use clm_time_manager , only : get_step_size_real, is_near_local_noon, get_nstep  ! [PORTED by Hui Tang: get_nstep for Phase-4 diagnostic]
      use abortutils       , only : endrun
      !
      ! !ARGUMENTS:
@@ -645,14 +645,13 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col      , & !Input:
-          frac_h2osfc     => waterdiagnosticbulk_inst%frac_h2osfc_col        & !Input:  [real(r8) (:)] fraction of ground covered by surface water (0 to 1)
+          frac_sno    => waterdiagnosticbulk_inst%frac_sno_col      & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
 
           )
 
        ! Determine seconds off current time step
        dtime = get_step_size_real()
-
+y
        ! Initialize fluxes
 
        do fp = 1,num_nourbanp
@@ -797,9 +796,12 @@ contains
                         surfalb_inst%fabd_nvp_col(c,ib) * trd(p,ib) + &
                         surfalb_inst%fabi_nvp_col(c,ib) * tri(p,ib)
                 end do
-                sabg_nvp(p)   = max(0._r8, min(sabg_nvp(p), sabg_lyr(p,1)))
+                sabg_nvp(p)   = max(0._r8, min(sabg_nvp(p), sabg_lyr(p,1)))  ! per-column
+
+                ![PORTED by Hui Tang: Soil patches receive the same amount of radiation, no matter it is under moss or not (exposed), per-area]
                 sabg_lyr(p,1) = sabg_lyr(p,1) - sabg_nvp(p)
                 sabg_soil(p)  = sabg_soil(p)  - sabg_nvp(p)
+
                 ! [PORTED by Hui Tang (2026-06-12): keep sabg_lyr(p,0) = sabg_nvp so the SNICAR
                 !  energy-conservation guard (sum(sabg_lyr)==sabg_snow) is satisfied without special-
                 !  casing. This does NOT re-inject internal solar: the j=0 RHS internal term is
@@ -825,17 +827,6 @@ contains
                    sub_surf_abs_SW(p) = sub_surf_abs_SW(p) + sabg_lyr(p,i)
                 endif
              enddo
-             ! [PORTED by Hui Tang: snow - NVP layer-0 SNICAR]
-             ! When use_nvp and SNICAR NVP layer-0 is active, flx_absdv(c,0)/flx_absiv(c,0)
-             ! already hold NVP absorption (set by SNICAR_RT above), so sabg_lyr(p,0) is
-             ! correct from the SNICAR loop above. Correct sabg_soil to use SNICAR soil layer.
-             ! [PORTED by Hui Tang: nest the NVP guard — see line ~768 for rationale]
-             if (use_nvp) then
-                if (surfalb_inst%nvp_tau_col(c) > 0._r8) then
-                   ! sabg_lyr(p,1) = SNICAR soil-layer absorption (excludes NVP); use it directly.
-                   sabg_soil(p) = sabg_lyr(p,1)
-                end if
-             end if
 
              ! Divide absorbed by total, to get fraction absorbed in subsurface
              if (sabg_snl_sum /= 0._r8) then
@@ -913,7 +904,47 @@ contains
                            surfalb_inst%fabd_nvp_col(c,ib) * trd(p,ib) + &
                            surfalb_inst%fabi_nvp_col(c,ib) * tri(p,ib)
                    end do
-                   sabg_nvp(p) = max(0._r8, sabg_nvp_beer)
+                   sabg_nvp(p)   = max(0._r8, min(sabg_nvp_beer, sabg(p)-sabg_snow(p)))  ! per-column
+
+                  ! [PORTED by Hui Tang: snow - NVP layer-0 SNICAR]
+                  ! When use_nvp and SNICAR NVP layer-0 is active, flx_absdv(c,0)/flx_absiv(c,0)
+                  ! already hold NVP absorption (set by SNICAR_RT above), so sabg_lyr(p,0) is
+                  ! correct from the SNICAR loop above. Correct sabg_soil to use SNICAR soil layer.
+                  ! [PORTED by Hui Tang: nest the NVP guard — see line ~768 for rationale]
+                  ! sabg_lyr(p,1) = SNICAR soil-layer absorption (excludes NVP); use it directly.
+                   frac_nvp_eff_loc = min(1._r8 - frac_sno(c), max(0._r8, col%frac_nvp(c) - frac_sno(c)))
+
+                   ! [PORTED by Hui Tang (2026-06-13): guard the exposed-soil back-out against full snow
+                   !  cover. When frac_sno_eff==1 the denominator (1-frac_sno_eff)=0 -> sabg_soil=Inf/NaN,
+                   !  which then contaminates sw_grnd via the 0*NaN trap in SoilFluxesMod (the zero soil
+                   !  weight does NOT cancel a NaN). At full snow cover there is no exposed soil, so
+                   !  sabg_soil must be a finite 0.]
+                   if (frac_sno(c) < 1._r8) then
+                      sabg_soil(p) = (sabg(p) - sabg_snow(p)*frac_sno(c) - (frac_nvp_eff_loc/col%frac_nvp(c))*sabg_nvp(p))/(1-frac_sno(c))
+                   else
+                      sabg_soil(p) = 0._r8
+                   end if
+
+                   ! [PORTED by Hui Tang (2026-06-13): Phase-4 diagnostic (snl<0 partial snow). Dumps the
+                   !  raw ground-solar pieces so we can measure how sabg(p) (albgrd total, now incl. the
+                   !  exposed moss via Phase 3) decomposes vs the FGR reconstruction and the SABG tile.
+                   !  Offline: M_alb = sabg(p) - fse*sabg_snow - (1-fse)*sabg_soil_bandloop (opaque moss);
+                   !  M_beer = nvp_exp*sabg_nvp; FGR_solar ≈ (1-fse)*sabg_lyr1 + fse*sabg_snow + M_beer;
+                   !  SABG_tile = fse*sabg_snow + (1-fse)*bandloop + M_beer. Residual to close: sabg(p)-FGR
+                   !  and the soil seam (1-fse)*(bandloop - sabg_lyr1). REMOVE after Phase 4 verified.]
+                   if (frac_sno_eff(c) > 0._r8 .and. frac_sno_eff(c) < col%frac_nvp(c)) then
+                      write(iulog,*) '[NVP P4 RAD] nstep,c,p=', get_nstep(), c, p, &
+                           ' sabg=', sabg(p), ' sabg_snow=', sabg_snow(p), &
+                           ' bandloop=', sabg_soil_bandloop(p), ' sabg_lyr0=', sabg_lyr(p,0), &
+                           ' sabg_lyr1=', sabg_lyr(p,1), ' sabg_nvp=', sabg_nvp(p), &
+                           ' fse=', frac_sno_eff(c), ' fsno=', frac_sno(c), &
+                           ' frac_nvp=', col%frac_nvp(c), &
+                           ' nvp_exp=', min(1._r8-frac_sno_eff(c), &
+                                            max(0._r8,col%frac_nvp(c)-frac_sno_eff(c)))/col%frac_nvp(c), &
+                           ' FGRrecon=', (1._r8-frac_sno_eff(c))*sabg_lyr(p,1) + frac_sno_eff(c)*sabg_snow(p) &
+                                + (min(1._r8-frac_sno_eff(c), &
+                                       max(0._r8,col%frac_nvp(c)-frac_sno_eff(c)))/col%frac_nvp(c))*sabg_nvp(p)
+                   end if
                 end if
              end if  ! [PORTED by Hui Tang: close nvp_layer_active guard]
              end if  ! [PORTED by Hui Tang: close use_nvp guard]
