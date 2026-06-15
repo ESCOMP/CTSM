@@ -302,6 +302,8 @@ contains
      ! !DESCRIPTION:
      ! Set various input fluxes of water
      !
+     ! !USES:
+     use clm_time_manager, only : get_nstep   ! [PORTED by Hui Tang: NVP rain-partition diagnostic]
      ! !ARGUMENTS:
      type(bounds_type)          , intent(in)    :: bounds
      integer                    , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
@@ -315,6 +317,7 @@ contains
      real(r8) :: fsno         ! copy of frac_sno
      ! [PORTED by Hui Tang: NVP water infiltration]
      real(r8) :: frac_nvp_eff ! effective NVP area fraction (not covered by h2osfc) [-]
+     real(r8) :: frac_nvp_eff_soil ! [PORTED by Hui Tang: DEBUG] saved soil-input-partition frac_nvp_eff (line ~365, no snow term)
 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
@@ -366,6 +369,7 @@ contains
         else
            frac_nvp_eff = 0._r8
         end if
+        frac_nvp_eff_soil = frac_nvp_eff   ! [PORTED by Hui Tang: DEBUG] capture before the evap-block recompute
 
         ! Soil receives the non-h2osfc, non-NVP fraction; NVP handled by NVPWaterBalance_Column
         qflx_in_soil(c) = (1._r8 - frac_h2osfc(c) - frac_nvp_eff) * &
@@ -374,7 +378,8 @@ contains
 
         if (use_nvp .and. col%nvp_layer_active(c)) then
            if (snl(c) >= -1) then
-               frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)- fsno))
+               ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - fsno), cap = 1 - frac_h2osfc - fsno]
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - fsno, max(0._r8, col%frac_nvp(c) - fsno))
            else
                frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_h2osfc(c)))
            end if
@@ -385,6 +390,22 @@ contains
         ! remove evaporation from bare-soil fraction only (snow and NVP evap handled separately)
         qflx_in_soil(c) = qflx_in_soil(c) - max(0._r8, 1.0_r8 - fsno - frac_h2osfc(c) - frac_nvp_eff)*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
+
+        ! [PORTED by Hui Tang: DEBUG (errh2o rain-partition) — the soil-input partition (~line 365)
+        !  uses frac_nvp_eff WITHOUT a snow term, while the moss only receives rain via qflx_nvp_infl
+        !  (frac_sno_eff-subtracted) or via snow percolation. 'withheld_for_nvp' is the top water
+        !  deducted from qflx_in_soil for the NVP fraction; compare it against what the moss actually
+        !  gains ([NVP DBG] after NVPWaterBal: qflx_nvp_infl/Δliq0, + snow percolation into j=0). Any
+        !  gap is the rain-on-snow leak. Guard: NVP active + water on top. Remove after diagnosis.]
+        if (use_nvp .and. col%nvp_layer_active(c) .and. qflx_top_soil(c) > 1.e-8_r8) then
+           write(iulog,*) '[NVP DBG QIN] nstep=', get_nstep(), ' c=', c, ' snl=', col%snl(c), &
+                ' fsno=', fsno, ' frac_h2osfc=', frac_h2osfc(c), ' frac_nvp=', col%frac_nvp(c)
+           write(iulog,*) '[NVP DBG QIN]   frac_nvp_eff_soil(365)=', frac_nvp_eff_soil, &
+                ' frac_nvp_eff_evap(378)=', frac_nvp_eff
+           write(iulog,*) '[NVP DBG QIN]   qflx_top_soil=', qflx_top_soil(c), &
+                ' qflx_in_soil=', qflx_in_soil(c), &
+                ' withheld_for_nvp=', frac_nvp_eff_soil*(qflx_top_soil(c)-qflx_sat_excess_surf(c))
+        end if
 
      end do
 

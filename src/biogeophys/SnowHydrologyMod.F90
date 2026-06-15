@@ -2605,6 +2605,30 @@ contains
        end do
     end do
 
+    ! [DEBUG: temporary, remove after diagnosing SNOWDP growth during melt]
+    ! Per-timestep snapshot of final snow state for NVP-active columns.  Compare
+    ! across May→June: if dz(c,j<0) grows while h2osoi_ice/liq shrink, the standard
+    ! CTSM compaction floor (mass/frac_sno) is inflating snow-layer dz as frac_sno
+    ! drops.  dz(c,0) should stay at the structural nvp_dz value.
+    if (use_nvp) then
+       do fc = 1, num_snowc
+          c = filter_snowc(fc)
+          if (col%jbot_sno(c) == -1) then
+             write(iulog,*) '[NVP DBG snow] c=', c, &
+                  ' snl=', snl(c), &
+                  ' jbot_sno=', col%jbot_sno(c), &
+                  ' snow_depth=', snow_depth(c), &
+                  ' h2osno_total=', h2osno_total(c), &
+                  ' frac_sno=', frac_sno(c), &
+                  ' frac_sno_eff=', frac_sno_eff(c), &
+                  ' dz_nvp=', dz(c,0)
+             write(iulog,*) '  dz(snl+1..0)= ',       (dz(c,j),              j=snl(c)+1, 0)
+             write(iulog,*) '  h2osoi_ice(snl+1..0)= ',(h2osoi_ice_bulk(c,j), j=snl(c)+1, 0)
+             write(iulog,*) '  h2osoi_liq(snl+1..0)= ',(h2osoi_liq_bulk(c,j), j=snl(c)+1, 0)
+          end if
+       end do
+    end if
+
     end associate
     end associate
   end subroutine CombineSnowLayers
