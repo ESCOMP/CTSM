@@ -304,7 +304,7 @@ class TowerSite:
 
             # Grep for the parameter file string, get just the location of the parameter file
             # and strip the apostrophe(s) from the string
-            paramfile = subprocess.run(command, shell=True, capture_output=True, text=True)
+            paramfile = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
             output_paramfile = paramfile.stdout.strip()
             split_output_paramfile = output_paramfile.split('=')
             clean_paramfile = split_output_paramfile[1].replace("'", "")
