@@ -165,6 +165,7 @@ contains
     real(r8) :: dzm                                                      ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                      ! used in computing tridiagonal matrix
     real(r8) :: sabg_lyr_col(bounds%begc:bounds%endc,-nlevsno+1:1)       ! absorbed solar radiation (col,lyr) [W/m2]
+    real(r8) :: sabg_soil_col(bounds%begc:bounds%endc)                  ! [PORTED by Hui Tang: col-level bare-soil surface solar (sabg_soil) for the snl<0 (1-fse)-weighted soil-solar deposit]
     real(r8) :: eflx_gnet_top                                            ! net energy flux into surface layer, patch-level [W/m2]
     real(r8) :: hs_top(bounds%begc:bounds%endc)                          ! net energy flux into surface layer (col) [W/m2]
     logical  :: cool_on(bounds%begl:bounds%endl)                         ! is urban air conditioning on?
@@ -349,6 +350,7 @@ contains
            hs_nvp( begc:endc ),                                           &
            dhsdT( begc:endc ),                                                &
            sabg_lyr_col( begc:endc, -nlevsno+1: ),                            &
+           sabg_soil_col( begc:endc ),                                        &  ! [PORTED by Hui Tang: bare-soil surface solar for (1-fse) soil-solar deposit]
            atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
            waterfluxbulk_inst, solarabs_inst, energyflux_inst, temperature_inst)
 
@@ -390,6 +392,7 @@ contains
            hs_nvp( begc:endc ),                       &
            dhsdT( begc:endc ),                            &
            sabg_lyr_col (begc:endc, -nlevsno+1: ),        &
+           sabg_soil_col( begc:endc ),                    &  ! [PORTED by Hui Tang: bare-soil surface solar for (1-fse) soil-solar deposit]
            tk( begc:endc, -nlevsno+1: ),                  &
            tk_h2osfc( begc:endc ),                        &
            fact( begc:endc, -nlevsno+1: ),                &
@@ -606,7 +609,8 @@ contains
          c = filter_nolakec(fc)
          ! [PORTED by Hui Tang: NVP fractional area for t_grnd blend (excludes snow and h2osfc)]
          if (use_nvp) then
-            frac_nvp_eff = min(col%frac_nvp(c), max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c)))
+            ! [PORTED by Hui Tang: re-wired frac_nvp_eff — snow buries NVP (frac_nvp - frac_sno_eff), cap = 1 - frac_h2osfc - frac_sno_eff]
+            frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
          else
             frac_nvp_eff = 0._r8
          end if
@@ -1038,9 +1042,20 @@ contains
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
             if (col%jbot_sno(c) == -1) then
+               ! [PORTED by Hui Tang (2026-06-12): option (b) step 1 — make cv(c,0) FULLY PER-MOSS-AREA,
+               !  mirroring snow's per-snow-area cv (line ~1027). The moss occupies only frac_nvp of the
+               !  column, so divide the ENTIRE per-column heat capacity by frac_nvp. NOTE: the solid term
+               !  also needs /frac_nvp because dz(c,0)=col%dz_nvp = nvp_dz*frac_nvp*canopy_frac
+               !  (clmfates_interfaceMod:1816) is the column-EFFECTIVE depth — it already carries frac_nvp,
+               !  so csol_nvp*(1-watsat_nvp)*dz(c,0) is PER-COLUMN, not per-moss. Dividing the whole
+               !  expression gives cv_moss = old_cv/frac_nvp, so frac_nvp*cv_moss = the actual per-column
+               !  heat capacity (solid+water) — consistent with the per-column accounting and the moss
+               !  solid added to heat(c) in TotalWaterAndHeatMod. Pairs with the moss/soil interface
+               !  (frac_nvp on SOIL side, FULL on MOSS side) so frac_nvp cancels across storage and
+               !  conduction. jbot_sno==-1 => frac_nvp > nvp_frac_min > 0.]
                cv(c,0) = max(thin_sfclayer, &
-                    csol_nvp*(1._r8 - watsat_nvp)*dz(c,0) &
-                    + cpliq*h2osoi_liq(c,0) + cpice*h2osoi_ice(c,0))
+                    ( csol_nvp*(1._r8 - watsat_nvp)*dz(c,0) &
+                      + cpliq*h2osoi_liq(c,0) + cpice*h2osoi_ice(c,0) )/col%frac_nvp(c))
             end if
          end do
       end if
@@ -1167,6 +1182,13 @@ contains
                int_snow(c) = int_snow(c) - xm(c)
                if (snl(c) == 0) then
                   h2osno_no_layers(c) = h2osno_no_layers(c) - xm(c)
+               ! [PORTED by Hui Tang: NVP partial-freeze — route frozen surface water to the bottom
+               !  snow layer j=-1, NOT the NVP moss layer j=0 (mirrors the full-freeze case below,
+               !  lines ~1227). Without this, partial-freeze ice accumulates in the moss layer,
+               !  inflating its cv and corrupting t_soisno(c,0) -> errsoi spikes at h2osfc-freeze
+               !  transitions (the residual after Phase 1c).]
+               else if (use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) <= -2) then
+                  h2osoi_ice(c,-1) = h2osoi_ice(c,-1) - xm(c)
                else
                   h2osoi_ice(c,0) = h2osoi_ice(c,0) - xm(c)
                end if
@@ -1191,6 +1213,19 @@ contains
                   !initialize for next time step
                   t_soisno(c,0) = t_h2osfc(c)
                   eflx_h2osfc_to_snow_col(c) = 0.
+               ! [PORTED by Hui Tang: NVP partial-freeze — the ice was added to the bottom snow layer
+               !  j=-1 above, so equilibrate t_soisno(c,-1)/fact(c,-1), NOT the moss layer j=0 (mirrors
+               !  the full-freeze NVP case below, lines ~1268).]
+               else if (use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) <= -2) then
+                  c1=frac_sno(c)/fact(c,-1)*dtime
+                  if ( frac_h2osfc(c) /= 0.0_r8 )then
+                     c2=(-cpliq*xm(c) - frac_h2osfc(c)*dhsdT(c)*dtime)
+                  else
+                     c2=0.0_r8
+                  end if
+                  t_soisno(c,-1) = (c1*t_soisno(c,-1)+ c2*t_h2osfc(c)) &
+                       /(c1 + c2)
+                  eflx_h2osfc_to_snow_col(c) =(t_h2osfc(c)-t_soisno(c,-1))*c2/dtime
                else
                   if (snl(c) == -1)then
                      c1=frac_sno(c)*(dtime/fact(c,0) - dhsdT(c)*dtime)
@@ -1203,9 +1238,9 @@ contains
                      c2=0.0_r8
                   end if
                   t_soisno(c,0) = (c1*t_soisno(c,0)+ c2*t_h2osfc(c)) &
-                       /(c1 + c2)             
+                       /(c1 + c2)
                   eflx_h2osfc_to_snow_col(c) =(t_h2osfc(c)-t_soisno(c,0))*c2/dtime
-                  
+
                endif
 
                !=========================  xm > h2osfc  =============================
@@ -1216,7 +1251,18 @@ contains
                if (snl(c) == 0) then
                   h2osno_no_layers(c) = h2osno_no_layers(c) + h2osfc(c)
                else
-                  h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
+                  ! [PORTED by Hui Tang: route frozen surface water to the bottom SNOW layer, not the
+                  !  NVP moss layer. Standard CLM layer 0 is the bottom snow layer; with NVP, layer 0
+                  !  is the 79-micron moss layer and the bottom snow layer is j=-1 (jbot_sno==-1, and
+                  !  the first snow on NVP makes snl<=-2). Without this, frozen h2osfc accumulates as
+                  !  unphysical ice in the moss layer (ice0 grew 55->250 kg/m2 over snowmelt), inflating
+                  !  cv(c,0) and causing the soil-energy balance (errsoi) spikes. The matching
+                  !  temperature equilibration below is also routed to j=-1 for NVP.]
+                  if (use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) <= -2) then
+                     h2osoi_ice(c,-1) = h2osoi_ice(c,-1) + h2osfc(c)
+                  else
+                     h2osoi_ice(c,0) = h2osoi_ice(c,0) + h2osfc(c)
+                  end if
                end if
                h2osno_total(c) = h2osno_total(c) + h2osfc(c)
 
@@ -1250,6 +1296,20 @@ contains
                   t_h2osfc(c) = t_soisno(c,0)
 
                else
+                  ! [PORTED by Hui Tang: equilibrate the frozen h2osfc with the layer that received
+                  !  its ice. For NVP (jbot_sno==-1) the ice was added to the bottom snow layer j=-1
+                  !  above, so equilibrate t_soisno(c,-1)/fact(c,-1); otherwise use layer 0 as standard.]
+                  if (use_nvp .and. col%jbot_sno(c) == -1) then
+                     c1=frac_sno(c)/fact(c,-1)*dtime
+                     if ( frac_h2osfc(c) /= 0.0_r8 )then
+                        c2=frac_h2osfc(c)*(c_h2osfc(c) - dtime*dhsdT(c))
+                     else
+                        c2=0.0_r8
+                     end if
+                     t_soisno(c,-1) = (c1*t_soisno(c,-1)+ c2*t_h2osfc(c)) &
+                          /(c1 + c2)
+                     t_h2osfc(c) = t_soisno(c,-1)
+                  else
                   c1=frac_sno(c)/fact(c,0)*dtime
                   if ( frac_h2osfc(c) /= 0.0_r8 )then
                      c2=frac_h2osfc(c)*(c_h2osfc(c) - dtime*dhsdT(c))
@@ -1257,8 +1317,9 @@ contains
                      c2=0.0_r8
                   end if
                   t_soisno(c,0) = (c1*t_soisno(c,0)+ c2*t_h2osfc(c)) &
-                       /(c1 + c2)             
+                       /(c1 + c2)
                   t_h2osfc(c) = t_soisno(c,0)
+                  end if
                endif
 
                ! set h2osfc to zero (all liquid converted to ice)
@@ -1331,6 +1392,8 @@ contains
     real(r8) :: supercool(bounds%begc:bounds%endc,nlevmaxurbgrnd)        !supercooled water in soil (kg/m2) 
     real(r8) :: propor                                                   !proportionality constant (-)
     real(r8) :: tinc(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd)  !t(n+1)-t(n) [K]
+    real(r8) :: frac_nvp_eff   ! [PORTED by Hui Tang: exposed NVP fraction (Phase 1c iteration 2)]
+    real(r8) :: frac_soil      ! [PORTED by Hui Tang: bare-soil fraction (Phase 1c iteration 2)]
     real(r8) :: smp                                                      !frozen water potential (mm)
     real(r8) :: wexice0(bounds%begc:bounds%endc,-nlevsno+1:nlevmaxurbgrnd) !initial mass of excess_ice at the timestep (kg/m2)
 
@@ -1570,17 +1633,47 @@ contains
                         if ( j==1 .and. frac_h2osfc(c) /= 0.0_r8 ) then
                            hm(c,j) = hm(c,j) - frac_h2osfc(c)*(dhsdT(c)*tinc(c,j))
                         end if
+                        ! [PORTED by Hui Tang: snl==0 3-way (2026-06-11) — for NVP snl==0, j=1 is the
+                        !  TOP layer (j==snl+1) but its surface flux covers only the bare-soil fraction
+                        !  frac_soil; the exposed-moss surface is at j=0. Remove the frac_nvp_eff portion
+                        !  of the full-dhsdT surface term so hm uses frac_soil*dhsdT (= [1-fh2o-frac_nvp_eff]).]
+                        if ( j==1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) == 0 ) then
+                           frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                              max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                           hm(c,j) = hm(c,j) - frac_nvp_eff*(dhsdT(c)*tinc(c,j))
+                        end if
+                     else if (j == 1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) < 0) then
+                        ! [PORTED by Hui Tang: Phase 1c iteration 2 — soil layer 1 below NVP under
+                        !  partial snow (3-way split). The exposed-moss surface moved to j=0, so the
+                        !  direct bare-soil surface flux at j=1 now covers only frac_soil (was
+                        !  1-fse-fh2o). Phase-change must credit frac_soil*dhsdT*tinc to match the
+                        !  Phase 1c SetRHSVec_Soil/SetMatrix_Soil j=1 surface weight.]
+                        frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                           max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                        frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                        hm(c,j) = frac_soil*dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
                      else if (j == 1) then
                         hm(c,j) = (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) &
                              *dhsdT(c)*tinc(c,j) - tinc(c,j)/fact(c,j)
                      else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
-                        ! [PORTED by Hui Tang: NVP j=0 phase-change energy correction]
-                        ! cv(c,0) is per unit COLUMN area (unlike snow layers where cv is
-                        ! per unit snow area scaled by frac_sno).  Using the standard snow
-                        ! formula hm=-frac_sno_eff*tinc/fact understates hm by frac_sno_eff,
-                        ! causing xmf to miss (1-frac_sno_eff)*tinc/fact of latent heat and
-                        ! leaving a residual errsoi of that magnitude during phase-change events.
-                        hm(c,0) = -tinc(c,0) / fact(c,0)
+                        ! [PORTED by Hui Tang: NVP j=0 phase-change energy (Phase 1c iteration 2,
+                        !  2026-06-11). This branch only fires for snl<0 (for snl==0, j=0 < snl+1 so
+                        !  it is handled separately at the snl==0 block below). cv(c,0) is per unit
+                        !  COLUMN area, hence -tinc/fact with no frac_sno_eff scaling. The MISSING
+                        !  piece (the cause of the freeze/melt errsoi runaway, e.g. nstep~8710) was
+                        !  the surface-flux derivative term: the Phase 1c solve drives j=0 with the
+                        !  exposed-moss surface flux frac_nvp_eff*(hs_nvp - dhsdT*T0), so phase change
+                        !  must credit frac_nvp_eff*dhsdT*tinc here, mirroring the bare-soil j=1 form
+                        !  (1-fse-fh2o)*dhsdT*tinc. Without it the freeze energy was mis-accounted by
+                        !  ~frac_nvp_eff*dhsdT*tinc each step -> oscillation/blow-up.]
+                        frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                           max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                        ! [PORTED by Hui Tang (2026-06-12): option (b) step 3 — cv(c,0) is now PER-MOSS-
+                        !  area, so the storage term carries frac_nvp (per-moss -> per-column), like
+                        !  snow's -frac_sno*tinc/fact. The surface-flux derivative keeps frac_nvp_eff
+                        !  (exposed moss). For snl==0 (frac_nvp_eff=frac_nvp) this is the snow-top form
+                        !  frac_nvp*(dhsdT*tinc - tinc/fact).]
+                        hm(c,0) = frac_nvp_eff*dhsdT(c)*tinc(c,0) - col%frac_nvp(c)*tinc(c,0) / fact(c,0)
                      else ! non-interfacial snow/soil layers
                         if(j < 1) then
                            hm(c,j) = - frac_sno_eff(c)*(tinc(c,j)/fact(c,j))
@@ -1665,14 +1758,34 @@ contains
                         if (j == snl(c)+1) then
 
                            if(j==1) then
-                              t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
-                                   /(1._r8-(1.0_r8 - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
+                              ! [PORTED by Hui Tang: snl==0 3-way (2026-06-11) — for NVP snl==0, j=1's
+                              !  surface flux covers only frac_soil (exposed moss is at j=0), so the
+                              !  T-correction denominator uses frac_soil (was 1-frac_h2osfc).]
+                              if (use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) == 0) then
+                                 frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                                    max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                                 frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                                 t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
+                                      /(1._r8 - frac_soil*fact(c,j)*dhsdT(c))
+                              else
+                                 t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
+                                      /(1._r8-(1.0_r8 - frac_h2osfc(c))*fact(c,j)*dhsdT(c))
+                              end if
                            else
                               t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr &
                                    /(1._r8-fact(c,j)*dhsdT(c))
 
                            endif
 
+                        else if (j == 1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. snl(c) < 0) then
+                           ! [PORTED by Hui Tang: Phase 1c iteration 2 — soil layer 1 below NVP under
+                           !  partial snow. Denominator uses frac_soil (bare-soil surface weight in the
+                           !  3-way split), matching the hm fix above and the Phase 1c j=1 surface BC.]
+                           frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                              max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                           frac_soil    = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                           t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
+                                /(1._r8 - frac_soil*fact(c,j)*dhsdT(c))
                         else if (j == 1) then
 
                            t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr &
@@ -1681,9 +1794,20 @@ contains
                            if(j > 0) then
                               t_soisno(c,j) = t_soisno(c,j) + fact(c,j)*heatr
                            else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
-                              ! [PORTED by Hui Tang: NVP j=0 T-correction — cv(c,0) is per unit
-                              ! column area so no frac_sno_eff division; mirrors the hm fix above]
-                              t_soisno(c,0) = t_soisno(c,0) + fact(c,0)*heatr
+                              ! [PORTED by Hui Tang: NVP j=0 T-correction (Phase 1c iteration 2).
+                              ! cv(c,0) is per unit column area so no frac_sno_eff division. The
+                              ! denominator (1 - frac_nvp_eff*fact*dhsdT) accounts for the implicit
+                              ! dependence of the exposed-moss surface flux on T0, mirroring the
+                              ! bare-soil j=1 form (1 - (1-fse-fh2o)*fact*dhsdT). Must match the hm
+                              ! surface term above (frac_nvp_eff*dhsdT) or freeze/melt errsoi reopens.]
+                              frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                                 max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                              ! [PORTED by Hui Tang (2026-06-12): option (b) step 3 — per-moss-area cv:
+                              !  ΔT = fact*heatr/(frac_nvp - frac_nvp_eff*fact*dhsdT) (the leading 1 ->
+                              !  frac_nvp; reduces to snow-top (fact/frac_nvp)*heatr/(1-fact*dhsdT) when
+                              !  frac_nvp_eff=frac_nvp). dhsdT<0 so denom > frac_nvp > 0.]
+                              t_soisno(c,0) = t_soisno(c,0) + fact(c,0)*heatr &
+                                   /(col%frac_nvp(c) - frac_nvp_eff*fact(c,0)*dhsdT(c))
                            else
                               if(frac_sno_eff(c) > 0._r8) t_soisno(c,j) = t_soisno(c,j) + (fact(c,j)/frac_sno_eff(c))*heatr
                            endif
@@ -1738,7 +1862,13 @@ contains
          do fc = 1, num_nolakec
             c = filter_nolakec(fc)
             if (col%jbot_sno(c) == -1 .and. col%snl(c) == 0 .and. imelt(c,0) > 0) then
-               hm(c,0) = dhsdT(c)*tinc(c,0) - tinc(c,0)/fact(c,0)
+               ! [PORTED by Hui Tang: snl==0 3-way (2026-06-11) — surface-flux derivative weighted by
+               !  frac_nvp_eff (was full dhsdT under collapse), matching the snl==0 j=0 surface BC.]
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               ! [PORTED by Hui Tang (2026-06-12): option (b) step 3 — per-moss-area cv: storage term
+               !  carries frac_nvp (=frac_nvp_eff here since snl==0). = frac_nvp*(dhsdT*tinc-tinc/fact).]
+               hm(c,0) = frac_nvp_eff*dhsdT(c)*tinc(c,0) - col%frac_nvp(c)*tinc(c,0)/fact(c,0)
                ! Tridiagonal error check (mirrors standard Phasechange logic)
                if (imelt(c,0) == 1 .and. hm(c,0) < 0._r8) then
                   hm(c,0) = 0._r8 ; imelt(c,0) = 0
@@ -1758,9 +1888,10 @@ contains
                   end if
                   h2osoi_liq(c,0) = max(0._r8, wmass0(c,0) - h2osoi_ice(c,0))
                   if (abs(heatr) > 0._r8) then
-                     ! Top-layer T correction (no frac_sno_eff or frac_h2osfc for NVP)
+                     ! [PORTED by Hui Tang (2026-06-12): option (b) step 3 — per-moss-area cv: leading 1
+                     !  -> frac_nvp in the denominator (= snow-top (fact/frac_nvp)/(1-fact*dhsdT) here).]
                      t_soisno(c,0) = t_soisno(c,0) + fact(c,0)*heatr &
-                          / (1._r8 - fact(c,0)*dhsdT(c))
+                          / (col%frac_nvp(c) - frac_nvp_eff*fact(c,0)*dhsdT(c))
                   end if
                   if (h2osoi_liq(c,0)*h2osoi_ice(c,0) > 0._r8) t_soisno(c,0) = tfrz
                   xmf(c) = xmf(c) + hfus*(wice0(c,0)-h2osoi_ice(c,0))/dtime
@@ -1800,7 +1931,7 @@ contains
   subroutine ComputeGroundHeatFluxAndDeriv(bounds, &
        num_nolakep, filter_nolakep, num_nolakec, filter_nolakec, &
        num_nvpc, filter_nvpc, &
-       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, &
+       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, sabg_soil_col, &
        atm2lnd_inst, urbanparams_inst, canopystate_inst, waterdiagnosticbulk_inst, &
        waterfluxbulk_inst, solarabs_inst, energyflux_inst, temperature_inst)
     !
@@ -1817,6 +1948,7 @@ contains
     use column_varcon  , only : icol_road_perv, icol_road_imperv
     use clm_varpar     , only : nlevsno
     use UrbanParamsType, only : IsSimpleBuildTemp, IsProgBuildTemp
+    use clm_time_manager , only : get_nstep   ! [PORTED by Hui Tang: Phase-0 NVP exposure diagnostic]
     !
     ! !ARGUMENTS:
     implicit none
@@ -1834,6 +1966,7 @@ contains
     real(r8)               , intent(out)   :: hs_nvp( bounds%begc: )               ! [PORTED by Hui Tang: net surface flux at NVP layer 0] [W/m2]
     real(r8)               , intent(out)   :: dhsdT( bounds%begc: )                     ! temperature derivative of "hs" [col]
     real(r8)               , intent(out)   :: sabg_lyr_col( bounds%begc:, -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
+    real(r8)               , intent(out)   :: sabg_soil_col( bounds%begc: ) ! [PORTED by Hui Tang: col-level bare-soil surface solar sabg_soil [W/m2]]
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
     type(urbanparams_type) , intent(in)    :: urbanparams_inst
     type(canopystate_type) , intent(in)    :: canopystate_inst
@@ -1860,6 +1993,10 @@ contains
     ! [PORTED by Hui Tang: NVP surface flux variables]
     real(r8) :: lwrad_emit_nvp(bounds%begc:bounds%endc)                ! NVP LW emission [W/m2]
     real(r8) :: eflx_gnet_nvp                                          ! net surface flux at NVP layer, patch-level [W/m2]
+    ! [PORTED by Hui Tang: Phase-0 diagnostic — exposure-weighting of moss turbulent flux]
+    real(r8) :: frac_nvp_eff                                           ! exposed NVP column fraction [-]
+    real(r8) :: nvp_exp                                                ! snow-free fraction of moss coverage = frac_nvp_eff/frac_nvp [-]
+    real(r8) :: nvp_exp_solar                                          ! [PORTED by Hui Tang: SOLAR exposed-moss weight = frac_nvp_eff_solar/frac_nvp (no fh2o cap — h2osfc is not a solar tile)]
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -1877,8 +2014,9 @@ contains
          forc_lwrad              => atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
          
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
-         
+
          frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! [PORTED by Hui Tang: Phase-0 diag — needed for frac_nvp_eff cap]
          
          qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
@@ -1913,6 +2051,8 @@ contains
          
          sabg                    => solarabs_inst%sabg_patch                , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by ground (W/m**2)
          sabg_soil               => solarabs_inst%sabg_soil_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by soil (W/m**2)
+         sabg_nvp                => solarabs_inst%sabg_nvp_patch            , & ! [PORTED by Hui Tang: exposed-NVP moss surface solar (W/m2)]
+         sabg_soil_bandloop      => solarabs_inst%sabg_soil_bandloop_patch  , & ! [PORTED by Hui Tang: band-loop ground absorption snapshot for SABG tile]
          sabg_snow               => solarabs_inst%sabg_snow_patch           , & ! Input:  [real(r8) (:)   ]  solar radiation absorbed by snow (W/m**2)
          sabg_chk                => solarabs_inst%sabg_chk_patch            , & ! Output: [real(r8) (:)   ]  sum of soil/snow using current fsno, for balance check
          sabg_lyr                => solarabs_inst%sabg_lyr_patch            , & ! Output: [real(r8) (:,:) ]  absorbed solar radiation (pft,lyr) [W/m2]
@@ -1947,6 +2087,7 @@ contains
       end do
 
       hs_soil(begc:endc)   = 0._r8
+      sabg_soil_col(begc:endc) = 0._r8   ! [PORTED by Hui Tang: bare-soil surface solar accumulator]
       hs_h2osfc(begc:endc) = 0._r8
       hs(begc:endc)        = 0._r8
       dhsdT(begc:endc)     = 0._r8
@@ -1961,6 +2102,55 @@ contains
                  - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
             ! save sabg for balancecheck, in case frac_sno is set to zero later
             sabg_chk(p) = frac_sno_eff(c) * sabg_snow(p) + (1._r8 - frac_sno_eff(c) ) * sabg_soil(p)
+            ! [PORTED by Hui Tang: include NVP layer-0 absorbed solar in sabg_chk so the surface
+            !  energy balance (BalanceCheckMod errseb) is consistent with eflx_soil_grnd
+            !  (SoilFluxesMod:411), which adds sabg_lyr(p,0) back. Without this, errseb = -sabg_lyr(p,0)
+            !  (large when snow-free: sabg_lyr(p,0) is the NVP Beer's-law absorption). sabg_lyr(p,0)
+            !  is already per unit ground area, so it is added at full weight to mirror SoilFluxesMod.]
+            if (use_nvp .and. col%nvp_layer_active(c)) then
+               ! [PORTED by Hui Tang (2026-06-12): mirror the eflx_soil_grnd add-back in SoilFluxesMod
+               !  — add the EXPOSED-moss surface solar at frac_nvp_eff weight (matching the solve's
+               !  hs_nvp = sabg_nvp*frac_nvp_eff). The BURIED-moss internal sabg_lyr(p,0) is already in
+               !  frac_sno_eff*sabg_snow above (SNICAR sum), so it is NOT re-added. errseb/errsoi
+               !  consistency invariant.]
+               frac_nvp_eff = min(1._r8 - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               ! [PORTED by Hui Tang (2026-06-12): sabg_nvp is per-COLUMN (carries nvp_frac), so the
+               !  EXPOSED-moss surface solar entering the column is nvp_exp*sabg_nvp =
+               !  (frac_nvp_eff/frac_nvp)*sabg_nvp, NOT frac_nvp_eff*sabg_nvp (that double-counted the
+               !  coverage). Mirrors eflx_soil_grnd in SoilFluxesMod and the solve's hs_nvp deposit.]
+               sabg_chk(p) = sabg_chk(p) + (frac_nvp_eff/col%frac_nvp(c))*sabg_nvp(p)
+            end if
+
+            ! [PORTED by Hui Tang: make the SABG diagnostic read the TRUE exposed-surface absorption.
+            !  Previously sabg(p) was overridden to sabg_chk, which under snow uses the SNICAR
+            !  soil-LAYER absorption sabg_soil=sabg_lyr(p,1) (solar that penetrates the snowpack AND
+            !  the NVP layer to soil) — tiny during melt, so SABG collapsed unphysically. Instead
+            !  build a tile: SNICAR snow absorption on the snow-covered fraction + the band-loop
+            !  (albsod) ground absorption on the exposed fraction (sabg_soil_bandloop, snapshotted in
+            !  SurfaceRadiationMod before the carve-out / SNICAR reassignment). sabg_soil_bandloop is
+            !  the LUMPED NVP+soil absorption (albsod treats all non-reflected flux as absorbed), so
+            !  the NVP term is already included — no separate +sabg_lyr(p,0) (that would double-count).
+            !  Snow-free: frac_sno_eff=0 => SABG = sabg_soil_bandloop = old sabg_chk (summer unchanged).
+            !  DIAGNOSTIC ONLY and decoupled from the budget: errseb uses sabg_chk (BalanceCheckMod
+            !  :1035, non-urban), errsoi uses eflx_soil_grnd, and the solve uses sabg_lyr — ALL
+            !  unchanged. So this deliberately makes SABG differ from the model's conserved SW input.
+            !  Placed after eflx_gnet(p) (line ~1986) which already used the original sabg(p), and
+            !  ComputeGroundHeatFluxAndDeriv runs once per timestep, so it cannot feed back.]
+            
+            !if (use_nvp .and. col%nvp_layer_active(c)) then
+               ! [PORTED by Hui Tang (2026-06-13): Phase 4 — add the EXPOSED-moss surface solar to the SABG
+               !  tile so the offline balance SABV+SABG-FIRA-FSH-LH-FGR closes on the moss term: FGR carries
+               !  nvp_exp*sabg_nvp (SoilFluxesMod), so SABG must too. nvp_exp=frac_nvp_eff/frac_nvp.
+               !  frac_nvp_eff is the same value computed in the sabg_chk block just above. The remaining
+               !  offline residual is the SOIL seam (1-fse)*(sabg_soil_bandloop - sabg_lyr(p,1)) and the
+               !  opaque-vs-Beer moss difference — both quantified by the Phase-4 diagnostic in
+               !  SurfaceRadiationMod before the (physics-affecting) sabg_soil/line-839 reconciliation.]
+            !   frac_nvp_eff = min(1._r8 - frac_sno_eff(c), &
+            !                      max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+            !   sabg(p) = frac_sno_eff(c)*sabg_snow(p) + (1._r8 - frac_sno_eff(c))*sabg_soil(p) &
+            !           + (frac_nvp_eff/col%frac_nvp(c))*sabg_nvp(p)
+            !end if
 
             eflx_gnet_snow = sabg_snow(p) + dlrad(p) &
                  + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_snow(c) &
@@ -1973,6 +2163,20 @@ contains
             eflx_gnet_h2osfc = sabg_soil(p) + dlrad(p) &
                  + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_h2osfc(c) &
                  - (eflx_sh_h2osfc(p)+qflx_ev_h2osfc(p)*htvp(c))
+            ! [PORTED by Hui Tang (2026-06-14): the surface water sits OVER the ground, which here is mostly
+            !  moss, so it absorbs the moss-under-water SURFACE solar (not just sabg_soil). The moss-under-
+            !  water column fraction = frac_nvp_eff_solar - frac_nvp_eff (moss not-under-snow minus moss
+            !  exposed-to-air); its absorption (frac_uw/frac_nvp)*sabg_nvp is added here per h2osfc area
+            !  (=> /frac_h2osfc). This is the energy the MOSS layer cannot dissipate (its cooling weight
+            !  nvp_exp -> 0 under deep water -> divergence); the water CAN dissipate it via its own surface
+            !  fluxes. Bounded by sabg_nvp/frac_nvp since frac_uw <= frac_h2osfc. Paired with hs_nvp now
+            !  depositing only the EXPOSED moss (nvp_exp); together they sum to nvp_exp_solar*sabg_nvp so
+            !  the FGR/sabg_chk/carve-out total accounting is unchanged.]
+            if (use_nvp .and. col%nvp_layer_active(c) .and. frac_h2osfc(c) > 1.e-3_r8) then
+               eflx_gnet_h2osfc = eflx_gnet_h2osfc + sabg_nvp(p)/col%frac_nvp(c)/frac_h2osfc(c) * &
+                    ( min(1._r8 - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c))) &
+                    - min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), max(0._r8, col%frac_nvp(c) - frac_sno_eff(c))) )
+            end if
          else
             ! For urban columns we use the net longwave radiation (eflx_lwrad_net) because of
             ! interactions between urban columns.
@@ -2014,6 +2218,10 @@ contains
          dhsdT(c) = dhsdT(c) + dgnetdT(p) * patch%wtcol(p)
          ! separate surface fluxes for soil/snow
          hs_soil(c) = hs_soil(c) + eflx_gnet_soil * patch%wtcol(p)
+         ! [PORTED by Hui Tang (2026-06-13): accumulate the bare-soil SURFACE solar (sabg_soil) at column
+         !  level so the snl<0 solve can deposit it at the (1-fse) radiation weight (h2osfc is not a solar
+         !  tile) instead of the frac_soil flux weight carried by hs_soil.]
+         sabg_soil_col(c) = sabg_soil_col(c) + sabg_soil(p) * patch%wtcol(p)
          hs_h2osfc(c) = hs_h2osfc(c) + eflx_gnet_h2osfc * patch%wtcol(p)
       end do
 
@@ -2065,14 +2273,58 @@ contains
             ! tridiagonal solver; the main loop (do j=lyr_top,1) already accumulates
             ! sabg_lyr_col(c,0), so we must NOT add it again here or it is double-counted.
             if (col%nvp_layer_active(c)) then
-               eflx_gnet_nvp = sabg_lyr(p,0) + dlrad(p) &
+               ! [PORTED by Hui Tang: exposure-weight the moss surface flux. The WHOLE eflx_gnet_nvp
+               !  below (solar sabg_nvp + down/emitted LW + sensible + latent) is the moss surface flux;
+               !  Each patch (nvp or non-nvp patches) gets a share of contribution from nvp gnet (which
+               !  is unphysical), but the sum of NVP patches and non-NVP patches = frac_nvp_eff at column
+               !  level to form the exposed-moss per-column contribution. frac_nvp_eff is the exposed
+               !  (snow-free) moss area fraction.]
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               nvp_exp = frac_nvp_eff / col%frac_nvp(c)   ! FLUX exposed fraction of the moss (with-fh2o) [-]
+               ! [PORTED by Hui Tang (2026-06-13): SOLAR exposed-moss weight uses NO fh2o cap — h2osfc
+               !  is a tile for surface LW/turbulent fluxes but NOT for solar (albgrd has no h2osfc term).
+               !  So the moss SOLAR is deposited at nvp_exp_solar (no fh2o), matching the accounting
+               !  (carve-out, FGR add-back, sabg_chk); the LW/turbulent at nvp_exp (with fh2o).]
+               nvp_exp_solar = min(1._r8 - frac_sno_eff(c), &
+                                   max(0._r8, col%frac_nvp(c) - frac_sno_eff(c))) / col%frac_nvp(c)
+
+               ! [PORTED by Hui Tang: UNIFIED hs_nvp
+               !  for BOTH snl==0 and snl<0. hs_nvp carries the exposed-NVP surface flux, weighted by
+               !  frac_nvp_eff*wtcol (summed over patches -> frac_nvp_eff at column level). Solar enters
+               !  the NVP layer via sabg_nvp (surface, below) and sabg_lyr_col(c,0) (buried internal):
+               !  snl<0 via the do j=lyr_top,1 loop above; snl==0 via the explicit add below. This
+               !  replaces the previous snl==0 "collapse" (full solar-inclusive hs_nvp, bare soil folded
+               !  into NVP) with the 3-way split (exposed moss at j=0, bare soil at j=1) for continuity.]
+               ! [PORTED by Hui Tang (2026-06-11): hs_nvp now carries the EXPOSED-moss SURFACE solar
+               !  sabg_nvp(p) (Beer's law), exactly as hs_soil carries sabg_soil. The whole gnet
+               !  (incl. solar) is weighted by frac_nvp_eff*wtcol, so the exposed solar gets
+               !  the -dhsdT surface thermostat — this is what was missing (overheating). The BURIED
+               !  internal solar is sabg_lyr(p,0) (=snicar for snl<0, =0 for snl==0), accumulated into
+               !  sabg_lyr_col(c,0) and applied at fse weight in the j=0 RHS (like fse*sabg_lyr_col(c,1)
+               !  for soil).]
+               ! [PORTED by Hui Tang (2026-06-12): sabg_nvp is per-COLUMN (fabd_nvp carries nvp_frac),
+               !  but eflx_gnet_nvp is the moss surface energy balance PER UNIT MOSS area (the LW/turbulent
+               !  terms are per-moss), so convert the solar to per-moss with /col%frac_nvp(c). The exposed
+               !  weighting (nvp_exp) is applied afterwards in hs_nvp = eflx_gnet_nvp*nvp_exp*wtcol, so the
+               !  per-column moss solar deposited = frac_nvp*nvp_exp*(sabg_nvp/frac_nvp) = nvp_exp*sabg_nvp.]
+               eflx_gnet_nvp = sabg_nvp(p)/col%frac_nvp(c) + dlrad(p) &
                     + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit_nvp(c) &
                     - (eflx_sh_nvp(p) + qflx_ev_nvp(p)*htvp(c))
-               hs_nvp(c)     = hs_nvp(c)     + eflx_gnet_nvp * patch%wtcol(p)
-               ! [PORTED by Hui Tang: only accumulate sabg_lyr_col(c,0) here when there is
-               !  no snow (snl==0). When snow covers NVP (snl<0), the do j=lyr_top,1 loop
-               !  above already added sabg_lyr(p,0); adding it again would double-count it,
-               !  causing errsoi = -sabg_lyr(p,0).]
+               ! [PORTED by Hui Tang (2026-06-12): option (b) — per-MOSS-area cv requires the SOLVE-side
+               !  surface flux on the per-moss basis: nvp_exp*eflx_gnet (=frac_nvp_eff/frac_nvp), NOT the
+               !  per-column frac_nvp_eff. The frac_nvp in cv/interface bridges to the per-column
+               !  accounting (eflx_soil_grnd, sabg_chk stay frac_nvp_eff), exactly like snow. Mixing
+               !  per-moss cv with per-column hs_nvp under-cooled the moss -> overheat/crash.]
+               ! [PORTED by Hui Tang (2026-06-14): the moss layer deposits only the EXPOSED-to-air solar+flux
+               !  at nvp_exp (with-fh2o). The moss-under-water surface solar is NOT deposited here — it goes
+               !  to eflx_gnet_h2osfc above (the water can dissipate it; the moss cannot, nvp_exp->0 under
+               !  deep water -> divergence). moss(nvp_exp) + water((nvp_exp_solar-nvp_exp)) = nvp_exp_solar,
+               !  so the FGR/sabg_chk/carve-out total (nvp_exp_solar*sabg_nvp) is unchanged.]
+               hs_nvp(c)     = hs_nvp(c)     + eflx_gnet_nvp * nvp_exp * patch%wtcol(p)
+               ! sabg_lyr_col(c,0) for snl==0 (the do j=lyr_top,1 loop above only covers j>=1 then);
+               ! sabg_lyr(p,0)=0 for snl==0 so this adds nothing, but keep it for the snl<0 internal path
+               ! symmetry. For snl<0 the do-loop already set sabg_lyr_col(c,0)=snicar*wtcol.
                if (snl(c) == 0) then
                   sabg_lyr_col(c,0) = sabg_lyr_col(c,0) + sabg_lyr(p,0) * patch%wtcol(p)
                end if
@@ -2081,6 +2333,20 @@ contains
                     ' sabg_lyr(p,0)=', sabg_lyr(p,0), &
                     ' eflx_gnet_nvp=', eflx_gnet_nvp, &
                     ' hs_nvp(c)=', hs_nvp(c)
+               ! [PORTED by Hui Tang: VERIFY diagnostic (remove after confirmation) — exposure
+               !  weighting is now APPLIED in eflx_gnet_nvp above. turb_unweighted is the old value,
+               !  turb_applied = frac_nvp_eff*turb_unweighted is what now enters the solve.]
+               if (frac_sno_eff(c) > 0._r8) then
+                  write(iulog,*) '[NVP EXP DIAG] nstep=', get_nstep(), ' c=', c, ' p=', p, &
+                       ' snl=', snl(c), ' frac_nvp=', col%frac_nvp(c), &
+                       ' frac_sno_eff=', frac_sno_eff(c), ' frac_h2osfc=', frac_h2osfc(c), &
+                       ' frac_nvp_eff=', frac_nvp_eff
+                  write(iulog,*) '[NVP EXP DIAG]   eflx_sh_nvp=', eflx_sh_nvp(p), &
+                       ' qflx_ev_nvp=', qflx_ev_nvp(p), &
+                       ' turb_unweighted=', (eflx_sh_nvp(p)+qflx_ev_nvp(p)*htvp(c)), &
+                       ' turb_applied=', frac_nvp_eff*(eflx_sh_nvp(p)+qflx_ev_nvp(p)*htvp(c)), &
+                       ' eflx_gnet_nvp=', eflx_gnet_nvp
+               end if
             end if
          else
 
@@ -2211,7 +2477,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetRHSVec(bounds, num_nolakec, filter_nolakec, dtime, &
-       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, tk, &
+       hs_h2osfc, hs_top_snow, hs_soil, hs_top, hs_nvp, dhsdT, sabg_lyr_col, sabg_soil_col, tk, &
        tk_h2osfc, fact, fn, c_h2osfc, dz_h2osfc, &
        temperature_inst, waterdiagnosticbulk_inst, rvector)
 
@@ -2246,6 +2512,7 @@ contains
     real(r8) , intent(in)  :: hs_nvp( bounds%begc: )                 ! [PORTED by Hui Tang: surface heat flux at NVP layer 0] [W/m2]
     real(r8) , intent(in)  :: dhsdT( bounds%begc: )                      ! temperature derivative of "hs" [col]
     real(r8) , intent(in)  :: sabg_lyr_col( bounds%begc: , -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
+    real(r8) , intent(in)  :: sabg_soil_col( bounds%begc: ) ! [PORTED by Hui Tang: col-level bare-soil surface solar [W/m2]]
     real(r8) , intent(in)  :: tk( bounds%begc: , -nlevsno+1: )           ! thermal conductivity [W/(m K)]
     real(r8) , intent(in)  :: tk_h2osfc( bounds%begc: )                  ! thermal conductivity of h2osfc [W/(m K)] [col]
     real(r8) , intent(in)  :: fact( bounds%begc: , -nlevsno+1: )         ! used in computing tridiagonal matrix [col, lev]
@@ -2310,6 +2577,8 @@ contains
            fn( begc:endc, -nlevsno+1: ),                       &
            t_soisno ( begc:endc, -nlevsno+1: ),                &
            t_h2osfc ( begc:endc ),                             &
+           frac_sno_eff( begc:endc ),                          & ! [PORTED by Hui Tang: Phase 1c]
+           frac_h2osfc( begc:endc ),                           & ! [PORTED by Hui Tang: Phase 1c]
            rt_snow( begc:endc, -nlevsno:))
 
       ! Set entries in RHS vector for surface water layer
@@ -2332,6 +2601,7 @@ contains
            hs_top( begc:endc ),                                &
            dhsdT( begc:endc ),                                 &
            sabg_lyr_col (begc:endc, -nlevsno+1: ),             &
+           sabg_soil_col( begc:endc ),                         &  ! [PORTED by Hui Tang]
            fact( begc:endc, -nlevsno+1: ),                     &
            fn( begc:endc, -nlevsno+1: ),                       &
            fn_h2osfc( begc:endc ),                             &
@@ -2356,7 +2626,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine SetRHSVec_Snow(bounds, num_nolakec, filter_nolakec, &
        hs_top_snow, hs_top, hs_nvp, dhsdT, sabg_lyr_col, &
-       fact, fn, t_soisno, t_h2osfc, rt)
+       fact, fn, t_soisno, t_h2osfc, frac_sno_eff, frac_h2osfc, rt)
     !
     ! !DESCRIPTION:
     ! Sets up RHS vector corresponding to snow layers for all columns.
@@ -2380,8 +2650,10 @@ contains
     real(r8), intent(in)  :: sabg_lyr_col( bounds%begc: , -nlevsno+1: ) ! absorbed solar radiation (col,lyr) [W/m2]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )         ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: fn (bounds%begc: , -nlevsno+1: )           ! heat diffusion through the layer interface [W/m2]
-    real(r8), intent(in)  :: t_soisno(bounds%begc:, -nlevsno+1:)        ! soil temperature [K] 
-    real(r8), intent(in)  :: t_h2osfc(bounds%begc:)                     ! surface water temperature [K] 
+    real(r8), intent(in)  :: t_soisno(bounds%begc:, -nlevsno+1:)        ! soil temperature [K]
+    real(r8), intent(in)  :: t_h2osfc(bounds%begc:)                     ! surface water temperature [K]
+    real(r8), intent(in)  :: frac_sno_eff(bounds%begc: )               ! [PORTED by Hui Tang: fraction of ground covered by snow (0 to 1)]
+    real(r8), intent(in)  :: frac_h2osfc(bounds%begc: )                ! [PORTED by Hui Tang: fraction of ground covered by surface water (0 to 1)]
     real(r8), intent(out) :: rt(bounds%begc: , -nlevsno: )              ! rhs vector entries
     !-----------------------------------------------------------------------
     !
@@ -2390,6 +2662,10 @@ contains
     integer  :: fc                                                      ! lake filtered column indices
     real(r8) :: dzp, dzm                                                ! used in computing tridiagonal matrix
     real(r8) :: hs_top_lev(bounds%endc)
+    real(r8) :: frac_nvp_eff   ! [PORTED by Hui Tang: exposed NVP fraction (Phase 1c)]
+    real(r8) :: w_cond         ! [PORTED by Hui Tang: NVP-over-soil conduction weight = frac_sno_eff + frac_nvp_eff]
+    real(r8) :: nvp_exp        ! [PORTED by Hui Tang: exposed fraction of the moss = frac_nvp_eff/frac_nvp (per-moss surface weight)]
+    real(r8) :: sno_exp        ! [PORTED by Hui Tang: buried (under-snow) fraction of the moss = frac_sno_eff/frac_nvp (per-moss snow-conduction/buried-solar weight)]
 
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(hs_top_snow)  == (/bounds%endc/)),           sourcefile, __LINE__)
@@ -2400,6 +2676,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(fn)           == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(t_soisno)     == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(t_h2osfc)     == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_sno_eff) == (/bounds%endc/)),           sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)  == (/bounds%endc/)),           sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(rt)           == (/bounds%endc, -1/)),       sourcefile, __LINE__)
 
     associate(                           &
@@ -2440,6 +2718,31 @@ contains
                rt(c,j-1) = t_soisno(c,j) +  fact(c,j)*( hs_top_lev(c) &
                       - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
 
+            ! [PORTED by Hui Tang: Phase 1c — NVP layer 0 dual surface under partial snow (snl<0).
+            !  Tested BEFORE the "j > snl+1" internal branch (which would treat j=0 as buried).
+            !  Exposed moss (frac_nvp_eff) gets the atmospheric surface flux hs_nvp (per-column,
+            !  NON-solar; solar in sabg_lyr_col(c,0)); snow-covered moss (frac_sno_eff) conducts from
+            !  snow above fn(-1); NVP->soil conduction fn(0) over w_cond = frac_sno_eff + frac_nvp_eff.]
+            else if (j == 0 .and. use_nvp .and. jbot_sno(c) == -1 .and. snl(c) < 0) then
+               dzm = z(c,0) - z(c,-1)
+               dzp = z(c,1) - z(c,0)
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               w_cond = frac_sno_eff(c) + frac_nvp_eff
+               nvp_exp = frac_nvp_eff / col%frac_nvp(c)   ! exposed fraction of the moss [-]
+               sno_exp = frac_sno_eff(c) / col%frac_nvp(c)   ! buried (under-snow) fraction of the moss [-]
+               ! [PORTED by Hui Tang (2026-06-12): option (b) — ALL per-column fluxes into the per-moss-area
+               !  moss layer are divided by frac_nvp (per-column -> per-moss). Surface: nvp_exp*dhsdT/hs_nvp.
+               !  Soil conduction fn(0): FULL on moss side (=frac_nvp/frac_nvp), w_cond on soil side. SNOW
+               !  conduction fn(-1) and BURIED internal solar sabg_lyr_col(c,0): both /frac_nvp via sno_exp
+               !  (=frac_sno_eff/frac_nvp). This CONSERVES at the moss/snow interface — snow loses
+               !  frac_sno_eff*fn(-1) per column, moss gains frac_nvp*sno_exp*fn(-1)=frac_sno_eff*fn(-1).
+               !  (Before this, per-moss cv under-counted the snow flux by frac_nvp -> winter errsoi leak.)]
+               rt(c,j-1) = t_soisno(c,0) + fact(c,0) * &
+                    ( hs_nvp(c) - nvp_exp*dhsdT(c)*t_soisno(c,0) &
+                      + cnfac*( fn(c,0) - sno_exp*fn(c,-1) ) ) &
+                    + sno_exp*fact(c,0)*sabg_lyr_col(c,0)   ! [PORTED by Hui Tang: buried-moss internal solar, per-moss (sno_exp=fse/frac_nvp); exposed solar is in hs_nvp]
+
             else if (j > col%snl(c)+1) then
                dzm     = (z(c,j)-z(c,j-1))
                dzp     = (z(c,j+1)-z(c,j))
@@ -2447,12 +2750,24 @@ contains
                rt(c,j-1) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
                rt(c,j-1) = rt(c,j-1) + fact(c,j)*sabg_lyr_col(c,j)
 
-            ! [PORTED by Hui Tang: NVP layer 0 is the top surface when snl=0 and no snow]
-            ! When NVP active, jtop=-1 so layer 0 is in the TVD system but falls through
-            ! the conditions above (j=0 < snl+1=1). Apply NVP surface BC here.
+            ! [PORTED by Hui Tang: NVP layer 0 surface BC when snl==0 (no snow), 3-way split
+            !  (2026-06-11). j=0 < snl+1=1 so it falls through the conditions above. With no snow,
+            !  frac_sno_eff=0 so w_cond = frac_nvp_eff and there is no fn(-1) snow-conduction term:
+            !  exposed moss (frac_nvp_eff) gets hs_nvp WHICH NOW INCLUDES the SURFACE solar sabg_nvp
+            !  (so the solar gets the -dhsdT thermostat) + conduction frac_nvp_eff*fn(0). The buried
+            !  internal solar term frac_sno_eff*sabg_lyr_col(c,0) vanishes here (frac_sno_eff=0). The
+            !  bare-soil surface flux is applied at j=1 (SetRHSVec_Soil).]
             else if (j == 0 .and. use_nvp .and. jbot_sno(c) == -1 .and. snl(c) == 0) then
+               frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                  max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+               nvp_exp = frac_nvp_eff / col%frac_nvp(c)   ! exposed fraction of the moss [-] (=1 here, snl==0)
+               ! [PORTED by Hui Tang (2026-06-12): option (b) step 2 — moss/soil conduction fn(0) at
+               !  FULL weight on the moss side (per-moss-area cv); soil side (j=1) keeps frac_nvp. The
+               !  surface thermostat is per-moss nvp_exp*dhsdT (=dhsdT here, nvp_exp=1) to match hs_nvp.]
                rt(c,j-1) = t_soisno(c,0) + fact(c,0) * &
-                    (hs_nvp(c) - dhsdT(c)*t_soisno(c,0) + cnfac*fn(c,0))
+                    ( hs_nvp(c) - nvp_exp*dhsdT(c)*t_soisno(c,0) &
+                      + cnfac*fn(c,0) ) &
+                    + frac_sno_eff(c)*fact(c,0)*sabg_lyr_col(c,0)
             end if
          end do
       end do
@@ -2538,7 +2853,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetRHSVec_Soil(bounds, num_nolakec, filter_nolakec, &
-       hs_top_snow, hs_soil, hs_top, dhsdT, sabg_lyr_col, fact, fn, fn_h2osfc, c_h2osfc, &
+       hs_top_snow, hs_soil, hs_top, dhsdT, sabg_lyr_col, sabg_soil_col, fact, fn, fn_h2osfc, c_h2osfc, &
        frac_h2osfc, frac_sno_eff, t_soisno, rt)
     !
     ! !DESCRIPTION:
@@ -2561,6 +2876,7 @@ contains
     real(r8), intent(in)  :: hs_top(bounds%begc: )                              ! net energy flux into surface layer (col) [W/m2]
     real(r8), intent(in)  :: dhsdT(bounds%begc: )                               ! temperature derivative of "hs" [col]
     real(r8), intent(in)  :: sabg_lyr_col(bounds%begc:, -nlevsno+1: )           ! absorbed solar radiation (col,lyr) [W/m2]
+    real(r8), intent(in)  :: sabg_soil_col(bounds%begc:)                        ! [PORTED by Hui Tang: col-level bare-soil surface solar [W/m2]]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )                 ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: fn (bounds%begc: ,-nlevsno+1: )                    ! heat diffusion through the layer interface [W/m2]
     real(r8), intent(in)  :: fn_h2osfc (bounds%begc: )                          ! heat diffusion through standing-water/soil interface [W/m2]
@@ -2574,6 +2890,9 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: j,c,l                                           ! indices
     integer  :: fc                                              ! lake filtered column indices
+    real(r8) :: frac_nvp_eff   ! [PORTED by Hui Tang: exposed NVP fraction (Phase 1c)]
+    real(r8) :: w_cond         ! [PORTED by Hui Tang: NVP-over-soil conduction weight = frac_sno_eff + frac_nvp_eff]
+    real(r8) :: frac_soil      ! [PORTED by Hui Tang: bare-soil fraction (Phase 1c)]
     !-----------------------------------------------------------------------
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(hs_soil)      == (/bounds%endc/)),           sourcefile, __LINE__)
@@ -2644,10 +2963,48 @@ contains
                if (j == col%snl(c)+1 .and. .not. (use_nvp .and. jbot_sno(c) == -1)) then
                   rt(c,j) = t_soisno(c,j) +  fact(c,j)*( hs_top_snow(c) &
                        - dhsdT(c)*t_soisno(c,j) + cnfac*fn(c,j) )
-               ! [PORTED by Hui Tang: layer 1 below NVP is interior: conduction + transmitted solar]
+               ! [PORTED by Hui Tang: soil layer 1 below NVP, snl==0, 3-way split (2026-06-11). The
+               !  bare-soil fraction (frac_soil) gets its surface flux hs_soil here (exposed moss is at
+               !  j=0); up-conduction from NVP (fn(0)=fn(j-1)) weighted frac_nvp_eff = w_cond (frac_sno_eff
+               !  =0). Replaces the previous pure-internal treatment (collapse, bare soil folded into NVP).
+               !  Solar kept as full sabg_lyr_col(c,1) (snow-free).]
                else if (j == 1 .and. use_nvp .and. jbot_sno(c) == -1 .and. col%snl(c) == 0) then
-                  rt(c,j) = t_soisno(c,j) + cnfac*fact(c,j)*( fn(c,j) - fn(c,j-1) )
+                  frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                     max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                  frac_soil = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                  ! [PORTED by Hui Tang: SOLAR DOUBLE-COUNT FIX (2026-06-11). For snl==0, lyr_top=1 so
+                  !  hs_soil(=eflx_gnet_soil) carries sabg_lyr(p,1) as its solar — the SAME quantity as
+                  !  sabg_lyr_col(c,1) (SurfaceRadiationMod:793-795 sets sabg_lyr(p,1)=total soil solar,
+                  !  no separate bare-soil-direct term). Adding frac_soil*hs_soil AND sabg_lyr_col(c,1)
+                  !  double-counted sabg_lyr(p,1) by frac_soil, overheating the soil and (via the dry-
+                  !  moss feedback) the moss. Subtract sabg_lyr_col(c,1) inside the bracket so the
+                  !  bare-soil surface flux is NON-solar; the explicit term below supplies the soil
+                  !  solar exactly once (= the collapse behaviour).]
+                  rt(c,j) = t_soisno(c,j) + fact(c,j) &
+                       *( frac_soil*(hs_soil(c) - sabg_lyr_col(c,1) - dhsdT(c)*t_soisno(c,j)) &
+                       + cnfac*(fn(c,j) - frac_nvp_eff*fn(c,j-1)) )
                   rt(c,j) = rt(c,j) + fact(c,j)*sabg_lyr_col(c,j)
+               ! [PORTED by Hui Tang: Phase 1c — soil layer 1 below NVP under partial snow (snl<0).
+               !  Exposed-moss surface flux enters at j=0, so j=1 gets only the bare-soil surface flux
+               !  hs_soil over frac_soil; up-conduction from NVP (fn(0)) weighted by w_cond =
+               !  frac_sno_eff + frac_nvp_eff, matching the j=0 down-conduction. Solar kept as fse.]
+               else if (j == 1 .and. use_nvp .and. jbot_sno(c) == -1 .and. col%snl(c) < 0) then
+                  frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                     max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                  w_cond    = frac_sno_eff(c) + frac_nvp_eff
+                  frac_soil = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                  rt(c,j) = t_soisno(c,j) + fact(c,j) &
+                       *( frac_soil*(hs_soil(c) - dhsdT(c)*t_soisno(c,j)) &
+                       + cnfac*(fn(c,j) - w_cond*fn(c,j-1)) )
+                  rt(c,j) = rt(c,j) + frac_sno_eff(c)*fact(c,j)*sabg_lyr_col(c,j)
+                  ! [PORTED by Hui Tang (2026-06-13/14): SOLAR/flux split — frac_soil*hs_soil deposits the
+                  !  bare-soil surface solar at the FLUX weight frac_soil. Lift it to the soil's true solar
+                  !  share = (1-fse-fh2o)*sabg_soil = (frac_soil+frac_nvp_eff)*sabg_soil (bare soil +
+                  !  soil-under-EXPOSED-moss). Add ((1-fse-fh2o)-frac_soil)=frac_nvp_eff times sabg_soil_col.
+                  !  fh2o is EXCLUDED: the h2osfc gets its sabg_soil share via eflx_gnet_h2osfc; and the
+                  !  moss-under-water solar now also goes to the water (not the soil/moss), so this no longer
+                  !  destabilizes the moss (the moss deposits only its exposed solar at nvp_exp).]
+                  rt(c,j) = rt(c,j) + fact(c,j)*frac_nvp_eff*sabg_soil_col(c)
                else if (j == 1) then
                   ! this is the snow/soil interface layer
                   rt(c,j) = t_soisno(c,j) + fact(c,j) &
@@ -2761,6 +3118,7 @@ contains
            tk( begc:endc, -nlevsno+1: ),                              &
            fact( begc:endc, -nlevsno+1: ),                            &
            frac_sno_eff(begc:endc),                                   &
+           frac_h2osfc(begc:endc),                                    & ! [PORTED by Hui Tang: Phase 1c]
            bmatrix_snow( begc:endc, 1:, -nlevsno: ),                  &
            bmatrix_snow_soil( begc:endc, 1:, -1: ))
 
@@ -2920,7 +3278,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine SetMatrix_Snow(bounds, num_nolakec, filter_nolakec, nband, &
-       dhsdT, tk, fact, frac_sno_eff, bmatrix_snow, bmatrix_snow_soil)
+       dhsdT, tk, fact, frac_sno_eff, frac_h2osfc, bmatrix_snow, bmatrix_snow_soil)
     !
     ! !DESCRIPTION:
     ! Setup the matrix entries corresponding to internal snow layers
@@ -2941,6 +3299,7 @@ contains
     real(r8), intent(in)  :: tk(bounds%begc: ,-nlevsno+1: )               ! thermal conductivity [W/(m K)]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )           ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: frac_sno_eff(bounds%begc: )                  ! fraction of ground covered by snow (0 to 1)
+    real(r8), intent(in)  :: frac_h2osfc(bounds%begc: )                   ! [PORTED by Hui Tang: fraction of ground covered by surface water (0 to 1)]
     real(r8), intent(out) :: bmatrix_snow(bounds%begc: , 1:, -nlevsno: )  ! matrix enteries
     real(r8), intent(out) :: bmatrix_snow_soil(bounds%begc: , 1:,-1: )    ! matrix enteries
     !
@@ -2950,6 +3309,10 @@ contains
     integer  :: nlev_thresh(1:num_nolakec)
     real(r8) :: dzm                                                         ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                         ! used in computing tridiagonal matrix
+    real(r8) :: frac_nvp_eff   ! [PORTED by Hui Tang: exposed NVP fraction (Phase 1c)]
+    real(r8) :: w_cond         ! [PORTED by Hui Tang: NVP-over-soil conduction weight = frac_sno_eff + frac_nvp_eff]
+    real(r8) :: nvp_exp        ! [PORTED by Hui Tang: exposed fraction of the moss = frac_nvp_eff/frac_nvp (per-moss surface weight)]
+    real(r8) :: sno_exp        ! [PORTED by Hui Tang: buried (under-snow) fraction of the moss = frac_sno_eff/frac_nvp (per-moss snow-conduction/buried-solar weight)]
     !-----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -2957,6 +3320,7 @@ contains
     SHR_ASSERT_ALL_FL((ubound(tk)                == (/bounds%endc, nlevmaxurbgrnd/)),  sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(fact)              == (/bounds%endc, nlevmaxurbgrnd/)),  sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(frac_sno_eff)      == (/bounds%endc/)),            sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(frac_h2osfc)       == (/bounds%endc/)),            sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bmatrix_snow)      == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(bmatrix_snow_soil) == (/bounds%endc, nband, -1/)), sourcefile, __LINE__)
 
@@ -2991,10 +3355,33 @@ contains
       do j = -nlevsno+1,0
         do fc = 1,num_nolakec
            c = filter_nolakec(fc)
-           if (j >= col%snl(c)+1) then
-              dzp     = z(c,j+1)-z(c,j)    
+           ! [PORTED by Hui Tang: Phase 1c — NVP layer 0 dual-surface matrix under partial snow
+           !  (snl<0). Tested BEFORE the generic "j >= snl+1" branch. -frac_nvp_eff*dhsdT on the
+           !  diagonal (exposed-moss surface flux derivative); up-conduction to snow frac_sno_eff;
+           !  down-conduction to soil w_cond = frac_sno_eff + frac_nvp_eff. Snow rows keep full
+           !  fn(-1) (per-snow-area cv convention, as the standard snow/soil interface).]
+           if (j == 0 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. col%snl(c) < 0) then
+              dzm = z(c,0) - z(c,-1)
+              dzp = z(c,1) - z(c,0)
+              frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                 max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+              w_cond = frac_sno_eff(c) + frac_nvp_eff
+              nvp_exp = frac_nvp_eff / col%frac_nvp(c)   ! exposed fraction of the moss [-]
+              sno_exp = frac_sno_eff(c) / col%frac_nvp(c)   ! buried (under-snow) fraction of the moss [-]
+              ! [PORTED by Hui Tang (2026-06-12): option (b) — per-moss-area cv: every per-column flux
+              !  into the moss is /frac_nvp. moss/soil conduction tk(0)/dzp FULL on the moss side (soil
+              !  side keeps w_cond). SNOW up-conduction tk(-1)/dzm at sno_exp=frac_sno_eff/frac_nvp
+              !  (per-moss) so the interface CONSERVES (moss gains frac_nvp*sno_exp*fn=frac_sno_eff*fn =
+              !  snow's loss). Surface derivative per-moss nvp_exp*dhsdT (matches hs_nvp and the RHS).]
+              bmatrix_snow(c,4,j-1) = - sno_exp*(1._r8-cnfac)*fact(c,0)*tk(c,-1)/dzm
+              bmatrix_snow(c,3,j-1) = 1._r8 + (1._r8-cnfac)*fact(c,0) &
+                   *( tk(c,0)/dzp + sno_exp*tk(c,-1)/dzm ) &
+                   - nvp_exp*fact(c,0)*dhsdT(c)
+              bmatrix_snow_soil(c,1,j-1) = - (1._r8-cnfac)*fact(c,0)*tk(c,0)/dzp
+           else if (j >= col%snl(c)+1) then
+              dzp     = z(c,j+1)-z(c,j)
               if (j == col%snl(c)+1) then
-                 bmatrix_snow (c,4,j-1) = 0._r8                                                        
+                 bmatrix_snow (c,4,j-1) = 0._r8
                  bmatrix_snow (c,3,j-1) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
               else
                  dzm     = (z(c,j)-z(c,j-1))
@@ -3006,16 +3393,24 @@ contains
               else !if ( j == 0)
                  bmatrix_snow_soil(c,1,j-1) =   - (1._r8-cnfac)*fact(c,j)* tk(c,j)/dzp
               end if
-           ! [PORTED by Hui Tang: NVP top-layer BC in SetMatrix_Snow]
-           ! With snl=0, condition j>=snl+1=j>=1 never fires for j=0, leaving
-           ! bmatrix_snow(c,:,-1) all zeros -> singular matrix (dgbsv info=1).
-           ! Explicitly set the NVP surface BC here: j=0 is the top of the system
-           ! with no layer above and coupled to soil j=1 below.
-           else if (use_nvp .and. col%jbot_sno(c) == -1 .and. j == 0) then
+           ! [PORTED by Hui Tang: NVP top-layer BC in SetMatrix_Snow, snl==0, 3-way split (2026-06-11).
+           ! j=0 < snl+1=1 so it falls through above (snl<0 is handled by the dedicated branch first).
+           ! frac_sno_eff=0 here so w_cond=frac_nvp_eff: -frac_nvp_eff*dhsdT on the diagonal (exposed-
+           ! moss surface derivative), no up-coupling (no snow), down-coupling to soil weighted
+           ! frac_nvp_eff (matches the SetRHSVec_Snow j=0 snl==0 branch). Replaces the previous
+           ! "collapse" (full dhsdT, full down-coupling).]
+           else if (use_nvp .and. col%jbot_sno(c) == -1 .and. col%snl(c) == 0 .and. j == 0) then
               dzp = z(c,j+1) - z(c,j)
+              frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                 max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+              nvp_exp = frac_nvp_eff / col%frac_nvp(c)   ! exposed fraction of the moss [-] (=1 here, snl==0)
+              ! [PORTED by Hui Tang (2026-06-12): option (b) step 2 — moss/soil conduction tk(0)/dzp at
+              !  FULL weight on the moss side (per-moss-area cv); soil side (j=1) keeps frac_nvp. The
+              !  surface derivative is per-moss nvp_exp*dhsdT (=dhsdT here, nvp_exp=1) to match hs_nvp
+              !  and the RHS — required for the per-moss cv to stay stable (was frac_nvp_eff -> overheat).]
               bmatrix_snow(c,4,j-1) = 0._r8
               bmatrix_snow(c,3,j-1) = 1._r8 + (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp &
-                   - fact(c,j)*dhsdT(c)
+                   - nvp_exp*fact(c,j)*dhsdT(c)
               bmatrix_snow_soil(c,1,j-1) = -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
            end if
         enddo
@@ -3061,6 +3456,9 @@ end subroutine SetMatrix_Snow
     integer  :: fc                                                     ! lake filtered column indices
     real(r8) :: dzm                                                    ! used in computing tridiagonal matrix
     real(r8) :: dzp                                                    ! used in computing tridiagonal matrix
+    real(r8) :: frac_nvp_eff   ! [PORTED by Hui Tang: exposed NVP fraction (Phase 1c)]
+    real(r8) :: w_cond         ! [PORTED by Hui Tang: NVP-over-soil conduction weight = frac_sno_eff + frac_nvp_eff]
+    real(r8) :: frac_soil      ! [PORTED by Hui Tang: bare-soil fraction (Phase 1c)]
     ! -----------------------------------------------------------------------
 
     ! Enforce expected array sizes
@@ -3149,15 +3547,39 @@ end subroutine SetMatrix_Snow
                    end if
                    bmatrix_soil(c,3,j) = 1._r8+(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp-fact(c,j)*dhsdT(c)
                    bmatrix_soil(c,2,j) =  -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-                ! [PORTED by Hui Tang: j=1 below NVP is interior — full conduction coupling to NVP at j=0]
-                ! frac_sno_eff=0 when snl=0 so the standard snow/soil branch would give zero coupling;
-                ! NVP is always fully present above j=1, so use full conductance (no dhsdT term).
+                ! [PORTED by Hui Tang: soil layer 1 below NVP, snl==0, 3-way split (2026-06-11). Matrix
+                ! counterpart of the SetRHSVec_Soil j=1 snl==0 branch: bare-soil surface derivative
+                ! weighted frac_soil; up-conduction to NVP weighted frac_nvp_eff (= w_cond, frac_sno_eff=0),
+                ! matching the j=0 down-conduction. Replaces the previous full-conductance/no-dhsdT
+                ! "collapse" treatment.]
                 else if (j == 1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. col%snl(c) == 0) then
                    dzm     = (z(c,j)-z(c,j-1))
                    dzp     = (z(c,j+1)-z(c,j))
+                   frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                      max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                   frac_soil = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
                    bmatrix_soil(c,2,j) =   -(1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
-                   bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp + tk(c,j-1)/dzm)
-                   bmatrix_soil_snow(c,5,j) = -(1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                   bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
+                        + frac_nvp_eff*tk(c,j-1)/dzm) &
+                        - frac_soil*fact(c,j)*dhsdT(c)
+                   bmatrix_soil_snow(c,5,j) = -frac_nvp_eff*(1._r8-cnfac)*fact(c,j)*tk(c,j-1)/dzm
+                ! [PORTED by Hui Tang: Phase 1c — soil layer 1 below NVP under partial snow (snl<0).
+                !  Matrix counterpart of the SetRHSVec_Soil j=1 snl<0 branch: bare-soil surface
+                !  derivative weighted frac_soil; up-conduction to NVP weighted w_cond = frac_sno_eff
+                !  + frac_nvp_eff (matches the j=0 down-conduction so the interface conserves energy).]
+                else if (j == 1 .and. use_nvp .and. col%jbot_sno(c) == -1 .and. col%snl(c) < 0) then
+                   dzm     = (z(c,j)-z(c,j-1))
+                   dzp     = (z(c,j+1)-z(c,j))
+                   frac_nvp_eff = min(1._r8 - frac_h2osfc(c) - frac_sno_eff(c), &
+                                      max(0._r8, col%frac_nvp(c) - frac_sno_eff(c)))
+                   w_cond    = frac_sno_eff(c) + frac_nvp_eff
+                   frac_soil = max(0._r8, 1._r8 - frac_sno_eff(c) - frac_h2osfc(c) - frac_nvp_eff)
+                   bmatrix_soil(c,2,j) = - (1._r8-cnfac)*fact(c,j)*tk(c,j)/dzp
+                   bmatrix_soil(c,3,j) = 1._r8 + (1._r8-cnfac)*fact(c,j)*(tk(c,j)/dzp &
+                        + w_cond * tk(c,j-1)/dzm) &
+                        - frac_soil*fact(c,j)*dhsdT(c)
+                   bmatrix_soil_snow(c,5,j) =   - w_cond * (1._r8-cnfac) * fact(c,j) &
+                        * tk(c,j-1)/dzm
                 else if (j == 1) then
                    ! this is the snow/soil interface layer
                    dzm     = (z(c,j)-z(c,j-1))
