@@ -1,4 +1,91 @@
 ===============================================================
+Tag name: ctsm5.4.045
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Jun 15 11:35:27 AM MDT 2026
+One-line Summary: Update mizuRoute and CISM submodules
+
+Purpose and description of changes
+----------------------------------
+
+Update the submodules for CISM and also for mizuRoute
+
+This changes answers for compsets with CISM and also for compsets that use mizuRoute. We currently don't test both of them together.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  Work on Get the mizu testlist working #3808
+  Was fixed ESCOMP/mizuRoute/Single-point mode incompatible with parallel I/O netcdf? Suggestion to change documentation. #613
+  Was fixed ESCOMP/mizuRoute/Document what we want covered in system tests #615
+  Fixes Going to a CISM active test for a processor change test (PEM), causes answers to change... #2542
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes made to namelist defaults (e.g., changed parameter values):
+   Changes some mizuRoute defaults as shown below under answer changing section
+
+Contributors: @nmizukami, @kate
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+   Add a working test for izumi_nag
+
+Testing summary: regular + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes for compsets with eiher mizuRoute or CISM in them
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: mizuRoute or CISM
+    - what platforms/compilers: all
+    - nature of change:
+      CISM Update is for reproducible sums for CISM which should just be a roundoff level change
+      For mizuRoute routing alogrithm changes will change answers beyond roundoff, but shouldn't change climate
+      Defaults change also: timestep from daily to hourly
+                            headwaters drain at top of headwater not bottom
+                            qgwl_runoff_option to negative to match MOSART
+                            ice_runoff now True to match MOSART
+
+    Changes evaluated by the CISM team for CISM and Naoki Mizukami for mizuRoute
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): mizuRoute and CISM
+  mizuRoute to v3.1.1 (updates CESM coupling, small routing alogrithm changes, and then cleanup changes not affecting answers)
+  CISM to cismwrap_2_2_015 (updates Derecho environment and then supports reproducable sums with roundoff differences)
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+  #4088 -- Answer changes with updates for CISM and mizuRoute
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.044
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Jun  8 03:09:27 PM MDT 2026
