@@ -304,18 +304,20 @@ class TowerSite:
 
             # Grep for the parameter file string, get just the location of the parameter file
             # and strip the apostrophe(s) from the string
-            paramfile = subprocess.run(command, shell=True, capture_output=True,
-                 text=True, check=True)
+            paramfile = subprocess.run(
+                command, shell=True, capture_output=True, text=True, check=True
+            )
             output_paramfile = paramfile.stdout.strip()
-            split_output_paramfile = output_paramfile.split('=')
+            split_output_paramfile = output_paramfile.split("=")
             clean_paramfile = split_output_paramfile[1].replace("'", "")
 
             # Define a new parameter file that will go in the run directory
             modified_paramfile = os.path.join(case_root, "run/modified_paramfile.nc")
 
             # Set baseflow_scalar = 0 in the modified parameter file
-            os.system("ncap2 -s 'baseflow_scalar=0'" + " " + clean_paramfile +
-                 " " + modified_paramfile)
+            os.system(
+                "ncap2 -s 'baseflow_scalar=0'" + " " + clean_paramfile + " " + modified_paramfile
+            )
 
             # Create a string with the modified parameter file for user_nl_clm
             modified_paramfile_user_nl_line = "paramfile = " + "'" + modified_paramfile + "'"

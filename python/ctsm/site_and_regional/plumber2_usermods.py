@@ -63,7 +63,7 @@ def write_usermods(
     # pylint: disable=line-too-long
     s_file.write(
         # TODO turn on following line after cdeps changes are added
-        './xmlchange PLUMBER2SITE='+site + '\n' \
+        "./xmlchange PLUMBER2SITE=" + site + "\n"
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
         "./xmlchange DATM_YR_END=" + str(end_year) + "\n"
@@ -123,6 +123,7 @@ def write_usermods(
     # pylint: enable=line-too-long, anomalous-backslash-in-string
 
     s_file.close()
+
 
 # End write_usermods function
 
