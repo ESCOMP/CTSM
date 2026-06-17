@@ -2835,7 +2835,7 @@ module CLMFatesInterfaceMod
  ! ======================================================================================
 
  subroutine wrap_nvp_photosynthesis(this, nc, bounds, &
-       atm2lnd_inst, temperature_inst, waterdiagnosticbulk_inst)
+       atm2lnd_inst, temperature_inst, waterdiagnosticbulk_inst, frictionvel_inst)
 
    ! [PORTED by Hui Tang: separate NVP (moss/lichen) photosynthesis call.
    !
@@ -2862,6 +2862,9 @@ module CLMFatesInterfaceMod
    type(atm2lnd_type),               intent(in)    :: atm2lnd_inst
    type(temperature_type),           intent(in)    :: temperature_inst
    type(waterdiagnosticbulk_type),   intent(in)    :: waterdiagnosticbulk_inst
+   ! [PORTED by Hui Tang: frictionvel_inst supplies the bare-ground aerodynamic
+   !  resistance (ram1_patch) used as the NVP leaf boundary-layer resistance rb_pa.]
+   type(frictionvel_type),           intent(in)    :: frictionvel_inst
 
    integer  :: s, c, p, ifp, g
    real(r8) :: dtime
@@ -2893,6 +2896,22 @@ module CLMFatesInterfaceMod
             ! [PORTED by Hui Tang: NVP-specific inputs — column quantities broadcast to patch]
             this%fates(nc)%bc_in(s)%t_nvp_pa(ifp)    = temperature_inst%t_nvp_col(c)
             this%fates(nc)%bc_in(s)%fwet_nvp_pa(ifp) = waterdiagnosticbulk_inst%fwet_nvp_col(c)
+
+            ! [PORTED by Hui Tang: set atmospheric O2/CO2 partial pressures for NVP photosynthesis.
+            !  CanopyFluxes (and hence wrap_photosynthesis, which normally sets oair_pa/cair_pa
+            !  from forc_po2_grc/forc_pco2_grc) is never called for NVP columns, so these would
+            !  otherwise retain uninitialized/stale values and corrupt the Farquhar CO2/O2 terms
+            !  in FatesPlantRespPhotosynthDrive. Mirror the assignment in wrap_photosynthesis.]
+            this%fates(nc)%bc_in(s)%oair_pa(ifp) = atm2lnd_inst%forc_po2_grc(g)
+            this%fates(nc)%bc_in(s)%cair_pa(ifp) = atm2lnd_inst%forc_pco2_grc(g)
+
+            ! [PORTED by Hui Tang: NVP leaf boundary-layer resistance. CanopyFluxes
+            !  (which normally sets rb_pa) is never called for NVP columns, so use the
+            !  bare-ground aerodynamic resistance ram1_patch from BareGroundFluxes. This
+            !  is consumed in LeafBiophysicsMod (gb = 1/rb_pa) for the NVP boundary-layer-
+            !  only CO2 diffusion; the moss water-film resistance is handled separately by
+            !  the fwet_nvp term, so ram (not ram+rnvp) is used here.]
+            this%fates(nc)%bc_in(s)%rb_pa(ifp) = frictionvel_inst%ram1_patch(p)
 
             ! [PORTED by Hui Tang: dayl_factor_pa — CanopyFluxesMod is never called for NVP
             !  columns, so dayl_factor_pa is never set there; compute it here directly from

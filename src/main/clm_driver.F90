@@ -793,7 +793,7 @@ contains
        if (use_fates .and. use_nvp) then
           call clm_fates%wrap_nvp_photosynthesis(nc, bounds_clump, &
                atm2lnd_inst, temperature_inst, &
-               water_inst%waterdiagnosticbulk_inst)
+               water_inst%waterdiagnosticbulk_inst, frictionvel_inst)
        end if
 
        ! Fluxes for all urban landunits
