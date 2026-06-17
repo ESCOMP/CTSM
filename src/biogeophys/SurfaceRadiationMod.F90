@@ -645,13 +645,13 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno    => waterdiagnosticbulk_inst%frac_sno_col      & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col      & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
 
           )
 
        ! Determine seconds off current time step
        dtime = get_step_size_real()
-y
+
        ! Initialize fluxes
 
        do fp = 1,num_nourbanp
