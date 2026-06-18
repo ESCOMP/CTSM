@@ -17,7 +17,7 @@ echo "~~~~~ Build all docs using container"
 # Also do a custom --conf-py-path
 rm -rf _build _publish
 d1="$PWD/_publish_container"
-./build_docs_to_publish -r _build -d --site-root "$PWD/_publish"
+./build_docs_to_publish -r _build -d --site-root "$PWD/_publish" --verbose
 # VERSION LINKS WILL NOT RESOLVE IN _publish_container
 cp -a _publish "${d1}"
 
