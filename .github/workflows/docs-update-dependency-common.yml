@@ -22,7 +22,8 @@ jobs:
 
     # Don't run on forks, because test_container_eq_ctsm_pylib.sh uses
     # build_docs_to_publish, which will look for branch(es) that forks
-    # may not have
+    # may not have.
+    # To run locally with `act`, include `--env GITHUB_REPOSITORY=ESCOMP/CTSM` in the call.
     if: ${{ github.repository == 'ESCOMP/CTSM' }}
 
     runs-on: ubuntu-latest
@@ -44,6 +45,7 @@ jobs:
           environment-file: ${{ inputs.conda_env_file }}
           channels: conda-forge
           auto-activate-base: false
+          miniconda-version: "latest"
 
       - name: Compare docs built with container vs. ctsm_pylib
         run: |
