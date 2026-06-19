@@ -73,7 +73,7 @@ jobs:
         if: success() || failure()
         run: |
           if ${{ inputs.use_conda }}; then
-            cd doc && conda run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
+            cd doc && conda run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c --verbose
           else
-            cd doc && ./build_docs -b ${PWD}/_build -c
+            cd doc && ./build_docs -b ${PWD}/_build -c --verbose
           fi
