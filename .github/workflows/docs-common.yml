@@ -43,13 +43,13 @@ jobs:
         uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f  # v3
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/doc-builder/doc-build-container/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install Python requirements
         if: ${{ ! inputs.use_conda }}
         run: |
-          pip install -r doc/ctsm-docs_container/requirements.txt
+          pip install -r doc/doc-builder/doc-build-container/requirements.txt
 
       # Do this if using conda
       - name: Set up conda environment
