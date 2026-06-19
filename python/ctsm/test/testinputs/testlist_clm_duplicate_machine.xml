@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+     This is a test comment
+        And here is some extra indentation
+-->
+<testlist version="2.0">
+  <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+    </options>
+  </test>
+</testlist>

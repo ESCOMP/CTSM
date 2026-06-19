@@ -5,25 +5,10 @@ Remove duplicate tests from testlist_clm.xml
 import os
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
-
-# Define the input and output file paths
-rel_path = os.path.join(
-    os.pardir,
-    os.pardir,
-    "cime_config",
-    "testdefs",
-    "testlist_clm.xml",
-)
-INPUT_FILE = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    rel_path,
-)
-if not os.path.exists(INPUT_FILE):
-    raise FileNotFoundError(INPUT_FILE)
-OUTPUT_FILE = INPUT_FILE
+import argparse
 
 
-def get_front_matter(input_file):
+def get_front_matter(file_in):
     """
     Read the input file and preserve the stuff at the top.
 
@@ -33,7 +18,7 @@ def get_front_matter(input_file):
     Returns:
         list: List of lines representing the front matter.
     """
-    with open(input_file, "r", encoding="utf-8") as file:
+    with open(file_in, "r", encoding="utf-8") as file:
         lines = file.readlines()
     front_matter = []
     for line in lines:
@@ -43,7 +28,7 @@ def get_front_matter(input_file):
     return front_matter
 
 
-def parse_xml(input_file):
+def parse_xml(file_in):
     """
     Parse the input XML file and preserve comments.
 
@@ -53,21 +38,37 @@ def parse_xml(input_file):
     Returns:
         ElementTree: Parsed XML tree.
     """
-    parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
-    tree = ET.parse(input_file, parser=parser)
+    xml_parser = ET.XMLParser(target=ET.TreeBuilder(insert_comments=True))
+    tree = ET.parse(file_in, parser=xml_parser)
     return tree
 
 
-def write_xml(tree, file):
+def reparse(tree):
     """
-    Write the preserved comments and parsed XML tree to the output file.
+    Convert the XML tree to a minidom Document for pretty printing.
 
     Args:
         tree (ElementTree): Parsed XML tree.
-        f (file object): File object to write the XML content.
+
+    Returns:
+        Document: Minidom Document object.
     """
     rough_string = ET.tostring(tree.getroot(), "utf-8")
     reparsed = minidom.parseString(rough_string)
+    return reparsed
+
+
+def xml_to_text(tree):
+    """
+    Convert the XML tree to a formatted string with preserved comments and fixed indentation.
+
+    Args:
+        tree (ElementTree): Parsed XML tree.
+
+    Returns:
+        str: Formatted XML string.
+    """
+    reparsed = reparse(tree)
     pretty_xml = reparsed.toprettyxml(indent="", newl="")
     # Replace &quot; with "
     pretty_xml = pretty_xml.replace("&quot;", '"')
@@ -75,7 +76,7 @@ def write_xml(tree, file):
     pretty_xml = pretty_xml.replace('<?xml version="1.0" ?>', "")
     # Fix indentation difference introduced by removal of duplicates
     pretty_xml = pretty_xml.replace("      </machines>", "    </machines>")
-    file.write(pretty_xml)
+    return pretty_xml
 
 
 def print_test_info(test):
@@ -152,20 +153,64 @@ def remove_duplicate_machines(tree):
     return tree
 
 
-# Read the input file and preserve the stuff at the top
-xml_front_matter = get_front_matter(INPUT_FILE)
+def main():
+    """
+    Main function to remove duplicate tests from the input XML file and write the result to the
+    output file.
 
-# Parse the input XML file
-xml_tree = parse_xml(INPUT_FILE)
+    Args:
+        input_file (str): Path to the input XML file.
+        output_file (str): Path to the output XML file.
+    """
+    args = get_args()
 
-# Remove duplicate machines
-xml_tree = remove_duplicate_machines(xml_tree)
+    # Read the input file and preserve the stuff at the top
+    xml_front_matter = get_front_matter(args.input_file)
 
-# # Print all the information associated with each test
-# print_tests_info(tree)
+    # Parse the input XML file
+    xml_tree = parse_xml(args.input_file)
 
-# Write
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f_out:
-    f_out.writelines(xml_front_matter)
-with open(OUTPUT_FILE, "a", encoding="utf-8") as f_out:
-    write_xml(xml_tree, f_out)
+    # Remove duplicate machines
+    xml_tree = remove_duplicate_machines(xml_tree)
+
+    # # Print all the information associated with each test
+    # print_tests_info(tree)
+
+    # Write
+    with open(args.output_file, "w", encoding="utf-8") as f_out:
+        f_out.writelines(xml_front_matter)
+    with open(args.output_file, "a", encoding="utf-8") as f_out:
+        pretty_xml = xml_to_text(xml_tree)
+        f_out.write(pretty_xml)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Remove duplicate tests from testlist_clm.xml")
+    parser.add_argument(
+        "-i", "--input-file", type=str, default=None, help="Path to the input XML file"
+    )
+    parser.add_argument(
+        "-o", "--output-file", type=str, default=None, help="Path to the output XML file"
+    )
+    args = parser.parse_args()
+
+    if not args.input_file:
+        args.input_file = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            os.pardir,
+            os.pardir,
+            "cime_config",
+            "testdefs",
+            "testlist_clm.xml",
+        )
+    if not os.path.exists(args.input_file):
+        raise FileNotFoundError(args.input_file)
+    if not args.output_file:
+        args.output_file = args.input_file
+
+    if not os.path.exists(args.input_file):
+        raise FileNotFoundError(args.input_file)
+    return args
+
+if __name__ == "__main__":
+    main()
