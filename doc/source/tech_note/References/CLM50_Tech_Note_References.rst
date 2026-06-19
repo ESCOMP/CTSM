@@ -196,6 +196,11 @@ Brzostek, E. R., J. B. Fisher, and R. P. Phillips, 2014. Modeling the carbon cos
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and biomass across multiple biogeographical regions. Ecol. Appl. 10:95-114.
 
+.. _Buotteetal2021:
+
+Buotte, P. C., Koven, C. D., Xu, C., Shuman, J. K., Goulden, M. L., Levis, S., Katz, J., Ding, J., Ma, W., Robbins, Z., and Kueppers, L. M. 2021. Capturing functional strategies and compositional dynamics in vegetation demographic models, Biogeosciences, 18, 4473–4490, DOI:10.5194/bg-18-4473-2021.
+
+
 .. _Busing2005:
 
 Busing, R.T. 2005. Tree mortality, canopy turnover, and woody detritus in old cove forests of the southern Appalachians. Ecology 86:73-84.
@@ -467,6 +472,10 @@ Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation 
 .. _foley1996:
 
 Foley, J.A. et al., 1996. An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics. Global Biogeochemical Cycles 10.4, pp. 603-628.
+
+.. _Fosteretal2026:
+
+Foster, A.C., Hawkins, L.R., Kennedy, D., Bonan, G.B., Fisher, R.A., Needham, J.F, Knox, R.G., Koven, C.D., Wieder, W.R., Dagon, K., and Lawrence, D.M. 2026. Contrasting parametric sensitivities in two global vegetation models using parameter perturbation ensembles. Journal of Advances in Modeling Earth Systems. 18, e2025MS005590. DOI:10.1029/2025MS005590.
 
 .. _Friedl,etal2002:
 
@@ -767,6 +776,10 @@ Koven, C.D. et al. 2015. Permafrost carbon-climate feedback is sensitive to deep
 .. _Kovenetal2017:
 
 Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
+
+.. _Kovenetal2020:
+
+Koven, C. D., Knox, R. G., Fisher, R. A., Chambers, J. Q., Christoffersen, B. O., Davies, S. J., Detto, M., Dietze, M. C., Faybishenko, B., Holm, J., Huang, M., Kovenock, M., Kueppers, L. M., Lemieux, G., Massoud, E., McDowell, N. G., Muller-Landau, H. C., Needham, J. F., Norby, R. J., Powell, T., Rogers, A., Serbin, S. P., Shuman, J. K., Swann, A. L. S., Varadharajan, C., Walker, A. P., Wright, S. J., and Xu, C. 2020. Benchmarking and parameter sensitivity of physiological and vegetation dynamics using the Functionally Assembled Terrestrial Ecosystem Simulator (FATES) at Barro Colorado Island, Panama, Biogeosciences, 17, 3017–3044, DOI:10.5194/bg-17-3017-2020.
 
 .. _kucharik1998:
 
@@ -1080,6 +1093,10 @@ Moorcroft, P.R., G.C. Hurtt, and S.W. Pacala, 2001. A method for scaling vegetat
 .. _Mynenietal2002:
 
 Myneni, R.B., et al. 2002. Global products of vegetation leaf area and fraction absorbed PAR from year one of MODIS data. Remote Sens. Environ. 83:214-231.
+
+.. _Needhametal2022:
+
+Needham, J. F., Johnson, D. J., Anderson-Teixeira, K. J., Bourg, N., Bunyavejchewin, S., Butt, N., Cao, M., Cárdenas, D., Chang-Yang, C.-H., Chen, Y.-Y., Chuyong, G., Dattaraja, H. S., Davies, S. J., Duque, A., Ewango, C. E. N., Fernando, E. S., Fisher, R., Fletcher, C. D., Foster, R., ... McMahon, S. M. 2022. Demographic composition, not demographic diversity, predicts biomass and turnover across temperate and tropical forests. Global Change Biology, 28, 2895–2909. DOI:10.1111/gcb.16100
 
 .. _Neffetal2005:
 
@@ -1440,6 +1457,10 @@ Shi, M., J. B. Fisher, E. R. Brzostek, and R. P. Phillips, 2016: Carbon cost of 
 .. _Shiklomanov2000:
 
 Shiklomanov, I.A. 2000. Appraisal and assessment of world water resources. Water International 25:11-32.
+
+.. _Shumanetal2024:
+
+Shuman, J. K., Fisher, R. A., Koven, C., Knox, R., Kueppers, L., and Xu, C. 2024. Dynamic ecosystem assembly and escaping the “fire trap” in the tropics: insights from FATES_15.0.0, Geosci. Model Dev., 17, 4643–4671, DOI:10.5194/gmd-17-4643-2024.
 
 .. _Siebertetal2005:
 
