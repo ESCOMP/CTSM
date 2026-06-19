@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -N segment001
+#PBS -q develop
+#PBS -l walltime=1:00:00
+#PBS -A P93300041
+#PBS -k eod
+#PBS -l select=1:ncpus=5
+
+# ---------------------------------------------------------
+
+source ~/.bashrc
+conda activate ppe-py
+
+
+tdir="/glade/work/djk2120/ctsm_tether/tools/tether/"
+wdir="/glade/u/home/djk2120/vp/sims/ICLM50Bgc.CPLHIST.default/"
+$tdir"tether.sh" $wdir commands.txt derecho.template
+
+
