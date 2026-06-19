@@ -24,8 +24,9 @@ cp -a _publish "${d1}"
 # Build all docs using ctsm_pylib
 echo "~~~~~ Build all docs using ctsm_pylib"
 rm -rf _build _publish
+rm -rf "${d2}"
 d2="$PWD/_publish_nocontainer"
-conda run -n ctsm_pylib --no-capture-output ./build_docs_to_publish -r _build --site-root "$PWD/_publish"  --conf-py-path doc-builder/test/conf.py --static-path ../_static --templates-path ../_templates --verbose
+conda run -n ctsm_pylib --no-capture-output ./build_docs_to_publish -r _build --site-root "$PWD/_publish" --verbose
 # VERSION LINKS WILL NOT RESOLVE IN _publish_nocontainer
 cp -a _publish "${d2}"
 
