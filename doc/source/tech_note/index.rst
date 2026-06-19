@@ -42,7 +42,7 @@ CLM Technical Note
    Plant_Mortality/CLM50_Tech_Note_Plant_Mortality.rst
    Fire/CLM50_Tech_Note_Fire.rst
    Methane/CLM50_Tech_Note_Methane.rst
-   Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.rst
+   Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.md
    Transient_Landcover/CLM50_Tech_Note_Transient_Landcover.rst
    DGVM/CLM50_Tech_Note_DGVM.rst
    BVOCs/CLM50_Tech_Note_BVOCs.rst

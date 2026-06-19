@@ -6,7 +6,7 @@ on:
     branches: ['*']
     paths:
       - 'python/conda_env_ctsm_py.txt'
-      - 'doc/ctsm-docs_container/requirements.txt'
+      - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
 
@@ -14,7 +14,7 @@ on:
     # Run on pull requests that change the listed files
     paths:
       - 'python/conda_env_ctsm_py.txt'
-      - 'doc/ctsm-docs_container/requirements.txt'
+      - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
 

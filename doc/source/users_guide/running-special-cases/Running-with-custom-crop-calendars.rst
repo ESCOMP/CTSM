@@ -1,6 +1,6 @@
-.. running-with-custom-crop-calendars:
-
 .. include:: ../substitutions.rst
+
+.. _running-with-custom-crop-calendars:
 
 =======================================
  Running with custom crop calendars

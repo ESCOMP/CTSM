@@ -63,7 +63,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p build-logs
-          cd doc && PYTHONUNBUFFERED=1 ./build_docs -b ${PWD}/_build -c -d 2>&1 | tee >(sed -E $'s/\x1b\\[[0-9;]*[a-zA-Z]//g' > "${GITHUB_WORKSPACE}/build-logs/build.log")
+          cd doc && PYTHONUNBUFFERED=1 ./build_docs -b ${PWD}/_build -c -d --verbose 2>&1 | tee >(sed -E $'s/\x1b\\[[0-9;]*[a-zA-Z]//g' > "${GITHUB_WORKSPACE}/build-logs/build.log")
         # The tee writes build.log for the PR comment (posted by docs-pr-failure-post-comment.yml); the inner sed strips ANSI color codes that would otherwise render as garbage in the comment.
         # PYTHONUNBUFFERED=1 because otherwise the teed log will be out of order
 

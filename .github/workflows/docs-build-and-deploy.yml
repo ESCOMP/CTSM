@@ -61,7 +61,7 @@ jobs:
         id: build-docs
         run: |
           cd doc
-          ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM
+          ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM --verbose
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8  # v3
