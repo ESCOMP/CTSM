@@ -101,28 +101,57 @@ contains
             write(iulog,*) '  stream_varnames                  = ',stream_varnames
          end if
 
-         ! Initialize the cdeps data type sdat_rghn
-         call shr_strdata_init_from_inline(sdat_rghn,                                   &
-              my_task             = iam,                                                &
-              logunit             = iulog,                                              &
-              compname            = 'LND',                                              &
-              model_clock         = model_clock,                                        &
-              model_mesh          = mesh,                                               &
-              stream_meshfile     = control%stream_meshfile_prigentroughness,           &
-              stream_lev_dimname  = 'null',                                             &
-              stream_mapalgo      = control%prigentroughnessmapalgo,                    &
-              stream_filenames    = (/trim(control%stream_fldFileName_prigentroughness)/), &
-              stream_fldlistFile  = stream_varnames,                                    &
-              stream_fldListModel = stream_varnames,                                    &
-              stream_yearFirst    = 1997,                                               &
-              stream_yearLast     = 1997,                                               &
-              stream_yearAlign    = 1,                                                  &
-              stream_offset       = 0,                                                  &
-              stream_taxmode      = 'extend',                                           &
-              stream_dtlimit      = 1.0e30_r8,                                          &
-              stream_tintalgo     = 'linear',                                           &
-              stream_name         = 'Prigent roughness',                                &
-              rc                  = rc)
+         ! Initialize the cdeps data type sdat_rghn.
+         ! When the stream is on the model grid (mapalgo='redist', as for the
+         ! ne1024pg2 Prigent file) reuse the already-built CLM model mesh instead
+         ! of letting CDEPS create a duplicate full ESMF mesh from the stream mesh
+         ! file -- at ne1024pg2 that duplicate is a large init memory/time cost.
+         if (trim(control%prigentroughnessmapalgo) == 'redist') then
+            call shr_strdata_init_from_inline(sdat_rghn,                                   &
+                 my_task             = iam,                                                &
+                 logunit             = iulog,                                              &
+                 compname            = 'LND',                                              &
+                 model_clock         = model_clock,                                        &
+                 model_mesh          = mesh,                                               &
+                 stream_meshfile     = control%stream_meshfile_prigentroughness,           &
+                 stream_lev_dimname  = 'null',                                             &
+                 stream_mapalgo      = control%prigentroughnessmapalgo,                    &
+                 stream_filenames    = (/trim(control%stream_fldFileName_prigentroughness)/), &
+                 stream_fldlistFile  = stream_varnames,                                    &
+                 stream_fldListModel = stream_varnames,                                    &
+                 stream_yearFirst    = 1997,                                               &
+                 stream_yearLast     = 1997,                                               &
+                 stream_yearAlign    = 1,                                                  &
+                 stream_offset       = 0,                                                  &
+                 stream_taxmode      = 'extend',                                           &
+                 stream_dtlimit      = 1.0e30_r8,                                          &
+                 stream_tintalgo     = 'linear',                                           &
+                 stream_name         = 'Prigent roughness',                                &
+                 stream_mesh_in      = mesh,                                               &
+                 rc                  = rc)
+         else
+            call shr_strdata_init_from_inline(sdat_rghn,                                   &
+                 my_task             = iam,                                                &
+                 logunit             = iulog,                                              &
+                 compname            = 'LND',                                              &
+                 model_clock         = model_clock,                                        &
+                 model_mesh          = mesh,                                               &
+                 stream_meshfile     = control%stream_meshfile_prigentroughness,           &
+                 stream_lev_dimname  = 'null',                                             &
+                 stream_mapalgo      = control%prigentroughnessmapalgo,                    &
+                 stream_filenames    = (/trim(control%stream_fldFileName_prigentroughness)/), &
+                 stream_fldlistFile  = stream_varnames,                                    &
+                 stream_fldListModel = stream_varnames,                                    &
+                 stream_yearFirst    = 1997,                                               &
+                 stream_yearLast     = 1997,                                               &
+                 stream_yearAlign    = 1,                                                  &
+                 stream_offset       = 0,                                                  &
+                 stream_taxmode      = 'extend',                                           &
+                 stream_dtlimit      = 1.0e30_r8,                                          &
+                 stream_tintalgo     = 'linear',                                           &
+                 stream_name         = 'Prigent roughness',                                &
+                 rc                  = rc)
+         end if
          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
             call ESMF_Finalize(endflag=ESMF_END_ABORT)
          end if
