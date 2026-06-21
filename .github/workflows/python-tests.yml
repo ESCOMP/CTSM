@@ -37,7 +37,7 @@ jobs:
       - name: Run Python unit tests
         run: |
           cd python
-          mamba run -n ctsm_pylib ./run_ctsm_py_tests -u
+          micromamba run -n ctsm_pylib ./run_ctsm_py_tests -u
 
   python-lint-and-black:
     runs-on: ubuntu-latest
@@ -58,7 +58,7 @@ jobs:
       - name: Run pylint
         run: |
           cd python
-          mamba run -n ctsm_pylib make lint
+          micromamba run -n ctsm_pylib make lint
 
       # Run black check
       - name: Run black
@@ -66,4 +66,4 @@ jobs:
         if: success() || failure()
         run: |
           cd python
-          mamba run -n ctsm_pylib make black
+          micromamba run -n ctsm_pylib make black

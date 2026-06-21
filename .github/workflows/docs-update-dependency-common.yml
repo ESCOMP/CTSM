@@ -49,7 +49,7 @@ jobs:
       - name: Compare docs built with container vs. ctsm_pylib
         run: |
           cd doc/test/
-          ./test_container_eq_ctsm_pylib.sh mamba
+          ./test_container_eq_ctsm_pylib.sh micromamba
 
   makefile-method:
     runs-on: ubuntu-latest
@@ -76,4 +76,4 @@ jobs:
       - name: Check that Makefile method works
         run: |
           cd doc/test/
-          mamba run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh
+          micromamba run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh

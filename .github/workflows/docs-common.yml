@@ -64,7 +64,7 @@ jobs:
       - name: Build Sphinx docs with makefile
         run: |
           if ${{ inputs.use_conda }}; then
-            mamba run -n ${{ inputs.conda_env_name }} make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+            micromamba run -n ${{ inputs.conda_env_name }} make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
           else
             make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
           fi
@@ -73,7 +73,7 @@ jobs:
         if: success() || failure()
         run: |
           if ${{ inputs.use_conda }}; then
-            cd doc && mamba run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
+            cd doc && micromamba run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
           else
             cd doc && ./build_docs -b ${PWD}/_build -c
           fi

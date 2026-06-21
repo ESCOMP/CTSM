@@ -47,4 +47,4 @@ jobs:
 
       - name: Text Sphinx builds with omnibus script
         run: |
-          cd doc/test/ && ./testing.sh mamba
+          cd doc/test/ && ./testing.sh micromamba
