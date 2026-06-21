@@ -37,18 +37,18 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+      - name: Set up conda/mamba environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476  # v3.0.0
         with:
-          activate-environment: ${{ inputs.conda_env_name }}
+          environment-name: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
-          channels: conda-forge
-          auto-activate-base: false
+          cache-environment: true
+          cache-downloads: true
 
       - name: Compare docs built with container vs. ctsm_pylib
         run: |
           cd doc/test/
-          ./test_container_eq_ctsm_pylib.sh
+          ./test_container_eq_ctsm_pylib.sh mamba
 
   makefile-method:
     runs-on: ubuntu-latest
@@ -63,15 +63,15 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+      - name: Set up conda/mamba environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476  # v3.0.0
         with:
-          activate-environment: ${{ inputs.conda_env_name }}
+          environment-name: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
-          channels: conda-forge
-          auto-activate-base: false
+          cache-environment: true
+          cache-downloads: true
 
       - name: Check that Makefile method works
         run: |
           cd doc/test/
-          conda run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh
+          mamba run -n ${{ inputs.conda_env_name }} --no-capture-output ./test_makefile_method.sh

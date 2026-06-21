@@ -7,12 +7,14 @@ on:
     paths:
       - 'doc/test/*'
       - 'doc/Makefile'
+      - 'doc/test/testing.sh'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'doc/test/*'
       - 'doc/Makefile'
+      - 'doc/test/testing.sh'
 
   workflow_dispatch:
 
@@ -34,15 +36,15 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      # Set up conda
-      - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+      # Set up conda/mamba
+      - name: Set up conda/mamba environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476  # v3.0.0
         with:
-          activate-environment: ctsm_pylib
+          environment-name: ctsm_pylib
           environment-file: python/conda_env_ctsm_py.yml
-          channels: conda-forge
-          auto-activate-base: false
+          cache-environment: true
+          cache-downloads: true
 
       - name: Text Sphinx builds with omnibus script
         run: |
-          cd doc/test/ && ./testing.sh
+          cd doc/test/ && ./testing.sh mamba

@@ -51,20 +51,19 @@ jobs:
         run: |
           pip install -r doc/ctsm-docs_container/requirements.txt
 
-      # Do this if using conda
-      - name: Set up conda environment
-        if: ${{ inputs.use_conda }}
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+      # Do this if using conda/mamba
+      - name: Set up conda/mamba environment
+        uses: mamba-org/setup-micromamba@d7c9bd84e824b79d2af72a2d4196c7f4300d3476  # v3.0.0
         with:
-          activate-environment: ${{ inputs.conda_env_name }}
+          environment-name: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
-          channels: conda-forge
-          auto-activate-base: false
+          cache-environment: true
+          cache-downloads: true
 
       - name: Build Sphinx docs with makefile
         run: |
           if ${{ inputs.use_conda }}; then
-            conda run -n ${{ inputs.conda_env_name }} make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+            mamba run -n ${{ inputs.conda_env_name }} make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
           else
             make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
           fi
@@ -73,7 +72,7 @@ jobs:
         if: success() || failure()
         run: |
           if ${{ inputs.use_conda }}; then
-            cd doc && conda run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
+            cd doc && mamba run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
           else
             cd doc && ./build_docs -b ${PWD}/_build -c
           fi

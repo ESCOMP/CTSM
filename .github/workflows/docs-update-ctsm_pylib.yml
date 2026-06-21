@@ -9,6 +9,7 @@ on:
       - 'doc/ctsm-docs_container/requirements.txt'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   pull_request:
     # Run on pull requests that change the listed files
@@ -17,6 +18,7 @@ on:
       - 'doc/ctsm-docs_container/requirements.txt'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   schedule:
     # 8 am every Monday UTC
