@@ -1,4 +1,46 @@
 ===============================================================
+Tag name: ctsm5.4.046
+Originator(s): glemieux (Gregory Lemieux, LBNL, glemieux@lbl.gov)
+Date: Mon Jun 22 10:25:13 MDT 2026
+One-line Summary: Remove variables to exclude for fates_sp user mod
+
+Purpose and description of changes
+----------------------------------
+
+Removes the hist_fexcl fields in the fates_sp user mod. Coordinated with NGEET/fates#1568, which adds satellite phenology mode aware logic to automatically set the active/inactive FATES history variables.
+
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: Fieldlist diffs.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+- fates: sci.1.92.5_api.46.0.0 → sci.1.92.7_api.46.0.0
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #4079: ctsm5.4.046: Remove variables to exclude for `fates_sp` user mod by glemieux](https://github.com/ESCOMP/CTSM/pull/4079)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.045
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Jun 15 11:35:27 AM MDT 2026
