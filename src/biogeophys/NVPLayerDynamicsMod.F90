@@ -753,7 +753,7 @@ contains
     do c = bounds%begc, bounds%endc
        if (col%nvp_layer_active(c) .and. col%dz(c,0) > 0._r8) then
           max_ice_nvp = watsat_nvp * denice * col%dz(c,0)
-          waterstate_inst%h2osoi_ice_col(c,0) = 0._r8
+          waterstate_inst%h2osoi_ice_col(c,0) = max_ice_nvp
           waterstate_inst%h2osoi_liq_col(c,0) = 0._r8
        end if
     end do
