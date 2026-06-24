@@ -1,0 +1,591 @@
+!------------------------------------------------------------------------
+! This file is used to modify datm.streams.xml generated in $RUNDIR
+! Entries should have the form
+!  <streamname>:<stream_variable>= <new stream_value> (NO Quotes!!!)
+! The following are accepted values for a stream named foo
+!  foo:meshfile = character string
+!  foo:datafiles = comma separated string of full pathnames (e.g. file1,file2,file3...)
+!  foo:datavars = comma separated string of field pairs  (e.g. foo foobar,foo2 foobar2...)
+!  foo:taxmode = one of [cycle, extend, limit]
+!  foo:tintalgo = one of [lower,upper,nearest,linear,coszen]
+!  foo:readmode = single (only suported mode right now)
+!  foo:mapalgo = one of [bilinear,redist,nn,consf,consd,none]
+!  foo:dtlimit = real (1.5 is default)
+!  foo:year_first = integer
+!  foo:year_last = integer
+!  foo:year_align = integer
+!  foo:vectors = null or the names of the vector fields in the model (i.e. Sa_u:Sa_v)
+!  foo:lev_dimname: = one of [null,name of level dimenion name]
+!  foo:offset = integer
+! As an example:
+!   foo:year_first = 1950
+! would change the stream year_first stream_entry to 1950 for the foo stream block
+! NOTE: multi-line inputs are enabled by adding a \ at the end of the line
+! As an emaple:
+! foo:datafiles=foo1,foo2, \
+!     foo3
+! Will yield the following new entry for datafiles in stream foo
+!   <datafiles>
+!      <file>foo1</file>
+!      <file>foo2</file>
+!      <file>foo3</file>
+!   </datafiles>
+!------------------------------------------------------------------------
+co2tseries.cmip6_20tr:datafiles=/glade/campaign/cesm/cesmdata/inputdata/atm/datm7/CO2/WIEMIP_l_co2_ann_2024_2300_copied_to_fco2_datm_global_simyr_1700-2024_TRENDY_c250625.nc
+co2tseries.cmip6_20tr:year_first=1850
+co2tseries.cmip6_20tr:year_last=2023
+co2tseries.cmip6_20tr:year_align=1850
+co2tseries.cmip6_20tr:datavars=CO2 Sa_co2diag
+
+presaero.hist:datafiles=/glade/campaign/cesm/cesmdata/inputdata/atm/cam/chem/trop_mozart_aero/aero/aerodep_clm_SSP370_b.e21.BWSSP370cmip6.f09_g17.CMIP6-SSP3-7.0-WACCM.001_1849-2101_monthly_0.9x1.25_c201103.nc
+presaero.hist:year_first=1850
+presaero.hist:year_last=2023
+presaero.hist:year_align=1850
+
+!preso3.hist:year_first=1850
+!preso3.hist:year_last=2023
+!preso3.hist:year_align=1850
+
+
+CLMCRUJRA2024b.Solar:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/ESMFmesh_WIEMIP_0.5deg_c260603.nc
+CLMCRUJRA2024b.Solar:mapalgo=bilinear
+CLMCRUJRA2024b.Solar:year_first=1850
+CLMCRUJRA2024b.Solar:year_last=2023
+CLMCRUJRA2024b.Solar:year_align=1850
+CLMCRUJRA2024b.Solar:datafiles=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2000.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2001.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2002.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2003.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2004.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2005.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2006.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2007.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2008.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2009.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2010.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2011.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2012.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2013.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2014.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2015.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2016.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2017.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2018.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2019.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2020.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2021.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2022.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Solar.2023.nc
+
+CLMCRUJRA2024b.Precip:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/ESMFmesh_WIEMIP_0.5deg_c260603.nc
+CLMCRUJRA2024b.Precip:mapalgo=bilinear
+CLMCRUJRA2024b.Precip:year_first=1850
+CLMCRUJRA2024b.Precip:year_last=2023
+CLMCRUJRA2024b.Precip:year_align=1850
+CLMCRUJRA2024b.Precip:datafiles=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2000.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2001.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2002.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2003.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2004.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2005.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2006.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2007.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2008.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2009.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2010.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2011.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2012.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2013.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2014.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2015.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2016.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2017.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2018.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2019.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2020.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2021.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2022.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.Precip.2023.nc
+
+CLMCRUJRA2024b.TPQW:meshfile=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/ESMFmesh_WIEMIP_0.5deg_c260603.nc
+CLMCRUJRA2024b.TPQW:mapalgo=bilinear
+CLMCRUJRA2024b.TPQW:year_first=1850
+CLMCRUJRA2024b.TPQW:year_last=2023
+CLMCRUJRA2024b.TPQW:year_align=1850
+CLMCRUJRA2024b.TPQW:datafiles=/glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1850.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1851.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1852.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1853.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1854.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1855.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1856.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1857.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1858.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1859.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1860.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1861.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1862.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1863.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1864.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1865.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1866.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1867.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1868.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1869.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1870.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1871.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1872.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1873.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1874.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1875.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1876.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1877.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1878.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1879.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1880.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1881.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1882.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1883.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1884.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1885.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1886.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1887.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1888.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1889.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1890.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1891.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1892.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1893.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1894.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1895.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1896.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1897.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1898.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1899.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1900.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1901.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1902.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1903.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1904.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1905.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1906.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1907.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1908.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1909.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1910.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1911.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1912.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1913.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1914.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1915.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1916.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1917.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1918.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1919.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1920.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1921.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1922.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1923.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1924.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1925.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1926.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1927.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1928.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1929.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1930.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1931.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1932.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1933.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1934.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1935.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1936.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1937.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1938.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1939.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1940.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1941.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1942.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1943.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1944.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1945.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1946.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1947.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1948.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1949.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1950.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1951.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1952.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1953.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1954.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1955.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1956.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1957.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1958.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1959.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1960.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1961.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1962.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1963.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1964.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1965.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1966.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1967.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1968.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1969.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1970.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1971.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1972.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1973.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1974.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1975.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1976.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1977.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1978.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1979.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1980.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1981.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1982.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1983.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1984.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1985.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1986.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1987.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1988.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1989.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1990.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1991.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1992.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1993.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1994.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1995.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1996.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1997.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1998.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.1999.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2000.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2001.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2002.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2003.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2004.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2005.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2006.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2007.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2008.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2009.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2010.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2011.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2012.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2013.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2014.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2015.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2016.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2017.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2018.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2019.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2020.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2021.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2022.nc,\
+    /glade/derecho/scratch/swensosc/WIEMIP/historical_three_stream/clmforc.wiemip_historical.TPQWL.2023.nc
+
+
+
