@@ -1,5 +1,11 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.044     erik 06/08/2026 Merge b4b-dev to master
+       ctsm5.4.043   slevis 06/03/2026 Overflow respiration bug fixes
+       ctsm5.4.042   slevis 05/22/2026 Get hillslope_fsat_equals_zero .true. for use_hillslope
+       ctsm5.4.041 samrabin 05/21/2026 Merge b4b-dev 2026-05-21
+       ctsm5.4.040 multiple 05/20/2026 Paramfile updates
+       ctsm5.4.039 multiple 05/14/2026 Add FATES namelist option to initialize cohorts with diameter at breast height (DBH)
        ctsm5.4.038   slevis 05/07/2026 Merge b4b-dev to master
        ctsm5.4.037 multiple 05/04/2026 Fix for FATES year-boundary restart issue
        ctsm5.4.036 multiple 04/27/2026 Complete the FATES-CLM nitrogen coupling
