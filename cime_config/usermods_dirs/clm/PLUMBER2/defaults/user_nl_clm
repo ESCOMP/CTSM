@@ -21,4 +21,11 @@
 flanduse_timeseries = ' '   ! This isn't needed for a non transient case, but will be once we start using transient compsets
 fsurdat = "$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/PLUMBER2/ctsm5.4.0/surfdata_1x1_PLUMBER2_${PLUMBER2SITE}_hist_2000_16pfts_c251023.no_nan_fill.nc"
 
+! Turn off HumanIndexMod calculations for all sites.  This avoids an error triggered by passing negative
+! 2-m relative humidity into HumanIndexMod. The error occurs only for these sites but we turn this off for all
+! sites for convenience:
+! ES-ES2, ES-LgS, ES-VDA, SE-Deg, US-Cop
+! See https://github.com/ESCOMP/CTSM/issues/4081 for discussion about this error.
+calc_human_stress_indices = 'NONE'
+
 ! custom namelist changes for each site / case
