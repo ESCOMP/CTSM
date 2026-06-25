@@ -41,7 +41,7 @@ else
   ./xmlchange CLM_NML_USE_CASE="2000_control"
   ./xmlchange CLM_FORCE_COLDSTART=on
   echo "CLM_USRDAT.PLUMBER2:taxmode=cycle" >> user_nl_datm_streams
-  echo "CLM_USRDAT.PLUMBER2:dtlimit=30" >> user_nl_datm_streams
+  echo "CLM_USRDAT.PLUMBER2:dtlimit=50" >> user_nl_datm_streams
 
 fi
 
