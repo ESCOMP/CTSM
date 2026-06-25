@@ -35,7 +35,7 @@ def write_usermods(
     datm_yr_start_spin,
     datm_yr_end_spin,
     datm_yr_align_spin,
-    start_tod_spin
+    start_tod_spin,
 ):
     """
     Write information to be added to user mods
@@ -180,7 +180,7 @@ def main():
             datm_yr_start_spin=datm_yr_start_spin,
             datm_yr_end_spin=datm_yr_end_spin,
             datm_yr_align_spin=datm_yr_align_spin,
-            start_tod_spin=start_tod_spin
+            start_tod_spin=start_tod_spin,
         )
 
 
