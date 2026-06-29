@@ -30,4 +30,4 @@ jobs:
 
       - name: Call run_sys_tests
         run: |
-          ./run_sys_tests -t SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-default --skip-compare --skip-generate --extra-create-test-args " --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP" --testroot-base $RUNNER_TEMP
+          ./run_sys_tests -t SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-default --skip-compare --skip-generate --extra-create-test-args " --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP" --testroot-base $RUNNER_TEMP --verbose
