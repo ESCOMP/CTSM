@@ -275,7 +275,7 @@ class TowerSite:
         # Change baseflow_scalar to 0 in parameter file for PLUMBER2 wetland sites
         # We need to grep the lnd_in file for the parameter file so that we can modify it
         # to set baseflow_scalar = 0 for wetland sites.  We need to grep the base case
-        # since at this point the current site simulation, e.g., AD, has not yet had 
+        # since at this point the current site simulation, e.g., AD, has not yet had
         # a namelist generated.
 
         wetland = [
