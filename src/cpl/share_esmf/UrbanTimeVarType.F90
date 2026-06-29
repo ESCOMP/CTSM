@@ -194,57 +194,28 @@ contains
        write(iulog,*) ' '
     endif
 
-    ! Initialize the cdeps data type this%sdat_urbantv.
-    ! When the stream is on the model grid (mapalgo='redist'; the urbantv mesh is
-    ! ne1024pg2, identical element count/ordering to the model mesh) reuse the
-    ! model mesh instead of building a duplicate full ESMF mesh from the stream
-    ! mesh file -- a large init memory/time cost at ne1024pg2.
-    if (trim(urbantvmapalgo) == 'redist') then
-       call shr_strdata_init_from_inline(this%sdat_urbantv,             &
-            my_task             = iam,                                  &
-            logunit             = iulog,                                &
-            compname            = 'LND',                                &
-            model_clock         = model_clock,                          &
-            model_mesh          = mesh,                                 &
-            stream_meshfile     = trim(stream_meshfile_urbantv),        &
-            stream_lev_dimname  = 'null',                               &
-            stream_mapalgo      = trim(urbantvmapalgo),                 &
-            stream_filenames    = (/trim(stream_fldfilename_urbantv)/), &
-            stream_fldlistFile  = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
-            stream_fldListModel = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
-            stream_yearFirst    = stream_year_first_urbantv,            &
-            stream_yearLast     = stream_year_last_urbantv,             &
-            stream_yearAlign    = model_year_align_urbantv,             &
-            stream_offset       = 0,                                    &
-            stream_taxmode      = 'extend',                             &
-            stream_dtlimit      = 1.0e30_r8,                            &
-            stream_tintalgo     = urbantv_tintalgo,                     &
-            stream_name         = 'Urban time varying data',            &
-            stream_mesh_in      = mesh,                                 &
-            rc                  = rc)
-    else
-       call shr_strdata_init_from_inline(this%sdat_urbantv,             &
-            my_task             = iam,                                  &
-            logunit             = iulog,                                &
-            compname            = 'LND',                                &
-            model_clock         = model_clock,                          &
-            model_mesh          = mesh,                                 &
-            stream_meshfile     = trim(stream_meshfile_urbantv),        &
-            stream_lev_dimname  = 'null',                               &
-            stream_mapalgo      = trim(urbantvmapalgo),                 &
-            stream_filenames    = (/trim(stream_fldfilename_urbantv)/), &
-            stream_fldlistFile  = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
-            stream_fldListModel = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
-            stream_yearFirst    = stream_year_first_urbantv,            &
-            stream_yearLast     = stream_year_last_urbantv,             &
-            stream_yearAlign    = model_year_align_urbantv,             &
-            stream_offset       = 0,                                    &
-            stream_taxmode      = 'extend',                             &
-            stream_dtlimit      = 1.0e30_r8,                            &
-            stream_tintalgo     = urbantv_tintalgo,                     &
-            stream_name         = 'Urban time varying data',            &
-            rc                  = rc)
-    end if
+    ! Initialize the cdeps data type this%sdat_urbantv
+    call shr_strdata_init_from_inline(this%sdat_urbantv,             &
+         my_task             = iam,                                  &
+         logunit             = iulog,                                &
+         compname            = 'LND',                                &
+         model_clock         = model_clock,                          &
+         model_mesh          = mesh,                                 &
+         stream_meshfile     = trim(stream_meshfile_urbantv),        &
+         stream_lev_dimname  = 'null',                               &
+         stream_mapalgo      = trim(urbantvmapalgo),                 &
+         stream_filenames    = (/trim(stream_fldfilename_urbantv)/), &
+         stream_fldlistFile  = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
+         stream_fldListModel = stream_varnames(stream_varname_MIN:stream_varname_MAX), &
+         stream_yearFirst    = stream_year_first_urbantv,            &
+         stream_yearLast     = stream_year_last_urbantv,             &
+         stream_yearAlign    = model_year_align_urbantv,             &
+         stream_offset       = 0,                                    &
+         stream_taxmode      = 'extend',                             &
+         stream_dtlimit      = 1.0e30_r8,                            &
+         stream_tintalgo     = urbantv_tintalgo,                     &
+         stream_name         = 'Urban time varying data',            &
+         rc                  = rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, line=__LINE__, file=__FILE__)) then
        call ESMF_Finalize(endflag=ESMF_END_ABORT)
     end if
