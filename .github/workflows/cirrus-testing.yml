@@ -1,0 +1,64 @@
+name: CIRRUS runner test workflow
+
+on: [push, pull_request] # Trigger on push or pull request
+
+jobs:
+
+  hello-world:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: Print a little message
+        run: echo "Hello, world!"
+
+  list-glade-cesm-input:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: List Glade inputdata
+        run: ls /glade/campaign/cesm/cesmdata/cseg/inputdata
+
+  simple-build-run_sys_tests:
+    name: Build one simple case with run_sys_tests
+    runs-on: gha-runner-ctsm
+    steps:
+
+      - name: Check out CTSM
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      - name: Call run_sys_tests
+        run: |
+          git checkout -b tmp
+          ./run_sys_tests -t SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_gnu.clm-default --skip-compare --skip-generate --extra-create-test-args " --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP" --testroot-base $RUNNER_TEMP --debug
+          echo "STDERR:"
+          cat $RUNNER_TEMP/tests_*/STDERR*
+          echo "STDOUT:"
+          cat $RUNNER_TEMP/tests_*/STDOUT*
+
+  simple-build-create_test:
+    name: Build one simple case with create_test
+    # runs-on: gha-runner-ctsm
+    runs-on: ubuntu-latest
+    
+    container:
+      image: ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
+
+    steps:
+
+      - name: Check out CTSM
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      - name: Call create_test
+        run: |
+          export USER=ctsm_developer
+          cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --verbose SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.container_gnu.clm-default
+          echo "STDERR:"
+          cat $RUNNER_TEMP/tests_*/STDERR*
+          echo "STDOUT:"
+          cat $RUNNER_TEMP/tests_*/STDOUT*
