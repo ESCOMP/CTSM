@@ -51,7 +51,7 @@ jobs:
 
       - name: Call create_test
         run: |
-          cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --debug SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-default
+          cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --verbose SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.derecho_intel.clm-default
           echo "STDERR:"
           cat $RUNNER_TEMP/tests_*/STDERR*
           echo "STDOUT:"
