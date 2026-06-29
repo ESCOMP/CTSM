@@ -250,7 +250,6 @@ class TowerSite:
         Modify user namelist. If transient, include finidat in user_nl;
         Otherwise, adjust user_nl to include different mfilt, nhtfrq, and variables in hist_fincl1.
         """
-
         user_nl_fname = os.path.join(case_root, "user_nl_clm")
         user_nl_lines = None
         if run_type == "transient":
@@ -274,10 +273,10 @@ class TowerSite:
                     nl_file.write("{}\n".format(line))
 
         # Change baseflow_scalar to 0 in parameter file for PLUMBER2 wetland sites
-        # We need to grep the lnd_in file for the parameter file so that we can modified it
-        # for baseflow_scalar = 0 for wetland sites.  We need to grep the base case since at
-        # this point the current site simulation, e.g., AD, has not yet had a namelist
-        # generated.
+        # We need to grep the lnd_in file for the parameter file so that we can modify it
+        # to set baseflow_scalar = 0 for wetland sites.  We need to grep the base case
+        # since at this point the current site simulation, e.g., AD, has not yet had 
+        # a namelist generated.
 
         wetland = [
             "CZ-wet",
@@ -303,7 +302,7 @@ class TowerSite:
             command = "grep paramfile" + " " + src_paramfile
 
             # Grep for the parameter file string, get just the location of the parameter file
-            # and strip the apostrophe(s) from the string
+            # and strip the apostrophes from the string
             paramfile = subprocess.run(
                 command, shell=True, capture_output=True, text=True, check=True
             )
@@ -326,6 +325,7 @@ class TowerSite:
                 modified_paramfile_user_nl_line,
             ]
 
+        # Append the user_nl_clm
         if user_nl_lines:
             with open(user_nl_fname, "a") as nl_file:
                 for line in user_nl_lines:
@@ -514,6 +514,7 @@ class TowerSite:
                 # AD cases, would start in 0018, followed by postAD in 1018.
                 # PLUMBER cases have specific start dates for each site that are set in
                 # shell_commands
+                # DOES THIS NEED TO BE SET DIFFERENTLY FOR PLUMBER2 SPINUP?
                 case.set_value("RUN_REFDATE", "0018-01-01")
 
                 if self.tower_type == "NEON":
