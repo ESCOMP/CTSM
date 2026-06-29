@@ -39,7 +39,8 @@ jobs:
 
   simple-build-create_test:
     name: Build one simple case with create_test
-    runs-on: gha-runner-ctsm
+    # runs-on: gha-runner-ctsm
+    runs-on: ubuntu-latest
     
     container:
       image: ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
