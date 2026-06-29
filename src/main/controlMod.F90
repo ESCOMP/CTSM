@@ -246,6 +246,7 @@ contains
           use_fates_luh,                                &
           use_fates_lupft,                              &
           use_fates_potentialveg,                       &
+          use_fates_interstitial_bareground,            &
           fluh_timeseries,                              &
           flandusepftdat,                               &
           fates_inventory_ctrl_filename,                &
@@ -855,6 +856,7 @@ contains
     call mpi_bcast (use_fates_potentialveg, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_bgc, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_daylength_factor, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_interstitial_bareground, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (fates_photosynth_acclimation, len(fates_photosynth_acclimation), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
@@ -1275,6 +1277,7 @@ contains
        write(iulog, *) '    use_fates_luh= ', use_fates_luh
        write(iulog, *) '    use_fates_lupft= ', use_fates_lupft
        write(iulog, *) '    use_fates_potentialveg = ', use_fates_potentialveg
+       write(iulog, *) '    use_fates_interstitial_bareground= ', use_fates_interstitial_bareground
        write(iulog, *) '    fluh_timeseries = ', trim(fluh_timeseries)
        write(iulog, *) '    flandusepftdat = ', trim(flandusepftdat)
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence

@@ -361,6 +361,7 @@ module clm_varctl
   logical, public            :: use_fates_fixed_biogeog = .false.       ! true => use fixed biogeography mode
   logical, public            :: use_fates_nocomp = .false.              ! true => use no comopetition mode
   logical, public            :: use_fates_daylength_factor = .false.    ! true => enable fates to use host land model daylength factor
+  logical, public            :: use_fates_interstitial_bareground = .true.    ! true => incorporate fates interstitial bareground with CLM bareground
 
 
   ! FATES history dimension level

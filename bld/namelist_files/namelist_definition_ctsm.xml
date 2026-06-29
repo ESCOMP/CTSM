@@ -774,6 +774,13 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).
 </entry>
 
+<entry id="use_fates_interstitial_bareground" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".true.">
+This option sets whether or not to include the interstitial bareground areas from FATES
+patches into the CLM bareground patch area.  If this option is turned off, fates_radiation_model
+must by set to 'twostream'.
+</entry>
+
 <entry id="fates_harvest_mode" type="char*18" category="physics"
         group="clm_inparm" valid_values="no_harvest,event_code,landuse_timeseries,luhdata_area,luhdata_mass">
 Set FATES harvesting mode by setting fates_harvest_mode to a valid string option.
