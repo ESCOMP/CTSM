@@ -297,6 +297,8 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. Carbon isotope fractionation (Chapter :numref:`rst_Carbon Isotopes`)
 
+#. Tuning (Chapter :numref:`rst_Tuning`)
+
 .. _Figure Land processes:
 
 .. figure:: image1.png

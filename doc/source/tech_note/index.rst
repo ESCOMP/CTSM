@@ -49,5 +49,6 @@ CLM Technical Note
    Dust/CLM50_Tech_Note_Dust.rst
    Isotopes/CLM50_Tech_Note_Isotopes.rst
    Land-Only_Mode/CLM50_Tech_Note_Land-Only_Mode.rst
+   Tuning/CLM50_Tuning.rst
    References/CLM50_Tech_Note_References.rst
 
