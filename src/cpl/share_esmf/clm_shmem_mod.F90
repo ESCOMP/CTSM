@@ -20,11 +20,14 @@ module clm_shmem_mod
   !   <all ranks may now read ptr for the rest of its lifetime>
   !   call clm_shmem_free(ptr, win)                   ! collective over the node comm
   !
-  ! CLM is always built against MPI (it has no SPMD cpp guard), and mpi-serial
-  ! supplies the MPI-3 shared-memory entry points for single-task builds, so the
-  ! shared-memory path is compiled unconditionally.  The F90 'mpi' module (not
-  ! mpif.h) is used because the TYPE(C_PTR) overloads of MPI_WIN_ALLOCATE_SHARED /
-  ! MPI_WIN_SHARED_QUERY are only guaranteed there (MPI-3.0).
+  ! The MPI-3 shared-memory path is used for real MPI builds.  mpi-serial does not
+  ! implement the MPI-2/MPI-3 one-sided / shared-memory interfaces, so for
+  ! mpi-serial builds (CPP macro NO_MPI2, set by CIME for MPILIB=mpi-serial) a
+  ! single-task fallback is compiled instead: each "node-shared" array is a plain
+  ! local allocation (one task is its own node and its own leader, so there is no
+  ! cross-rank sharing and the leader sum-reduce is a no-op).  The F90 'mpi' module
+  ! (not mpif.h) is used because the TYPE(C_PTR) overloads of MPI_WIN_ALLOCATE_SHARED
+  ! / MPI_WIN_SHARED_QUERY are only guaranteed there (MPI-3.0).
   !-----------------------------------------------------------------------------
 
   use mpi
@@ -47,6 +50,9 @@ module clm_shmem_mod
      module procedure clm_shmem_free_i4_1d
   end interface clm_shmem_free
 
+  ! Sentinel window handle used by the mpi-serial fallback (no real MPI window).
+  integer, parameter :: SHMEM_WIN_NONE = -1
+
   logical, save :: initialized = .false.
   integer, save :: node_comm   = MPI_COMM_NULL  ! ranks sharing a node
   integer, save :: leader_comm = MPI_COMM_NULL  ! one rank per node (the leaders)
@@ -60,10 +66,13 @@ contains
   subroutine init_comms()
     ! Lazily build the node-local and node-leader communicators.  Collective over
     ! mpicom; safe to call from every shared-memory request.
+#ifndef NO_MPI2
     integer :: ierr, color
+#endif
 
     if (initialized) return
 
+#ifndef NO_MPI2
     call mpi_comm_split_type(mpicom, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &
                              node_comm, ierr)
     call mpi_comm_rank(node_comm, node_rank, ierr)
@@ -77,6 +86,12 @@ contains
        color = MPI_UNDEFINED
     end if
     call mpi_comm_split(mpicom, color, 0, leader_comm, ierr)
+#else
+    ! mpi-serial: a single task is its own node and its own leader.
+    node_rank = 0
+    node_size = 1
+    is_leader = .true.
+#endif
 
     initialized = .true.
   end subroutine init_comms
@@ -89,13 +104,18 @@ contains
     integer,          intent(out) :: win
     integer,          intent(in)  :: n
 
+#ifndef NO_MPI2
     integer(kind=MPI_ADDRESS_KIND) :: winsize, qsize
     integer :: ierr, disp_unit, qdisp
     integer :: itmp
     type(c_ptr) :: baseptr
+#else
+    integer :: istat
+#endif
 
     call init_comms()
 
+#ifndef NO_MPI2
     disp_unit = storage_size(itmp) / 8   ! bytes per default integer (robust to -i8)
     if (is_leader) then
        winsize = int(n, MPI_ADDRESS_KIND) * int(disp_unit, MPI_ADDRESS_KIND)
@@ -114,6 +134,12 @@ contains
     end if
 
     call c_f_pointer(baseptr, ptr, [n])
+#else
+    ! mpi-serial: single task, no shared memory -- a plain local allocation.
+    allocate(ptr(n), stat=istat)
+    if (istat /= 0) call endrun('clm_shmem_mod: allocate failed (mpi-serial path)')
+    win = SHMEM_WIN_NONE
+#endif
   end subroutine clm_shmem_alloc_i4_1d
 
   !=============================================================================
@@ -127,10 +153,13 @@ contains
     integer,             intent(in)    :: win
     integer,             intent(in)    :: n
 
+#ifndef NO_MPI2
     integer, allocatable :: tmp(:)
     integer :: ierr
+#endif
 
     call clm_shmem_fence(win)             ! all node stores complete and visible to leader
+#ifndef NO_MPI2
     if (is_leader) then
        allocate(tmp(n))
        call mpi_allreduce(ptr, tmp, n, MPI_INTEGER, MPI_SUM, leader_comm, ierr)
@@ -138,17 +167,23 @@ contains
        ptr(1:n) = tmp(1:n)
        deallocate(tmp)
     end if
+#else
+    ! mpi-serial: the single task owns the whole domain, so ptr already holds the
+    ! global array -- there is nothing to sum across nodes.
+#endif
     call clm_shmem_fence(win)             ! publish global result to all node ranks
   end subroutine clm_shmem_leader_allreduce_sum_i4
 
   !=============================================================================
   subroutine clm_shmem_fence(win)
     ! Collective over the node communicator; synchronizes the window so stores
-    ! become visible to all ranks on the node.
+    ! become visible to all ranks on the node.  A no-op for the mpi-serial path.
     integer, intent(in) :: win
+#ifndef NO_MPI2
     integer :: ierr
     call mpi_win_fence(0, win, ierr)
     if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_fence failed')
+#endif
   end subroutine clm_shmem_fence
 
   !=============================================================================
@@ -157,6 +192,7 @@ contains
     ! the node communicator; a no-op when win == MPI_WIN_NULL.
     integer, pointer       :: ptr(:)
     integer, intent(inout) :: win
+#ifndef NO_MPI2
     integer :: ierr
     if (win /= MPI_WIN_NULL) then
        call mpi_win_free(win, ierr)
@@ -164,6 +200,11 @@ contains
     end if
     if (associated(ptr)) nullify(ptr)
     win = MPI_WIN_NULL
+#else
+    ! mpi-serial: ptr was a plain local allocation, so deallocate it.
+    if (associated(ptr)) deallocate(ptr)
+    win = SHMEM_WIN_NONE
+#endif
   end subroutine clm_shmem_free_i4_1d
 
   !=============================================================================
