@@ -260,14 +260,17 @@ class TowerSite:
         else:
             if not site_lines:
                 site_lines = []
-            user_nl_lines = [
-                "hist_fincl2 = ''",
-                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN',
-                                 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'"""
-                "hist_mfilt = 20",
-                "hist_nhtfrq = -8760",
-                "hist_empty_htapes = .true.",
-            ] + site_lines
+            user_nl_lines = (
+                [
+                    "hist_fincl2 = ''",
+                    """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN',
+                                     'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'""",
+                    "hist_mfilt = 20",
+                    "hist_nhtfrq = -8760",
+                    "hist_empty_htapes = .true.",
+                ]
+                + site_lines
+            )
 
         if user_nl_lines:
             with open(user_nl_fname, "a") as nl_file:
