@@ -262,7 +262,8 @@ class TowerSite:
                 site_lines = []
             user_nl_lines = [
                 "hist_fincl2 = ''",
-                "hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN', 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'"
+                """hist_fincl1 = 'TOTECOSYSC', 'TOTECOSYSN', 'TOTSOMC', 'TOTSOMN', 'TOTVEGC', 'TOTVEGN',
+                                 'TLAI', 'GPP', 'CPOOL', 'NPP', 'TWS', 'H2OSNO'"""
                 "hist_mfilt = 20",
                 "hist_nhtfrq = -8760",
                 "hist_empty_htapes = .true.",
