@@ -58,6 +58,7 @@ class TestNeonSite(unittest.TestCase):
 
         # modify_user_nl parameters:
         case_root = self._tempdir
+        base_case_root = self._tempdir
         run_type = "transient"
         rundir = ""
 
@@ -69,7 +70,7 @@ class TestNeonSite(unittest.TestCase):
             start_month=start_month,
             end_month=end_month,
             finidat=finidat,
-        ).modify_user_nl(case_root, run_type, rundir)
+        ).modify_user_nl(base_case_root, case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")
@@ -98,6 +99,7 @@ class TestNeonSite(unittest.TestCase):
 
         # modify_user_nl parameters:
         case_root = self._tempdir
+        base_case_root = self._tempdir
         run_type = "ad"
         rundir = ""
 
@@ -109,7 +111,7 @@ class TestNeonSite(unittest.TestCase):
             start_month=start_month,
             end_month=end_month,
             finidat=finidat,
-        ).modify_user_nl(case_root, run_type, rundir)
+        ).modify_user_nl(base_case_root, case_root, run_type, rundir)
 
         # gather file contents for test
         new_nl_file = open(glob.glob(case_root + "/*")[0], "r")

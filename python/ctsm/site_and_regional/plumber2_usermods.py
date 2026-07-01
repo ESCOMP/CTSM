@@ -30,6 +30,12 @@ def write_usermods(
     start_tod,
     atm_ncpl,
     stop_n,
+    run_startdate_spin,
+    calendar_spin,
+    datm_yr_start_spin,
+    datm_yr_end_spin,
+    datm_yr_align_spin,
+    start_tod_spin,
 ):
     """
     Write information to be added to user mods
@@ -63,11 +69,12 @@ def write_usermods(
     # pylint: disable=line-too-long
     s_file.write(
         # TODO turn on following line after cdeps changes are added
-        #'./xmlchange PLUMBER2SITE='+site + '\n' \
+        "./xmlchange PLUMBER2SITE=" + site + "\n"
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
         "./xmlchange DATM_YR_END=" + str(end_year) + "\n"
         "./xmlchange DATM_YR_START_FILENAME=" + str(start_year) + "\n"
+        "./xmlchange DATM_YR_END_FILENAME=" + str(end_year) + "\n"
         "./xmlchange START_TOD=" + str(start_tod) + "\n"
         "./xmlchange ATM_NCPL=" + str(atm_ncpl) + "\n"
         "\n"
@@ -99,9 +106,12 @@ def write_usermods(
         "  ./xmlchange DATM_YR_START=" + str(start_year_actual) + "\n"
         "else \n"
         "  # for spinup case with I2000 compset \n"
-        "  ./xmlchange RUN_STARTDATE=0001-01-01" + "\n"
-        "  ./xmlchange DATM_YR_ALIGN=" + str(1) + "\n"
-        "  ./xmlchange DATM_YR_START=" + str(start_year) + "\n"
+        "  ./xmlchange RUN_STARTDATE=" + str(run_startdate_spin) + "\n"
+        "  ./xmlchange CALENDAR=" + str(calendar_spin) + "\n"
+        "  ./xmlchange DATM_YR_START=" + str(datm_yr_start_spin) + "\n"
+        "  ./xmlchange DATM_YR_END=" + str(datm_yr_end_spin) + "\n"
+        "  ./xmlchange DATM_YR_ALIGN=" + str(datm_yr_align_spin) + "\n"
+        "  ./xmlchange START_TOD=" + str(start_tod_spin) + "\n"
         "fi \n"
         "\n"
         "# Turn on LAI streams for a SP case \n"
@@ -123,28 +133,6 @@ def write_usermods(
     # pylint: enable=line-too-long, anomalous-backslash-in-string
 
     s_file.close()
-
-    # add baseflow_scalar = 0 to user_nl_clm for wetland sites
-    wetland = [
-        "CZ-wet",
-        "DE-SfN",
-        "FI-Kaa",
-        "FI-Lom",
-        "RU-Che",
-        "SE-Deg",
-        "US-Los",
-        "US-Myb",
-        "US-Tw4",
-        "PL-wet",
-    ]
-    if any(x == site for x in wetland):
-        s_file = open(shell, "a")  # or 'a' to add text instead of truncate
-        s_file.write(
-            "\n"
-            "# set baseflow scalar to zero for wetland site \n"
-            'echo "baseflow_scalar = 0" >> user_nl_clm'
-        )
-        s_file.close()
 
 
 # End write_usermods function
@@ -169,6 +157,12 @@ def main():
         start_tod = row["START_TOD"]
         atm_ncpl = row["ATM_NCPL"]
         stop_n = 1 + end_year - start_year
+        run_startdate_spin = row["RUN_STARTDATE_SPIN"]
+        calendar_spin = row["CALENDAR_SPIN"]
+        datm_yr_start_spin = row["DATM_YR_START_SPIN"]
+        datm_yr_end_spin = row["DATM_YR_END_SPIN"]
+        datm_yr_align_spin = row["DATM_YR_ALIGN_SPIN"]
+        start_tod_spin = row["START_TOD_SPIN"]
 
         write_usermods(
             lat=lat,
@@ -181,6 +175,12 @@ def main():
             start_tod=start_tod,
             atm_ncpl=atm_ncpl,
             stop_n=stop_n,
+            run_startdate_spin=run_startdate_spin,
+            calendar_spin=calendar_spin,
+            datm_yr_start_spin=datm_yr_start_spin,
+            datm_yr_end_spin=datm_yr_end_spin,
+            datm_yr_align_spin=datm_yr_align_spin,
+            start_tod_spin=start_tod_spin,
         )
 
 
