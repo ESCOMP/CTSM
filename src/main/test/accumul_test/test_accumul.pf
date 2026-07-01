@@ -992,7 +992,7 @@ contains
     reset_output_int = merge(1, 0, reset_output)
     @assertEqual(expected, reset_output_int)
     call unittest_subgrid_teardown()
-  end subroutine markreset_allpoints_1level
+end subroutine markreset_allpoints_1level
 
 @Test
 subroutine markreset_allpoints_alllevels(this)
