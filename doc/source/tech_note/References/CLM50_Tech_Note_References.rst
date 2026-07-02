@@ -264,6 +264,10 @@ Collatz, G.J., Ball, J.T., Grivet, C., and Berry, J.A. 1991. Physiological and e
 
 Collatz, G.J., Ribas-Carbo, M., and Berry, J.A. 1992. Coupled photosynthesis-stomatal conductance model for leaves of C\ :math:`{}_{4}` plants. Aust. J. Plant Physiol. 19:519-538.
 
+.. _Collieretal2018:
+
+Collier, N., Hoffman, F. M., Lawrence, D. M., Keppel-Aleks, G., Koven, C. D., Riley, W. J., Mu, M., Randerson, J. T. 2018. The International Land Model Benchmarking (ILAMB) system: Design, theory, and implementation. Journal of Advances in Modeling Earth Systems, 10, 2731–2754. https://doi.org/10.1029/2018MS001354
+
 .. _Colmer2003:
 
 Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on internal aeration and radial oxygen loss from roots. Plant Cell and Environment 26:17-36.
@@ -287,6 +291,10 @@ Cosby, B.J., Hornberger, G.M., Clapp, R.B., and Ginn, T.R. 1984. A statistical e
 .. _Crawfordetal1982:
 
 Crawford, T. W., Rendig, V. V., and Broadent, F. E. 1982. Sources, fluxes, and sinks of nitrogen during early reproductive growth of maize (Zea mays L.). Plant Physiol. 70:1645-1660.
+
+.. _Dagonetal2020:
+
+Dagon, K., Sanderson, B. M., Fisher, R. A., and Lawrence, D. M. 2020. A machine learning approach to emulation and biophysical parameter estimation with the Community Land Model, version 5. Advances in Statistical Climatology, Meteorology and Oceanography, 6(2), 223-244.
 
 .. _Dahlinetal2015:
 
@@ -715,6 +723,10 @@ Keller, M., Palace, M., Asner, G.P., Pereira, R., Jr. and Silva, J.N.M., 2004. C
 .. _Kellneretal2006:
 
 Kellner, E., Baird, A.J., Oosterwoud, M., Harrison, K. and Waddington, J.M., 2006. Effect of temperature and atmospheric pressure on methane (CH4) ebullition from near-surface peats. Geophys. Res. Lett. 33. DOI:10.1029/2006GL027509.
+
+.. _Kennedyetal2025:
+
+Kennedy, D., Dagon, K., Lawrence, D. M., Fisher, R. A., Sanderson, B. M., Collier, N., Hoffman, F. M., Koven, C. D., Kluzek, E., Levis, S., Lu, X., Oleson, K. W., Zarakas, C. M., Cheng, Y., Foster, A. C., Fowler, M. D., Hawkins, L. R., Kavoo, T., Kumar, S., Newman, A. J., Lawrence, P. J., Li, F., Lombardozzi, D. L., Lou, Y., Shuman, J. K., Swann, A. L. S., Swenson, S. C., Tand, G., Wieder, W. R., Wood, A. W., 2025. One-at-a-Time Parameter Perturbation Ensemble of the Community Land Model, Version 5.1. Journal of Advances in Modeling Earth Systems, 17(8), e2024MS004715. https://doi.org/10.1029/2024MS004715
 
 .. _Kimballetal1997:
 
@@ -1777,6 +1789,10 @@ Wieder, W.R., Butterfield, Z., Lindsay, K., Lombardozzi, D.L., Keppel-Aleks, G. 
 .. _Williamsetal1996:
 
 Williams, M., Rastetter, E.B., Fernandes, D.N., Goulden, M.L., Wofsy, S.C., Shaver, G.R., Melillo, J.M., Munger, J.W., Fan, S.M. and Nadelhoffer, K.J. 1996. Modelling the soil-plant-atmosphere continuum in a Quercus–Acer stand at Harvard Forest: the regulation of stomatal conductance by light, nitrogen and soil/plant hydraulic properties. Plant, Cell & Environment, 19: 911–927. doi:10.1111/j.1365-3040.1996.tb00456.x
+
+.. _Williamsonetal2013:
+
+Williamson, D., Goldstein, M., Allison, L., Blaker, A., Challenor, P., Jackson, L., and Yamazaki, K. 2013. History matching for exploring and reducing climate model parameter space using observations and a large perturbed physics ensemble. Climate Dynamics, 41(7), 1703–1729. https://doi.org/10.1007/s00382-013-1896-4
 
 .. _WiscombeWarren1980:
 
