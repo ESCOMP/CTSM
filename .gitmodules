@@ -67,8 +67,8 @@ fxDONOTUSEurl = https://github.com/ESCOMP/mizuRoute
         
 [submodule "ccs_config"]
 path = ccs_config
-url = https://github.com/ESMCI/ccs_config_cesm.git
-fxtag = ccs_config_cesm1.0.77
+url = https://github.com/samsrabin/ccs_config_cesm.git
+fxtag = b6387972bba85d25b0e81ebc03035864e283823c
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git

@@ -1979,6 +1979,8 @@ lnd/clm2/surfdata_esmf/ctsm5.4.0/synthetic/surfdata_1x1_smallvilleIA_synth_hist_
 lnd/clm2/surfdata_esmf/ctsm5.4.0/synthetic/surfdata_1x1_cidadinhoBR_synth_hist_2000_78pfts_c251023.no_nan_fill.nc</fsurdat>
 <fsurdat hgrid="1x1_brazil"       sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_1x1_brazil_hist_1850_78pfts_c251023.no_nan_fill.nc</fsurdat>
+<fsurdat hgrid="1x1_ALP2"         sim_year="2000" use_nvp=".true." use_fates_sp=".true.">
+lnd/clm2/surfdata_esmf/testdata/moss/surfdata_ALP2_hist_2000_16pfts_c260427.nc</fsurdat>
 
 <fsurdat hgrid="ne16np4.pg3"              sim_year="1850">
 lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_ne16np4.pg3_hist_1850_78pfts_c251022.nc</fsurdat>

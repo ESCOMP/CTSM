@@ -17,6 +17,7 @@
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+        fates_nvp: Tests of FATES non-vascular plant capability
       ROF model test lists: (in each component model)
         mosart: MOSART test list, run when MOSARt is updated
         rtm: RTM test list, run when RTM is updated
@@ -4898,6 +4899,21 @@
     <options>
       <option name="wallclock">00:30:00</option>
       <option name="comment"> Placeholder failing test for mosart hybrid history issue which appears for tests longer than Ld33</option>
+    </options>
+  </test>
+
+<!-- Tests of FATES non-vascular plant capability -->
+
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Moss">
+    <machines>
+      <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates_nvp"/>
+      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="fates_nvp"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only</option>
     </options>
   </test>
 
