@@ -1292,7 +1292,8 @@ contains
     ! In that case, it will take until the next winter solstice
     ! before the growing degree-day summation starts again.
 
-    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
+    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8.and. &
+         dayl<min_critical_daylength_onset) then
         onset_gddflag = 0._r8
         onset_gdd = 0._r8
     end if
@@ -1323,7 +1324,7 @@ contains
         ! matter for reasonable values between the two degenerate cases.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
-                t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                t_a5min > SHR_CONST_TKFRZ .and. &
                 dayl>min_critical_daylength_onset .and. &
                 snow_5day<params_inst%snow5d_thresh_for_onset) then
            do_onset = .true.
