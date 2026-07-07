@@ -85,22 +85,22 @@
   </compset>
   <compset>
     <alias>I2000Clm60SpRs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60SpCrujraRs</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I2000Clm60Sp</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
   </compset>
   <compset>
     <alias>I2000Clm60SpCrujra</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_t232"/>
     <science_support grid="f19_g17"/>
   </compset>
@@ -114,12 +114,12 @@
   <!-- compsets for mizuRoute -->
   <compset>
     <alias>I2000Clm60SpMizGs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MIZUROUTE_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I2000Clm60SpMizGsNldas</alias>
-    <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+    <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -145,20 +145,20 @@
 
   <compset>
     <alias>I2000Clm60BgcCrop</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60BgcCropCrujra</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I2000Clm60Bgc</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60BgcCrujra</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing -->
@@ -178,11 +178,11 @@
 
   <compset>
     <alias>I1850Clm60SpCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60SpCru</alias>
-    <lname>1850_DATM%CRUv7_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUv7_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -195,27 +195,27 @@
   <!-- currently needed for CESM remove when no longer needed -->
   <compset>
     <alias>I1850Clm60BgcCrop</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I1850Clm60Sp</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
   </compset>
 
   <compset>
     <alias>I1850Clm60Bgc</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
 
@@ -227,11 +227,11 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujraCmip6</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing the CMIP6WACCMDECK compset option -->
@@ -242,11 +242,11 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6waccm</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujraCmip6waccm</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- clm5_0 (CMIP6) version with BGC-Crop and CRU forcing -->
@@ -260,7 +260,7 @@
   <!-- latest CLM version with BGC-Crop and CRU forcing -->
   <compset>
     <alias>I1850Clm60BgcCropCru</alias>
-    <lname>1850_DATM%CRUv7_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUv7_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing - when we want builds and runs to be as
@@ -268,7 +268,7 @@
        atm forcing to speed up datm, SROF to speed up build and run -->
   <compset>
     <alias>I2000Clm60BgcCropQianRs</alias>
-    <lname>2000_DATM%QIA_CLM60%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%QIA_CLM60%BGC-CROP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50BgcCropQianRs</alias>
@@ -297,7 +297,7 @@
   <!---I FATES compsets -->
   <compset>
     <alias>I2000Clm60Fates</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50Fates</alias>
@@ -309,15 +309,15 @@
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpCrujraRsGs</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpCruRsGs</alias>
-    <lname>2000_DATM%CRUv7_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUv7_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpRsGs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50FatesCru</alias>
@@ -330,11 +330,11 @@
   </compset>
   <compset>
     <alias>I2000Clm60FatesRs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60FatesCrujraRs</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -344,23 +344,23 @@
 
   <compset>
      <alias>I1850Clm60BgcNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
      <science_support grid="f09_g17"/>
    </compset>
   <compset>
      <alias>I1850Clm60BgcCrujraNoAnthro</alias>
-     <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
      <science_support grid="f09_t232"/>
    </compset>
 
   <compset>
      <alias>I1850Clm60SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
      <science_support grid="f09_g17"/>
    </compset>
   <compset>
      <alias>I1850Clm60SpCrujraNoAnthro</alias>
-     <lname>1850_DATM%CRUJRA2024b_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%CRUJRA2024b_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
      <science_support grid="f09_t232"/>
    </compset>
 
@@ -384,36 +384,36 @@
 
   <compset>
     <alias>IHistClm60Sp</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_g17"/>
     <science_support grid="f19_g17"/>
   </compset>
   <compset>
     <alias>IHistClm60SpCrujra</alias>
-    <lname>HIST_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm60SpRs</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>IHistClm60SpCrujraRs</alias>
-    <lname>HIST_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>HIST_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm60Bgc</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm60BgcCrop</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>IHistClm60BgcCropCrujra</alias>
-    <lname>HIST_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -432,7 +432,7 @@
 
   <compset>
     <alias>IHistClm60SpCru</alias>
-    <lname>HIST_DATM%CRUv7_CLM60%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%CRUv7_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -455,7 +455,7 @@
 
   <compset>
     <alias>IHistClm60BgcQianRs</alias>
-    <lname>HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
 <!-- 
@@ -467,7 +467,7 @@
   </compset>
   <compset>
     <alias>ISSP585Clm60BgcCropCrujra</alias>
-    <lname>SSP585_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP585_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -486,7 +486,7 @@
   </compset>
   <compset>
     <alias>ISSP245Clm60BgcCropCrujra</alias>
-    <lname>SSP245_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP245_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -495,7 +495,7 @@
   </compset>
   <compset>
     <alias>ISSP370Clm60BgcCropCrujra</alias>
-    <lname>SSP370_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP370_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -516,7 +516,7 @@
   <!-- Latest CLM version -->
   <compset>
     <alias>ISSP585Clm60BgcCrop</alias>
-    <lname>SSP585_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP585_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
 
@@ -529,7 +529,7 @@
   </compset>
   <compset>
     <alias>IHistClm60BgcCropQianRs</alias>
-    <lname>HIST_DATM%QIA_CLM60%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>HIST_DATM%QIA_CLM60%BGC-CROP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing -->
@@ -759,11 +759,11 @@
 
   <compset>
     <alias>I1850Clm60SpRs</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60SpCrujraRs</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
 
