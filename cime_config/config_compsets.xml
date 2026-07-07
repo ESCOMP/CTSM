@@ -309,15 +309,15 @@
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpCrujraRsGs</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>I2000Clm60FatesSpCruRsGs</alias>
-    <lname>2000_DATM%CRUv7_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
+    <alias>I2000Clm60FatesSpCrujra</alias>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpRsGs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>2000_DATM%GSWP3v1_CLM60%FATES-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50FatesCru</alias>
@@ -333,8 +333,8 @@
     <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
-    <alias>I2000Clm60FatesCrujraRs</alias>
-    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
+    <alias>I2000Clm60FatesCrujraRsGs</alias>
+    <lname>2000_DATM%CRUJRA2024b_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
