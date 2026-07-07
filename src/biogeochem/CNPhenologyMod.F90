@@ -1319,15 +1319,16 @@ contains
        ! shrub, C3 arctic grass)
        if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
            do_onset = .true.
-        ! Note: The check "dayl>min_critical_daylength_onset" in the if
-        ! statement was added because for some coastal
-        ! points the other triggers could allow onset in January/February
-        ! which isn't sustainable and is a degenerate case. To prevent this
-        ! condition was added, but now the other conditions aren't triggered
-        ! until much later so it's value just needs to be high enough to prevent
-        ! the degenerate case of happening too early, and low enough that it
-        ! doesn't restrict onset. As such the value of this parameter shouldn't
-        ! matter for reasonable values between the two degenerate cases.
+           ! Note: The "dayl>min_critical_daylength_onset" criterion
+           ! was added because for some coastal points, onset was triggered 
+           ! too early (e.g January/February).  This criterion ensures that 
+           ! onset does not occur too early, and at the same time (because the
+           ! criterion is symmetric about the solstices), it does not allow
+           ! onset when the day length becomes less than
+           ! min_critical_daylength_onset after the summer solstice.
+           ! The value of min_critical_daylength_onset needs to be high
+           ! enough to prevent onset happening too early, and low enough
+           ! that it doesn't restrict onset.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
                 t_a5min > SHR_CONST_TKFRZ .and. &
