@@ -1644,14 +1644,12 @@ contains
     ! Given a vegetation type (pft, integer), return whether it's a prognostic crop. Does not
     ! include generic crops (those and natural PFTs will return .false.).
     !
-    ! NOTE: This isn't a completely robust way to check if this is a prognostic crop patch. At the
-    ! very least, it should also check if <= npcropmax. Ideally it would use a new prognostic_crop
-    ! flag on the parameter file iteself.
+    ! NOTE: Ideally, this would use a new prognostic_crop flag on the parameter file itself.
     !
     ! !ARGUMENTS
     integer, intent(in) :: veg_type
 
-    is_prognostic_crop = veg_type >= npcropmin
+    is_prognostic_crop = veg_type >= npcropmin .and. veg_type <= npcropmax
 
   end function is_prognostic_crop
 
