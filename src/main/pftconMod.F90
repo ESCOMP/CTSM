@@ -325,6 +325,7 @@ module pftconMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
+  public :: is_crop
   public :: is_prognostic_crop
   public :: get_crop_n_from_veg_type
   public :: get_veg_type_from_crop_n
@@ -1355,7 +1356,7 @@ contains
           else
              call endrun(msg=' ERROR: irrigated has wrong values'//errMsg(sourcefile, __LINE__))
           end if
-          if (      this%crop(i) == 1.0_r8 .and. (i >= nc3crop .and. i <= npcropmax) )then
+          if (      this%crop(i) == 1.0_r8 .and. is_crop(i) )then
              ! correct
           else if ( this%crop(i) == 0.0_r8 )then
              ! correct
@@ -1638,6 +1639,22 @@ contains
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
   end subroutine Clean
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a crop. Includes both generic
+    ! and prognostic crops. Natural PFTs will return .false.
+    !
+    ! NOTE: Ideally, this would use a new crop flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_crop = veg_type >= nc3crop .and. veg_type <= npcropmax
+
+  end function is_crop
 
   !-----------------------------------------------------------------------
   elemental logical function is_prognostic_crop(veg_type)
