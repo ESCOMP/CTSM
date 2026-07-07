@@ -1,5 +1,7 @@
 module pftconMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing vegetation constants, methods to
@@ -1654,7 +1656,7 @@ contains
   end function is_prognostic_crop
 
   !-----------------------------------------------------------------------
-  elemental integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
+  integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
     !
     ! !DESCRIPTION:
     ! Given a vegetation type (pft, integer), return a 1-indexed number indicating where it would
@@ -1663,12 +1665,15 @@ contains
     ! !ARGUMENTS
     integer, intent(in) :: veg_type
 
+    call shr_assert(veg_type >= npcropmin)
+    call shr_assert(veg_type <= npcropmax)
+
     crop_n = veg_type - npcropmin + 1
 
   end function get_crop_n_from_veg_type
 
   !-----------------------------------------------------------------------
-  elemental integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
+  integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
     !
     ! !DESCRIPTION:
     ! Given a return a 1-indexed number indicating where a PFT would be in a list of all simulated
@@ -1678,6 +1683,9 @@ contains
     integer, intent(in) :: crop_n
 
     veg_type = npcropmin + crop_n - 1
+
+    call shr_assert(veg_type >= npcropmin)
+    call shr_assert(veg_type <= npcropmax)
 
   end function get_veg_type_from_crop_n
 
