@@ -548,7 +548,8 @@ class TowerSite:
                         return
                 case.set_value("CALENDAR", "GREGORIAN")
                 case.set_value("RESUBMIT", 0)
-                case.set_value("STOP_OPTION", "nmonths")
+                if self.tower_type == "NEON":
+                    case.set_value("STOP_OPTION", "nmonths")
             if not rundir:
                 rundir = case.get_value("RUNDIR")
 
