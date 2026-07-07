@@ -2539,7 +2539,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm60FatesSpRsGs" testmods="clm/FatesColdSatPhen">
+  <test name="SMS" grid="f45_f45_mg37" compset="I2000Clm60FatesSp" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="fates"/>
@@ -3465,7 +3465,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
@@ -3477,7 +3477,7 @@
       <option name="comment">5x5_amazon grid with FATES and latest CLM</option>
     </options>
   </test>
-  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesCrujraRs" testmods="clm/FatesCold">
+  <test name="SMS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesCrujraRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
@@ -3517,7 +3517,7 @@
       <option name="comment">Ensure functionality of the tree damage option in FATES</option>
     </options>
   </test>
-  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdElecTransJB">
+  <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdElecTransJB">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -3624,7 +3624,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhenCamLndTuningMode">
+  <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdSatPhenCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
@@ -3682,7 +3682,7 @@
       <option name="comment">Fates with clm6_0</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRs" testmods="clm/FatesCold">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="5x5_amazon" compset="I2000Clm60FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -3774,7 +3774,7 @@
       <option name="comment">30 day exact restart test activating FATES size and age mortality mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERP_P256x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/mimicsFatesCold">
+  <test name="ERP_P256x2_Ld30" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/mimicsFatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
@@ -3900,7 +3900,7 @@
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode (P still prescribed in clm).</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdPRT2_suplnAll">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdPRT2_suplnAll">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3909,7 +3909,7 @@
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode with suplnitro set to ALL.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdPRT2_synthN">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdPRT2_synthN">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4053,7 +4053,7 @@
       <option name="comment">60 day exact restart test that turns off all fire (both FATES and CLM) on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdManagedFire">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdManagedFire">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4112,7 +4112,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
+  <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -4124,7 +4124,7 @@
     </options>
   </test>
   <!-- DISABLING UNTIL COMPATIBLE (RGK 051925) https://github.com/ESCOMP/CTSM/issues/1784
-       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDryDepSatPhen">
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdDryDepSatPhen">
        <machines>
        <machine name="derecho" compiler="gnu" category="aux_clm"/>
        </machines>
@@ -4133,7 +4133,7 @@
        <option name="comment">Run a test with dry deposition on and FATES-SP</option>
        </options>
        </test>
-       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdMeganSatPhen">
+       <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdMeganSatPhen">
        <machines>
        <machine name="derecho" compiler="gnu" category="aux_clm"/>
        </machines>
@@ -4143,7 +4143,7 @@
        </options>
        </test> -->
 
-  <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
+  <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCru" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
     </machines>
@@ -4152,7 +4152,7 @@
       <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdBasic">
+  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdBasic">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4161,7 +4161,7 @@
       <option name="comment">Smoke test that uses just the FATES SP compset.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdSatPhen">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
