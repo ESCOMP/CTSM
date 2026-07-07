@@ -1289,8 +1289,14 @@ contains
     ! Test to turn off growing degree-day sum, if on.
     ! This test resets the growing degree day sum if it gets past
     ! the summer solstice without reaching the threshold value.
-    ! In that case, it will take until the next winter solstice
-    ! before the growing degree-day summation starts again.
+    ! After the summer solstice, a daylength criterion is used
+    ! to trigger the reset: if daylength is less than  the
+    ! parameter value, gdd is reset.  This criterion was added to
+    ! allow for situations in the high latitudes when using only
+    ! the summer solstice as a trigger caused some vegetation to never
+    ! achieve onset.
+    ! If the conditional is met, it will take until the next winter 
+    ! solstice before the growing degree-day summation starts again.
 
     if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8.and. &
          dayl<min_critical_daylength_onset) then
