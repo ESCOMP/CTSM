@@ -114,8 +114,9 @@ module pftconMod
   ! Number of prognostic crop functional types on the parameter file, even if not actually used
   integer, public :: num_prognostic_cfts_possible
 
-  ! Number of crops on the parameter file (both generic and prognostic), even if not actually used
+  ! Number and indices of crops on the parameter file (both generic and prognostic), even if not actually used
   integer, public :: num_cfts_possible
+  integer, public, allocatable :: indices_cfts_possible(:)
 
   ! Number and indices of rainfed and irrigated crops on the parameter file
   integer, public :: num_cfts_possible_rainfed
@@ -1393,17 +1394,25 @@ contains
        ! Make sure there are the same number of irrigated and rainfed crops. This is assumed by,
        ! e.g., surfrdUtilsMod collapse_crop_types().
        call shr_assert(num_cfts_possible_rainfed == num_cfts_possible_irrigated)
-       ! What are the indices of the rainfed and irrigated PFTs?
+       ! Make sure the number of possible crops equals the sum of the numbers of possible rainfed
+       ! and irrigated crops. Not sure this is ever assumed anywhere, but it's a good sense check.
+       call shr_assert(num_cfts_possible == num_cfts_possible_rainfed + num_cfts_possible_irrigated)
+       ! What are the indices of the (rainfed and irrigated) PFTs?
+       allocate(indices_cfts_possible(num_cfts_possible))
        allocate(indices_cfts_possible_rainfed(num_cfts_possible_rainfed))
        allocate(indices_cfts_possible_irrigated(num_cfts_possible_irrigated))
+       indices_cfts_possible(:)   = -999
        indices_cfts_possible_rainfed(:)   = -999
        indices_cfts_possible_irrigated(:) = -999
+       k = 0
        m = 0
        n = 0
        do i = 0, mxpft
           if (.not. is_crop(i)) then
              cycle
           end if
+          k = k + 1
+          indices_cfts_possible(k) = i
           if (is_irrigated(i)) then
              m = m + 1
              indices_cfts_possible_irrigated(m) = i
@@ -1412,6 +1421,7 @@ contains
              indices_cfts_possible_rainfed(n) = i
           end if
        end do
+       call shr_assert(k == num_cfts_possible)
        call shr_assert(m == num_cfts_possible_irrigated)
        call shr_assert(n == num_cfts_possible_rainfed)
     end if
@@ -1673,6 +1683,9 @@ contains
     deallocate( this%ndays_on)
 
     ! TODO? Move these to their own function? They're not members of this class.
+    if (allocated(indices_cfts_possible)) then
+       deallocate(indices_cfts_possible)
+    end if
     if (allocated(indices_cfts_possible_rainfed)) then
        deallocate(indices_cfts_possible_rainfed)
     end if
