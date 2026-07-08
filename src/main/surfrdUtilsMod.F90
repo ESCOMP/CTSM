@@ -419,7 +419,8 @@ contains
     ! !USES:
     use clm_varctl , only : irrigate, use_crop
     use clm_varpar , only : cft_lb, cft_ub, maxveg
-    use pftconMod  , only : nc3crop, nc3irrig, pftcon
+    use pftconMod  , only : pftcon
+    use pftconMod  , only : indices_cfts_possible_rainfed, indices_cfts_possible_irrigated
     !
     ! !ARGUMENTS:
 
@@ -466,16 +467,9 @@ contains
           end if
 
           do g = begg, endg
-             ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop
-             !                 to maxveg-1, stride 2
-             ! Right Hand Side: rainfed crop pfts from nc3crop to maxveg-1,
-             !                  stride 2
-             ! plus             irrigated crop pfts from nc3irrig to maxveg,
-             !                  stride 2
-             ! where stride 2 means "every other"
-             wt_cft(g, nc3crop:maxveg-1:2) = &
-                  wt_cft(g, nc3crop:maxveg-1:2) + wt_cft(g, nc3irrig:maxveg:2)
-             wt_cft(g, nc3irrig:maxveg:2)  = 0._r8
+             wt_cft(g, indices_cfts_possible_rainfed) = &
+                  wt_cft(g, indices_cfts_possible_rainfed) + wt_cft(g, indices_cfts_possible_irrigated)
+             wt_cft(g, indices_cfts_possible_irrigated)  = 0._r8
           end do
 
           call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation', sumto=TotalSum)

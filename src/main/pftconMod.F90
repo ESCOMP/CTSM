@@ -117,6 +117,12 @@ module pftconMod
   ! Number of crops on the parameter file (both generic and prognostic), even if not actually used
   integer, public :: num_cfts_possible
 
+  ! Number and indices of rainfed and irrigated crops on the parameter file
+  integer, public :: num_cfts_possible_rainfed
+  integer, public :: num_cfts_possible_irrigated
+  integer, public, allocatable :: indices_cfts_possible_rainfed(:)
+  integer, public, allocatable :: indices_cfts_possible_irrigated(:)
+
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
 
@@ -1368,6 +1374,8 @@ contains
     ! Get some additional information unless FATES is on
     ! (Could be combined with the above loop, but we'll keep that one purely error checking)
     num_cfts_possible = 0
+    num_cfts_possible_rainfed = 0
+    num_cfts_possible_irrigated = 0
     if (.not. use_fates) then
        ! How many rainfed and irrigated CFTs are there?
        ! TODO: This could be vectorized
@@ -1376,7 +1384,36 @@ contains
              cycle
           end if
           num_cfts_possible = num_cfts_possible + 1
+          if (is_irrigated(i)) then
+             num_cfts_possible_irrigated = num_cfts_possible_irrigated + 1
+          else
+             num_cfts_possible_rainfed = num_cfts_possible_rainfed + 1
+          end if
        end do
+       ! Make sure there are the same number of irrigated and rainfed crops. This is assumed by,
+       ! e.g., surfrdUtilsMod collapse_crop_types().
+       call shr_assert(num_cfts_possible_rainfed == num_cfts_possible_irrigated)
+       ! What are the indices of the rainfed and irrigated PFTs?
+       allocate(indices_cfts_possible_rainfed(num_cfts_possible_rainfed))
+       allocate(indices_cfts_possible_irrigated(num_cfts_possible_irrigated))
+       indices_cfts_possible_rainfed(:)   = -999
+       indices_cfts_possible_irrigated(:) = -999
+       m = 0
+       n = 0
+       do i = 0, mxpft
+          if (.not. is_crop(i)) then
+             cycle
+          end if
+          if (is_irrigated(i)) then
+             m = m + 1
+             indices_cfts_possible_irrigated(m) = i
+          else
+             n = n + 1
+             indices_cfts_possible_rainfed(n) = i
+          end if
+       end do
+       call shr_assert(m == num_cfts_possible_irrigated)
+       call shr_assert(n == num_cfts_possible_rainfed)
     end if
 
     if (masterproc) then
@@ -1634,6 +1671,14 @@ contains
     deallocate( this%mimics_fi)
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
+
+    ! TODO? Move these to their own function? They're not members of this class.
+    if (allocated(indices_cfts_possible_rainfed)) then
+       deallocate(indices_cfts_possible_rainfed)
+    end if
+    if (allocated(indices_cfts_possible_irrigated)) then
+       deallocate(indices_cfts_possible_irrigated)
+    end if
   end subroutine Clean
 
   !-----------------------------------------------------------------------
