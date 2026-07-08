@@ -326,6 +326,7 @@ module pftconMod
        __FILE__
 
   public :: is_crop
+  public :: is_generic_crop
   public :: is_prognostic_crop
   public :: get_crop_n_from_veg_type
   public :: get_veg_type_from_crop_n
@@ -1655,6 +1656,22 @@ contains
     is_crop = veg_type >= nc3crop .and. veg_type <= npcropmax
 
   end function is_crop
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_generic_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a generic crop. Natural PFTs and
+    ! prognostic crops will return .false.
+    !
+    ! NOTE: Ideally, this would use a new generic_crop flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_generic_crop = veg_type == nc3crop .or. veg_type == nc3irrig
+
+  end function is_generic_crop
 
   !-----------------------------------------------------------------------
   elemental logical function is_prognostic_crop(veg_type)
