@@ -12,7 +12,7 @@ module FireEmisFactorsMod
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
   use clm_varpar,   only : maxveg
-  use pftconMod,    only : nc3crop
+  use pftconMod,    only : num_pfts_possible_natural
   use pftconMod,    only : handle_too_short_fire_emis_factor_file
 !
   implicit none
@@ -125,8 +125,8 @@ contains
     call ncd_inqdlen( ncid, dimid, n_comps, name='Comp_Num')
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
-    if ( (n_pfts < maxveg) .and. (n_pfts < nc3crop) )then
-       write(iulog,*) ' n_pfts = ', n_pfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
+    if (n_pfts < num_pfts_possible_natural) then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' num_pfts_possible_natural = ', num_pfts_possible_natural
        call endrun('Number of PFTs on the fire emissions file is less than the number of natural PFTs from the surface dataset')
     end if
     if ( n_pfts > mxpft )then

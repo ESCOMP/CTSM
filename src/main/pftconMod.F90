@@ -124,6 +124,10 @@ module pftconMod
   integer, public, allocatable :: indices_cfts_possible_rainfed(:)
   integer, public, allocatable :: indices_cfts_possible_irrigated(:)
 
+  ! Number and indices of non-crop ("natural") PFTs on the parameter file, even if not actually
+  ! used. Does not include bare ground.
+  integer, public :: num_pfts_possible_natural
+
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
 
@@ -335,6 +339,7 @@ module pftconMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
+  public :: is_bare
   public :: is_crop
   public :: is_generic_crop
   public :: is_prognostic_crop
@@ -1373,7 +1378,14 @@ contains
        end do
     end if
 
-    ! Get some additional information unless FATES is on
+    ! Get some additional information...
+    num_pfts_possible_natural = 0
+    do i = 0, mxpft
+       if (.not. is_crop(i) .and. .not. is_bare(i)) then
+          num_pfts_possible_natural = num_pfts_possible_natural + 1
+       end if
+    end do
+    ! ... unless FATES is on
     ! (Could be combined with the above loop, but we'll keep that one purely error checking)
     num_cfts_possible = 0
     num_cfts_possible_rainfed = 0
@@ -1694,6 +1706,21 @@ contains
        deallocate(indices_cfts_possible_irrigated)
     end if
   end subroutine Clean
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_bare(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's bare ground.
+    !
+    ! NOTE: Ideally, this would use a new bare_ground flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_bare = veg_type == 0
+
+  end function is_bare
 
   !-----------------------------------------------------------------------
   elemental logical function is_crop(veg_type)
