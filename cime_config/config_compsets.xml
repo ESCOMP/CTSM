@@ -13,13 +13,14 @@
     TIME_ATM[%phys]_LND[%phys]_ICE[%phys]_OCN[%phys]_ROF[%phys]_GLC[%phys]_WAV[%phys][_BGC%phys]
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, SSP585...)
-    ATM  = [CAM40, CAM50, CAM60]
-    LND  = [CLM45, CLM50, CLM60, SLND]
-    ICE  = [CICE, DICE, SICE]
-    OCN  = [DOCN, ,AQUAP, SOCN]
-    ROF  = [RTM, SROF]
-    GLC  = [CISM2, SGLC]
-    WAV  = [SWAV]
+    ATM  = [DATM, CAM40, CAM50, CAM60, CAM70, SATM] (CAM only for CAM or CESM checkouts)
+    LND  = [CLM45, CLM50, CLM60, DLND, SLND]
+    ICE  = [CICE, DICE, SICE] (CICE only for CAM or CESM checkouts)
+    OCN  = [MOM, DOCN, SOCN] (MOM only for CESM checkouts)
+    ROF  = [RTM, MOSART, MIZUROUTE, DROF, SROF]
+    GLC  = [CISM2, DGLC, SGLC]
+    WAV  = [WW3, DWAV, SWAV] (WW3 only for CESM checkouts)
+    ESP  = [DESP, SESP]
     BGC  = optional BGC scenario
 
     The OPTIONAL %phys attributes specify submodes of the given system
