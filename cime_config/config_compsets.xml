@@ -325,12 +325,12 @@
   </compset>
 
   <compset>
-    <alias>I2000Clm50FatesRs</alias>
+    <alias>I2000Clm50FatesRsGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>I2000Clm60FatesRs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_DGLC%NOEVOLVE_SWAV</lname>
+    <alias>I2000Clm60FatesRsGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm60FatesCrujraRsGs</alias>
@@ -631,7 +631,7 @@
 
   <!-- Stub rof needed for regional / single-point -->
   <compset>
-    <alias>I2000Clm45FatesRs</alias>
+    <alias>I2000Clm45FatesRsGs</alias>
     <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
