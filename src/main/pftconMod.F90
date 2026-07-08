@@ -328,6 +328,7 @@ module pftconMod
   public :: is_crop
   public :: is_generic_crop
   public :: is_prognostic_crop
+  public :: is_irrigated
   public :: get_crop_n_from_veg_type
   public :: get_veg_type_from_crop_n
   !-----------------------------------------------------------------------
@@ -1327,30 +1328,7 @@ contains
           call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(sourcefile, __LINE__))
        end if
        do i = 0, mxpft
-          if ( this%irrigated(i) == 1.0_r8 .and.                              &
-               (i == nc3irrig               .or.                              &
-                i == nirrig_tmp_corn        .or.                              &
-                i == nirrig_swheat          .or. i == nirrig_wwheat      .or. &
-                i == nirrig_tmp_soybean     .or.                              &
-                i == nirrig_barley          .or. i == nirrig_wbarley     .or. &
-                i == nirrig_rye             .or. i == nirrig_wrye        .or. &
-                i == nirrig_cassava         .or.                              &
-                i == nirrig_citrus          .or.                              &
-                i == nirrig_cocoa           .or. i == nirrig_coffee      .or. &
-                i == nirrig_cotton          .or.                              &
-                i == nirrig_datepalm        .or.                              &
-                i == nirrig_foddergrass     .or.                              &
-                i == nirrig_grapes          .or. i == nirrig_groundnuts  .or. &
-                i == nirrig_millet          .or.                              &
-                i == nirrig_oilpalm         .or.                              &
-                i == nirrig_potatoes        .or. i == nirrig_pulses      .or. &
-                i == nirrig_rapeseed        .or. i == nirrig_rice        .or. &
-                i == nirrig_sorghum         .or.                              &
-                i == nirrig_sugarbeet       .or. i == nirrig_sugarcane   .or. &
-                i == nirrig_sunflower       .or.                              &
-                i == nirrig_miscanthus      .or. i == nirrig_switchgrass .or. &
-                i == nirrig_trp_corn        .or.                              &
-                i == nirrig_trp_soybean) )then
+          if ( this%irrigated(i) == 1.0_r8 .and. is_irrigated(i)) then
              ! correct
           else if ( this%irrigated(i) == 0.0_r8 )then
              ! correct
@@ -1688,6 +1666,45 @@ contains
     is_prognostic_crop = veg_type >= npcropmin .and. veg_type <= npcropmax
 
   end function is_prognostic_crop
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_irrigated(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's irrigated.
+    !
+    ! NOTE: Ideally, this would use a new "irrigated" flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_irrigated = ( &
+         veg_type == nc3irrig            .or.                                      &
+         veg_type == nirrig_tmp_corn     .or.                                      &
+         veg_type == nirrig_swheat       .or. veg_type == nirrig_wwheat  .or.      &
+         veg_type == nirrig_tmp_soybean  .or.                                      &
+         veg_type == nirrig_barley       .or. veg_type == nirrig_wbarley  .or.     &
+         veg_type == nirrig_rye          .or. veg_type == nirrig_wrye     .or.     &
+         veg_type == nirrig_cassava      .or.                                      &
+         veg_type == nirrig_citrus       .or.                                      &
+         veg_type == nirrig_cocoa        .or. veg_type == nirrig_coffee  .or.      &
+         veg_type == nirrig_cotton       .or.                                      &
+         veg_type == nirrig_datepalm     .or.                                      &
+         veg_type == nirrig_foddergrass  .or.                                      &
+         veg_type == nirrig_grapes       .or. veg_type == nirrig_groundnuts  .or.  &
+         veg_type == nirrig_millet       .or.                                      &
+         veg_type == nirrig_oilpalm      .or.                                      &
+         veg_type == nirrig_potatoes     .or. veg_type == nirrig_pulses  .or.      &
+         veg_type == nirrig_rapeseed     .or. veg_type == nirrig_rice    .or.      &
+         veg_type == nirrig_sorghum      .or.                                      &
+         veg_type == nirrig_sugarbeet    .or. veg_type == nirrig_sugarcane  .or.   &
+         veg_type == nirrig_sunflower    .or.                                      &
+         veg_type == nirrig_miscanthus   .or. veg_type == nirrig_switchgrass  .or. &
+         veg_type == nirrig_trp_corn     .or.                                      &
+         veg_type == nirrig_trp_soybean                                            &
+         )
+
+  end function is_irrigated
 
   !-----------------------------------------------------------------------
   integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
