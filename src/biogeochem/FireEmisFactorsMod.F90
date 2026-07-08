@@ -13,7 +13,7 @@ module FireEmisFactorsMod
   use clm_varctl,   only : iulog
   use clm_varpar,   only : maxveg
   use pftconMod,    only : nc3crop
-  use pftconMod,    only : indices_cfts_possible
+  use pftconMod,    only : handle_too_short_fire_emis_factor_file
 !
   implicit none
   private
@@ -75,11 +75,7 @@ contains
     endif
 
     factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
-    ! If fire emissions factor file only includes natural PFT's, but this is a crop case
-    ! Copy the generic crop factors to the crop CFT's from generic crop
-    if ( size(factors) > nc3crop )then
-       factors(indices_cfts_possible) = comp_factors_table( ndx )%eff(nc3crop)
-    end if
+    call handle_too_short_fire_emis_factor_file(factors, comp_factors_table(ndx)%eff)
     molecwght  = comp_factors_table( ndx )%wght
 
   end subroutine fire_emis_factors_get

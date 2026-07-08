@@ -341,6 +341,7 @@ module pftconMod
   public :: is_irrigated
   public :: get_crop_n_from_veg_type
   public :: get_veg_type_from_crop_n
+  public :: handle_too_short_fire_emis_factor_file
   !-----------------------------------------------------------------------
 
 contains
@@ -1814,6 +1815,31 @@ contains
     call shr_assert(veg_type <= npcropmax)
 
   end function get_veg_type_from_crop_n
+
+  !-----------------------------------------------------------------------
+  subroutine handle_too_short_fire_emis_factor_file(factors, eff)
+    !
+    ! !DESCRIPTION:
+    ! Original description when this was in fire_emis_factors_get():
+         ! If fire emissions factor file only includes natural PFT's, but this is a crop case
+         ! Copy the generic crop factors to the crop CFT's from generic crop
+    ! However, there are problems with that:
+    !   1. This will happen even if the fire emissions factor file DOES include crop PFTs, since
+    !      there is no condition in the if() checking for that.
+    !   2. Indeed, this code will error if the fire emissions factor file DOESN'T include crop PFTs,
+    !      because of the reference to index nc3crop of the eff array.
+    ! Filed as ESCOMP/CTSM Issue #4120: Something wrong with "file only includes natural PFTs" in
+    ! fire_emis_factors_get(); https://github.com/ESCOMP/CTSM/issues/4120
+    !
+    ! !ARGUMENTS
+    real(r8), intent(inout) :: factors(:)
+    real(r8), intent(in) :: eff(:)
+
+    if (size(factors) > nc3crop) then
+       factors(indices_cfts_possible) = eff(nc3crop)
+    end if
+
+  end subroutine handle_too_short_fire_emis_factor_file
 
 end module pftconMod
 
