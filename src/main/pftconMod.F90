@@ -311,6 +311,7 @@ module pftconMod
 
      procedure, public  :: Init
      procedure, public  :: InitForTesting ! version of Init meant for unit testing
+     procedure, public  :: InitForTestingCollapseCropTypes ! version of Init meant for unit testing
      procedure, public  :: Clean
      procedure, private :: InitAllocate   
      procedure, private :: InitRead
@@ -374,6 +375,56 @@ contains
     call this%InitAllocate()
 
   end subroutine InitForTesting
+
+  subroutine InitForTestingCollapseCropTypes(this, cftsize, merge_2_to_generic)
+   ! Version of Init meant for testing collapse_crop_types()
+    use clm_varpar, only : maxveg, natpft_size, natpft_lb, natpft_ub
+
+    class(pftcon_type) :: this
+    integer, intent(in) :: cftsize
+    logical, optional, intent(in) :: merge_2_to_generic
+
+    integer :: n_cfts
+    integer :: m
+
+    ! Set relevant pftcon values to defaults; override where necessary
+    call pftcon%InitForTesting()
+    nc3crop     = 15
+    nc3irrig    = nc3crop + 1
+    do m = 1, nc3irrig
+       pftcon%mergetoclmpft(m) = m
+    end do
+    if (cftsize == 0) then  ! crops lumped together with unmanaged pfts
+       maxveg = nc3irrig  ! # of patches without bare ground
+       natpft_size = maxveg + 1  ! includes bare ground
+    else
+       natpft_size = nc3crop  ! includes bare ground
+       maxveg = natpft_size + cftsize - 1  ! # of patches without bare ground
+    end if
+    natpft_lb = 0
+    natpft_ub = natpft_lb + natpft_size - 1
+    cft_lb = natpft_ub + 1
+    cft_ub = cft_lb + cftsize - 1
+
+   ! Allocate and fill arrays of indices:
+   ! Assume that there are the same number of rainfed and irrigatedCFTs
+   n_cfts = cft_ub - cft_lb + 1
+   call shr_assert(mod(n_cfts, 2) == 0)
+   allocate(indices_cfts_possible_rainfed(n_cfts / 2))
+   allocate(indices_cfts_possible_irrigated(n_cfts / 2))
+   ! Assume that every irrigated CFT follows its respective rainfedCFT
+   ! (Implied do-loops for array construction)
+   indices_cfts_possible_rainfed = [(m, m = cft_lb, cft_ub-1, 2)]
+   indices_cfts_possible_irrigated = [(m, m = cft_lb+1, cft_ub, 2)]
+
+   if (present(merge_2_to_generic)) then
+      if (merge_2_to_generic) then
+         this%mergetoclmpft(nc3crop + 2) = nc3crop
+         this%mergetoclmpft(nc3irrig + 2) = nc3irrig
+      end if
+   end if
+
+  end subroutine InitForTestingCollapseCropTypes
 
   !-----------------------------------------------------------------------
   subroutine InitAllocate (this)

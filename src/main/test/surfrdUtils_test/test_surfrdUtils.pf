@@ -13,36 +13,6 @@ module test_surfrdUtils
 
 contains
   
-  subroutine setup_test_collapse_routines(cftsize)
-     ! called during setup of all subroutines test_collapse_crop_types_*
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
-     use clm_varpar, only : maxveg, cft_lb, cft_ub, natpft_size, natpft_lb, natpft_ub
-
-     implicit none
-     integer, intent(in) :: cftsize
-     integer :: m
-
-     ! Set relevant pftcon values to defaults; override where necessary
-     call pftcon%InitForTesting()
-     nc3crop     = 15
-     nc3irrig    = nc3crop + 1
-     do m = 1, nc3irrig
-        pftcon%mergetoclmpft(m) = m
-     end do
-     if (cftsize == 0) then  ! crops lumped together with unmanaged pfts
-        maxveg = nc3irrig  ! # of patches without bare ground
-        natpft_size = maxveg + 1  ! includes bare ground
-     else
-        natpft_size = nc3crop  ! includes bare ground
-        maxveg = natpft_size + cftsize - 1  ! # of patches without bare ground
-     end if
-     natpft_lb = 0
-     natpft_ub = natpft_lb + natpft_size - 1
-     cft_lb = natpft_ub + 1
-     cft_ub = cft_lb + cftsize - 1
-
-  end subroutine setup_test_collapse_routines
-
   @Test
   subroutine test_collapse_all_lunit_opts_active
      ! Tests subroutine collapse_to_dominant when called first with
@@ -729,7 +699,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize)
 
      ! Collapse crop types
      call collapse_crop_types( wt_cft, fert_cft, cftsize, begg, endg, verbose = .true.)
@@ -771,7 +741,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize)
      irrigate = .false.  ! named the test 16_to_15 because we collapse the...
      use_crop = .false.  ! ...irrigated with the unirrigated
 
@@ -820,7 +790,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize)
      irrigate = .true.
      use_crop = .false.
 
@@ -842,7 +812,7 @@ contains
      ! This test starts with two non-generic and two generic crops in the data
      ! but ends up with only two generic crops because use_crop = .false. and
      ! irrigate = .true.
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use pftconMod, only : pftcon
      use clm_varctl, only : irrigate, use_crop
 
      implicit none
@@ -874,11 +844,9 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize, merge_2_to_generic=.true.)
      irrigate = .true.
      use_crop = .false.
-     pftcon%mergetoclmpft(17) = nc3crop
-     pftcon%mergetoclmpft(18) = nc3irrig
 
      ! Collapse crop types
      TotalSum = 100._r8
@@ -898,7 +866,7 @@ contains
      ! This test starts with two non-generic and two generic crops in the data
      ! and ends up with only one generic crop because use_crop = .false. and
      ! irrigate = .false.
-     use pftconMod, only : pftcon, nc3crop, nc3irrig
+     use pftconMod, only : pftcon
      use clm_varctl, only : irrigate, use_crop
 
      implicit none
@@ -930,11 +898,9 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize, merge_2_to_generic=.true.)
      irrigate = .false.
      use_crop = .false.
-     pftcon%mergetoclmpft(17) = nc3crop
-     pftcon%mergetoclmpft(18) = nc3irrig
 
      ! Collapse crop types
      TotalSum = 100._r8
@@ -979,7 +945,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize)
      irrigate = .true.
      use_crop = .true.
      pftcon%mergetoclmpft(17) = 17
@@ -1036,7 +1002,7 @@ contains
 
      ! Setup before calling the subroutine that's being tested
      @assertGreaterThanOrEqual(cftsize, 0)
-     call setup_test_collapse_routines(cftsize)
+     call pftcon%InitForTestingCollapseCropTypes(cftsize)
      irrigate = .true.
      use_crop = .true.
      pftcon%mergetoclmpft(17) = 19
