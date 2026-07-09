@@ -1457,10 +1457,19 @@ contains
        end do
        ! Make sure there are the same number of irrigated and rainfed crops. This is assumed by,
        ! e.g., surfrdUtilsMod collapse_crop_types().
-       call shr_assert(num_cfts_possible_rainfed == num_cfts_possible_irrigated)
+       if (num_cfts_possible_rainfed /= num_cfts_possible_irrigated) then
+          write(iulog, *) 'num_cfts_possible_rainfed   = ', num_cfts_possible_rainfed
+          write(iulog, *) 'num_cfts_possible_irrigated = ', num_cfts_possible_irrigated
+          call endrun(msg='num_cfts_possible_rainfed /= num_cfts_possible_irrigated')
+       end if
        ! Make sure the number of possible crops equals the sum of the numbers of possible rainfed
        ! and irrigated crops. Not sure this is ever assumed anywhere, but it's a good sense check.
-       call shr_assert(num_cfts_possible == num_cfts_possible_rainfed + num_cfts_possible_irrigated)
+       if (num_cfts_possible /= num_cfts_possible_rainfed + num_cfts_possible_irrigated) then
+          write(iulog, *) 'num_cfts_possible           = ', num_cfts_possible
+          write(iulog, *) 'num_cfts_possible_rainfed   = ', num_cfts_possible_rainfed
+          write(iulog, *) 'num_cfts_possible_irrigated = ', num_cfts_possible_irrigated
+          call endrun(msg='num_cfts_possible /= num_cfts_possible_rainfed + num_cfts_possible_irrigated')
+       end if
        ! What are the indices of the (rainfed and irrigated) PFTs?
        allocate(indices_cfts_possible(num_cfts_possible))
        allocate(indices_cfts_possible_rainfed(num_cfts_possible_rainfed))
