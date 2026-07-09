@@ -1,0 +1,67 @@
+-----------
+STEP1 concat the data
+
+cp /glade/campaign/cgd/tss/common/WIEMIP_overshoot/ndep_05deg/drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc
+
+ncks -A /glade/campaign/cgd/tss/common/WIEMIP_overshoot/ndep_05deg/drynoy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc
+
+ncks -A /glade/campaign/cgd/tss/common/WIEMIP_overshoot/ndep_05deg/wetnhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc
+
+ncks -A /glade/campaign/cgd/tss/common/WIEMIP_overshoot/ndep_05deg/wetnoy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc
+
+mv drynhx_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc
+
+---------------
+STEP2
+---------------
+
+
+ncap2 -O -s 'time=udunits(time, "days since 1850-01-01 00:00:00"); time@units="days since 1850-01-01 00:00:00"' drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_185001-202212.05deg.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_temp.nc
+
+ncrename -d bnds,nbnd drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_temp.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc
+
+ncks -d time,"1850-01-01","2022-12-31" -v time /glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_1849-2101_monthly_0.9x1.25_c190828.nc time_slice.nc
+
+ncap2 -O -s 'time=udunits(time, "days since 1850-01-01 00:00:00"); time@units="days since 1850-01-01 00:00:00"' time_slice.nc time_slice.nc
+
+ncap2 -O -s 'time_bnds=time_bnds-365' time_slice.nc time_slice.nc
+
+ncks -A -v time time_slice.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc
+
+---------------
+! Avoid chunking problems
+---------------
+ncap2 --cnk_dmn time,1 --cnk_dmn lat,360 --cnk_dmn lon,720 -s 'NDEP_NOy_month=(drynoy + wetnoy) * 1000.0; NDEP_NOy_month@units="g(N)/m2/s"' drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_new.nc
+
+ncap2 --cnk_dmn time,1 --cnk_dmn lat,360 --cnk_dmn lon,720 -s 'NDEP_NHx_month=(drynhx + wetnhx) * 1000.0; NDEP_NHx_month@units="g(N)/m2/s"' drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_new.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newer.nc
+
+ncap2 --cnk_dmn time,1 --cnk_dmn lat,360 --cnk_dmn lon,720 -s 'NDEP_month=(drynhx + wetnhx + drynoy + wetnoy) * 1000.0; NDEP_month@units="g(N)/m2/s"' drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newer.nc drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a long_name,NDEP_NOy_month,o,c,"NOy deposition" drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a long_name,NDEP_NHx_month,o,c,"NHx deposition" drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a long_name,NDEP_month,o,c,"Sum of NOy and NHx deposition" drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a _FillValue,NDEP_NOy_month,d,, -a missing_value,NDEP_NOy_month,d,, -a original_name,NDEP_NOy_month,d,, -a standard_name,NDEP_NOy_month,d,, drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a _FillValue,NDEP_NHx_month,d,, -a missing_value,NDEP_NHx_month,d,, -a original_name,NDEP_NHx_month,d,, -a standard_name,NDEP_NHx_month,d,, drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a _FillValue,NDEP_month,d,, -a missing_value,NDEP_month,d,, -a original_name,NDEP_month,d,, -a standard_name,NDEP_month,d,, drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a _FillValue,lat,o,f,-900. drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncatted -a _FillValue,lon,o,f,-900. drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc
+
+ncks -d time,"1850-01-01","2022-12-31" -v date /glade/campaign/cesm/cesmdata/cseg/inputdata/lnd/clm2/ndepdata/fndep_clm_SSP245_b.e21.BWSSP245cmip6.f09_g17.CMIP6-SSP2-4.5-WACCM.001_1849-2101_monthly_0.9x1.25_c190828.nc date_slice.nc
+
+cp drynhx_noy_wetnhx_noy_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg_newest.nc fndep_clm_hist_from_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc
+
+ncks -A -v date date_slice.nc fndep_clm_hist_from_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc
+
+ncap2 -O -s 'time=udunits(time, "days since 1850-01-01 00:00:00"); time@units="days since 1850-01-01 00:00:00"' date_slice.nc date_slice.nc
+
+ncap2 -O -s 'time_bnds=time_bnds-365' date_slice.nc date_slice.nc
+
+ncks -A -v time date_slice.nc fndep_clm_hist_from_input4MIPs_surfaceFluxes_CMIP_FZJ-CMIP-nitrogen-2-0_gn_1850-2022.05deg.nc
+
