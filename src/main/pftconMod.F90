@@ -98,8 +98,8 @@ module pftconMod
   integer, public :: nirrig_trp_corn        !value for tropical corn (ir)
   integer, public :: ntrp_soybean           !value for tropical soybean (rf)
   integer, public :: nirrig_trp_soybean     !value for tropical soybean (ir)
-  integer, public :: nc3crop                ! value for generic crop (rf)
-  integer, public :: nc3irrig               ! value for irrigated generic crop (ir)
+  integer :: nc3crop                ! value for generic crop (rf)
+  integer :: nc3irrig               ! value for irrigated generic crop (ir)
 
   ! First and last prognostic crops
   integer :: npcropmin              ! value for first crop
