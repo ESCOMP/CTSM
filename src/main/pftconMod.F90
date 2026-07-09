@@ -112,7 +112,7 @@ module pftconMod
   integer, public :: num_cfts_known_to_model
 
   ! Number of prognostic crop functional types on the parameter file, even if not actually used
-  integer, public :: num_cfts_possible
+  integer, public :: num_prognostic_cfts_possible
 
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
@@ -302,7 +302,7 @@ module pftconMod
      procedure, private :: InitRead
      procedure, private :: set_is_pft_known_to_model   ! Set is_pft_known_to_model based on mergetoclmpft
      procedure, private :: set_num_cfts_known_to_model ! Set the module-level variable, num_cfts_known_to_model
-     procedure, private :: set_num_cfts_possible ! Set the module-level variable, num_cfts_possible
+     procedure, private :: set_num_prognostic_cfts_possible ! Set the module-level variable, num_prognostic_cfts_possible
 
   end type pftcon_type
 
@@ -1259,7 +1259,7 @@ contains
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
-    call this%set_num_cfts_possible()
+    call this%set_num_prognostic_cfts_possible()
 
     ! Set vegetation family identifier (tree/shrub/grass)
     do m = 0,mxpft 
@@ -1430,10 +1430,10 @@ contains
   end subroutine set_num_cfts_known_to_model
 
   !-----------------------------------------------------------------------
-  subroutine set_num_cfts_possible(this)
+  subroutine set_num_prognostic_cfts_possible(this)
     !
     ! !DESCRIPTION:
-    ! Set the module-level variable, num_cfts_possible
+    ! Set the module-level variable num_prognostic_cfts_possible
     !
     ! !USES:
     !
@@ -1443,12 +1443,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: m
 
-    character(len=*), parameter :: subname = 'set_num_cfts_possible'
+    character(len=*), parameter :: subname = 'set_num_prognostic_cfts_possible'
     !-----------------------------------------------------------------------
 
-    num_cfts_possible = npcropmax - npcropmin + 1
+    num_prognostic_cfts_possible = npcropmax - npcropmin + 1
 
-  end subroutine set_num_cfts_possible
+  end subroutine set_num_prognostic_cfts_possible
 
   !-----------------------------------------------------------------------
   subroutine Clean(this)
