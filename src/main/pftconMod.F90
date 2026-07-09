@@ -114,6 +114,9 @@ module pftconMod
   ! Number of prognostic crop functional types on the parameter file, even if not actually used
   integer, public :: num_prognostic_cfts_possible
 
+  ! Number of crops on the parameter file (both generic and prognostic), even if not actually used
+  integer, public :: num_cfts_possible
+
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
 
@@ -1359,6 +1362,20 @@ contains
                      errMsg(sourcefile, __LINE__))
              end if
           end do
+       end do
+    end if
+
+    ! Get some additional information unless FATES is on
+    ! (Could be combined with the above loop, but we'll keep that one purely error checking)
+    num_cfts_possible = 0
+    if (.not. use_fates) then
+       ! How many rainfed and irrigated CFTs are there?
+       ! TODO: This could be vectorized
+       do i = 0, mxpft
+          if (.not. is_crop(i)) then
+             cycle
+          end if
+          num_cfts_possible = num_cfts_possible + 1
        end do
     end if
 
