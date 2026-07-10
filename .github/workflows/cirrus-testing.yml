@@ -54,8 +54,8 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      - name: Install Perl core modules
-        run: dnf install -y perl-core
+      - name: Install Perl modules
+        run: dnf install -y perl-core perl-XML-LibXML
 
       - name: Call create_test
         run: |
