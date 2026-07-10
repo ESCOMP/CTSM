@@ -1,3 +1,6 @@
 #!/bin/bash
 
-./xmlchange MOSART_MODE="NULL"
+COMP_ROF=`./xmlquery --value COMP_ROF`
+if [[ $COMP_ROF == "MOSART" ]]; then
+   ./xmlchange MOSART_MODE="NULL"
+fi
