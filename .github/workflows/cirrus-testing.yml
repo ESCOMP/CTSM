@@ -54,6 +54,9 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
+      - name: Install perl-English
+        run: dnf install -y perl-English
+
       - name: Call create_test
         run: |
           export USER=ctsm_developer
