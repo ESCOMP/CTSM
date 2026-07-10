@@ -298,7 +298,7 @@ class TowerSite:
 
         site = self.name
         user_nl_lines = None
-        if any(x == site for x in wetland):
+        if site in wetland:
 
             # Get the base case path of the lnd_in
             src_paramfile = os.path.join(base_case_root, "CaseDocs/lnd_in")
