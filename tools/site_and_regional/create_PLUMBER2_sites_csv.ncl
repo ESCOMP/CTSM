@@ -32,7 +32,6 @@ begin
   print ("Start Time: "+systemfunc("date") )
   print ("=========================================")
 
-
 ; Sites (170 sites)
   sim = systemfunc("ls -1 " + "/glade/work/oleson/PLUMBER2/datm_files/")
 
@@ -225,7 +224,8 @@ begin
 
   print((/"Done with Loop"/))
 
-  fname = "/glade/work/oleson/ctsm_PLUMBERwetland/tools/site_and_regional/PLUMBER2_sites.csv"
+  fname = systemfunc("pwd") + "/PLUMBER2_sites.csv"
+  print(fname)
   header = (/"#pftX-cth and pftX-cbh are the site=specific canopy top and bottom heights", \
              "#start_year and end_year will be used to define DATM_YR_ALIGN, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
              "#RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.", \
