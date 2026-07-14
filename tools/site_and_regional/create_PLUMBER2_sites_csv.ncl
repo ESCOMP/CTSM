@@ -12,14 +12,42 @@
 ; experimental description and preliminary results, Biogeosciences, 21, 5517–5538, 
 ; https://doi.org/10.5194/bg-21-5517-2024, 2024, and xmlquery the following variables so that they can be 
 ; added to the csv file:
-; RUN_STARDATE
+; RUN_STARTDATE
 ; CALENDAR
 ; DATM_YR_START
 ; DATM_YR_END
 ; DATM_YR_ALIGN
 ; START_TOD
-; See /glade/work/oleson/release-clm5.0.34/tools/PTCLM/run_clmtowers_plumber2.csh for 
-; rationale on how these had to be set for spinup.
+
+; The rationale for how these are set for spinup is as follows:
+; To avoid dtlimit errors during spinup as much as possible, we do not use the first year or the last year of forcing and
+; start at GMT=local midnight. So we need at least six years to loop over 4 year blocks in gregorian mode.
+; dtlimit errors occur in cases when we try to start at GMT 0 of the first year and there is no data at GMT=0 (e.g., US-Ha1),
+; or when we try to start at GMT \= 0 of the first year (to start at local time midnight) and loop back around, because model
+; may not have data at the end of that year of forcing. The forcing for the last time step of the year is then repeated for
+; the number of time steps that local time is different from GMT.  The dtlimit errors vary in size depending on the local
+; time/GMT offset.
+; If we have at least four years even when skipping first and last year of forcing, then we use available multiples 
+; of four years. The CALENDAR is set to GREGORIAN. There shouldn't be any dlimit errors for these cases when using the 
+; default setting of 1.5.
+
+; Special cases where there are less than four years of forcing are handled as follows:
+
+; If have only one year then we must obviously use that year of forcing. We start at GMT=local midnight and set 
+; dtlimit to 50. The consequence is that the forcing for the last time step of the year is repeated for the
+; number of time steps that local time is different from GMT (unavoidable in this case).
+; We use an alignyear of 1 and set the CALENDAR to NO_LEAP (because otherwise model expects leap day avery fourth year and
+; it may not be available).
+
+; If we have two years or three years, repeat first year of forcing and start at GMT=0 (for cases where
+; starting month is December), or repeat second year of forcing and start at GMT=local midnight (for cases 
+; where the starting month is January).
+; We use an alignyear of 1 and set the CALENDAR to NO_LEAP (because otherwise model expects leap day avery fourth year and it
+; may not be available. There shouldn't be any dlimit errors for these cases when using the defaut setting of 1.5.
+
+; Note that although setting dtlimit to 50 for spinup is not strictly required for all sites as noted above, it is set to 
+; 50 by CDEPS nonetheless rather than implementing special handling in CDEPS for all 170 PLUMBER2 sites.
+
 ; All of the csv fields are then read in using plumber2_usermods to generate a set of shell commands found at 
 ; /glade/work/oleson/ctsm_PLUMBERwetland/cime_config/usermods_dirs/clm/PLUMBER2
 ;**************************************
