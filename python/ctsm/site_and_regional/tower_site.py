@@ -517,11 +517,10 @@ class TowerSite:
                 case.set_value("CLM_ACCELERATED_SPINUP", "on")
                 # This was originally set to 18 for NEON cases, which typically start in 2018.
                 # AD cases, would start in 0018, followed by postAD in 1018.
-                # PLUMBER cases have specific start dates for each site that are set in
-                # shell_commands
-                # DOES THIS NEED TO BE SET DIFFERENTLY FOR PLUMBER2 SPINUP?
                 case.set_value("RUN_REFDATE", "0018-01-01")
 
+                # PLUMBER cases have specific start dates for each site that are set in
+                # shell_commands
                 if self.tower_type == "NEON":
                     case.set_value("RUN_STARTDATE", "0018-01-01")
 
