@@ -11,7 +11,7 @@ module pftconMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
+  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, cft_size, ndecomp_pools
   use clm_varctl  , only : iulog, use_cndv, use_crop, use_grainproduct
   use CropReprPoolsMod, only : repr_structure_min, repr_structure_max
   !
@@ -114,15 +114,12 @@ module pftconMod
   ! Number of prognostic crop functional types on the parameter file, even if not actually used
   integer, public :: num_prognostic_cfts_possible
 
-  ! Number and indices of crops on the parameter file (both generic and prognostic), even if not actually used
-  integer, public :: num_cfts_possible
-  integer, public, allocatable :: indices_cfts_possible(:)
-
-  ! Number and indices of rainfed and irrigated crops on the parameter file
-  integer, public :: num_cfts_possible_rainfed
-  integer, public :: num_cfts_possible_irrigated
-  integer, public, allocatable :: indices_cfts_possible_rainfed(:)
-  integer, public, allocatable :: indices_cfts_possible_irrigated(:)
+  ! Number and indices of crops on the surface dataset
+  integer :: cft_size_rainfed
+  integer :: cft_size_irrigated
+  integer, public, allocatable :: indices_cfts(:)  ! no corresponding size integer above because it comes from clm_varpar
+  integer, public, allocatable :: indices_cfts_rainfed(:)
+  integer, public, allocatable :: indices_cfts_irrigated(:)
 
   ! Number and indices of non-crop ("natural") PFTs on the parameter file, even if not actually
   ! used. Does not include bare ground.
@@ -384,7 +381,6 @@ contains
     integer, intent(in) :: cftsize
     logical, optional, intent(in) :: merge_2_to_generic
 
-    integer :: n_cfts
     integer :: m
 
     ! Set relevant pftcon values to defaults; override where necessary
@@ -407,15 +403,14 @@ contains
     cft_ub = cft_lb + cftsize - 1
 
    ! Allocate and fill arrays of indices:
-   ! Assume that there are the same number of rainfed and irrigatedCFTs
-   n_cfts = cft_ub - cft_lb + 1
-   call shr_assert(mod(n_cfts, 2) == 0)
-   allocate(indices_cfts_possible_rainfed(n_cfts / 2))
-   allocate(indices_cfts_possible_irrigated(n_cfts / 2))
-   ! Assume that every irrigated CFT follows its respective rainfedCFT
+   ! Assume that there are the same number of rainfed and irrigated CFTs
+   call shr_assert(mod(cft_size, 2) == 0)
+   allocate(indices_cfts_rainfed(cft_size / 2))
+   allocate(indices_cfts_irrigated(cft_size / 2))
+   ! Assume that every irrigated CFT follows its respective rainfed CFT
    ! (Implied do-loops for array construction)
-   indices_cfts_possible_rainfed = [(m, m = cft_lb, cft_ub-1, 2)]
-   indices_cfts_possible_irrigated = [(m, m = cft_lb+1, cft_ub, 2)]
+   indices_cfts_rainfed = [(m, m = cft_lb, cft_ub-1, 2)]
+   indices_cfts_irrigated = [(m, m = cft_lb+1, cft_ub, 2)]
 
    if (present(merge_2_to_generic)) then
       if (merge_2_to_generic) then
@@ -593,6 +588,8 @@ contains
     allocate( this%mimics_fi(2) )
     allocate( this%crit_onset_gdd_sf (0:mxpft) )
     allocate( this%ndays_on      (0:mxpft) )
+
+    allocate(indices_cfts(cft_size))
  
   end subroutine InitAllocate
 
@@ -1437,66 +1434,63 @@ contains
        end if
     end do
     ! ... unless FATES is on
-    ! (Could be combined with the above loop, but we'll keep that one purely error checking)
-    num_cfts_possible = 0
-    num_cfts_possible_rainfed = 0
-    num_cfts_possible_irrigated = 0
+    cft_size_rainfed = 0
+    cft_size_irrigated = 0
     if (.not. use_fates) then
-       ! How many rainfed and irrigated CFTs are there?
-       ! TODO: This could be vectorized
-       do i = 0, mxpft
-          if (.not. is_crop(i)) then
-             cycle
-          end if
-          num_cfts_possible = num_cfts_possible + 1
+
+       ! How many rainfed and irrigated CFTs are there on the surface dataset?
+       k = 0
+       do i = cft_lb, cft_ub
+          call shr_assert(is_crop(i))
+          k = k + 1
           if (is_irrigated(i)) then
-             num_cfts_possible_irrigated = num_cfts_possible_irrigated + 1
+             cft_size_irrigated = cft_size_irrigated + 1
           else
-             num_cfts_possible_rainfed = num_cfts_possible_rainfed + 1
+             cft_size_rainfed = cft_size_rainfed + 1
           end if
        end do
+       call shr_assert(k == cft_size)
+
        ! Make sure there are the same number of irrigated and rainfed crops. This is assumed by,
        ! e.g., surfrdUtilsMod collapse_crop_types().
-       if (num_cfts_possible_rainfed /= num_cfts_possible_irrigated) then
-          write(iulog, *) 'num_cfts_possible_rainfed   = ', num_cfts_possible_rainfed
-          write(iulog, *) 'num_cfts_possible_irrigated = ', num_cfts_possible_irrigated
-          call endrun(msg='num_cfts_possible_rainfed /= num_cfts_possible_irrigated')
+       if (cft_size_rainfed /= cft_size_irrigated) then
+          write(iulog, *) 'cft_size_rainfed   = ', cft_size_rainfed
+          write(iulog, *) 'cft_size_irrigated = ', cft_size_irrigated
+          call endrun(msg='cft_size_rainfed /= cft_size_irrigated')
        end if
-       ! Make sure the number of possible crops equals the sum of the numbers of possible rainfed
-       ! and irrigated crops. Not sure this is ever assumed anywhere, but it's a good sense check.
-       if (num_cfts_possible /= num_cfts_possible_rainfed + num_cfts_possible_irrigated) then
-          write(iulog, *) 'num_cfts_possible           = ', num_cfts_possible
-          write(iulog, *) 'num_cfts_possible_rainfed   = ', num_cfts_possible_rainfed
-          write(iulog, *) 'num_cfts_possible_irrigated = ', num_cfts_possible_irrigated
-          call endrun(msg='num_cfts_possible /= num_cfts_possible_rainfed + num_cfts_possible_irrigated')
+
+       ! Make sure the number of crops on the surface dataset equals the sum of the numbers of
+       ! rainfed and irrigated crops on the surface dataset.
+       if (cft_size /= cft_size_rainfed + cft_size_irrigated) then
+          write(iulog, *) 'cft_size           = ', cft_size
+          write(iulog, *) 'cft_size_rainfed   = ', cft_size_rainfed
+          write(iulog, *) 'cft_size_irrigated = ', cft_size_irrigated
+          call endrun(msg='cft_size /= cft_size_rainfed + cft_size_irrigated')
        end if
-       ! What are the indices of the (rainfed and irrigated) PFTs?
-       allocate(indices_cfts_possible(num_cfts_possible))
-       allocate(indices_cfts_possible_rainfed(num_cfts_possible_rainfed))
-       allocate(indices_cfts_possible_irrigated(num_cfts_possible_irrigated))
-       indices_cfts_possible(:)   = -999
-       indices_cfts_possible_rainfed(:)   = -999
-       indices_cfts_possible_irrigated(:) = -999
+
+       ! What are the indices of the CFTs on the surface dataset?
+       allocate(indices_cfts_rainfed(cft_size_rainfed))
+       allocate(indices_cfts_irrigated(cft_size_irrigated))
+       indices_cfts_rainfed(:)   = -999
+       indices_cfts_irrigated(:) = -999
        k = 0
        m = 0
        n = 0
-       do i = 0, mxpft
-          if (.not. is_crop(i)) then
-             cycle
-          end if
+       do i = cft_lb, cft_ub
+          call shr_assert(is_crop(i))
           k = k + 1
-          indices_cfts_possible(k) = i
+          indices_cfts(k) = i
           if (is_irrigated(i)) then
              m = m + 1
-             indices_cfts_possible_irrigated(m) = i
+             indices_cfts_irrigated(m) = i
           else
              n = n + 1
-             indices_cfts_possible_rainfed(n) = i
+             indices_cfts_rainfed(n) = i
           end if
        end do
-       call shr_assert(k == num_cfts_possible)
-       call shr_assert(m == num_cfts_possible_irrigated)
-       call shr_assert(n == num_cfts_possible_rainfed)
+       call shr_assert(k == cft_size)
+       call shr_assert(m == cft_size_irrigated)
+       call shr_assert(n == cft_size_rainfed)
     end if
 
     if (masterproc) then
@@ -1756,14 +1750,14 @@ contains
     deallocate( this%ndays_on)
 
     ! TODO? Move these to their own function? They're not members of this class.
-    if (allocated(indices_cfts_possible)) then
-       deallocate(indices_cfts_possible)
+    if (allocated(indices_cfts)) then
+       deallocate(indices_cfts)
     end if
-    if (allocated(indices_cfts_possible_rainfed)) then
-       deallocate(indices_cfts_possible_rainfed)
+    if (allocated(indices_cfts_rainfed)) then
+       deallocate(indices_cfts_rainfed)
     end if
-    if (allocated(indices_cfts_possible_irrigated)) then
-       deallocate(indices_cfts_possible_irrigated)
+    if (allocated(indices_cfts_irrigated)) then
+       deallocate(indices_cfts_irrigated)
     end if
   end subroutine Clean
 
@@ -1923,7 +1917,7 @@ contains
     real(r8), intent(in) :: eff(:)
 
     if (size(factors) > nc3crop) then
-       factors(indices_cfts_possible) = eff(nc3crop)
+       factors(indices_cfts) = eff(nc3crop)
     end if
 
   end subroutine handle_too_short_fire_emis_factor_file
