@@ -68,7 +68,6 @@ def write_usermods(
     s_file = open(shell, "w")  # or 'a' to add text instead of truncate
     # pylint: disable=line-too-long
     s_file.write(
-        # TODO turn on following line after cdeps changes are added
         "./xmlchange PLUMBER2SITE=" + site + "\n"
         "./xmlchange PTS_LON=" + str(lon) + "\n"
         "./xmlchange PTS_LAT=" + str(lat) + "\n"
