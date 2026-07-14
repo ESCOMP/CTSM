@@ -49,7 +49,7 @@
 ; 50 by CDEPS nonetheless rather than implementing special handling in CDEPS for all 170 PLUMBER2 sites.
 
 ; All of the csv fields are then read in using plumber2_usermods to generate a set of shell commands found at 
-; /glade/work/oleson/ctsm_PLUMBERwetland/cime_config/usermods_dirs/clm/PLUMBER2
+; cime_config/usermods_dirs/clm/PLUMBER2
 ;**************************************
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
@@ -61,7 +61,7 @@ begin
   print ("=========================================")
 
 ; Sites (170 sites)
-  sim = systemfunc("ls -1 " + "/glade/work/oleson/PLUMBER2/datm_files/")
+  sim = systemfunc("ls -1 " + "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/")
 
   nsim = dimsizes(sim)
   site_num           = new(nsim,"integer")
@@ -99,11 +99,11 @@ begin
 
     print((/sim(sel)/))
     ; Specify input directory
-    f_in_dir  = "/glade/work/oleson/PLUMBER2/datm_files/"+sim(sel)+"/CLM1PT_data/"
+    f_in_dir  = "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/"+sim(sel)+"/CLM1PT_data/"
     fls = systemfunc("ls " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*-*"+".nc")
-    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c76-79"
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c113-116"
     startyear(sel) = systemfunc(command)
-    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c81-84"
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c118-121"
     endyear(sel) = systemfunc(command)
     datmfile = addfile(fls,"r")
     time = datmfile->time
@@ -137,7 +137,7 @@ begin
 
     run_startdate(sel) = tostring(sprinti("%0.4i",tointeger(localstartyear(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startmonth(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startday(sel))))
 
-    f_in_dir  = "/glade/work/oleson/PLUMBER2/input_files/"+sim(sel)+"/"
+    f_in_dir  = "/glade/campaign/cgd/tss/projects/PLUMBER2/input_files/"+sim(sel)+"/"
     fls = systemfunc("ls " + f_in_dir + "surfdata_0.9x1.25_16pfts_" + sim(sel) + ".nc")
     surfdatafile = addfile(fls,"r")
     pct_natveg = surfdatafile->PCT_NATVEG(0,0)
@@ -216,7 +216,7 @@ begin
     ; Specify case directory to get spinup variables
     case_pref = "spinclm50conr34sp_"
     case_suff = "_I1PtClm50SpGs"
-    f_in_dir  = "/glade/work/oleson/release-clm5.0.34/cime/scripts/"+case_pref+sim(sel)+case_suff+"/"
+    f_in_dir  = "/glade/campaign/cgd/tss/projects/PLUMBER2/Case_Directories/"+case_pref+sim(sel)+case_suff+"/"
 
     strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery RUN_STARTDATE")
     print((/strs/))
