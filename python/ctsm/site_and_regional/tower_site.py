@@ -278,11 +278,17 @@ class TowerSite:
                     nl_file.write("{}\n".format(line))
 
         # Change baseflow_scalar to 0 in parameter file for PLUMBER2 wetland sites
-        # We need to grep the lnd_in file for the parameter file so that we can modify it
-        # to set baseflow_scalar = 0 for wetland sites.  We need to grep the base case
-        # since at this point the current site simulation, e.g., AD, has not yet had
-        # a namelist generated.
+        self._set_wetland_baseflow_scalar(base_case_root, case_root, user_nl_fname)
 
+    def _set_wetland_baseflow_scalar(self, base_case_root, case_root, user_nl_fname):
+        """
+        Change baseflow_scalar to 0 in parameter file for PLUMBER2 wetland sites.
+        We need to grep the lnd_in file for the parameter file so that we can modify it
+        to set baseflow_scalar = 0 for wetland sites.  We need to grep the base case
+        since at this point the current site simulation, e.g., AD, has not yet had
+        a namelist generated.
+        """
+        # pylint: disable=too-many-locals
         wetland = [
             "CZ-wet",
             "DE-SfN",
@@ -298,7 +304,7 @@ class TowerSite:
 
         site = self.name
         user_nl_lines = None
-        if any(x == site for x in wetland):
+        if site in wetland:
 
             # Get the base case path of the lnd_in
             src_paramfile = os.path.join(base_case_root, "CaseDocs/lnd_in")
