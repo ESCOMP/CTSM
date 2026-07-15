@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#PBS -N ctsm-ci-gh-build
+#PBS -q casper
+#PBS -l select=1:ncpus=16:mem=64GB
+#PBS -l walltime=03:00:00
+#PBS -j oe
+#
 # Build the ctsm-ci-gh image with podman on an NCAR HPC node (Casper).
 #
 # This wrapper exists because of a host-side requirement that CANNOT live
