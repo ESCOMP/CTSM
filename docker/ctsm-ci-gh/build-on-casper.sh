@@ -24,7 +24,17 @@
 #   CTSM_BUILD_TMPDIR  node-local scratch dir (default /var/tmp/$USER)
 #   IMAGE_TAG          image tag to build     (default ctsm-ci-gh:dev)
 #   DOCKERFILE         Dockerfile to use      (default Dockerfile.scratch)
-set -euo pipefail
+set -eo pipefail
+
+if [ "$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
+    batch=1
+    logdest=/dev/null
+else
+    batch=0
+    logdest="build-on-casper.log.$(date +%Y%m%d%H%M%S%N)"
+fi
+
+set -u
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 user="${USER:-$(id -un)}"
@@ -42,4 +52,4 @@ podman build \
     -f "${here}/${dockerfile}" \
     -t "${image}" \
     "$@" \
-    "${here}"
+    "${here}" 2>&1 | tee -p "${logdest}"
