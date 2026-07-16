@@ -36,7 +36,7 @@ if  [[ $compset =~ ^HIST ]]; then
 else 
   # for spinup case with I2000 compset 
   ./xmlchange RUN_STARTDATE=2004-01-01
-  ./xmlchange CALENDAR=GREGORIAN
+  ./xmlchange CALENDAR=NO_LEAP
   ./xmlchange DATM_YR_START=2004
   ./xmlchange DATM_YR_END=2015
   ./xmlchange DATM_YR_ALIGN=2004
