@@ -25,7 +25,7 @@ To get a list of the compsets use the ``query_config`` command as follows:
 Compsets with different choices for the River "Runoff OutFlow" (ROF) Model
 --------------------------------------------------------------------------
 
-CTSM can be run with four different options for the ROF model: stub, MOSART, RTM, or the newly available component mizuRoute. The default for compsets is MOSART and as such it isn't mentioned in the compset aliases. Compsets with the stub ROF model usually have a "Rs" in the name to designate that a stub ROF is being used (for example the single point tower site compset I1PtClm60SpRs).
+CTSM can be run with four different options for the ROF model: stub, MOSART, RTM, or the newly available component mizuRoute. The default for compsets is MOSART and as such it isn't mentioned in the compset aliases. Compsets with the stub ROF model usually have a "Rs" in the name to designate that a stub ROF is being used (for example the single point tower site compset I1PtClm60SpRsGs).
 Compset aliases for MOSART as it's the default don't have it in the name. Compsets with clm4_5 physics are with RTM as RTM was the default ROF model when CLM4.5 was created. Also since Paleo climate work uses RTM, the "NoAnthro" compset aliases use RTM. Compset aliases with "Miz" in the name use mizuRoute.
 
 Both MOSART and RTM run on a default half degree grid, that is selected as part of the standard grid aliases. mizuRoute also can use the standard grid aliases and will be run on it's half degree grid if so. See the next section for on the other options for mizuRoute grids.

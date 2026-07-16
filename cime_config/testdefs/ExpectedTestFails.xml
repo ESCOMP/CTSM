@@ -29,7 +29,7 @@
 
 
   <!-- ctsm_sci test suite failures -->
-  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRs.derecho_intel.clm-output_sp_highfreq">
+  <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRsGs.derecho_intel.clm-output_sp_highfreq">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>CDEPS/#243 and/or #2122</issue>
@@ -156,7 +156,7 @@
       <comment>Divide by zero happens when ch4finundatedmapalgo==bilinear with intel/2025.3.2, but passes for nn,consf,consd</comment>
     </phase>
   </test>
-  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60Fates.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
+  <test name="SMS_Ld10_D_Mmpi-serial.CLM_USRDAT.I1PtClm60FatesRsGs.derecho_intel.clm-FatesFireLightningPopDens--clm-NEON-FATES-NIWO">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>

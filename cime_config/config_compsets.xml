@@ -38,22 +38,22 @@
 <!-- I single point forcing -->
 
   <compset>
-    <alias>I1PtClm60Bgc</alias>
+    <alias>I1PtClm60BgcRsGs</alias>
     <lname>2000_DATM%1PT_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm60Fates</alias>
+    <alias>I1PtClm60FatesRsGs</alias>
     <lname>2000_DATM%1PT_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>IHist1PtClm60Bgc</alias>
+    <alias>IHist1PtClm60BgcRsGs</alias>
     <lname>HIST_DATM%1PT_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
     <compset>
-    <alias>IHist1PtClm60Fates</alias>
+    <alias>IHist1PtClm60FatesRsGs</alias>
     <lname>HIST_DATM%1PT_CLM60%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
@@ -63,12 +63,12 @@
   </compset>
 
   <compset>
-    <alias>I1PtClm50SpRs</alias>
+    <alias>I1PtClm50SpRsGs</alias>
     <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>I1PtClm45SpRs</alias>
+    <alias>I1PtClm45SpRsGs</alias>
     <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
