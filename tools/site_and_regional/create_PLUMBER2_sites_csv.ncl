@@ -226,6 +226,10 @@ begin
     strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery CALENDAR")
     print((/strs/))
     calendar_spin(sel) = str_get_field(strs, 2, delim)
+    ; KWO This is a workaround for CTSM Issue #
+    ; Currently, we can't change the CALENDAR in env_build.xml in a case
+    ; that was cloned from a base case and uses the base case executable.
+    calendar_spin(sel) = "NO_LEAP"
     print((/calendar_spin(sel)/))
 
     strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery DATM_CLMNCEP_YR_START")
