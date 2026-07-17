@@ -157,7 +157,4 @@ RTM
 SCRIP
   Spherical Coordinate Remapping and Interpolation Package (SCRIP). We use it's file format for specifying both grid coordinates as well as mapping between different grids.
 
-VIC
-  Variable Infiltration Capacity (VIC) model for hydrology. This is an option to |version| in place of the standard |version| hydrology. The CLM_CONFIG_OPTS option for this is
-
   ``./xmlchange CLM_CONFIG_OPTS="-vichydro on" -append``
