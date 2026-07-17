@@ -42,6 +42,8 @@ fi
 
 set -u
 
+module load podman
+
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 user="${USER:-$(id -un)}"
 
