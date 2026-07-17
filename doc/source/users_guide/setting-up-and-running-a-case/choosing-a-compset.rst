@@ -33,7 +33,7 @@ Both MOSART and RTM run on a default half degree grid, that is selected as part 
 Compsets and grids with the mizuRoute ROF model
 -----------------------------------------------
 
-Compset aliases with "Miz" in the name use mizuRoute as the ROF model. For example, the compset alias I2000Clm60SpMizGs which is for present day with clm6_0 physics using Satellite Phenology with a stub glacier model.
+Compset aliases with "Miz" in the name use mizuRoute as the ROF model. For example, the compset alias I2000Clm60SpMiz which is for present day with clm6_0 physics using Satellite Phenology.
 As mizuRoute is a ROF model grid alias for special grids for it include a "_r*" in the middle of the compset name (between the atmosphere/land grid and the ocean grid/mask).
 
 To get a list of the grid alises use the ``query_config`` command as follows:

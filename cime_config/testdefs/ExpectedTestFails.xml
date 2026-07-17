@@ -135,7 +135,7 @@
   </test>
 
   <!-- mpi-serial failures on derecho_intel with the intel compiler update to intel/2025.3.2 -->
-  <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRs.derecho_intel.clm-decStart1851_noinitial">
+  <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRsGs.derecho_intel.clm-decStart1851_noinitial">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3798</issue>

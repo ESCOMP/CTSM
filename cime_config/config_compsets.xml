@@ -108,13 +108,13 @@
 
   <!-- compsets for mizuRoute -->
   <compset>
-    <alias>I2000Clm60SpMizGs</alias>
+    <alias>I2000Clm60SpMiz</alias>
     <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MIZUROUTE_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_f09_rHDMAlk_mg17"/>
   </compset>
 
   <compset>
-    <alias>I2000Clm60SpMizGsNldas</alias>
+    <alias>I2000Clm60SpMizNldas</alias>
     <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
