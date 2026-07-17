@@ -41,12 +41,21 @@ SHELL ["/bin/bash", "-c"]
 # -llapack -lblas) live in the CRB repo. The perl modules are needed by
 # CTSM's build-namelist. The system gcc/g++ only bootstraps the
 # GCC ${GCC_VERSION} build below.
+#
+# git is deliberately NOT installed. It would pull in openssh, whose rpm
+# chowns a setuid helper (ssh-keysign) to a non-root id -- which fails
+# under NCAR's rootless single-UID podman ("cpio: chown failed"), the one
+# operation that can't build here. The image doesn't need git anyway:
+# CTSM checkout and `git-fleximod update` run OUTSIDE the container in CI
+# (see .github/workflows/cirrus-testing.yml), and create_test uses git
+# only for an optional version stamp, recording MODEL_VERSION=unknown when
+# git is absent.
 RUN dnf -y install dnf-plugins-core \
     && dnf config-manager --set-enabled crb \
     && dnf -y install \
         gcc gcc-c++ \
         make cmake m4 patch file diffutils hostname which findutils \
-        wget git bzip2 xz \
+        wget bzip2 xz \
         python3 \
         perl-core perl-XML-LibXML \
         zlib-devel libcurl-devel \
