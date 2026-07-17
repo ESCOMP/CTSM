@@ -318,4 +318,17 @@
       <issue>#3507</issue>
     </phase>
   </test>  
+
+  <!-- other tests -->
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2Bare">
+    <phase name="RUN">
+      <status>FAIL</status>
+    </phase>
+  </test>
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2Grass">
+    <phase name="RUN">
+      <status>FAIL</status>
+    </phase>
+  </test>
+
 </expectedFails>
