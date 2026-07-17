@@ -62,6 +62,14 @@ RUN dnf -y install dnf-plugins-core \
         lapack-devel blas-devel \
     && dnf clean all
 
+# Extract source tarballs as the build user, not the uid/gid recorded in
+# the archive. Upstream tarballs (GCC's, etc.) are owned by the packager's
+# uid/gid; under rootless single-UID podman tar cannot chown to an unmapped
+# id ("Cannot change ownership ... Invalid argument"). TAR_OPTIONS is
+# honored by every tar invocation, including the nested ones inside GCC's
+# contrib/download_prerequisites.
+ENV TAR_OPTIONS=--no-same-owner
+
 # ---- GCC (matches derecho's gcc/12.2.0 module) ----
 # download_prerequisites vendors gmp/mpfr/mpc/isl into the tree.
 # --disable-bootstrap: single-stage build; the result is the same
