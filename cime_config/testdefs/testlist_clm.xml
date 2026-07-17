@@ -8,7 +8,7 @@
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
         prelpha: Run before CESM alpha tags (subset of aux_clm tests)
         prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
-        aux_cime_baselines: CESM cime baselines (subset of aux_clm tests)
+        aux_cime_baselines: CESM cime baselines (subset of aux_clm tests) (these tests are run nightly with latest submodules on main machine)
         hillslope: Experimental test list used for the hillslope option of the model
         rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
         matrixcn: Tests exercising the matrix-CN capability
@@ -1470,7 +1470,6 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
-      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3002,10 +3001,10 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
-      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
