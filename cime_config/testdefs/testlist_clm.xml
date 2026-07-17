@@ -2211,7 +2211,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_Ld600_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRs" testmods="clm/cropMonthlyNoinitial">
+  <test name="ERS_Ld600_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRsGs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -2221,7 +2221,7 @@
       <option name="comment">tests mid-year restart, with the restart file being written in the middle of the first year after cold start initialization</option>
     </options>
   </test>
-  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRs" testmods="clm/ciso_monthly">
+  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRsGs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -2231,7 +2231,7 @@
       <option name="comment">multi-year test with crops and isotopes that includes all crop types; added (2020-05-21) in order to test the new switchgrass and miscanthus crops (which otherwise aren't currently tested)</option>
     </options>
   </test>
-  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRs" testmods="clm/ciso_monthly--clm/matrixcnOn">
+  <test name="ERS_Ly5_Mmpi-serial" grid="1x1_smallvilleIA" compset="I1850Clm50BgcCropRsGs" testmods="clm/ciso_monthly--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -2242,7 +2242,7 @@
       <option name="comment">Repeat ERS_Ly5_Mmpi-serial...ciso_monthly test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERS_Ld1200_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
+  <test name="ERS_Ld1200_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -2252,7 +2252,7 @@
       <option name="comment">tests mid-year restart, with the restart file being written in the middle of the second year after cold start initialization (to test crop restarts at different points throughout the first few years after cold start)</option>
     </options>
   </test>
-  <test name="ERS_Ld1600_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
+  <test name="ERS_Ld1600_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2262,7 +2262,7 @@
       <option name="comment">tests mid-year restart, with the restart file being written after more than 2 years after cold start initialization (to test crop restarts at different points throughout the first few years after cold start)</option>
     </options>
   </test>
-  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial">
+  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/cropMonthlyNoinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2273,7 +2273,7 @@
       <option name="comment">20 year single point tests with BGC-Crop starting from cold start (crop keeps a 20 year running mean, so this tests the sequence of that running mean being established)</option>
     </options>
   </test>
-  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/cropMonthlyNoinitial--clm/matrixcnOn">
+  <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/cropMonthlyNoinitial--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2294,7 +2294,7 @@
       <option name="comment">Include a long ERS test of the cmip6 configuration, though at coarse resolution. This gives a year+ test covering the output_crop usermod, which is something we want: if this is removed, we should add a test of at least a year duration covering the output_crop usermod. This test needs to use init_interp to work, because of adding virtual Antarctica columns (currently the default out-of-the-box setting uses init_interp for this).</option>
     </options>
   </test>
-  <test name="ERS_Ly3_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly3_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -2369,7 +2369,7 @@
       <option name="comment">Exact restart short DEBUG SP test with clm60</option>
     </options>
   </test>
-  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput">
+  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2380,7 +2380,7 @@
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
-  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/cropMonthOutput--clm/matrixcnOn_ignore_warnings">
+  <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/cropMonthOutput--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2887,7 +2887,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsRLA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRsGs" testmods="clm/ptsRLA">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -3127,7 +3127,7 @@
       <option name="comment">Want a debug test that tests a number of aspects of transient crops, including a new crop landunit and shifting PCT_CFT; move to CLM50 once we can get it fast enough (see bug 2391)</option>
     </options>
   </test>
-  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynlakes_monthly">
+  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/smallville_dynlakes_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -3136,7 +3136,7 @@
       <option name="comment">Include a test of transient lakes</option>
     </options>
   </test>
-  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRs" testmods="clm/smallville_dynurban_monthly">
+  <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/smallville_dynurban_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -3176,7 +3176,7 @@
       <option name="comment">Since bias correction is in CDEPS we want to make sure CESM testing exercises this, in case a CDEPS change causes problems</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRs" testmods="clm/ptsROA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mg37" compset="I2000Clm50SpRsGs" testmods="clm/ptsROA">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -3400,7 +3400,7 @@
       <option name="comment">Single point 3-year test for CTSM science test list with latest CLM version</option>
     </options>
   </test>
-  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianRs" testmods="clm/ignor_warn_cropMonthOutputColdStart">
+  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianRsGs" testmods="clm/ignor_warn_cropMonthOutputColdStart">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
