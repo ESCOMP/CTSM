@@ -3,7 +3,7 @@
 Decomposition
 =================
 
-Decomposition of fresh litter material into progressively longer turnover pools of soil organic matter is represented in CLM as a cascade of transformations between decomposing coarse woody debris (CWD), litter, and soil organic matter (SOM) pools, each defined at :math:`{n}_{lev}` vertical levels. The default soil submodel in CLM6 is comparable to the Century model (Parton et al 1988). 
+Decomposition of fresh litter material into progressively longer turnover pools of soil organic matter is represented in CLM as a cascade of transformations between decomposing coarse woody debris (CWD), litter, and soil organic matter (SOM) pools, each defined at :math:`{n}_{lev}` levels in the vertical. The default soil submodel in CLM6 is comparable to the Century model (:ref:`Parton et al. 1988 <Partonetal1988>`). 
 
 
 Century-based Pool Structure, Rate Constants and Parameters
