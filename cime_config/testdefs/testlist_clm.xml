@@ -3399,16 +3399,6 @@
       <option name="comment">Single point 3-year test for CTSM science test list with latest CLM version</option>
     </options>
   </test>
-  <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcDvCropQianRsGs" testmods="clm/ignor_warn_cropMonthOutputColdStart">
-    <machines>
-      <machine name="derecho" compiler="gnu" category="aux_clm"/>
-      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
-    </machines>
-    <options>
-      <option name="wallclock">01:40:00</option>
-      <option name="comment">Single point 3-year test with DV"</option>
-    </options>
-  </test>
   <test name="SSPMATRIXCN_Ly5_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRsGs" testmods="clm/ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>

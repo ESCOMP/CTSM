@@ -13,8 +13,8 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM45[%SP][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
+    <desc lnd="CLM45[%SP][%BGC][%BGC-CROP][%FATES]"                  >clm4.5:</desc>
+    <desc lnd="CLM50[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
     <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
@@ -24,8 +24,6 @@
     <desc option="BGC-NOANTHRO"    >BGC (vert. resol. CN and methane) without anthropomorphic influences:</desc>
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
     <desc option="FATES-SP"        >Satellite phenology with FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
-    <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
-    <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
     <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
 
@@ -278,13 +276,6 @@ Caveats:
       <value compset="CAM[^_]*_CLM[^_]*BGC-CROP"  >--bgc bgc --crop --no-megan --no-drydep --no-fire_emis</value>
       <!-- ======================================= End of Coupled to CAM Options ===============================  -->
 
-      <!-- Options specific for CLM4.5 -->
-      <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
-
-      <!-- Options specific for CLM5.0 -->
-      <value compset="_CLM50%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
