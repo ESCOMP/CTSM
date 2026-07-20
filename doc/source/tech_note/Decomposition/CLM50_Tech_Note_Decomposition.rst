@@ -9,7 +9,7 @@ Decomposition of fresh litter material into progressively longer turnover pools 
 Century-based Pool Structure, Rate Constants and Parameters
 ----------------------------------------------------------------
 
-The Century-based decomposition cascade is a first-order decay model. It includes a CWD pool, 3 litter pools, and 3 soil organic matter pools. Pools each have a turnover time and are connected to a number of different pools, as seen in Figure 2.22.1. Soil pools also each have a fixed C:N ratio. Each flux between pools has a respiration fraction that determines the proportion of carbon lost during the flux.
+The Century-based decomposition cascade is a first-order decay model. It includes a CWD pool, 3 litter pools, and 3 soil organic matter pools. Pools each have a turnover time and are connected to a number of different pools, as seen in :numref:`Figure Century-based soil model structure`. Soil pools also each have a fixed C:N ratio. Each flux between pools has a respiration fraction that determines the proportion of carbon lost during the flux.
 
 .. _Figure Century-based soil model structure:
 
