@@ -279,7 +279,7 @@ where :math:`M_{j1} =(M_{{leaf}},M_{{livestem,1}},M_{{deadstem}},M_{{root}},M_{{
 
 where :math:`M_{livestem,2}` is the corresponding mortality factor (:numref:`Table PFT-specific fire parameters`).
 
-Fire nitrogen emissions and nitrogen transfers due to fire-induced mortality are calculated the same way as for carbon, using the same values for combustion completeness and mortality factors. With CLM's dynamic vegetation option enabled, the number of tree PFT individuals killed by fire per km\ :sup:`2` (individual km\ :sup:`-2` s\ :sup:`-1`) is given by
+Fire nitrogen emissions and nitrogen transfers due to fire-induced mortality are calculated the same way as for carbon, using the same values for combustion completeness and mortality factors. With CLM's dynamic vegetation option (i.e. transient land use) enabled, the number of tree PFT individuals killed by fire per km\ :sup:`2` (individual km\ :sup:`-2` s\ :sup:`-1`) is given by
 
 .. math::
    :label: 23.29

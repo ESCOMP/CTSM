@@ -6,8 +6,6 @@ Dynamic Global Vegetation and FATES
 What has changed
 ^^^^^^^^^^^^^^^^^^^^
 
-- Deprecation of the dynamic global vegetation model (DGVM): The CLM5.0 model contains the legacy 'CNDV' code, which runs the CLM biogeochemistry model in combination with the LPJ-derived dynamics vegetation model introduced in CLM3. While this capacity has not technically been removed from the model, the DGVM has not been tested in the development of CLM5 and is no longer scientifically supported.
-
 - Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5.
 
 FATES
