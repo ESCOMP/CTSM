@@ -862,7 +862,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:40:00</option>
       <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side (DEBUG to work on izumi_nag)</option>
     </options>
   </test>
@@ -4408,6 +4408,16 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Parallel test of mizuRoute for the small 5x5_amazon HDMA grid</option>
+      <option name="comment">Add to CESM testing because mizuRoute can be sensitive to submodule changes</option>
+    </options>
+  </test>
+  <test name="ERS_D_Ld10" grid="5x5_amazon_r05" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
+    <machines>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Parallel test of mizuRoute for the tiny 5x5_amazon r05 grid</option>
       <option name="comment">Add to CESM testing because mizuRoute can be sensitive to submodule changes</option>
     </options>
   </test>
