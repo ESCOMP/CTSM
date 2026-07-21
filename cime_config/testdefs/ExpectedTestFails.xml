@@ -48,7 +48,7 @@
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#3661</issue>
-      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
+      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields; as per #3661, we commented out the failing fields to allow this test to catch new problems as they arise.</comment>
     </phase>
   </test>
   <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
