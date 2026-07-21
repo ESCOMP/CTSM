@@ -3795,15 +3795,6 @@
 
     </machines>
   </test>
-  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Ctsm50NwpBgcCropGswpGs" testmods="clm/default">
-    <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:30:00</option>
-      <option name="comment">A debug ERP test of the NWP configuration with active BGC and CROP.</option>
-    </options>
-  </test>
   <test name="LWISO_Ld10" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/coldStart">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>

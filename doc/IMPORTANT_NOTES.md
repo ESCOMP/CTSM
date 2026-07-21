@@ -1,6 +1,14 @@
 # Important Notes on Experimental Features of CTSM
 ---
 
+## Compsets that are NOT tested
+
+- "Nwp" (Numerical Weather Prediction) compsets with BGC or BGC-Crop
+- "Nwp" compsets with active GLC (CISM)
+- LILAC with active GLC
+- FATES with active GLC
+- mizuRoute with active GLC or BGC or BGC-Crop
+
 ## Namelist items not regularly tested or used (some aren't even implemented)
 
 See '../bld/namelist_files/namelist_definition_ctsm.xml' -- for definitions of all namelist variables

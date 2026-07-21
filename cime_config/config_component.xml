@@ -14,8 +14,8 @@
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
     <desc lnd="CLM45[%SP][%BGC][%BGC-CROP][%FATES]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
-    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
+    <desc lnd="CLM50[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP]">clm5.0:</desc>
+    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP]">clm6.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
     <desc option="SP-NOANTHRO"     >Satellite phenology without anthropomorphic influences</desc>
@@ -28,7 +28,6 @@
     <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
 
     <desc option="NWP-SP"          >NWP configuration with satellite phenology:</desc>
-    <desc option="NWP-BGC-CROP"    >NWP configuration with BGC and CROP:</desc>
   </description>
   <entry id="COMP_LND">
     <type>char</type>
