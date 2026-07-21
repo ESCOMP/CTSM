@@ -17,7 +17,7 @@ The Century-based decomposition cascade is a first-order decay model. It include
 
   Pool structure, transitions, respired fractions (numbers at end of arrows), and turnover times (numbers in boxes) for the default, Century-based soil model in CLM.
 
-The turnover times for the Century-based pool structure follow those described in Parton et al. (1988) (Table 2.22.1).
+The turnover times for the Century-based pool structure follow those described in :ref:`Parton et al. (1988) <Partonetal1988>` (:numref:`Table Turnover times`).
 
 .. _Table Turnover times:
 
