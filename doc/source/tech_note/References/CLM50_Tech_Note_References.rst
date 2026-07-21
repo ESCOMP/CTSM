@@ -388,6 +388,10 @@ Dutch, V.R., Rutter, N., Wake, L., Sandells, M., Derksen, C., Walker, B., Hould 
 
 Eitel, J.U., Maguire, A.J., Boelman, N., Vierling, L.A., Griffin, K.L., Jensen, J., Magney, T.S., Mahoney, P.J., Meddens, A.J., Silva, C., and Sonnentag, O. 2019. Proximal remote sensing of tree physiology at northern treeline: Do late-season changes in the photochemical reflectance index (PRI) respond to climate or photoperiod? Remote Sens. Environ. 221:340–350.
 
+.. _Emmonsetal2020:
+
+Emmons, L.K., Schwantes, R. H., Orlando, J. J., Tyndall, G., Kinnison, D., Lamarque, J. -F., Marsh, D., Mills, M., Tilmes, S., Bardeen, C., Buchholz, R. R., Conley, A., Gettelman, A., Garcia, R., Simpson, I., Blake, D. R., Meinardi, S., Petron, G. 2020. The Chemistry Mechanism in the Community Earth System Model version 2 (CESM2), J. Advances in Modeling Earth Systems, 12, https://doi.org/10.1029/2019MS001882. 
+
 .. _EntekhabiEagleson1989:
 
 Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization for atmospheric general circulation models including subgrid scale spatial variability. J. Climate 2:816-831.
@@ -795,6 +799,10 @@ Ladd, J.N., Jocteur-Monrozier, L. and Amato, M., 1992. Carbon turnover and nitro
 .. _Lamarqueetal2010:
 
 Lamarque, J.-F., et al. 2010. Historical (1850-2000) gridded anthropogenic and biomass burning emissions of reactive gases and aerosols: methodology and application. Atmos. Chem. Phys. Discuss. 10:4963-5019. DOI:10.5194/acpd-10-4963-2010.
+
+.. _Lamarqueetal2012:
+
+Lamarque, J.-F., Emmons, L. K., Hess, P. G., Kinnison, D. E., Tilmes, S., Vitt, F., Heald, C. L., Holland, E. A., Lauritzen, P. H., Neu, J., Orlando, J. J., Rasch, P. J., and Tyndall, G. K.  2012.CAM-chem: description and evaluation of interactive atmospheric chemistry in the Community Earth System Model, Geosci. Model Dev., 5, 369–411, https://doi.org/10.5194/gmd-5-369-2012. 
 
 .. _Larcher1995:
 
@@ -1677,6 +1685,10 @@ Uriarte, M. et al., 2009. Natural disturbance and human land use as determinants
 .. _VallanoSparks2007:
 
 Vallano, D.M. and Sparks, J.P. 2007. Quantifying foliar uptake of gaseous itrogen dioxide using enriched foliar :math:`\delta^{15}`\  N values. New Phytologist 177:946-955.
+
+.. _ValMartinetal2014:
+
+Val Martin, M., Heald, C. L. and Arnold, S. R.  2014. Coupling dry deposition to vegetation phenology in the Community Earth System Model: Implications for the simulation of surface O3, Geophys. Res. Lett., 41, 2988–2996, doi:10.1002/2014GL059651.
 
 .. _vanderWerfetal2010:
 
