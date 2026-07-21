@@ -544,12 +544,12 @@ contains
 
     this%bw_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%bw_col(:,-nlevsno+1:0)
-    call hist_addfld2d ( &
-         fname=this%info%fname('SNO_BW'), &
-         units='kg/m3', type2d='levsno', &
-         avgflag='A', &
-         long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   call hist_addfld2d ( &
+!        fname=this%info%fname('SNO_BW'), &
+!        units='kg/m3', type2d='levsno', &
+!        avgflag='A', &
+!        long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d ( &
          fname=this%info%fname('SNO_BW_ICE'), &
