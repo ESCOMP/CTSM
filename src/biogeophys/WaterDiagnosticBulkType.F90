@@ -358,12 +358,12 @@ contains
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
 
     this%rh_af_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('RHAF'), &
-         units='fraction', &
-         avgflag='A', &
-         long_name=this%info%lname('fractional humidity of canopy air'), &
-         ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
+!   call hist_addfld1d ( &
+!        fname=this%info%fname('RHAF'), &
+!        units='fraction', &
+!        avgflag='A', &
+!        long_name=this%info%lname('fractional humidity of canopy air'), &
+!        ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
 
     if(use_luna)then
        call hist_addfld1d ( &

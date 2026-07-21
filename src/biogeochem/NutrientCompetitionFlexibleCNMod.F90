@@ -138,9 +138,9 @@ contains
          avgflag='A', long_name='Leaf CN ratio used for flexible CN', &
          ptr_patch=this%actual_leafcn )
     this%actual_storage_leafcn(begp:endp) = spval
-    call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
-         avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
-         ptr_patch=this%actual_storage_leafcn, default='inactive')
+!   call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
+!        avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
+!        ptr_patch=this%actual_storage_leafcn, default='inactive')
 
   end subroutine InitHistory
 
