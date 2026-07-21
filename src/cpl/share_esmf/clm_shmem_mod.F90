@@ -159,6 +159,13 @@ contains
     if (istat /= 0) call endrun('clm_shmem_mod: allocate failed (mpi-serial path)')
     win = SHMEM_WIN_NONE
 #endif
+
+    ! Post-condition: the allocation must have produced an associated pointer of length n.
+    ! A disassociated ptr here means the shared-memory allocation returned a null base
+    ! address (e.g. the MPI-3 path being unavailable); catching it now gives a clear error
+    ! instead of a confusing "reference to disassociated pointer" at the first use of ptr.
+    if (.not. associated(ptr)) call endrun('clm_shmem_mod: clm_shmem_alloc_i4_1d: allocation did not associate ptr')
+    if (size(ptr) /= n) call endrun('clm_shmem_mod: clm_shmem_alloc_i4_1d: allocated size does not match n')
   end subroutine clm_shmem_alloc_i4_1d
 
   !=============================================================================
@@ -176,6 +183,12 @@ contains
     integer, allocatable :: tmp(:)
     integer :: ierr
 #endif
+
+    ! ptr must be the node-shared buffer of length n created by clm_shmem_alloc_i4_1d.
+    ! Guard against a caller passing an inconsistent n: the mpi_allreduce and the ptr(1:n)
+    ! store below would otherwise read or write past the end of the buffer.
+    if (.not. associated(ptr)) call endrun('clm_shmem_mod: clm_shmem_leader_allreduce_sum_i4: ptr is not associated')
+    if (size(ptr) /= n) call endrun('clm_shmem_mod: clm_shmem_leader_allreduce_sum_i4: size(ptr) does not match n')
 
     call clm_shmem_fence(win)             ! all node stores complete and visible to leader
 #ifndef NO_MPI2
