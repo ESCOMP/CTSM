@@ -46,7 +46,7 @@ The following are NOT currently tested nor turned on by default:
     - snicar_solarspec /= mid_latitude_winter
     - snicar_use_aerosol /= FALSE
     - urban_traffic (not implemented)
-    - use_cndv (deprecated)
+    - use_cndv (deprecated, not tested and being removed)
     - use_extralakelayers
     - usefrootc
     - usephfact
