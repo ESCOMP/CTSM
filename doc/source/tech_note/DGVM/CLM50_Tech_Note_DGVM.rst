@@ -6,7 +6,7 @@ Dynamic Global Vegetation and FATES
 What has changed
 ^^^^^^^^^^^^^^^^^^^^
 
-- Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM5.
+- Introduction of FATES: The Functionally Assembled Terrestrial Ecosystem Simulator (FATES) is the actively developed DGVM for the CLM6
 
 FATES
 ^^^^^^^^^^^^^^^^^^^^

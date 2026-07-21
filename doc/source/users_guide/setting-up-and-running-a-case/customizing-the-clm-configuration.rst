@@ -291,7 +291,7 @@ The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and ma
 
 ``-chk_res`` ensures that the resolution chosen is supported by CLM. If the resolution is NOT supported it will cause the CLM ``build-namelist`` to abort when run. So when either ``preview_namelist``, ``case.build`` or ``case.run`` is executed it will abort early. Since, the CESM scripts only support certain resolutions anyway, in general this option is NOT needed in the context of running CESM cases.
 
-``-clm_demand`` asks the ``build-namelist`` step to require that the list of variables entered be set. Typically, this is used to require that optional filenames be used and ensure they are set before continuing. For example, you may want to require that fpftdyn be set to get dynamically changing vegetation types. To do this you would do the following.
+``-clm_demand`` asks the ``build-namelist`` step to require that the list of variables entered be set. Typically, this is used to require that optional filenames be used and ensure they are set before continuing. For example, you may want to require that fpftdyn be set to get dynamically changing vegetation types (i.e. transient landuse change). To do this you would do the following.
 ::
 
    > ./xmlchange CLM_BLDNML_OPTS="-clm_demand fpftdyn"
@@ -302,7 +302,7 @@ To see a list of valid variables that you could set do this:
    > cd $CTSMROOT/doc
    > ../bld/build-namelist -clm_demand list
 
-.. note:: Using a 20th-Century transient compset or the ``20thC_transient`` use-case using ``CLM_NML_USE_CASE`` would set this as well, but would also use dynamic nitrogen and aerosol deposition files, so using ``-clm_demand`` would be a way to get *just* dynamic vegetation types and NOT the other files as well.
+.. note:: Using a 20th-Century transient compset or the ``20thC_transient`` use-case using ``CLM_NML_USE_CASE`` would set this as well, but would also use dynamic nitrogen and aerosol deposition files, so using ``-clm_demand`` would be a way to get *just* dynamic vegetation types (transient landuse change) and NOT the other files as well.
 
 ``-drydep`` adds a dry-deposition namelist for testing to the driver. This is a driver namelist, but adding the option here has CLM ``build-namelist`` create the ``drv_flds_in`` file that the driver will copy over and use. Invoking this option does have an impact on performance even for I compsets and will slow the model down. It's also only useful when running with an active atmosphere model that makes use of this information.
 
