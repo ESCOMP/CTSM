@@ -20,6 +20,19 @@ module clm_shmem_mod
   !   <all ranks may now read ptr for the rest of its lifetime>
   !   call clm_shmem_free(ptr, win)                   ! collective over the node comm
   !
+  ! Terminology (MPI-3 shared-memory concepts used throughout this module):
+  !   window - the shared allocation itself (an "MPI window", type MPI_Win), created once
+  !            per node and mapped into the address space of every rank on that node; "win"
+  !            is the integer handle used to reference and later free it.
+  !   leader - the single rank per node that owns the physical storage (node-local rank 0,
+  !            clm_shmem_is_leader()); it is the only rank that requests the allocation,
+  !            initializes it, and reduces across nodes.
+  !   fence  - an MPI_Win_fence synchronization: a collective call over the node that makes
+  !            stores issued by one rank visible to the other ranks sharing the window.
+  !   color  - the grouping key passed to MPI_Comm_split; here leaders get color 0 (so they
+  !            are gathered into leader_comm) while non-leaders get MPI_UNDEFINED (so they
+  !            are excluded from it).
+  !
   ! The MPI-3 shared-memory path is used for real MPI builds.  mpi-serial does not
   ! implement the MPI-2/MPI-3 one-sided / shared-memory interfaces, so for
   ! mpi-serial builds (CPP macro NO_MPI2, set by CIME for MPILIB=mpi-serial) a
@@ -56,8 +69,8 @@ module clm_shmem_mod
   logical, save :: initialized = .false.
   integer, save :: node_comm   = MPI_COMM_NULL  ! ranks sharing a node
   integer, save :: leader_comm = MPI_COMM_NULL  ! one rank per node (the leaders)
-  integer, save :: node_rank   = 0
-  integer, save :: node_size   = 1
+  integer, save :: node_rank   = 0              ! this rank's index within node_comm (0 => leader)
+  integer, save :: node_size   = 1              ! number of ranks sharing this node
   logical, save :: is_leader   = .true.
 
 contains
@@ -66,6 +79,11 @@ contains
   subroutine init_comms()
     ! Lazily build the node-local and node-leader communicators.  Collective over
     ! mpicom; safe to call from every shared-memory request.
+    !
+    ! NO_MPI2 is defined by CIME only for MPILIB=mpi-serial, whose stub library lacks the
+    ! MPI-2/MPI-3 one-sided and shared-memory routines.  Throughout this module, therefore,
+    ! "#ifndef NO_MPI2" selects the real-MPI shared-memory path and the "#else" branch
+    ! selects the single-task mpi-serial fallback.
 #ifndef NO_MPI2
     integer :: ierr, color
 #endif
@@ -100,15 +118,16 @@ contains
   subroutine clm_shmem_alloc_i4_1d(ptr, win, n)
     ! Allocate a node-shared default-integer array of length n.  Only the node
     ! leader requests storage; peers map the leader's contiguous segment.
-    integer, pointer, intent(out) :: ptr(:)
-    integer,          intent(out) :: win
-    integer,          intent(in)  :: n
+    integer, pointer, intent(out) :: ptr(:)  ! Fortran pointer mapped onto the node-shared buffer
+    integer,          intent(out) :: win     ! MPI window handle for the allocation (pass to clm_shmem_free)
+    integer,          intent(in)  :: n       ! number of elements to allocate (identical on every rank)
 
 #ifndef NO_MPI2
     integer(kind=MPI_ADDRESS_KIND) :: winsize, qsize
     integer :: ierr, disp_unit, qdisp
     integer :: itmp
-    type(c_ptr) :: baseptr
+    type(c_ptr) :: baseptr  ! shared-segment base address; the MPI-3 win routines return the mapped
+                            ! address as a C pointer, which c_f_pointer then turns into the pointer ptr
 #else
     integer :: istat
 #endif
