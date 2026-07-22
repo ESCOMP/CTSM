@@ -20,7 +20,6 @@ The following are tested but not on by default (for any physics):
 
     - all_active
     - allow_invalid_gdd20_season_inputs
-    - h2osfcflag (deprecated)
     - use_nvmovement
     - use_soil_moisture_streams
 
@@ -80,6 +79,9 @@ The following are NOT currently tested nor turned on by default:
     - pertlim
     - use_cndv
     - use_vichydro
+    - h2osfcflag
+    - snow_cover_fraction_method = 'NiuYang2007'
+    - use_subgrid_fluxes = .false.
 
 ### The following are clm4_5 physics options that are deprecated and will be removed
 ### (They also are NOT tested)
