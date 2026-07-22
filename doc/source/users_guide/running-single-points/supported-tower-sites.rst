@@ -111,7 +111,7 @@ Spin-up notes
    ::
 
        cd  CTSM/tools/site_and_regional
-       run_tower --plumber-sites AR-SLu --run-type ad --xmlchange STOP_OPTION=nyears,STOP_N=100,RESUBMIT=2,JOB_WALLCLOCK_TIME=06:00:00
+       ./run_tower --plumber-sites AR-SLu --run-type ad --xmlchange STOP_OPTION=nyears,STOP_N=100,RESUBMIT=2,JOB_WALLCLOCK_TIME=06:00:00
 
 #. The initial and final years of the simulations may differ for the spin-up (e.g., ad and postad) and transient simulations. This is to avoid calendar errors encountered when the start time is local midnight.
 
