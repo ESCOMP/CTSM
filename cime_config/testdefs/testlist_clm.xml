@@ -2017,13 +2017,13 @@
       <option name="comment">threaded ERP test for crop for 25 months</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm45BgcCrop" testmods="clm/crop">
+  <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm-crop--clm-bgcCropSimplePhysics">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">include a debug test of I1850Clm45BgcCrop</option>
+      <option name="comment">include a debug test of I1850Clm50BgcCrop with SimplePhysics testmod</option>
       <option name="tput_tolerance">0.5</option>
     </options>
   </test>
