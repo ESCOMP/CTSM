@@ -70,7 +70,7 @@ PLUMBER2 Tower Single Point Simulations
 
 .. note:: A few important notes regarding the PLUMBER2 tower site simulations are that the default run type is ``ad``; additionally, PLUMBER2 cases all start in different years; and the atmospheric forcing data is in local time, consequently, the model is started at GMT time corresponding to local midnight.
 
-Currently, the ``run_tower`` tool supports running CTSM at PLUMBER2 sites using forcing data from the PLUMBER2 project. Detailed site information is provided in `Ukkola et al. 2022 <https://doi.org/10.5194/essd-14-449-2022>`_ , and the description of the experiment and results is provided in `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_.
+Currently, the ``run_tower`` tool supports running CTSM at PLUMBER2 sites using forcing data from the PLUMBER2 project. Detailed site information is provided in `Ukkola et al. 2022 <https://doi.org/10.5194/essd-14-449-2022>`_ , and the description of the experiment and results are provided in `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_.
 Information on the specific sites can be found `here <https://researchdata.edu.au/plumber2-forcing-evaluation-surface-models/1656048>`_.
 
 Currently supported PLUMBER2 sites can be found by running ``run_tower --help``. Keep in mind that the experiment was designed to run 170 sites, however, `Abramowitz et al. 2024 <https://doi.org/10.5194/bg-21-5517-2024>`_ identified issues with some of the sites (e.g., sites with precipitation reported in one unit while the metadata reported a different unit), and most of that article only uses 156 sites.
