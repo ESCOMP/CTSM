@@ -42,14 +42,11 @@ SHELL ["/bin/bash", "-c"]
 # CTSM's build-namelist. The system gcc/g++ only bootstraps the
 # GCC ${GCC_VERSION} build below.
 #
-# git is deliberately NOT installed. It would pull in openssh, whose rpm
-# chowns a setuid helper (ssh-keysign) to a non-root id -- which fails
-# under NCAR's rootless single-UID podman ("cpio: chown failed"), the one
-# operation that can't build here. The image doesn't need git anyway:
-# CTSM checkout and `git-fleximod update` run OUTSIDE the container in CI
-# (see .github/workflows/cirrus-testing.yml), and create_test uses git
-# only for an optional version stamp, recording MODEL_VERSION=unknown when
-# git is absent.
+# git is NOT dnf-installed: it pulls in openssh, whose rpm chowns a setuid
+# helper (ssh-keysign) to a non-root id, which fails under NCAR's rootless
+# single-UID podman ("cpio: chown failed"). git IS needed at runtime --
+# CIME's cprnc/PIO builds clone genf90 via git -- so it is built from
+# source in a later layer instead (see the git section near the bottom).
 RUN dnf -y install dnf-plugins-core \
     && dnf config-manager --set-enabled crb \
     && dnf -y install \
@@ -228,6 +225,28 @@ RUN cd /tmp \
     && make -j"${MAKE_JOBS}" \
     && make install \
     && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
+
+# ---- git (built from source; NO openssh dependency) ----
+# CIME build steps clone helper repos at build time via CMake
+# ExternalProject_Add: cprnc fetches genf90 (github.com/PARALLELIO/genf90),
+# and PIO/CDEPS/CMEPS generate code with genf90 too -- so the image needs a
+# real git at runtime. git cannot be dnf-installed here: it pulls openssh,
+# whose rpm chowns a setuid helper (ssh-keysign) to a non-root id, which
+# fails under rootless single-UID podman ("cpio: chown failed"). Building
+# from source avoids openssh entirely -- https clones go through libcurl --
+# and behaves like a stock git. NO_OPENSSL/NO_EXPAT/NO_GETTEXT/NO_TCLTK drop
+# optional deps we don't ship. Placed after the toolchain so editing this
+# layer doesn't rebuild those.
+ARG GIT_VERSION=2.45.2
+RUN cd /tmp \
+    && wget -nv "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.xz" \
+    && tar xf "git-${GIT_VERSION}.tar.xz" \
+    && cd "git-${GIT_VERSION}" \
+    && make -j"${MAKE_JOBS}" prefix=/usr/local CC=gcc \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 all \
+    && make prefix=/usr/local \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 install \
+    && rm -rf /tmp/git-*
 
 # Runtime environment for CIME's "container" machine:
 # - ESMFMKFILE: not set by the machine config; must come from the image.
