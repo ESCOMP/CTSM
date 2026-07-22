@@ -12,7 +12,8 @@ module FireEmisFactorsMod
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
   use clm_varpar,   only : maxveg
-  use pftconMod,    only : nc3crop
+  use pftconMod,    only : num_pfts_possible_natural
+  use pftconMod,    only : handle_too_short_fire_emis_factor_file
 !
   implicit none
   private
@@ -74,11 +75,7 @@ contains
     endif
 
     factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
-    ! If fire emissions factor file only includes natural PFT's, but this is a crop case
-    ! Copy the generic crop factors to the crop CFT's from generic crop
-    if ( size(factors) > nc3crop )then
-       factors(nc3crop+1:) = comp_factors_table( ndx )%eff(nc3crop)
-    end if
+    call handle_too_short_fire_emis_factor_file(factors, comp_factors_table(ndx)%eff)
     molecwght  = comp_factors_table( ndx )%wght
 
   end subroutine fire_emis_factors_get
@@ -114,6 +111,7 @@ contains
     integer :: ierr, i, vid
     integer :: dimid, n_comps, n_pfts
     integer :: comp_ef_vid,comp_name_vid,comp_mw_vid
+    integer :: n_pfts_min
 
     real(r8),          allocatable :: comp_factors(:)
     character(len=64), allocatable :: comp_names(:)     ! FireEmis compound names
@@ -128,10 +126,14 @@ contains
     call ncd_inqdlen( ncid, dimid, n_comps, name='Comp_Num')
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
-    if ( (n_pfts < maxveg) .and. (n_pfts < nc3crop) )then
-       write(iulog,*) ' n_pfts = ', n_pfts, ' maxveg = ', maxveg, ' nat_pft = ', nc3crop
-       call endrun('Number of PFTs on the fire emissions file is less than the number of natural PFTs from the surface dataset')
+    n_pfts_min = num_pfts_possible_natural + 1
+    if (n_pfts < n_pfts_min) then
+       write(iulog,*) 'n_pfts = ', n_pfts
+       write(iulog,*) 'num_pfts_possible_natural = ', num_pfts_possible_natural
+       write(iulog,*) 'n_pfts_min = ', n_pfts_min
+       call endrun('Number of PFTs on the fire emissions file needs to have at least the number of natural PFTs from the surface dataset plus one. The extra is intended for use by all missing crops (see handle_too_short_fire_emis_factor_file()), although due to what is probably a bug (https://github.com/ESCOMP/CTSM/issues/4120), it will be used by ALL crops.')
     end if
+
     if ( n_pfts > mxpft )then
        write(iulog,*) ' n_pfts = ', n_pfts, ' mxpft = ', mxpft
        call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')
