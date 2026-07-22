@@ -268,38 +268,47 @@ contains
             ptr_patch=this%fv_patch, default='inactive')
 
        this%rah1_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='RAH1', units='s/m', &
 !           avgflag='A', long_name='aerodynamical resistance ', &
 !           ptr_patch=this%rah1_patch, default='inactive')
        this%rah2_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='RAH2', units='s/m', &
 !           avgflag='A', long_name='aerodynamical resistance ', &
 !           ptr_patch=this%rah2_patch, default='inactive')
        this%raw1_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='RAW1', units='s/m', &
 !           avgflag='A', long_name='aerodynamical resistance ', &
 !           ptr_patch=this%raw1_patch, default='inactive')
        this%raw2_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='RAW2', units='s/m', &
 !           avgflag='A', long_name='aerodynamical resistance ', &
 !           ptr_patch=this%raw2_patch, default='inactive')
        this%ustar_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='USTAR', units='m/s', &
 !           avgflag='A', long_name='friction velocity ', &
 !           ptr_patch=this%ustar_patch, default='inactive')
        this%um_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='UM', units='m/s', &
 !           avgflag='A', long_name='wind speed plus stability effect', &
 !           ptr_patch=this%um_patch, default='inactive')
        this%uaf_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='UAF', units='m/s', &
 !           avgflag='A', long_name='canopy air speed ', &
 !           ptr_patch=this%uaf_patch, default='inactive')
        this%taf_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='TAF', units='K', &
 !           avgflag='A', long_name='canopy air temperature', &
 !           ptr_patch=this%taf_patch, default='inactive')
        this%qaf_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='QAF', units='kg/kg', &
 !           avgflag='A', long_name='canopy air humidity', &
 !           ptr_patch=this%qaf_patch, default='inactive')
@@ -312,6 +321,7 @@ contains
             avgflag='A', long_name='dimensionless stability parameter', &
             ptr_patch=this%zeta_patch, default='inactive')
        this%vpd_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='VPD', units='kPa', &
 !           avgflag='A', long_name='vapor pressure deficit', &
 !           ptr_patch=this%vpd_patch, default='inactive')

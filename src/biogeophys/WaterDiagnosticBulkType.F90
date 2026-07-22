@@ -358,6 +358,7 @@ contains
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
 
     this%rh_af_patch(begp:endp) = spval
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !   call hist_addfld1d ( &
 !        fname=this%info%fname('RHAF'), &
 !        units='fraction', &
@@ -544,6 +545,7 @@ contains
 
     this%bw_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%bw_col(:,-nlevsno+1:0)
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !   call hist_addfld2d ( &
 !        fname=this%info%fname('SNO_BW'), &
 !        units='kg/m3', type2d='levsno', &
