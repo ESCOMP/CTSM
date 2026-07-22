@@ -133,7 +133,7 @@ Here is an example of setting up and running a PLUMBER2 site with the ``run_towe
     cd CTSM/tools/site_and_regional
     setenv tower AR-SLu  # (tcsh) or export tower=AR-SLu (bash)
     ./run_tower --plumber-sites ${tower} --run-type ad --xmlchange STOP_OPTION=nyears,STOP_N=100,RESUBMIT=2,JOB_WALLCLOCK_TIME=06:00:00
-    CHECK FOR SUCCESSFUL COMPLETION of ad MODE
+    # CHECK FOR SUCCESSFUL COMPLETION of ad MODE
     ./run_tower --plumber-sites ${tower} --run-type postad --xmlchange STOP_OPTION=nyears,STOP_N=100,JOB_WALLCLOCK_TIME=06:00:00
     CHECK FOR SUCCESSFUL COMPLETION of postad MODE
     ./run_tower --plumber-sites ${tower} --run-type transient
