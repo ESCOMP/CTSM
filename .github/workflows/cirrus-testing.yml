@@ -19,6 +19,10 @@ jobs:
   simple-build-run_sys_tests:
     name: Build one simple case with run_sys_tests
     runs-on: gha-runner-ctsm
+
+    container:
+      image: docker.io/ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
+
     steps:
 
       - name: Check out CTSM
