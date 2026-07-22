@@ -1,3 +1,4 @@
-ndep_varlist = 'NDEP_month'
+! Test that NDEP can be read in two seperate streams rather than the one that is the sum of both
+ndep_varlist = 'NDEP_NOy_month', 'NDEP_Nhx_month'
 ndep_taxmode = 'cycle'
 stream_fldfilename_ndep = '$DIN_LOC_ROOT/lnd/clm2/ndepdata/fndep_clm_hist_simyr1850_0.9x1.25_CMIP6alpha01_c170330.nc'
