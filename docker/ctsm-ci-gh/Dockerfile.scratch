@@ -70,15 +70,25 @@ RUN dnf -y install dnf-plugins-core \
 # contrib/download_prerequisites.
 ENV TAR_OPTIONS=--no-same-owner
 
+# Compute-node network can be flaky; have wget retry connection refusals
+# (it already retries most other transient errors by default).
+RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc/wgetrc
+
 # ---- GCC (matches derecho's gcc/12.2.0 module) ----
-# download_prerequisites vendors gmp/mpfr/mpc/isl into the tree.
-# --disable-bootstrap: single-stage build; the result is the same
-# compiler, just not self-compiled three times.
-RUN cd /tmp \
+# gmp/mpfr/mpc come from AlmaLinux (dnf) rather than GCC's
+# contrib/download_prerequisites, which fetches them from gcc.gnu.org --
+# unreliable from the compute node. The distro ships the versions GCC 12.2
+# expects (gmp 6.2, mpfr 4.1.0, libmpc 1.2.1), so the compiler is
+# equivalent and skipping their in-tree build is faster. configure finds
+# them in the default /usr paths (no --with-* needed). Installed in this
+# layer, not the base dnf layer, to keep that layer's cache valid.
+# --disable-bootstrap: single-stage build; same compiler, just not
+# self-compiled three times.
+RUN dnf -y install gmp-devel mpfr-devel libmpc-devel && dnf clean all \
+    && cd /tmp \
     && wget -nv "https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" \
     && tar xf "gcc-${GCC_VERSION}.tar.xz" \
     && cd "gcc-${GCC_VERSION}" \
-    && ./contrib/download_prerequisites \
     && mkdir build && cd build \
     && ../configure --prefix="/opt/gcc/${GCC_VERSION}" \
         --enable-languages=c,c++,fortran \
