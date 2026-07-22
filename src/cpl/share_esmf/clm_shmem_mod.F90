@@ -44,7 +44,7 @@ module clm_shmem_mod
   !-----------------------------------------------------------------------------
 
   use mpi
-  use, intrinsic :: iso_c_binding, only : c_ptr, c_f_pointer
+  use, intrinsic :: iso_c_binding, only : c_ptr, c_f_pointer, c_associated, c_null_ptr
   use spmdMod   , only : mpicom
   use abortutils, only : endrun
 
@@ -66,12 +66,20 @@ module clm_shmem_mod
   ! Sentinel window handle used by the mpi-serial fallback (no real MPI window).
   integer, parameter :: SHMEM_WIN_NONE = -1
 
-  logical, save :: initialized = .false.
-  integer, save :: node_comm   = MPI_COMM_NULL  ! ranks sharing a node
-  integer, save :: leader_comm = MPI_COMM_NULL  ! one rank per node (the leaders)
-  integer, save :: node_rank   = 0              ! this rank's index within node_comm (0 => leader)
-  integer, save :: node_size   = 1              ! number of ranks sharing this node
-  logical, save :: is_leader   = .true.
+  logical, save :: initialized   = .false.
+  integer, save :: node_comm     = MPI_COMM_NULL ! ranks sharing a node
+  integer, save :: leader_comm   = MPI_COMM_NULL ! one rank per node (the leaders)
+  integer, save :: node_rank     = 0             ! this rank's index within node_comm (0 => leader)
+  integer, save :: node_size     = 1             ! number of ranks sharing this node
+  logical, save :: is_leader     = .true.        ! .true. on node rank 0
+  ! Whether the MPI-3 shared-memory path is actually usable on this platform.  Decided
+  ! once by a runtime probe in init_comms(): on some MPI stacks (e.g. certain MVAPICH2
+  ! builds) MPI_Win_shared_query returns a null base to non-leaders, which would crash at
+  ! first use.  When the probe fails, the module runs in a "private" fallback mode: every
+  ! rank keeps its own full-size copy and the leader-reduce becomes a plain MPI_Allreduce
+  ! over mpicom -- bit-for-bit with the pre-optimization all-rank reduce, just without the
+  ! per-node memory saving.  Stays .false. for the mpi-serial (NO_MPI2) build.
+  logical, save :: shared_active = .false.
 
 contains
 
@@ -104,15 +112,82 @@ contains
        color = MPI_UNDEFINED
     end if
     call mpi_comm_split(mpicom, color, 0, leader_comm, ierr)
+
+    ! Only trust the MPI-3 shared-memory path if a runtime probe confirms it works
+    ! end-to-end on this node (see probe_shared_mem and the shared_active comment above).
+    shared_active = probe_shared_mem()
 #else
-    ! mpi-serial: a single task is its own node and its own leader.
+    ! mpi-serial: a single task is its own node and its own leader; no shared memory.
     node_rank = 0
     node_size = 1
     is_leader = .true.
+    shared_active = .false.
 #endif
 
     initialized = .true.
   end subroutine init_comms
+
+#ifndef NO_MPI2
+  !=============================================================================
+  logical function probe_shared_mem() result(ok)
+    ! Verify that MPI-3 shared memory actually works on this node before relying on it.
+    ! The leader allocates a one-element shared window and writes a sentinel; every rank
+    ! maps the leader's segment (leader: its own base; peers: MPI_Win_shared_query) and
+    ! confirms it can read the sentinel back.  This catches both a null base pointer and a
+    ! wrong/garbage mapping.  Collective over mpicom.  The final agreement is AND-reduced
+    ! over mpicom (not just node_comm) so the WHOLE job picks one mode: a mix of shared and
+    ! private ranks would deadlock the later reduce (shared leaders wait on leader_comm
+    ! while private ranks wait on mpicom).  Returns the same value on every rank.
+    integer, parameter :: SENTINEL = 1234567
+    integer(kind=MPI_ADDRESS_KIND) :: winsize, qsize
+    integer          :: ierr, disp_unit, qdisp, itmp, pwin
+    integer          :: iok(1), iok_all(1)
+    type(c_ptr)      :: baseptr
+    integer, pointer :: p(:)
+    logical          :: have_ptr, have_win
+
+    disp_unit = storage_size(itmp) / 8
+    if (is_leader) then
+       winsize = int(disp_unit, MPI_ADDRESS_KIND)
+    else
+       winsize = 0_MPI_ADDRESS_KIND
+    end if
+
+    ! MPI_Win_allocate_shared is collective over node_comm and returns uniformly within a
+    ! node; different nodes are independent (each runs its own per-node window ops below).
+    call mpi_win_allocate_shared(winsize, disp_unit, MPI_INFO_NULL, node_comm, baseptr, pwin, ierr)
+    have_win = (ierr == MPI_SUCCESS)
+
+    iok(1) = 0
+    if (have_win) then
+       ! Peers replace their (zero-size) base with the leader's segment.
+       if (.not. is_leader) then
+          call mpi_win_shared_query(pwin, 0, qsize, qdisp, baseptr, ierr)
+          if (ierr /= MPI_SUCCESS) baseptr = c_null_ptr
+       end if
+
+       have_ptr = c_associated(baseptr)
+       if (have_ptr) call c_f_pointer(baseptr, p, [1])
+
+       ! The fences are collective over node_comm and this whole node has a window, so all
+       ! its ranks call them; only the sentinel store/load is guarded by have_ptr.
+       call mpi_win_fence(0, pwin, ierr)
+       if (have_ptr .and. is_leader) p(1) = SENTINEL
+       call mpi_win_fence(0, pwin, ierr)
+
+       if (have_ptr) then
+          if (p(1) == SENTINEL) iok(1) = 1
+       end if
+
+       call mpi_win_free(pwin, ierr)
+    end if
+
+    ! Whole-job agreement -- every rank reaches this (no early return): shared memory is
+    ! usable only if EVERY rank mapped and read its node's segment correctly.
+    call mpi_allreduce(iok, iok_all, 1, MPI_INTEGER, MPI_MIN, mpicom, ierr)
+    ok = (iok_all(1) == 1)
+  end function probe_shared_mem
+#endif
 
   !=============================================================================
   subroutine clm_shmem_alloc_i4_1d(ptr, win, n)
@@ -122,37 +197,50 @@ contains
     integer,          intent(out) :: win     ! MPI window handle for the allocation (pass to clm_shmem_free)
     integer,          intent(in)  :: n       ! number of elements to allocate (identical on every rank)
 
+    integer :: istat
 #ifndef NO_MPI2
     integer(kind=MPI_ADDRESS_KIND) :: winsize, qsize
     integer :: ierr, disp_unit, qdisp
     integer :: itmp
     type(c_ptr) :: baseptr  ! shared-segment base address; the MPI-3 win routines return the mapped
                             ! address as a C pointer, which c_f_pointer then turns into the pointer ptr
-#else
-    integer :: istat
 #endif
 
     call init_comms()
 
 #ifndef NO_MPI2
-    disp_unit = storage_size(itmp) / 8   ! bytes per default integer (robust to -i8)
-    if (is_leader) then
-       winsize = int(n, MPI_ADDRESS_KIND) * int(disp_unit, MPI_ADDRESS_KIND)
+    if (shared_active) then
+       disp_unit = storage_size(itmp) / 8   ! bytes per default integer (robust to -i8)
+       if (is_leader) then
+          winsize = int(n, MPI_ADDRESS_KIND) * int(disp_unit, MPI_ADDRESS_KIND)
+       else
+          winsize = 0_MPI_ADDRESS_KIND
+       end if
+
+       call mpi_win_allocate_shared(winsize, disp_unit, MPI_INFO_NULL, node_comm, &
+                                    baseptr, win, ierr)
+       if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_allocate_shared failed')
+
+       ! Non-leaders learn the address of the leader's (rank 0) contiguous segment.
+       if (.not. is_leader) then
+          call mpi_win_shared_query(win, 0, qsize, qdisp, baseptr, ierr)
+          if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_shared_query failed')
+       end if
+
+       ! Guard the base address itself: the associated(ptr) post-condition below cannot
+       ! detect a null base because c_f_pointer takes the shape from [n], not from baseptr.
+       ! init_comms's probe should already have set shared_active=.false. wherever this
+       ! would trip, so reaching this endrun is unexpected.
+       if (.not. c_associated(baseptr)) &
+            call endrun('clm_shmem_mod: clm_shmem_alloc_i4_1d: shared-memory base pointer is null')
+       call c_f_pointer(baseptr, ptr, [n])
     else
-       winsize = 0_MPI_ADDRESS_KIND
+       ! Real MPI but shared memory is unavailable on this platform: fall back to a
+       ! private per-rank allocation (freed with deallocate; summed over mpicom).
+       allocate(ptr(n), stat=istat)
+       if (istat /= 0) call endrun('clm_shmem_mod: allocate failed (private fallback path)')
+       win = SHMEM_WIN_NONE
     end if
-
-    call mpi_win_allocate_shared(winsize, disp_unit, MPI_INFO_NULL, node_comm, &
-                                 baseptr, win, ierr)
-    if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_allocate_shared failed')
-
-    ! Non-leaders learn the address of the leader's (rank 0) contiguous segment.
-    if (.not. is_leader) then
-       call mpi_win_shared_query(win, 0, qsize, qdisp, baseptr, ierr)
-       if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_shared_query failed')
-    end if
-
-    call c_f_pointer(baseptr, ptr, [n])
 #else
     ! mpi-serial: single task, no shared memory -- a plain local allocation.
     allocate(ptr(n), stat=istat)
@@ -191,10 +279,23 @@ contains
     if (size(ptr) /= n) call endrun('clm_shmem_mod: clm_shmem_leader_allreduce_sum_i4: size(ptr) does not match n')
 
     call clm_shmem_fence(win)             ! all node stores complete and visible to leader
+                                          ! (a no-op in private mode; win == SHMEM_WIN_NONE)
 #ifndef NO_MPI2
-    if (is_leader) then
+    if (shared_active) then
+       ! Shared mode: the node's partial sum lives in the one shared buffer; the leaders
+       ! reduce their per-node partials across nodes over leader_comm.
+       if (is_leader) then
+          allocate(tmp(n))
+          call mpi_allreduce(ptr, tmp, n, MPI_INTEGER, MPI_SUM, leader_comm, ierr)
+          if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Allreduce failed')
+          ptr(1:n) = tmp(1:n)
+          deallocate(tmp)
+       end if
+    else
+       ! Private mode: every rank filled disjoint indices of its own full-size copy, so
+       ! sum across all ranks over mpicom -- bit-for-bit with the original all-rank reduce.
        allocate(tmp(n))
-       call mpi_allreduce(ptr, tmp, n, MPI_INTEGER, MPI_SUM, leader_comm, ierr)
+       call mpi_allreduce(ptr, tmp, n, MPI_INTEGER, MPI_SUM, mpicom, ierr)
        if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Allreduce failed')
        ptr(1:n) = tmp(1:n)
        deallocate(tmp)
@@ -204,6 +305,7 @@ contains
     ! global array -- there is nothing to sum across nodes.
 #endif
     call clm_shmem_fence(win)             ! publish global result to all node ranks
+                                          ! (a no-op in private mode)
   end subroutine clm_shmem_leader_allreduce_sum_i4
 
   !=============================================================================
@@ -213,6 +315,7 @@ contains
     integer, intent(in) :: win
 #ifndef NO_MPI2
     integer :: ierr
+    if (win == SHMEM_WIN_NONE) return   ! private-mode allocation: no window to synchronize
     call mpi_win_fence(0, win, ierr)
     if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_fence failed')
 #endif
@@ -226,12 +329,18 @@ contains
     integer, intent(inout) :: win
 #ifndef NO_MPI2
     integer :: ierr
-    if (win /= MPI_WIN_NULL) then
-       call mpi_win_free(win, ierr)
-       if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_free failed')
+    if (win == SHMEM_WIN_NONE) then
+       ! private-mode fallback: ptr was a plain local allocation, so deallocate it.
+       if (associated(ptr)) deallocate(ptr)
+    else
+       ! shared-memory window: free it (never deallocate a c_f_pointer'd buffer).
+       if (win /= MPI_WIN_NULL) then
+          call mpi_win_free(win, ierr)
+          if (ierr /= MPI_SUCCESS) call endrun('clm_shmem_mod: MPI_Win_free failed')
+       end if
+       if (associated(ptr)) nullify(ptr)
     end if
-    if (associated(ptr)) nullify(ptr)
-    win = MPI_WIN_NULL
+    win = SHMEM_WIN_NONE
 #else
     ! mpi-serial: ptr was a plain local allocation, so deallocate it.
     if (associated(ptr)) deallocate(ptr)
@@ -242,7 +351,9 @@ contains
   !=============================================================================
   logical function clm_shmem_is_leader()
     call init_comms()
-    clm_shmem_is_leader = is_leader
+    ! In private-fallback mode every rank owns its own full-size copy and must initialize
+    ! it, so every rank reports as a leader; in shared mode only node rank 0 does.
+    clm_shmem_is_leader = (is_leader .or. .not. shared_active)
   end function clm_shmem_is_leader
 
   !=============================================================================
