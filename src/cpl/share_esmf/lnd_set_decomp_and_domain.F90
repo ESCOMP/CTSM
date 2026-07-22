@@ -21,8 +21,8 @@ module lnd_set_decomp_and_domain
   use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
   use perf_mod     , only : t_startf, t_stopf
-  use clm_shmem_mod, only : clm_shmem_alloc_i4_1d, clm_shmem_free, clm_shmem_fence
-  use clm_shmem_mod, only : clm_shmem_is_leader, clm_shmem_leader_allreduce_sum_i4
+  use shr_mpishmem_mod, only : shr_mpishmem_alloc_i4_1d, shr_mpishmem_free, shr_mpishmem_fence
+  use shr_mpishmem_mod, only : shr_mpishmem_is_leader, shr_mpishmem_leader_allreduce_sum_i4
 
   implicit none
   private ! except
@@ -189,10 +189,10 @@ contains
     end do
 
     ! Deallocate global pointer memory.  The cmeps paths allocate lndmask_glob as
-    ! a per-node shared-memory window (clm_shmem_alloc_i4_1d), so it must be freed
-    ! with clm_shmem_free, not deallocate; the lilac path uses a plain allocate.
+    ! a per-node shared-memory window (shr_mpishmem_alloc_i4_1d), so it must be freed
+    ! with shr_mpishmem_free, not deallocate; the lilac path uses a plain allocate.
     if (trim(driver) == 'cmeps') then
-       call clm_shmem_free(lndmask_glob, lndmask_win)
+       call shr_mpishmem_free(lndmask_glob, lndmask_win)
     else
        deallocate(lndmask_glob)
     end if
@@ -538,10 +538,10 @@ contains
 
     ! Allocate the global land mask once per shared-memory node (not once per rank).
     ! Leader zeroes it; the compute branch below fills disjoint local points on each
-    ! rank and sums across nodes (clm_shmem_leader_allreduce_sum_i4).
-    call clm_shmem_alloc_i4_1d(lndmask_glob, lndmask_win, gsize)
-    if (clm_shmem_is_leader()) lndmask_glob(:) = 0
-    call clm_shmem_fence(lndmask_win)
+    ! rank and sums across nodes (shr_mpishmem_leader_allreduce_sum_i4).
+    call shr_mpishmem_alloc_i4_1d(mpicom, lndmask_glob, lndmask_win, gsize)
+    if (shr_mpishmem_is_leader(mpicom)) lndmask_glob(:) = 0
+    call shr_mpishmem_fence(lndmask_win)
 
     ! Determine if lndfrac/lndmask file exists
     inquire(file=trim(flandfrac), exist=lexist)
@@ -624,7 +624,7 @@ contains
        do n = 1,lsize_lnd
           lndmask_glob(gindex_input(n)) = lndmask_loc(n)
        end do
-       call clm_shmem_leader_allreduce_sum_i4(lndmask_glob, lndmask_win, gsize)
+       call shr_mpishmem_leader_allreduce_sum_i4(mpicom, lndmask_glob, lndmask_win, gsize)
 
        ! deallocate memory
        deallocate(maskmask_loc)
@@ -680,14 +680,14 @@ contains
     ! Allocate the global land mask once per shared-memory node (not once per rank)
     ! and build it by summing each rank's disjoint local contributions across nodes
     ! (the leader-only reduce replaces the all-rank ESMF_VMAllReduce; bit-for-bit).
-    call clm_shmem_alloc_i4_1d(lndmask_glob, lndmask_win, gsize)
-    if (clm_shmem_is_leader()) lndmask_glob(:) = 0
-    call clm_shmem_fence(lndmask_win)
+    call shr_mpishmem_alloc_i4_1d(mpicom, lndmask_glob, lndmask_win, gsize)
+    if (shr_mpishmem_is_leader(mpicom)) lndmask_glob(:) = 0
+    call shr_mpishmem_fence(lndmask_win)
 
     do n = 1,lsize
        lndmask_glob(gindex(n)) = lndmask_loc(n)
     end do
-    call clm_shmem_leader_allreduce_sum_i4(lndmask_glob, lndmask_win, gsize)
+    call shr_mpishmem_leader_allreduce_sum_i4(mpicom, lndmask_glob, lndmask_win, gsize)
     deallocate(gindex)
     deallocate(lndmask_loc)
 
