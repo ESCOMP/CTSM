@@ -179,13 +179,6 @@
   </test>
 
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>ESCOMP/mizuRoute#613</issue>
-    </phase>
-  </test>
-  
-  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
     <phase name="NLCOMP">
       <status>FAIL</status>
       <issue>ESMCI/cime#4966</issue>
@@ -200,9 +193,9 @@
   </test>
 
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
-    <phase name="MODEL_BUILD">
+    <phase name="RUN">
       <status>FAIL</status>
-      <issue>ESCOMP/mizuRoute#615</issue>
+      <issue>ESCOMP/mizuRoute#636</issue>
     </phase>
   </test>
 
@@ -293,10 +286,10 @@
 
   <!-- decomp_init test list-->
 
-  <test name="SMS_Ln1_PL.mpasa15_mpasa15.I2000Clm45Sp.derecho_intel.clm-run_self_tests">
+  <test name="SMS_Ln1_PL.mpasa3p75_mpasa3p75_mt13.I2000Clm45Sp.derecho_intel.clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
     <phase name="RUN">
       <status>FAIL</status>
-      <issue>#3316</issue>
+      <issue>#4107</issue>
     </phase>
   </test>
 

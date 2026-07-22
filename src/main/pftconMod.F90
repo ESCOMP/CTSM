@@ -1,5 +1,7 @@
 module pftconMod
 
+#include "shr_assert.h"
+
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
   ! Module containing vegetation constants, methods to
@@ -9,7 +11,7 @@ module pftconMod
   ! !USES:
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils  , only : endrun
-  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, ndecomp_pools
+  use clm_varpar  , only : mxpft, numrad, ivis, inir, cft_lb, cft_ub, cft_size, ndecomp_pools
   use clm_varctl  , only : iulog, use_cndv, use_crop, use_grainproduct
   use CropReprPoolsMod, only : repr_structure_min, repr_structure_max
   !
@@ -96,8 +98,8 @@ module pftconMod
   integer, public :: nirrig_trp_corn        !value for tropical corn (ir)
   integer, public :: ntrp_soybean           !value for tropical soybean (rf)
   integer, public :: nirrig_trp_soybean     !value for tropical soybean (ir)
-  integer, public :: nc3crop                ! value for generic crop (rf)
-  integer, public :: nc3irrig               ! value for irrigated generic crop (ir)
+  integer :: nc3crop                ! value for generic crop (rf)
+  integer :: nc3irrig               ! value for irrigated generic crop (ir)
 
   ! First and last prognostic crops
   integer :: npcropmin              ! value for first crop
@@ -110,7 +112,18 @@ module pftconMod
   integer, public :: num_cfts_known_to_model
 
   ! Number of prognostic crop functional types on the parameter file, even if not actually used
-  integer, public :: num_cfts_possible
+  integer, public :: num_prognostic_cfts_possible
+
+  ! Number and indices of crops on the surface dataset
+  integer :: cft_size_rainfed
+  integer :: cft_size_irrigated
+  integer, public, allocatable :: indices_cfts(:)  ! no corresponding size integer above because it comes from clm_varpar
+  integer, public, allocatable :: indices_cfts_rainfed(:)
+  integer, public, allocatable :: indices_cfts_irrigated(:)
+
+  ! Number and indices of non-crop ("natural") PFTs on the parameter file, even if not actually
+  ! used. Does not include bare ground.
+  integer, public :: num_pfts_possible_natural
 
   ! !PUBLIC TYPES:
   type, public :: pftcon_type
@@ -295,12 +308,13 @@ module pftconMod
 
      procedure, public  :: Init
      procedure, public  :: InitForTesting ! version of Init meant for unit testing
+     procedure, public  :: InitForTestingCollapseCropTypes ! version of Init meant for unit testing
      procedure, public  :: Clean
      procedure, private :: InitAllocate   
      procedure, private :: InitRead
      procedure, private :: set_is_pft_known_to_model   ! Set is_pft_known_to_model based on mergetoclmpft
      procedure, private :: set_num_cfts_known_to_model ! Set the module-level variable, num_cfts_known_to_model
-     procedure, private :: set_num_cfts_possible ! Set the module-level variable, num_cfts_possible
+     procedure, private :: set_num_prognostic_cfts_possible ! Set the module-level variable, num_prognostic_cfts_possible
 
   end type pftcon_type
 
@@ -323,9 +337,14 @@ module pftconMod
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
+  public :: is_bare
+  public :: is_crop
+  public :: is_generic_crop
   public :: is_prognostic_crop
+  public :: is_irrigated
   public :: get_crop_n_from_veg_type
   public :: get_veg_type_from_crop_n
+  public :: handle_too_short_fire_emis_factor_file
   !-----------------------------------------------------------------------
 
 contains
@@ -353,6 +372,54 @@ contains
     call this%InitAllocate()
 
   end subroutine InitForTesting
+
+  subroutine InitForTestingCollapseCropTypes(this, cftsize, merge_2_to_generic)
+   ! Version of Init meant for testing collapse_crop_types()
+    use clm_varpar, only : maxveg, natpft_size, natpft_lb, natpft_ub
+
+    class(pftcon_type) :: this
+    integer, intent(in) :: cftsize
+    logical, optional, intent(in) :: merge_2_to_generic
+
+    integer :: m
+
+    ! Set relevant pftcon values to defaults; override where necessary
+    call pftcon%InitForTesting()
+    nc3crop     = 15
+    nc3irrig    = nc3crop + 1
+    do m = 1, nc3irrig
+       pftcon%mergetoclmpft(m) = m
+    end do
+    if (cftsize == 0) then  ! crops lumped together with unmanaged pfts
+       maxveg = nc3irrig  ! # of patches without bare ground
+       natpft_size = maxveg + 1  ! includes bare ground
+    else
+       natpft_size = nc3crop  ! includes bare ground
+       maxveg = natpft_size + cftsize - 1  ! # of patches without bare ground
+    end if
+    natpft_lb = 0
+    natpft_ub = natpft_lb + natpft_size - 1
+    cft_lb = natpft_ub + 1
+    cft_ub = cft_lb + cftsize - 1
+
+   ! Allocate and fill arrays of indices:
+   ! Assume that there are the same number of rainfed and irrigated CFTs
+   call shr_assert(mod(cft_size, 2) == 0)
+   allocate(indices_cfts_rainfed(cft_size / 2))
+   allocate(indices_cfts_irrigated(cft_size / 2))
+   ! Assume that every irrigated CFT follows its respective rainfed CFT
+   ! (Implied do-loops for array construction)
+   indices_cfts_rainfed = [(m, m = cft_lb, cft_ub-1, 2)]
+   indices_cfts_irrigated = [(m, m = cft_lb+1, cft_ub, 2)]
+
+   if (present(merge_2_to_generic)) then
+      if (merge_2_to_generic) then
+         this%mergetoclmpft(nc3crop + 2) = nc3crop
+         this%mergetoclmpft(nc3irrig + 2) = nc3irrig
+      end if
+   end if
+
+  end subroutine InitForTestingCollapseCropTypes
 
   !-----------------------------------------------------------------------
   subroutine InitAllocate (this)
@@ -521,6 +588,8 @@ contains
     allocate( this%mimics_fi(2) )
     allocate( this%crit_onset_gdd_sf (0:mxpft) )
     allocate( this%ndays_on      (0:mxpft) )
+
+    allocate(indices_cfts(cft_size))
  
   end subroutine InitAllocate
 
@@ -1254,7 +1323,7 @@ contains
 
     call this%set_is_pft_known_to_model()
     call this%set_num_cfts_known_to_model()
-    call this%set_num_cfts_possible()
+    call this%set_num_prognostic_cfts_possible()
 
     ! Set vegetation family identifier (tree/shrub/grass)
     do m = 0,mxpft 
@@ -1323,37 +1392,14 @@ contains
           call endrun(msg=' ERROR: npcropmax is NOT the last value'//errMsg(sourcefile, __LINE__))
        end if
        do i = 0, mxpft
-          if ( this%irrigated(i) == 1.0_r8 .and.                              &
-               (i == nc3irrig               .or.                              &
-                i == nirrig_tmp_corn        .or.                              &
-                i == nirrig_swheat          .or. i == nirrig_wwheat      .or. &
-                i == nirrig_tmp_soybean     .or.                              &
-                i == nirrig_barley          .or. i == nirrig_wbarley     .or. &
-                i == nirrig_rye             .or. i == nirrig_wrye        .or. &
-                i == nirrig_cassava         .or.                              &
-                i == nirrig_citrus          .or.                              &
-                i == nirrig_cocoa           .or. i == nirrig_coffee      .or. &
-                i == nirrig_cotton          .or.                              &
-                i == nirrig_datepalm        .or.                              &
-                i == nirrig_foddergrass     .or.                              &
-                i == nirrig_grapes          .or. i == nirrig_groundnuts  .or. &
-                i == nirrig_millet          .or.                              &
-                i == nirrig_oilpalm         .or.                              &
-                i == nirrig_potatoes        .or. i == nirrig_pulses      .or. &
-                i == nirrig_rapeseed        .or. i == nirrig_rice        .or. &
-                i == nirrig_sorghum         .or.                              &
-                i == nirrig_sugarbeet       .or. i == nirrig_sugarcane   .or. &
-                i == nirrig_sunflower       .or.                              &
-                i == nirrig_miscanthus      .or. i == nirrig_switchgrass .or. &
-                i == nirrig_trp_corn        .or.                              &
-                i == nirrig_trp_soybean) )then
+          if ( this%irrigated(i) == 1.0_r8 .and. is_irrigated(i)) then
              ! correct
           else if ( this%irrigated(i) == 0.0_r8 )then
              ! correct
           else
              call endrun(msg=' ERROR: irrigated has wrong values'//errMsg(sourcefile, __LINE__))
           end if
-          if (      this%crop(i) == 1.0_r8 .and. (i >= nc3crop .and. i <= npcropmax) )then
+          if (      this%crop(i) == 1.0_r8 .and. is_crop(i) )then
              ! correct
           else if ( this%crop(i) == 0.0_r8 )then
              ! correct
@@ -1378,6 +1424,73 @@ contains
              end if
           end do
        end do
+    end if
+
+    ! Get some additional information...
+    num_pfts_possible_natural = 0
+    do i = 0, mxpft
+       if (.not. is_crop(i) .and. .not. is_bare(i)) then
+          num_pfts_possible_natural = num_pfts_possible_natural + 1
+       end if
+    end do
+    ! ... unless FATES is on
+    cft_size_rainfed = 0
+    cft_size_irrigated = 0
+    if (.not. use_fates) then
+
+       ! How many rainfed and irrigated CFTs are there on the surface dataset?
+       k = 0
+       do i = cft_lb, cft_ub
+          call shr_assert(is_crop(i))
+          k = k + 1
+          if (is_irrigated(i)) then
+             cft_size_irrigated = cft_size_irrigated + 1
+          else
+             cft_size_rainfed = cft_size_rainfed + 1
+          end if
+       end do
+       call shr_assert(k == cft_size)
+
+       ! Make sure there are the same number of irrigated and rainfed crops. This is assumed by,
+       ! e.g., surfrdUtilsMod collapse_crop_types().
+       if (cft_size_rainfed /= cft_size_irrigated) then
+          write(iulog, *) 'cft_size_rainfed   = ', cft_size_rainfed
+          write(iulog, *) 'cft_size_irrigated = ', cft_size_irrigated
+          call endrun(msg='cft_size_rainfed /= cft_size_irrigated')
+       end if
+
+       ! Make sure the number of crops on the surface dataset equals the sum of the numbers of
+       ! rainfed and irrigated crops on the surface dataset.
+       if (cft_size /= cft_size_rainfed + cft_size_irrigated) then
+          write(iulog, *) 'cft_size           = ', cft_size
+          write(iulog, *) 'cft_size_rainfed   = ', cft_size_rainfed
+          write(iulog, *) 'cft_size_irrigated = ', cft_size_irrigated
+          call endrun(msg='cft_size /= cft_size_rainfed + cft_size_irrigated')
+       end if
+
+       ! What are the indices of the CFTs on the surface dataset?
+       allocate(indices_cfts_rainfed(cft_size_rainfed))
+       allocate(indices_cfts_irrigated(cft_size_irrigated))
+       indices_cfts_rainfed(:)   = -999
+       indices_cfts_irrigated(:) = -999
+       k = 0
+       m = 0
+       n = 0
+       do i = cft_lb, cft_ub
+          call shr_assert(is_crop(i))
+          k = k + 1
+          indices_cfts(k) = i
+          if (is_irrigated(i)) then
+             m = m + 1
+             indices_cfts_irrigated(m) = i
+          else
+             n = n + 1
+             indices_cfts_rainfed(n) = i
+          end if
+       end do
+       call shr_assert(k == cft_size)
+       call shr_assert(m == cft_size_irrigated)
+       call shr_assert(n == cft_size_rainfed)
     end if
 
     if (masterproc) then
@@ -1448,10 +1561,10 @@ contains
   end subroutine set_num_cfts_known_to_model
 
   !-----------------------------------------------------------------------
-  subroutine set_num_cfts_possible(this)
+  subroutine set_num_prognostic_cfts_possible(this)
     !
     ! !DESCRIPTION:
-    ! Set the module-level variable, num_cfts_possible
+    ! Set the module-level variable num_prognostic_cfts_possible
     !
     ! !USES:
     !
@@ -1461,12 +1574,12 @@ contains
     ! !LOCAL VARIABLES:
     integer :: m
 
-    character(len=*), parameter :: subname = 'set_num_cfts_possible'
+    character(len=*), parameter :: subname = 'set_num_prognostic_cfts_possible'
     !-----------------------------------------------------------------------
 
-    num_cfts_possible = npcropmax - npcropmin + 1
+    num_prognostic_cfts_possible = npcropmax - npcropmin + 1
 
-  end subroutine set_num_cfts_possible
+  end subroutine set_num_prognostic_cfts_possible
 
   !-----------------------------------------------------------------------
   subroutine Clean(this)
@@ -1635,7 +1748,65 @@ contains
     deallocate( this%mimics_fi)
     deallocate( this%crit_onset_gdd_sf)
     deallocate( this%ndays_on)
+
+    ! TODO? Move these to their own function? They're not members of this class.
+    if (allocated(indices_cfts)) then
+       deallocate(indices_cfts)
+    end if
+    if (allocated(indices_cfts_rainfed)) then
+       deallocate(indices_cfts_rainfed)
+    end if
+    if (allocated(indices_cfts_irrigated)) then
+       deallocate(indices_cfts_irrigated)
+    end if
   end subroutine Clean
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_bare(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's bare ground.
+    !
+    ! NOTE: Ideally, this would use a new bare_ground flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_bare = veg_type == 0
+
+  end function is_bare
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a crop. Includes both generic
+    ! and prognostic crops. Natural PFTs will return .false.
+    !
+    ! NOTE: Ideally, this would use a new crop flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_crop = veg_type >= nc3crop .and. veg_type <= npcropmax
+
+  end function is_crop
+
+  !-----------------------------------------------------------------------
+  elemental logical function is_generic_crop(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's a generic crop. Natural PFTs and
+    ! prognostic crops will return .false.
+    !
+    ! NOTE: Ideally, this would use a new generic_crop flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_generic_crop = veg_type == nc3crop .or. veg_type == nc3irrig
+
+  end function is_generic_crop
 
   !-----------------------------------------------------------------------
   elemental logical function is_prognostic_crop(veg_type)
@@ -1644,19 +1815,56 @@ contains
     ! Given a vegetation type (pft, integer), return whether it's a prognostic crop. Does not
     ! include generic crops (those and natural PFTs will return .false.).
     !
-    ! NOTE: This isn't a completely robust way to check if this is a prognostic crop patch. At the
-    ! very least, it should also check if <= npcropmax. Ideally it would use a new prognostic_crop
-    ! flag on the parameter file iteself.
+    ! NOTE: Ideally, this would use a new prognostic_crop flag on the parameter file itself.
     !
     ! !ARGUMENTS
     integer, intent(in) :: veg_type
 
-    is_prognostic_crop = veg_type >= npcropmin
+    is_prognostic_crop = veg_type >= npcropmin .and. veg_type <= npcropmax
 
   end function is_prognostic_crop
 
   !-----------------------------------------------------------------------
-  elemental integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
+  elemental logical function is_irrigated(veg_type)
+    !
+    ! !DESCRIPTION:
+    ! Given a vegetation type (pft, integer), return whether it's irrigated.
+    !
+    ! NOTE: Ideally, this would use a new "irrigated" flag on the parameter file itself.
+    !
+    ! !ARGUMENTS
+    integer, intent(in) :: veg_type
+
+    is_irrigated = ( &
+         veg_type == nc3irrig            .or.                                      &
+         veg_type == nirrig_tmp_corn     .or.                                      &
+         veg_type == nirrig_swheat       .or. veg_type == nirrig_wwheat  .or.      &
+         veg_type == nirrig_tmp_soybean  .or.                                      &
+         veg_type == nirrig_barley       .or. veg_type == nirrig_wbarley  .or.     &
+         veg_type == nirrig_rye          .or. veg_type == nirrig_wrye     .or.     &
+         veg_type == nirrig_cassava      .or.                                      &
+         veg_type == nirrig_citrus       .or.                                      &
+         veg_type == nirrig_cocoa        .or. veg_type == nirrig_coffee  .or.      &
+         veg_type == nirrig_cotton       .or.                                      &
+         veg_type == nirrig_datepalm     .or.                                      &
+         veg_type == nirrig_foddergrass  .or.                                      &
+         veg_type == nirrig_grapes       .or. veg_type == nirrig_groundnuts  .or.  &
+         veg_type == nirrig_millet       .or.                                      &
+         veg_type == nirrig_oilpalm      .or.                                      &
+         veg_type == nirrig_potatoes     .or. veg_type == nirrig_pulses  .or.      &
+         veg_type == nirrig_rapeseed     .or. veg_type == nirrig_rice    .or.      &
+         veg_type == nirrig_sorghum      .or.                                      &
+         veg_type == nirrig_sugarbeet    .or. veg_type == nirrig_sugarcane  .or.   &
+         veg_type == nirrig_sunflower    .or.                                      &
+         veg_type == nirrig_miscanthus   .or. veg_type == nirrig_switchgrass  .or. &
+         veg_type == nirrig_trp_corn     .or.                                      &
+         veg_type == nirrig_trp_soybean                                            &
+         )
+
+  end function is_irrigated
+
+  !-----------------------------------------------------------------------
+  integer function get_crop_n_from_veg_type(veg_type) result(crop_n)
     !
     ! !DESCRIPTION:
     ! Given a vegetation type (pft, integer), return a 1-indexed number indicating where it would
@@ -1665,12 +1873,15 @@ contains
     ! !ARGUMENTS
     integer, intent(in) :: veg_type
 
+    call shr_assert(veg_type >= npcropmin)
+    call shr_assert(veg_type <= npcropmax)
+
     crop_n = veg_type - npcropmin + 1
 
   end function get_crop_n_from_veg_type
 
   !-----------------------------------------------------------------------
-  elemental integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
+  integer function get_veg_type_from_crop_n(crop_n) result(veg_type)
     !
     ! !DESCRIPTION:
     ! Given a return a 1-indexed number indicating where a PFT would be in a list of all simulated
@@ -1681,7 +1892,35 @@ contains
 
     veg_type = npcropmin + crop_n - 1
 
+    call shr_assert(veg_type >= npcropmin)
+    call shr_assert(veg_type <= npcropmax)
+
   end function get_veg_type_from_crop_n
+
+  !-----------------------------------------------------------------------
+  subroutine handle_too_short_fire_emis_factor_file(factors, eff)
+    !
+    ! !DESCRIPTION:
+    ! Original description when this was in fire_emis_factors_get():
+         ! If fire emissions factor file only includes natural PFT's, but this is a crop case
+         ! Copy the generic crop factors to the crop CFT's from generic crop
+    ! However, there are problems with that:
+    !   1. This will happen even if the fire emissions factor file DOES include crop PFTs, since
+    !      there is no condition in the if() checking for that.
+    !   2. Indeed, this code will error if the fire emissions factor file DOESN'T include crop PFTs,
+    !      because of the reference to index nc3crop of the eff array.
+    ! Filed as ESCOMP/CTSM Issue #4120: Something wrong with "file only includes natural PFTs" in
+    ! fire_emis_factors_get(); https://github.com/ESCOMP/CTSM/issues/4120
+    !
+    ! !ARGUMENTS
+    real(r8), intent(inout) :: factors(:)
+    real(r8), intent(in) :: eff(:)
+
+    if (size(factors) > nc3crop) then
+       factors(indices_cfts) = eff(nc3crop)
+    end if
+
+  end subroutine handle_too_short_fire_emis_factor_file
 
 end module pftconMod
 

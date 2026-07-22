@@ -3,7 +3,7 @@
 Glaciers
 ========
 
-This chapter describes features of CLM that are specific to coupling to an ice sheet model (in the CESM context, this is the CISM model; :ref:`Lipscomb and Sacks (2012)<LipscombSacks2012>` provide documentation and user's guide for CISM). General information about glacier land units can be found elsewhere in this document (see Chapter :numref:`rst_Surface Characterization, Vertical Discretization, and Model Input Requirements` for an overview).
+This chapter describes features of CLM that are specific to coupling to an ice sheet model (in the CESM context, this is the CISM model; see the `CISM documentation and user's guide <https://escomp.github.io/cism-docs/cism-in-cesm/versions/master/html/>_` for more information). General information about glacier land units can be found elsewhere in this document (see Chapter :numref:`rst_Surface Characterization, Vertical Discretization, and Model Input Requirements` for an overview).
 
 .. _Glaciers summary of CLM5.0 updates relative to CLM4.5:
 
