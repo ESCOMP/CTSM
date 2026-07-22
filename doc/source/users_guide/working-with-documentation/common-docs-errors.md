@@ -18,6 +18,10 @@ You tried to build the documentation using our container (`./build_docs ... -d`)
 - {ref}`bld-prev-docs-mac`
 - {ref}`bld-prev-docs-windows`
 
+### "Failed to fetch object"
+
+This can happen if you are trying to build from within a git worktree. The simplest solution is to clone a fresh copy of your working branch somewhere else and try from there.
+
 (common-rst-errors)=
 
 ## Common docs errors: reStructuredText
@@ -188,3 +192,12 @@ If you're sure the label you referenced actually exists, this probably means you
 ### "WARNING: malformed hyperlink target"
 
 You may have forgotten the trailing `:` on a label line.
+
+### "WARNING: Title underline too short"
+
+reStructuredText is just being difficult. It KNOWS that when you did something like this
+```reStructuredText
+Tips for working with reStructuredText
+===================================
+```
+you meant to indicate that was a section header, but it's going to make you extend those equal signs (or hyphens or whatever) all the way out to match (or exceed) the length of the line above.
