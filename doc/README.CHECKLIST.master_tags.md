@@ -27,7 +27,6 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    3c -- make sure you understand any changes to the baselines -- to document in ChangeLog
    3d -- Check the log file for run_sys_tests (`../run_sys_test.log`, to make sure that
          submodules are correct (see 2c above)
-   3e -- When Izumi’s baseline is ready, manually open read permissions to all.
 > [!TIP]
 > Always test on your fork with a feature-branch so that we can change tag order if needed. Put
 > baselines in the next tag name, as we can easily change afterwards if needed.
@@ -52,7 +51,7 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    5e -- Push all the changes on your local branches to the branch on your fork
 
 - [ ] 6. Submit a pull request (PR) for the changes
-    Have someone review it if you are able. At minimum review it youself. The PR mechanism
+    Have someone review it if you are able. At minimum review it yourself. The PR mechanism
     on git is an excellent way to code review code for both yourself and others. Also make
     sure all your changes are correct, changes that shouldn't have gone in don't, and all new
     files are added in.
