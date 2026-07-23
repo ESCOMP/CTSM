@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #PBS -N ctsm-ci-gh-build
 #PBS -q casper
-#PBS -l select=1:ncpus=16:mem=64GB
+#PBS -l select=1:ncpus=16:mem=256GB
 #PBS -l walltime=03:00:00
 #PBS -j oe
 #
