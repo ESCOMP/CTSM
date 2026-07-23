@@ -885,6 +885,7 @@ Liao, C., Lu X., Huang Y., Tao F., Lawrence D.M, Koven C.D., Oleson K.W., Wieder
 Li, C., Aber, J., Stange, F., Butterbach-Bahl, K. and Papen, H. 2000. A process-oriented model of N2O and NO emissions from forest soils: 1. Model development. J. Geophys. Res. 105(D4):4369-4384.
 
 .. _Lietal2012a:
+
 Li, F., Zeng, X.-D., and Levis, S. 2012a. A process-based fire parameterization of intermediate complexity in a Dynamic Global Vegetation Model. Biogeosciences 9:2761-2780.
 
 .. _Lietal2012b:
