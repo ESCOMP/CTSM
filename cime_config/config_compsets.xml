@@ -67,11 +67,6 @@
     <lname>2000_DATM%1PT_CLM50%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
-  <compset>
-    <alias>I1PtClm45SpRsGs</alias>
-    <lname>2000_DATM%1PT_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
 <!-- I CLM50 Compsets -->
 
   <compset>
@@ -287,10 +282,6 @@
   <compset>
     <alias>I2000Clm50BgcCropQianRs</alias>
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-  <compset>
-    <alias>I2000Clm45BgcCropQianRs</alias>
-    <lname>2000_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
     <alias>I2000Clm50FatesQian</alias>
@@ -586,78 +577,6 @@
   <compset>
     <alias>I2000Ctsm50NwpSpNldasRsGs</alias>
     <lname>2000_DATM%NLDAS2_CLM50%NWP-SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-<!-- I CLM45 Compsets -->
-
-  <compset>
-    <alias>I1850Clm45BgcCrop</alias>
-    <lname>1850_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm45BgcCru</alias>
-    <lname>1850_DATM%CRUv7_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Primarily for testing -->
-  <compset>
-    <alias>IHistClm45BgcCrop</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Primarily for testing; uses Qian atmospheric forcing simply to give
-       faster datm throughput, which is particularly relevant for single-point
-       cases (where datm dominates the runtime) -->
-  <compset>
-    <alias>IHistClm45BgcCropQianRs</alias>
-    <lname>HIST_DATM%QIA_CLM45%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I2000Clm45Sp</alias>
-    <lname>2000_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I2000Clm45SpRs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I2000Clm45BgcCrop</alias>
-    <lname>2000_DATM%GSWP3v1_CLM45%BGC-CROP_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I2000Clm45Fates</alias>
-    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <!-- Stub rof needed for regional / single-point -->
-  <compset>
-    <alias>I2000Clm45FatesRsGs</alias>
-    <lname>2000_DATM%GSWP3v1_CLM45%FATES_SICE_SOCN_SROF_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>I1850Clm45Bgc</alias>
-    <lname>1850_DATM%GSWP3v1_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>IHistClm45Bgc</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>IHistClm45BgcCru</alias>
-    <lname>HIST_DATM%CRUv7_CLM45%BGC_SICE_SOCN_RTM_SGLC_SWAV</lname>
-  </compset>
-
-  <compset>
-    <alias>IHistClm45Sp</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM45%SP_SICE_SOCN_RTM_SGLC_SWAV</lname>
   </compset>
 
 <!-- 
