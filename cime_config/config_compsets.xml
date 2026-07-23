@@ -14,7 +14,7 @@
     Where for the CAM specific compsets below the following is supported
     TIME = Time period (e.g. 2000, HIST, SSP585...)
     ATM  = [DATM, CAM40, CAM50, CAM60, CAM70, SATM] (CAM only for CAM or CESM checkouts)
-    LND  = [CLM45, CLM50, CLM60, DLND, SLND]
+    LND  = [CLM50, CLM60, DLND, SLND]
     ICE  = [CICE, DICE, SICE] (CICE only for CAM or CESM checkouts)
     OCN  = [MOM, DOCN, SOCN] (MOM only for CESM checkouts)
     ROF  = [RTM, MOSART, MIZUROUTE, DROF, SROF]

@@ -186,7 +186,7 @@ This defines various CTSM-specific system tests
   </test>
 
 <!--
-SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
+SSP    smoke CLM spinup test (only valid for CLM compsets with CLM50)
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
          write restarts at the end of the run
          short term archiving is on
