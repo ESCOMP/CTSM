@@ -2,6 +2,9 @@
 ! Mostly they are options to simplify physics by turning more advanced options off.
 ! This can be useful for software testing and possibly for science testing as well.
 
+  ! finundation_method requires BGC as it's used for the methane model
+  finundation_method = 'ZWT_inversion' ! useful to test with water isotopes
+
   ! The following require certain compset physics options
   use_luna = .false. ! Requires BGC
   constrain_stress_deciduous_onset = .false. ! Requires BGC

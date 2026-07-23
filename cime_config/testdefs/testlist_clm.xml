@@ -4449,7 +4449,7 @@
   </test>
 
   <!-- decomp_init tests -->
-  <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm45SpRs" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
@@ -4459,7 +4459,7 @@
       <option name="comment">mpi-serial self tests with DEBUG</option>
     </options>
   </test>
-  <test name="SMS_D_Ln1" grid="f10_f10_mt232" compset="I2000Clm45Sp" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1" grid="f10_f10_mt232" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="gnu" category="decomp_init"/>
@@ -4470,7 +4470,7 @@
       <option name="comment">Self tests with DEBUG on for f10</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50SpRsGs" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4479,7 +4479,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4488,7 +4488,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4497,7 +4497,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Small" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
+  <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4506,7 +4506,7 @@
       <option name="comment">Initialization test for ne120pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun">
+  <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
     </machines>
@@ -4515,7 +4515,7 @@
       <option name="comment">Initialization test for mpasa15 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+  <test name="SMS_Ln1" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -4525,7 +4525,7 @@
       <option name="comment">Initialization test for mpasa3p75 default layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PL" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+  <test name="SMS_Ln1_PL" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
     </machines>
@@ -4534,7 +4534,7 @@
       <option name="comment">Initialization test for mpasa3p75 "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_PLhm" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm45Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+  <test name="SMS_Ln1_PLhm" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
     </machines>
