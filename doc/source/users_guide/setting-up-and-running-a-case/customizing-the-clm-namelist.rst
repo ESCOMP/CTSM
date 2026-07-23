@@ -42,6 +42,7 @@ Example 1-2. Default CLM Namelist
 ---------------------------------
 .. I copied the following file from the baseline for ctsm5.4.047 for the SMS_D_Ld5_PS.f09_f09_mt232.I1850Clm60BgcCrop.derecho_gnu.clm-f09_ObscureStreamOpts test.
 .. As said above I removed the empty namelist groups and namelist groups that aren't relevant for this case. And then added leading spaces.
+
 ::
 
      &clm_inparm
