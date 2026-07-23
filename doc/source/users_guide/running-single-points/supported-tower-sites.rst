@@ -80,7 +80,7 @@ To run CTSM at a PLUMBER2 site, change directories to where the ``run_tower`` to
 
     conda activate ctsm_pylib
     cd CTSM/tools/site_and_regional
-    run_tower --plumber-sites AR-SLu
+    ./run_tower --plumber-sites AR-SLu
 
 The history output for a PLUMBER2 case will be set up and archived similarly to the output for a NEON case, as described above.
 
