@@ -1,0 +1,59 @@
+name: Probe -- can gha-runner-ctsm load the derecho ncarenv modules?
+
+# Feasibility spike for the Phase 2 drift-detection cron (see
+# docker/ctsm-ci-derecho-gnu/derecho-versions.ini): does the self-hosted Cirrus
+# runner have Lmod + the ncarenv module stack, and if so how do we make it
+# available in a non-login shell? Run manually (Actions tab -> this workflow ->
+# "Run workflow") and read the log. Informational only -- the job always
+# succeeds; its output is the result.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe-modules:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: Probe the module system
+        run: |
+          set +e            # never fail the step; the log is the result
+          set +o pipefail
+
+          echo "=== is 'module' already available (no sourcing)? ==="
+          command -v module && module --version 2>&1
+          type module 2>/dev/null
+
+          echo "=== try sourcing an Lmod init script ==="
+          for init in /etc/profile.d/z00_lmod.sh /etc/profile.d/lmod.sh \
+                      /etc/profile.d/00-modulepath.sh \
+                      "${LMOD_PKG:-}/init/bash" "${LMOD_ROOT:-}/lmod/init/bash"; do
+            if [ -r "$init" ]; then echo "sourcing $init"; source "$init"; fi
+          done
+          command -v module || echo "NO 'module' command available"
+
+          echo "=== MODULEPATH ==="
+          echo "${MODULEPATH:-<unset>}"
+
+          if ! command -v module >/dev/null 2>&1; then
+            echo "RESULT: 'module' is NOT available on this runner -- it cannot"
+            echo "        load the ncarenv stack; the Phase 2 probe must run"
+            echo "        elsewhere (e.g. a cron on casper/derecho)."
+            echo "=== done (informational; this step always succeeds) ==="
+            exit 0
+          fi
+          echo "RESULT: 'module' IS available; attempting the derecho gnu load"
+
+          echo "=== try loading the derecho gnu stack ==="
+          module --force purge 2>&1
+          module load ncarenv/23.09 gcc/12.2.0 cray-mpich/8.1.27 netcdf-mpi/4.9.2 2>&1 \
+            || echo "MODULE LOAD FAILED"
+          module list 2>&1
+
+          echo "=== values the Phase 2 probe would read ==="
+          nc-config --version 2>&1 || echo "(no nc-config)"
+          nf-config --version 2>&1 || echo "(no nf-config)"
+          module show netcdf-mpi 2>&1 | grep -i hdf5 \
+            || echo "(no hdf5 line from 'module show netcdf-mpi')"
+
+          echo "=== done (informational; this step always succeeds) ==="
+          exit 0
