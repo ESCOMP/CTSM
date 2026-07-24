@@ -40,7 +40,7 @@ FATES Reduced Complexity Modes
 
 Currently, FATES can be run in several different "reduced complexity modes", where parts of the vegetation model are driven by input data rather than simulated. These modes can be used to facilitate calibration, test features, or run simulations more quickly. These modes are:
 
-1. **Satellite Phenology** (SP) mode: this mode is designed to run with leaf area index (LAI), stem area index (SAI), and canopy height (HTOP) as input to the model. As such, all processes that are normally used to calculate these values are turned off (e.g., mortality, allocation, etc.)
+1. **Satellite Phenology (SP) Mode**: this mode is designed to run with leaf area index (LAI), stem area index (SAI), and canopy height (HTOP) as input to the model. As such, all processes that are normally used to calculate these values are turned off (e.g., mortality, allocation, etc.)
 
 2. **No-Competition Mode**: this mode runs with full complexity in terms of processes, but places each FATES PFT on its own patch. As such, PFTs do not compete with one another. 
 
