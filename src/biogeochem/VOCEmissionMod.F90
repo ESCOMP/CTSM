@@ -14,8 +14,9 @@ module VOCEmissionMod
   use pftconMod          , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
   use pftconMod          , only : nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree
   use pftconMod          , only : nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub
-  use pftconMod          , only : nc3_arctic_grass   , nc3crop
+  use pftconMod          , only : nc3_arctic_grass
   use pftconMod          , only : nc4_grass,           noveg
+  use pftconMod          , only : is_crop
   use shr_megan_mod      , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod      , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
   use MEGANFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
@@ -775,7 +776,7 @@ contains
     else if (ivt_in >= nc3_arctic_grass &
          .and.    ivt_in <= nc4_grass) then            !grass
        get_map_EF = vocemis_inst%efisop_grc(5,g_in)
-    else if (ivt_in >= nc3crop) then                   !crops
+    else if (is_crop(ivt_in)) then                   !crops
        get_map_EF = vocemis_inst%efisop_grc(6,g_in)
     end if
 

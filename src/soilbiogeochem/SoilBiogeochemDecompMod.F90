@@ -127,7 +127,7 @@ contains
          net_nmin                         =>    soilbiogeochem_nitrogenflux_inst%net_nmin_col                         , & ! Output: [real(r8) (:)     ]  net rate of N mineralization (gN/m2/s)            
          
          w_scalar                         =>    soilbiogeochem_carbonflux_inst%w_scalar_col                           , & ! Input:  [real(r8) (:,:)   ]  fraction by which decomposition is limited by moisture availability
-         c_overflow_vr                    =>    soilbiogeochem_carbonflux_inst%c_overflow_vr                          , & ! Input:  [real(r8) (:,:,:) ]  vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
+         c_overflow_hr_vr                 =>    soilbiogeochem_carbonflux_inst%c_overflow_hr_vr                       , & ! Input:  [real(r8) (:,:,:) ]  vertically-resolved C rejected by microbes that cannot process it (gC/m3/s)
          decomp_cascade_hr_vr             =>    soilbiogeochem_carbonflux_inst%decomp_cascade_hr_vr_col               , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          decomp_cascade_ctransfer_vr      =>    soilbiogeochem_carbonflux_inst%decomp_cascade_ctransfer_vr_col        , & ! Output: [real(r8) (:,:,:) ]  vertically-resolved het. resp. from decomposing C pools (gC/m3/s)
          phr_vr                           =>    soilbiogeochem_carbonflux_inst%phr_vr_col                             , & ! Input:  [real(r8) (:,:)   ]  potential HR (gC/m3/s)                           
@@ -194,7 +194,7 @@ contains
                   if (decomp_method == mimics_decomp) then
                      decomp_cascade_hr_vr(c,j,k) = min( &
                         p_decomp_cpool_loss(c,j,k), &
-                        decomp_cascade_hr_vr(c,j,k) + c_overflow_vr(c,j,k))
+                        decomp_cascade_hr_vr(c,j,k) + c_overflow_hr_vr(c,j,k))
                      decomp_cascade_ctransfer_vr(c,j,k) = max(0.0_r8, p_decomp_cpool_loss(c,j,k) - decomp_cascade_hr_vr(c,j,k))
                   end if
                   if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. cascade_receiver_pool(k) /= i_atm) then

@@ -35,7 +35,7 @@ There is a rich and diverse set of people that use the CESM, and often it is use
 The CLM web pages
 -----------------
 
-The main `CLM web page <http://www.cgd.ucar.edu/tss/clm/>`_ contains information on the CLM, its history, developers, as well as downloads for previous model versions. Some other links are available at the `CESM2 land component webpage <http://www.cesm.ucar.edu/models/cesm2/land>`. There are also documentation text files in the `$CTSMROOT/doc directory <https://github.com/ESCOMP/CTSM/tree/master/doc>`_ that give some quick information on using CLM.
+The main `CLM web page <https://www.cesm.ucar.edu/models/clm>`_ contains information on the CLM, its history, developers, as well as downloads for previous model versions. Some other links are available at the `CESM2 land component webpage <http://www.cesm.ucar.edu/models/cesm2/land>`. There are also documentation text files in the `$CTSMROOT/doc directory <https://github.com/ESCOMP/CTSM/tree/master/doc>`_ that give some quick information on using CLM.
 
 Also note that several of the XML database files can help with namelist options, namelist defaults, or compsets. For the most recent release:
 
@@ -56,7 +56,7 @@ Some archives are available for previous versions:
 Reporting bugs in |version|
 ----------------------------
 
-If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue on GitHub https://github.com/ESCOMP/ctsm/issues or for CIME scripts and infrastructure to https://github.com/ESMCI/CIME/issues. Or send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
+If you have any problems, additional questions, bug reports, or any other feedback, please report it as an issue on GitHub `https://github.com/ESCOMP/ctsm/issues <https://github.com/ESCOMP/ctsm/issues>` or for CIME scripts and infrastructure to `https://github.com/ESMCI/cime/issues <https://github.com/ESMCI/cime/issues>`. Or send an email to <`cesmhelp@cgd.ucar.edu <cesmhelp@cgd.ucar.edu>`_> or <`ctsm-software@ucar.edu <ctsm-software@ucar.edu>`_>. If you find bad, wrong, or misleading information in this users guide report it as an issue on CTSM.
 
 .. _acronyms-and-terms:
 
