@@ -1,0 +1,3 @@
+# Build logs / scratch produced by build-on-casper.sh
+build-on-casper.log.*
+logs/
