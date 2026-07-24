@@ -33,21 +33,22 @@ Here's where you need to specify the version number in the Dockerfile:
 ```docker
 LABEL org.opencontainers.image.version="vX.Y.Z"
 ```
-The string there can technically be anything as long as (a) it starts with a lowercase `v` and (b) it hasn't yet been used on a published version of the container.
+The string there can technically be anything as long as (a) it starts with a lowercase `v` and (b) it hasn't yet been used on a published version of the container. You may need to "bump" the version string in order for various tests to pass; if so, just add a lowercase letter at the end.
 
 You can check the results of the automatic publication on the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs).
 
 ### Updating doc-builder
 After the new version of the container is published, you will probably want to tell [doc-builder](https://github.com/ESMCI/doc-builder) to use the new one. Open a PR where you change the tag (the part after the colon) in the definition of `DEFAULT_IMAGE` in `doc_builder/build_commands.py`. Remember, **use the version number**, not "latest".
 
-## Publishing manually (NOT recommended)
+## Publishing manually
 
-It's vastly preferable to let GitHub build and publish the new repo using the `docker-image-build-publish.yml` workflow as described above. However, if you need to publish manually for some reason, here's how.
+It's vastly preferable to let GitHub build and publish the new repo using the `docker-image-build-publish.yml` workflow as described above. However, you may need to publish manually if, for instance, you introduce a change that breaks `doc-builder`. You could work around that by first merging a CTSM `master` PR that updates the container, then updating `doc-builder` to use it, then updating CTSM to use the new `doc-builder`. That's not always practical, though, so here's how to publish the container manually.
 
 ### Building the multi-architecture version
 
 When publishing our container, we need to make sure it can run on either arm64 or amd64 processor architecture. This requires a special build process:
 ```shell
+podman manifest rm ctsm-docs-manifest 2>/dev/null
 podman manifest create ctsm-docs-manifest
 podman build --platform linux/amd64,linux/arm64  --manifest ctsm-docs-manifest .
 ```
@@ -66,16 +67,17 @@ export HISTCONTROL=ignoreboth
 ```
 
 ### Tagging
-You'll next need to tag the image. Lots of container instructions tell you to use the `latest` tag, and Podman may actually add that for you. However, `latest` can lead to support headaches as users think they have the right version but actually don't. Instead, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
+You'll next need to tag the image. Lots of container instructions tell you to use the `latest` tag, and Podman may actually add that for you. However, using `latest` in `doc-builder` can lead to support headaches as users think they have the right version but actually don't. So in addition to `latest`, you'll make a new version number incremented from the [previous one](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs/versions), in the `vX.Y.Z` format.
 
-Copy the relevant image ID (see `podman images` instructions above) and tag it with your version number like so:
+Tag the manifest with your version number like so:
 ```shell
-podman tag 6464f26339bc ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
+podman tag ctsm-docs-manifest ghcr.io/escomp/ctsm/ctsm-docs:v2.0.1
 ```
 
 Push to the repo:
 ```shell
 podman manifest push --all ctsm-docs-manifest ghcr.io/escomp/ctsm/ctsm-docs:vX.Y.Z
+podman manifest push --all ctsm-docs-manifest ghcr.io/escomp/ctsm/ctsm-docs:latest
 ```
 
 Then browse to the [container's GitHub page](https://github.com/ESCOMP/CTSM/pkgs/container/ctsm%2Fctsm-docs) to make sure this all worked and the image is public.

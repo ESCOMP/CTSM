@@ -18,7 +18,7 @@ Changes to defaults for `clm6_0` physics:
 
 * Urban explicit A/C turned on (links above).
 * Snow thermal conductivity method is now `Sturm1997`. ([PR \#2348](https://github.com/ESCOMP/CTSM/pull/2348); see also [discussion \#1960](https://github.com/ESCOMP/CTSM/discussions/1960))
-* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 (“2-degree” 1850), and ne30 (1850, 1979, 2000) resolutions.
+* New initial conditions files for f09 ("1-degree" 1850, 2000), f19 ("2-degree" 1850), and ne30 (1850, 1979, 2000) resolutions.
 * New crop calendars. ([PR \#2664](https://github.com/ESCOMP/CTSM/pull/2664); informed by [Rabin et al., 2023](https://gmd.copernicus.org/articles/16/7253/2023/gmd-16-7253-2023.html))
 * Dust emissions method is now `Leung_2023` (links above).
 * Excess ice is turned on. ([PR \#1787](https://github.com/ESCOMP/CTSM/pull/1787))
@@ -35,8 +35,8 @@ Changes for all physics versions:
 
 ### Heads up
 
-* Small glacier changes mean that you can’t use a 5.3 surface dataset with pre-5.3 code and vice versa anymore. (Merged with [PR \#2500](https://github.com/ESCOMP/CTSM/pull/2500))
-* Updates the definition of history variable “time” from *end* of `time_bounds` to *middle* of `time_bounds`. ([PR \#2838](https://github.com/ESCOMP/CTSM/pull/2838); see section below)
+* Small glacier changes mean that you can't use a 5.3 surface dataset with pre-5.3 code and vice versa anymore. (Merged with [PR \#2500](https://github.com/ESCOMP/CTSM/pull/2500))
+* Updates the definition of history variable "time" from *end* of `time_bounds` to *middle* of `time_bounds`. ([PR \#2838](https://github.com/ESCOMP/CTSM/pull/2838); see section below)
 * Standardizes history variable attributes and a history dimension name. ([PR \#2052](https://github.com/ESCOMP/CTSM/pull/2052); see section below)
 
 ##
@@ -49,7 +49,7 @@ Changes for all physics versions:
 
 Startup and hybrid runs no longer run the 0th time step, consistent with the same change in CAM. (Branch and continue runs never had this 0th time step.) This means you will not get an extraneous initial history file anymore. In some circumstances this may also affect the names of history files.
 
-In most cases, the history `time` variable is now defined as the middle of a history file’s `time_bounds` instead of the end, for consistency with the same change in CAM. The exception is if you specify `hist_avgflag_pertape = 'I'` for that file, in which case it will be treated as an “instantaneous” file. Instantaneous history files (a) have their `time` coordinate set to the end of the last timestep (as did all history files before this tag) and (b) do not include `time_bounds`.
+In most cases, the history `time` variable is now defined as the middle of a history file's `time_bounds` instead of the end, for consistency with the same change in CAM. The exception is if you specify `hist_avgflag_pertape = 'I'` for that file, in which case it will be treated as an "instantaneous" file. Instantaneous history files (a) have their `time` coordinate set to the end of the last timestep (as did all history files before this tag) and (b) do not include `time_bounds`.
 
 The history dimension name `hist_interval` (of output variable `time_bounds`) is standardized to be `nbnd`. History variables `time_bounds`, `mcdate`, `mcsec`, `mdcur`, and `mscur` are standardized to include the calendar attribute.
 
@@ -77,7 +77,7 @@ The history dimension name `hist_interval` (of output variable `time_bounds`) is
 
 ### Changes to rpointer files
 
-The rpointer files are simple text files that CESM uses to keep track of how far simulations have progressed, pointing to the filename of the latest restart file for that component. There is one such file for each component, so for CTSM `I` cases that's `lnd`, `cpl`, and `atm` (and `rof` if it's active). Normally, when the user is just extending the length  of simulations, there’s no need to worry about these files.
+The rpointer files are simple text files that CESM uses to keep track of how far simulations have progressed, pointing to the filename of the latest restart file for that component. There is one such file for each component, so for CTSM `I` cases that's `lnd`, `cpl`, and `atm` (and `rof` if it's active). Normally, when the user is just extending the length  of simulations, there's no need to worry about these files.
 
 However, if there was a problem when a simulation shut down, it's possible that different components will have mismatched restarts and rpointer files. In the past, this meant figuring out what restart file should be pointed to in each component rpointer file and correcting it by hand in an editor. There was only the final set of rpointer files that was kept for a case.
 

@@ -3,7 +3,7 @@ name: Documentation
 about: Something should be added to or fixed in the documentation
 
 ---
-
+(Please see our [contribution guidelines for documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines).)
 
 ### What sort(s) of documentation issue is this?
 - [ ] Something is missing.

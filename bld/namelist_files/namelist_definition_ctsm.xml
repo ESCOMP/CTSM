@@ -708,10 +708,11 @@ Toggle to turn on the FATES model
 Functionally Assembled Terrestrial Ecosystem Simulator (FATES)
 </entry>
 
-<entry id="fates_parteh_mode" type="integer" category="physics"
-        group="clm_inparm" valid_values="1,2">
+<entry id="fates_parteh_mode" type="char*80" category="physics"
+       group="clm_inparm" valid_values="carbon_only,carbon_nitrogen">
 Switch deciding which nutrient model to use in FATES.
 (Only relevant if FATES is on)
+(fates_parteh_mode='carbon_nitrogen' is EXPERIMENTAL and UNSUPPORTED)
 </entry>
 
 <entry id="fates_seeddisp_cadence" type="integer" category="physics"
@@ -877,6 +878,14 @@ Toggle to turn on inventory initialization to startup FATES
        input_pathname="abs" group="clm_inparm" valid_values="" >
 Full pathname to the inventory initialization control file.
 (Required, if use_fates_inventory_init=T)
+(Only relevant if FATES is on).
+</entry>
+
+
+<entry id="use_fates_dbh_init" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+Initialize cohorts at coldstart with diameter at breast height instead of density
+(Applies only if use_fates_nocomp=.true.)
 (Only relevant if FATES is on).
 </entry>
 

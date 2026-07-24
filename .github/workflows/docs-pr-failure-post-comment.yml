@@ -1,0 +1,66 @@
+name: Post PR comment with doc-build failure log
+
+env:
+  DOCS_FAILURE_ARTIFACT: test-build-docs-container_failed
+
+on:
+  workflow_run:
+    workflows: ["Test building docs when they're updated"]
+    types: [completed]
+
+jobs:
+  comment:
+    if: >-
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Check for failure artifact
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api repos/$REPO/actions/runs/${{ github.event.workflow_run.id }}/artifacts \
+            --jq '.artifacts[] | select(.name == "${{ env.DOCS_FAILURE_ARTIFACT }}") | .id' > artifact_id.txt
+          
+          if [ -s artifact_id.txt ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download logs
+        if: steps.check.outputs.found == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.DOCS_FAILURE_ARTIFACT }}
+          path: ${{ env.DOCS_FAILURE_ARTIFACT }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post comment
+        if: steps.check.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          PR_NUMBER=$(cat "${DOCS_FAILURE_ARTIFACT}/pr_number.txt")
+
+          {
+            echo "### ❌ Docs build failed"
+            echo
+            echo '<details open="true">'
+            echo "<summary>Build logs</summary>"
+            echo
+            echo '```'
+            cat "${DOCS_FAILURE_ARTIFACT}/build.log"
+            echo '```'
+            echo
+            echo "</details>"
+          } > comment-body.md
+
+          gh pr comment "$PR_NUMBER" --repo "$REPO" --body-file comment-body.md

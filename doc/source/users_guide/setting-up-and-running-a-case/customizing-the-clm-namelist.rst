@@ -36,7 +36,7 @@ Below we will give examples of user namelists that activate different commonly u
 The default namelist
 --------------------
 
-Here we give the default namelist as it would be created for an "I1850Clm50BgcCropCru" compset at 0.9x1.25 resolution with a gx1v7 land-mask on cheyenne. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
+Here we give the default namelist as it would be created for an "I1850Clm50BgcCropCru" compset at 0.9x1.25 resolution with a gx1v7 land-mask on derecho. To edit the namelist you would edit the ``user_nl_clm`` user namelist with just the items you want to change. For simplicity we will just show the CLM namelist and NOT the entire file. In the sections below, for simplicity we will just show the user namelist (``user_nl_clm``) that will add (or modify existing) namelist items to the namelist.
 
 Example 1-2. Default CLM Namelist
 ---------------------------------

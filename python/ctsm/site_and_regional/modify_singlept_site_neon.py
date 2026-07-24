@@ -274,7 +274,7 @@ def find_soil_structure(args, surf_file):
         soil_bot : array of soil layers top depths
         soil_top : array of soil layers bottom depths
     """
-    # TODO: What if not cheyenne? Self-contained depth info.
+    # TODO: What if not derecho? Self-contained depth info.
 
     print("------------")
     print("surf_file : ", surf_file)
