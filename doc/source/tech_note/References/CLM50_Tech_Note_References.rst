@@ -1468,7 +1468,7 @@ Shiklomanov, I.A. 2000. Appraisal and assessment of world water resources. Water
 
 .. _Shumanetal2024:
 
-Shuman, J. K., Fisher, R. A., Koven, C., Knox, R., Kueppers, L., and Xu, C. 2024. Dynamic ecosystem assembly and escaping the “fire trap” in the tropics: insights from FATES_15.0.0, Geosci. Model Dev., 17, 4643–4671, DOI:10.5194/gmd-17-4643-2024.
+Shuman, J. K., Fisher, R. A., Koven, C., Knox, R., Kueppers, L., and Xu, C. 2024. Dynamic ecosystem assembly and escaping the "fire trap" in the tropics: insights from FATES_15.0.0, Geosci. Model Dev., 17, 4643–4671, DOI:10.5194/gmd-17-4643-2024.
 
 .. _Siebertetal2005:
 
