@@ -9,16 +9,6 @@ name: Probe -- can gha-runner-ctsm load the derecho ncarenv modules?
 
 on:
   workflow_dispatch:
-  # TEMPORARY scaffolding: the workflow_dispatch "Run workflow" button only
-  # appears once this file is on the default branch, so it can't be triggered
-  # manually from a feature branch. Trigger on PRs that touch this file so the
-  # spike runs on the current PR. Scoped to this file's path so it does NOT run
-  # (and tie up the self-hosted runner) on unrelated PRs. Remove this
-  # pull_request block -- back to workflow_dispatch-only -- once the spike has
-  # served its purpose.
-  pull_request:
-    paths:
-      - '.github/workflows/probe-derecho-modules.yml'
 
 jobs:
   probe-modules:
