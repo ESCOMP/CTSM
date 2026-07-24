@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-#PBS -N ctsm-ci-gh-build
+#PBS -N ctsm-ci-derecho-gnu-build
 #PBS -q casper
 #PBS -l select=1:ncpus=16:mem=256GB
 #PBS -l walltime=03:00:00
 #PBS -j oe
 #
-# Build the ctsm-ci-gh image with podman on an NCAR HPC node (Casper).
+# Build the ctsm-ci-derecho-gnu image with podman on an NCAR HPC node (Casper).
 #
 # This wrapper exists because of a host-side requirement that CANNOT live
 # in the Dockerfile: rootless podman/buildah must place the build
@@ -22,13 +22,13 @@
 # switches users or chowns to other UIDs.
 #
 # Usage:
-#   docker/ctsm-ci-gh/build-on-casper.sh [extra 'podman build' args]
+#   docker/ctsm-ci-derecho-gnu/build-on-casper.sh [extra 'podman build' args]
 # Examples:
-#   docker/ctsm-ci-gh/build-on-casper.sh
-#   docker/ctsm-ci-gh/build-on-casper.sh --build-arg MAKE_JOBS=8
+#   docker/ctsm-ci-derecho-gnu/build-on-casper.sh
+#   docker/ctsm-ci-derecho-gnu/build-on-casper.sh --build-arg MAKE_JOBS=8
 # Overridable via environment:
 #   CTSM_BUILD_TMPDIR  node-local scratch dir (default /var/tmp/$USER)
-#   IMAGE_TAG          image tag to build     (default ctsm-ci-gh:dev)
+#   IMAGE_TAG          image tag to build     (default ctsm-ci-derecho-gnu:dev)
 #   DOCKERFILE         Dockerfile to use      (default Dockerfile)
 set -eo pipefail
 
@@ -52,7 +52,7 @@ TMPDIR="${CTSM_BUILD_TMPDIR:-/var/tmp/${user}}"
 export TMPDIR
 mkdir -p "${TMPDIR}"
 
-image="${IMAGE_TAG:-ctsm-ci-gh:dev}"
+image="${IMAGE_TAG:-ctsm-ci-derecho-gnu:dev}"
 dockerfile="${DOCKERFILE:-Dockerfile}"
 
 echo "Building ${image} from ${dockerfile} (TMPDIR=${TMPDIR})"

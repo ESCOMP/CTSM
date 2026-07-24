@@ -47,11 +47,11 @@ jobs:
     runs-on: ubuntu-latest
     
     container:
-      # TODO(publish): point at the published ctsm-ci-gh image once it is
-      # pushed to a registry (final step in docker/ctsm-ci-gh/NEXT_STEPS.md),
-      # e.g. ghcr.io/<owner>/ctsm-ci-gh:<tag>. Until then this job cannot pull
+      # TODO(publish): point at the published ctsm-ci-derecho-gnu image once it is
+      # pushed to a registry (final step in docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md),
+      # e.g. ghcr.io/<owner>/ctsm-ci-derecho-gnu:<tag>. Until then this job cannot pull
       # the image and will fail at container startup -- expected pre-publish.
-      image: ctsm-ci-gh:PUBLISH_TBD
+      image: ctsm-ci-derecho-gnu:PUBLISH_TBD
 
     steps:
 
