@@ -175,8 +175,7 @@ contains
                                          soilbiogeochem_carbonflux_inst,                                           &              
                                          soilbiogeochem_state_inst, soilbiogeochem_nitrogenstate_inst,             &
                                          soilbiogeochem_nitrogenflux_inst,canopystate_inst,                        &
-                                         drydepvel_inst)
-                                         soilbiogeochem_nitrogenflux_inst,canopystate_inst, clm_fates)
+                                         drydepvel_inst, clm_fates)
     !
     ! !USES:
     use clm_varctl       , only: fates_parteh_mode, allocate_carbon_only, iulog
