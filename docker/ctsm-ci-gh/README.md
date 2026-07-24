@@ -7,6 +7,10 @@ GitHub Actions, e.g. the `simple-build-create_test` job in
 It is **not** the image for running on derecho itself (that will be a separate,
 Cray-based image someday — hence the `-gh` suffix).
 
+It is built **from scratch** on AlmaLinux 9 (no vendor base image): every
+component below is compiled or installed here so it matches derecho's gnu
+stack wherever an open equivalent exists.
+
 ## Design goals
 
 1. **Match derecho's gnu software stack** (what
@@ -15,16 +19,19 @@ Cray-based image someday — hence the `-gh` suffix).
 2. **Satisfy CIME's `container` machine unmodified**: netCDF/PnetCDF under
    `/usr/local`, LAPACK/BLAS linkable as `-llapack -lblas`, `ESMFMKFILE`,
    `USER`, and `CESMDATAROOT` preset.
-3. **Work in GitHub Actions**: GHA runs steps in *non-login* shells, so the
-   CISL base image's login-shell environment (`/etc/profile.d/z00-build-env.sh`)
-   never fires there. Everything needed is baked in as Docker `ENV` instead.
+3. **Work in GitHub Actions**: GHA runs steps in *non-login* shells, so
+   profile scripts never fire. Everything needed is baked in as Docker `ENV`.
 
-## Version match vs. derecho gnu
+## Software stack vs. derecho gnu
+
+The toolchain (GCC, MPICH) lives under `/opt`; libraries install under
+`/usr/local` (where the `container` machine hard-codes `NETCDF_PATH` /
+`PNETCDF_PATH`); ESMF is located via `ESMFMKFILE`.
 
 | Component | derecho gnu | this image | note |
 |---|---|---|---|
-| GCC | 12.2.0 | 12.5.0 | from the CISL base image; exact 12.2.0 planned via a from-scratch build |
-| MPI | cray-mpich 8.1.27 | MPICH 3.4.3 | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary |
+| GCC | 12.2.0 | 12.2.0 | exact match, built from source under `/opt/gcc` |
+| MPI | cray-mpich 8.1.27 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary |
 | HDF5 | hdf5-mpi/1.12.2 | 1.12.2 (parallel) | confirmed on derecho: loaded by netcdf-mpi/4.9.2 under ncarenv/23.09 |
 | netCDF-C | netcdf-mpi/4.9.2 | 4.9.2 | |
 | netCDF-Fortran | bundled in netcdf/4.9.2 | 4.6.1 | confirmed on derecho: `nf-config --version` with ncarenv/23.09 + netcdf-mpi/4.9.2 |
@@ -34,10 +41,11 @@ Cray-based image someday — hence the `-gh` suffix).
 | PIO | parallelio/2.6.2 module | none installed | CIME builds PIO from CTSM's pinned ParallelIO submodule during the case build |
 | conda, nco | loaded on derecho | not included | not needed for build-only CI; revisit when tests actually run |
 
-The CISL base image's own newer libraries (netCDF 4.9.3, PnetCDF 1.14.0,
-HDF5 1.14.6, PIO 2.6.6, FFTW, heFFTe) remain under `/container/` but are
-shadowed by `/usr/local` in `PATH`/`ldconfig` order. They will disappear when
-the Dockerfile is converted to a from-scratch (AlmaLinux 9) build.
+`git` is also built from source (it is not part of derecho's stack): CIME's
+cprnc and PIO builds clone `genf90` via git during the case build. git can't
+be `dnf install`ed here because that pulls in `openssh`, whose setuid
+`ssh-keysign` fails to `chown` under NCAR's rootless single-UID podman — see
+[NEXT_STEPS.md](NEXT_STEPS.md) for the full story.
 
 ## ESMF flavors
 
@@ -59,31 +67,42 @@ env:
 
 ## Building the image
 
-On an x86_64 Linux box:
+**On NCAR HPC (Casper), rootless podman** — use the wrapper, which sets the
+node-local `TMPDIR` that rootless podman/buildah requires and carries PBS
+headers for a build allocation:
 
 ```bash
-podman build -t ctsm-ci-gh:dev docker/ctsm-ci-gh/
+docker/ctsm-ci-gh/build-on-casper.sh
 ```
 
-On Apple Silicon, add `--arch amd64` (runs under Rosetta emulation — the
-ESMF builds make this take a while):
+Request generous memory (e.g. `mem=256GB`): the build compiles the whole
+toolchain and the final image commit is memory-hungry. See
+[NEXT_STEPS.md](NEXT_STEPS.md) for the full set of rootless-podman build
+constraints.
+
+**On a host with unrestricted Docker/root** (a workstation or CI runner), a
+plain build works:
 
 ```bash
-podman build --arch amd64 -t ctsm-ci-gh:dev docker/ctsm-ci-gh/
+podman build -t ctsm-ci-gh:dev docker/ctsm-ci-gh/   # or: docker build ...
 ```
+
+Validate a built image with `docker/ctsm-ci-gh/smoke-test.sh`.
 
 ## Bumping versions
 
-Library versions are `ARG`s at the top of the Dockerfile. If the base image
-tag is bumped, also update `GCC_ROOT`/`MPICH_ROOT` to the paths the new base
-uses under `/container/`.
+Component versions are `ARG`s near the top of the `Dockerfile`
+(`GCC_VERSION`, `MPICH_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`,
+`NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`), plus
+`GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
 
 ## Baked-in environment (why each matters)
 
 | Variable | Value | Why |
 |---|---|---|
-| `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/container` gcc+mpich | non-login GHA shells; shadow base-image libs |
-| `CC/CXX/FC/F77` | MPICH wrappers | same convention as the base image |
+| `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt` mpich + gcc | non-login GHA shells need the toolchain on `PATH` without profile scripts |
+| `CC/CXX/FC/F77` | MPICH wrappers (`mpicc`, …) | build everything against MPICH |
 | `ESMFMKFILE` | `/usr/local/esmf-8.6.0-debug/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it |
 | `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run` |
-| `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it (GHA sets `HOME=/github/home`, so `CIME_OUTPUT_ROOT=$HOME/scratch` lands somewhere writable) |
+| `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
+| `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain |
