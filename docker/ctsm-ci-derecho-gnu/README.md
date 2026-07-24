@@ -1,11 +1,13 @@
-# ctsm-ci-gh: CTSM build/test container for GitHub Actions
+# ctsm-ci-derecho-gnu: CTSM build/test container for GitHub Actions
 
 This image lets CIME's `container` machine (`--machine container`, compiler
 `gnu`; defined in `ccs_config/machines/container/`) compile CTSM cases in
 GitHub Actions, e.g. the `simple-build-create_test` job in
 [.github/workflows/cirrus-testing.yml](../../.github/workflows/cirrus-testing.yml).
-It is **not** the image for running on derecho itself (that will be a separate,
-Cray-based image someday — hence the `-gh` suffix).
+Despite the name, it is **not** meant to run on the derecho HPC machine
+itself — it *replicates* derecho's gnu software stack inside a container so
+CTSM can be built and tested in CI. An image for running on derecho proper
+would be Cray-based and separate.
 
 It is built **from scratch** on AlmaLinux 9 (no vendor base image): every
 component below is compiled or installed here so it matches derecho's gnu
@@ -72,7 +74,7 @@ node-local `TMPDIR` that rootless podman/buildah requires and carries PBS
 headers for a build allocation:
 
 ```bash
-docker/ctsm-ci-gh/build-on-casper.sh
+docker/ctsm-ci-derecho-gnu/build-on-casper.sh
 ```
 
 Request generous memory (e.g. `mem=256GB`): the build compiles the whole
@@ -84,10 +86,10 @@ constraints.
 plain build works:
 
 ```bash
-podman build -t ctsm-ci-gh:dev docker/ctsm-ci-gh/   # or: docker build ...
+podman build -t ctsm-ci-derecho-gnu:dev docker/ctsm-ci-derecho-gnu/   # or: docker build ...
 ```
 
-Validate a built image with `docker/ctsm-ci-gh/smoke-test.sh`.
+Validate a built image with `docker/ctsm-ci-derecho-gnu/smoke-test.sh`.
 
 ## Bumping versions
 

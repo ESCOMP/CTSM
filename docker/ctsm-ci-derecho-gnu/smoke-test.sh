@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Smoke-test the built ctsm-ci-gh image. Asserts the toolchain versions
+# Smoke-test the built ctsm-ci-derecho-gnu image. Asserts the toolchain versions
 # match derecho's gnu stack and that a small MPI + netCDF Fortran program
 # compiles, links (-lnetcdff -lnetcdf -llapack -lblas) and runs under
 # mpiexec. Run after build-on-casper.sh tags the image.
 #
-# Usage: docker/ctsm-ci-gh/smoke-test.sh
-#   IMAGE_TAG overrides the image (default localhost/ctsm-ci-gh:dev)
+# Usage: docker/ctsm-ci-derecho-gnu/smoke-test.sh
+#   IMAGE_TAG overrides the image (default localhost/ctsm-ci-derecho-gnu:dev)
 set -eo pipefail
 
 module load podman 2>/dev/null || true
 
-image="${IMAGE_TAG:-localhost/ctsm-ci-gh:dev}"
+image="${IMAGE_TAG:-localhost/ctsm-ci-derecho-gnu:dev}"
 echo "Smoke-testing ${image}"
 
 # The checks run INSIDE a fresh container so we exercise exactly the baked-in
