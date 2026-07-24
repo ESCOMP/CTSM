@@ -98,6 +98,15 @@ Component versions are `ARG`s near the top of the `Dockerfile`
 `NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`), plus
 `GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
 
+`check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
+locally: `python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`) fails
+if these ARGs drift from derecho's gnu stack in
+`ccs_config/machines/derecho/config_machines.xml`. Most are read live from
+that file. HDF5 and netCDF-Fortran (bundled in `netcdf-mpi`, so not standalone
+modules there) and the intentional `cray-mpich`→MPICH deviation are recorded
+by hand in `derecho-versions.ini`; update that file too when they change
+(verify on derecho with `module show netcdf-mpi` / `nf-config --version`).
+
 ## Baked-in environment (why each matters)
 
 | Variable | Value | Why |
