@@ -29,7 +29,7 @@
 # Overridable via environment:
 #   CTSM_BUILD_TMPDIR  node-local scratch dir (default /var/tmp/$USER)
 #   IMAGE_TAG          image tag to build     (default ctsm-ci-gh:dev)
-#   DOCKERFILE         Dockerfile to use      (default Dockerfile.scratch)
+#   DOCKERFILE         Dockerfile to use      (default Dockerfile)
 set -eo pipefail
 
 if [ "$PBS_ENVIRONMENT" = "PBS_BATCH" ]; then
@@ -53,7 +53,7 @@ export TMPDIR
 mkdir -p "${TMPDIR}"
 
 image="${IMAGE_TAG:-ctsm-ci-gh:dev}"
-dockerfile="${DOCKERFILE:-Dockerfile.scratch}"
+dockerfile="${DOCKERFILE:-Dockerfile}"
 
 echo "Building ${image} from ${dockerfile} (TMPDIR=${TMPDIR})"
 podman build \
