@@ -1,56 +1,131 @@
 # Container image for building CTSM in GitHub Actions CI.
 #
-# The software stack matches what CIME loads for gnu builds on derecho
-# (per ccs_config/machines/derecho/config_machines.xml) as closely as a
-# container allows; see README.md for the version-match table and the
-# accepted deviations.
+# Built from scratch on AlmaLinux 9 so every component can match what
+# CIME loads for gnu builds on derecho (per
+# ccs_config/machines/derecho/config_machines.xml) exactly where an open
+# equivalent exists; see README.md for the version-match table and the
+# accepted deviations (cray-mpich -> MPICH 3.4.3, cray-libsci ->
+# reference LAPACK/BLAS).
 #
 # Libraries are installed under /usr/local because CIME's "container"
 # machine (ccs_config/machines/container/) hard-codes
-# NETCDF_PATH=/usr/local and PNETCDF_PATH=/usr/local. ESMF is located
-# via ESMFMKFILE instead, so its two build flavors (debug/optimized)
-# live in their own prefixes.
+# NETCDF_PATH=/usr/local and PNETCDF_PATH=/usr/local. The toolchain
+# lives under /opt. ESMF is located via ESMFMKFILE instead, so its two
+# build flavors (debug/optimized) live in their own prefixes.
 #
 # All environment needed at runtime is baked in with ENV: GitHub
-# Actions runs steps in non-login shells, so the base image's
-# /etc/profile.d/z00-build-env.sh (login shells only) never fires in CI.
+# Actions runs steps in non-login shells, so profile.d scripts never
+# fire in CI.
 
-FROM docker.io/ncarcisl/cisldev-x86_64-almalinux9-gcc12-mpich3:25.08
+FROM docker.io/almalinux:9
 
-ARG GCC_ROOT=/container/gcc/12.5.0
-ARG MPICH_ROOT=/container/mpich/3.4.3
+ARG GCC_VERSION=12.2.0
+ARG MPICH_VERSION=3.4.3
 ARG HDF5_VERSION=1.12.2
 ARG NETCDF_C_VERSION=4.9.2
 ARG NETCDF_FORTRAN_VERSION=4.6.1
 ARG PNETCDF_VERSION=1.12.3
 ARG ESMF_VERSION=8.6.0
 
-# Deterministic toolchain environment for both the build layers below and
-# the final image (GHA inherits image ENV). /usr/local/bin comes first so
-# nc-config etc. resolve to the versions built here, not the base image's
-# newer copies under /container.
-ENV PATH=/usr/local/bin:${MPICH_ROOT}/bin:${GCC_ROOT}/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
-    LD_LIBRARY_PATH=/usr/local/lib:${GCC_ROOT}/lib64:${GCC_ROOT}/lib:${MPICH_ROOT}/lib \
-    CC=mpicc \
-    CXX=mpicxx \
-    FC=mpifort \
-    F77=mpif77
+# Parallelism for the source builds below. Bounded (not $(nproc)) because
+# podman inside a PBS job can report the whole node's CPU count rather than
+# the cores actually allocated, which oversubscribes the build. Default 16
+# matches the recommended ncpus=16 build allocation; override with
+# --build-arg MAKE_JOBS=N.
+ARG MAKE_JOBS=16
 
 SHELL ["/bin/bash", "-c"]
 
-# LAPACK/BLAS stand in for derecho's cray-libsci (proprietary); the CIME
-# "container" machine links -llapack -lblas. The Perl modules are needed
-# by CTSM's build-namelist.
+# System packages. lapack-devel/blas-devel (stand-ins for derecho's
+# proprietary cray-libsci; the CIME "container" machine links
+# -llapack -lblas) live in the CRB repo. The perl modules are needed by
+# CTSM's build-namelist. The system gcc/g++ only bootstraps the
+# GCC ${GCC_VERSION} build below.
+#
+# git is NOT dnf-installed: it pulls in openssh, whose rpm chowns a setuid
+# helper (ssh-keysign) to a non-root id, which fails under NCAR's rootless
+# single-UID podman ("cpio: chown failed"). git IS needed at runtime --
+# CIME's cprnc/PIO builds clone genf90 via git -- so it is built from
+# source in a later layer instead (see the git section near the bottom).
 RUN dnf -y install dnf-plugins-core \
     && dnf config-manager --set-enabled crb \
     && dnf -y install \
-        lapack-devel blas-devel \
+        gcc gcc-c++ \
+        make cmake m4 patch file diffutils hostname which findutils \
+        wget bzip2 xz \
+        python3 \
         perl-core perl-XML-LibXML \
-        zlib-devel libcurl-devel m4 patch file diffutils hostname \
-    && dnf clean all \
-    && printf '%s\n' /usr/local/lib "${GCC_ROOT}/lib64" "${GCC_ROOT}/lib" "${MPICH_ROOT}/lib" \
+        zlib-devel libcurl-devel \
+        lapack-devel blas-devel \
+    && dnf clean all
+
+# Extract source tarballs as the build user, not the uid/gid recorded in
+# the archive. Upstream tarballs (GCC's, etc.) are owned by the packager's
+# uid/gid; under rootless single-UID podman tar cannot chown to an unmapped
+# id ("Cannot change ownership ... Invalid argument"). TAR_OPTIONS is
+# honored by every tar invocation, including the nested ones inside GCC's
+# contrib/download_prerequisites.
+ENV TAR_OPTIONS=--no-same-owner
+
+# Compute-node network can be flaky; have wget retry connection refusals
+# (it already retries most other transient errors by default).
+RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc/wgetrc
+
+# ---- GCC (matches derecho's gcc/12.2.0 module) ----
+# gmp/mpfr/mpc come from AlmaLinux (dnf) rather than GCC's
+# contrib/download_prerequisites, which fetches them from gcc.gnu.org --
+# unreliable from the compute node. The distro ships the versions GCC 12.2
+# expects (gmp 6.2, mpfr 4.1.0, libmpc 1.2.1), so the compiler is
+# equivalent and skipping their in-tree build is faster. configure finds
+# them in the default /usr paths (no --with-* needed). Installed in this
+# layer, not the base dnf layer, to keep that layer's cache valid.
+# --disable-bootstrap: single-stage build; same compiler, just not
+# self-compiled three times.
+RUN dnf -y install gmp-devel mpfr-devel libmpc-devel && dnf clean all \
+    && cd /tmp \
+    && wget -nv "https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" \
+    && tar xf "gcc-${GCC_VERSION}.tar.xz" \
+    && cd "gcc-${GCC_VERSION}" \
+    && mkdir build && cd build \
+    && ../configure --prefix="/opt/gcc/${GCC_VERSION}" \
+        --enable-languages=c,c++,fortran \
+        --disable-multilib --disable-bootstrap --disable-nls \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && printf '%s\n' "/opt/gcc/${GCC_VERSION}/lib64" > /etc/ld.so.conf.d/gcc.conf \
+    && ldconfig \
+    && rm -rf /tmp/gcc-*
+
+ENV PATH=/usr/local/bin:/opt/mpich/${MPICH_VERSION}/bin:/opt/gcc/${GCC_VERSION}/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
+    LD_LIBRARY_PATH=/usr/local/lib:/opt/gcc/${GCC_VERSION}/lib64:/opt/mpich/${MPICH_VERSION}/lib
+
+# ---- MPICH (open equivalent of derecho's cray-mpich 8.1.27, which is
+# MPICH-3.4-ABI-derived). ch4:ofi matches cray-mpich's libfabric
+# lineage; the libfabric implementation is the one embedded in the
+# MPICH tarball. ----
+RUN cd /tmp \
+    && wget -nv "https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz" \
+    && tar xzf "mpich-${MPICH_VERSION}.tar.gz" \
+    && cd "mpich-${MPICH_VERSION}" \
+    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+       CXX="/opt/gcc/${GCC_VERSION}/bin/g++" \
+       F77="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       FFLAGS="-fallow-argument-mismatch" \
+       FCFLAGS="-fallow-argument-mismatch" \
+       ./configure --prefix="/opt/mpich/${MPICH_VERSION}" \
+        --with-device=ch4:ofi --enable-shared \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && printf '%s\n' /usr/local/lib "/opt/mpich/${MPICH_VERSION}/lib" \
         > /etc/ld.so.conf.d/ctsm.conf \
-    && ldconfig
+    && ldconfig \
+    && rm -rf /tmp/mpich-*
+
+ENV CC=mpicc \
+    CXX=mpicxx \
+    FC=mpifort \
+    F77=mpif77
 
 # ---- HDF5 (parallel) ----
 # Only the git tag archive is still downloadable for this version; it
@@ -60,19 +135,23 @@ RUN cd /tmp \
     && tar xzf "hdf5-${HDF5_VERSION//./_}.tar.gz" \
     && cd "hdf5-hdf5-${HDF5_VERSION//./_}" \
     && ./configure --prefix=/usr/local --enable-parallel --enable-hl --with-zlib \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && ldconfig \
     && rm -rf /tmp/hdf5-*
 
 # ---- netCDF-C ----
-RUN cd /tmp \
+# libxml2-devel is installed here rather than in the base dnf layer to
+# keep the (expensive) GCC layer cache valid; fold it into the base
+# layer whenever a clean rebuild happens anyway.
+RUN dnf -y install libxml2-devel && dnf clean all \
+    && cd /tmp \
     && wget -nv "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_C_VERSION}/netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
     && tar xzf "netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
     && cd "netcdf-c-${NETCDF_C_VERSION}" \
     && CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" \
        ./configure --prefix=/usr/local --enable-netcdf-4 --enable-shared \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && ldconfig \
     && rm -rf /tmp/netcdf-c-*
@@ -84,7 +163,7 @@ RUN cd /tmp \
     && cd "netcdf-fortran-${NETCDF_FORTRAN_VERSION}" \
     && CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" \
        ./configure --prefix=/usr/local --enable-shared \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && ldconfig \
     && rm -rf /tmp/netcdf-fortran-*
@@ -95,7 +174,7 @@ RUN cd /tmp \
     && tar xzf "pnetcdf-${PNETCDF_VERSION}.tar.gz" \
     && cd "pnetcdf-${PNETCDF_VERSION}" \
     && ./configure --prefix=/usr/local --enable-shared MPICC=mpicc MPICXX=mpicxx MPIF77=mpif77 MPIF90=mpif90 \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && ldconfig \
     && rm -rf /tmp/pnetcdf-*
@@ -123,7 +202,7 @@ RUN cd /tmp \
         ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}-debug/mod" \
         ESMF_INSTALL_LIBDIR="/usr/local/esmf-${ESMF_VERSION}-debug/lib" \
         ESMF_INSTALL_BINDIR="/usr/local/esmf-${ESMF_VERSION}-debug/bin" \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
 
@@ -143,9 +222,31 @@ RUN cd /tmp \
         ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}/mod" \
         ESMF_INSTALL_LIBDIR="/usr/local/esmf-${ESMF_VERSION}/lib" \
         ESMF_INSTALL_BINDIR="/usr/local/esmf-${ESMF_VERSION}/bin" \
-    && make -j"$(nproc)" \
+    && make -j"${MAKE_JOBS}" \
     && make install \
     && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
+
+# ---- git (built from source; NO openssh dependency) ----
+# CIME build steps clone helper repos at build time via CMake
+# ExternalProject_Add: cprnc fetches genf90 (github.com/PARALLELIO/genf90),
+# and PIO/CDEPS/CMEPS generate code with genf90 too -- so the image needs a
+# real git at runtime. git cannot be dnf-installed here: it pulls openssh,
+# whose rpm chowns a setuid helper (ssh-keysign) to a non-root id, which
+# fails under rootless single-UID podman ("cpio: chown failed"). Building
+# from source avoids openssh entirely -- https clones go through libcurl --
+# and behaves like a stock git. NO_OPENSSL/NO_EXPAT/NO_GETTEXT/NO_TCLTK drop
+# optional deps we don't ship. Placed after the toolchain so editing this
+# layer doesn't rebuild those.
+ARG GIT_VERSION=2.45.2
+RUN cd /tmp \
+    && wget -nv "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.xz" \
+    && tar xf "git-${GIT_VERSION}.tar.xz" \
+    && cd "git-${GIT_VERSION}" \
+    && make -j"${MAKE_JOBS}" prefix=/usr/local CC=gcc \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 all \
+    && make prefix=/usr/local \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 install \
+    && rm -rf /tmp/git-*
 
 # Runtime environment for CIME's "container" machine:
 # - ESMFMKFILE: not set by the machine config; must come from the image.
@@ -157,8 +258,8 @@ RUN cd /tmp \
 #   netCDF/netCDF-Fortran via pkg-config.
 # - PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: EL9's pkgconf filters
 #   -I/usr/local/include out of --cflags as a "system" dir, but that is
-#   only true for the system gcc; the /container toolchain does not
-#   search /usr/local/include by default.
+#   only true for the system gcc; the /opt toolchain does not search
+#   /usr/local/include by default.
 ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-debug/lib/esmf.mk \
     CESMDATAROOT=/opt/cesmdata \
     USER=root \
@@ -167,7 +268,9 @@ ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-debug/lib/esmf.mk \
 
 RUN mkdir -p "${CESMDATAROOT}/inputdata"
 
-LABEL hdf5="${HDF5_VERSION}" \
+LABEL gcc="${GCC_VERSION}" \
+      mpich="${MPICH_VERSION}" \
+      hdf5="${HDF5_VERSION}" \
       netcdf-c="${NETCDF_C_VERSION}" \
       netcdf-fortran="${NETCDF_FORTRAN_VERSION}" \
       pnetcdf="${PNETCDF_VERSION}" \
