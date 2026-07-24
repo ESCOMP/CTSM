@@ -47,7 +47,11 @@ jobs:
     runs-on: ubuntu-latest
     
     container:
-      image: ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
+      # TODO(publish): point at the published ctsm-ci-gh image once it is
+      # pushed to a registry (final step in docker/ctsm-ci-gh/NEXT_STEPS.md),
+      # e.g. ghcr.io/<owner>/ctsm-ci-gh:<tag>. Until then this job cannot pull
+      # the image and will fail at container startup -- expected pre-publish.
+      image: ctsm-ci-gh:PUBLISH_TBD
 
     steps:
 
@@ -58,13 +62,8 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
-      - name: Install Perl modules
-        run: dnf install -y perl-core perl-XML-LibXML
-
       - name: Call create_test
         run: |
-          export USER=ctsm_developer
-          export CESMDATAROOT=
           cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --verbose SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.container_gnu.clm-default
           echo "STDERR:"
           cat $RUNNER_TEMP/tests_*/STDERR*
