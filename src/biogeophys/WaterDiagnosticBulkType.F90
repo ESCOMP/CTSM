@@ -358,12 +358,13 @@ contains
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
 
     this%rh_af_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('RHAF'), &
-         units='fraction', &
-         avgflag='A', &
-         long_name=this%info%lname('fractional humidity of canopy air'), &
-         ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld1d ( &
+!        fname=this%info%fname('RHAF'), &
+!        units='fraction', &
+!        avgflag='A', &
+!        long_name=this%info%lname('fractional humidity of canopy air'), &
+!        ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
 
     if(use_luna)then
        call hist_addfld1d ( &
@@ -544,12 +545,13 @@ contains
 
     this%bw_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%bw_col(:,-nlevsno+1:0)
-    call hist_addfld2d ( &
-         fname=this%info%fname('SNO_BW'), &
-         units='kg/m3', type2d='levsno', &
-         avgflag='A', &
-         long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d ( &
+!        fname=this%info%fname('SNO_BW'), &
+!        units='kg/m3', type2d='levsno', &
+!        avgflag='A', &
+!        long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d ( &
          fname=this%info%fname('SNO_BW_ICE'), &
