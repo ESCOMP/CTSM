@@ -294,7 +294,7 @@ The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and ma
 ``-clm_demand`` asks the ``build-namelist`` step to require that the list of variables entered be set. Typically, this is used to require that optional filenames be used and ensure they are set before continuing. For example, you may want to require that flanduse_timeseries be set, so as to get PFTs that change according to a transient landuse dataset. To do this you would do the following.
 ::
 
-   > ./xmlchange CLM_BLDNML_OPTS="-clm_demand fpftdyn"
+   > ./xmlchange CLM_BLDNML_OPTS="-clm_demand flanduse_timeseries"
 
 To see a list of valid variables that you could set do this:
 ::
