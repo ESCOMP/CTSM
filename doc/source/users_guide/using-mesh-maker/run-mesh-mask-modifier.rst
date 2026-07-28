@@ -1,12 +1,12 @@
 .. include:: ../substitutions.rst
 
-.. _how-to-make-mesh:
+.. _run-mesh-mask-modifier:
 
-===============================================
- Creating an ESMF mesh file from a netCDF file
-===============================================
+========================================
+ Modifying the mask of an ESMF mesh file
+========================================
 
-This page includes instructions for using the  ``mesh_maker`` tool to create a mesh file from a netCDF file with valid 1D or 2D latitude and longitude coordinates. It also shows how to use ``mesh_plotter`` to visualize a mesh file.
+CHANGE THIS ENTIRE SECTION: This page includes instructions for using the  ``mesh_maker`` tool to create a mesh file from a netCDF file with valid 1D or 2D latitude and longitude coordinates. It also shows how to use ``mesh_plotter`` to visualize a mesh file.
 
 .. note:: An **ESMF mesh file** is a netCDF file that includes the information about the grid's coordinates and their connectivity to each other in an **Unstructured Grid Format**. Additional information about ESMF mesh files is available `here <https://earthsystemmodeling.org/docs/release/ESMF_8_0_1/ESMF_refdoc/node3.html#SECTION03028200000000000000>`_.
 
@@ -44,11 +44,11 @@ You can check out the ``mesh_maker`` options like so:
      --overwrite       If meshfile exists, overwrite the meshfile.
      -v, --verbose     Increase output verbosity
 
-===========================================
-Example: Making and visualizing a mesh file
-===========================================
+==========================================
+Example: Modifying the mask of a mesh file
+==========================================
 
-In this example, we will use ``mesh_maker`` to create a mesh file from a netCDF file with 2D latitudes and longitudes. On the sample input provided, those coordinates are saved on the ``LATIXY`` and ``LONGXY`` variables, respectively.
+CHANGE THIS ENTIRE SECTION: In this example, we will use ``mesh_maker`` to create a mesh file from a netCDF file with 2D latitudes and longitudes. On the sample input provided, those coordinates are saved on the ``LATIXY`` and ``LONGXY`` variables, respectively.
 
 ::
 
