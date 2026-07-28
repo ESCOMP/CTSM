@@ -2988,6 +2988,71 @@
     </options>
   </test>
 
+  <test name="SMS_Ly2_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ARSLu--clm/ADspinup_PLUMBER2">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in AD mode that has one year of atm forcing (loop over twice). Note that the site usermods_dirs (AR-SLu) has been linked to ARSLu for the purpose of this test.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="IHist1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ARSLu">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in transient mode that has one year of atm forcing. Note that the site usermods_dirs (AR-SLu) has been linked to ARSLu for the purpose of this test.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup_PLUMBER2">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in AD mode that had previously failed due to negative humidity passed to HumanIndexMod.  HumanIndexMod is now off for PLUMBER2 sites. Note that the site usermods_dirs (ES-LgS) has been linked to ESLgS for the purpose of this test.</option>
+    </options>
+  </test>
+
+
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="IHist1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ARSLu">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="aux_cime_baselines"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in transient mode that has one year of atm forcing. Note that the site usermods_dirs (AR-SLu) has been linked to ARSLu for the purpose of this test.</option>
+    </options>
+  </test>
+
   <test name="ERS_P128x1_Ld765" grid="f10_f10_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <!-- no izumi tests since this has a pe layout specific for derecho -->
