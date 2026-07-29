@@ -6,63 +6,67 @@
  Modifying the mask of an ESMF mesh file
 ========================================
 
-CHANGE THIS ENTIRE SECTION: This page includes instructions for using the  ``mesh_maker`` tool to create a mesh file from a netCDF file with valid 1D or 2D latitude and longitude coordinates. It also shows how to use ``mesh_plotter`` to visualize a mesh file.
+The mesh_mask_modifier tool modifies the mask in ESMF mesh files. It reads a mesh file and outputs a modified copy of the same file.
 
-.. note:: An **ESMF mesh file** is a netCDF file that includes the information about the grid's coordinates and their connectivity to each other in an **Unstructured Grid Format**. Additional information about ESMF mesh files is available `here <https://earthsystemmodeling.org/docs/release/ESMF_8_0_1/ESMF_refdoc/node3.html#SECTION03028200000000000000>`_.
-
-You can check out the ``mesh_maker`` options like so:
-
-::
-
-   > tools/site_and_regional/mesh_maker --help
-   
-   |------------------------------------------------------------------|
-   |---------------------  Instructions  -----------------------------|
-   |------------------------------------------------------------------|
-   This script creates ESMF unstructured GRID (mesh file) from a netCDF
-   file with valid lats and lons. Provided lats and lons can be 1D or 2D.
-
-   For example for running WRF-CTSM cases, the user can create a mesh
-   file for their domain :
-       ./mesh_maker.py --input wrfinput_d01 --output my_region
-           --lat XLAT --lon XLONG --verbose
-
-   optional arguments:
-     -h, --help        show this help message and exit
-     --input INPUT     Netcdf input file for creating ESMF mesh.
-     --output OUTPUT   Name of the ESMF mesh created.
-     --outdir OUT_DIR  Output directory (only if name of output mesh is not
-                       defined)
-     --lat LAT_NAME    Name of latitude varibale on netCDF input file. If none
-                       given, looks to find variables that include 'lat'.
-     --lon LON_NAME    Name of latitude varibale on netCDF input file. If none
-                       given, looks to find variables that include 'lon'.
-     --mask MASK_NAME  Name of mask varibale on netCDF input file. If none given,
-                       create a fake mask with values of 1.
-     --area AREA_NAME  Name of area variable on netCDF input file. If none given,
-                       ESMF calculates element areas automatically.
-     --overwrite       If meshfile exists, overwrite the meshfile.
-     -v, --verbose     Increase output verbosity
-
-==========================================
-Example: Modifying the mask of a mesh file
-==========================================
-
-CHANGE THIS ENTIRE SECTION: In this example, we will use ``mesh_maker`` to create a mesh file from a netCDF file with 2D latitudes and longitudes. On the sample input provided, those coordinates are saved on the ``LATIXY`` and ``LONGXY`` variables, respectively.
+Files involved
+--------------
 
 ::
 
-   input_file="python/ctsm/test/testinputs/surfdata_5x5_amazon_hist_78pfts_CMIP6_2000_c230517.nc"
-   output_file="meshfile_5x5_amazon.nc"
-   
-   # Create the file. (Add --verbose for additional debugging information.)
-   tools/site_and_regional/mesh_maker --input "${input_file}" --output "${output_file}" --lon LONGXY --lat LATIXY
-   
-   # Visualize the meshes
-   tools/site_and_regional/mesh_plotter --input "${output_file}"
+   python/ctsm/modify_input_files/mesh_mask_modifier.py
+   python/ctsm/modify_input_files/modify_mesh_mask.py
+   tools/modify_input_files/mesh_mask_modifier
+   tools/modify_input_files/modify_mesh_template.cfg
 
-This produces two figures:
+Instructions
+------------
 
-.. figure:: test_c240918_regional.png
+1) Activate conda (however you do this on your system and if not already active), run py_env_create (if necessary), and activate ctsm_pylib:
 
-.. figure:: test_c240918_global.png
+::
+
+   ./py_env_create  # once per machine, unless needing to update the ctsm_pylib environment
+   conda activate ctsm_pylib  # every time you come to this step
+
+(Use "deactivate" to reverse the latter.)
+
+2) Copy, then modify the configure file named `modify_mesh_template.cfg`, which contains all the arguments needed by the script.
+
+3) Run the script `mesh_mask_modifier` pointing to the copied/modified `.cfg` file, e.g. `./mesh_mask_modifier modify_users_copy.cfg`
+
+
+================================================
+Example: F-Case, modify the continental geometry
+================================================
+
+User wants to make the Indian Ocean into grassland. In a netcdf file, they specify their own land mask on the CESM 1-degree grid, as well as the area to be specified as grassland. This has been obtained by modifying the default land fraction of CESM. The file contains two arrays:
+
+- `landmask` = the new landmask
+- `mod_lnd_props` = set to 1 where the new land surface has been specified (i.e., where grassland needs to be specified) and zero elsewhere
+
+This use-case requires modification to both the fsurdat file and the mesh file. To modify the former, use the `modify_fsurdat` tool (see section ???). Here are the steps to modify the mesh file:
+
+In your copy of the CTSM (say, `~<user>/ctsm`), go to the appropriate tool:
+
+::
+
+   cd tools/modify_input_files
+   cp modify_mesh_template.cfg modify_fill_indianocean.cfg
+
+Enter the following (or similar) selections in `modify_fill_indianocean.cfg`:
+
+::
+
+   mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
+   mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
+   landmask_file = .../path_to_your_copy_of/fill_indianocean.nc
+
+Run the tool
+
+::
+
+   ./mesh_mask_modifier modify_fill_indianocean.cfg
+
+A modified mesh file should appear in the directory where you ran. Point to this file in your case's `env_run.xml` in the line that sets `MASK_MESH`.
+
+.. note:: If for some reason this fails, hardwire the ocean domain mesh file name in `~<user>/ctsm/ccs_config/component_grids_nuopc.xml` before starting your CTSM or CESM simulation. In the specific example shown here, hardwire the mesh file name for domain name `gx1v7`. (This note has not been updated since around 2021.)
