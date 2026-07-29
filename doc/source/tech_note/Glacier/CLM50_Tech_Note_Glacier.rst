@@ -80,7 +80,7 @@ The world's glaciers and ice sheets are broken down into a number of different r
 
    b. Ice runoff from snow capping is melted (generating a negative sensible heat flux) and runs off as liquid. This matches the behavior for non-glacier columns. This is appropriate in regions that have little iceberg calving in reality. This can be important to avoid unrealistic cooling of the ocean and consequent runaway sea ice growth.
 
-The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM/DGLC. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM/DGC domain. (This treatment of the non-Greenland portion of the CISM/DGC domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
+The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM/DGLC. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM/DGLC domain. (This treatment of the non-Greenland portion of the CISM/DGLC domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
 
 .. _Table Glacier region behaviors:
 
