@@ -1,0 +1,9 @@
+fsurdat='$DIN_LOC_ROOT/lnd/clm2/testdata/moss/fsurdat/surfdata_ALP2_hist_2000_16pfts_c260427_grass.nc'
+use_fates = .true.
+use_fates_sp = .true.
+use_nvp = .true.
+use_nvp_undersnow = .true.
+nvp_rad_model_ground = .true.
+use_bedrock=.true.
+fates_paramfile = '$DIN_LOC_ROOT/lnd/clm2/testdata/moss/fates_paramfile/fates_params_default.c260717.45a9aaf3.json'
+
