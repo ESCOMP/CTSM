@@ -1373,7 +1373,7 @@
       <option name="comment">Run in DEBUG with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
-  <test name="ERS_Ld1640_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRs" testmods="clm/ciso_monthly_matrixcn_spinup">
+  <test name="ERS_Ld1640_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/ciso_monthly_matrixcn_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -1633,7 +1633,7 @@
       <option name="comment">Test soil_decomp_method = 'MIMICSWieder2015' for a transient case</option>
     </options>
   </test>
-  <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRs" testmods="clm/newton_krylov_spinup">
+  <test name="SMS_Ly5_Mmpi-serial" grid="1x1_brazil" compset="IHistClm50BgcQianRsGs" testmods="clm/newton_krylov_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -2142,7 +2142,7 @@
       <option name="comment">test that NDEP can come in as two variables rather than the default single variable</option>
     </options>
   </test>
-  <test name="ERS_D_Ld7_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRs" testmods="clm/decStart1851_noinitial">
+  <test name="ERS_D_Ld7_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropRsGs" testmods="clm/decStart1851_noinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -4235,7 +4235,7 @@
     </options>
   </test>
 
-  <test name="SMS_D_Ln1" grid="f10_f10_mg37" compset="I2000Clm50BgcCropQianRs" testmods="clm-run_self_tests">
+  <test name="SMS_D_Ln1" grid="f10_f10_mg37" compset="I2000Clm50BgcCropQianRsGs" testmods="clm-run_self_tests">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>

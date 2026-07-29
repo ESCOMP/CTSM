@@ -234,7 +234,7 @@
   <!-- Use the CMIP6 version (clm5_0) -->
   <compset>
     <alias>I1850Clm50BgcCropCmip6</alias>
-    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6</alias>
@@ -249,7 +249,7 @@
   <!-- Use the CMIP6 version (clm5_0) -->
   <compset>
     <alias>I1850Clm50BgcCropCmip6waccm</alias>
-    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1_CLM50%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6waccm</alias>
@@ -263,7 +263,7 @@
   <!-- clm5_0 (CMIP6) version with BGC-Crop and CRU forcing -->
   <compset>
     <alias>I1850Clm50BgcCropCru</alias>
-    <lname>1850_DATM%CRUv7_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUv7_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- latest CLM version with BGC-Crop and CRU forcing -->
@@ -280,7 +280,7 @@
     <lname>2000_DATM%QIA_CLM60%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
-    <alias>I2000Clm50BgcCropQianRs</alias>
+    <alias>I2000Clm50BgcCropQianRsGs</alias>
     <lname>2000_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
@@ -346,7 +346,7 @@
 
   <compset>
      <alias>I1850Clm50Bgc</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
    </compset>
 
   <compset>
@@ -373,18 +373,18 @@
 
   <compset>
      <alias>I1850Clm50BgcNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM50%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
    </compset>
 
   <compset>
      <alias>I1850Clm50SpNoAnthro</alias>
-     <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_RTM_SGLC_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1_CLM50%SP-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
    </compset>
 
 
   <compset>
     <alias>IHistClm50BgcCrop</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -429,12 +429,12 @@
 
   <compset>
     <alias>IHistClm50Sp</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM50%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>IHistClm50SpCru</alias>
-    <lname>HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%CRUv7_CLM50%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
@@ -444,7 +444,7 @@
 
   <compset>
     <alias>IHistClm50Bgc</alias>
-    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing; uses Qian atmospheric forcing simply to
@@ -452,11 +452,11 @@
        single-point cases (where datm dominates the runtime) -->
   <compset>
     <alias>IHistClm50BgcQian</alias>
-    <lname>HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
-    <alias>IHistClm50BgcQianRs</alias>
+    <alias>IHistClm50BgcQianRsGs</alias>
     <lname>HIST_DATM%QIA_CLM50%BGC_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
@@ -470,7 +470,7 @@
 -->
   <compset>
     <alias>ISSP585Clm50BgcCrop</alias>
-    <lname>SSP585_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP585_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>ISSP585Clm60BgcCropCrujra</alias>
@@ -479,17 +479,17 @@
 
   <compset>
     <alias>ISSP126Clm50BgcCrop</alias>
-    <lname>SSP126_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP126_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP119Clm50BgcCrop</alias>
-    <lname>SSP119_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP119_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP245Clm50BgcCrop</alias>
-    <lname>SSP245_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP245_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>ISSP245Clm60BgcCropCrujra</alias>
@@ -498,7 +498,7 @@
 
   <compset>
     <alias>ISSP370Clm50BgcCrop</alias>
-    <lname>SSP370_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP370_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>ISSP370Clm60BgcCropCrujra</alias>
@@ -507,17 +507,17 @@
 
   <compset>
     <alias>ISSP434Clm50BgcCrop</alias>
-    <lname>SSP434_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP434_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP460Clm50BgcCrop</alias>
-    <lname>SSP460_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP460_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
     <alias>ISSP534Clm50BgcCrop</alias>
-    <lname>SSP534_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>SSP534_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Latest CLM version -->
@@ -531,7 +531,7 @@
      give faster datm throughput, which is particularly relevant for
      single-point cases (where datm dominates the runtime) -->
   <compset>
-    <alias>IHistClm50BgcCropQianRs</alias>
+    <alias>IHistClm50BgcCropQianRsGs</alias>
     <lname>HIST_DATM%QIA_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
   <compset>
@@ -541,7 +541,7 @@
 
   <!-- Primarily for testing -->
   <compset>
-    <alias>IHistClm50BgcCropRs</alias>
+    <alias>IHistClm50BgcCropRsGs</alias>
     <lname>HIST_DATM%GSWP3v1_CLM50%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
@@ -549,7 +549,7 @@
 
   <compset>
     <alias>I1850Clm50BgcSpinup</alias>
-    <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+    <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <compset>
