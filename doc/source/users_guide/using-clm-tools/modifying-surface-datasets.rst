@@ -15,6 +15,7 @@ This tool differs from `modify_singlept_site_neon` in that the latter specifical
 ===================================  ======================================
 std_elev (user sets STD_ELEV value)  uniform-snowpack (sets STD_ELEV to 20)
 max_sat_area (user sets FMAX value)  cap-saturation (sets FMAX to zero)    
+===================================  ======================================
 
 Files involved
 --------------
@@ -29,7 +30,7 @@ Files involved
 Instructions
 ------------
 
-Activate conda (however you do this on your system and if not already active), run py_env_create (if necessary), and activate ctsm_pylib:
+1) Activate conda (however you do this on your system and if not already active), run py_env_create (if necessary), and activate ctsm_pylib:
 
 ::
 
@@ -40,7 +41,7 @@ Activate conda (however you do this on your system and if not already active), r
 
 2) Copy, then modify the configure file named `modify_fsurdat_template.cfg`, which contains all the arguments needed by the script.
 
-3) Run the script `./fsurdat_modifier` pointing to the copied/modified `.cfg` file, e.g. `./fsurdat_modifier modify_users_copy.cfg`
+3) Run the script `./fsurdat_modifier` pointing to the copied/modified `.cfg` file, e.g.
 
 ::
 
