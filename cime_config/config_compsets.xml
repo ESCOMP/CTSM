@@ -109,8 +109,13 @@
   </compset>
 
   <compset>
-    <alias>I2000Clm60SpMizNldas</alias>
-    <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_DGLC%NOEVOLVE_SWAV</lname>
+    <alias>I2000Clm60SpMizSpGs</alias>
+    <lname>2000_DATM%GSWP3v1_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
+  </compset>
+
+  <compset>
+    <alias>I2000Clm60SpMizNldasGs</alias>
+    <lname>2000_DATM%NLDAS2_CLM60%SP_SICE_SOCN_MIZUROUTE_SGLC_SWAV</lname>
   </compset>
 
   <compset>
