@@ -85,6 +85,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_nvp
    use clm_varctl        , only : use_nvp_undersnow
    use clm_varctl        , only : nvp_rad_model_ground
+   use clm_varctl        , only : use_nvp_temp_for_patch_gas_params
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
@@ -325,6 +326,7 @@ module CLMFatesInterfaceMod
      integer             :: pass_nvp
      integer             :: pass_nvp_undersnow
      integer             :: pass_nvp_rad_model_ground
+     integer             :: pass_nvp_temp_for_patch_gas_params
      logical             :: verbose_output
      
      call t_startf('fates_globals1')
@@ -400,6 +402,13 @@ module CLMFatesInterfaceMod
            pass_nvp_rad_model_ground = 0
         end if
         call set_fates_ctrlparms('nvp_rad_model_ground', ival=pass_nvp_rad_model_ground)
+
+        if (use_nvp_temp_for_patch_gas_params) then
+           pass_nvp_temp_for_patch_gas_params = 1
+        else
+           pass_nvp_temp_for_patch_gas_params = 0
+        end if
+        call set_fates_ctrlparms('use_nvp_temp_for_patch_gas_params', ival=pass_nvp_temp_for_patch_gas_params)
 
      end if
 

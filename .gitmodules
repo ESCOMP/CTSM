@@ -28,7 +28,7 @@
 [submodule "fates"]
 path = src/fates
 url = https://github.com/samsrabin/fates
-fxtag = 45a9aaf3e7bb837d2431e95dee4aa4a81798b76e
+fxtag = 9e1d6b0932eb3e009f22b06da1e9e63473acef33
 fxrequired = AlwaysRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/NGEET/fates

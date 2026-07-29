@@ -4,7 +4,7 @@ use_fates_sp = .true.
 use_nvp = .true.
 use_nvp_undersnow = .true.
 nvp_rad_model_ground = .true.
-use_nvp_temp_for_patch_gas_params = .true.
+use_nvp_temp_for_patch_gas_params = .false.
 use_bedrock=.true.
 fates_paramfile = '$DIN_LOC_ROOT/lnd/clm2/testdata/moss/fates_paramfile/fates_params_default_moss.c260717.45a9aaf3.json'
 

@@ -643,6 +643,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <use_nvp              >.false.</use_nvp>
 <use_nvp_undersnow    >.false.</use_nvp_undersnow>
 <nvp_rad_model_ground >.false.</nvp_rad_model_ground>
+<use_nvp_temp_for_patch_gas_params >.true.</use_nvp_temp_for_patch_gas_params>
 
 <!-- Flexible CN options -->
 <MM_Nuptake_opt             use_flexibleCN=".true." >.true.</MM_Nuptake_opt>

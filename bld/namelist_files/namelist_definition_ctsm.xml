@@ -967,6 +967,12 @@ the CLM bare-ground scheme.
 Only relevant when use_nvp=".true.".
 </entry>
 
+<entry id="use_nvp_temp_for_patch_gas_params" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".true.">
+Whether to use NVP temperature when getting entire patch's gas exchange parameters.
+Requires use_fates=".true.".
+</entry>
+
 <entry id="use_hillslope" type="logical" category="physics"
         group="clm_inparm" valid_values="" value=".false.">
 Toggle to turn on the hillslope model
