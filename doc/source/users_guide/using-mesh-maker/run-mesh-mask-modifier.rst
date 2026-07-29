@@ -44,7 +44,7 @@ User wants to make the Indian Ocean into grassland. In a netcdf file, they speci
 - `landmask` = the new landmask
 - `mod_lnd_props` = set to 1 where the new land surface has been specified (i.e., where grassland needs to be specified) and zero elsewhere
 
-This use-case requires modification to both the fsurdat file and the mesh file. To modify the former, use the `modify_fsurdat` tool (see section ???). Here are the steps to modify the mesh file:
+This use-case requires modification to both the fsurdat file and the mesh file. To modify the former, use the `modify_fsurdat` tool (see section :numref:`modifying-surface-datasets`). Here are the steps to modify the mesh file:
 
 In your copy of the CTSM (say, `~<user>/ctsm`), go to the appropriate tool:
 
