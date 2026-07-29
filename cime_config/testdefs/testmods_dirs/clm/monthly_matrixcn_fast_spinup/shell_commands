@@ -2,6 +2,6 @@
 ./xmlchange DATM_YR_START=1901,DATM_YR_END=1902
 
 COMP_ROF=`./xmlquery --value COMP_ROF`
-if [[ $COMP_ROF == "MOSART" ]]; then
+if [[ $COMP_ROF == "mosart" ]]; then
    ./xmlchange MOSART_MODE="NULL"
 fi
