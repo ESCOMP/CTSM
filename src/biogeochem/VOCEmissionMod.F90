@@ -22,7 +22,7 @@ module VOCEmissionMod
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use fileutils          , only : getfil
-  use clm_varcon         , only : grlnd
+  use clm_varcon         , only : grlnd, spval
   use atm2lndType        , only : atm2lnd_type
   use CanopyStateType    , only : canopystate_type
   use PhotosynthesisMod  , only : photosyns_type
@@ -586,6 +586,24 @@ contains
     ! initialize variables which get passed to the atmosphere
     vocflx(bounds%begp:bounds%endp,:)   = 0._r8
     vocflx_tot(bounds%begp:bounds%endp) = 0._r8
+
+    gamma_out(bounds%begp:bounds%endp) = spval
+    gammaL_out(bounds%begp:bounds%endp) = spval
+    gammaT_out(bounds%begp:bounds%endp) = spval
+    gammaP_out(bounds%begp:bounds%endp) = spval
+    gammaA_out(bounds%begp:bounds%endp) = spval
+    gammaS_out(bounds%begp:bounds%endp) = spval
+    gammaC_out(bounds%begp:bounds%endp) = spval
+    Eopt_out(bounds%begp:bounds%endp) = spval
+    topt_out(bounds%begp:bounds%endp) = spval
+    alpha_out(bounds%begp:bounds%endp) = spval
+    cp_out(bounds%begp:bounds%endp) = spval
+    paru_out(bounds%begp:bounds%endp) = spval
+    par24u_out(bounds%begp:bounds%endp) = spval
+    par240u_out(bounds%begp:bounds%endp) = spval
+    para_out(bounds%begp:bounds%endp) = spval
+    par24a_out(bounds%begp:bounds%endp) = spval
+    par240a_out(bounds%begp:bounds%endp) = spval
 
     do imeg=1,shr_megan_megcomps_n
       meg_out(imeg)%flux_out(bounds%begp:bounds%endp) = 0._r8

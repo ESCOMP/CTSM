@@ -206,7 +206,7 @@ contains
     ! Set diagnostic variables related to the fraction of water and ice in each layer
     !
     ! !USES:
-    use clm_varcon, only : denice
+    use clm_varcon, only : denice, spval
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
@@ -248,6 +248,14 @@ contains
           eff_porosity(c,j) = max(0.01_r8,watsat(c,j)-vol_ice(c,j))
           icefrac(c,j) = min(1._r8,vol_ice(c,j)/watsat(c,j))
 
+       end do
+    end do
+
+    do j = nlevsoi+1, nlevgrnd
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          eff_porosity(c,j) = spval
+          icefrac(c,j)      = spval
        end do
     end do
 

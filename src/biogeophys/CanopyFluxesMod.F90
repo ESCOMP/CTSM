@@ -640,6 +640,9 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
+      ! Initialize diagnostic variables to spval so inactive patches don't retain stale memory
+      rhaf(begp:endp) = spval
+
       
       ! Determine step size
 
