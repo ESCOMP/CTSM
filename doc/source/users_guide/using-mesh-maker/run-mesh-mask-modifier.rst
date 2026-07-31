@@ -60,6 +60,13 @@ Enter the following (or similar) selections in ``modify_fill_indianocean.cfg``:
    mesh_mask_in = /glade/campaign/cesm/cesmdata/cseg/inputdata/share/meshes/fv0.9x1.25_141008_polemod_ESMFmesh.nc
    mesh_mask_out = fv0.9x1.25_141008_polemod_ESMFmesh_modified.nc
    landmask_file = .../path_to_your_copy_of/fill_indianocean.nc
+   lat_varname = lsmlat
+   lon_varname = lsmlon
+   lat_dimname = lsmlat
+   lon_dimname = lsmlon
+   lon_type = 360
+
+where ``lon_type`` equals 360 for files oriented 0-360 and ``lon_type`` equals 180 for files oriented -180 to 180.
 
 Run the tool
 
