@@ -22,6 +22,7 @@ module CNFireLi2014Mod
   use clm_varpar                         , only : nlevdecomp, ndecomp_pools, nlevdecomp_full
   use clm_varcon                         , only : dzsoi_decomp
   use pftconMod                          , only : noveg, pftcon
+  use pftconMod                          , only : is_crop
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
   use subgridAveMod                      , only : p2c
@@ -96,7 +97,7 @@ contains
     ! !USES:
     use clm_time_manager     , only: get_step_size_real, get_curr_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
-    use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
+    use pftconMod            , only: nc4_grass, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
     use dynSubgridControlMod , only: run_has_transient_landcover
     use CropType             , only: crop_type
@@ -344,7 +345,7 @@ contains
         p = filter_exposedvegp(fp)
         c = patch%column(p)
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
            btran_col(c) = btran_col(c)+btran2(p)*patch%wtcol(p)
            wtlf(c)      = wtlf(c)+patch%wtcol(p)
         end if
@@ -356,7 +357,7 @@ contains
         g = col%gridcell(c)
 
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
 
            ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
            ! and deciduous tropical trees (used to determine if a column is
@@ -664,7 +665,6 @@ contains
    use clm_varctl           , only: use_cndv
    use clm_varcon           , only: secspday
    use clm_varpar           , only: i_met_lit, i_litr_max
-   use pftconMod            , only: nc3crop
    use dynSubgridControlMod , only: run_has_transient_landcover
    use clm_varpar           , only: ileaf,ileaf_st,ileaf_xf,ifroot,ifroot_st,ifroot_xf,&
                                     ilivestem,ilivestem_st,ilivestem_xf,&
@@ -960,7 +960,7 @@ contains
         p = filter_soilp(fp)
         c = patch%column(p)
 
-        if( patch%itype(p) < nc3crop .and. cropf_col(c) < 1.0_r8)then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c) < 1.0_r8)then
            ! For non-crop (bare-soil and natural vegetation)
            if (transient_landcover) then
               f = (fbac(c)-baf_crop(c))/(1.0_r8-cropf_col(c))

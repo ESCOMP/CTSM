@@ -22,7 +22,6 @@ module surfrdUtilsMod
   public :: check_sums_equal_1  ! Confirm that sum(arr(n,:)) == 1 for all n
   public :: renormalize         ! Renormalize an array
   public :: apply_convert_ocean_to_land ! Apply the conversion of ocean to land points
-  public :: convert_cft_to_pft  ! Conversion of crop CFT to natural veg PFT
   public :: collapse_crop_types ! Collapse unused crop types into types used in this run
   public :: collapse_individual_lunits  ! Collapse landunits by user-defined thresholds
   public :: collapse_to_dominant ! Collapse to dominant pfts or landunits
@@ -145,47 +144,6 @@ contains
     end do
 
   end subroutine apply_convert_ocean_to_land
-
-
-!-----------------------------------------------------------------------
-  subroutine convert_cft_to_pft( begg, endg, cftsize, wt_cft )
-    !
-    ! !DESCRIPTION:
-    !        Convert generic crop types that were read in as seperate CFT's on
-    !        a crop landunit, and put them on the vegetated landunit.
-    ! !USES:
-    use clm_instur      , only : wt_lunit, wt_nat_patch
-    use clm_varpar      , only : cft_size
-    use pftconMod       , only : nc3crop
-    use landunit_varcon , only : istsoil, istcrop
-    ! !ARGUMENTS:
-    implicit none
-    integer          , intent(in)    :: begg, endg
-    integer          , intent(in)    :: cftsize          ! CFT size
-    real(r8)         , intent(inout) :: wt_cft(begg:,:)  ! CFT weights
-    !
-    ! !LOCAL VARIABLES:
-    integer :: g    ! index
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_ALL_FL((ubound(wt_cft) == (/endg, cftsize/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(wt_nat_patch) == (/endg, nc3crop+cftsize-1/)), sourcefile, __LINE__)
-    
-    do g = begg, endg
-       if ( wt_lunit(g,istcrop) > 0.0_r8 )then
-          ! Move CFT over to PFT and do weighted average of the crop and soil parts
-          wt_nat_patch(g,:) = wt_nat_patch(g,:) * wt_lunit(g,istsoil)
-          wt_cft(g,:)       = wt_cft(g,:) * wt_lunit(g,istcrop)
-          wt_nat_patch(g,nc3crop:) = wt_cft(g,:)      ! Add crop CFT's to end of natural veg PFT's
-          wt_lunit(g,istsoil) = (wt_lunit(g,istsoil) + wt_lunit(g,istcrop)) ! Add crop landunit to soil landunit
-          wt_nat_patch(g,:)   =  wt_nat_patch(g,:) / wt_lunit(g,istsoil)
-          wt_lunit(g,istcrop) = 0.0_r8                ! Zero out crop CFT's
-       else
-          wt_nat_patch(g,nc3crop:) = 0.0_r8    ! Make sure generic crops are zeroed out
-       end if
-    end do
-
-  end subroutine convert_cft_to_pft
 
   !-----------------------------------------------------------------------
   subroutine collapse_individual_lunits(wt_lunit, begg, endg, toosmall_soil, &
@@ -419,7 +377,8 @@ contains
     ! !USES:
     use clm_varctl , only : irrigate, use_crop
     use clm_varpar , only : cft_lb, cft_ub, maxveg
-    use pftconMod  , only : nc3crop, nc3irrig, pftcon
+    use pftconMod  , only : pftcon
+    use pftconMod  , only : indices_cfts_rainfed, indices_cfts_irrigated
     !
     ! !ARGUMENTS:
 
@@ -466,16 +425,9 @@ contains
           end if
 
           do g = begg, endg
-             ! Left Hand Side: merged rainfed+irrigated crop pfts from nc3crop
-             !                 to maxveg-1, stride 2
-             ! Right Hand Side: rainfed crop pfts from nc3crop to maxveg-1,
-             !                  stride 2
-             ! plus             irrigated crop pfts from nc3irrig to maxveg,
-             !                  stride 2
-             ! where stride 2 means "every other"
-             wt_cft(g, nc3crop:maxveg-1:2) = &
-                  wt_cft(g, nc3crop:maxveg-1:2) + wt_cft(g, nc3irrig:maxveg:2)
-             wt_cft(g, nc3irrig:maxveg:2)  = 0._r8
+             wt_cft(g, indices_cfts_rainfed) = &
+                  wt_cft(g, indices_cfts_rainfed) + wt_cft(g, indices_cfts_irrigated)
+             wt_cft(g, indices_cfts_irrigated)  = 0._r8
           end do
 
           call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname//': irrigation', sumto=TotalSum)
