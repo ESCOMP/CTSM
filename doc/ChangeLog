@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.048
 Originator(s): erik (Erik Kluzek)
-Date: Thu Jul 30 08:02:58 MDT 2026
+Date: Fri Jul 31 02:44:53 PM MDT 2026
 One-line Summary: Move b4b-dev to master
 
 Purpose and description of changes
@@ -36,6 +36,7 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
   - Resolves Review 2.7. Hydrology #3853
   - Partial in Review 1.6. Running Single Point and Regional Cases #3885
   - Partial for documentation in CTSM5.4.0xx Fix problems encountered with running PLUMBER2 sites #4092
+  - Partial for Remove ability to use 16-PFT fire emission factor files (only support 78-pft files) #4120
   - Partial for refactor code that assumes a particular ordering of PFT type constants #21
   - Partial for Avoid in-code checks of PFT type #3388
   - Resolves Documentation needed for Dry Deposition of gases #4032
@@ -63,10 +64,11 @@ Notes of particular relevance for developers:
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
    More work needs to be done in order for PFT order dependence to go away. Some of the new
    functions in pftconMod.F90 need to be used more often, and new ones added and used. We should
-   also add a unit test for pftconMod.F90.
+   also add a unit test for pftconMod.F90 (See #21).
 
-   Sam Rabin found that Fire-Emissions does something strange for crop. I'm looking at that more
-   closely so we understand what it's doing.
+   Sam Rabin found that the Fire-Emissions factor file allows files for less than 78 PFT, but always
+   copies the crop fields overwriting any differences in factors. This should be resolved by just 
+   supporting 78 pft factor files (see #4120). Currently there are just TODO notes in the code about this.
 
 Changes to tests or testing:
    Removed RHAF from the list of history variables asked for by PLUMBER2 user-mods as that was one of the
