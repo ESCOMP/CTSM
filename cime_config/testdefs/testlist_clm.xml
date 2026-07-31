@@ -4951,7 +4951,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only, NOT using moss temp for entire patch's gas params </option>
+      <option name="comment">2-year test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
 <test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Grass">
@@ -5048,7 +5048,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, grass only</option>
+      <option name="comment">2-year test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, grass only</option>
     </options>
   </test>
 <test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2BareNoNVP">
@@ -5069,7 +5069,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only</option>
+      <option name="comment">2-year test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only</option>
     </options>
   </test>
 
