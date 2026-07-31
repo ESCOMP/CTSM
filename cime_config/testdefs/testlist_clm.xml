@@ -1,22 +1,28 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
-        clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm tests)
-        clm_short: The short CLM test for basic testing of a few configurations
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
+        clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm)
+        clm_short: The short CLM test for basic testing of a few configurations (subset of aux_clm)
         fates: The FATES testlist, run when FATES is updated
+        fates-landuse: FATES testlist running with transient landuse (subset of fates)
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
         prelpha: Run before CESM alpha tags (subset of aux_clm tests)
         prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
         aux_cime_baselines: CESM cime baselines (subset of aux_clm tests) (these tests are run nightly with latest submodules on main machine)
         hillslope: Experimental test list used for the hillslope option of the model
-        rxcropmaturity: Short tests to be run during development related to prescribed crop calendars
-        matrixcn: Tests exercising the matrix-CN capability
-        aux_clm_mpi_serial: aux_clm tests using mpi-serial. Useful for redoing tests that failed due to https://github.com/ESCOMP/CTSM/issues/2916, after having replaced libraries/mpi-serial with a fresh copy.
-        subset_data: Tests exercising the subset_data tool and running CTSM with its output
+        rxcropmaturity: Short tests to be run during development related to prescribed crop maturity (subset of crop_calendars)
+        crop_calendars: Short tests to be run during development related to prescribed crop calendars
+        matrixcn: Tests exercising the matrix-CN capability (subset of aux_clm)
+        aux_clm_mpi_serial: aux_clm tests using mpi-serial. (subset of aux_clm)
+        subset_data: Tests exercising the subset_data tool and running CTSM with its output (subset of aux_clm)
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
         interim_restart: Tests having to do with interim restart capability.
+        ssp: Tests for the CMIP6 SSP scenarios
+        fire: Tests related to the fire model
+      CISM model test list: (in component/cism)
+        aux_glc: CISM test list (runs some CLM I compsets)
       ROF model test lists: (in each component model)
         mosart: MOSART test list, run when MOSARt is updated
         rtm: RTM test list, run when RTM is updated
