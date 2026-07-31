@@ -465,6 +465,46 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%rb10_patch)
     endif
 
+    call restartvar(ncid=ncid, flag=flag, varname='RAH1', xtype=ncd_double,  &
+         dim1name='pft', long_name='aerodynamical resistance', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%rah1_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='RAH2', xtype=ncd_double,  &
+         dim1name='pft', long_name='aerodynamical resistance', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%rah2_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='RAW1', xtype=ncd_double,  &
+         dim1name='pft', long_name='aerodynamical resistance', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%raw1_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='RAW2', xtype=ncd_double,  &
+         dim1name='pft', long_name='aerodynamical resistance', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%raw2_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='USTAR', xtype=ncd_double,  &
+         dim1name='pft', long_name='friction velocity', units='m/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%ustar_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='UM', xtype=ncd_double,  &
+         dim1name='pft', long_name='wind speed plus stability effect', units='m/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%um_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='UAF', xtype=ncd_double,  &
+         dim1name='pft', long_name='canopy air speed', units='m/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%uaf_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='TAF', xtype=ncd_double,  &
+         dim1name='pft', long_name='canopy air temperature', units='K', &
+         interpinic_flag='interp', readvar=readvar, data=this%taf_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='QAF', xtype=ncd_double,  &
+         dim1name='pft', long_name='canopy air humidity', units='kg/kg', &
+         interpinic_flag='interp', readvar=readvar, data=this%qaf_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='VPD', xtype=ncd_double,  &
+         dim1name='pft', long_name='vapor pressure deficit', units='kPa', &
+         interpinic_flag='interp', readvar=readvar, data=this%vpd_patch)
+
   end subroutine Restart
 
   !-----------------------------------------------------------------------

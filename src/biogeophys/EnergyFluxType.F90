@@ -902,6 +902,11 @@ contains
          long_name='instantaneous daily minimum of transpiration wetness factor', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran_min_inst_patch) 
 
+    call restartvar(ncid=ncid, flag=flag, varname='RRESIS', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='aerodynamic resistance to root transpiration', units='s/m', &
+         interpinic_flag='interp', readvar=readvar, data=this%rresis_patch)
+
     call this%eflx_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart

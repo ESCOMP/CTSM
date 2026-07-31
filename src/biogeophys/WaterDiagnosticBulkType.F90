@@ -989,6 +989,16 @@ contains
        end if
     endif
 
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('SNO_BW'), xtype=ncd_double,  &
+         dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
+         long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), units='kg/m3', &
+         interpinic_flag='interp', readvar=readvar, data=this%bw_col(:,-nlevsno+1:0))
+
+    call restartvar(ncid=ncid, flag=flag, varname=this%info%fname('RHAF'), xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name=this%info%lname('fractional humidity of canopy air'), units='fraction', &
+         interpinic_flag='interp', readvar=readvar, data=this%rh_af_patch)
+
   end subroutine RestartBulk
 
   !-----------------------------------------------------------------------
