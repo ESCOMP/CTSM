@@ -35,6 +35,7 @@ module NutrientCompetitionCLM45defaultMod
    contains
      ! public methocs
      procedure, public :: init                                ! Initialize the class
+     procedure, public :: restart                             ! restart
      procedure, public :: calc_plant_nutrient_competition     ! calculate nutrient yield rate from competition
      procedure, public :: calc_plant_nutrient_demand          ! calculate plant nutrient demand
      !
@@ -74,6 +75,20 @@ contains
     type(bounds_type), intent(in) :: bounds
 
   end subroutine Init
+
+  !------------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Restart for the class (currently empty for this version)
+    !
+    use ncdio_pio              , only : file_desc_t
+    class(nutrient_competition_clm45default_type) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+
+  end subroutine Restart
 
   !-----------------------------------------------------------------------
   subroutine calc_plant_nutrient_competition (this,                   &

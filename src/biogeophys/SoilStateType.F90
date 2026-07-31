@@ -379,6 +379,26 @@ contains
          scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
+    call restartvar(ncid=ncid, flag=flag, varname='KROOT', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levsoi', switchdim=.true., &
+         long_name='root conductance each soil layer', units='1/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%root_conductance_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='KSOIL', xtype=ncd_double,  &
+         dim1name='pft', dim2name='levsoi', switchdim=.true., &
+         long_name='soil conductance in each soil layer', units='1/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%soil_conductance_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='EFF_POROSITY', xtype=ncd_double,  &
+         dim1name='column', dim2name='levgrnd', switchdim=.true., &
+         long_name='effective porosity = porosity - vol_ice', units='proportion', &
+         interpinic_flag='interp', readvar=readvar, data=this%eff_porosity_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='SNO_TK', xtype=ncd_double,  &
+         dim1name='column', dim2name='levsno', switchdim=.true., lowerb2=-nlevsno+1, upperb2=0, &
+         long_name='Thermal conductivity', units='W/m-K', &
+         interpinic_flag='interp', readvar=readvar, data=this%thk_col(:,-nlevsno+1:0))
+
      readrootfr = .false.
      if (flag=='read' .and. .not. readrootfr ) then
             if (masterproc) then

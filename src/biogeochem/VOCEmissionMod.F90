@@ -62,6 +62,7 @@ module VOCEmissionMod
      real(r8) , pointer, private :: efisop_grc        (:,:) ! gridcell isoprene emission factors
    contains
      procedure, public  :: Init
+     procedure, public  :: Restart
      procedure, private :: InitAllocate
      procedure, private :: InitHistory
      procedure, private :: InitCold
@@ -362,8 +363,92 @@ contains
 
   end subroutine InitHistory
 
+  !------------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Restart method for vocemis_type
+    !
+    use ncdio_pio              , only : file_desc_t, ncd_double
+    use restUtilMod            , only : restartvar
+    class(vocemis_type)              :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    logical                          :: readvar
+
+    call restartvar(ncid=ncid, flag=flag, varname='EOPT', xtype=ncd_double,  & 
+         dim1name='pft', long_name='Eopt coefficient', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%Eopt_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='TOPT', xtype=ncd_double,  & 
+         dim1name='pft', long_name='topt coefficient', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%topt_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='ALPHA', xtype=ncd_double,  & 
+         dim1name='pft', long_name='alpha coefficient', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%alpha_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='currentPatch', xtype=ncd_double,  & 
+         dim1name='pft', long_name='currentPatch coefficient for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%cp_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR_sun', xtype=ncd_double,  & 
+         dim1name='pft', long_name='sunlit PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%paru_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR24_sun', xtype=ncd_double,  & 
+         dim1name='pft', long_name='24-hour sunlit PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%par24u_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR240_sun', xtype=ncd_double,  & 
+         dim1name='pft', long_name='240-hour sunlit PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%par240u_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR_shade', xtype=ncd_double,  & 
+         dim1name='pft', long_name='shaded PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%para_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR24_shade', xtype=ncd_double,  & 
+         dim1name='pft', long_name='24-hour shaded PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%par24a_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='PAR240_shade', xtype=ncd_double,  & 
+         dim1name='pft', long_name='240-hour shaded PAR for VOC calc', units='umol/m2/s', &
+         interpinic_flag='interp', readvar=readvar, data=this%par240a_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMA', xtype=ncd_double,  & 
+         dim1name='pft', long_name='total gamma for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gamma_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAL', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma L for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaL_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAT', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma T for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaT_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAP', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma P for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaP_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAA', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma A for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaA_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAS', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma S for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaS_out_patch)
+
+    call restartvar(ncid=ncid, flag=flag, varname='GAMMAC', xtype=ncd_double,  & 
+         dim1name='pft', long_name='gamma C for VOC calc', units='non', &
+         interpinic_flag='interp', readvar=readvar, data=this%gammaC_out_patch)
+
+  end subroutine Restart
+
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds)
+  subroutine InitCold(this, bounds, soilstate_inst)
     !
     ! !DESCRIPTION:
     ! Initialize cold start conditions for module variables

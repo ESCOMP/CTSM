@@ -20,6 +20,9 @@ module NutrientCompetitionMethodMod
      ! initialization
      procedure(init_interface), public, deferred :: init
 
+     ! restart
+     procedure(restart_interface), public, deferred :: restart
+
       ! compute plant nutrient demand
      procedure(calc_plant_nutrient_demand_interface), public, deferred :: calc_plant_nutrient_demand
 
@@ -57,6 +60,24 @@ module NutrientCompetitionMethodMod
        type(bounds_type)                       , intent(in)    :: bounds
 
      end subroutine init_interface
+
+     !---------------------------------------------------------------------------
+     subroutine restart_interface(this, bounds, ncid, flag)
+       ! !DESCRIPTION:
+       ! restart for nutrient competition
+       !
+       ! !USES:
+       use decompMod              , only : bounds_type
+       use ncdio_pio              , only : file_desc_t
+       import :: nutrient_competition_method_type
+       !
+       ! !ARGUMENTS:
+       class(nutrient_competition_method_type)                 :: this
+       type(bounds_type)                       , intent(in)    :: bounds
+       type(file_desc_t)                       , intent(inout) :: ncid
+       character(len=*)                        , intent(in)    :: flag
+
+     end subroutine restart_interface
 
      !---------------------------------------------------------------------------     
      subroutine calc_plant_nutrient_demand_interface (this, bounds,                &

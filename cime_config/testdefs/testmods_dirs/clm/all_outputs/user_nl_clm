@@ -1,4 +1,3 @@
 calc_human_stress_indices = 'ALL'
 hist_all_fields = .true.
 hist_wrtch4diag = .true.
-hist_fexcl1 = 'LEAFCN_STORAGE', 'GAMMA', 'GAMMAL', 'GAMMAT', 'GAMMAP', 'GAMMAA', 'GAMMAS', 'GAMMAC', 'EOPT', 'TOPT', 'ALPHA', 'currentPatch', 'PAR_sun', 'PAR24_sun', 'PAR240_sun', 'PAR_shade', 'PAR24_shade', 'PAR240_shade', 'RRESIS', 'RAH1', 'RAH2', 'RAW1', 'RAW2', 'USTAR', 'UM', 'UAF', 'TAF', 'QAF', 'VPD', 'KROOT', 'KSOIL', 'SNO_TK', 'EFF_POROSITY', 'RHAF', 'SNO_BW'

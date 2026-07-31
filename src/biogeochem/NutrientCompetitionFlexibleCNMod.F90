@@ -43,8 +43,9 @@ module NutrientCompetitionFlexibleCNMod
      real(r8), pointer :: actual_leafcn(:)                    ! leaf CN ratio used by flexible CN
      real(r8), pointer :: actual_storage_leafcn(:)            ! storage leaf CN ratio used by flexible CN
    contains
-     ! public methocs
+     ! public methods
      procedure, public :: Init                                ! Initialization
+     procedure, public :: Restart                             ! Restart
      procedure, public :: calc_plant_nutrient_competition     ! calculate nutrient yield rate from competition
      procedure, public :: calc_plant_nutrient_demand          ! calculate plant nutrient demand
      !
@@ -143,6 +144,27 @@ contains
          ptr_patch=this%actual_storage_leafcn, default='inactive')
 
   end subroutine InitHistory
+
+  !------------------------------------------------------------------------
+  subroutine Restart(this, bounds, ncid, flag)
+    !
+    ! !DESCRIPTION:
+    ! Restart for the class
+    !
+    use ncdio_pio              , only : file_desc_t, ncd_double
+    use restUtilMod            , only : restartvar
+    class(nutrient_competition_FlexibleCN_type) :: this
+    type(bounds_type), intent(in)    :: bounds
+    type(file_desc_t), intent(inout) :: ncid
+    character(len=*) , intent(in)    :: flag
+    logical                          :: readvar
+
+    call restartvar(ncid=ncid, flag=flag, varname='LEAFCN_STORAGE', xtype=ncd_double,  & 
+         dim1name='pft', &
+         long_name='Storage Leaf CN ratio used for flexible CN', units='gC/gN', &
+         interpinic_flag='interp', readvar=readvar, data=this%actual_storage_leafcn)
+
+  end subroutine Restart
 
   !-----------------------------------------------------------------------
   subroutine calc_plant_nutrient_competition (this, &

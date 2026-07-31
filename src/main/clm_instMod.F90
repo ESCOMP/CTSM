@@ -552,6 +552,8 @@ contains
 
     call ozone_inst%restart (bounds, ncid, flag=flag)
 
+    call vocemis_inst%Restart (bounds, ncid, flag=flag)
+
     call photosyns_inst%restart (bounds, ncid, flag=flag)
 
     call soilhydrology_inst%restart (bounds, ncid, flag=flag)
@@ -592,6 +594,10 @@ contains
 
        call soilbiogeochem_nitrogenstate_inst%restart(bounds, ncid, flag=flag, &
             totvegc_col=bgc_vegetation_inst%get_totvegc_col(bounds))
+
+       if (allocated(nutrient_competition_method)) then
+          call nutrient_competition_method%Restart(bounds, ncid, flag=flag)
+       end if
 
        call crop_inst%restart(bounds, ncid, bgc_vegetation_inst%cnveg_state_inst, flag=flag)
     end if
