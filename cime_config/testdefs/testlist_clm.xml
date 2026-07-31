@@ -4908,6 +4908,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
     </machines>
@@ -4920,6 +4922,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
     </machines>
@@ -4932,6 +4936,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
     </machines>
@@ -4944,6 +4950,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
     </machines>
@@ -4955,8 +4963,10 @@
 <test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassNoNVP">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="fates_nvp"/>
       <machine name="derecho" compiler="intel" category="fates_nvp_nonvp"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
       <machine name="derecho" compiler="gnu" category="fates_nvp_nonvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
@@ -4970,9 +4980,10 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
-      <machine name="derecho" compiler="gnu" category="fates"/>
-      <machine name="derecho" compiler="gnu" category="fates_nvp_nonvp"/>
       <machine name="derecho" compiler="intel" category="fates_nvp_nonvp"/>
+      <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp"/>
+      <machine name="derecho" compiler="gnu" category="fates_nvp_nonvp"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates_nvp"/>
     </machines>
