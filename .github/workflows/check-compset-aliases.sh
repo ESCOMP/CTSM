@@ -107,5 +107,6 @@ bad_compsets "Gag " '_CISM2%AIS-EVOLVE%GRIS-EVOLVE_'
 # Now check compsets that don't have something in the alias to make sure something else is there
 #
 negative_bad_compsets "Rs|Rtm|Miz" "_MOSART_"
+negative_bad_compsets "Gs|G |Gag|Ga " "_DGLC%NOEVOLVE_"
 
 exit 0
