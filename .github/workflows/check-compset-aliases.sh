@@ -27,6 +27,25 @@ bad_compsets() {
   fi
 }
 
+negative_bad_compsets() {
+  # Subroutine to Find bad compsets by checking that something is found in the long-compset name if something is NOT in the alias
+  # Allows for regular expressions in the alias argument
+  # Set input arguments
+  ALIAS=$1
+  LCOMPSET=$2
+  OLD_IFS=$IFS
+  IFS='\n'
+  set +e
+  # Relies on case sensitivity here: Alias should have $ALIAS and longname should have $LCOMPSET
+  bad_compsets="$(cime/scripts/query_config --compsets clm | awk 'NR > 5{print $0}' | grep -E --invert-match $ALIAS | grep --fixed-strings --invert-match $LCOMPSET)"
+  set -e
+  if [[ "${bad_compsets}" != "" ]]; then
+      echo "One or more compsets without $ALIAS alias but not $LCOMPSET longname:" >&2
+      echo $bad_compsets  >&2
+      exit 1
+  fi
+}
+
 # Now call the subroutine for various options
 # -- Physics versions ---
 bad_compsets Clm60 CLM60
@@ -82,5 +101,11 @@ bad_compsets RtmFl "_RTM%FLOOD_"
 bad_compsets "G " '_CISM2%GRIS-EVOLVE_'
 bad_compsets "Ga " '_CISM2%AIS-EVOLVE_'
 bad_compsets "Gag " '_CISM2%AIS-EVOLVE%GRIS-EVOLVE_'
+
+
+#
+# Now check compsets that don't have something in the alias to make sure something else is there
+#
+negative_bad_compsets "Rs|Rtm|Miz" "_MOSART_"
 
 exit 0
