@@ -108,5 +108,6 @@ bad_compsets "Gag " '_CISM2%AIS-EVOLVE%GRIS-EVOLVE_'
 #
 negative_bad_compsets "Rs|Rtm|Miz" "_MOSART_"
 negative_bad_compsets "Gs|G |Gag|Ga " "_DGLC%NOEVOLVE_"
+negative_bad_compsets 'Crujra|Cru|Nldas|As|1Pt|Qia|Spi' 'GSWP3v1'
 
 exit 0
