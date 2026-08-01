@@ -65,9 +65,8 @@ bad_compsets Nwp "%NWP-SP"
 bad_compsets Nwp Gs
 bad_compsets Fates "%FATES"
 bad_compsets FatesSp "%FATES-SP"
-# ---- This fails with the error: grep: thro ": No such file or directory
-# ---- So commenting out ----
-#bad_compsets 'NoAnthro ' 'NOANTHRO_'
+# ---- Using full NoAnthro This fails with the error: grep: thro ": No such file or directory
+bad_compsets 'NoA' 'NOANTHRO_'
 
 # -- Period of simulation --
 bad_compsets I2000 2000_
@@ -88,9 +87,8 @@ bad_compsets Gswp "DATM%GSWP3v1"
 bad_compsets "Cru " "DATM%CRU"
 bad_compsets Nldas "DATM%NLDAS2"
 bad_compsets Qian '_DATM%QIA_'
-# ---- This fails with the error: grep: up ": No such file or directory
-# ---- So commenting out ----
-#bad_compsets 'Spinup ' 'DATM%CPLHIST'
+# ---- Using full "Spinup" This fails with the error: grep: up ": No such file or directory
+bad_compsets 'Spi' 'DATM%CPLHIST'
 
 # --- ROF models ---
 bad_compsets Miz _MIZUROUTE_
