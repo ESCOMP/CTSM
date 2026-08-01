@@ -196,6 +196,11 @@ Brzostek, E. R., J. B. Fisher, and R. P. Phillips, 2014. Modeling the carbon cos
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and biomass across multiple biogeographical regions. Ecol. Appl. 10:95-114.
 
+.. _Buotteetal2021:
+
+Buotte, P. C., Koven, C. D., Xu, C., Shuman, J. K., Goulden, M. L., Levis, S., Katz, J., Ding, J., Ma, W., Robbins, Z., and Kueppers, L. M. 2021. Capturing functional strategies and compositional dynamics in vegetation demographic models, Biogeosciences, 18, 4473–4490, DOI:10.5194/bg-18-4473-2021.
+
+
 .. _Busing2005:
 
 Busing, R.T. 2005. Tree mortality, canopy turnover, and woody detritus in old cove forests of the southern Appalachians. Ecology 86:73-84.
@@ -384,6 +389,10 @@ Dutch, V.R., Rutter, N., Wake, L., Sandells, M., Derksen, C., Walker, B., Hould 
 
 Eitel, J.U., Maguire, A.J., Boelman, N., Vierling, L.A., Griffin, K.L., Jensen, J., Magney, T.S., Mahoney, P.J., Meddens, A.J., Silva, C., and Sonnentag, O. 2019. Proximal remote sensing of tree physiology at northern treeline: Do late-season changes in the photochemical reflectance index (PRI) respond to climate or photoperiod? Remote Sens. Environ. 221:340–350.
 
+.. _Emmonsetal2020:
+
+Emmons, L.K., Schwantes, R. H., Orlando, J. J., Tyndall, G., Kinnison, D., Lamarque, J. -F., Marsh, D., Mills, M., Tilmes, S., Bardeen, C., Buchholz, R. R., Conley, A., Gettelman, A., Garcia, R., Simpson, I., Blake, D. R., Meinardi, S., Petron, G. 2020. The Chemistry Mechanism in the Community Earth System Model version 2 (CESM2), J. Advances in Modeling Earth Systems, 12, https://doi.org/10.1029/2019MS001882. 
+
 .. _EntekhabiEagleson1989:
 
 Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization for atmospheric general circulation models including subgrid scale spatial variability. J. Climate 2:816-831.
@@ -463,6 +472,10 @@ Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation 
 .. _foley1996:
 
 Foley, J.A. et al., 1996. An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics. Global Biogeochemical Cycles 10.4, pp. 603-628.
+
+.. _Fosteretal2026:
+
+Foster, A.C., Hawkins, L.R., Kennedy, D., Bonan, G.B., Fisher, R.A., Needham, J.F, Knox, R.G., Koven, C.D., Wieder, W.R., Dagon, K., and Lawrence, D.M. 2026. Contrasting parametric sensitivities in two global vegetation models using parameter perturbation ensembles. Journal of Advances in Modeling Earth Systems. 18, e2025MS005590. DOI:10.1029/2025MS005590.
 
 .. _Friedl,etal2002:
 
@@ -760,6 +773,10 @@ Koven, C.D. et al. 2015. Permafrost carbon-climate feedback is sensitive to deep
 
 Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
 
+.. _Kovenetal2020:
+
+Koven, C. D., Knox, R. G., Fisher, R. A., Chambers, J. Q., Christoffersen, B. O., Davies, S. J., Detto, M., Dietze, M. C., Faybishenko, B., Holm, J., Huang, M., Kovenock, M., Kueppers, L. M., Lemieux, G., Massoud, E., McDowell, N. G., Muller-Landau, H. C., Needham, J. F., Norby, R. J., Powell, T., Rogers, A., Serbin, S. P., Shuman, J. K., Swann, A. L. S., Varadharajan, C., Walker, A. P., Wright, S. J., and Xu, C. 2020. Benchmarking and parameter sensitivity of physiological and vegetation dynamics using the Functionally Assembled Terrestrial Ecosystem Simulator (FATES) at Barro Colorado Island, Panama, Biogeosciences, 17, 3017–3044, DOI:10.5194/bg-17-3017-2020.
+
 .. _kucharik1998:
 
 Kucharik, C.J., J.M. Norman, and S.T. Gower, 1998. Measurements of branch area and adjusting leaf area index indirect measurements. Agricultural and Forest Meteorology 91.1, pp. 69-88.
@@ -779,6 +796,10 @@ Ladd, J.N., Jocteur-Monrozier, L. and Amato, M., 1992. Carbon turnover and nitro
 .. _Lamarqueetal2010:
 
 Lamarque, J.-F., et al. 2010. Historical (1850-2000) gridded anthropogenic and biomass burning emissions of reactive gases and aerosols: methodology and application. Atmos. Chem. Phys. Discuss. 10:4963-5019. DOI:10.5194/acpd-10-4963-2010.
+
+.. _Lamarqueetal2012:
+
+Lamarque, J.-F., Emmons, L. K., Hess, P. G., Kinnison, D. E., Tilmes, S., Vitt, F., Heald, C. L., Holland, E. A., Lauritzen, P. H., Neu, J., Orlando, J. J., Rasch, P. J., and Tyndall, G. K.  2012.CAM-chem: description and evaluation of interactive atmospheric chemistry in the Community Earth System Model, Geosci. Model Dev., 5, 369–411, https://doi.org/10.5194/gmd-5-369-2012. 
 
 .. _Larcher1995:
 
@@ -1072,6 +1093,10 @@ Moorcroft, P.R., G.C. Hurtt, and S.W. Pacala, 2001. A method for scaling vegetat
 .. _Mynenietal2002:
 
 Myneni, R.B., et al. 2002. Global products of vegetation leaf area and fraction absorbed PAR from year one of MODIS data. Remote Sens. Environ. 83:214-231.
+
+.. _Needhametal2022:
+
+Needham, J. F., Johnson, D. J., Anderson-Teixeira, K. J., Bourg, N., Bunyavejchewin, S., Butt, N., Cao, M., Cárdenas, D., Chang-Yang, C.-H., Chen, Y.-Y., Chuyong, G., Dattaraja, H. S., Davies, S. J., Duque, A., Ewango, C. E. N., Fernando, E. S., Fisher, R., Fletcher, C. D., Foster, R., ... McMahon, S. M. 2022. Demographic composition, not demographic diversity, predicts biomass and turnover across temperate and tropical forests. Global Change Biology, 28, 2895–2909. DOI:10.1111/gcb.16100
 
 .. _Neffetal2005:
 
@@ -1429,6 +1454,10 @@ Shi, M., J. B. Fisher, E. R. Brzostek, and R. P. Phillips, 2016: Carbon cost of 
 
 Shiklomanov, I.A. 2000. Appraisal and assessment of world water resources. Water International 25:11-32.
 
+.. _Shumanetal2024:
+
+Shuman, J. K., Fisher, R. A., Koven, C., Knox, R., Kueppers, L., and Xu, C. 2024. Dynamic ecosystem assembly and escaping the "fire trap" in the tropics: insights from FATES_15.0.0, Geosci. Model Dev., 17, 4643–4671, DOI:10.5194/gmd-17-4643-2024.
+
 .. _Siebertetal2005:
 
 Siebert, S., Döll, P., Hoogeveen, J., Faures, J.M., Frenken, K., Feick, S., 2005. Development and validation of the global map of irrigation areas. Hydrol Earth Syst Sc 9:535–547
@@ -1657,6 +1686,10 @@ Uriarte, M. et al., 2009. Natural disturbance and human land use as determinants
 .. _VallanoSparks2007:
 
 Vallano, D.M. and Sparks, J.P. 2007. Quantifying foliar uptake of gaseous itrogen dioxide using enriched foliar :math:`\delta^{15}`\  N values. New Phytologist 177:946-955.
+
+.. _ValMartinetal2014:
+
+Val Martin, M., Heald, C. L. and Arnold, S. R.  2014. Coupling dry deposition to vegetation phenology in the Community Earth System Model: Implications for the simulation of surface O3, Geophys. Res. Lett., 41, 2988–2996, doi:10.1002/2014GL059651.
 
 .. _vanderWerfetal2010:
 

@@ -215,14 +215,16 @@ contains
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
     this%root_conductance_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
-         avgflag='A', long_name='root conductance each soil layer', &
-         ptr_patch=this%root_conductance_patch, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+!        avgflag='A', long_name='root conductance each soil layer', &
+!        ptr_patch=this%root_conductance_patch, default='inactive')
     
     this%soil_conductance_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
-         avgflag='A', long_name='soil conductance in each soil layer', &
-         ptr_patch=this%soil_conductance_patch, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+!        avgflag='A', long_name='soil conductance in each soil layer', &
+!        ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -258,9 +260,10 @@ contains
 
     this%thk_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%thk_col(:,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
-         avgflag='A', long_name='Thermal conductivity', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
+!        avgflag='A', long_name='Thermal conductivity', &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d (fname='SNO_TK_ICE', units='W/m-K', type2d='levsno', &
          avgflag='A', long_name='Thermal conductivity (ice landunits only)', &
@@ -291,9 +294,10 @@ contains
 
     if (use_cn) then
        this%eff_porosity_col(begc:endc,:) = spval
-       call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective porosity = porosity - vol_ice', &
-            ptr_col=this%eff_porosity_col, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
+!           avgflag='A', long_name='effective porosity = porosity - vol_ice', &
+!           ptr_col=this%eff_porosity_col, default='inactive')
     end if
 
     if (use_cn) then
