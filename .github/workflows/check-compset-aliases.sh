@@ -72,8 +72,15 @@ bad_compsets Qian '_DATM%QIA_'
 # ---- This fails with the error: grep: up ": No such file or directory
 # ---- So commenting out ----
 #bad_compsets 'Spinup ' 'DATM%CPLHIST'
+
+# --- ROF models ---
 bad_compsets Miz _MIZUROUTE_
 bad_compsets "Rtm " _RTM_
 bad_compsets RtmFl "_RTM%FLOOD_"
+
+# --- CISM options ---
+bad_compsets "G " '_CISM2%GRIS-EVOLVE_'
+bad_compsets "Ga " '_CISM2%AIS-EVOLVE_'
+bad_compsets "Gag " '_CISM2%AIS-EVOLVE%GRIS-EVOLVE_'
 
 exit 0
