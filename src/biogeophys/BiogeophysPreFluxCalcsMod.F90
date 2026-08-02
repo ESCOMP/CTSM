@@ -92,6 +92,7 @@ contains
     !-----------------------------------------------------------------------
 
     call frictionvel_inst%TimestepInit(bounds)
+    call soilstate_inst%TimestepInit(bounds)
 
     call SetZ0mDisp(bounds, num_nolakep, filter_nolakep, &
          clm_fates, frictionvel_inst, canopystate_inst)

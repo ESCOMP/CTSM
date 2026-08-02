@@ -3007,9 +3007,6 @@ contains
          gs_mol_sha_ln => photosyns_inst%gs_mol_sha_ln_patch   & ! Output: [real(r8) (:,:) ]  shaded leaf stomatal conductance averaged over 1 hour before to 1 hour after local noon (umol H2O/m**2/s)
          )
 
-      root_conductance_patch(bounds%begp:bounds%endp,:) = spval
-      soil_conductance_patch(bounds%begp:bounds%endp,:) = spval
-
       par_z_sun     =>    solarabs_inst%parsun_z_patch        ! Input:  [real(r8) (:,:) ]  par absorbed per unit lai for canopy layer (w/m**2)
       lai_z_sun     =>    canopystate_inst%laisun_z_patch     ! Input:  [real(r8) (:,:) ]  leaf area index for canopy layer, sunlit or shaded
       vcmaxcint_sun =>    surfalb_inst%vcmaxcintsun_patch     ! Input:  [real(r8) (:)   ]  leaf to canopy scaling coefficient

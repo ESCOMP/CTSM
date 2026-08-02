@@ -251,6 +251,8 @@ contains
        end do
     end do
 
+    ! Initialize deeper bedrock layers (which do not have active hydrology) to spval 
+    ! to prevent them from carrying stale memory into history output variables.
     do j = nlevsoi+1, nlevgrnd
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)

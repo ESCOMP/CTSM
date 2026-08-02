@@ -82,6 +82,7 @@ module SoilStateType
 
      procedure, public  :: Init         
      procedure, public  :: Restart
+     procedure, public  :: TimestepInit
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -392,5 +393,29 @@ contains
          end if
     
   end subroutine Restart
+
+  !------------------------------------------------------------------------
+  subroutine TimestepInit(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Initialize arrays that need to be reset to spval each timestep
+    !
+    ! !USES:
+    use clm_varcon, only : spval
+    !
+    ! !ARGUMENTS:
+    class(soilstate_type)         :: this
+    type(bounds_type), intent(in) :: bounds
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+    !-----------------------------------------------------------------------
+
+    begp = bounds%begp; endp = bounds%endp
+
+    this%root_conductance_patch(begp:endp,:) = spval
+    this%soil_conductance_patch(begp:endp,:) = spval
+
+  end subroutine TimestepInit
 
 end module SoilStateType

@@ -737,9 +737,10 @@ contains
             endif
 
             ! Thermal conductivity of snow
-            ! Initialize bw to spval for inactive snow layers
+            ! Initialize bw and thk to spval for inactive snow layers
             if (j <= 0) then
                bw(c,j) = spval
+               thk(c,j) = spval
             end if
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
