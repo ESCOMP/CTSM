@@ -126,6 +126,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERI basic test with DEBUG on</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/clm50cam4LndTuningModeZDustSoilErod">
@@ -476,6 +477,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
+      <option name="comment">ERI basic test with DEBUG on for plain ne30 for Clm50</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay--clm/matrixcnOn">
@@ -636,6 +638,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
+      <option name="comment">ERI basic test with DEBUG for Clm50 on Izumi</option>
     </options>
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/reduceOutput--clm/nofireemis">
@@ -723,6 +726,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP threading test with DEBUG for Clm50 for carbon only testmod</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/snowveg_norad">
@@ -731,6 +735,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP threading test with DEBUG for Clm50 for snowveg_norad testmod where snow on vegetation doesn't effect radiation</option>
     </options>
   </test>
   <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/drydepnomegan">
@@ -739,6 +744,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERI production test for Clm50 with drydeposition but not megan</option>
     </options>
   </test>
   <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -748,6 +754,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">simple ERI production test for Clm50</option>
     </options>
   </test>
   <test name="ERI_Ld9" grid="f45_g37" compset="I2000Clm50BgcCru" testmods="clm/nofire">
@@ -756,6 +763,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Basic ERI production test with nofire</option>
     </options>
   </test>
   <test name="ERI_Ld9" grid="f45_g37" compset="I2000Clm50BgcCru" testmods="clm/nofire--clm/matrixcnOn">
@@ -879,6 +887,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG threading test</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_changeFlags">
@@ -1308,6 +1317,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG tests with Carbon isotopes flexible CN and FUN on for Clm50</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/ciso_flexCN_FUN--clm/matrixcnOn">
@@ -1406,6 +1416,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG tests for Clm50 with fire emissions on</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm60Sp" testmods="clm/decStart--clm/nofireemis">
@@ -1433,7 +1444,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">ERP DEBUG historical Clm50 SP case with drydeposition but without MEGAN Also --nofireemis because this is a SP compset</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
@@ -1556,6 +1567,7 @@
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
+      <option name="comment">ERP DEBUG tests for Clm50 with reduced output</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/o3lombardozzi2015">
@@ -1655,6 +1667,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG threading tests for Clm50 with flexible CN and FUN on</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN--clm/matrixcnOn_ignore_warnings">
@@ -1673,6 +1686,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG threading tests for Clm50 without FUN/LUNA but with flexible CN on</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN--clm/matrixcnOn_ignore_warnings">
@@ -1691,6 +1705,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG threading tests for Clm50 with LUNA on</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -1700,6 +1715,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Simple default ERP DEBUG threading tests for Clm50</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld30" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -1809,6 +1825,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN--clm/matrixcnOn">
@@ -1827,6 +1844,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN--clm/matrixcnOn">
@@ -1845,6 +1863,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with LUNA on</option>
     </options>
   </test>
   <test name="ERP_Ly3_P64x2" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput">
@@ -2128,6 +2147,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Exact restart DEBUG test with deepsoil and bedrock options on for Clm50</option>
     </options>
   </test>
   <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
@@ -2136,6 +2156,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Default exact restart DEBUG test Clm50</option>
     </options>
   </test>
   <test name="ERS_D_Ld6" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/CMIP6ndepTwoVars">
@@ -2434,6 +2455,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
+      <option name="comment">Default PEM DEBUG test for Clm50</option>
     </options>
   </test>
   <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/till">
@@ -2856,6 +2878,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Default Izumi DEBUG test for Clm50 with bias correction on for CRUv7 forcing</option>
     </options>
   </test>
   <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -2885,6 +2908,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
+      <option name="comment">Default DEBUG test for Clm50</option>
     </options>
   </test>
   <test name="SMS_C2_D_Lh12" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/pauseResume">
@@ -3733,7 +3757,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Short ERP debug FATES test for f19_g17 grid with modified task layout.</option>
+      <option name="comment">Short ERP debug threading FATES test for f19_g17 grid with modified task layout.</option>
     </options>
   </test>
   <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesCold">
@@ -4569,6 +4593,7 @@
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
+      <option name="comment">Default DEBUG test for Clm50</option>
     </options>
   </test>
 
