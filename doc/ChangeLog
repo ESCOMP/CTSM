@@ -1,4 +1,55 @@
 ===============================================================
+Tag name: ctsm5.4.049
+Originator(s): r-ward (Rachel Ward, r.ward@berkeley.edu, UC Berkeley)
+Date: Mon Aug  3 15:24:15 MDT 2026
+One-line Summary: Fix typo 'expontential' to 'exponential' in fates c starvation model
+
+Purpose and description of changes
+----------------------------------
+
+ Fixes a typo in src/utils/clmfates_interfaceMod.F90 for the fates c starvation namelist option ("expontential" --> "exponential") that causes runs using fates_cstarvation_model=exponential (valid options =linear, exponential) to abort at init with error message "Invalid carbon starvation model".
+
+Notes of particular relevance for users
+---------------------------------------
+Changes made to namelist defaults (e.g., changed parameter values):
+ Typo correction to the fates c starvation namelist option "exponential"
+
+Contributors:
+ glemieux
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Adding a derecho test and an izumi test to the fates test-suite:
+ ERP_Ld90.f45_f45_mg37.I2000Clm60FatesRs.derecho_intel.clm-FatesColdCStarvationExp
+ ERP_D_Ld90.f45_f45_mg37.I2000Clm60FatesRs.izumi_nag.clm-FatesColdCStarvationExP
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: new baseline fates-sci.1.92.7_api.46.0.0-ctsm5.4.049 compared to existing baseline fates-sci.1.92.7_api.46.0.0-ctsm5.4.047
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4093
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.048
 Originator(s): erik (Erik Kluzek)
 Date: Fri Jul 31 02:44:53 PM MDT 2026
