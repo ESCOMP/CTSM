@@ -119,7 +119,7 @@
       <option name="comment">Simple test to make sure adding obscure stream options works</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -467,7 +467,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">ERI basic test with DEBUG on for plain ne30 for Clm50</option>
+      <option name="comment">ERI basic test with DEBUG on for plain ne30 for Clm50 and CRUv7 forcing</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay--clm/matrixcnOn">
@@ -477,7 +477,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">Repeat last ERI_D_Ld9...vrtlay test with matrixcnOn</option>
+      <option name="comment">Repeat last ERI_D_Ld9...vrtlay test with matrixcnOn (NOTE: It's good to test matrixcn for different datm forcing datasets)</option>
     </options>
   </test>
   <test name="SMS_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
@@ -518,22 +518,22 @@
       <option name="comment">Science support for I1850Clm50Sp at f19</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50SpCru" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for I1850Clm50SpCru at f09</option>
+      <option name="comment">Science support for I1850Clm50Sp at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50SpCru" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for I1850Clm50SpCru at f19</option>
+      <option name="comment">Science support for I1850Clm50Sp at f19</option>
     </options>
   </test>
   <!-- science support for workhorse resolutions with CLM6_0 physics -->
@@ -621,7 +621,7 @@
       <option name="comment">Include a test of prescribed soil-moisture, has to be at f09, should be 2000 and for SP</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/reduceOutput">
+  <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/reduceOutput">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prebeta"/>
@@ -710,7 +710,7 @@
       <option name="comment">Run a transient case with standalone settings similar to the FXHIST waccm test</option>
     </options>
   </test>
-  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/cn_conly">
+  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/cn_conly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -719,7 +719,7 @@
       <option name="comment">ERP threading test with DEBUG for Clm50 for carbon only testmod</option>
     </options>
   </test>
-  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/snowveg_norad">
+  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/snowveg_norad">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -728,7 +728,7 @@
       <option name="comment">ERP threading test with DEBUG for Clm50 for snowveg_norad testmod where snow on vegetation doesn't effect radiation</option>
     </options>
   </test>
-  <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/drydepnomegan">
+  <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/drydepnomegan">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -737,7 +737,7 @@
       <option name="comment">ERI production test for Clm50 with drydeposition but not megan</option>
     </options>
   </test>
-  <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -753,7 +753,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Basic ERI production test with nofire</option>
+      <option name="comment">Basic ERI production test with nofire with Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERI_Ld9" grid="f45_g37" compset="I2000Clm50BgcCru" testmods="clm/nofire--clm/matrixcnOn">
@@ -870,7 +870,7 @@
       <option name="comment">ERI test for a transient case across the year boundary, with the restart on the first year side (DEBUG to work on izumi_nag)</option>
     </options>
   </test>
-  <test name="ERP_D_Ld3_P64x2" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERP_D_Ld3_P64x2" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -1288,7 +1288,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Run a test with anoxia turned on</option>
+      <option name="comment">Run a test with anoxia turned on and Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/anoxia--clm/matrixcnOn">
@@ -1307,7 +1307,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG tests with Carbon isotopes flexible CN and FUN on for Clm50</option>
+      <option name="comment">ERP DEBUG tests with Carbon isotopes flexible CN and FUN on for Clm50 with Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/ciso_flexCN_FUN--clm/matrixcnOn">
@@ -1400,7 +1400,7 @@
       <option name="comment">Run without DEBUG for a long period for a low resolution case with the matrix solution on for spinup with all options it interacts with (requires Bgc, but also turn on Crop and Carbon isotopes)</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/fire_emis">
+  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/fire_emis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -1427,7 +1427,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50SpCru" testmods="clm/drydepnomegan--clm/nofireemis">
+  <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50Sp" testmods="clm/drydepnomegan--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
@@ -1455,7 +1455,7 @@
       <option name="comment">Test Hist compset with Sp for CLM6.0</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50SpCru" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1464,7 +1464,7 @@
       <option name="comment">Science support for IHistClm50SpCru at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50SpCru" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1551,7 +1551,7 @@
       <option name="comment">Repeat SMS_Ld3_PS...GU_LULCC test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/reduceOutput">
+  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/reduceOutput">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -1657,7 +1657,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG threading tests for Clm50 with flexible CN and FUN on</option>
+      <option name="comment">ERP DEBUG threading tests for Clm50 with flexible CN and FUN on and Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN--clm/matrixcnOn_ignore_warnings">
@@ -1676,7 +1676,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG threading tests for Clm50 without FUN/LUNA but with flexible CN on</option>
+      <option name="comment">ERP DEBUG threading tests for Clm50 without FUN/LUNA but with flexible CN on with Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN--clm/matrixcnOn_ignore_warnings">
@@ -1689,7 +1689,7 @@
       <option name="comment">Repeat last ERP_D_P64x2_Ld3...noFUN_flexCN test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/luna">
+  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/luna">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1698,7 +1698,7 @@
       <option name="comment">ERP DEBUG threading tests for Clm50 with LUNA on</option>
     </options>
   </test>
-  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -1708,7 +1708,7 @@
       <option name="comment">Simple default ERP DEBUG threading tests for Clm50</option>
     </options>
   </test>
-  <test name="ERP_D_P64x2_Ld30" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERP_D_P64x2_Ld30" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -1791,7 +1791,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_Ld3" grid="f09_g17" compset="I1850Clm50BgcCropCru" testmods="clm/default">
+  <test name="SMS_Ld3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1800,7 +1800,7 @@
       <option name="comment">Science support for I1850Clm50BgcCropCru at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld3" grid="f19_g17" compset="I1850Clm50BgcCropCru" testmods="clm/default">
+  <test name="SMS_Ld3" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
@@ -1815,7 +1815,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on and Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN--clm/matrixcnOn">
@@ -1834,7 +1834,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on with Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN--clm/matrixcnOn">
@@ -1847,7 +1847,7 @@
       <option name="comment">Repeat ERP_D_Ld5_P48x1...noFUN_flexCN test with matrixcnOn</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/luna">
+  <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/luna">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
     </machines>
@@ -2131,7 +2131,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/deepsoil_bedrock">
+  <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/deepsoil_bedrock">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2140,7 +2140,7 @@
       <option name="comment">Exact restart DEBUG test with deepsoil and bedrock options on for Clm50</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -2438,7 +2438,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="PEM_D_Ld5" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="PEM_D_Ld5" grid="ne30_g17" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -2891,7 +2891,7 @@
       <option name="comment">Repeat last SMS_D_Ld3...default test with matrixcnOn"</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
@@ -3741,7 +3741,7 @@
       <option name="comment">Short ERP debug FATES test for f19_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_D_P128x2_Ld3" grid="f19_g17" compset="I2000Clm50FatesCru" testmods="clm/FatesCold">
+  <test name="ERP_D_P128x2_Ld3" grid="f19_g17" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3853,7 +3853,7 @@
       <option name="comment">Exact restart debug FATES test covering for the f19_g17 grid resolution.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="f19_g17" compset="I2000Clm50BgcCru" testmods="clm/default">
+  <test name="ERS_D_Ld5" grid="f19_g17" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4576,7 +4576,7 @@
     </options>
   </test>
 
-  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/FireLi2016Cru">
+  <test name="SMS_D_Ld65" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/FireLi2016Cru">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fire"/>
