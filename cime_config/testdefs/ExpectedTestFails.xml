@@ -320,44 +320,44 @@
   </test>  
 
   <!-- other tests -->
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2Bare">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvp--clm-FatesALP2Bare">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Divide-by-zero in snow thermal conductivity calculation due to running with use_nvp true but no NVP present</comment>
     </phase>
   </test>
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2Grass">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvp--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Divide-by-zero in snow thermal conductivity calculation due to running with use_nvp true but no NVP present</comment>
     </phase>
   </test>
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_gnu.clm-FatesColdSatPhen--clm-FatesALP2Bare">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_gnu.clm-FatesColdSatPhen--clm-FatesNvp--clm-FatesALP2Bare">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Divide-by-zero in snow thermal conductivity calculation due to running with use_nvp true but no NVP present</comment>
     </phase>
   </test>
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_gnu.clm-FatesColdSatPhen--clm-FatesALP2Grass">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_gnu.clm-FatesColdSatPhen--clm-FatesNvp--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Divide-by-zero in snow thermal conductivity calculation due to running with use_nvp true but no NVP present</comment>
     </phase>
   </test>
 
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2GrassNoNVP">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpFalse--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2GrassNoNVP">
+  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpFalse--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdSatPhen--clm-FatesALP2Moss_NoNvpTempForPatchGasParams">
+  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpNoUseNvpTempForPatchGasParams--clm-FatesALP2BareMoss">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
