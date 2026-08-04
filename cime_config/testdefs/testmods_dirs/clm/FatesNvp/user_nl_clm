@@ -1,0 +1,12 @@
+! For now, the FatesNvp testmod requires an additional testmod that specifies custom fsurdat and
+! fates_paramfile
+! TODO: Before merging, either specify default ones here or in namelist defaults.
+
+use_nvp = .true.
+use_nvp_undersnow = .true.
+nvp_rad_model_ground = .true.
+use_bedrock=.true.
+
+! TODO: Before merging, make sure this matches the namelist default. If not, change it, and also
+! change the name and behavior of the testmod that does the opposite.
+use_nvp_temp_for_patch_gas_params = .true.

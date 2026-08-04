@@ -4904,7 +4904,7 @@
 
 <!-- Tests of FATES non-vascular plant capability -->
 
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Moss">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvp--clm/FatesALP2BareMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -4918,10 +4918,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only, using moss temp for entire patch's gas params</option>
+      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare+moss, using moss temp for entire patch's gas params</option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Moss_NoNvpTempForPatchGasParams">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpNoUseNvpTempForPatchGasParams--clm/FatesALP2BareMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -4935,10 +4935,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only, NOT using moss temp for entire patch's gas params </option>
+      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare+moss, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassMoss_NocompRxbg_NoNvpTempForPatchGasParams">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdNoCompFixedBioGeo--clm/FatesNvpNoUseNvpTempForPatchGasParams--clm/FatesALP2BareGrassMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -4955,7 +4955,7 @@
       <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare+grass+moss, nocomp with prescribed biogeography, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
-<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Moss_NoNvpTempForPatchGasParams">
+<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpNoUseNvpTempForPatchGasParams--clm/FatesALP2BareMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -4971,7 +4971,7 @@
       <option name="comment">2-year test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, moss only, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
-<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassMoss_NoNvpTempForPatchGasParams">
+<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpNoUseNvpTempForPatchGasParams--clm/FatesALP2BareGrassMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -4987,7 +4987,7 @@
       <option name="comment">2-year test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, grass+moss, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
-<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassMoss_NocompRxbg_NoNvpTempForPatchGasParams">
+<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdNoCompFixedBioGeo--clm/FatesNvpNoUseNvpTempForPatchGasParams--clm/FatesALP2BareGrassMoss">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5003,7 +5003,7 @@
       <option name="comment">2-year test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare+grass+moss, nocomp with prescribed biogeography, NOT using moss temp for entire patch's gas params </option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Grass">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvp--clm/FatesALP2BareGrass">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5017,10 +5017,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, grass only</option>
+      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare+grass only but with use_nvp true</option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2Bare">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvp--clm/FatesALP2Bare">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5034,10 +5034,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only</option>
+      <option name="comment">Test of FATES NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only but with use_nvp true</option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassNoNVP">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpFalse--clm/FatesALP2BareGrass">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5055,10 +5055,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, grass only</option>
+      <option name="comment">Test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare+grass only</option>
     </options>
   </test>
-<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2BareNoNVP">
+<test name="SMS_Ld5_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpFalse--clm/FatesALP2Bare">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5079,7 +5079,7 @@
       <option name="comment">Test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only</option>
     </options>
   </test>
-<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2GrassNoNVP">
+<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpFalse--clm/FatesALP2BareGrass">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
@@ -5097,10 +5097,10 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">2-year test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, grass only</option>
+      <option name="comment">2-year test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare+grass only</option>
     </options>
   </test>
-<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesALP2BareNoNVP">
+<test name="SMS_Ly2_D_Mmpi-serial" grid="1x1_ALP2" compset="I2000Clm60Fates" testmods="clm/FatesColdSatPhen--clm/FatesNvpFalse--clm/FatesALP2Bare">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates_nvp"/>
