@@ -3714,7 +3714,7 @@
       <option name="comment">Include a short smoke test covering the nldas2 grid and the I2000Ctsm50NwpSpNldasRsGs compset, which uses NLDAS datm forcing.</option>
     </options>
   </test>
-  <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
+  <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3741,7 +3741,7 @@
       <option name="comment">Short ERP FATES test for f09_g17 grid.</option>
     </options>
   </test>
-  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdAllVars">
+  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdAllVars">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3768,7 +3768,7 @@
       <option name="comment">ERP_D FATES test covering FATES exponential carbon starvation (non-default), where the debug option _D allows the test to pass on izumi_nag</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdPRT2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdPRT2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -3805,7 +3805,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLUH2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
@@ -3815,7 +3815,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestArea">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLUH2HarvestArea">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
@@ -3824,7 +3824,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLUH2HarvestMass">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLUH2HarvestMass">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
@@ -3833,7 +3833,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="PVT_Lm3" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesLUPFT">
+  <test name="PVT_Lm3" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesLUPFT">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
@@ -3843,7 +3843,7 @@
       <option name="comment">FATES land use potential vegetation spin-up to transient run mode test</option>
     </options>
   </test>
-  <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
+  <test name="ERS_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
@@ -3862,7 +3862,7 @@
       <option name="comment">Exact restart debug test to provide for some CLM coverage during fates suite tests.</option>
     </options>
   </test>
-  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
+  <test name="ERS_D_Mmpi-serial_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -3872,7 +3872,7 @@
       <option name="comment">Short ERP debug FATES test for single site grid with serial mpi.</option>
     </options>
   </test>
-  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdCH4Off">
+  <test name="ERS_Ld9" grid="f10_f10_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdCH4Off">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -3882,7 +3882,7 @@
       <option name="comment">30 day exact restart test activating FATES with CH4 off for the f10 grid.</option>
     </options>
   </test>
-  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdHydro">
+  <test name="SMS_Lm3_D_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdHydro">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -3894,7 +3894,7 @@
       <option name="comment">Longer smoke debug test for single site grid with serial mpi with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
-  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdHydro">
+  <test name="ERS_D_Ld5" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdHydro">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -3904,7 +3904,7 @@
       <option name="comment">Short exact restart debug test for single site grid with coverage for FATES Hydro. Bypasses grid level mass checks.</option>
     </options>
   </test>
-  <test name="ERI_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/Fates">
+  <test name="ERI_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/Fates">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3913,7 +3913,7 @@
       <option name="comment">60 day exact restart FATES test on f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoFire">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoFire">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3931,7 +3931,7 @@
       <option name="comment">60 day exact restart test that turns on FATES managed fire on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdST3">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdST3">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3940,7 +3940,7 @@
       <option name="comment">60 day exact restart test activating FATES static stand structure on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdPPhys">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdPPhys">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3949,7 +3949,7 @@
       <option name="comment">60 day exact restart test activating FATES prescribed physiology mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdFixedBiogeo">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdFixedBiogeo">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3957,7 +3957,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoComp">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3965,7 +3965,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoCompFixedBioGeo">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoCompFixedBioGeo">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3973,7 +3973,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld10" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdNoCompInitDbh">
+  <test name="ERS_D_Ld10" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoCompInitDbh">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4050,7 +4050,7 @@
       <option name="comment">30 day exact restart test with threading for FATES fixed biogeography reduced complexity mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdLogging">
+  <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLogging">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4059,7 +4059,7 @@
       <option name="comment">60 day exact restart test providing coverage for the FATES logging mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesColdSizeAgeMort">
+  <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4068,7 +4068,7 @@
       <option name="comment">30 day exact restart test activating FATES size and age mortality mode on an f45 grid.</option>
     </options>
   </test>
-  <test name="SMS_Lm6" grid="f45_f45_mg37" compset="I2000Clm50FatesCruRsGs" testmods="clm/Fates">
+  <test name="SMS_Lm6" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/Fates">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -4077,7 +4077,7 @@
       <option name="comment">Run a short non-Fates test (without land-ice model) in the fates test list, to make sure fates changes do not mess up the standard model</option>
     </options>
   </test>
-  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesCold">
+  <test name="SMS_Lm13" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
@@ -4087,7 +4087,7 @@
       <option name="comment">13 month single site FATES smoke test.</option>
     </options>
   </test>
-  <test name="ERS_Ld366" grid="1x1_brazil" compset="I2000Clm50FatesCruRsGs" testmods="clm/FatesFireLightningPopDens">
+  <test name="ERS_Ld366" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
