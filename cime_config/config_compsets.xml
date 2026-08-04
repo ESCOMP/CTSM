@@ -124,6 +124,12 @@
   </compset>
 
   <compset>
+    <alias>I2000Clm50Bgc</alias>
+    <lname>2000_DATM%GSWP3v1_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+  </compset>
+
+  <!--- support one Clm50 compset with CRUv7 forcing for testing -->
+  <compset>
     <alias>I2000Clm50BgcCru</alias>
     <lname>2000_DATM%CRUv7_CLM50%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
