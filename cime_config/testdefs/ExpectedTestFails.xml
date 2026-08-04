@@ -345,31 +345,31 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpFalse--clm-FatesALP2BareGrass">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpOff--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpFalse--clm-FatesALP2BareGrass">
+  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpOff--clm-FatesALP2BareGrass">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpNoUseNvpTempForPatchGasParams--clm-FatesALP2BareMoss">
+  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60FatesSpRsGs.derecho_intel.clm-FatesColdSatPhen--clm-FatesNvpTempFix--clm-FatesALP2BareMoss">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdNoCompFixedBioGeo--clm-FatesNvpNoUseNvpTempForPatchGasParams--clm-FatesALP2BareGrassMoss">
+  <test name="SMS_Ld5_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdNoCompFixedBioGeo--clm-FatesNvpTempFix--clm-FatesALP2BareGrassMoss">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
     </phase>
   </test>
-  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdNoCompFixedBioGeo--clm-FatesNvpNoUseNvpTempForPatchGasParams--clm-FatesALP2BareGrassMoss">
+  <test name="SMS_Ly2_D_Mmpi-serial.1x1_ALP2.I2000Clm60Fates.derecho_intel.clm-FatesColdNoCompFixedBioGeo--clm-FatesNvpTempFix--clm-FatesALP2BareGrassMoss">
     <phase name="RUN">
       <status>FAIL</status>
       <comment>Floating invalid, doesn't happen with gnu</comment>
