@@ -2707,6 +2707,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <fates_cstarvation_model        use_fates=".true.">linear</fates_cstarvation_model>
 <fates_regeneration_model       use_fates=".true.">default</fates_regeneration_model>
 <fates_radiation_model          use_fates=".true.">norman</fates_radiation_model>
+<fates_radiation_model          use_fates=".true." use_fates_interstitial_bareground=".false.">twostream</fates_radiation_model>
 <fates_hydro_solver             use_fates=".true.">2D_Picard</fates_hydro_solver>
 <use_fates_managed_fire         use_fates=".true.">.false.</use_fates_managed_fire>
 <use_fates_planthydro           use_fates=".true.">.false.</use_fates_planthydro>
@@ -2734,6 +2735,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <use_fates_fixed_biogeog        use_fates=".true." use_fates_sp=".true."   >.true.</use_fates_fixed_biogeog>
 <use_fates_fixed_biogeog        use_fates=".true." use_fates_lupft=".true.">.true.</use_fates_fixed_biogeog>
 <use_fates_fixed_biogeog        use_fates=".true."                         >.false.</use_fates_fixed_biogeog>
+<use_fates_interstitial_bareground use_fates=".true." >.true.</use_fates_interstitial_bareground>
 <fates_history_dimlevel         use_fates=".true.">2,2</fates_history_dimlevel>
 
 <!-- Supplmental Nitrogen mode -->

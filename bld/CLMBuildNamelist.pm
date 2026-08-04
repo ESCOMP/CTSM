@@ -823,7 +823,7 @@ sub setup_cmdl_fates_mode {
                       "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                       "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		      "use_fates_managed_fire", "fates_lu_transition_logic");
+		                "use_fates_managed_fire", "fates_lu_transition_logic", "use_fates_interstitial_bareground");
 
        # dis-allow fates specific namelist items with non-fates runs
        foreach my $var ( @list ) {
@@ -4904,8 +4904,8 @@ sub setup_logic_fates {
                        "fates_harvest_mode","fates_parteh_mode", "use_fates_cohort_age_tracking","use_fates_tree_damage",
                        "use_fates_daylength_factor", "fates_photosynth_acclimation", "fates_stomatal_model",
                        "fates_stomatal_assimilation", "fates_leafresp_model", "fates_cstarvation_model",
-                       "fates_regeneration_model", "fates_hydro_solver", "fates_radiation_model", "fates_electron_transport_model",
-		                  "use_fates_managed_fire","fates_lu_transition_logic"
+                       "fates_regeneration_model", "fates_hydro_solver", "fates_electron_transport_model",
+		                  "use_fates_managed_fire","fates_lu_transition_logic", "use_fates_interstitial_bareground"
                     );
 
         foreach my $var ( @list ) {
@@ -4929,6 +4929,8 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_radiation_model', 'use_fates'=>$nl_flags->{'use_fates'},
+                    'use_fates_interstitial_bareground'=>$nl->get_value('use_fates_interstitial_bareground') );
 
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
@@ -5066,7 +5068,18 @@ sub setup_logic_fates {
            if ( &value_is_true($nl->get_value($var)) ) {
               if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
                  $log->fatal_error("fates_spitfire_mode must be non-zero when $var is true");
-	      }
+	           }
+           }
+        }
+
+        # Check the fates_radiation_model is compatible with interstitial bareground
+        my $var = "use_fates_interstitial_bareground";
+        if ( defined($nl->get_value($var))  ) {
+           if ( ! &value_is_true($nl->get_value($var)) ) {
+           my $mode = remove_leading_and_trailing_quotes($nl->get_value('fates_radiation_model'));
+              if ( $mode ne 'twostream' ) {
+                    $log->fatal_error("fates_radiation_model must be 'twostream' when $var is false");
+	           }
            }
         }
     }
