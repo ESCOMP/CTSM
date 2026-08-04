@@ -29,7 +29,7 @@ module WaterDiagnosticBulkType
   use WaterStateBulkType, only : waterstatebulk_type
   use WaterFluxType, only : waterflux_type
   ! Cathy [dev.04]
-  use UrbanParamsType, only : IsProgBuildTemp
+  use UrbanParamsType, only : IsProgBuildTemp, ac_dehumid
   !
   implicit none
   save
@@ -158,7 +158,7 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)  ! Initial total snow water (mm H2O)
 
 
-    call this%Init(bounds, info, vars, IsProgBuildTemp())
+    call this%Init(bounds, info, vars, IsProgBuildTemp() .and. ac_dehumid)
 
     call this%InitBulkAllocate(bounds) 
 
@@ -363,13 +363,15 @@ contains
          long_name=this%info%lname('Urban 2m relative humidity'), &
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval, default='inactive')
 
-    this%rh_building_lun(begl:endl) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('RHBUILD'), &
-         units='%',  &
-         avgflag='A', &
-         long_name=this%info%lname('Internal urban building air relative humidity'), &
-         ptr_lunit=this%rh_building_lun, set_nourb=spval, default='inactive')
+    if (ac_dehumid) then
+       this%rh_building_lun(begl:endl) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('RHBUILD'), &
+            units='%',  &
+            avgflag='A', &
+            long_name=this%info%lname('Internal urban building air relative humidity'), &
+            ptr_lunit=this%rh_building_lun, set_nourb=spval, default='inactive')
+    end if
 
     this%rh_af_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -827,7 +829,7 @@ contains
     !------------------------------------------------------------------------
 
 
-    call this%Restart(bounds, ncid, flag=flag, is_prog_buildtemp=IsProgBuildTemp())
+    call this%Restart(bounds, ncid, flag=flag, is_prog_buildtemp=IsProgBuildTemp() .and. ac_dehumid)
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, &

@@ -1075,6 +1075,12 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
 If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux and interior building temperature calculations.
 </entry>
 
+<entry id="ac_dehumid" type="logical" category="clm_physics"
+       group="clmu_inparm" valid_values="" >
+If TRUE, simulate indoor humidity, air-conditioning latent cooling, and condensate runoff.
+Requires urban_hac to be ON or ON_WASTEHEAT, urban_explicit_ac to be TRUE, and the prognostic building-temperature method.
+</entry>
+
 <entry id="urban_traffic" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
 If TRUE, urban traffic flux will be activated (Currently NOT implemented).

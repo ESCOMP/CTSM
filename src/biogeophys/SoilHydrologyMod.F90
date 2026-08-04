@@ -33,6 +33,7 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch
+  use UrbanParamsType   , only : ac_dehumid
 
   !
   ! !PUBLIC TYPES:
@@ -598,9 +599,12 @@ contains
                    pondmx_urban/dtime)
               qflx_surf(c) = xs_urban(c)
            end if
-           ! send flood water flux to runoff for all urban columns
-           ! Cathy [dev.15]
-           qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c) + qflx_condensate_from_ac(c)
+           ! Send flood water flux to runoff for all urban columns.
+           if (ac_dehumid) then
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c) + qflx_condensate_from_ac(c)
+           else
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c)
+           end if
         else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
            qflx_surf(c) = 0._r8
         end if

@@ -2249,8 +2249,22 @@ sub setup_logic_urban {
 
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'building_temp_method');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_hac');
+  add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'ac_dehumid');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_explicit_ac');
   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'urban_traffic');
+
+  if (value_is_true($nl->get_value('ac_dehumid'))) {
+     my $urban_hac = remove_leading_and_trailing_quotes($nl->get_value('urban_hac'));
+     if ($urban_hac ne 'ON' && $urban_hac ne 'ON_WASTEHEAT') {
+        $log->fatal_error("ac_dehumid requires urban_hac to be ON or ON_WASTEHEAT");
+     }
+     if (! value_is_true($nl->get_value('urban_explicit_ac'))) {
+        $log->fatal_error("ac_dehumid requires urban_explicit_ac=.true.");
+     }
+     if ($nl->get_value('building_temp_method') != 1) {
+        $log->fatal_error("ac_dehumid requires building_temp_method=1");
+     }
+  }
 }
 
 #-------------------------------------------------------------------------------

@@ -14,6 +14,7 @@ module EnergyFluxType
   use ColumnType     , only : col                
   use PatchType      , only : patch                
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use UrbanParamsType, only : ac_dehumid
   !
   implicit none
   save
@@ -594,10 +595,12 @@ contains
             ptr_lunit=this%eflx_urban_ac_lun, set_nourb=0._r8, l2g_scale_type='unity')
 
        ! Cathy [dev.14]
-       this%eflx_urban_ac_sen_lun(begl:endl) = spval
-       call hist_addfld1d (fname='URBAN_AC_SEN', units='W/m^2',  &
-            avgflag='A', long_name='sensible heat component of urban air conditioning flux', &
-            ptr_lunit=this%eflx_urban_ac_sen_lun, set_nourb=0._r8, l2g_scale_type='unity')
+       if (ac_dehumid) then
+          this%eflx_urban_ac_sen_lun(begl:endl) = spval
+          call hist_addfld1d (fname='URBAN_AC_SEN', units='W/m^2',  &
+               avgflag='A', long_name='sensible heat component of urban air conditioning flux', &
+               ptr_lunit=this%eflx_urban_ac_sen_lun, set_nourb=0._r8, l2g_scale_type='unity')
+       end if
 
        this%eflx_urban_heat_lun(begl:endl) = spval
        call hist_addfld1d (fname='URBAN_HEAT', units='W/m^2',  &

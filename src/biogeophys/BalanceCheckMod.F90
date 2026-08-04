@@ -36,6 +36,7 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope_routing
+  use UrbanParamsType    , only : ac_dehumid
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -644,22 +645,22 @@ contains
           ! add qflx_drain_perched and qflx_flood
           if (col%active(c)) then
 
-             errh2o_col(c) = endwb_col(c) - begwb_col(c) &
-                  - (forc_rain_col(c)        &
-                  + forc_snow_col(c)         &
-                  + qflx_flood_col(c)        &
-                  + qflx_sfc_irrig_col(c)    &
-                  + qflx_glcice_dyn_water_flux_col(c) &
-                  ! Cathy [dev.16]
-                  + qflx_condensate_from_ac_col(c) &
-                  - qflx_evap_tot_col(c)     &
-                  - qflx_surf_col(c)         &
-                  - qflx_qrgwl_col(c)        &
-                  - qflx_drain_col(c)        &
-                  - qflx_drain_perched_col(c) &
-                  - qflx_ice_runoff_col(c)   &
-                  - qflx_snwcp_discarded_liq_col(c) &
-                  - qflx_snwcp_discarded_ice_col(c)) * dtime
+             if (ac_dehumid) then
+                errh2o_col(c) = endwb_col(c) - begwb_col(c) &
+                     - (forc_rain_col(c) + forc_snow_col(c) + qflx_flood_col(c) &
+                     + qflx_sfc_irrig_col(c) + qflx_glcice_dyn_water_flux_col(c) &
+                     + qflx_condensate_from_ac_col(c) - qflx_evap_tot_col(c) &
+                     - qflx_surf_col(c) - qflx_qrgwl_col(c) - qflx_drain_col(c) &
+                     - qflx_drain_perched_col(c) - qflx_ice_runoff_col(c) &
+                     - qflx_snwcp_discarded_liq_col(c) - qflx_snwcp_discarded_ice_col(c)) * dtime
+             else
+                errh2o_col(c) = endwb_col(c) - begwb_col(c) &
+                     - (forc_rain_col(c) + forc_snow_col(c) + qflx_flood_col(c) &
+                     + qflx_sfc_irrig_col(c) + qflx_glcice_dyn_water_flux_col(c) &
+                     - qflx_evap_tot_col(c) - qflx_surf_col(c) - qflx_qrgwl_col(c) &
+                     - qflx_drain_col(c) - qflx_drain_perched_col(c) - qflx_ice_runoff_col(c) &
+                     - qflx_snwcp_discarded_liq_col(c) - qflx_snwcp_discarded_ice_col(c)) * dtime
+             end if
 
           else
 
@@ -695,8 +696,9 @@ contains
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
-              ! Cathy [dev.17] help debug the water imbalance
-              write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
+              if (ac_dehumid) then
+                 write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
+              end if
 
               write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_col(indexc)*dtime
 
@@ -734,29 +736,30 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       ! Cathy [dev.16]
-       call c2g( bounds,  &
-         qflx_condensate_from_ac_col(bounds%begc:bounds%endc),  &
-         qflx_condensate_from_ac_grc(bounds%begg:bounds%endg),  &
-         c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       if (ac_dehumid) then
+          call c2g( bounds,  &
+            qflx_condensate_from_ac_col(bounds%begc:bounds%endc),  &
+            qflx_condensate_from_ac_grc(bounds%begg:bounds%endg),  &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       end if
 
        do g = bounds%begg, bounds%endg
-          errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
-               - (forc_rain_grc(g)  &
-               + forc_snow_grc(g)  &
-               + forc_flood_grc(g)  &
-               + qflx_sfc_irrig_grc(g)  &
-               + qflx_glcice_dyn_water_flux_grc(g)  &
-               ! Cathy [dev.16]
-               + qflx_condensate_from_ac_grc(g) &
-               - qflx_evap_tot_grc(g)  &
-               - qflx_surf_grc(g)  &
-               - qflx_qrgwl_grc(g)  &
-               - qflx_drain_grc(g)  &
-               - qflx_drain_perched_grc(g)  &
-               - qflx_ice_runoff_grc(g)  &
-               - qflx_snwcp_discarded_liq_grc(g)  &
-               - qflx_snwcp_discarded_ice_grc(g)) * dtime
+          if (ac_dehumid) then
+             errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
+                  - (forc_rain_grc(g) + forc_snow_grc(g) + forc_flood_grc(g) &
+                  + qflx_sfc_irrig_grc(g) + qflx_glcice_dyn_water_flux_grc(g) &
+                  + qflx_condensate_from_ac_grc(g) - qflx_evap_tot_grc(g) &
+                  - qflx_surf_grc(g) - qflx_qrgwl_grc(g) - qflx_drain_grc(g) &
+                  - qflx_drain_perched_grc(g) - qflx_ice_runoff_grc(g) &
+                  - qflx_snwcp_discarded_liq_grc(g) - qflx_snwcp_discarded_ice_grc(g)) * dtime
+          else
+             errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
+                  - (forc_rain_grc(g) + forc_snow_grc(g) + forc_flood_grc(g) &
+                  + qflx_sfc_irrig_grc(g) + qflx_glcice_dyn_water_flux_grc(g) &
+                  - qflx_evap_tot_grc(g) - qflx_surf_grc(g) - qflx_qrgwl_grc(g) &
+                  - qflx_drain_grc(g) - qflx_drain_perched_grc(g) - qflx_ice_runoff_grc(g) &
+                  - qflx_snwcp_discarded_liq_grc(g) - qflx_snwcp_discarded_ice_grc(g)) * dtime
+          end if
        end do
 
        ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
@@ -827,7 +830,9 @@ contains
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
              ! Cathy [dev.17] help debug the water imbalance
-             write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
+             if (ac_dehumid) then
+                write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
+             end if
 
              write(iulog,*)'CTSM is stopping'
              call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))

@@ -101,6 +101,7 @@ module UrbanParamsType
   character(len= *), parameter, public :: urban_hac_on =  'ON'                 
   character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'  
   character(len= 16), public           :: urban_hac = urban_hac_off
+  logical, public                      :: ac_dehumid = .false.         ! whether to simulate AC dehumidification
   logical, public                      :: urban_explicit_ac = .true.  ! whether to use explicit, time-varying AC adoption rate
   logical, public                      :: urban_traffic = .false.     ! urban traffic fluxes
 
@@ -848,7 +849,7 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 
-    namelist / clmu_inparm / urban_hac, urban_explicit_ac, urban_traffic, building_temp_method
+    namelist / clmu_inparm / urban_hac, ac_dehumid, urban_explicit_ac, urban_traffic, building_temp_method
     !EOP
     !-----------------------------------------------------------------------
 
@@ -876,6 +877,7 @@ contains
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(urban_hac,             mpicom)
+    call shr_mpi_bcast(ac_dehumid,            mpicom)
     call shr_mpi_bcast(urban_explicit_ac,     mpicom)
     call shr_mpi_bcast(urban_traffic,         mpicom)
     call shr_mpi_bcast(building_temp_method,  mpicom)
@@ -885,9 +887,21 @@ contains
        write(iulog,*)'Urban traffic fluxes are not implemented currently'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+    if (ac_dehumid) then
+       if (trim(urban_hac) /= urban_hac_on .and. trim(urban_hac) /= urban_wasteheat_on) then
+          call endrun(msg='ac_dehumid requires urban_hac to be ON or ON_WASTEHEAT'//errmsg(sourcefile, __LINE__))
+       end if
+       if (.not. urban_explicit_ac) then
+          call endrun(msg='ac_dehumid requires urban_explicit_ac=.true.'//errmsg(sourcefile, __LINE__))
+       end if
+       if (building_temp_method /= BUILDING_TEMP_METHOD_PROG) then
+          call endrun(msg='ac_dehumid requires the prognostic building temperature method'//errmsg(sourcefile, __LINE__))
+       end if
+    end if
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
+       write(iulog,*) '   urban air-conditioning dehumidification       = ', ac_dehumid
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
@@ -955,7 +969,6 @@ contains
   !-----------------------------------------------------------------------
 
 end module UrbanParamsType
-
 
 
 
