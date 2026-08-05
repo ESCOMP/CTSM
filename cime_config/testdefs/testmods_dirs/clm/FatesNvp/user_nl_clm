@@ -5,7 +5,6 @@
 use_nvp = .true.
 use_nvp_undersnow = .true.
 nvp_rad_model_ground = .true.
-use_bedrock=.true.
 
 ! TODO: Before merging, make sure this matches the namelist default. If not, change it, and also
 ! change the name and behavior of the testmod that does the opposite.
