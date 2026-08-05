@@ -281,13 +281,6 @@ where :math:`M_{livestem,2}` is the corresponding mortality factor (:numref:`Tab
 
 Fire nitrogen emissions and nitrogen transfers due to fire-induced mortality are calculated the same way as for carbon, using the same values for combustion completeness and mortality factors.
 
-.. math::
-   :label: 23.29
-
-   P_{disturb,j} =\frac{A_{b,j} }{f_{j} A_{g} } P_{j} \xi _{j}
-
-where :math:`P_{j}` (individual km\ :sup:`-2`) is the population density for the :math:`j` th tree PFT and :math:`\xi _{j}` is the whole-plant mortality factor (:numref:`Table PFT-specific fire parameters`).
-
 .. _Agricultural fires:
 
 Agricultural fires
