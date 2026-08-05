@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Check that clm6* compset aliases return CLM6* longnames
+# Check that compset aliases return matching longnames
 
 # Change to top level of clone
 cd "$(git rev-parse --show-toplevel)"
