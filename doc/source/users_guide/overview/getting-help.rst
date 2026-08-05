@@ -76,13 +76,13 @@ CIME
 CLM
   Community Land Model (CLM). The prognostically active land model component of CESM.
 
-CLMBGC
-  Community Land Model (|version|) with BGC Biogeochemistry. Uses CN Biogeochemistry with vertically resolved soil Carbon, CENTURY model like pools, and Nitrification/De-Nitrification. Hereonafter we will refer to this as ClmBgc, similar to the corresponding compset alias (e.g. Clm60Bgc). The CLM_CONFIG_OPTS option is
+ClmBgc (formatted as the corresponding compset alias, e.g. Clm60Bgc)
+  Community Land Model (|version|) with BGC Biogeochemistry. Uses CN Biogeochemistry with vertically resolved soil Carbon, CENTURY model like pools, and Nitrification/De-Nitrification. The CLM_CONFIG_OPTS option is
 
   ``./xmlchange CLM_CONFIG_OPTS="phys clm5_0 -bgc bgc``
 
-CLMBGC-Crop
-  Community Land Model (|version|) with BGC Biogeochemistry and prognotic crop. Hereonafter we will refer to this as ClmBgcCrop, similar to the corresponding compset alias (e.g. Clm60BgcCrop). The CLM_CONFIG_OPTS option for this is
+ClmBgcCrop (formatted as the corresponding compset alias, e.g. Clm60BgcCrop)
+  Community Land Model (|version|) with BGC Biogeochemistry and prognotic crop. The CLM_CONFIG_OPTS option for this is
 
   ``./xmlchange CLM_CONFIG_OPTS="phys clm5_0 -bgc bgc -crop``
 
@@ -91,8 +91,8 @@ CLMCN
 
   ``./xmlchange CLM_CONFIG_OPTS="-bgc cn" -append``
 
-CLMSP
-  Community Land Model (CLM) with Satellite Phenology (SP) (either CLM4.0, CLM4.5 or |version|). Hereonafter we will refer to this as ClmSp, similar to the corresponding compset alias (e.g. Clm60Sp). The CLM_CONFIG_OPTS option for this is
+ClmSp (formatted as the corresponding compset alias, e.g. Clm60Sp)
+  Community Land Model (CLM) with Satellite Phenology (SP) (either CLM4.0, CLM4.5 or |version|). The CLM_CONFIG_OPTS option for this is
 
   ``./xmlchange CLM_CONFIG_OPTS="-bgc sp" -append``
 
