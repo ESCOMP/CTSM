@@ -3750,7 +3750,7 @@
       <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
-  <test name="ERP_Ld90" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdCStarvationExp">
+  <test name="ERP_Ld90" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCStarvationExp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
@@ -3759,7 +3759,7 @@
       <option name="comment">ERP FATES test covering FATES exponential carbon starvation (non-default)</option>
     </options>
   </test>
-  <test name="ERP_D_Ld90" grid="f45_f45_mg37" compset="I2000Clm60FatesRs" testmods="clm/FatesColdCStarvationExp">
+  <test name="ERP_D_Ld90" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCStarvationExp">
     <machines>
       <machine name="izumi" compiler="nag" category="fates"/>
     </machines>
