@@ -10,7 +10,7 @@ Summary of CLM5.0 updates relative to the CLM4.5
 
 We describe here the complete crop and irrigation parameterizations that appear in CLM5.0. Corresponding information for CLM4.5 appeared in the CLM4.5 Technical Note (:ref:`Oleson et al. 2013 <Olesonetal2013>`).
 
-CLM5.0 includes the following new updates to the CROP option, where CROP refers to the interactive crop management model and is included as an option with the BGC configuration:
+CLM5.0 includes the following new updates to the CROP option, where CROP refers to the interactive crop management model and is included as an option with the Bgc configuration:
 
 - New crop functional types
 
@@ -53,7 +53,7 @@ Introduction
 
 Groups developing Earth System Models generally account for the human footprint on the landscape in simulations of historical and future climates. Traditionally we have represented this footprint with natural vegetation types and particularly grasses because they resemble many common crops. Most modeling efforts have not incorporated more explicit representations of land management such as crop type, planting, harvesting, tillage, fertilization, and irrigation, because global scale datasets of these factors have lagged behind vegetation mapping. As this begins to change, we increasingly find models that will simulate the biogeophysical and biogeochemical effects not only of natural but also human-managed land cover.
 
-AgroIBIS is a state-of-the-art land surface model with options to simulate dynamic vegetation (:ref:`Kucharik et al. 2000 <Kuchariketal2000>`) and interactive crop management (:ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop management parameterizations from AgroIBIS (March 2003 version) were coupled as a proof-of-concept to the Community Land Model version 3 [CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>` ] (not published), then coupled to the CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and CLM4.5BGC. Additional updates after the release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2016>`), and those are now incorporated into CLM5.
+AgroIBIS is a state-of-the-art land surface model with options to simulate dynamic vegetation (:ref:`Kucharik et al. 2000 <Kuchariketal2000>`) and interactive crop management (:ref:`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop management parameterizations from AgroIBIS (March 2003 version) were coupled as a proof-of-concept to the Community Land Model version 3 [CLM3.0, :ref:`Oleson et al. (2004) <Olesonetal2004>` ] (not published), then coupled to the CLM3.5 (:ref:`Levis et al. 2009 <Levisetal2009>`) and later released to the community with CLM4CN (:ref:`Levis et al. 2012 <Levisetal2012>`), and Clm45Bgc. Additional updates after the release of CLM4.5 were available by request (:ref:`Levis et al. 2016 <Levisetal2016>`), and those are now incorporated into CLM5.
 
 With interactive crop management and, therefore, a more accurate representation of agricultural landscapes, we hope to improve the CLM's simulated biogeophysics and biogeochemistry. These advances may improve fully coupled simulations with the Community Earth System Model (CESM), while helping human societies answer questions about changing food, energy, and water resources in response to climate, environmental, land use, and land management change (e.g., :ref:`Kucharik and Brye 2003 <KucharikBrye2003>`; :ref:`Lobell et al. 2006 <Lobelletal2006>`). As implemented here, the crop model uses the same physiology as the natural vegetation but with uses different crop-specific parameter values, phenology, and allocation, as well as fertilizer and irrigation management.
 
@@ -70,7 +70,7 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 
 .. _Table Crop plant functional types:
 
-.. table:: Crop plant functional types (PFTs) included in CLM5BGCCROP.
+.. table:: Crop plant functional types (PFTs) included in Clm50BgcCrop.
 
  ===  ===========================  ================  ===========================
  IVT  Plant function types (PFTs)  Management Class  Crop Parameters Used
@@ -146,7 +146,7 @@ In addition, CLM's default list of plant functional types (PFTs) includes an irr
 Phenology
 ^^^^^^^^^
 
-CLM5-BGC includes evergreen, seasonally deciduous (responding to changes in day length), and stress deciduous (responding to changes in temperature and/or soil moisture) phenology algorithms (Chapter :numref:`rst_Vegetation Phenology and Turnover`). CLM5-BGC-crop uses the AgroIBIS crop phenology algorithm, consisting of three distinct phases.
+Clm50Bgc includes evergreen, seasonally deciduous (responding to changes in day length), and stress deciduous (responding to changes in temperature and/or soil moisture) phenology algorithms (Chapter :numref:`rst_Vegetation Phenology and Turnover`). Clm50BgcCrop uses the AgroIBIS crop phenology algorithm, consisting of three distinct phases.
 
 Phase 1 starts at planting and ends with leaf emergence, phase 2 continues from leaf emergence to the beginning of grain fill, and phase 3 starts from the beginning of grain fill and ends with physiological maturity and harvest.
 
@@ -217,7 +217,7 @@ Harvest is assumed to occur as soon as the crop reaches maturity. When :math:`GD
 
 .. _Table Crop phenology parameters:
 
-.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+.. list-table:: Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in Clm50BgcCrop. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
    :header-rows: 1
 
    * - \
@@ -569,7 +569,7 @@ Annual food crop yields (g dry matter m\ :sup:`-2`) can be calculated by saving 
 
 .. _Table Crop allocation parameters:
 
-.. table:: Crop allocation parameters for the active crop plant functional types (PFTs) in CLM5BGCCROP. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
+.. table:: Crop allocation parameters for the active crop plant functional types (PFTs) in Clm50BgcCrop. Numbers in the first row correspond to the list of PFTs in :numref:`Table Crop plant functional types`.
 
  ===========================================  ==============  ============  ==================  ======  ======  =========  =============  ================  ================  ================
  \                                            temperate corn  spring wheat  temperate soybean   cotton  rice    sugarcane  tropical corn  tropical soybean  miscanthus        switchgrass
@@ -622,7 +622,7 @@ where :math:`z_{top}^{\max }` is the maximum top-of-canopy height of the crop (:
 
 Interactive Fertilization
 '''''''''''''''''''''''''
-CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that natural vegetation will not access the fertilizer applied to crops. Fertilizer in CLM5BGCCROP is prescribed by crop functional types and varies spatially for each year based on the LUMIP land use and land cover change time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). One of two fields is used to prescribe industrial fertilizer based on the type of simulation. For non-transient simulations, annual fertilizer application in g N/m\ :sup:`2`/yr is specified on the land surface data set by the field CONST_FERTNITRO_CFT. In transient simulations, annual fertilizer application is specified on the land use time series file by the field FERTNITRO_CFT, which is also in g N/m\ :sup:`2`/yr. The values for both of these fields come from the LUMIP time series for each year. In addition to the industrial fertilizer, background manure fertilizer is specified on the parameter file by the field ``manunitro``. For perennial bioenergy crops, little fertilizer (56kg/ha/yr) is applied to switchgrass and no fertilizer is applied to Miscanthus. Note these rates are only based on local land management practices at the University of Illinois Energy Farm located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. For the current CLM5BGCCROP, manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly to minimize N loss (primarily through denitrification) and maximize plant uptake. The current implementation of CLM5 inherits this legacy, although denitrification rates are slower in the current version of the model (:ref:`Koven et al. 2013 <Kovenetal2013>`). As such, fertilizer application begins during the leaf emergence phase of crop development (phase 2) and continues for 20 days, which helps reduce large losses of nitrogen from leaching and denitrification during the early stage of crop development. The 20-day period is chosen as an optimization to limit fertilizer application to the emergence stage. A fertilizer counter in seconds, *f*, is set as soon as the leaf emergence phase for crops initiates:
+CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that natural vegetation will not access the fertilizer applied to crops. Fertilizer in Clm50BgcCrop is prescribed by crop functional types and varies spatially for each year based on the LUMIP land use and land cover change time series (LUH2 for historical and SSPs for future) (:ref:`Lawrence et al. 2016 <Lawrenceetal2016>`). One of two fields is used to prescribe industrial fertilizer based on the type of simulation. For non-transient simulations, annual fertilizer application in g N/m\ :sup:`2`/yr is specified on the land surface data set by the field CONST_FERTNITRO_CFT. In transient simulations, annual fertilizer application is specified on the land use time series file by the field FERTNITRO_CFT, which is also in g N/m\ :sup:`2`/yr. The values for both of these fields come from the LUMIP time series for each year. In addition to the industrial fertilizer, background manure fertilizer is specified on the parameter file by the field ``manunitro``. For perennial bioenergy crops, little fertilizer (56kg/ha/yr) is applied to switchgrass and no fertilizer is applied to Miscanthus. Note these rates are only based on local land management practices at the University of Illinois Energy Farm located in Central Midwestern United States :ref:`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. For the current Clm50BgcCrop, manure N is applied at a rate of 0.002 kg N/m\ :sup:`2`/yr. Because previous versions of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly to minimize N loss (primarily through denitrification) and maximize plant uptake. The current implementation of CLM5 inherits this legacy, although denitrification rates are slower in the current version of the model (:ref:`Koven et al. 2013 <Kovenetal2013>`). As such, fertilizer application begins during the leaf emergence phase of crop development (phase 2) and continues for 20 days, which helps reduce large losses of nitrogen from leaching and denitrification during the early stage of crop development. The 20-day period is chosen as an optimization to limit fertilizer application to the emergence stage. A fertilizer counter in seconds, *f*, is set as soon as the leaf emergence phase for crops initiates:
 
 .. math::
    :label: 25.17
@@ -658,7 +658,7 @@ where :math:`baset` is the *base temperature for GDD* (7\ :sup:`th` row) in :num
 
 Separate reproductive pool
 ''''''''''''''''''''''''''
-One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM5BGCCROP, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
+One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation :eq:`25.5` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In Clm50BgcCrop, as allocation declines in stem, leaf, and root pools (see section :numref:`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
 
 .. _Tillage:
 
