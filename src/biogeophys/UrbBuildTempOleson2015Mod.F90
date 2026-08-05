@@ -16,13 +16,10 @@ module UrbBuildTempOleson2015Mod
   use UrbanTimeVarType  , only : urbantv_type  
   use EnergyFluxType    , only : energyflux_type
   use TemperatureType   , only : temperature_type
-  ! Cathy [dev.02] [dev.04]
   use WaterDiagnosticBulkType, only : waterdiagnosticbulk_type
-  ! Cathy [dev.15]
   use WaterFluxBulkType , only : waterfluxbulk_type
   use LandunitType      , only : lun                
   use ColumnType        , only : col
-  ! Cathy [dev.06]
   use atm2lndType       , only : atm2lnd_type                
   !
   ! !PUBLIC TYPES:
@@ -50,7 +47,7 @@ contains
                                   filter_nolakec, num_urbanc, filter_urbanc, &
                                   tk, urbanparams_inst, temperature_inst, &
                                   energyflux_inst, urbantv_inst, waterdiagnosticbulk_inst, &
-                                  waterfluxbulk_inst, atm2lnd_inst) ! Cathy [dev.02] [dev.04] [dev.06] [dev.15]
+                                  waterfluxbulk_inst, atm2lnd_inst)
 !
 ! !DESCRIPTION:
 ! Solve for t_building, inner surface temperatures of roof, sunw, shdw, and floor temperature
@@ -214,17 +211,14 @@ contains
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
                                  dz_floor, dens_floor, cp_floor, vent_ach, &
-                                 ! Cathy [dev.02]
                                  ! q_building_max, hvap
-                                 ! Cathy [dev.06] [dev.11]
                                  rh_building_max, hvap, rwat, cpwvap
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv ! Cathy [dev.15]
+    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
     use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
     use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on, &
                                  urban_explicit_ac, ac_dehumid
-    ! Cathy [dev.06]
     use QSatMod         , only : QSat
 !
 ! !ARGUMENTS:
@@ -232,7 +226,6 @@ contains
     type(bounds_type), intent(in) :: bounds                   ! bounds
     integer , intent(in)  :: num_nolakec                      ! number of column non-lake points in column filter
     integer , intent(in)  :: filter_nolakec(:)                ! column filter for non-lake points
-    ! Cathy [dev.15]
     integer , intent(in)  :: num_urbanc                       ! number of column urban points in column filter
     integer , intent(in)  :: filter_urbanc(:)                 ! column filter for urban points
     integer , intent(in)  :: num_urbanl                       ! number of urban landunits in clump
@@ -242,16 +235,12 @@ contains
     type(temperature_type), intent(inout) :: temperature_inst ! temperature variables
     type(energyflux_type) , intent(inout) :: energyflux_inst  ! energy flux variables
     type(urbantv_type)    , intent(in)    :: urbantv_inst     ! urban time varying variables
-    ! Cathy [dev.02] [dev.04]
     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst ! water diagnostic variables
-    ! Cathy [dev.15]
     type(waterfluxbulk_type), intent(inout) :: waterfluxbulk_inst ! water flux variables
-    ! Cathy [dev.06]
     type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
 !
 ! !LOCAL VARIABLES:
     integer, parameter :: neq = 5          ! number of equation/unknowns
-    ! Cathy [dev.07]
     ! integer  :: fc,fl,c,l                  ! indices
     integer  :: fc,fl,c,l,g                ! indices
     real(r8) :: dtime                      ! land model time step (s)
@@ -262,11 +251,9 @@ contains
     real(r8) :: t_floor_bef(bounds%begl:bounds%endl)       ! floor temperature at previous time step (K)              
     real(r8) :: t_building_bef(bounds%begl:bounds%endl)    ! internal building air temperature at previous time step [K]
     real(r8) :: t_building_bef_hac(bounds%begl:bounds%endl)! internal building air temperature before applying HAC [K]
-    ! Cathy [dev.02]
     real(r8) :: q_building_bef(bounds%begl:bounds%endl)    ! internal building air specific humidity at previous time step (kg/kg)
     real(r8) :: q_building_bef_hac(bounds%begl:bounds%endl)! internal building air specific humidity before applying HAC (kg/kg)
-    real(r8) :: eflx_urban_ac_sat(bounds%begl:bounds%endl) ! urban air conditioning heat flux under AC adoption saturation (W/m**2) ! Cathy [dev.03]
-    ! Cathy [dev.03]
+    real(r8) :: eflx_urban_ac_sat(bounds%begl:bounds%endl)
     real(r8) :: eflx_urban_ac_sat_lat(bounds%begl:bounds%endl) ! urban air conditioning latent heat flux under AC adoption saturation (W/m**2)
     real(r8) :: hcv_roofi(bounds%begl:bounds%endl)         ! roof convective heat transfer coefficient (W m-2 K-1)
     real(r8) :: hcv_sunwi(bounds%begl:bounds%endl)         ! sunwall convective heat transfer coefficient (W m-2 K-1)
@@ -279,7 +266,6 @@ contains
     real(r8) :: dz_floori(bounds%begl:bounds%endl)         ! concrete floor thickness (m)
     real(r8) :: cp_floori(bounds%begl:bounds%endl)         ! concrete floor volumetric heat capacity (J m-3 K-1)
     real(r8) :: cv_floori(bounds%begl:bounds%endl)         ! intermediate calculation for concrete floor (W m-2 K-1)
-    ! Cathy [dev.11] rho_dair below will be temporarily used as density of HUMID air; the var name and description will be changed later
     real(r8) :: rho_dair(bounds%begl:bounds%endl)          ! density of dry air at standard pressure and t_building (kg m-3)
     real(r8) :: cp_hair(bounds%begl:bounds%endl)           ! specific heat capacity of indoor humid air (J kg-1 K-1)
     real(r8) :: vf_rf(bounds%begl:bounds%endl)             ! view factor of roof for floor (-)
@@ -332,16 +318,12 @@ contains
                                            ! on exit, if info = 0, the n-by-nrhs solution matrix x
     integer  :: info                       ! exit information for LAPACK routine dgesv
     integer  :: ipiv(neq)                  ! the pivot indices that define the permutation matrix P
-    ! Cathy [dev.06]
     real(r8) :: q_building_max             ! maximum internal building air specific humidity determined from rh_building_max (kg/kg)
     real(r8) :: qsat_building_max          ! maximum internal building air saturated specific humidity/mixing ratio used to determing q_building_max from rh_building_max (kg/kg)
     real(r8) :: qsat_building              ! internal building air saturated specific humidity/mixing ratio used to calculate rh_building (kg/kg)
-    ! Cathy [dev.11]
     real(r8) :: esat_building              ! internal building air saturated vapor pressure used to calculate p_vapor (Pa)
     real(r8) :: p_vapor                    ! internal building air partial pressure of water vapor (Pa)
-    ! Cathy [dev.15]
     real(r8) :: qtot_condensate(bounds%begl:bounds%endl) ! total condensed water due to dehumidification per building area (kg m-2)
-    ! Cathy [dev.19]
     real(r8) :: eflx_urban_ac_lat_derived(bounds%begl:bounds%endl) ! urban air conditioning latent heat flux derived from condensate output, for error check (W m-2)
     real(r8) :: err_eflx_urban_ac_lat(bounds%begl:bounds%endl) ! Difference in urban air conditioning latent heat flux for error check (W m-2)
 !EOP
@@ -359,7 +341,6 @@ contains
     ht_roof           => lun%ht_roof                       , & ! Input:  [real(r8) (:)]  height of urban roof (m) 
     canyon_hwr        => lun%canyon_hwr                    , & ! Input:  [real(r8) (:)]  ratio of building height to street hwidth (-)
     wtlunit_roof      => lun%wtlunit_roof                  , & ! Input:  [real(r8) (:)]  weight of roof with respect to landunit
-    ! Cathy [dev.15]
     wtroad_perv       => lun%wtroad_perv                   , & ! Input:  [real(r8) (:)]  weight of pervious road column to total road (-)
     urbpoi            => lun%urbpoi                        , & ! Input:  [logical (:)]  true => landunit is an urban point
 
@@ -376,11 +357,9 @@ contains
     t_building_max    => urbantv_inst%t_building_max       , & ! Input:  [real(r8) (:)]  maximum internal building air temperature (K)
     t_building_min    => urbanparams_inst%t_building_min   , & ! Input:  [real(r8) (:)]  minimum internal building air temperature (K)
 
-    ! Cathy [dev.02] [dev.04]
     ! trying to change to waterdiagnosticbulk_inst following how qaf was used in UrbanFluxesMod.F90
     qaf               => waterdiagnosticbulk_inst%qaf_lun      , & ! Input:  [real(r8) (:)]  urban canopy air specific humidity (kg/kg)
     q_building        => waterdiagnosticbulk_inst%q_building_lun,& ! InOut:  [real(r8) (:)]  internal building air specific humidity (kg/kg)
-    ! Cathy [dev.06]
     rh_building       => waterdiagnosticbulk_inst%rh_building_lun,& ! InOut: [real(r8) (:)]  internal building air relative humidity (%)
     forc_pbot         => atm2lnd_inst%forc_pbot_not_downscaled_grc,& ! Input:[real(r8) (:)]  atmospheric pressure (Pa)
 
@@ -390,7 +369,6 @@ contains
     eflx_urban_heat   => energyflux_inst%eflx_urban_heat_lun,& ! Output:  [real(r8) (:)]  urban heating flux (W/m**2)
     eflx_ventilation  => energyflux_inst%eflx_ventilation_lun, & ! Output: [real(r8) (:)]  sensible heat flux from building ventilation (W/m**2)
 
-    ! Cathy [dev.15]
     qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col, & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for impervious road area (mm/s)
     qflx_condensate_from_ac_lu => waterfluxbulk_inst%qflx_condensate_from_ac_lun & ! Output: [real(r8) (:)] condensed water flux due to dehumidification for urban area by land unit (mm/s)
     )
@@ -408,7 +386,6 @@ contains
     ! 5. Calculate building height to building width ratio
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       ! Cathy [dev.13]
        g = lun%gridcell(l)
        if (urbpoi(l)) then
          t_roof_inner_bef(l)  = t_roof_inner(l)
@@ -1008,7 +985,6 @@ contains
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       ! Cathy [dev.06]
        g = lun%gridcell(l)
        if (urbpoi(l)) then
           if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
@@ -1102,7 +1078,6 @@ contains
           end if
        end do
 
-    ! Cathy [dev.18.03] Start a seperate loop for this:
     ! Assume all condensed water gets added to the roof column (that goes directly into surface runoff)
     ! Calculate and assign water flux due to dehumidification to roof column [mm/s],
     ! water flux to other urban columns are set to 0.

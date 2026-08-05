@@ -499,7 +499,6 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
-     ! Cathy [dev.16]
      real(r8) :: qflx_condensate_from_ac_grc(bounds%begg:bounds%endg)  ! grid cell-level condensate from air-conditioning [mm H2O /s]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
@@ -512,10 +511,8 @@ contains
      real(r8), parameter :: h2o_warning_thresh       = 1.e-9_r8                       ! Warning threshhold for error in errh2o and errh2osnow 
      real(r8), parameter :: energy_warning_thresh    = 1.e-7_r8                       ! Warning threshhold for error in errsol, errsol, errseb, errlonv
      real(r8), parameter :: error_thresh             = 1.e-5_r8                       ! Error threshhold for conservation error
-     ! ################################## Cathy [dev.16.1] local vars for error check begins ##################################
      ! real(r8) :: tot_cond_from_col                      ! total condensate from AC mass flow rate calculated from column-level var [kg/s]
      ! real(r8) :: tot_cond_from_grc                      ! total condensate from AC mass flow rate calculated from grid-cell-level var [kg/s]
-     ! ################################## Cathy [dev.16.1] local vars for error check ends ##################################
 
      !-----------------------------------------------------------------------
 
@@ -575,7 +572,6 @@ contains
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
           qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
-          ! Cathy [dev.15]
           qflx_condensate_from_ac_col => waterflux_inst%qflx_condensate_from_ac_col, & ! Input: [real(r8) (:)]  column level condensate water flux from air-conditioning (mm H2O /s)
 
           dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
@@ -771,28 +767,6 @@ contains
           enddo
        endif
 
-       ! ################################## Cathy [dev.16.1]: error check for qflx_condensate_from_ac begins ##################################
-       ! Below, total condensate mass flow in kg/s will be calculated based on both the column-level var and the grid-cell var.
-       ! They should match if our code in assigning condensate flux to roof column was correct and the c2g aggregation 
-       ! is done correctly.
-
-       ! do c = bounds%begc,bounds%endc
-       !    g = col%gridcell(c)
-       !    l = col%landunit(c)       
-       ! 
-       !    if (col%itype(c) == icol_roof) then
-       !       ! tot_cond_from_col = qflx_condensate_from_ac_col(c) * (grc%area(g)*1.e6_r8*col%wtgcell(c)) ! kg/s = kg/m2/s * m2
-       !       tot_cond_from_col = qflx_condensate_from_ac_col(c) * (grc%area(g)*1.e6_r8*lun%wtgcell(l)*lun%wtlunit_roof(l)) ! grid area * lun frac * roof frac
-       !       tot_cond_from_grc = qflx_condensate_from_ac_grc(g) * (grc%area(g)*1.e6_r8)
-       !       if (tot_cond_from_col > 0._r8 .or. tot_cond_from_grc > 0._r8) then
-       !          write(iulog,*) 'Cathy [dev.16.1] at grid = ',g, 'nstep = ',nstep, &
-       !                         '  from col: ', tot_cond_from_col, &
-       !                         '  from grc: ', tot_cond_from_grc
-       !       end if
-       !    end if
-       ! end do
-       ! ################################## Cathy [dev.16.1]: error check for qflx_condensate_from_ac ends ##################################
-
        errh2o_max_val = maxval(abs(errh2o_grc(bounds%begg:bounds%endg)))
 
        ! BUG(rgk, 2021-04-13, ESCOMP/CTSM#1314) Temporarily bypassing gridcell-level check with use_fates_planthydro until issue 1314 is resolved
@@ -829,7 +803,6 @@ contains
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
-             ! Cathy [dev.17] help debug the water imbalance
              if (ac_dehumid) then
                 write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
              end if

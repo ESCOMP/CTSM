@@ -49,7 +49,6 @@ module WaterDiagnosticType
      real(r8), pointer :: qg_h2osfc_col          (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qg_col                 (:)   ! col ground specific humidity [kg/kg]
      real(r8), pointer :: qaf_lun                (:)   ! lun urban canopy air specific humidity (kg/kg)
-     ! [Cathy] dev.01
      real(r8), pointer :: q_building_lun         (:)   ! lun internal building air specific humidity (kg/kg)
 
    contains
@@ -77,7 +76,6 @@ contains
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
     type(water_tracer_container_type), intent(inout) :: tracer_vars
-    ! Cathy [dev.01]
     logical, intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
 
     this%info => info
@@ -142,7 +140,6 @@ contains
     call AllocateVar1d(var = this%q_ref2m_patch, name = 'q_ref2m_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
-    ! Cathy [dev.01]
     call AllocateVar1d(var = this%q_building_lun, name = 'q_building_lun', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_landunit)
@@ -161,20 +158,17 @@ contains
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
-    ! Cathy [dev.01]
     logical, intent(in) :: is_prog_buildtemp ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
     integer           :: begc, endc
-    ! Cathy [dev.04]
     integer           :: begl, endl
     integer           :: begg, endg
     !------------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
     begc = bounds%begc; endc= bounds%endc
-    ! Cathy [dev.01]
     begl = bounds%begl; endl= bounds%endl
     begg = bounds%begg; endg= bounds%endg
 
@@ -256,7 +250,6 @@ contains
          ptr_col=this%snowice_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
     
-    ! Cathy [dev.01]
     if ( is_prog_buildtemp ) then
        this%q_building_lun(begl:endl) = spval
        call hist_addfld1d ( &
@@ -281,7 +274,6 @@ contains
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
-    ! Cathy [dev.01]
     logical               , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
@@ -312,7 +304,6 @@ contains
        end if
     end do
 
-    ! Cathy [dev.01]
     ! Initialize internal building specific humidity (following example above and t_building_max in TemperatureType.F90)
     if ( is_prog_buildtemp ) then
        do l = bounds%begl, bounds%endl
@@ -333,9 +324,8 @@ contains
     ! !USES:
     use clm_varcon       , only : nameg, namec
     use ncdio_pio        , only : file_desc_t, ncd_double
-    use clm_varctl       , only : use_fates_planthydro, iulog ! Cathy [dev.04]
+    use clm_varctl       , only : use_fates_planthydro, iulog
     use restUtilMod
-    ! Cathy [dev.04]
     use spmdMod          , only : masterproc
     !
     ! !ARGUMENTS:
@@ -343,7 +333,6 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    ! Cathy [dev.01]
     logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
     !
     ! !LOCAL VARIABLES:
@@ -380,7 +369,6 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
     end if
 
-    ! Cathy [dev.01]
     if ( is_prog_buildtemp ) then
        ! landunit type physical state variable - q_building
        call restartvar(ncid=ncid, flag=flag, &

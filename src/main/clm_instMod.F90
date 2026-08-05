@@ -547,7 +547,6 @@ contains
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:), &
          t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), & 
          altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc), &
-         ! Cathy [dev.04]
          is_prog_buildtemp = IsProgBuildTemp())
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
@@ -612,4 +611,3 @@ contains
  end subroutine clm_instRest
 
 end module clm_instMod
-

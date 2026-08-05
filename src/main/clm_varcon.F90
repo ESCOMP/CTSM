@@ -14,7 +14,6 @@ module clm_varcon
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
                            SHR_CONST_MWDAIR, SHR_CONST_MWWV, SHR_CONST_CPFW,  &
-                           ! Cathy [dev.11]
                            SHR_CONST_CPWV
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
@@ -58,7 +57,6 @@ module clm_varcon
   real(r8), public :: cpliq  = SHR_CONST_CPFW                       ! Specific heat of water [J/kg-K]
   real(r8), public :: cpice  = SHR_CONST_CPICE                      ! Specific heat of ice [J/kg-K]
   real(r8), public :: cpair  = SHR_CONST_CPDAIR                     ! specific heat of dry air [J/kg/K]
-  ! Cathy [dev.11]
   real(r8), public :: cpwvap = SHR_CONST_CPWV                       ! specific heat of water vapor [J/kg/K]
   real(r8), public :: hvap   = SHR_CONST_LATVAP                     ! Latent heat of evap for water [J/kg]
   real(r8), public :: hsub   = SHR_CONST_LATSUB                     ! Latent heat of sublimation    [J/kg]
@@ -191,9 +189,7 @@ module clm_varcon
   real(r8), public, parameter :: sh_floor = 880._r8     ! specific heat of floor - concrete (Salmanca et al. 2010, TAC) (J kg-1 K-1)
   real(r8), public :: cp_floor = dens_floor*sh_floor    ! volumetric heat capacity of floor - concrete (Salmanca et al. 2010, TAC) (J m-3 K-1)
   real(r8), public :: vent_ach = 0.3_r8                    ! ventilation rate (air exchanges per hour)
-  ! Cathy [dev.02]
   ! real(r8), public :: q_building_max = 0.013_r8         ! maximum internal building air specific humidity (kg/kg)
-  ! Cathy [dev.06]
   real(r8), public :: rh_building_max = 65._r8          ! maximum internal building air relative humidity (%)
 
   real(r8), public :: wasteheat_limit = 100._r8         ! limit on wasteheat (W/m2)

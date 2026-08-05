@@ -1350,7 +1350,7 @@ end subroutine InitHistory
     ! Clausius-Clapeyron
     p_tmb = p_t*0.01_r8
     tcfbdiff = T_k - Cf + beta
-    es_mb = es_C*exp(alpha*(T_k - Cf)/(tcfbdiff)) ! Cathy [dev.06] notes: this calculates sat. vapor pressure
+    es_mb = es_C*exp(alpha*(T_k - Cf)/(tcfbdiff))
     dlnes_mbdT = alpha*beta/((tcfbdiff)*(tcfbdiff))
     pminuse = p_tmb - es_mb
     de_mbdT = es_mb*dlnes_mbdT
@@ -1387,4 +1387,3 @@ end subroutine InitHistory
 !-----------------------------------------------------------------------
 
 end module HumanIndexMod
-

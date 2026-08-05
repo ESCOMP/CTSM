@@ -28,7 +28,6 @@ module WaterDiagnosticBulkType
   use WaterStateType, only : waterstate_type
   use WaterStateBulkType, only : waterstatebulk_type
   use WaterFluxType, only : waterflux_type
-  ! Cathy [dev.04]
   use UrbanParamsType, only : IsProgBuildTemp, ac_dehumid
   !
   implicit none
@@ -65,7 +64,6 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
-     ! Cathy [dev.06]
      real(r8), pointer :: rh_building_lun        (:)   ! lun internal building air relative humidity (%) 
      real(r8), pointer :: rh_af_patch            (:)   ! patch fractional humidity of canopy air (dimensionless) ! private
      real(r8), pointer :: rh10_af_patch          (:)   ! 10-day mean patch fractional humidity of canopy air (dimensionless)
@@ -223,7 +221,6 @@ contains
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
-    ! Cathy [dev.06]
     allocate(this%rh_building_lun        (begl:endl))                     ; this%rh_building_lun        (:)   = nan
     allocate(this%rh_af_patch            (begp:endp))                     ; this%rh_af_patch            (:)   = nan
     allocate(this%rh10_af_patch          (begp:endp))                     ; this%rh10_af_patch          (:)   = spval
