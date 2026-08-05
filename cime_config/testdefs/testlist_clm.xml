@@ -3768,7 +3768,7 @@
       <option name="comment">ERP_D FATES test covering FATES exponential carbon starvation (non-default), where the debug option _D allows the test to pass on izumi_nag</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdPRT2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdPRT2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
@@ -3805,7 +3805,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLUH2">
+  <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdLUH2">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
@@ -3833,7 +3833,7 @@
       <option name="wallclock">00:40:00</option>
     </options>
   </test>
-  <test name="PVT_Lm3" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesLUPFT">
+  <test name="PVT_Lm3" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesLUPFT">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
