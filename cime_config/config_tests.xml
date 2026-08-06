@@ -187,6 +187,7 @@ This defines various CTSM-specific system tests
 
 <!--
 SSP    smoke CLM spinup test (only valid for CLM compsets with CLM50)
+       Only use with Clm50 compsets as this was the spinup procedure for that era.
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
          write restarts at the end of the run
          short term archiving is on
@@ -205,6 +206,10 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM50)
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+<!--
+SSPMATRIX    smoke CLM spinup test using CN-Matrix "sasu" mode to shorten the spinup
+             Can be used in both Clm50 and Clm60 compsets
+-->
   <test NAME="SSPMATRIXCN">
     <DESC>smoke CLM CN-Matrix spinup test</DESC>
     <INFO_DBUG>1</INFO_DBUG>
