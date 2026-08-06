@@ -6,7 +6,7 @@
  Spinup of ClmBgcCrop
 =====================
 
-To get the ClmBgcCrop model to a steady state, you start it from arbitrary initial conditions using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM `env_run.xml`, see example below) mode for 300-400 simulation years. :numref:`Figure BgcCrop AD spinup plot for 1850` shows spinup behavior for an 1850 BgcCrop accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
+To get the ClmBgcCrop model to a steady state, you start it from arbitrary initial conditions (finidat = ' ') using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM `env_run.xml`, see example below) mode for 300-400 simulation years. :numref:`Figure BgcCrop AD spinup plot for 1850` shows spinup behavior for an 1850 BgcCrop accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
 
 .. _Figure BgcCrop AD spinup plot for 1850:
 
