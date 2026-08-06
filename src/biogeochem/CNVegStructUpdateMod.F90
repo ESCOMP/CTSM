@@ -37,8 +37,8 @@ contains
     ! vegetation structure (LAI, SAI, height)
     !
     ! !USES:
-    use pftconMod        , only : noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod        , only : is_prognostic_crop
+    use pftconMod        , only : noveg, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use pftconMod        , only : is_generic_crop, is_prognostic_crop
     use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
@@ -171,7 +171,7 @@ contains
             ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
             ! dt and dividing by dtsmonth (seconds in average 30 day month)
             ! tsai_min scaled by 0.5 to match MODIS satellite derived values
-            if (ivt(p) == nc3crop .or. ivt(p) == nc3irrig) then ! generic crops
+            if (is_generic_crop(ivt(p))) then ! generic crops
 
                tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
                tsai_min = 0.1_r8
