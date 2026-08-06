@@ -509,7 +509,7 @@ The base acceleration terms for the two decomposition cascades are shown in :num
 
 Alternate soil sub-model: MIMICS
 -----------------------------------------
-In CLM6, there is a new capability to use the MIcrobial-MIneral Carbon Stabilization (MIMICS) model (:ref:`Wieder et al. 2014 <Wiederetal2014>`; :ref:`Wieder et al. 2015b <Wiederetal2015b>`; :ref:`Kyker-Snowman et al. 2020 <KykerSnowmanetal2020>`) instead of the Century-like soil model. MIMICS is a microbially-explicit soil biogeochemical model that represents modern understanding about plant and microbial contributions to soil organic matter and mineral stabilization as a protection mechanism for soil organic matter. MIMICS has two litter pools, two microbial pools, and three soil organic matter pools that are connected as in Figure 2.22.9. Details about MIMICS-CN can be found in :ref:`Kyker-Snowman et al. (2020) <KykerSnowmanetal2020>`. 
+In CLM6, there is a new capability to use the MIcrobial-MIneral Carbon Stabilization (MIMICS) model (:ref:`Wieder et al. 2014 <Wiederetal2014>`; :ref:`Wieder et al. 2015b <Wiederetal2015b>`; :ref:`Kyker-Snowman et al. 2020 <KykerSnowmanetal2020>`) instead of the Century-like soil model. MIMICS is a microbially-explicit soil biogeochemical model that represents modern understanding about plant and microbial contributions to soil organic matter and mineral stabilization as a protection mechanism for soil organic matter. MIMICS has two litter pools, two microbial pools, and three soil organic matter pools that are connected as in :numref:`Figure MIMICS soil model structure`. Details about MIMICS-CN can be found in :ref:`Kyker-Snowman et al. (2020) <KykerSnowmanetal2020>`. 
 
 .. _Figure MIMICS soil model structure:
 
