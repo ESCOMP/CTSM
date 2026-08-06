@@ -3318,7 +3318,7 @@
       <option name="comment">Include a restart test for AD spinup mode because of specific logic for spinup_state. Lack of this test did cause a problem.</option>
     </options>
   </test>
-  <test name="SSP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/rtmColdSSP">
+  <test name="SSP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -3327,7 +3327,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SSP_D_Ld4" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso_rtmColdSSP">
+  <test name="SSP_D_Ld4" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
@@ -3335,7 +3335,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SSP_Ld10" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/rtmColdSSP">
+  <test name="SSP_Ld10" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
@@ -3343,7 +3343,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm60BgcCrop" testmods="clm/ciso_rtmColdSSP">
+  <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm60BgcCrop" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
