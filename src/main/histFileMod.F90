@@ -4881,7 +4881,8 @@ contains
           if (ntapes_onfile /= ntapes) then
              write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
              call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
-                  'You can NOT change history options on restart.', &
+                  'You can NOT change history options on a continuation run. '// &
+                  'To change history options, use a branch run instead.', &
                   additional_msg=errMsg(sourcefile, __LINE__))
           end if
 
@@ -4908,7 +4909,8 @@ contains
                       write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
                       write(iulog,*) 'means that history tape is empty.)'
                       call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
-                           'You can NOT change history options on restart.', &
+                           'You can NOT change history options on a continuation run. '// &
+                           'To change history options, use a branch run instead.', &
                            additional_msg=errMsg(sourcefile, __LINE__))
                    end if
                 end do file_loop4
@@ -4967,8 +4969,9 @@ contains
                 call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t,f) )
                 if ( nflds_onfile /= tape(t)%nflds(f) ) then
                    write(iulog,*) 'nflds = ', tape(t)%nflds(f), ' nflds_onfile = ', nflds_onfile
-                   call endrun(msg=' ERROR: number of fields different than on restart file!,'// &
-                        ' you can NOT change history options on restart!' //&
+                   call endrun(msg=' ERROR: number of fields differs from restart file. '// &
+                        'You can NOT change history options on a continuation run. '// &
+                        'To change history options, use a branch run instead. ' //&
                      errMsg(sourcefile, __LINE__))
                 end if
                 call ncd_io('ntimes',  tape(t)%ntimes(f), 'read', ncid_hist(t,f) )
