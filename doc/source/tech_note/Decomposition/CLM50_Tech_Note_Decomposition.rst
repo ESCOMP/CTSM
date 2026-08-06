@@ -191,7 +191,7 @@ Following from the general case, potential carbon fluxes leaving individual pool
 
    CF_{pot,\, SOM3} ={CS_{SOM3} k_{SOM3} r_{total} \mathord{\left/ {\vphantom {CS_{SOM3} k_{SOM3} r_{total}  \Delta t}} \right.} \Delta t}
 
-where the factor (1/:math:`\Delta`\ *t*) is included because the rate constant is calculated for the entire timestep (Eqs. and ), but the convention is to express all fluxes on a per-second basis. Potential mineral nitrogen fluxes associated with these decomposition steps are:
+where the factor (1/:math:`\Delta`\ *t*) is included because the rate constant is calculated for the entire timestep (see equations above), but the convention is to express all fluxes on a per-second basis. Potential mineral nitrogen fluxes associated with these decomposition steps are:
 
 .. math::
    :label: 21.19)
