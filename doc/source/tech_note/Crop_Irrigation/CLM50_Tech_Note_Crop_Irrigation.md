@@ -1,0 +1,989 @@
+<!-- Define math macros here -->
+$\newcommand{\gddthreshgrain}{GDD_\textrm{*grain}}$
+$\newcommand{\gddthreshmat}{GDD_\textrm{*mat}}$
+$\newcommand{\gddthreshmatbl}{\gddthreshmat^\textrm{bl}}$
+$\newcommand{\gddaccsoil}{GDD_{T_\textrm{soi}}}$
+$\newcommand{\ttwom}{T_\textrm{2m}}$
+$\newcommand{\gddacctwom}{GDD_{\ttwom}}$
+$\newcommand{\gddzero}{GDD_0}$
+$\newcommand{\gddeight}{GDD_8}$
+$\newcommand{\gddten}{GDD_{10}}$
+$\newcommand{\gddx}{GDD_x}$
+$\newcommand{\gddzerorun}{\overline{\gddzero}^\textrm{20yr}}$
+$\newcommand{\gddeightrun}{\overline{\gddeight}^\textrm{20yr}}$
+$\newcommand{\gddtenrun}{\overline{\gddten}^\textrm{20yr}}$
+$\newcommand{\gddxrun}{\overline{\gddx}^\textrm{20yr}}$
+$\newcommand{\gddxrunbl}{\overline{\gddx}^\textrm{20-yr,bl}}$
+$\newcommand{\gddxdaymax}{\gddx^\textrm{daymax}}$
+$\newcommand{\huithreshlfemerg}{h_\textrm{*lfemerg}}$
+$\newcommand{\huithreshgrain}{h_\textrm{*grain}}$
+$\newcommand{\huithreshgrainactual}{h_\textrm{*grain}^{'}}$
+$\newcommand{\parambaset}{T_\textrm{base}}$
+$\newcommand{\paramztopmx}{z_\textrm{top}^\textrm{max}}$
+$\newcommand{\paramaleaff}{a_\textrm{leaf}^f}$
+$\newcommand{\paramfleafi}{a_\textrm{leaf}^i}$  <!-- TODO: Should be f_ -->
+$\newcommand{\paramarooti}{a_\textrm{froot}^i}$
+$\newcommand{\paramarootf}{a_\textrm{froot}^f}$
+$\newcommand{\paramastemf}{a_\textrm{stem}^f}$
+$\newcommand{\paramaorganf}{a_\textrm{organ}^f}$
+$\newcommand{\paramlaimx}{L_\textrm{max}}$
+$\newcommand{\paramdeclfact}{d_L}$
+$\newcommand{\paramallconsl}{d_\textrm{alloc}^\textrm{leaf}}$
+$\newcommand{\paramallconss}{d_\textrm{alloc}^\textrm{stem}}$
+$\newcommand{\paramallconso}{d_\textrm{alloc}^\textrm{organ}}$
+$\newcommand{\paramleafcn}{CN_\textrm{leaf}}$
+$\newcommand{\paramfleafcn}{\paramleafcn^\textrm{f}}$
+$\newcommand{\paramlivewdcn}{CN_\textrm{stem}}$
+$\newcommand{\paramfstemcn}{\paramlivewdcn^\textrm{f}}$
+$\newcommand{\paramfrootcn}{CN_\textrm{froot}}$
+$\newcommand{\paramffrootcn}{\paramfrootcn^\textrm{f}}$
+$\newcommand{\paramgraincn}{CN_\textrm{grain}}$
+$\newcommand{\paramorgancn}{CN_\textrm{[organ]}}$
+$\newcommand{\paramforgancn}{\paramorgancn^\textrm{f}}$
+$\newcommand{\corgan}{C_\textrm{[organ]}}$
+$\newcommand{\norgan}{N_\textrm{[organ]}}$
+$\newcommand{\paramplantingtemp}{T_\textrm{p}}$
+$\newcommand{\paramminplantingtemp}{\paramplantingtemp^\textrm{min}}$
+$\newcommand{\paramgddmin}{GDD_\textrm{min}}$
+$\newcommand{\parambiofuelharvfrac}{\texttt{biofuel_harvfrac}}$
+$\newcommand{\paramcropresidueremovalfrac}{\texttt{crop_residue_removal_frac}}$
+$\newcommand{\fracthrugrnfill}{\frac{\gddacctwom - \gddthreshgrain}{\gddthreshmat \paramdeclfact - \gddthreshgrain}}$
+
+(rst_crops and irrigation)=
+
+# Crops and Irrigation
+
+(the-crop-model)=
+
+## The crop model: cash and bioenergy crops
+
+### Introduction
+
+Groups developing Earth System Models generally account for the human footprint on the landscape in simulations of historical and future climates. For a long time, this was accomplished using natural vegetation types—particularly grasses—because they resemble many common crops, but now it is more common to explicitly represent land management such as crop type, planting, harvesting, fertilization, irrigation, and more.
+
+AgroIBIS is a state-of-the-art land surface model with options to simulate dynamic vegetation ({ref}`Kucharik et al. 2000 <Kuchariketal2000>`) and interactive crop management ({ref}`Kucharik and Brye 2003 <KucharikBrye2003>`). The interactive crop management parameterizations from AgroIBIS (March 2003 version) were coupled (not published) as a proof-of-concept in CLM3.0 ({ref}`Oleson et al. (2004) <Olesonetal2004>`), then CLM3.5 ({ref}`Levis et al. 2009 <Levisetal2009>`) and later released to the community with CLM4CN ({ref}`Levis et al. 2012 <Levisetal2012>`), and CLM4.5BGC. Additional updates after the release of CLM4.5 were available by request ({ref}`Levis et al. 2016 <Levisetal2016>`), and beginning with CLM5 crops have been incorporated into the main codebase.
+
+With interactive crop management and, therefore, a more accurate representation of agricultural landscapes, we hope to improve CLM's simulated biogeophysics and biogeochemistry. These advances may improve fully coupled simulations with the Community Earth System Model (CESM), while helping human societies answer questions about changing food, energy, and water resources in response to climate, environmental, land use, and land management change (e.g., {ref}`Kucharik and Brye 2003 <KucharikBrye2003>`; {ref}`Lobell et al. 2006 <Lobelletal2006>`). The CLM crop model uses the same physiology as the natural vegetation but with different crop-specific parameter values, phenology, allocation, as well as management (fertilizer, irrigation, tillage, and residue removal).
+
+(crop-plant-functional-types)=
+
+### Crop plant functional types
+
+To allow crops to coexist with natural vegetation in a grid cell, the vegetated land unit is separated into a naturally vegetated land unit and a managed crop land unit. Unlike the plant functional types (PFTs) in the naturally vegetated land unit, the managed crop PFTs in the managed crop land unit do not share soil columns and thus permit for differences in the land management between crops. Each crop type has a rainfed and an irrigated PFT that are on independent soil columns. Crop area distributions are defined as explained in Sects. {numref}`Surface Data` and {numref}`rst_Transient Landcover Change`; see Sect. {numref}`Surface Heterogeneity and Data Structure` for more information on land units and soil columns.
+
+CLM includes ten actively managed crop types (temperate soybean, tropical soybean, temperate corn, tropical corn, spring wheat, cotton, rice, sugarcane, _Miscanthus_, and switchgrass) that are chosen based on the availability of corresponding algorithms in AgroIBIS and as developed by {ref}`Badger and Dirmeyer (2015)<BadgerandDirmeyer2015>` and described by {ref}`Levis et al. (2016)<Levisetal2016>`, or from available observations as described by {ref}`Cheng et al. (2019)<Chengetal2019>`. Sugarcane and tropical corn are both C{sub}`4` plants and are therefore represented using the temperate corn functional form—i.e., they differ in only a few parameters. Tropical soybean uses the temperate soybean functional form, while rice and cotton use the wheat functional form. In tropical regions, parameter values were originally developed for the Amazon Basin. Plantation areas of bioenergy crops are projected to expand throughout the 21st century as a major energy source to replace fossil fuels and mitigate climate change. _Miscanthus_ and switchgrass are perennial bioenergy crops and have quite different physiological traits and land management practices than annual crops, such as longer growing seasons, higher productivity, and lower demands for nutrients and water. About 70% of biofuel aboveground biomass (leaf and stem) is removed at harvest. Parameter values were developed by using observation data collected at the University of Illinois Energy Farm located in Central Midwestern United States ({ref}`Cheng et al., 2019<Chengetal2019>`).
+
+In addition, CLM's default list of plant functional types (PFTs) includes an irrigated and unirrigated unmanaged C{sub}`3` crop ({numref}`Table Crop plant functional types`) treated as a second C{sub}`3` grass. The unmanaged C{sub}`3` crop is only used when the crop model is not active and has grid cell coverage assigned from satellite data, and the unmanaged C{sub}`3` irrigated crop type is currently not used since irrigation requires the crop model to be active. The default list of PFTs also includes twenty-one inactive crop PFTs that do not yet have associated parameters required for active management. Each of the inactive crop types is simulated using the parameters of the spatially closest associated crop type that is most similar to the functional type (e.g., C{sub}`3` or C{sub}`4`), which is required to maintain similar phenological parameters based on temperature thresholds. Information detailing which parameters are used for each crop type is included in {numref}`Table Crop plant functional types`; this information can also be found in the parameter file (variable `mergetoclmpft`; see [](#query-paramfile)).
+
+It should be noted that PFT-level history output merges all crop types into the actively managed crop type, so analysis of crop-specific output will require use of the land surface input dataset to remap the yields of each actively and inactively managed crop type. Otherwise, the actively managed crop type will include yields for that crop type and all inactively managed crop types that are using the same parameter set. Note that if a "pure" simulation of the actively-managed crop types is desired, the `mergetoclmpft` parameter of the other crop types should be set to something not usually simulated in runs with managed crops on (`BgcCrop` component sets), such as 15 (C{sub}`3` unmanaged crops; see [](#set-paramfile)).
+
+```{warning}
+Enabling the inactive crop PFTs will cause the model to error due to certain logic in the code that does not yet handle those PFTs; see the related [GitHub issue](https://github.com/ESCOMP/CTSM/issues/3388).
+```
+
+(table crop plant functional types)=
+
+```{list-table} Crop plant functional types (PFTs) included in CLM. IVT is the integer used to refer to each vegetation type in the FORTRAN code. {{paramfile_disclaimer_md}}
+:header-rows: 1
+
+* - IVT
+  - Plant functional type (PFT)
+  - Simulated as (`mergetoclmpft`)
+* - 15
+  - C{sub}`3` unmanaged rainfed crop
+  - (itself)
+* - 16
+  - C{sub}`3` unmanaged irrigated crop
+  - (itself)
+* - 17
+  - rainfed temperate corn
+  - (itself)
+* - 18
+  - irrigated temperate corn
+  - (itself)
+* - 19
+  - rainfed spring wheat
+  - (itself)
+* - 20
+  - irrigated spring wheat
+  - (itself)
+* - 21
+  - rainfed winter wheat
+  - rainfed spring wheat
+* - 22
+  - irrigated winter wheat
+  - irrigated spring wheat
+* - 23
+  - rainfed temperate soybean
+  - (itself)
+* - 24
+  - irrigated temperate soybean
+  - (itself)
+* - 25
+  - rainfed barley
+  - rainfed spring wheat
+* - 26
+  - irrigated barley
+  - irrigated spring wheat
+* - 27
+  - rainfed winter barley
+  - rainfed spring wheat
+* - 28
+  - irrigated winter barley
+  - irrigated spring wheat
+* - 29
+  - rainfed rye
+  - rainfed spring wheat
+* - 30
+  - irrigated rye
+  - irrigated spring wheat
+* - 31
+  - rainfed winter rye
+  - rainfed spring wheat
+* - 32
+  - irrigated winter rye
+  - irrigated spring wheat
+* - 33
+  - rainfed cassava
+  - rainfed rice
+* - 34
+  - irrigated cassava
+  - irrigated rice
+* - 35
+  - rainfed citrus
+  - rainfed spring wheat
+* - 36
+  - irrigated citrus
+  - irrigated spring wheat
+* - 37
+  - rainfed cocoa
+  - rainfed rice
+* - 38
+  - irrigated cocoa
+  - irrigated rice
+* - 39
+  - rainfed coffee
+  - rainfed rice
+* - 40
+  - irrigated coffee
+  - irrigated rice
+* - 41
+  - rainfed cotton
+  - (itself)
+* - 42
+  - irrigated cotton
+  - (itself)
+* - 43
+  - rainfed datepalm
+  - rainfed cotton
+* - 44
+  - irrigated datepalm
+  - irrigated cotton
+* - 45
+  - rainfed foddergrass
+  - rainfed spring wheat
+* - 46
+  - irrigated foddergrass
+  - irrigated spring wheat
+* - 47
+  - rainfed grapes
+  - rainfed spring wheat
+* - 48
+  - irrigated grapes
+  - irrigated spring wheat
+* - 49
+  - rainfed groundnuts
+  - rainfed rice
+* - 50
+  - irrigated groundnuts
+  - irrigated rice
+* - 51
+  - rainfed millet
+  - rainfed tropical corn
+* - 52
+  - irrigated millet
+  - irrigated tropical corn
+* - 53
+  - rainfed oilpalm
+  - rainfed rice
+* - 54
+  - irrigated oilpalm
+  - irrigated rice
+* - 55
+  - rainfed potatoes
+  - rainfed spring wheat
+* - 56
+  - irrigated potatoes
+  - irrigated spring wheat
+* - 57
+  - rainfed pulses
+  - rainfed spring wheat
+* - 58
+  - irrigated pulses
+  - irrigated spring wheat
+* - 59
+  - rainfed rapeseed
+  - rainfed spring wheat
+* - 60
+  - irrigated rapeseed
+  - irrigated spring wheat
+* - 61
+  - rainfed rice
+  - (itself)
+* - 62
+  - irrigated rice
+  - (itself)
+* - 63
+  - rainfed sorghum
+  - rainfed tropical corn
+* - 64
+  - irrigated sorghum
+  - irrigated tropical corn
+* - 65
+  - rainfed sugarbeet
+  - rainfed spring wheat
+* - 66
+  - irrigated sugarbeet
+  - irrigated spring wheat
+* - 67
+  - rainfed sugarcane
+  - (itself)
+* - 68
+  - irrigated sugarcane
+  - (itself)
+* - 69
+  - rainfed sunflower
+  - rainfed spring wheat
+* - 70
+  - irrigated sunflower
+  - irrigated spring wheat
+* - 71
+  - rainfed _Miscanthus_
+  - (itself)
+* - 72
+  - irrigated _Miscanthus_
+  - (itself)
+* - 73
+  - rainfed switchgrass
+  - (itself)
+* - 74
+  - irrigated switchgrass
+  - (itself)
+* - 75
+  - rainfed tropical corn
+  - (itself)
+* - 76
+  - irrigated tropical corn
+  - (itself)
+* - 77
+  - rainfed tropical soybean
+  - (itself)
+* - 78
+  - irrigated tropical soybean
+  - (itself)
+```
+
+(phenology)=
+
+### Phenology
+
+CLM uses the AgroIBIS crop phenology algorithm, consisting of three distinct phases.
+
+Phase 1 starts at planting and ends with leaf emergence, phase 2 continues from leaf emergence to the beginning of grain fill, and phase 3 starts from the beginning of grain fill and ends with physiological maturity and harvest.
+
+(planting)=
+
+#### Planting
+
+Each crop can be planted in each gridcell once per year, in the "sowing window." This is, by default, defined for each crop in each gridcell, with the start and end of the window drawn from the input files `stream_fldFileName_swindow_start` and `stream_fldFileName_swindow_end`, respectively. These sowing windows are centered on the sowing dates developed for phase 3 of the Inter-Sectoral Impacts Model Intercomparison Project's Agriculture sector runs ({ref}`Jägermeyr et al., 2021 <jägermeyretal2021>`, {ref}`Rabin et al., 2023 <rabinetal2023>`). The widths of the sowing windows are based on the original sowing windows from the `min_NH_planting_date`, `max_NH_planting_date`, `min_SH_planting_date`, and `max_SH_planting_date` parameters, which remain on the parameter file but are ignored by default (i.e., unless you set `cropcals_rx = .false.` in `user_nl_clm`). See {ref}`running-with-custom-crop-calendars`.
+
+To be planted, a crop patch must meet the following requirements sometime within its sowing window:
+
+$$
+\begin{align}
+T_{10d} &> \paramplantingtemp \\
+T_{10d}^{\min } &> \paramminplantingtemp  \\
+\gddeightrun &\ge \paramgddmin
+\end{align}
+$$ (25.1)
+
+where ${T}_{10d}$ is the 10-day running mean of $\ttwom$, (the simulated 2-m air temperature during each model time step) and $T_{10d}^{\min}$ is the 10-day running mean of $\ttwom^{\min }$ (the daily minimum of $\ttwom$). $\paramplantingtemp$ and $\paramminplantingtemp$ are crop-specific coldest planting temperatures ({numref}`Table Crop phenology parameters`), $\gddeightrun$ is the 20-year running mean growing degree-days (units are °C day) tracked from April through September (NH) above 8°C with maximum daily increments of 30 degree-days (see equation {eq}`25.3`), and $\paramgddmin$is the minimum growing degree day requirement ({numref}`Table Crop phenology parameters`). $\gddeightrun$ does not change as quickly as ${T}_{10d}$ and $T_{10d}^{\min }$, so it determines whether it is warm enough for the crop to be planted in a grid cell, while the 2-m air temperature variables determine the day when the crop may be planted if the $\gddeightrun$ threshold is met. If the requirements in equation {eq}`25.1` are not met by the maximum planting date, crops are still planted on the maximum planting date as long as $\gddeightrun > 0$.
+
+At planting, each crop seed pool is assigned 3 gC m{sup}`-2` from its grain product pool. The seed carbon is transferred to the leaves upon leaf emergence. An equivalent amount of seed leaf N is assigned given the PFT's C to N ratio for leaves ($\paramleafcn$ in {numref}`Table Crop allocation parameters`; this differs from AgroIBIS, which uses a seed leaf area index instead of seed C).
+
+#### Maturity requirement
+At planting, CLM determines how many growing degree-days will be needed for the crop to reach maturity and thus be harvested. By default (i.e., `cropcals_rx_adapt = .true.`), this is set according to two input files with PFT-specific maps:
+- `stream_fldfilename_cultivar_gdds` ($\gddthreshmatbl$): the average growing-degree days to reach maturity in the "baseline" period.
+- `stream_fldFileName_gdd20_baseline` ($\gddxrunbl$): the means over the baseline period of $\gddzerorun$, $\gddeightrun$, and $\gddtenrun$.
+
+Maturity requirement, $\gddthreshmat$, is then calculated as:
+
+$$
+\gddthreshmat = \max \left( 1,\ \gddthreshmatbl \times \frac{\gddxrun}{\gddxrunbl} \right),
+$$ (gddmat-rx-adapt)
+
+where $x$ is 0 (wheat, cotton, and rice), 8 (corn, sugarcane, _Miscanthus_, and switchgrass), or 10 (soybean). This allows the maturity requirement to "adapt" over time, being lower in cool periods and higher in warm periods. The baseline period is the 1980-2009 growing seasons (i.e., seasons where planting occurred in those calendar years, inclusive); baseline values were calculated based on a half-degree, land-only run with CRU-JRA climate forcings (Rabin et al., in prep.). The minimum value of 1 avoids numeric issues when $\gddthreshmat$ is in the denominator of a calculation.
+
+- **Check baseline period**
+
+If `cropcals_rx_adapt` is false but `cropcals_rx` is true, the calculation is just $\gddthreshmat = \gddthreshmatbl$.
+
+If both `cropcals_rx_adapt` and `cropcals_rx` are false, or if $\gddthreshmatbl$ is negative, then CLM sets $\gddthreshmat$ according to various crop-specific rules based on $\gddx$, the PFT-specific parameter `hybgdd`, and hard-coded minimum and maximum values.
+
+Equation {eq}`25.3` shows how we calculate $\gddzero$, $\gddeight$, and $\gddten$ for each model timestep:
+
+$$
+\gddx = \gddx + \frac{\min \left( \gddxdaymax,\ \max \left[ 0,\ \ttwom - 273.15 - x \right] \right)}{48}
+$$ (25.3)
+
+where $\ttwom$ is the 2-m air temperature (K), 273.15 K is the freezing temperature of water, and $GDD$ is in units of °C-days. $\gddxdaymax$, the maximum daily growing degree-day accumulation, is 26°C for $x=0$ and 30°C for $x=8$ and $x=10$. The division by 48 is to adjust for the number of timesteps in a day.
+
+By default, the $\gddx$ values are set to zero at the beginning of the "$\gddx$ season" and then accumulated through its end: from April 1 through September 30 in the Northern Hemisphere and from October 1 through March 31 in the Southern Hemisphere. (Setting `stream_gdd20_seasons = .true.` would instead take those start and end dates from PFT-specific maps in the input files `stream_fldFileName_gdd20_season_start` and `stream_fldFileName_gdd20_season_end`, respectively; however, this is not scientifically supported.) At the end of each $\gddx$ season, the final value of $\gddx$ is incorporated into $\gddxrun$ like so:
+
+$$
+\gddxrun = \frac{\gddxrun \times \min(n-1, 19) + \gddx}{20},
+$$ (update-gddxrun)
+
+where $n$ is the number of years that $\gddxrun$ gas been calculated for. Note that this is not a true rolling 20-year mean, which would come with a memory cost in the simulation as a 20-member array would need to be saved for each PFT.
+
+(leaf-emergence)=
+
+#### Leaf emergence
+
+The "leaf emergence" phase is the period of vegetative growth between when the leaves first emerge from the soil to when filling of the reproductive organ begins.
+
+According to AgroIBIS, leaves may emerge when the growing degree-days of soil temperature to 0.05 m depth ($\gddaccsoil$ ), which is tracked since planting, reaches 1 to 5% of $\gddthreshmat$ (see $\huithreshlfemerg$ in {numref}`Table Crop phenology parameters`). The base temperature threshold values for $\gddaccsoil$ are listed in {numref}`Table Crop phenology parameters` (the same base temperature threshold values are also used for $\gddacctwom$ in section {numref}`Grain Fill`), and leaf emergence (crop phenology phase 2) starts when this threshold is met. Leaf onset occurs in the first time step of phase 2, at which moment all seed C is transferred to leaf C. Subsequently, the leaf area index generally increases throughout phase 2 until it reaches a predetermined maximum value. Stem and root C also increase throughout phase 2 based on the carbon allocation algorithm in section {numref}`Leaf emergence to grain fill`. Note that, since all represented crops are herbaceous, their stem biomass is all is live stem.
+
+(grain fill)=
+
+#### Grain fill
+
+The grain fill phase (phase 3) begins in one of two ways. The first potential trigger is based on temperature, similar to phase 2. A variable tracked since planting, similar to $\gddaccsoil$ but for 2-m air temperature, $\gddacctwom$, must reach a heat unit threshold, $\huithreshgrain$, of 40 to 65% of $\gddthreshmat$ (see {numref}`Table Crop phenology parameters`). The second potential trigger for phase 3 is based on leaf area index. When the maximum value of leaf area index is reached in phase 2 ({numref}`Table Crop allocation parameters`), phase 3 begins. In phase 3, the leaf area index begins to decline in response to a background litterfall rate calculated as the inverse of leaf longevity for the PFT as done in the BGC part of the model.
+
+(harvest)=
+
+#### Harvest
+
+Harvest is assumed to occur as soon as the crop reaches maturity. When $\gddacctwom$ reaches 100% of $\gddthreshmat$ or the number of days past planting reaches a crop-specific maximum (`mxmat`; {numref}`Table Crop phenology parameters`), then the crop is harvested. Harvest occurs in one time step using the BGC leaf offset algorithm.
+
+(table crop phenology parameters)=
+
+```{list-table} Crop phenology and morphology parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). Where there are two values in a cell, they refer to the rainfed and irrigated functional types, respectively. {{paramfile_disclaimer_md}}
+:header-rows: 1
+
+* - Parameter
+  - Variable
+  - temperate corn
+  - spring wheat
+  - temperate soybean
+  - cotton
+  - rice
+  - sugarcane
+  - tropical corn
+  - tropical soybean
+  - _Miscanthus_
+  - switchgrass
+* - IVT
+  - n/a
+  - 17, 18  <!-- temperate corn -->
+  - 19, 20  <!-- spring wheat -->
+  - 23, 24  <!-- temperate soybean -->
+  - 41, 42  <!-- cotton -->
+  - 61, 62  <!-- rice -->
+  - 67, 68  <!-- sugarcane -->
+  - 75, 76  <!-- tropical corn -->
+  - 77, 78  <!-- tropical soybean -->
+  - 71, 72  <!-- miscanthus -->
+  - 73, 74  <!-- switchgrass -->
+* - $\paramplantingtemp$ (K)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `planting_temp`
+  - 283.15  <!-- temperate corn -->
+  - 280.15  <!-- spring wheat -->
+  - 286.15  <!-- temperate soybean -->
+  - 294.15  <!-- cotton -->
+  - 294.15  <!-- rice -->
+  - 294.15  <!-- sugarcane -->
+  - 294.15  <!-- tropical corn -->
+  - 294.15  <!-- tropical soybean -->
+  - 283.15  <!-- miscanthus -->
+  - 283.15  <!-- switchgrass -->
+* - $\paramminplantingtemp$ (K)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `min_planting_temp`
+  - 279.15  <!-- temperate corn -->
+  - 272.15  <!-- spring wheat -->
+  - 279.15  <!-- temperate soybean -->
+  - 283.15  <!-- cotton -->
+  - 283.15  <!-- rice -->
+  - 283.15  <!-- sugarcane -->
+  - 283.15  <!-- tropical corn -->
+  - 283.15  <!-- tropical soybean -->
+  - 279.15  <!-- miscanthus -->
+  - 279.15  <!-- switchgrass -->
+* - $\paramgddmin$ (degree-days)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `gddmin`
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
+* - $\parambaset$ (°C)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `baset`
+  - 8   <!-- temperate corn -->
+  - 0   <!-- spring wheat -->
+  - 10  <!-- temperate soybean -->
+  - 10  <!-- cotton -->
+  - 10  <!-- rice -->
+  - 10  <!-- sugarcane -->
+  - 10  <!-- tropical corn -->
+  - 10  <!-- tropical soybean -->
+  - 8   <!-- miscanthus -->
+  - 8   <!-- switchgrass -->
+* - $\huithreshlfemerg$ (% $\gddthreshmat$)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `lfemerg`
+  - 3%  <!-- temperate corn -->
+  - 5%  <!-- spring wheat -->
+  - 3%  <!-- temperate soybean -->
+  - 3%  <!-- cotton -->
+  - 1%  <!-- rice -->
+  - 3%  <!-- sugarcane -->
+  - 3%  <!-- tropical corn -->
+  - 3%  <!-- tropical soybean -->
+  - 3%  <!-- miscanthus -->
+  - 3%  <!-- switchgrass -->
+* - $\huithreshgrain$ (% $\gddthreshmat$)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `grnfill`
+  - 65%  <!-- temperate corn -->
+  - 60%  <!-- spring wheat -->
+  - 50%  <!-- temperate soybean -->
+  - 50%  <!-- cotton -->
+  - 40%  <!-- rice -->
+  - 65%  <!-- sugarcane -->
+  - 50%  <!-- tropical corn -->
+  - 50%  <!-- tropical soybean -->
+  - 40%  <!-- miscanthus -->
+  - 40%  <!-- switchgrass -->
+* - Max. growing season length  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `mxmat`
+  - 165  <!-- temperate corn -->
+  - 150  <!-- spring wheat -->
+  - 180  <!-- temperate soybean -->
+  - 225  <!-- cotton -->
+  - 180  <!-- rice -->
+  - 360  <!-- sugarcane -->
+  - 160  <!-- tropical corn -->
+  - 150  <!-- tropical soybean -->
+  - 210  <!-- miscanthus -->
+  - 210  <!-- switchgrass -->
+* - $\paramztopmx$ (m)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `ztopmx`
+  - 2.5   <!-- temperate corn -->
+  - 1.2   <!-- spring wheat -->
+  - 0.75  <!-- temperate soybean -->
+  - 1.5   <!-- cotton -->
+  - 1.8   <!-- rice -->
+  - 4     <!-- sugarcane -->
+  - 2.5   <!-- tropical corn -->
+  - 1     <!-- tropical soybean -->
+  - 2.5   <!-- miscanthus -->
+  - 2.5   <!-- switchgrass -->
+* - SLA (m {sup}`2` leaf g {sup}`-1` C)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `slatop`
+  - 0.05   <!-- temperate corn -->
+  - 0.035  <!-- spring wheat -->
+  - 0.035  <!-- temperate soybean -->
+  - 0.035  <!-- cotton -->
+  - 0.035  <!-- rice -->
+  - 0.05   <!-- sugarcane -->
+  - 0.05   <!-- tropical corn -->
+  - 0.035  <!-- tropical soybean -->
+  - 0.035  <!-- miscanthus -->
+  - 0.035  <!-- switchgrass -->
+```
+
+Notes:
+
+- $\paramplantingtemp$ and $\paramminplantingtemp$ are crop-specific average and coldest planting temperatures, respectively. (See Sect. {numref}`Planting`.)
+- $\paramgddmin$ is a threshold describing the coolest historical climate a patch can have had in order for a crop to be sown there; see Sect. {numref}`Planting` for details.
+- $\parambaset$ is the minimum temperature for accumulating growing degree-days.
+- $\huithreshlfemerg$ and $\huithreshgrain$ are, respectively, the threshold fractions of $\gddthreshmat$ a crop must reach to enter the leaf-emergence phase (phase 2) and grain-filling phase (phase 3). However, note the adjustment applied to $\huithreshgrain$ for some crops (Eq. {eq}`corn-huigrain-adjustment`).
+- `mxmat` is the maximum growing season length (days past planting), at which harvest occurs even if heat unit index has not reached $\gddthreshmat$.
+- $\paramztopmx$ is the maximum top-of-canopy height of a crop (see Sect. {numref}`Vegetation Structure`).
+- SLA is specific leaf area (see Chapter {numref}`rst_Photosynthetic Capacity`).
+
+(allocation)=
+
+### Allocation
+
+Allocation changes based on the crop phenology phase (section {numref}`Phenology`). Simulated C assimilation begins every year upon leaf emergence in phase 2 and ends with harvest at the end of phase 3; therefore, so does the allocation of such C to the crop's leaf, stem, fine root, and reproductive pools.
+
+Typically, C:N ratios in plant tissue vary throughout the growing season and tend to be lower during early growth stages and higher in later growth stages. In order to account for this seasonal change, two sets of C:N ratios are established in CLM for the leaf, stem, and fine root of crops: one during the leaf emergence phase (phenology phase 2), and a second during grain fill phase (phenology phase 3). This modified C:N ratio approach accounts for the nitrogen retranslocation that occurs during the grain fill phase (phase 3) of crop growth. Leaf, stem, and root C:N ratios for phase 2 are calculated using the standard CLM carbon and nitrogen allocation scheme (Chapter {numref}`rst_CN Allocation`), which provides a target C:N value ({numref}`Table Crop allocation parameters`) and allows C:N to vary through time. During grain fill (phase 3) of the crop growth cycle, a portion of the nitrogen in the plant tissues is moved to a storage pool to fulfill nitrogen demands of organ (reproductive pool) development, such that the resulting C:N ratio of the plant tissue is reflective of measurements at harvest. All C:N ratios were determined by calibration process, through comparisons of model output versus observations of plant carbon throughout the growing season.
+
+Carbon supply for excess maintenance respiration (Chapter {numref}`rst_Plant Respiration`) cannot continue to happen after harvest for annual crops, so at harvest the excess respiration pool is turned into a flux that extracts CO{sub}`2` directly from the atmosphere. This way any excess maintenance respiration remaining at harvest is eliminated as if such respiration had not taken place.
+
+(leaf emergence to grain fill)=
+
+#### Leaf emergence
+
+During phase 2, the allocation coefficients (fraction of available C) to
+each C pool are defined as:
+
+$$
+\begin{aligned}
+a_{repr} &= 0 \\
+a_{froot} &= \paramarooti -(\paramarooti - \paramarootf ) \times {\rm min}\left(\frac{\gddacctwom }{\gddthreshmat }, 1\right) \\
+a_{leaf} &= (1-a_{froot} ) \times \frac{\paramfleafi (e^{-b} -e^{-b\frac{\gddacctwom }{\gddthreshgrain} } )}{e^{-b} -1} {\rm \; \; \; where\; \; \; }b=0.1 \\
+a_{stem} &= 1-a_{repr} - a_{froot} - a_{leaf}
+\end{aligned}
+$$ (eq-lfemerg-allocations)
+
+where $\paramfleafi$, $\paramarooti$, and $\paramarootf$ are initial and final values of these coefficients (respectively parameters `fleafi`, `arooti`, and `arootf`), and $\gddthreshgrain$ is the growing degree-day threshold to enter the grain-filling phase.
+
+For most crops, $\gddthreshgrain$ is equal to $\gddthreshmat$ times the PFT parameter $\huithreshgrain$ (`grnfill`). However, for corn, sugarcane, _Miscanthus_, and switchgrass, an adjustment is applied ({ref}`Kucharik 2003 <KucharikBrye2003>`; C.J. Kucharik, pers. comm.):
+
+$$
+\begin{aligned}
+c &= \max \left( 73,\ \min \left[135, \frac{\gddthreshmat + 53.683}{13.882} \right] \right) \\
+\huithreshgrainactual &= \min \left( \max \left[ -0.002  * \left( c - 73 \right) + \huithreshgrain,\ \huithreshgrain-0.1 \right],\ \huithreshgrain \right) \\
+\gddthreshgrain &= \gddthreshmat \times \huithreshgrainactual
+\end{aligned}
+$$ (corn-huigrain-adjustment)
+
+At a crop-specific maximum leaf area index, $\paramlaimx$, carbon allocation is directed almost exclusively to fine roots, with only 0.001% of carbon going to leaves. See {numref}`Table Crop allocation parameters` for parameter values.
+
+(grain fill to harvest)=
+
+#### Grain fill
+
+The calculation of $a_{froot}$ remains the same from phase 2 (Eq. [](#eq-lfemerg-allocations)) to phase 3. During grain fill (phase 3), leaf and stem allocation coefficients change to:
+
+$$
+\begin{aligned}
+x &= \min \left[1,\ \fracthrugrnfill \right] \\
+a_{organ} &= \min \left( a_{organ}^{i,3},\ \max \left[ \paramaorganf,\ a_{organ} \left( 1 - x \right)^{\paramallconso} \right] \right)
+\end{aligned}
+$$ (alloc-grnfill-leafstem)
+
+where $\textrm{organ}$ is either $\textrm{leaf}$ or $\textrm{stem}$, $a_{organ}^{i,3}$ (initial values) equals the last $a_{organ}$ calculated in phase 2, $\paramdeclfact$ and $\paramallconso$ are allocation decline factors, $\paramaorganf$ is the parameterized value of these allocation coefficients at maturity, and $\huithreshgrain$ is the heat unit threshold to enter the grain-filling phase. (See {numref}`Table Crop allocation parameters` for parameter values.)
+
+As in the leaf-emergence phase (Sect {numref}`leaf emergence to grain fill`), at a crop-specific maximum leaf area index, $\paramlaimx$, leaf allocation is reduced to 0.001%.
+
+After allocation to fine roots, leaves, and stem, the rest of the carbon goes to the reproductive pool:
+
+$$
+a_{repr} =1-a_{froot} -a_{stem} -a_{leaf}
+$$ (alloc-grnfill-repr)
+
+(nitrogen-retranslocation-for-crops)=
+
+#### Nitrogen retranslocation for crops
+
+Nitrogen retranslocation in crops occurs when nitrogen that was used for tissue growth of leaves, stems, and fine roots during the early growth season is remobilized and used for grain development ({ref}`Pollmer et al. 1979 <Pollmeretal1979>`, {ref}`Crawford et al. 1982 <Crawfordetal1982>`, {ref}`Simpson et al. 1983 <Simpsonetal1983>`, {ref}`Ta and Weiland 1992 <TaWeiland1992>`, {ref}`Barbottin et al. 2005 <Barbottinetal2005>`, {ref}`Gallais et al. 2006 <Gallaisetal2006>`, {ref}`Gallais et al. 2007 <Gallaisetal2007>`). Nitrogen allocation for crops follows that of natural vegetation, is supplied in CLM by the soil mineral nitrogen pool, and depends on C:N ratios for leaves, stems, roots, and organs. Nitrogen demand during organ development is fulfilled through retranslocation from leaves, stems, and roots. Nitrogen retranslocation is initiated at the beginning of the grain fill stage for all crops except soybean, for which retranslocation is after LAI decline. Nitrogen stored in the leaf and stem is moved into a storage retranslocation pool for all crops, and for wheat and rice, nitrogen in roots is also released into the retranslocation storage pool. The quantity of nitrogen mobilized from an organ to the retranslocation pool is calculated as
+
+$$
+\norgan - \frac{\corgan}{\paramforgancn}
+$$ (n-from-organ-to-retrans-pool)
+
+where $\corgan$ and $\norgan$ are the carbon and nitrogen in the organ, respectively, and $\paramforgancn$ is the C:N ratio of the organ ({numref}`Table Crop allocation parameters`). Since C:N measurements are often taken from mature crops, pre-grain development C:N ratios for leaves, stems, and roots in the model are optimized to allow maximum nitrogen accumulation for later use during organ development, and post-grain fill C:N ratios are assigned the same as crop residue. After nitrogen is moved into the retranslocated pool, the nitrogen in this pool is used to meet plant nitrogen demand by assigning the available nitrogen from the retranslocated pool equal to the plant nitrogen demand for each organ ($\paramforgancn$ in {numref}`Table Crop allocation parameters`). Once the retranslocation pool is depleted, soil mineral nitrogen pool is used to fulfill plant nitrogen demands.
+
+(harvest to food and seed)=
+
+#### Harvest
+
+CLM splits live crop grain C and N between "food" and "seed" pools. In the former, C and N decay to the atmosphere over approximately one year. Specifically, $E = P^k$, where $E$ is the emissions in one timestep, $P$ is the product pool before emissions, and $k$ is a decay constant set to 0.0001296. The seed pool is used in the subsequent year to account for the C and N required for crop seeding.
+
+Live leaf and stem biomass at harvest is transferred to biofuel, removed residue, and/or litter pools. The harvested biofuel and removed residue pools (together, the "crop product" pool) emit their C and N to the atmosphere with a turnover time of approximately one year (as for the food pool above).
+
+For the biofuel crops, _Miscanthus_ and switchgrass, 70% of live leaf and stem biomass at harvest is transferred to the crop product pool. This value can be changed for these crops—or set to something other than the default zero for any other crop—with the parameter `biofuel_harvfrac` (0-1).
+
+50% of any remaining live leaf and stem biomass at harvest (after biofuel removal, if any) is removed to the crop product pool to represent off-field uses such as use for animal feed and bedding. This value can be changed with the parameter `crop_residue_removal_frac` (0–1). The default 50% is derived from {ref}`Smerald et al. 2023 <Smeraldetal2023>`, who found a global average of 50% of residues left on the field. This includes residues burned in the field, meaning that our implementation implictly assumes the CLM crop burning representation will handle those residues appropriately.
+
+The following equations illustrate how this works. Subscript $p$ refers to either the leaf or stem biomass pool.
+
+$$
+CF_{p,biofuel} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times \parambiofuelharvfrac
+$$ (25.9)
+
+$$
+CF_{p,removed\_residue} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times (1 - \parambiofuelharvfrac) \times \paramcropresidueremovalfrac
+$$ (harv_c_to_removed_residue)
+
+$$
+CF_{p,litter} = \left({CS_{p} \mathord{\left/ {\vphantom {CS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times \left( 1-\parambiofuelharvfrac  \right) \times \left( 1-\paramcropresidueremovalfrac  \right) +CF_{p,alloc}
+$$ (25.11)
+
+with corresponding nitrogen fluxes:
+
+$$
+NF_{p,biofuel} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times \parambiofuelharvfrac
+$$ (25.12)
+
+$$
+NF_{p,removed\_residue} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times \left( 1 - \parambiofuelharvfrac \right) \times \paramcropresidueremovalfrac
+$$ (harv_n_to_removed_residue)
+
+$$
+NF_{p,litter} = \left({NS_{p} \mathord{\left/ {\vphantom {NS_{p}  \Delta t}} \right.} \Delta t}
+  \right) \times  \left( 1-\parambiofuelharvfrac  \right) \times  \left( 1-\paramcropresidueremovalfrac  \right)
+$$ (25.14)
+
+where CF is the carbon flux, CS is stored carbon, NF is the nitrogen flux, NS is stored nitrogen, and `biofuel_harvfrac` is the harvested fraction of leaf/stem for biofuel feedstocks.
+
+Annual food crop yields (g dry matter m{sup}`-2`) can be calculated by saving the `GRAINC_TO_FOOD_ANN` variable once per year, then postprocessing with Equation {eq}`25.15`. This calculation assumes that grain C is 45% of the total dry weight. Additionally, harvest is not typically 100% efficient, so analysis needs to assume that harvest efficiency is less---we use 85%.
+
+$$
+\text{Grain yield} = \frac{\texttt{GRAINC_TO_FOOD_ANN} \times 0.85}{0.45}
+$$ (25.15)
+
+(table crop allocation parameters)=
+
+```{list-table} Crop allocation parameters for the active crop plant functional types (PFTs) in CLM with managed crops on (BgcCrop component sets). {{paramfile_disclaimer_md}}
+:header-rows: 1
+
+* - Parameter
+  - Variable
+  - temperate corn
+  - spring wheat
+  - temperate soybean
+  - cotton
+  - rice
+  - sugarcane
+  - tropical corn
+  - tropical soybean
+  - _Miscanthus_
+  - switchgrass
+* - IVT
+  - n/a
+  - 17, 18  <!-- temperate corn -->
+  - 19, 20  <!-- spring wheat -->
+  - 23, 24  <!-- temperate soybean -->
+  - 41, 42  <!-- cotton -->
+  - 61, 62  <!-- rice -->
+  - 67, 68  <!-- sugarcane -->
+  - 75, 76  <!-- tropical corn -->
+  - 77, 78  <!-- tropical soybean -->
+  - 71, 72  <!-- miscanthus -->
+  - 73, 74  <!-- switchgrass -->
+* - $\paramfleafi$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `fleafi`
+  - 0.75  <!-- temperate corn -->
+  - 0.9   <!-- spring wheat -->
+  - 0.85  <!-- temperate soybean -->
+  - 0.85  <!-- cotton -->
+  - 0.75  <!-- rice -->
+  - 0.6   <!-- sugarcane -->
+  - 0.6   <!-- tropical corn -->
+  - 0.85  <!-- tropical soybean -->
+  - 0.9   <!-- miscanthus -->
+  - 0.7   <!-- switchgrass -->
+* - $\paramlaimx$ (m{sup}`2`  m{sup}`-2`)  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `laimx`
+  - 6.2  <!-- temperate corn -->
+  - 7    <!-- spring wheat -->
+  - 6    <!-- temperate soybean -->
+  - 6    <!-- cotton -->
+  - 7    <!-- rice -->
+  - 5    <!-- sugarcane -->
+  - 5    <!-- tropical corn -->
+  - 6    <!-- tropical soybean -->
+  - 10   <!-- miscanthus -->
+  - 6.5  <!-- switchgrass -->
+* - $\paramarooti$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `arooti`
+  - 0.1   <!-- temperate corn -->
+  - 0.3   <!-- spring wheat -->
+  - 0.2   <!-- temperate soybean -->
+  - 0.2   <!-- cotton -->
+  - 0.3   <!-- rice -->
+  - 0.3   <!-- sugarcane -->
+  - 0.1   <!-- tropical corn -->
+  - 0.2   <!-- tropical soybean -->
+  - 0.11  <!-- miscanthus -->
+  - 0.14  <!-- switchgrass -->
+* - $\paramarootf$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `arootf`
+  - 0.05  <!-- temperate corn -->
+  - 0     <!-- spring wheat -->
+  - 0.2   <!-- temperate soybean -->
+  - 0.2   <!-- cotton -->
+  - 0     <!-- rice -->
+  - 0.1   <!-- sugarcane -->
+  - 0.05  <!-- tropical corn -->
+  - 0.2   <!-- tropical soybean -->
+  - 0.09  <!-- miscanthus -->
+  - 0.09  <!-- switchgrass -->
+* - $\paramastemf$   <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `astemf`
+  - 0     <!-- temperate corn -->
+  - 0.05  <!-- spring wheat -->
+  - 0.3   <!-- temperate soybean -->
+  - 0.3   <!-- cotton -->
+  - 0.05  <!-- rice -->
+  - 0     <!-- sugarcane -->
+  - 0     <!-- tropical corn -->
+  - 0.3   <!-- tropical soybean -->
+  - 0     <!-- miscanthus -->
+  - 0     <!-- switchgrass -->
+* - $\paramallconss$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `allconss`
+  - 2  <!-- temperate corn -->
+  - 1  <!-- spring wheat -->
+  - 2  <!-- temperate soybean -->
+  - 5  <!-- cotton -->
+  - 1  <!-- rice -->
+  - 2  <!-- sugarcane -->
+  - 2  <!-- tropical corn -->
+  - 5  <!-- tropical soybean -->
+  - 2  <!-- miscanthus -->
+  - 2  <!-- switchgrass -->
+* - $\paramallconsl$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `allconsl`
+  - 5  <!-- temperate corn -->
+  - 3  <!-- spring wheat -->
+  - 2  <!-- temperate soybean -->
+  - 2  <!-- cotton -->
+  - 3  <!-- rice -->
+  - 5  <!-- sugarcane -->
+  - 5  <!-- tropical corn -->
+  - 2  <!-- tropical soybean -->
+  - 5  <!-- miscanthus -->
+  - 5  <!-- switchgrass -->
+* - $\paramleafcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `leafcn`
+  - 25  <!-- temperate corn -->
+  - 20  <!-- spring wheat -->
+  - 20  <!-- temperate soybean -->
+  - 20  <!-- cotton -->
+  - 20  <!-- rice -->
+  - 25  <!-- sugarcane -->
+  - 25  <!-- tropical corn -->
+  - 20  <!-- tropical soybean -->
+  - 20  <!-- miscanthus -->
+  - 20  <!-- switchgrass -->
+* - $\paramlivewdcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `livewdcn`
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
+* - $\paramfrootcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `frootcn`
+  - 42  <!-- temperate corn -->
+  - 42  <!-- spring wheat -->
+  - 42  <!-- temperate soybean -->
+  - 42  <!-- cotton -->
+  - 42  <!-- rice -->
+  - 42  <!-- sugarcane -->
+  - 42  <!-- tropical corn -->
+  - 42  <!-- tropical soybean -->
+  - 42  <!-- miscanthus -->
+  - 42  <!-- switchgrass -->
+* - $\paramfleafcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `fleafcn`
+  - 65  <!-- temperate corn -->
+  - 65  <!-- spring wheat -->
+  - 65  <!-- temperate soybean -->
+  - 65  <!-- cotton -->
+  - 65  <!-- rice -->
+  - 65  <!-- sugarcane -->
+  - 65  <!-- tropical corn -->
+  - 65  <!-- tropical soybean -->
+  - 65  <!-- miscanthus -->
+  - 65  <!-- switchgrass -->
+* - $\paramfstemcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `fstemcn`
+  - 120  <!-- temperate corn -->
+  - 100  <!-- spring wheat -->
+  - 130  <!-- temperate soybean -->
+  - 130  <!-- cotton -->
+  - 100  <!-- rice -->
+  - 120  <!-- sugarcane -->
+  - 120  <!-- tropical corn -->
+  - 130  <!-- tropical soybean -->
+  - 120  <!-- miscanthus -->
+  - 120  <!-- switchgrass -->
+* - $\paramffrootcn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `ffrootcn`
+  - 0   <!-- temperate corn -->
+  - 40  <!-- spring wheat -->
+  - 0   <!-- temperate soybean -->
+  - 0   <!-- cotton -->
+  - 40  <!-- rice -->
+  - 0   <!-- sugarcane -->
+  - 0   <!-- tropical corn -->
+  - 0   <!-- tropical soybean -->
+  - 0   <!-- miscanthus -->
+  - 0   <!-- switchgrass -->
+* - $\paramgraincn$  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+  - `graincn`
+  - 50  <!-- temperate corn -->
+  - 50  <!-- spring wheat -->
+  - 50  <!-- temperate soybean -->
+  - 50  <!-- cotton -->
+  - 50  <!-- rice -->
+  - 50  <!-- sugarcane -->
+  - 50  <!-- tropical corn -->
+  - 50  <!-- tropical soybean -->
+  - 50  <!-- miscanthus -->
+  - 50  <!-- switchgrass -->
+```
+- $\paramaleaff$ (parameter `aleaff`) is zero for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+- $\paramdeclfact$ (parameter `declfact`) is 1.05 for all crops.  <!-- ✅ for CLM6.0 (ctsm60_params.c260303) -->
+
+(other-features)=
+
+### Other Features
+
+(physical-crop-characteristics)=
+
+#### Physical Crop Characteristics
+
+Leaf area index ($L$) is calculated as a function of specific leaf area (SLA, {numref}`Table Crop phenology parameters`) and leaf C. Stem area index ($S$) is equal to 0.1$L$ for temperate and tropical corn, sugarcane, switchgrass, and _Miscanthus_ and 0.2$L$ for other crops, as in AgroIBIS. All live C and N pools go to 0 after crop harvest, but the $S$ is kept at 0.25 to simulate a post-harvest "stubble" on the ground.
+
+Crop heights at the top and bottom of the canopy, $\paramztopmx$ and ${z}_{bot}$ (m), come from the AgroIBIS formulation:
+
+$$
+\begin{array}{l}
+{z_{top} = \paramztopmx \left(\frac{L}{\paramlaimx -1} \right)^{2} \ge 0.05{\rm \; where\; }\frac{L}{\paramlaimx -1} \le 1} \\
+{z_{bot} =0.02{\rm m}}
+\end{array}
+$$ (25.16)
+
+where $\paramztopmx$ is the maximum top-of-canopy height of the crop ({numref}`Table Crop phenology parameters`) and $\paramlaimx$ is the maximum leaf area index ({numref}`Table Crop allocation parameters`).
+
+(interactive-fertilization)=
+
+#### Interactive Fertilization
+
+CLM simulates fertilization by adding nitrogen directly to the soil mineral nitrogen pool to meet crop nitrogen demands using both industrial fertilizer and manure application. CLM's separate crop land unit ensures that natural vegetation will not access the fertilizer applied to crops. Fertilizer in CLM is prescribed by crop functional types and varies spatially for each year based on the LUMIP land use and land cover change time series (LUH2 for historical and SSPs for future) ({ref}`Lawrence et al. 2016 <Lawrenceetal2016>`). One of two fields is used to prescribe industrial fertilizer based on the type of simulation. For non-transient simulations, annual fertilizer application in g N/m{sup}`2`/yr is specified on the land surface data set by the field `CONST_FERTNITRO_CFT`. In transient simulations, annual fertilizer application is specified on the land use time series file by the field `FERTNITRO_CFT`, which is also in g N/m{sup}`2`/yr. The values for both of these fields come from the LUMIP time series for each year. In addition to the industrial fertilizer, background manure fertilizer is specified on the parameter file by the field `manunitro`. For perennial bioenergy crops, little fertilizer (56kg/ha/yr) is applied to switchgrass and no fertilizer is applied to _Miscanthus_. Note these rates are only based on local land management practices at the University of Illinois Energy Farm located in Central Midwestern United States {ref}`(Cheng et al., 2019)<Chengetal2019>` rather than the LUMIP timeseries. Manure N is applied at a rate of 0.002 kg N/m{sup}`2`/yr. Because previous versions of CLM (e.g., CLM4) had rapid denitrification rates, fertilizer is applied slowly to minimize N loss (primarily through denitrification) and maximize plant uptake. The current implementation of CLM inherits this legacy, although denitrification rates are slower in the current version of the model ({ref}`Koven et al. 2013 <Kovenetal2013>`). As such, fertilizer application begins during the leaf emergence phase of crop development (phase 2) and continues for 20 days, which helps reduce large losses of nitrogen from leaching and denitrification during the early stage of crop development. The 20-day period is chosen as an optimization to limit fertilizer application to the emergence stage. A fertilizer counter in seconds, $f$, is set as soon as the leaf emergence phase for crops initiates:
+
+$$
+f = n \times 86400
+$$ (25.17)
+
+where $n$ is set to 20 fertilizer application days and 86400 is the number of seconds per day. When the crop enters phase 2 (leaf emergence) of its growth cycle, fertilizer application begins by initializing fertilizer amount to the total fertilizer at each column within the grid cell divided by the initialized $f$. Fertilizer is applied and $f$ is decremented each time step until a zero balance on the counter is reached.
+
+(biological-nitrogen-fixation-for-soybeans)=
+
+#### Biological nitrogen fixation for soybeans
+
+Biological N fixation for soybeans is calculated by the fixation and uptake of nitrogen module (Chapter {numref}`rst_FUN`) and is the same as N fixation in natural vegetation. Unlike natural vegetation, where a fraction of each PFT are N fixers, all soybeans are treated as N fixers.
+
+(latitude-vary-base-temperature-for-growing-degree-days)=
+
+#### Latitudinal variation in base growth temperature
+
+For most crops, $\gddacctwom$ (growing degree days since planting) is the same in all locations. However, for spring wheat and sugarcane within 30° of the Equator, the calculation of $\gddacctwom$ allows for latitudinal variation:
+
+$$
+\parambaset^{\prime} = \parambaset + 12 - 0.4 \times \mid latitude \mid
+$$ (25.18)
+
+where $\parambaset$ is the base temperature for GDD ({numref}`Table Crop phenology parameters`). Such latitudinal variation in base temperature could slow $\gddacctwom$ accumulation extend the growing season for regions within 30°S to 30°N for spring wheat and sugarcane.
+
+(separate-reproductive-pool)=
+
+#### Separate reproductive pool
+
+One notable difference between natural vegetation and crops is the presence of reproductive carbon and nitrogen pools. Accounting for the reproductive pools helps determine whether crops are performing reasonably through yield calculations. The reproductive pool is maintained similarly to the leaf, stem, and fine root pools, but allocation of carbon and nitrogen does not begin until the grain fill stage of crop development. Equation {eq}`alloc-grnfill-leafstem` describes the carbon and nitrogen allocation coefficients to the reproductive pool. In CLM, as allocation declines in stem, leaf, and root pools (see section {numref}`Grain fill to harvest`) during the grain fill stage of growth, increasing amounts of carbon and nitrogen are available for grain development.
+
+(tillage)=
+
+#### Tillage
+
+Tillage is represented as an enhancement of the decomposition rate coefficient; see section {numref}`decomp_mgmt_modifiers`.
+
+(the-irrigation-model)=
+
+## The irrigation model
+
+CLM includes the option to irrigate cropland areas that are equipped for irrigation. The application of irrigation responds dynamically to the simulated soil moisture conditions. This irrigation algorithm is based loosely on the implementation of {ref}`Ozdogan et al. (2010) <Ozdoganetal2010>`.
+
+When irrigation is enabled, the crop areas of each grid cell are divided into irrigated and rainfed fractions according to a dataset of areas equipped for irrigation ({ref}`Portmann et al. 2010 <Portmannetal2010>`). Irrigated and rainfed crops are placed on separate soil columns, so that irrigation is only applied to the soil beneath irrigated crops.
+
+In irrigated croplands, a check is made once per day to determine whether irrigation is required on that day. This check is made in the first time step after 6 AM local time. Irrigation is required if crop leaf area $>$ 0, and the available soil water is below a specified threshold.
+
+The soil moisture deficit $D_{irrig}$ is
+
+$$
+D_{irrig} = \left\{
+\begin{array}{lr}
+w_{target} - w_{avail} &\qquad w_{thresh} > w_{avail} \\
+0 &\qquad w_{thresh} \le w_{avail}
+\end{array} \right\}
+$$ (25.61)
+
+where $w_{target}$ is the irrigation target soil moisture (mm)
+
+$$
+w_{target} = \sum_{j=1}^{N_{irr}} \theta_{target} \Delta z_{j} \ .
+$$ (25.62)
+
+The irrigation moisture threshold (mm) is
+
+$$
+w_{thresh} = f_{thresh} \left(w_{target} - w_{wilt}\right) + w_{wilt}
+$$ (25.63)
+
+where $w_{wilt}$ is the wilting point soil moisture (mm)
+
+$$
+w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
+$$ (25.64)
+
+and $f_{thresh}$ is a tuning parameter. The available moisture in the soil (mm) is
+
+$$
+w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
+$$ (25.65)
+
+Note that $w_{target}$ is truly supposed to give the target soil moisture value that we're shooting for whenever irrigation happens; then the soil moisture deficit $D_{irrig}$ gives the difference between this target value and the current soil moisture. The irrigation moisture threshold $w_{thresh}$, on the other hand, gives a threshold at which we decide to do any irrigation at all. The way this is written allows for the possibility that one may not want to irrigate every time there becomes even a tiny soil moisture deficit. Instead, one may want to wait until the deficit is larger before initiating irrigation; at that point, one doesn't want to just irrigate up to the "threshold" but instead up to the higher "target". The target should always be greater than or equal to the threshold.
+
+$N_{irr}$ is the index of the soil layer corresponding to a specified depth $z_{irrig}$ ({numref}`Table Irrigation parameters`) and $\Delta z_{j}$ is the thickness of the soil layer in layer $j$ (section {numref}`Vertical Discretization`). $\theta_{j}$ is the volumetric soil moisture in layer $j$ (section {numref}`Soil Water`). $\theta_{target}$ and $\theta_{wilt}$ are the target and wilting point volumetric soil moisture values, respectively, and are determined by inverting {eq}`7.94` using soil matric potential parameters $\Psi_{target}$ and $\Psi_{wilt}$ ({numref}`Table Irrigation parameters`). After the soil moisture deficit $D_{irrig}$ is calculated, irrigation in an amount equal to $\frac{D_{irrig}}{T_{irrig}}$ (mm/s) is applied uniformly over the irrigation period $T_{irrig}$ (s). Irrigation water is applied directly to the ground surface, bypassing canopy interception (i.e., added to ${q}_{grnd,liq}$: section {numref}`Canopy Water`).
+
+To conserve mass, irrigation is removed from river water storage (Chapter {numref}`rst_MOSART`). When river water storage is inadequate to meet irrigation demand, there are two options: 1) the additional water can be removed from the ocean model, or 2) the irrigation demand can be reduced such that river water storage is maintained above a specified threshold.
+
+(table irrigation parameters)=
+
+```{list-table} Irrigation parameters. Values in the "Parameter" column are the associated namelist variable, if the value is not hard-coded in the model code. {{nonparamfile_disclaimer_md}}
+:header-rows: 1
+
+* - Symbol
+  - Parameter
+  - Units
+  - Value
+* - $f_{thresh}$
+  - `irrig_threshold_fraction`
+  - Unitless
+  - 1.0
+* - $z_{irrig}$
+  - `irrig_depth`
+  - m
+  - 0.6
+* - $\Psi_{target}$
+  - `irrig_target_smp`
+  - mm
+  - -3400
+* - $\Psi_{wilt}$
+  - (Hard-coded)
+  - mm
+  - -150000
+```
+
+% add a reference to surface data in chapter2
+% To accomplish this we downloaded data of percent irrigated and percent rainfed corn, soybean, and temperate cereals (wheat, barley, and rye) (:ref:`Portmann et al. 2010 <Portmannetal2010>`), available online from *ftp://ftp.rz.uni-frankfurt.de/pub/uni-frankfurt/physische\_geographie/hydrologie/public/data/MIRCA2000/harvested\_area\_grids.*

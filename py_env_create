@@ -237,6 +237,10 @@ if [[ ${dry_run} -ne 0 ]]; then
    exit 0
 fi
 
+# Make sure doc-builder is up-to-date, since it contains a requirements.txt file
+echo "Making sure doc-builder is up-to-date..."
+bin/git-fleximod update doc-builder 1>/dev/null
+
 # Rename or overwrite existing
 if [[ ${conda_env_does_exist} -gt 0 ]]; then
    if [[ "${new_name_for_existing}" != "" ]]; then
