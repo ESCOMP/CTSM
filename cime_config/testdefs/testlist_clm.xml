@@ -4170,7 +4170,7 @@
       <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdBasic">
+  <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDailyHist">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
