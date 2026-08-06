@@ -559,6 +559,12 @@
     <lname>1850_DATM%CPLHIST_CLM50%BGC_SICE_SOCN_MOSART_SGLC_SWAV</lname>
   </compset>
 
+  <compset>
+    <alias>I1850Clm60BgcCropSpinup</alias>
+    <lname>1850_DATM%CPLHIST_CLM60%BGC-CROP_SICE_SOCN_MOSART_SGLC_SWAV</lname>
+  </compset>
+
+
 <!-- I CLM50 NWP Compsets -->
 
   <!-- GSWP datm forcing, for global runs or regional runs outside the CONUS -->
