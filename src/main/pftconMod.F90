@@ -1909,8 +1909,9 @@ contains
     !      there is no condition in the if() checking for that.
     !   2. Indeed, this code will error if the fire emissions factor file DOESN'T include crop PFTs,
     !      because of the reference to index nc3crop of the eff array.
-    ! Filed as ESCOMP/CTSM Issue #4120: Something wrong with "file only includes natural PFTs" in
-    ! fire_emis_factors_get(); https://github.com/ESCOMP/CTSM/issues/4120
+    ! ESCOMP/CTSM Issue #4120: Remove ability to use 16-PFT fire emission factor files (only support 78-pft files)
+    !   https://github.com/ESCOMP/CTSM/issues/4120
+    ! TODO: Remove this subroutine entirely once the fire emissions factor file is guaranteed to always include crop PFTs.
     !
     ! !ARGUMENTS
     real(r8), intent(inout) :: factors(:)
