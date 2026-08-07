@@ -5,10 +5,16 @@
 
 - "Nwp" (Numerical Weather Prediction) compsets with BGC or BGC-Crop
 - "Nwp" compsets with active GLC (CISM)
+- "Nwp" compsets with clm6_0 physics
 - LILAC with active GLC
+- LILAC with clm6_0 physics
 - FATES with active GLC
 - mizuRoute with active GLC or BGC or BGC-Crop
 - compsets with clm4_5 physics
+
+## Compsets that are being deprecated
+
+- Compsets using CRUNCEPv7 forcing
 
 ## Namelist items not regularly tested or used (some aren't even implemented)
 
