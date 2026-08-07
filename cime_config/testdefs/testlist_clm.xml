@@ -1805,7 +1805,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on and Cruv7 forcing</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, and FUN on and LUNA off, and Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN--clm/matrixcnOn">
@@ -1824,7 +1824,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, LUNA and FUN on with Cruv7 forcing</option>
+      <option name="comment">ERP DEBUG test on Izumi for I2000Clm50BgcCru with flexCN, and FUN on and LUNA off, and Cruv7 forcing</option>
     </options>
   </test>
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN--clm/matrixcnOn">
