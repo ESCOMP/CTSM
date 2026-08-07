@@ -1441,6 +1441,7 @@ module CLMFatesInterfaceMod
      integer  :: s                        ! site index
      real(r8) :: dtime
      integer  :: i_lig_lit, i_cel_lit     ! indices for lignan and cellulose
+     integer  :: nlevdecomp_bc  ! Number of levels in decomp-related variables in fates bc_in and bc_out. Not necessarily the same as CLM's nlevdecomp!
 
      dtime = get_step_size_real()
      s = this%f2hmap(ci)%hsites(c)
@@ -1451,24 +1452,26 @@ module CLMFatesInterfaceMod
        
        if ( .not. use_fates_sp ) then
 
+         nlevdecomp_bc = this%fates(ci)%bc_in(s)%nlevdecomp
+
           ! (gC/m3/timestep)
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp)*dtime
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_met_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_met_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp_bc)*dtime
 
           ! Used for mass balance checking (gC/m2/s)
-          !nf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp) * &
-          !                                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          !nf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_n_si(1:nlevdecomp_bc) * &
+          !                                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
           
           i_cel_lit = i_met_lit + 1
           
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp)*dtime
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_cel_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_cel_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp_bc)*dtime
 
           !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
-          !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp) * &
-          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          !     sum(this%fates(ci)%bc_out(s)%litt_flux_cel_n_si(1:nlevdecomp_bc) * &
+          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
 
           if (decomp_method == mimics_decomp) then
              ! Mimics has a structural pool, which is cellulose and lignan
@@ -1478,13 +1481,13 @@ module CLMFatesInterfaceMod
              i_lig_lit = i_cel_lit + 1
           end if
         
-          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
-          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
-          !     this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp)*dtime
+          !nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_lig_lit) = &
+          !     nf_soil%decomp_npools_sourcesink_col(c,1:nlevdecomp_bc,i_lig_lit) + &
+          !     this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp_bc)*dtime
           
           !nf_soil%fates_litter_flux(c) = nf_soil%fates_litter_flux(c) + &
-          !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp) * &
-          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          !     sum(this%fates(ci)%bc_out(s)%litt_flux_lig_n_si(1:nlevdecomp_bc) * &
+          !         this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
 
           nf_soil%fates_litter_flux = 0._r8
           
@@ -1514,6 +1517,7 @@ module CLMFatesInterfaceMod
      integer  :: s                        ! site index
      real(r8) :: dtime
      integer  :: i_lig_lit, i_cel_lit     ! indices for lignan and cellulose
+     integer  :: nlevdecomp_bc  ! Number of levels in decomp-related variables in fates bc_in and bc_out. Not necessarily the same as CLM's nlevdecomp!
      
      dtime = get_step_size_real()
      s = this%f2hmap(ci)%hsites(c)
@@ -1527,29 +1531,30 @@ module CLMFatesInterfaceMod
        
        if ( .not. use_fates_sp ) then
 
+          nlevdecomp_bc = this%fates(ci)%bc_in(s)%nlevdecomp
 
           call FluxIntoLitterPools(this%fates(ci)%sites(s), &
                                    this%fates(ci)%bc_in(s), &
                                    this%fates(ci)%bc_out(s))
 
           ! (gC/m3/timestep)
-          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
-               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp)*dtime
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_met_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_met_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp_bc)*dtime
 
           ! Used for mass balance checking (gC/m2/s)
-          cf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp) * &
-                                             this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+          cf_soil%fates_litter_flux(c) = sum(this%fates(ci)%bc_out(s)%litt_flux_lab_c_si(1:nlevdecomp_bc) * &
+                                             this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
           
           i_cel_lit = i_met_lit + 1
           
-          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) = &
-               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_cel_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp)*dtime
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_cel_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_cel_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp_bc)*dtime
 
           cf_soil%fates_litter_flux(c) = cf_soil%fates_litter_flux(c) + &
-               sum(this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp) * &
-                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+               sum(this%fates(ci)%bc_out(s)%litt_flux_cel_c_si(1:nlevdecomp_bc) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
 
           if (decomp_method == mimics_decomp) then
              ! Mimics has a structural pool, which is cellulose and lignan
@@ -1559,13 +1564,13 @@ module CLMFatesInterfaceMod
              i_lig_lit = i_cel_lit + 1
           end if
         
-          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) = &
-               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_lig_lit) + &
-               this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp)*dtime
+          cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_lig_lit) = &
+               cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp_bc,i_lig_lit) + &
+               this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp_bc)*dtime
           
           cf_soil%fates_litter_flux(c) = cf_soil%fates_litter_flux(c) + &
-               sum(this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp) * &
-                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp))
+               sum(this%fates(ci)%bc_out(s)%litt_flux_lig_c_si(1:nlevdecomp_bc) * &
+                   this%fates(ci)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc))
           
        else
           ! In SP mode their is no mass flux between the two 
@@ -3801,20 +3806,21 @@ module CLMFatesInterfaceMod
     integer :: c  ! column index
     integer :: j  ! Depth index
     integer :: nlevsoil
-    integer :: nlevdecomp
+    integer :: nlevdecomp_bc  ! Number of levels in decomp-related variables in fates bc_in and bc_out. Not necessarily the same as CLM's nlevdecomp!
+
 
     call t_startf('fates_initsoildepths')
 
     do s = 1, this%fates(nc)%nsites
        c = this%f2hmap(nc)%fcolumn(s)
        nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
-       nlevdecomp = this%fates(nc)%bc_in(s)%nlevdecomp
+       nlevdecomp_bc = this%fates(nc)%bc_in(s)%nlevdecomp
 
        this%fates(nc)%bc_in(s)%zi_sisl(0:nlevsoil)    = col%zi(c,0:nlevsoil)
        this%fates(nc)%bc_in(s)%dz_sisl(1:nlevsoil)    = col%dz(c,1:nlevsoil)
        this%fates(nc)%bc_in(s)%z_sisl(1:nlevsoil)     = col%z(c,1:nlevsoil)
-       this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp) = &
-             dzsoi_decomp(1:nlevdecomp)
+       this%fates(nc)%bc_in(s)%dz_decomp_sisl(1:nlevdecomp_bc) = &
+             dzsoi_decomp(1:nlevdecomp_bc)
 
        do j=1,nlevsoil
           this%fates(nc)%bc_in(s)%decomp_id(j) = j
