@@ -76,7 +76,7 @@ here is guidance on different available levels of system testing:
     c) python only (for use where the only changes are in the python directory:
                     run the python testing listed below)
     d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+    e) release (regular tests plus the fates, ctsm_sci, mosart, mizu and rtm test lists
                 and normally all of the ancillary tests (build-namelist, python, etc.)
 		            would be run as well)
 
