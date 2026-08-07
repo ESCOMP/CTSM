@@ -1,4 +1,54 @@
 ===============================================================
+Tag name: ctsm5.4.050
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Fri Aug  7 01:30:48 PM MDT 2026
+One-line Summary: Rework FATES SP testmods
+
+Purpose and description of changes
+----------------------------------
+
+Removes the FatesColdSatPhen testmod, which didn't actually set anything having to do with SP mode (see [#4150](https://github.com/ESCOMP/CTSM/issues/4150)). Tests that included FatesColdSatPhen now include FatesColdDailyHist instead. The latter has replaced FatesColdBasic, which was previously included by FatesColdSatPhen and has now been updated to include the history file setting changes from FatesColdSatPhen's `user_nl_clm`.
+
+All remaining `Fates*SatPhen*` testmods will now fail if a non-FatesSp compset is chosen. Why not just set use_fates_sp in user_nl_clm? Because there are (or may be) *other* things set in a FatesSp compset, so if this test doesn't use one, it's not representative.
+
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description):
+- Resolves [ESCOMP/CTSM Issue #4150: FatesColdSatPhen testmod doesn't actually set SP mode](https://github.com/ESCOMP/CTSM/issues/4150)
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing: See description above.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  tests using a SatPhen testmod:
+    derecho ----- PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+  NOTE: For the most part, I didn't actually run the aux_clm suite tests, aside from those using a SatPhen testmod. Instead, I compared the ctsm5.4.050 namelists to the ctsm5.4.049 ones.
+    derecho ----- PASS
+    izumi ------- PASS
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+  NOTE: I didn't actually run the fates suite tests, aside from those using a SatPhen testmod. Instead, I generated baseline namelists (baseline name ctsm5.4.049_fates_namelists) and then compared the ctsm5.4.050 namelists to them.
+    derecho ----- PASS
+    izumi ------- PASS
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #4155: ctsm5.4.050: Remove FatesColdSatPhen testmod ](https://github.com/ESCOMP/CTSM/pull/4155)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.049
 Originator(s): r-ward (Rachel Ward, r.ward@berkeley.edu, UC Berkeley)
 Date: Mon Aug  3 15:24:15 MDT 2026
