@@ -2543,7 +2543,6 @@
     <machines>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="fates"/>
-      <machine name="derecho" compiler="nvhpc" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3628,9 +3627,7 @@
   <test name="ERI_D_Ld9" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhenCamLndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
-      <machine name="derecho" compiler="intel" category="remove-fatescoldsatphen-testmod"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
-      <machine name="derecho" compiler="gnu" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4137,9 +4134,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
-      <machine name="derecho" compiler="intel" category="remove-fatescoldsatphen-testmod"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
-      <machine name="derecho" compiler="gnu" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4169,7 +4164,6 @@
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
-      <machine name="derecho" compiler="gnu" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4179,7 +4173,6 @@
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDailyHist">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4189,7 +4182,6 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCruRsGs" testmods="clm/FatesColdDailyHist">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
-      <machine name="derecho" compiler="intel" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4201,7 +4193,6 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
-      <machine name="derecho" compiler="intel" category="remove-fatescoldsatphen-testmod"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
