@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  check-clm6-aliases:
+  check-compset-aliases:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
