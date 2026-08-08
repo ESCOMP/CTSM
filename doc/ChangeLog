@@ -1,4 +1,166 @@
 ===============================================================
+Tag name: ctsm5.4.051
+Originator(s): erik (Erik Kluzek)
+Date: Fri Aug  7 17:50:35 MDT 2026
+One-line Summary: Update compsets to use DGLC adjust Fates compsets/tests, remove clm4_5/VIC/BGCDV/NWP%BGC compsets/tests
+
+Purpose and description of changes
+----------------------------------
+
+Update most of the compsets to use DGLC%NOEVOLVE (Data GLaCier model) rather than stub
+glacier. I1Pt single point compsets are left alone.
+
+Make single point tests and compsets all have RsGs at the end of the alias to
+specify stub ROF and stub GLC, and do this consistently in all compsets and
+tests. This makes it easier to see the meaning in the aliases.
+
+Change FATES tests to use RsGs compsets for single-point/regional and
+without it for global. And change Clm60FatesCru tests to Clm60FatesCrujra.
+Make FATES tests (other than single-point) run with MOSART and DGLC.
+
+Make single point tests all consistently use Qian forcing compsets for
+consistency and speed. Remove most of the Cru tests except for one with Clm50.
+
+Also since I'm messing with compsets and tests, and removing compsets and
+tests for several things we've decided to deprecate: clm4_5, BGCDV, %BGC%NWP,
+and VIC. So I remove them from compsets and tests.
+
+The change to DGLC also required changes to the Tech Note regarding Glaciers.
+And the removal of the options talked about above (clm4_5 etc.) also required
+changes to the Tech Note.
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[x] clm5_0
+
+[ ] ctsm5_0-nwp
+
+(Since most compsets now use DGLC, answers are different over Greenland)
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+ - Fixes Only test a few Clm50 compsets with Cruv7 forcing #4149
+ - Partial on Some of our testmods test things that are default on, rather than the reverse #4148
+ - Fixes rtmColdSSP test mod directory is not a good label anymore -- remove it #1242
+ - Fixes Have most Fates compsets use MOSART #4109
+ - Fixes Use data glc model where we used to use CISM2%NOEVOLVE #1136
+ - Fixes Remove clm4_5 compets and tests and mark as deprecated #4128
+ - Fixes Remove Izumi aux_cime_baselines tests and move to prealpha #4129
+ - Fixes Remove BGCDV from our compsets, tests and documentation #4130
+ - Fixes Remove NwP Bgc/BgcCrop compsets and tests #4127
+ - Fixes Remove VIC compsets #4126
+ - Fixes Expand compset checking in GitHub workflows #3249
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+  Compsets may have the same name as before, but now most will use DGLC
+  (unless it has Gs, G, Ga, or Gag in the alias name)
+  Likewise some FATES compsets have the same name, but now most will use DGLC
+  and MOSART
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Extensive changes in compsets and alias names
+
+  Changes made to compset aliases to make them more consistent and predictable:
+
+  - Compsets consistently use Rs to denote that a stub ROF (river) model is used
+  - Compsets consistently use Gs to denote that a stub GLC (glacier) model is used
+  - Compsets consistently use Rtm or Miz to denote that RTM or mizuRoute is used in place of MOSART
+  - Compsets consistently use Cplhist, Cru, Qian, Nldas, or Crujra if GSWP forcing is NOT used
+
+  Note, compsets mostly have the forcing type at the end of the compset (order
+  is giving these types: ROF, GLC, Forcing). However, this is NOT completely
+  consistent yet.
+
+Changes to documentation:
+  Updates to Tech Note and User's Guide to cover using DGLC and to remove
+  documentation on the things removed.
+
+Contributors: @ekluzek @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+  The compset checker under .github/workflows updated to check more things for
+  validity. This can be run to check changes to compsets are correct. Updated
+  the science_support resolutions for scientifically supported compsets.
+
+Changes to tests or testing:
+  Tests changed to use the new compsets. Single point tests now consistently
+  use Qian forcing for speed. Tests for the deprecated options (clm4_5, etc.)
+  were removed. More reasons for tests were added as comments. Decomp_init
+  tests moved from Clm45 to Clm50 with SimplePhysics options. Remove tests and
+  testmods for the Li-fire options that are already turned on by default.
+
+Testing summary:  regular++ (close to release testing)
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho -----
+    izumi -------
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ----
+  decomp_init
+     derecho ----
+  uhr_decomp_init
+     derecho ----
+  hillslope, fire, ssp, interim-restart run with "--namelists-only" to verify that they function:
+     derecho ----
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Compsets without Gs in the alias
+    - what platforms/compilers: All
+    - nature of change:
+      New climate over Greenland, because the topography it's downscaled to, is now
+      determined by DGLC.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ -- #4110 Update compsets to use DGLC...
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.050
 Originator(s): samrabin (Sam Rabin, UCAR/TSS)
 Date: Fri Aug  7 01:30:48 PM MDT 2026

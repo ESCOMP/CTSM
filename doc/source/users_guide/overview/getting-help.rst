@@ -86,11 +86,6 @@ CLMBGC-Crop
 
   ``./xmlchange CLM_CONFIG_OPTS="phys clm5_0 -bgc bgc -crop``
 
-CLMCN
-  Community Land Model (CLM) with Carbon Nitrogen (CN) Biogeochemistry (either CLM4.0, CLM4.5 or |version|) The CLM_CONFIG_OPTS option for this is
-
-  ``./xmlchange CLM_CONFIG_OPTS="-bgc cn" -append``
-
 CLMSP
   Community Land Model (CLM) with Satellite Phenology (SP) (either CLM4.0, CLM4.5 or |version|) The CLM_CONFIG_OPTS option for this is
 
@@ -108,14 +103,6 @@ CTSM
 
 DATM
   Data Atmosphere Model (DATM) the prescribed data atmosphere component for CESM. Forcing data that we provide are either the CRUNCEP, Qian, or GSWP3 forcing datasets (see below).
-
-DV
-  Dynamic global vegetation, where fractional PFT (see PFT below) changes in time prognostically. Can NOT be used with prescribed transient PFT (requires either CLMBGC or CLMCN for either CLM4.0, CLM4.5 or |version|). The CLM_CONFIG_OPTS option for this is
-
-  ``./xmlchange CLM_CONFIG_OPTS="-bgc cndv" -append``
-
-  This option is being phased out for the different methodology of FATES (see below). DV is not currently scientifically validated
-  and as such should be considered experimental.
 
 ESMF
   Earth System Modeling Framework (ESMF). They are a software project that provides a software library to support Earth System modeling. We provide interfaces for ESMF as well as use their regridding capabilities for offline CLM tools.
@@ -156,8 +143,5 @@ RTM
 
 SCRIP
   Spherical Coordinate Remapping and Interpolation Package (SCRIP). We use it's file format for specifying both grid coordinates as well as mapping between different grids.
-
-VIC
-  Variable Infiltration Capacity (VIC) model for hydrology. This is an option to |version| in place of the standard |version| hydrology. The CLM_CONFIG_OPTS option for this is
 
   ``./xmlchange CLM_CONFIG_OPTS="-vichydro on" -append``
