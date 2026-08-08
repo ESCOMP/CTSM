@@ -37,13 +37,6 @@
   </test>
 
   <!-- aux_clm test suite failures -->
-  <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50Fates.derecho_intel.clm-FatesColdAllVars">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#3660</issue>
-      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
-    </phase>
-  </test>
   <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujraRsGs.derecho_intel.clm-default">
     <phase name="NLCOMP">
       <status>FAIL</status>
@@ -140,6 +133,64 @@
       <issue>ESCOMP/CDEPS#3788</issue>
     </phase>
   </test>
+
+  <test name="ERP_Ly3_P64x2.f10_f10_mg37.IHistClm50BgcCrop.derecho_intel.clm-cropMonthOutput">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld1096.f10_f10_mg37.I2000Clm50BgcCrop.derecho_intel.clm-clm50cropIrrigMonth_interp">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld1096.f10_f10_mg37.I2000Clm50BgcCrop.derecho_intel.clm-irrig_o3falk_reduceOutput">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld366.f10_f10_mg37.I2000Clm50BgcCrop.derecho_intel.clm-irrig_alternate_monthly">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld765.f10_f10_mg37.I2000Clm60BgcCrop.derecho_intel.clm-monthly">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_gnu.clm-monthly">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
+  <test name="ERP_Ly3_P64x2.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput--clm-matrixcnOn_ignore_warnings">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <comment>Does this also relate to #2619?</comment>
+      <issue>#4160</issue>
+    </phase>
+  </test>
+
   <!-- mpi-serial failures on derecho_intel with the intel compiler update to intel/2025.3.2 -->
   <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRsGs.derecho_intel.clm-decStart1851_noinitial">
     <phase name="RUN">
@@ -214,6 +265,7 @@
 
   <!-- fates test suite failures -->
 
+  <!--- NOTE: This test is also in aux_clm, but just including it here so it's not duplicated -->
   <test name="ERP_Ld9.f45_f45_mg37.I2000Clm50Fates.derecho_intel.clm-FatesColdAllVars">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
