@@ -33,7 +33,7 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch
-  use UrbanParamsType   , only : ac_dehumid
+  use UrbanParamsType   , only : IsACDehumidificationEnabled
 
   !
   ! !PUBLIC TYPES:
@@ -599,7 +599,7 @@ contains
               qflx_surf(c) = xs_urban(c)
            end if
            ! Send flood water flux to runoff for all urban columns.
-           if (ac_dehumid) then
+           if (IsACDehumidificationEnabled()) then
               qflx_surf(c) = qflx_surf(c) + qflx_floodc(c) + qflx_condensate_from_ac(c)
            else
               qflx_surf(c) = qflx_surf(c) + qflx_floodc(c)

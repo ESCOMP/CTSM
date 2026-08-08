@@ -17,7 +17,7 @@ module WaterFluxType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
-  use UrbanParamsType, only : ac_dehumid
+  use UrbanParamsType, only : IsACDehumidificationEnabled
   !
   implicit none
   private
@@ -597,7 +597,7 @@ contains
          long_name=this%info%lname('Rural total runoff'), &
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
 
-    if (ac_dehumid) then
+    if (IsACDehumidificationEnabled()) then
        this%qflx_condensate_from_ac_col(begc:endc) = 0.0_r8
        call hist_addfld1d ( &
             fname=this%info%fname('QCOND_FROM_AC'), &

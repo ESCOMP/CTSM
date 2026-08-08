@@ -218,7 +218,8 @@ contains
     use abortutils      , only : endrun
     use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
     use UrbanParamsType , only : urban_hac, urban_hac_off, urban_hac_on, urban_wasteheat_on, &
-                                 urban_explicit_ac, ac_dehumid
+                                 urban_explicit_ac, IsBuildingHumidityEnabled, &
+                                 IsACDehumidificationEnabled
     use QSatMod         , only : QSat
 !
 ! !ARGUMENTS:
@@ -393,7 +394,7 @@ contains
          t_shdw_inner_bef(l)  = t_shdw_inner(l)
          t_floor_bef(l)       = t_floor(l)
          t_building_bef(l)    = t_building(l)
-         if (ac_dehumid) then
+         if (IsBuildingHumidityEnabled()) then
             q_building_bef(l) = q_building(l)
          end if
          if (t_roof_inner_bef(l) .le. t_building_bef(l)) then
@@ -418,7 +419,7 @@ contains
          cp_floori(l) = cp_floor
          ! Intermediate calculation for concrete floor (W m-2 K-1)
          cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
-         if (ac_dehumid) then
+         if (IsBuildingHumidityEnabled()) then
             call QSat(t_building_bef(l), forc_pbot(g), qsat_building, es = esat_building)
             p_vapor = min(1._r8, q_building_bef(l) / qsat_building) * esat_building
             rho_dair(l) = (forc_pbot(g) - p_vapor) / (rair * t_building_bef(l)) &
@@ -726,7 +727,7 @@ contains
        end if
     end do
 
-    if (ac_dehumid) then
+    if (IsBuildingHumidityEnabled()) then
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
           if (urbpoi(l)) then
@@ -968,7 +969,7 @@ contains
          ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
          ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
          ! of the urban landunit.
-         if (ac_dehumid) then
+         if (IsBuildingHumidityEnabled()) then
             eflx_ventilation(l) = wtlunit_roof(l) * ( &
                  - ht_roof(l) * (vent_ach/3600._r8) * rho_dair(l) * cp_hair(l) * (taf(l) - t_building(l)) &
                  - ht_roof(l) * (vent_ach/3600._r8) * rho_dair(l) * hvap * (qaf(l) - q_building(l)) )
@@ -990,7 +991,7 @@ contains
           if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
             t_building_bef_hac(l) = t_building(l)
 !           rho_dair(l) = pstd / (rair*t_building(l))
-            if (ac_dehumid) then
+            if (IsACDehumidificationEnabled()) then
                q_building_bef_hac(l) = q_building(l)
                call QSat(t_building_bef_hac(l), forc_pbot(g), qsat_building_max)
                q_building_max = rh_building_max / 100._r8 * qsat_building_max
@@ -1005,11 +1006,11 @@ contains
                                      - (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
                 t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
                               * dtime / (ht_roof(l) * rho_dair(l) * cp_hair(l) * wtlunit_roof(l))
-                if (ac_dehumid) then
+                if (IsACDehumidificationEnabled()) then
                    eflx_urban_ac_sen(l) = p_ac(l) * eflx_urban_ac_sat(l)
                 end if
                 
-                if (ac_dehumid) then
+                if (IsACDehumidificationEnabled()) then
                    if (q_building_bef_hac(l) > q_building_max) then
                       ! Humidification during urban heating is not implemented.
                       eflx_urban_ac_sat_lat(l) = wtlunit_roof(l) * abs( &
@@ -1026,7 +1027,7 @@ contains
                 eflx_urban_ac(l) = wtlunit_roof(l) * abs( &
                      (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building(l) &
                      - (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
-                if (ac_dehumid) then
+                if (IsACDehumidificationEnabled()) then
                    eflx_urban_ac_sen(l) = eflx_urban_ac(l)
                 end if
               end if
@@ -1036,22 +1037,24 @@ contains
               eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building(l) &
                                    - (ht_roof(l) * rho_dair(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
             else
-              if (ac_dehumid) eflx_urban_ac_sen(l) = 0._r8
+              if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
               eflx_urban_ac(l) = 0._r8
               eflx_urban_heat(l) = 0._r8
             end if
 
           else
-            if (ac_dehumid) eflx_urban_ac_sen(l) = 0._r8
+            if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
             eflx_urban_ac(l) = 0._r8
             eflx_urban_heat(l) = 0._r8
           end if
-          if (ac_dehumid) then
+          if (IsBuildingHumidityEnabled()) then
              eflx_building(l) = wtlunit_roof(l) * ( &
                   (ht_roof(l) * rho_dair(l)*cp_hair(l)/dtime) * (t_building(l) - t_building_bef(l)) &
                   + (ht_roof(l) * rho_dair(l)*hvap/dtime) * (q_building(l) - q_building_bef(l)) )
-             qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
-             qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
+             if (IsACDehumidificationEnabled()) then
+                qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_dair(l)
+                qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
+             end if
              call QSat(t_building(l), forc_pbot(g), qsat_building)
              rh_building(l) = min(100._r8, q_building(l) / qsat_building * 100._r8)
           else
@@ -1061,7 +1064,7 @@ contains
        end if
     end do
 
-    if (ac_dehumid) then
+    if (IsACDehumidificationEnabled()) then
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
           if (urbpoi(l)) then

@@ -23,6 +23,8 @@ module UrbanParamsType
   public  :: CheckUrban        ! Check validity of urban points
   public  :: IsSimpleBuildTemp ! If using the simple building temperature method
   public  :: IsProgBuildTemp   ! If using the prognostic building temperature method
+  public  :: IsBuildingHumidityEnabled    ! If indoor building humidity is simulated
+  public  :: IsACDehumidificationEnabled  ! If AC dehumidification is simulated
   !
   ! !PRIVATE TYPE
   type urbinp_type
@@ -101,7 +103,10 @@ module UrbanParamsType
   character(len= *), parameter, public :: urban_hac_on =  'ON'                 
   character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'  
   character(len= 16), public           :: urban_hac = urban_hac_off
-  logical, public                      :: ac_dehumid = .false.         ! whether to simulate AC dehumidification
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_OFF = 0
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_ON = 1
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_DEHUMIDIFY = 2
+  integer, public                      :: building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
   logical, public                      :: urban_explicit_ac = .true.  ! whether to use explicit, time-varying AC adoption rate
   logical, public                      :: urban_traffic = .false.     ! urban traffic fluxes
 
@@ -849,7 +854,7 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 
-    namelist / clmu_inparm / urban_hac, ac_dehumid, urban_explicit_ac, urban_traffic, building_temp_method
+    namelist / clmu_inparm / urban_hac, building_humidity_mode, urban_explicit_ac, urban_traffic, building_temp_method
     !EOP
     !-----------------------------------------------------------------------
 
@@ -877,7 +882,7 @@ contains
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(urban_hac,             mpicom)
-    call shr_mpi_bcast(ac_dehumid,            mpicom)
+    call shr_mpi_bcast(building_humidity_mode, mpicom)
     call shr_mpi_bcast(urban_explicit_ac,     mpicom)
     call shr_mpi_bcast(urban_traffic,         mpicom)
     call shr_mpi_bcast(building_temp_method,  mpicom)
@@ -887,21 +892,28 @@ contains
        write(iulog,*)'Urban traffic fluxes are not implemented currently'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
-    if (ac_dehumid) then
+    if (building_humidity_mode < BUILDING_HUMIDITY_MODE_OFF .or. &
+         building_humidity_mode > BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
+       call endrun(msg='building_humidity_mode must be 0, 1, or 2'//errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON .and. &
+         building_temp_method /= BUILDING_TEMP_METHOD_PROG) then
+       call endrun(msg='building_humidity_mode=1 or 2 requires the prognostic building temperature method'// &
+            errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
        if (trim(urban_hac) /= urban_hac_on .and. trim(urban_hac) /= urban_wasteheat_on) then
-          call endrun(msg='ac_dehumid requires urban_hac to be ON or ON_WASTEHEAT'//errmsg(sourcefile, __LINE__))
+          call endrun(msg='building_humidity_mode=2 requires urban_hac to be ON or ON_WASTEHEAT'// &
+               errmsg(sourcefile, __LINE__))
        end if
        if (.not. urban_explicit_ac) then
-          call endrun(msg='ac_dehumid requires urban_explicit_ac=.true.'//errmsg(sourcefile, __LINE__))
-       end if
-       if (building_temp_method /= BUILDING_TEMP_METHOD_PROG) then
-          call endrun(msg='ac_dehumid requires the prognostic building temperature method'//errmsg(sourcefile, __LINE__))
+          call endrun(msg='building_humidity_mode=2 requires urban_explicit_ac=.true.'//errmsg(sourcefile, __LINE__))
        end if
     end if
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
-       write(iulog,*) '   urban air-conditioning dehumidification       = ', ac_dehumid
+       write(iulog,*) '   urban building humidity mode                  = ', building_humidity_mode
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
@@ -968,7 +980,32 @@ contains
 
   !-----------------------------------------------------------------------
 
-end module UrbanParamsType
+  logical function IsBuildingHumidityEnabled( )
+    implicit none
 
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsBuildingHumidityEnabled = building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON
+
+  end function IsBuildingHumidityEnabled
+
+  !-----------------------------------------------------------------------
+
+  logical function IsACDehumidificationEnabled( )
+    implicit none
+
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsACDehumidificationEnabled = building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY
+
+  end function IsACDehumidificationEnabled
+
+  !-----------------------------------------------------------------------
+
+end module UrbanParamsType
 
 

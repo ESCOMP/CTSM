@@ -36,7 +36,7 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope_routing
-  use UrbanParamsType    , only : ac_dehumid
+  use UrbanParamsType    , only : IsACDehumidificationEnabled
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -641,7 +641,7 @@ contains
           ! add qflx_drain_perched and qflx_flood
           if (col%active(c)) then
 
-             if (ac_dehumid) then
+             if (IsACDehumidificationEnabled()) then
                 errh2o_col(c) = endwb_col(c) - begwb_col(c) &
                      - (forc_rain_col(c) + forc_snow_col(c) + qflx_flood_col(c) &
                      + qflx_sfc_irrig_col(c) + qflx_glcice_dyn_water_flux_col(c) &
@@ -692,7 +692,7 @@ contains
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
-              if (ac_dehumid) then
+              if (IsACDehumidificationEnabled()) then
                  write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
               end if
 
@@ -732,7 +732,7 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
-       if (ac_dehumid) then
+       if (IsACDehumidificationEnabled()) then
           call c2g( bounds,  &
             qflx_condensate_from_ac_col(bounds%begc:bounds%endc),  &
             qflx_condensate_from_ac_grc(bounds%begg:bounds%endg),  &
@@ -740,7 +740,7 @@ contains
        end if
 
        do g = bounds%begg, bounds%endg
-          if (ac_dehumid) then
+          if (IsACDehumidificationEnabled()) then
              errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
                   - (forc_rain_grc(g) + forc_snow_grc(g) + forc_flood_grc(g) &
                   + qflx_sfc_irrig_grc(g) + qflx_glcice_dyn_water_flux_grc(g) &
@@ -803,7 +803,7 @@ contains
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
-             if (ac_dehumid) then
+             if (IsACDehumidificationEnabled()) then
                 write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
              end if
 

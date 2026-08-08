@@ -78,7 +78,7 @@ module WaterType
   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterTracerContainerType , only : water_tracer_container_type
   use WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
-  use UrbanParamsType          , only : IsProgBuildTemp, ac_dehumid
+  use UrbanParamsType          , only : IsBuildingHumidityEnabled
 
   implicit none
   private
@@ -387,7 +387,7 @@ contains
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
             this%bulk_and_tracers(i)%vars, &
-            IsProgBuildTemp() .and. ac_dehumid)
+            IsBuildingHumidityEnabled())
 
        call this%bulk_and_tracers(i)%waterbalance_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
@@ -771,7 +771,7 @@ contains
             altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag, &
-            is_prog_buildtemp=IsProgBuildTemp() .and. ac_dehumid)
+            is_prog_buildtemp=IsBuildingHumidityEnabled())
 
     end do
 
