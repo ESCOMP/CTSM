@@ -65,12 +65,11 @@ bad_compsets Clm50Sp "%SP"
 bad_compsets Clm60Sp "%SP"
 # ---- Note that specifying SP for NWP compsets as they shouldn't use BGC ----
 bad_compsets Nwp "%NWP-SP"
-# ---- NWP cases should always be stug GLC ---
+# ---- NWP cases should always be stub GLC ---
 bad_compsets Nwp Gs
 bad_compsets Fates "%FATES"
 bad_compsets FatesSp "%FATES-SP"
-# ---- Using full NoAnthro This fails with the error: grep: thro ": No such file or directory
-bad_compsets 'NoA' 'NOANTHRO_'
+bad_compsets 'NoAnthro' 'NOANTHRO_'
 
 # -- Period of simulation --
 bad_compsets I2000 2000_
@@ -91,8 +90,7 @@ bad_compsets Gswp "DATM%GSWP3v1"
 bad_compsets "Cru " "DATM%CRU"
 bad_compsets Nldas "DATM%NLDAS2"
 bad_compsets Qian '_DATM%QIA_'
-# ---- Using full "Spinup" This fails with the error: grep: up ": No such file or directory
-bad_compsets 'Spi' 'DATM%CPLHIST'
+bad_compsets 'Spinup' 'DATM%CPLHIST'
 
 # --- ROF models ---
 bad_compsets Miz _MIZUROUTE_
