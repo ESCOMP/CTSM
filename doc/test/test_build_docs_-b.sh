@@ -9,7 +9,7 @@ SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "${SCRIPT_DIR}/.."
 
 msg="~~~~~ Check that -b works"
-cmd="./build_docs -b _build -c"
+cmd="./build_docs -b _build -c --verbose"
 
 . test/compose_test_cmd.sh
 set -x
