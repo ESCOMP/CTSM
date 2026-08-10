@@ -1998,6 +1998,15 @@
       <option name="comment">Want a multi-year global crop restart test; this was 5 years when we were doing cold start, but 3 years is probably sufficient given that we have spun-up crop initial conditions</option>
     </options>
   </test>
+  <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_o3falk_reduceOutput">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Repeat the ERP_64x2_Ld1096 test above for a shorter period, this can be removed when #4160 is resolved</option>
+    </options>
+  </test>
   <test name="ERP_P64x2_Ld1096" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
@@ -2007,12 +2016,31 @@
       <option name="comment">Want a multi-year global crop restart test; this was 5 years when we were doing cold start, but 3 years is probably sufficient given that we have spun-up crop initial conditions</option>
     </options>
   </test>
+  <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">01:40:00</option>
+      <option name="comment">Repeat the ERP_64x2_Ld1096 test above for a shorter period, this can be removed when #4160 is resolved</option>
+    </options>
+  </test>
   <test name="ERP_P64x2_Ld366" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:30:00</option>
           <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
+        </options>
+      </machine>
+    </machines>
+  </test>
+  <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm">
+        <options>
+          <option name="wallclock">00:30:00</option>
+          <option name="comment">Repeat the ERP_64x2_Ld366 test above for a shorter period, this can be removed when #4160 is resolved</option>
         </options>
       </machine>
     </machines>
