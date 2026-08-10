@@ -14,6 +14,9 @@
 ./xmlchange CLM_STRUCTURE="fast"
 ./xmlchange CLM_CONFIGURATION="nwp"
 
+# In order to be compatible with collapse_urban
+./xmlchange GLC_TWO_WAY_COUPLING="FALSE"
+
 # Restarts aren't allowed for these tests, and turn off CPL history
 # First change in env_test.xml, then in the standard one so it won't complain there
 ./xmlchange --force REST_OPTION="never" --file env_test.xml
