@@ -4,24 +4,9 @@
 CTSM tools for analysis of CTSM history files -- or for creation or
 modification of CTSM input files.
 	
-I.  General directory structure:
+I. General directory structure NOW IN THE USER'S GUIDE
 
-    `$CTSMROOT/tools`
-        mksurfdata_esmf -- Create surface datasets.
-
-        crop_calendars --- Regrid and process GGCMI sowing and harvest date files for use in CTSM.
-
-        site_and_regional  Scripts for handling input datasets for site and regional cases.
-                           These scripts both help with creation of datasets using the
-                           standard process as well as subsetting existing datasets and overwriting
-                           some aspects for a specific case.
-
-        modify_input_files Scripts to modify CTSM input files. Specifically modifying the surface
-                           datasets and mesh files.
-
-        unsupported ------ Miscellaneous useful unsupported tools contributed by users. These tools may or may not work.
-
-II. Notes on building/running for each of the above tools:
+II. Notes on building and running the tools:
 
     mksurfdata_esmf has a cime configure and CMake based build using the following files:
 
@@ -30,14 +15,11 @@ II. Notes on building/running for each of the above tools:
         Makefile ---------------- GNU makefile to link the program together
         cmake ------------------- CMake macros for finding libraries
 
-    mkmapgrids and site_and_regional only contain scripts that do not need build files.
+    Tools with copies of files from other directories include a README.filecopies.md for more information.
 
-    Some tools have copies of files from other directories -- see the README.filecopies.md
-    file for more information on this.
+    Tools may have files with the directory name followed by .namelist to provide sample namelists, such as
 
-    Tools may also have files with the directory name followed by namelist to provide sample namelists.
-
-	<directory>.namelist ------ Namelist to create a global file.
+	<directory>.namelist ---- Namelist to create a global file
 
     These files are also used by the test scripts to test the tools (see the
     README.testing.md) file.

@@ -1,4 +1,4 @@
-# $CTSMROOT/tools/unsupported/README
+# $CTSMROOT/tools/unsupported/README.md
 
 Updated 2026/08/11 slevis
 Written 2019/01/24 ekluzek
