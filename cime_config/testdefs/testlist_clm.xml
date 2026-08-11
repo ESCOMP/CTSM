@@ -3637,6 +3637,7 @@
   <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdAllVars">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="fates"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3766,15 +3767,6 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Short ERP FATES test for f09_g17 grid.</option>
-    </options>
-  </test>
-  <test name="ERP_Ld9" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdAllVars">
-    <machines>
-      <machine name="derecho" compiler="intel" category="fates"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP FATES test covering all standard FATES history variables.</option>
     </options>
   </test>
   <test name="ERP_Ld90" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCStarvationExp">
