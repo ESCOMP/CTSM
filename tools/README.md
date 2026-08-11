@@ -19,10 +19,7 @@ I.  General directory structure:
         modify_input_files Scripts to modify CTSM input files. Specifically modifying the surface
                            datasets and mesh files.
 
-        contrib ---------- Miscellaneous tools for pre or post processing of CTSM.
-                           Typically these are contributed by anyone who has something
-                           they think might be helpful to the community. They may not
-                           be as well tested or supported as other tools.
+        unsupported ------ Miscellaneous useful unsupported tools contributed by users. These tools may or may not work.
 
 II. Notes on building/running for each of the above tools:
 
