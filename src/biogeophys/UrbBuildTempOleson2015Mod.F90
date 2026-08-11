@@ -1024,7 +1024,7 @@ contains
               else
                 t_building(l) = t_building_max(l)
                 eflx_urban_ac(l) = wtlunit_roof(l) * abs( &
-                     (ht_roof(l) * rho_hair(l) * cp_hair(l) / dtime) * t_building(l) &
+                     (ht_roof(l) * rho_air(l) * cp_hair(l) / dtime) * t_building(l) &
                      - (ht_roof(l) * rho_air(l) * cp_hair(l) / dtime) * t_building_bef_hac(l) )
                 if (IsACDehumidificationEnabled()) then
                    eflx_urban_ac_sen(l) = eflx_urban_ac(l)
