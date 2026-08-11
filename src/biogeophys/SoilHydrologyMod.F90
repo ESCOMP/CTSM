@@ -598,7 +598,7 @@ contains
                    pondmx_urban/dtime)
               qflx_surf(c) = xs_urban(c)
            end if
-           ! Send flood water flux to runoff for all urban columns.
+           ! Send flood water flux and air-conditioning condensate to runoff for all urban columns.
            if (IsACDehumidificationEnabled()) then
               qflx_surf(c) = qflx_surf(c) + qflx_floodc(c) + qflx_condensate_from_ac(c)
            else

@@ -913,7 +913,7 @@ contains
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
-       write(iulog,*) '   urban building humidity mode                  = ', building_humidity_mode
+       write(iulog,*) '   urban building humidity mode                   = ', building_humidity_mode
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
@@ -980,8 +980,23 @@ contains
 
   !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsBuildingHumidityEnabled
+  !
+  ! !INTERFACE:
+  !
   logical function IsBuildingHumidityEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If indoor building humidity is being simulated
+    !
+    ! !USES:
     implicit none
+    !EOP
+    !-----------------------------------------------------------------------
 
     if ( .not. ReadNamelist )then
        write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
@@ -993,8 +1008,23 @@ contains
 
   !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsACDehumidificationEnabled
+  !
+  ! !INTERFACE:
+  !
   logical function IsACDehumidificationEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If air-conditioning dehumidification is enabled
+    !
+    ! !USES:
     implicit none
+    !EOP
+    !-----------------------------------------------------------------------
 
     if ( .not. ReadNamelist )then
        write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
@@ -1007,5 +1037,4 @@ contains
   !-----------------------------------------------------------------------
 
 end module UrbanParamsType
-
 

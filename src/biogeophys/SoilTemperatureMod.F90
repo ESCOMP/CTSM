@@ -20,7 +20,6 @@ module SoilTemperatureMod
   use WaterFluxBulkType       , only : waterfluxbulk_type
   use WaterStateBulkType      , only : waterstatebulk_type
   use WaterDiagnosticBulkType , only : waterdiagnosticbulk_type
-  ! use WaterDiagnosticType     , only : waterdiagnostic_type
   use SolarAbsorbedType       , only : solarabs_type
   use SoilStateType           , only : soilstate_type
   use EnergyFluxType          , only : energyflux_type
@@ -145,7 +144,6 @@ contains
     type(solarabs_type)            ,  intent(inout) :: solarabs_inst
     type(energyflux_type)          ,  intent(inout) :: energyflux_inst
     type(temperature_type)         ,  intent(inout) :: temperature_inst
-    ! type(waterdiagnostic_type)     , intent(inout)  :: waterdiagnostic_inst ! water diagnostic variables
     !
     ! !LOCAL VARIABLES:
     integer  :: j,c,l,g                                                  ! indices

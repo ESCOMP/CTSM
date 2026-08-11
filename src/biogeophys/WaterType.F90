@@ -726,7 +726,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
-       watsat_col, t_soisno_col, altmax_lastyear_indx, is_prog_buildtemp)
+       watsat_col, t_soisno_col, altmax_lastyear_indx, is_prog_buildhumidity)
     !
     ! !DESCRIPTION:
     ! Read/write information to/from restart file for all water variables
@@ -740,7 +740,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:) !col active layer index last year
-    logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
+    logical          , intent(in)    :: is_prog_buildhumidity    ! Prognostic building humidity is being used
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -771,7 +771,7 @@ contains
             altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag, &
-            is_prog_buildtemp=IsBuildingHumidityEnabled())
+            is_prog_buildhumidity=is_prog_buildhumidity)
 
     end do
 

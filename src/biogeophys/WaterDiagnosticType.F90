@@ -70,21 +70,21 @@ module WaterDiagnosticType
 contains
 
   !------------------------------------------------------------------------
-  subroutine Init(this, bounds, info, tracer_vars, is_prog_buildtemp)
+  subroutine Init(this, bounds, info, tracer_vars, is_prog_buildhumidity)
 
     class(waterdiagnostic_type), intent(inout) :: this
     type(bounds_type) , intent(in)    :: bounds  
     class(water_info_base_type), intent(in), target :: info
     type(water_tracer_container_type), intent(inout) :: tracer_vars
-    logical, intent(in) :: is_prog_buildtemp    ! Prognostic building temp is being used
+    logical, intent(in) :: is_prog_buildhumidity    ! Prognostic building humidity is being used
 
     this%info => info
 
     call this%InitAllocate(bounds, tracer_vars)
 
-    call this%InitHistory(bounds, is_prog_buildtemp)
+    call this%InitHistory(bounds, is_prog_buildhumidity)
 
-    call this%InitCold(bounds, is_prog_buildtemp)
+    call this%InitCold(bounds, is_prog_buildhumidity)
 
   end subroutine Init
 
@@ -147,7 +147,7 @@ contains
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
-  subroutine InitHistory(this, bounds, is_prog_buildtemp)
+  subroutine InitHistory(this, bounds, is_prog_buildhumidity)
     !
     ! !DESCRIPTION:
     ! Initialize module data structure
@@ -158,7 +158,7 @@ contains
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type), intent(in) :: bounds  
-    logical, intent(in) :: is_prog_buildtemp ! Prognostic building temp is being used
+    logical, intent(in) :: is_prog_buildhumidity ! Prognostic building humidity is being used
     !
     ! !LOCAL VARIABLES:
     integer           :: begp, endp
@@ -250,7 +250,7 @@ contains
          ptr_col=this%snowice_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
     
-    if ( is_prog_buildtemp ) then
+    if ( is_prog_buildhumidity ) then
        this%q_building_lun(begl:endl) = spval
        call hist_addfld1d ( &
             fname=this%info%fname('QBUILD'), &
@@ -263,7 +263,7 @@ contains
   end subroutine InitHistory
 
   !-----------------------------------------------------------------------
-  subroutine InitCold(this, bounds, is_prog_buildtemp)
+  subroutine InitCold(this, bounds, is_prog_buildhumidity)
     !
     ! !DESCRIPTION:
     ! Initialize time constant variables and cold start conditions 
@@ -274,7 +274,7 @@ contains
     ! !ARGUMENTS:
     class(waterdiagnostic_type), intent(in) :: this
     type(bounds_type)     , intent(in)    :: bounds
-    logical               , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
+    logical               , intent(in)    :: is_prog_buildhumidity    ! Prognostic building humidity is being used
     !
     ! !LOCAL VARIABLES:
     integer            :: l
@@ -305,7 +305,7 @@ contains
     end do
 
     ! Initialize internal building specific humidity (following example above and t_building_max in TemperatureType.F90)
-    if ( is_prog_buildtemp ) then
+    if ( is_prog_buildhumidity ) then
        do l = bounds%begl, bounds%endl
           if (lun%urbpoi(l)) then
              this%q_building_lun(l) = this%qaf_lun(l) ! set to urban canopy specific humidity
@@ -316,7 +316,7 @@ contains
   end subroutine InitCold
 
   !------------------------------------------------------------------------
-  subroutine Restart(this, bounds, ncid, flag, is_prog_buildtemp)
+  subroutine Restart(this, bounds, ncid, flag, is_prog_buildhumidity)
     ! 
     ! !DESCRIPTION:
     ! Read/Write module information to/from restart file.
@@ -333,7 +333,7 @@ contains
     type(bounds_type), intent(in)    :: bounds 
     type(file_desc_t), intent(inout) :: ncid   ! netcdf id
     character(len=*) , intent(in)    :: flag   ! 'read' or 'write'
-    logical          , intent(in)    :: is_prog_buildtemp    ! Prognostic building temp is being used
+    logical          , intent(in)    :: is_prog_buildhumidity    ! Prognostic building humidity is being used
     !
     ! !LOCAL VARIABLES:
     integer  :: c,l,j
@@ -369,7 +369,7 @@ contains
             interpinic_flag='interp', readvar=readvar, data=this%total_plant_stored_h2o_col)
     end if
 
-    if ( is_prog_buildtemp ) then
+    if ( is_prog_buildhumidity ) then
        ! landunit type physical state variable - q_building
        call restartvar(ncid=ncid, flag=flag, &
             varname=this%info%fname('q_building'), &

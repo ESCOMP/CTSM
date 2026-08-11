@@ -826,7 +826,7 @@ contains
     !------------------------------------------------------------------------
 
 
-    call this%Restart(bounds, ncid, flag=flag, is_prog_buildtemp=IsBuildingHumidityEnabled())
+    call this%Restart(bounds, ncid, flag=flag, is_prog_buildhumidity=IsBuildingHumidityEnabled())
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, &
