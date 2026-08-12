@@ -207,12 +207,12 @@ contains
 ! !USES:
     use shr_kind_mod    , only : r8 => shr_kind_r8
     use clm_time_manager, only : get_step_size_real
-    use clm_varcon      , only : rair, pstd, cpair, sb, hcv_roof, hcv_roof_enhanced, &
+    use clm_varcon      , only : rair, cpair, sb, hcv_roof, hcv_roof_enhanced, &
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
                                  dz_floor, dens_floor, cp_floor, vent_ach, &
                                  rh_building_max, hvap, rwat, cpwvap
-    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_imperv
+    use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
     use clm_varpar      , only : nlevurb, nlevsno, nlevmaxurbgrnd
@@ -237,7 +237,7 @@ contains
     type(urbantv_type)    , intent(in)    :: urbantv_inst     ! urban time varying variables
     type(waterdiagnosticbulk_type), intent(inout) :: waterdiagnosticbulk_inst ! water diagnostic variables
     type(waterfluxbulk_type), intent(inout) :: waterfluxbulk_inst ! water flux variables
-    type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst
+    type(atm2lnd_type)    , intent(in)    :: atm2lnd_inst     ! forcing variables from atmosphere
 !
 ! !LOCAL VARIABLES:
     integer, parameter :: neq = 5          ! number of equation/unknowns
@@ -336,6 +336,7 @@ contains
     ctype             => col%itype                         , & ! Input:  [integer (:)]  column type
     zi                => col%zi                            , & ! Input:  [real(r8) (:,:)]  interface level below a "z" level (m)
     z                 => col%z                             , & ! Input:  [real(r8) (:,:)]  layer thickness (m)
+    forc_pbot         => atm2lnd_inst%forc_pbot_not_downscaled_grc, & ! Input: [real(r8) (:)]  atmospheric pressure (Pa)
 
     ht_roof           => lun%ht_roof                       , & ! Input:  [real(r8) (:)]  height of urban roof (m) 
     canyon_hwr        => lun%canyon_hwr                    , & ! Input:  [real(r8) (:)]  ratio of building height to street hwidth (-)
@@ -424,7 +425,8 @@ contains
                  + p_vapor / (rwat * t_building_bef(l))
             cp_hair(l) = cpair + cpwvap * q_building_bef(l)
          else
-            rho_air(l) = pstd / (rair*t_building_bef(l))
+            ! Density of dry air at surface pressure and t_building (kg m-3)
+            rho_air(l) = forc_pbot(g) / (rair*t_building_bef(l))
             cp_hair(l) = cpair
          end if
          ! Building height to building width ratio

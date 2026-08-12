@@ -1,0 +1,2 @@
+! Set mosart history output to daily, so that the ERI tests work
+nhtfrq = -24

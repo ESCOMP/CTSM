@@ -1,6 +1,7 @@
 """
 Regrid GGCMI sowing and harvest date files
 """
+
 from subprocess import run
 import os
 import glob
@@ -20,6 +21,10 @@ from ctsm.ctsm_pylib_dependent_utils import (  # pylint: disable=wrong-import-po
     import_coord_2d,
 )
 from ctsm import ctsm_logging  # pylint: disable=wrong-import-position
+
+# Functions here were written with too many positional arguments. At some point that should be
+# fixed. For now, we'll just disable the warning.
+# pylint: disable=too-many-positional-arguments
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +201,7 @@ def get_template_da_out(template_ds_in):
     """
     Get template output DataArray from input Dataset
     """
+    n_lat = None
     if "lat" in template_ds_in:
         lat, n_lat = import_coord_1d(template_ds_in, "lat")
     elif "LATIXY" in template_ds_in:
@@ -209,6 +215,7 @@ def get_template_da_out(template_ds_in):
         lat = lat.reindex(lat=list(reversed(lat["lat"])))
 
     # Import and format longitude
+    n_lon = None
     if "lon" in template_ds_in:
         lon, n_lon = import_coord_1d(template_ds_in, "lon")
     elif "LONGXY" in template_ds_in:

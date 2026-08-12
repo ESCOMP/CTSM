@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for run_sys_tests
-"""
+"""Unit tests for run_sys_tests"""
 
 from __future__ import print_function
 import unittest
@@ -10,9 +9,7 @@ import shutil
 import os
 import re
 from datetime import datetime
-
-import six
-from six_additions import mock, assertNotRegex
+from unittest import mock
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing
@@ -24,6 +21,7 @@ from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
 # pylint: disable=invalid-name
+
 
 # Replace the slow _record_git_status with a fake that does nothing
 @mock.patch("ctsm.run_sys_tests._record_git_status", mock.MagicMock(return_value=None))
@@ -112,18 +110,18 @@ class TestRunSysTests(unittest.TestCase):
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0].cmd
         expected_create_test = os.path.join(self._cime_path(), "scripts", "create_test")
-        six.assertRegex(self, command, r"^ *{}\s".format(re.escape(expected_create_test)))
-        six.assertRegex(self, command, r"--test-id +{}\s".format(self._expected_testid()))
+        self.assertRegex(command, r"^ *{}\s".format(re.escape(expected_create_test)))
+        self.assertRegex(command, r"--test-id +{}\s".format(self._expected_testid()))
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
-        six.assertRegex(self, command, r"--output-root +{}\s".format(expected_testroot_path))
-        six.assertRegex(self, command, r"--retry +0(\s|$)")
-        six.assertRegex(self, command, r"test1 +test2(\s|$)")
-        assertNotRegex(self, command, r"--compare\s")
-        assertNotRegex(self, command, r"--generate\s")
-        assertNotRegex(self, command, r"--baseline-root\s")
+        self.assertRegex(command, r"--output-root +{}\s".format(expected_testroot_path))
+        self.assertRegex(command, r"--retry +0(\s|$)")
+        self.assertRegex(command, r"test1 +test2(\s|$)")
+        self.assertNotRegex(command, r"--compare\s")
+        self.assertNotRegex(command, r"--generate\s")
+        self.assertNotRegex(command, r"--baseline-root\s")
         # In the machine object for this test, create_test_queue will be 'unspecified';
         # verify that this results in there being no '--queue' argument:
-        assertNotRegex(self, command, r"--queue\s")
+        self.assertNotRegex(command, r"--queue\s")
 
         expected_cs_status = os.path.join(
             self._scratch, self._expected_testroot(), "cs.status.fails"
@@ -161,18 +159,18 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 1)
         command = all_commands[0].cmd
-        six.assertRegex(self, command, r"--test-id +mytestid(\s|$)")
+        self.assertRegex(command, r"--test-id +mytestid(\s|$)")
         expected_testroot = os.path.join(testroot_base, "tests_mytestid")
-        six.assertRegex(self, command, r"--output-root +{}(\s|$)".format(expected_testroot))
-        six.assertRegex(self, command, r"--testfile +/path/to/testfile(\s|$)")
-        six.assertRegex(self, command, r"--compare +mycompare(\s|$)")
-        six.assertRegex(self, command, r"--generate +mygenerate(\s|$)")
-        six.assertRegex(self, command, r"--baseline-root +myblroot(\s|$)")
-        six.assertRegex(self, command, r"--walltime +3:45:67(\s|$)")
-        six.assertRegex(self, command, r"--queue +runqueue(\s|$)")
-        six.assertRegex(self, command, r"--project +myaccount(\s|$)")
-        six.assertRegex(self, command, r"--retry +5(\s|$)")
-        six.assertRegex(self, command, r"--some +extra +--createtest +args(\s|$)")
+        self.assertRegex(command, r"--output-root +{}(\s|$)".format(expected_testroot))
+        self.assertRegex(command, r"--testfile +/path/to/testfile(\s|$)")
+        self.assertRegex(command, r"--compare +mycompare(\s|$)")
+        self.assertRegex(command, r"--generate +mygenerate(\s|$)")
+        self.assertRegex(command, r"--baseline-root +myblroot(\s|$)")
+        self.assertRegex(command, r"--walltime +3:45:67(\s|$)")
+        self.assertRegex(command, r"--queue +runqueue(\s|$)")
+        self.assertRegex(command, r"--project +myaccount(\s|$)")
+        self.assertRegex(command, r"--retry +5(\s|$)")
+        self.assertRegex(command, r"--some +extra +--createtest +args(\s|$)")
 
         expected_cs_status = os.path.join(expected_testroot, "cs.status.fails")
         self.assertTrue(os.path.isfile(expected_cs_status))
@@ -202,18 +200,16 @@ class TestRunSysTests(unittest.TestCase):
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
         for command in all_commands:
-            six.assertRegex(self, command.cmd, r"--xml-category +{}(\s|$)".format("my_suite"))
-            six.assertRegex(
-                self, command.cmd, r"--xml-machine +{}(\s|$)".format(self._MACHINE_NAME)
-            )
+            self.assertRegex(command.cmd, r"--xml-category +{}(\s|$)".format("my_suite"))
+            self.assertRegex(command.cmd, r"--xml-machine +{}(\s|$)".format(self._MACHINE_NAME))
 
-        six.assertRegex(self, all_commands[0].cmd, r"--xml-compiler +intel(\s|$)")
-        six.assertRegex(self, all_commands[1].cmd, r"--xml-compiler +pgi(\s|$)")
+        self.assertRegex(all_commands[0].cmd, r"--xml-compiler +intel(\s|$)")
+        self.assertRegex(all_commands[1].cmd, r"--xml-compiler +pgi(\s|$)")
 
         expected_testid1 = "{}_int".format(self._expected_testid())
         expected_testid2 = "{}_pgi".format(self._expected_testid())
-        six.assertRegex(self, all_commands[0].cmd, r"--test-id +{}(\s|$)".format(expected_testid1))
-        six.assertRegex(self, all_commands[1].cmd, r"--test-id +{}(\s|$)".format(expected_testid2))
+        self.assertRegex(all_commands[0].cmd, r"--test-id +{}(\s|$)".format(expected_testid1))
+        self.assertRegex(all_commands[1].cmd, r"--test-id +{}(\s|$)".format(expected_testid2))
 
         expected_testroot_path = os.path.join(self._scratch, self._expected_testroot())
         self.assertEqual(
@@ -259,8 +255,8 @@ class TestRunSysTests(unittest.TestCase):
 
         all_commands = machine.job_launcher.get_commands()
         self.assertEqual(len(all_commands), 2)
-        six.assertRegex(self, all_commands[0].cmd, r"--xml-compiler +comp1a(\s|$)")
-        six.assertRegex(self, all_commands[1].cmd, r"--xml-compiler +comp2b(\s|$)")
+        self.assertRegex(all_commands[0].cmd, r"--xml-compiler +comp1a(\s|$)")
+        self.assertRegex(all_commands[1].cmd, r"--xml-compiler +comp2b(\s|$)")
 
     def test_withDryRun_nothingDone(self):
         """With dry_run=True, no directories should be created, and no commands should be run"""

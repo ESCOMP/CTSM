@@ -1,5 +1,6 @@
 """
-This module contains the NeonSite class and class functions which are used in run_neon.py
+This module contains the NeonSite class and class functions which extend the tower_site class for
+things that are specific just for NEON sites.
 """
 
 # Import libraries
@@ -33,85 +34,8 @@ class NeonSite(TowerSite):
     A class for encapsulating neon sites.
     """
 
-    def build_base_case(
-        self,
-        cesmroot,
-        output_root,
-        res,
-        compset,
-        user_mods_dirs=None,
-        overwrite=False,
-        setup_only=False,
-    ):
-        if user_mods_dirs is None:
-            user_mods_dirs = [
-                os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
-            ]
-        case_path = super().build_base_case(cesmroot, output_root, res, compset, user_mods_dirs)
-
-        return case_path
-
-    # pylint: disable=too-many-statements
-    def run_case(
-        self,
-        base_case_root,
-        run_type,
-        prism,
-        run_length,
-        user_version,
-        tower_type=None,
-        user_mods_dirs=None,
-        overwrite=False,
-        setup_only=False,
-        no_batch=False,
-        rerun=False,
-        experiment=False,
-    ):
-        """
-        Run case.
-
-        Args:
-        self
-        base_case_root: str, opt
-            file path of base case
-        run_type: str, opt
-            transient, post_ad, or ad case, default transient
-        prism: bool, opt
-            if True, use PRISM precipitation, default False
-        run_length: str, opt
-            length of run, default '4Y'
-        user_version: str, opt
-            default 'latest'
-        overwrite: bool, opt
-            default False
-        setup_only: bool, opt
-            default False; if True, set up but do not run case
-        no_batch: bool, opt
-            default False
-        rerun: bool, opt
-            default False
-        experiment: str, opt
-            name of experiment, default False
-        """
-        user_mods_dirs = [
-            os.path.join(self.cesmroot, "cime_config", "usermods_dirs", "NEON", self.name)
-        ]
-        tower_type = "NEON"
-
-        super().run_case(
-            base_case_root,
-            run_type,
-            prism,
-            run_length,
-            user_version,
-            tower_type,
-            user_mods_dirs,
-            overwrite,
-            setup_only,
-            no_batch,
-            rerun,
-            experiment,
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__("NEON", *args, **kwargs)
 
     def modify_user_nl(self, case_root, run_type, rundir, site_lines=None):
         # TODO: include neon-specific user namelist lines, using this as just an example currently

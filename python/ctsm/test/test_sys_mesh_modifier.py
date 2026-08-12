@@ -57,6 +57,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         self._lon_varname = None
         self._lat_dimname = None
         self._lon_dimname = None
+        self._lon_type = 360
 
         self._previous_dir = os.getcwd()
         os.chdir(self._tempdir)  # cd to tempdir
@@ -80,7 +81,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # The mask will be idnetically 1, no matter the input grid (you can, change it, but you have to get it from a mapping file)
         # Since, the mask is going to be changed later, it's fine that the mask at this point is identically 1.
 
-        # This could also alturnatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
+        # This could also alternatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
         ncks_cmd = (
             f"ncks --rgr infer --rgr scrip={self.scrip_file} {fsurdat_in} {self.metadata_file}"
         )
@@ -233,6 +234,8 @@ class TestSysMeshMaskModifier(unittest.TestCase):
                         line = f"\nlat_varname = {self._lat_varname}"
                     elif re.match(r" *lon_varname *=", line):
                         line = f"\nlon_varname = {self._lon_varname}"
+                    elif re.match(r" *lon_type *=", line):
+                        line = f"\nlon_type = {self._lon_type}"
                     cfg_out.write(line)
 
 

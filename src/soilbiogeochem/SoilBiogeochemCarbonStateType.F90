@@ -27,6 +27,8 @@ module SoilBiogeochemCarbonStateType
      
      ! all c pools involved in decomposition
      real(r8), pointer :: decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
+     real(r8), pointer :: decomp0_cpools_vr_col(:,:,:) ! (gC/m3) vertically-resolved C baseline (initial value of this year) in decomposing (litter, cwd, soil) pools in dimension (col,nlev,npools)
+     real(r8), pointer :: decomp_cpools_vr_SASUsave_col(:,:,:) ! (gC/m3) vertically-resolved decomposing (litter, cwd, soil) c pools
      real(r8), pointer :: decomp_soilc_vr_col  (:,:)   ! (gC/m3) vertically-resolved decomposing total soil c pool
      real(r8), pointer :: ctrunc_vr_col        (:,:)   ! (gC/m3) vertically-resolved column-level sink for C truncation
 
@@ -54,6 +56,17 @@ module SoilBiogeochemCarbonStateType
 
      
      ! Matrix-cn
+     real(r8), pointer :: matrix_cap_decomp_cpools_col    (:,:)   ! (gC/m2) C capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
+     real(r8), pointer :: matrix_cap_decomp_cpools_vr_col (:,:,:) ! (gC/m3) vertically-resolved C capacity in decomposing (litter, cwd, soil) pools in dimension(col,nlev,npools)
+     real(r8), pointer :: in_acc                          (:,:)   ! (gC/m3/yr) accumulated litter fall C input per year in dimension(col,nlev*npools)
+     real(r8), pointer :: in_acc_2d                       (:,:,:) ! (gC/m3/yr) accumulated litter fall C input per year in dimension(col,nlev,npools)
+     real(r8), pointer :: tran_acc                        (:,:,:) ! (gC/m3/yr) accumulated C transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools)
+     real(r8), pointer :: vert_up_tran_acc                (:,:,:) ! (gC/m3/yr) accumulated upward vertical C transport in dimension(col,nlev,npools)
+     real(r8), pointer :: vert_down_tran_acc              (:,:,:) ! (gC/m3/yr) accumulated downward vertical C transport in dimension(col,nlev,npools)
+     real(r8), pointer :: exit_acc                        (:,:,:) ! (gC/m3/yr) accumulated exit C in dimension(col,nlev,npools)
+     real(r8), pointer :: hori_tran_acc                   (:,:,:) ! (gC/m3/yr) accumulated C transport between pools at the same level in dimension(col,nlev,ntransfers)
+     type(sparse_matrix_type) :: AKXcacc                          ! (gC/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
+     type(vector_type) :: matrix_Cinter                           ! (gC/m3)    vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
 
    contains
 
@@ -113,17 +126,41 @@ contains
 
     allocate( this%decomp_cpools_col    (begc :endc,1:ndecomp_pools))   ; this%decomp_cpools_col    (:,:) = nan
     allocate( this%decomp_cpools_1m_col (begc :endc,1:ndecomp_pools))   ; this%decomp_cpools_1m_col (:,:) = nan
+    if(use_soil_matrixcn)then
+       allocate( this%matrix_cap_decomp_cpools_col    (begc :endc,1:ndecomp_pools))   ; this%matrix_cap_decomp_cpools_col    (:,:) = nan
+    end if
 
     allocate( this%ctrunc_vr_col(begc :endc,1:nlevdecomp_full)) ; 
     this%ctrunc_vr_col        (:,:) = nan
 
     allocate(this%decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
     this%decomp_cpools_vr_col(:,:,:)= nan
-
-    ! Matrix-spinup
+    !matrix-spinup
     if(use_soil_matrixcn)then
-    end if
+       allocate(this%matrix_cap_decomp_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
+       this%matrix_cap_decomp_cpools_vr_col(:,:,:)= nan
+       allocate(this%decomp0_cpools_vr_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
+       this%decomp0_cpools_vr_col(:,:,:)= nan
+       allocate(this%decomp_cpools_vr_SASUsave_col(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))  
+       this%decomp_cpools_vr_SASUsave_col(:,:,:)= nan
+       allocate(this%in_acc(begc:endc,1:nlevdecomp*ndecomp_pools))
+       this%in_acc(:,:)= nan
+       allocate(this%tran_acc(begc:endc,1:nlevdecomp*ndecomp_pools,1:nlevdecomp*ndecomp_pools))
+       this%tran_acc(:,:,:)= nan
 
+       allocate(this%in_acc_2d(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%in_acc_2d(:,:,:)= nan
+       allocate(this%vert_up_tran_acc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%vert_up_tran_acc(:,:,:)= nan
+       allocate(this%vert_down_tran_acc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%vert_down_tran_acc(:,:,:)= nan
+       allocate(this%exit_acc(begc:endc,1:nlevdecomp_full,1:ndecomp_pools))
+       this%exit_acc(:,:,:)= nan
+       allocate(this%hori_tran_acc(begc:endc,1:nlevdecomp_full,1:ndecomp_cascade_transitions))
+       this%hori_tran_acc(:,:,:)= nan
+       call this%AKXcacc%InitSM(ndecomp_pools*nlevdecomp,begc,endc,decomp_cascade_con%n_all_entries)
+       call this%matrix_Cinter%InitV        (ndecomp_pools*nlevdecomp,begc,endc)
+    end if
     allocate(this%decomp_soilc_vr_col(begc:endc,1:nlevdecomp_full))  
     this%decomp_soilc_vr_col(:,:)= nan
 
@@ -217,11 +254,24 @@ contains
 
        ! Matrix solution history fields
        if(use_soil_matrixcn)then
+          this%matrix_cap_decomp_cpools_col(begc:endc,:) = spval
           do l  = 1, ndecomp_pools
              if ( nlevdecomp_full > 1 ) then
+                data2dptr => this%matrix_cap_decomp_cpools_vr_col(:,1:nlevsoi,l)
+                fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap_vr'
+                longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity (vertically resolved)'
+                call hist_addfld2d (fname=fieldname, units='gC/m^3',  type2d='levsoi', &
+                     avgflag='I', long_name=longname, &
+                     ptr_col=data2dptr)
              endif
 
              if ( nlevdecomp_full .eq. 1)then
+                data1dptr => this%matrix_cap_decomp_cpools_col(:,l)
+                fieldname = trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap'
+                longname =  trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity'
+                call hist_addfld1d (fname=fieldname, units='gC/m^2', &
+                     avgflag='I', long_name=longname, &
+                     ptr_col=data1dptr)
              end if
 
           end do
@@ -317,11 +367,24 @@ contains
 
        ! Matrix solution history fields
        if(use_soil_matrixcn)then
+          this%matrix_cap_decomp_cpools_vr_col(begc:endc,:,:) = spval
           do l = 1, ndecomp_pools
              if ( nlevdecomp_full > 1 ) then
+                data2dptr => this%matrix_cap_decomp_cpools_vr_col(:,1:nlevsoi,l)
+                fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap_vr'
+                longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity (vertically resolved)'
+                call hist_addfld2d (fname=fieldname, units='gC13/m^3',  type2d='levsoi', &
+                     avgflag='I', long_name=longname, &
+                     ptr_col=data2dptr, default='inactive')
              endif
 
              if ( nlevdecomp_full .eq. 1)then
+                data1dptr => this%matrix_cap_decomp_cpools_col(:,l)
+                fieldname = 'C13_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap'
+                longname =  'C13 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity'
+                call hist_addfld1d (fname=fieldname, units='gC13/m^2', &
+                     avgflag='I', long_name=longname, &
+                     ptr_col=data1dptr)
              end if
           end do
        end if
@@ -420,11 +483,22 @@ contains
        end if
 
        if(use_soil_matrixcn)then
+          this%matrix_cap_decomp_cpools_vr_col(begc:endc,:,:) = spval
           do l = 1, ndecomp_pools
              if ( nlevdecomp_full > 1 ) then
+                data2dptr => this%matrix_cap_decomp_cpools_vr_col(:,1:nlevsoi,l)
+                fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap_vr'
+                longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity (vertically resolved)'
+                call hist_addfld2d (fname=fieldname, units='gC14/m^3',  type2d='levsoi', &
+                     avgflag='I', long_name=longname, ptr_col=data2dptr, default='inactive')
              endif
 
              if ( nlevdecomp_full .eq. 1)then
+                data1dptr => this%matrix_cap_decomp_cpools_col(:,l)
+                fieldname = 'C14_'//trim(decomp_cascade_con%decomp_pool_name_history(l))//'C_Cap'
+                longname =  'C14 '//trim(decomp_cascade_con%decomp_pool_name_history(l))//' C capacity'
+                call hist_addfld1d (fname=fieldname, units='gC14/m^2', &
+                     avgflag='I', long_name=longname, ptr_col=data1dptr)
              end if
           end do
        end if
@@ -502,8 +576,10 @@ contains
 
     do c = bounds%begc, bounds%endc
        l = col%landunit(c)
-       ! matrix-spinup
+       ! matrix spinup
        if(use_soil_matrixcn)then
+          this%in_acc(c,:) = 0._r8
+          this%AKXcacc%M(c,:) = 0._r8
        end if
 
        if (lun%itype(l) == istsoil .or. lun%itype(l) == istcrop) then
@@ -514,10 +590,12 @@ contains
                    if (zsoi(j) < decomp_cascade_con%initial_stock_soildepth ) then  !! only initialize upper soil column
                       this%decomp_cpools_vr_col(c,j,k) = decomp_cascade_con%initial_stock(k)
                       if(use_soil_matrixcn)then
+                         this%matrix_cap_decomp_cpools_vr_col(c,j,k) = decomp_cascade_con%initial_stock(k)
                       end if
                    else
                       this%decomp_cpools_vr_col(c,j,k) = 0._r8
                       if(use_soil_matrixcn)then
+                         this%matrix_cap_decomp_cpools_vr_col(c,j,k) = 0._r8
                       end if
                    endif
                 end do
@@ -528,6 +606,7 @@ contains
                    do k = 1, ndecomp_pools
                       this%decomp_cpools_vr_col(c,j,k) = 0._r8
                       if(use_soil_matrixcn)then
+                         this%matrix_cap_decomp_cpools_vr_col(c,j,k) = 0._r8
                       end if
                    end do
                    this%ctrunc_vr_col(c,j) = 0._r8
@@ -536,6 +615,7 @@ contains
              this%decomp_cpools_col(c,1:ndecomp_pools)    = decomp_cascade_con%initial_stock(1:ndecomp_pools)
              this%decomp_cpools_1m_col(c,1:ndecomp_pools) = decomp_cascade_con%initial_stock(1:ndecomp_pools)
              if(use_soil_matrixcn)then
+                this%matrix_cap_decomp_cpools_col(c,1:ndecomp_pools)    = decomp_cascade_con%initial_stock(1:ndecomp_pools)
              end if
 
           else
@@ -544,6 +624,7 @@ contains
                 do k = 1, ndecomp_pools
                    this%decomp_cpools_vr_col(c,j,k) = c12_soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(c,j,k) * ratio
                    if(use_soil_matrixcn)then
+                      this%matrix_cap_decomp_cpools_vr_col(c,j,k) = c12_soilbiogeochem_carbonstate_inst%matrix_cap_decomp_cpools_vr_col(c,j,k) * ratio
                    end if
                 end do
                 this%ctrunc_vr_col(c,j) = c12_soilbiogeochem_carbonstate_inst%ctrunc_vr_col(c,j) * ratio
@@ -553,6 +634,7 @@ contains
                    do k = 1, ndecomp_pools
                       this%decomp_cpools_vr_col(c,j,k) = 0._r8
                       if(use_soil_matrixcn)then
+                         this%matrix_cap_decomp_cpools_vr_col(c,j,k) = 0._r8
                       end if
                    end do
                    this%ctrunc_vr_col(c,j) = 0._r8
@@ -562,11 +644,28 @@ contains
                 this%decomp_cpools_col(c,k)    = c12_soilbiogeochem_carbonstate_inst%decomp_cpools_col(c,k) * ratio
                 this%decomp_cpools_1m_col(c,k) = c12_soilbiogeochem_carbonstate_inst%decomp_cpools_1m_col(c,k) * ratio
                 if(use_soil_matrixcn)then
+                   this%matrix_cap_decomp_cpools_col(c,k)    = c12_soilbiogeochem_carbonstate_inst%matrix_cap_decomp_cpools_col(c,k) * ratio
                 end if
              end do
 
           endif
           if(use_soil_matrixcn)then
+             do j = 1, nlevdecomp_full
+                do k = 1, ndecomp_pools
+                   this%in_acc_2d(c,j,k) = 0._r8
+                   this%vert_up_tran_acc(c,j,k) = 0._r8
+                   this%vert_down_tran_acc(c,j,k) = 0._r8
+                   this%exit_acc(c,j,k) = 0._r8
+                   this%decomp0_cpools_vr_col(c,j,k) = max(this%decomp_cpools_vr_col(c,j,k),1.e-30_r8)
+                   this%decomp_cpools_vr_SASUsave_col(c,j,k) = 0._r8
+                end do
+                do k = 1, ndecomp_cascade_transitions
+                   this%hori_tran_acc(c,j,k) = 0._r8
+                end do
+             end do
+             do j = 1,decomp_cascade_con%n_all_entries
+                this%AKXcacc%M(c,j) = 0._r8
+             end do
           end if
        end if
 
@@ -669,6 +768,126 @@ contains
        end do
 
        if (use_soil_matrixcn)then
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
+             ptr2d => this%matrix_cap_decomp_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             ptr2d => this%decomp0_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double,  &
+               dim1name='column', dim2name='levgrnd', switchdim=.true., &
+               long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+               interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          if(flag=='write')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc_2d(:,j,i) = this%in_acc(:,j+(i-1)*nlevdecomp)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%vert_up_tran_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%vert_down_tran_acc(:,i_lev,i_decomp) =  this%AKXcacc%M(:,i)
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%exit_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%hori_tran_acc(:,i_lev,k) = this%AKXcacc%M(:,i)
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c'
+             ptr2d => this%in_acc_2d(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_up_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_down_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%exit_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          do i = 1, ndecomp_cascade_transitions
+             varname=trim(decomp_cascade_con%cascade_step_name(i))//'c'
+             ptr2d => this%hori_tran_acc(:,:,i)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          if(flag=='read')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc(:,j+(i-1)*nlevdecomp) = this%in_acc_2d(:,j,i)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%AKXcacc%M(:,i) = this%vert_up_tran_acc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%AKXcacc%M(:,i) = this%vert_down_tran_acc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%AKXcacc%M(:,i) = this%exit_acc(:,i_lev,i_decomp) 
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%AKXcacc%M(:,i) = this%hori_tran_acc(:,i_lev,k) 
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
        end if
 
        ptr2d => this%ctrunc_vr_col
@@ -699,6 +918,16 @@ contains
                scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
           if(use_soil_matrixcn)then
+             ptr2d => this%matrix_cap_decomp_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double,  &
+                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                  long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             ptr2d => this%decomp0_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double,  &
+                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                  long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
           end if
           if (flag=='read' .and. .not. readvar) then
              write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col' &
@@ -709,6 +938,9 @@ contains
                       this%decomp_cpools_vr_col(i,j,k) = c12_soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(i,j,k) * c3_r2
                    endif
                    if(use_soil_matrixcn)then
+                      if (this%matrix_cap_decomp_cpools_vr_col(i,j,k) /= spval .and. .not. isnan(this%matrix_cap_decomp_cpools_vr_col(i,j,k)) ) then
+                         this%matrix_cap_decomp_cpools_vr_col(i,j,k) = c12_soilbiogeochem_carbonstate_inst%matrix_cap_decomp_cpools_vr_col(i,j,k) * c3_r2
+                      endif
                    end if
                 end do
              end do
@@ -716,6 +948,113 @@ contains
        end do
 
        if (use_soil_matrixcn)then
+          if(flag=='write')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc_2d(:,j,i) = this%in_acc(:,j+(i-1)*nlevdecomp)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%vert_up_tran_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%vert_down_tran_acc(:,i_lev,i_decomp) =  this%AKXcacc%M(:,i)
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%exit_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%hori_tran_acc(:,i_lev,k) = this%AKXcacc%M(:,i)
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_13'
+             ptr2d => this%in_acc_2d(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_up_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_down_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%exit_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          do i = 1, ndecomp_cascade_transitions
+             varname=trim(decomp_cascade_con%cascade_step_name(i))//'c_13'
+             ptr2d => this%hori_tran_acc(:,:,i)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          if(flag=='read')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc(:,j+(i-1)*nlevdecomp) = this%in_acc_2d(:,j,i)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%AKXcacc%M(:,i) = this%vert_up_tran_acc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%AKXcacc%M(:,i) = this%vert_down_tran_acc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%AKXcacc%M(:,i) = this%exit_acc(:,i_lev,i_decomp) 
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%AKXcacc%M(:,i) = this%hori_tran_acc(:,i_lev,k) 
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
        end if
 
        ptr2d => this%ctrunc_vr_col
@@ -741,6 +1080,16 @@ contains
                scale_by_thickness=.false., &
                interpinic_flag='interp', readvar=readvar, data=ptr2d)
           if(use_soil_matrixcn)then
+             ptr2d => this%matrix_cap_decomp_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_Cap_vr", xtype=ncd_double,  &
+                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                  long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
+             ptr2d => this%decomp0_cpools_vr_col(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"0_vr", xtype=ncd_double,  &
+                  dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                  long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                  interpinic_flag='interp', readvar=readvar, data=ptr2d)
           end if
           if (flag=='read' .and. .not. readvar) then
              write(iulog,*) 'initializing soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col with atmospheric c14 value for: '//&
@@ -751,6 +1100,9 @@ contains
                       this%decomp_cpools_vr_col(i,j,k) = c12_soilbiogeochem_carbonstate_inst%decomp_cpools_vr_col(i,j,k) * c3_r2
                    endif
                    if(use_soil_matrixcn)then
+                      if (this%matrix_cap_decomp_cpools_vr_col(i,j,k) /= spval .and. .not. isnan(this%matrix_cap_decomp_cpools_vr_col(i,j,k)) ) then
+                         this%matrix_cap_decomp_cpools_vr_col(i,j,k) = c12_soilbiogeochem_carbonstate_inst%matrix_cap_decomp_cpools_vr_col(i,j,k) * c3_r2
+                      endif
                    end if
                 end do
              end do
@@ -758,6 +1110,113 @@ contains
        end do
 
        if (use_soil_matrixcn)then
+          if(flag=='write')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc_2d(:,j,i) = this%in_acc(:,j+(i-1)*nlevdecomp)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%vert_up_tran_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%vert_down_tran_acc(:,i_lev,i_decomp) =  this%AKXcacc%M(:,i)
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%exit_acc(:,i_lev,i_decomp) = this%AKXcacc%M(:,i)
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%hori_tran_acc(:,i_lev,k) = this%AKXcacc%M(:,i)
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
+          do k = 1, ndecomp_pools
+             varname=trim(decomp_cascade_con%decomp_pool_name_restart(k))//'c_14'
+             ptr2d => this%in_acc_2d(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_input_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_up_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_up_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%vert_down_tran_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_vert_down_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+                ptr2d => this%exit_acc(:,:,k)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_exit_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          do i = 1, ndecomp_cascade_transitions
+             varname=trim(decomp_cascade_con%cascade_step_name(i))//'c_14'
+             ptr2d => this%hori_tran_acc(:,:,i)
+             call restartvar(ncid=ncid, flag=flag, varname=trim(varname)//"_hori_tran_acc_vr", xtype=ncd_double,  &
+                dim1name='column', dim2name='levgrnd', switchdim=.true., &
+                long_name='',  units='', fill_value=spval, scale_by_thickness=.false., &
+                interpinic_flag='interp', readvar=readvar, data=ptr2d)
+          end do
+          if(flag=='read')then
+             do i = 1,ndecomp_pools
+                do j = 1,nlevdecomp
+                   this%in_acc(:,j+(i-1)*nlevdecomp) = this%in_acc_2d(:,j,i)
+                end do
+             end do
+             do i = 1,decomp_cascade_con%n_all_entries
+                found = .false.
+                j_lev    = mod(decomp_cascade_con%all_j(i) - 1,nlevdecomp)  + 1
+                j_decomp = (decomp_cascade_con%all_j(i) - j_lev)/nlevdecomp + 1
+                i_lev    = mod(decomp_cascade_con%all_i(i) - 1,nlevdecomp)  + 1
+                i_decomp = (decomp_cascade_con%all_i(i) - i_lev)/nlevdecomp + 1
+                if(i_decomp .eq. j_decomp .and. j_lev - i_lev .eq. 1)then
+                   this%AKXcacc%M(:,i) = this%vert_up_tran_acc(:,i_lev,i_decomp) 
+                   found = .true.
+                else
+                   if(i_decomp .eq. j_decomp .and. i_lev - j_lev .eq. 1)then
+                      this%AKXcacc%M(:,i) = this%vert_down_tran_acc(:,i_lev,i_decomp) 
+                      found = .true.
+                   else
+                      if(i_decomp .eq. j_decomp .and. i_lev .eq. j_lev)then
+                         this%AKXcacc%M(:,i) = this%exit_acc(:,i_lev,i_decomp) 
+                         found = .true.
+                      else
+                         do k=1,ndecomp_cascade_transitions
+                            if(i_decomp .ne. j_decomp .and. i_lev .eq. j_lev .and. &
+                               i_decomp .eq. decomp_cascade_con%cascade_receiver_pool(k) .and. &
+                               j_decomp .eq. decomp_cascade_con%cascade_donor_pool(k) .and. .not. found)then
+                               this%AKXcacc%M(:,i) = this%hori_tran_acc(:,i_lev,k) 
+                               found = .true.
+                            end if
+                         end do
+                      end if
+                   end if
+                end if
+                if(.not. found) write(iulog,*) 'Error in storing matrix restart variables',i
+             end do
+          end if
        end if
 
        ptr2d => this%ctrunc_vr_col
@@ -895,6 +1354,7 @@ contains
           this%decomp_cpools_col(i,k) = value_column
           this%decomp_cpools_1m_col(i,k) = value_column
           if(use_soil_matrixcn)then
+             this%matrix_cap_decomp_cpools_col(i,k) = value_column
           end if
        end do
     end do
@@ -905,6 +1365,8 @@ contains
              i = filter_column(fi)
              this%decomp_cpools_vr_col(i,j,k) = value_column
              if(use_soil_matrixcn)then
+                this%matrix_cap_decomp_cpools_vr_col(i,j,k) = value_column
+                this%decomp0_cpools_vr_col(i,j,k) = value_column
              end if
           end do
        end do
@@ -915,17 +1377,28 @@ contains
           do k = 1, ndecomp_pools
              do fi = 1, num_column
                 i = filter_column(fi)
+                this%in_acc_2d(i,j,k)          = value_column
+                this%vert_up_tran_acc(i,j,k)   = value_column
+                this%vert_down_tran_acc(i,j,k) = value_column
+                this%exit_acc(i,j,k) = value_column
              end do
           end do
           do k = 1, ndecomp_cascade_transitions
              do fi = 1, num_column
                 i = filter_column(fi)
+                this%hori_tran_acc(i,j,k)   = value_column
              end do
           end do
        end do
     end if
     
     if(use_soil_matrixcn)then
+       do j = 1,decomp_cascade_con%n_all_entries
+          do fi = 1, num_column
+             i = filter_column(fi)
+             this%AKXcacc%M(i,j) = value_column
+          end do
+       end do
     end if
 
   end subroutine SetValues
@@ -963,6 +1436,7 @@ contains
           c = filter_allc(fc)
           this%decomp_cpools_col(c,l) = 0._r8
           if(use_soil_matrixcn)then
+             this%matrix_cap_decomp_cpools_col(c,l) = 0._r8
           end if
        end do
     end do
@@ -974,6 +1448,9 @@ contains
                   this%decomp_cpools_col(c,l) + &
                   this%decomp_cpools_vr_col(c,j,l) * dzsoi_decomp(j)
              if(use_soil_matrixcn)then
+                this%matrix_cap_decomp_cpools_col(c,l) = &
+                     this%matrix_cap_decomp_cpools_col(c,l) + &
+                     this%matrix_cap_decomp_cpools_vr_col(c,j,l) * dzsoi_decomp(j)
              end if
           end do
        end do

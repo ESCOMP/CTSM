@@ -21,19 +21,27 @@ logger = logging.getLogger(__name__)
 
 
 class FSURDATMODIFYCTSM(SystemTestsCommon):
-    def __init__(self, case):
+    def setup_phase(self, clean=False, test_mode=False, reset=False, keep=False, disable_git=False):
         """
-        initialize an object interface to the SMS system test
+        override default SMS system test setup phase
         """
-        SystemTestsCommon.__init__(self, case)
+
+        # Default SMS behavior
+        self.setup_indv(
+            clean=clean,
+            test_mode=test_mode,
+            reset=reset,
+            keep=keep,
+            disable_git=disable_git,
+        )
 
         if not os.path.exists(
             os.path.join(self._get_caseroot(), "done_FSURDATMODIFYCTSM_setup.txt")
         ):
             # Create out-of-the-box lnd_in to obtain fsurdat_in
-            case.create_namelists(component="lnd")
+            self._case.create_namelists(component="lnd")
             # If fsurdat_in does not exist, download it from the server
-            case.check_all_input_data()
+            self._case.check_all_input_data()
 
             lnd_in_path = os.path.join(self._get_caseroot(), "CaseDocs/lnd_in")
             with open(lnd_in_path, "r") as lnd_in:

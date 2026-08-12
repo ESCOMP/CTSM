@@ -349,8 +349,8 @@ contains
          fname=this%info%fname('RH2M_R'), &
          units='%',  &
          avgflag='A', &
-         long_name=this%info%lname('Rural 2m specific humidity'), &
-         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval, default='inactive')
+         long_name=this%info%lname('Rural 2m relative humidity'), &
+         ptr_patch=this%rh_ref2m_r_patch, set_spec=spval)
 
     this%rh_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d ( &
@@ -358,7 +358,7 @@ contains
          units='%',  &
          avgflag='A', &
          long_name=this%info%lname('Urban 2m relative humidity'), &
-         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
 
     if (IsBuildingHumidityEnabled()) then
        this%rh_building_lun(begl:endl) = spval
@@ -371,12 +371,13 @@ contains
     end if
 
     this%rh_af_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('RHAF'), &
-         units='fraction', &
-         avgflag='A', &
-         long_name=this%info%lname('fractional humidity of canopy air'), &
-         ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld1d ( &
+!        fname=this%info%fname('RHAF'), &
+!        units='fraction', &
+!        avgflag='A', &
+!        long_name=this%info%lname('fractional humidity of canopy air'), &
+!        ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
 
     if(use_luna)then
        call hist_addfld1d ( &
@@ -557,12 +558,13 @@ contains
 
     this%bw_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%bw_col(:,-nlevsno+1:0)
-    call hist_addfld2d ( &
-         fname=this%info%fname('SNO_BW'), &
-         units='kg/m3', type2d='levsno', &
-         avgflag='A', &
-         long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d ( &
+!        fname=this%info%fname('SNO_BW'), &
+!        units='kg/m3', type2d='levsno', &
+!        avgflag='A', &
+!        long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d ( &
          fname=this%info%fname('SNO_BW_ICE'), &

@@ -1,3 +1,4 @@
 ! Turn on using the soil eroditability file in CTSM
 dust_emis_method = 'Zender_2003'
 zender_soil_erod_source = 'lnd'
+hist_fincl1   += 'FV'

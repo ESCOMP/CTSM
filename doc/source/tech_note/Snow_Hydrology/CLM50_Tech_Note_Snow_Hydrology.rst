@@ -3,7 +3,7 @@
 Snow Hydrology
 ===============
 
-The parameterizations for snow are based primarily on :ref:`Anderson (1976) <Anderson1976>`, :ref:`Jordan (1991) <Jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. The snowpack can have up to twelve layers. These layers are indexed in the Fortran code as :math:`i=-11,-10,...,-1,0` where layer :math:`i=0` is the snow layer next to the top soil layer and layer :math:`i=-11` is the top layer of a twelve-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl+1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`Figure three layer snow pack` for an example of the snow layer structure for a three layer snow pack.
+The parameterizations for snow are based primarily on :ref:`Anderson (1976) <Anderson1976>`, :ref:`Jordan (1991) <Jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. The snowpack can have up to twelve layers. These layers are indexed in the Fortran code as :math:`i=-11,-10,...,-1,0` where layer :math:`i=0` is the snow layer next to the top soil layer and layer :math:`i=-11` is the top layer of a twelve-layer snowpack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl+1` to describe the top layer of snow for the variable layer snowpack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`Figure three layer snow pack` for an example of the snow layer structure for a three layer snowpack.
 
 .. _Figure three layer snow pack:
 
@@ -15,7 +15,22 @@ Shown are three snow layers, :math:`i=-2`, :math:`i=-1`, and :math:`i=0`. The la
 
 The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}` (kg m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}` (m), and temperature :math:`T_{i}` (Chapter :numref:`rst_Soil and Snow Temperatures`). The water vapor phase is neglected. Snow can also exist in the model without being represented by explicit snow layers. This occurs when the snowpack is less than a specified minimum snow depth (:math:`z_{sno} < 0.01` m). In this case, the state variable is the mass of snow :math:`W_{sno}` (kg m\ :sup:`-2`).
 
-Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The following two sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snow pack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater flushing. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
+.. note:: 
+   In CLM, all water-related state variables, including snow and ice, are reported in **liquid water equivalent** units. This means that quantities such as snow water equivalent (SWE), soil ice content, and snowmelt are expressed in terms of the depth of liquid water that would result if the frozen material melted completely.
+
+   For example:
+   
+   - ``H2OSNO`` represents the total snow water equivalent in mm.
+   - ``H2OSOI_ICE`` is the soil ice content in mm.
+   - ``QSNOMELT`` is the snow melt rate in mm/s.
+
+   In contrast, some glaciological or cryosphere models (e.g., PISM, RACMO2, Crocus) may output variables in **ice-equivalent** units, depending on the modeling context. When necessary, conversion from ice equivalent to water equivalent should account for the density of ice versus liquid water (:numref:`Table Physical Constants`):
+
+   .. math::
+
+      \text{Water equivalent} = \text{Ice equivalent} \times \frac{\rho_\text{ice}}{\rho_\text{liq}}
+
+Section :numref:`Snow Covered Area Fraction` describes the calculation of fractional snow covered area, which is used in the surface albedo calculation (Chapter :numref:`rst_Surface Albedos`) and the surface flux calculations (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). Sections (:numref:`Ice Content` and :numref:`Water Content`) describe the ice and water content of the snowpack assuming that at least one snow layer exists. Section :numref:`Black and organic carbon and mineral dust within snow` describes how black and organic carbon and mineral dust particles are represented within snow, including meltwater scavenging. See Section :numref:`Initialization of snow layer` for a description of how a snow layer is initialized.
 
 .. _Snow Covered Area Fraction:
 
@@ -98,15 +113,15 @@ The temperature dependent term is given by (:ref:`van Kampenhout et al. (2017) <
 
    \rho_{T} =
    \left\{\begin{array}{lr}
-   50 + 1.7 \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\
-   50+1.7 \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\
+   50 + 1.7 \ \left(17\right)^{1.5} & \qquad T_{atm} >T_{f} +2 \ \\
+   50+1.7 \ \left(T_{atm} -T_{f} + 15\right)^{1.5} & \qquad T_{f} - 15 < T_{atm} \le T_{f} + 2 \ \\
    -3.833 \ \left( T_{atm} -T_{f} \right) - 0.0333 \ \left( T_{atm} -T_{f} \right)^{2}
    &\qquad T_{atm} \le T_{f} - 15
    \end{array}\right\}
 
 .. bifall(c) = -(50._r8/15._r8 + 0.0333_r8*15_r8)*(forc_t(c)-tfrz) - 0.0333_r8*(forc_t(c)-tfrz)**2
 
-where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
+where :math:`T_{atm}` is the atmospheric temperature (K), and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`Table Physical Constants`). When 10 m wind speed :math:`W_{atm}` is greater than 0.1 m s\ :sup:`-1`, snow density increases due to wind-driven compaction according to :ref:`van Kampenhout et al. 2017 <vanKampenhoutetal2017>`
 
 .. math::
    :label: 8.21c
@@ -152,7 +167,7 @@ The snow water equivalent :math:`W_{sno}` is capped to not exceed 10,000 kg m\ :
 Water Content
 ^^^^^^^^^^^^^^^^^^^
 
-The conservation equation for mass of water in snow layers is
+The conservation equation for mass of liquid water in snow layers is
 
 .. math::
    :label: 8.26
@@ -213,7 +228,7 @@ Equations :eq:`8.29` - :eq:`8.33` are solved sequentially from top (:math:`i=snl
 Black and organic carbon and mineral dust within snow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Particles within snow originate from atmospheric aerosol deposition (:math:`D_{sp}` in Table 2.3 (kg m\ :sup:`-2` s\ :sup:`-1`) and influence snow radiative transfer (sections :numref:`Snow Albedo`, :numref:`Snowpack Optical Properties`, and :numref:`Snow Aging`). Particle masses and mixing ratios are represented with a simple mass-conserving scheme. The model maintains masses of the following eight particle species within each snow layer: hydrophilic black carbon, hydrophobic black carbon, hydrophilic organic carbon, hydrophobic organic carbon, and four species of mineral dust with the following particle sizes: 0.1-1.0, 1.0-2.5, 2.5-5.0, and 5.0-10.0 :math:`\mu m`. Each of these species has unique optical properties (:numref:`Table Single-scatter albedo values used for snowpack impurities and ice`) and meltwater removal efficiencies (:numref:`Table Meltwater scavenging`).
+Particles within snowpack originate from atmospheric aerosol deposition (:math:`D_{sp}` in Table 2.3, kg m\ :sup:`-2` s\ :sup:`-1`) and influence snowpack radiative transfer (sections :numref:`Snow Albedo`, :numref:`Snowpack Optical Properties`, and :numref:`Snow Aging`). Particle masses and mixing ratios are represented with a simple mass-conserving scheme. The model maintains masses of the following eight particle species within each snow layer: hydrophilic black carbon, hydrophobic black carbon, hydrophilic organic carbon, hydrophobic organic carbon, and four species of mineral dust with the following particle sizes: 0.1-1.0, 1.0-2.5, 2.5-5.0, and 5.0-10.0 :math:`\mu m`. Each of these species has unique optical properties (:numref:`Table Single-scatter albedo values used for snowpack impurities and ice`) and meltwater removal efficiencies (:numref:`Table Meltwater scavenging`).
 
 The black carbon and organic carbon deposition rates described in Table 2.3 are combined into four categories as follows
 
@@ -237,7 +252,7 @@ The black carbon and organic carbon deposition rates described in Table 2.3 are 
 
    D_{oc,\, hphob} =D_{oc,\, dryhphob}
 
-Deposited particles are assumed to be instantly mixed (homogeneously) within the surface snow layer and are added after the inter-layer water fluxes are computed (section :numref:`Water Content`) so that some aerosol is in the top layer after deposition and is not immediately washed out before radiative calculations are done. Particle masses are then redistributed each time step based on meltwater drainage through the snow column (section :numref:`Water Content`) and snow layer combination and subdivision (section :numref:`Snow Layer Combination and Subdivision`). The change in mass of each of the particle species :math:`\Delta m_{sp,\, i}` (kg m\ :sup:`-2`) is
+Deposited particles are assumed to be instantly mixed within the surface snow layer (black carbon and dust can be either internally or externally mixed with snow grains; section :numref:`Snow Albedo`) and are added after the inter-layer water fluxes are computed (section :numref:`Water Content`) so that some aerosol is in the top layer after deposition and is not immediately washed out before radiative calculations are done. Particle masses are then redistributed each time step based on meltwater drainage through the snow column (section :numref:`Water Content`) and snow layer combination and subdivision (section :numref:`Snow Layer Combination and Subdivision`). The change in mass of each of the particle species :math:`\Delta m_{sp,\, i}` (kg m\ :sup:`-2`) is
 
 .. math::
    :label: 8.38
@@ -454,7 +469,7 @@ The latter equation (for the mobility index :math:`M_\mathrm{O}`) is a simplific
 Snow Layer Combination and Subdivision
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After the determination of snow temperature including phase change(Chapter :numref:`rst_Soil and Snow Temperatures`), snow hydrology (Chapter :numref:`rst_Snow Hydrology`), and the compaction calculations (section :numref:`Snow Compaction`), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <Jordan1991>`.
+After the determination of snow temperature including phase change (Chapter :numref:`rst_Soil and Snow Temperatures`), snow hydrology (Chapter :numref:`rst_Snow Hydrology`), and the compaction calculations (section :numref:`Snow Compaction`), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <Jordan1991>`.
 
 .. _Combination:
 
@@ -585,7 +600,7 @@ The maximum snow layer thickness, :math:`\Delta z_{\max }`, depends on the numbe
 Subdivision
 '''''''''''''''''''
 
-The snow layers are subdivided when the layer thickness exceeds the prescribed maximum thickness :math:`\Delta z_{\max }` with lower and upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`Table snow layer thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\; i}` and :math:`w_{ice,\; i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations -. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}` ) and the splitting layer (:math:`T_{2}` ) and constraining the new temperatures (:math:`T_{2}^{n+1}`, :math:`T_{3}^{n+1}` ) to lie along this slope. The temperature of the lower layer is first evaluated from
+The snow layers are subdivided when the layer thickness exceeds the prescribed maximum thickness :math:`\Delta z_{\max }` with lower and upper bounds that depend on the number of snow layers (:numref:`Table snow layer thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`Table snow layer thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\; i}` and :math:`w_{ice,\; i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations :eq:`8.55` - :eq:`8.58`. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}` ) and the splitting layer (:math:`T_{2}` ) and constraining the new temperatures (:math:`T_{2}^{n+1}`, :math:`T_{3}^{n+1}` ) to lie along this slope. The temperature of the lower layer is first evaluated from
 
 .. math::
    :label: 8.62
@@ -602,5 +617,5 @@ then adjusted as,
    T_{2}^{n+1} = T_{2}^{n} +\left(\frac{T_{1}^{n} -T_{2}^{n} }{{\left(\Delta z_{1} +\Delta z_{2}^{n} \right)\mathord{\left/ {\vphantom {\left(\Delta z_{1} +\Delta z_{2}^{n} \right) 2}} \right.} 2} } \right)\left(\frac{\Delta z_{2}^{n+1} }{2} \right) & \qquad T'_{3} <T_{f}
    \end{array}
 
-where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations and.
+where the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations :eq:`8.60` and :eq:`8.61`.
 

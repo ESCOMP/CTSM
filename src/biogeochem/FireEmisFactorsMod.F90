@@ -11,6 +11,9 @@ module FireEmisFactorsMod
   use shr_kind_mod, only : r8 => shr_kind_r8
   use abortutils,   only : endrun
   use clm_varctl,   only : iulog
+  use clm_varpar,   only : maxveg
+  use pftconMod,    only : num_pfts_possible_natural
+  use pftconMod,    only : handle_too_short_fire_emis_factor_file
 !
   implicit none
   private
@@ -21,7 +24,6 @@ module FireEmisFactorsMod
   public :: fire_emis_factors_get
 
 ! !PRIVATE MEMBERS:
-  integer :: npfts ! number of plant function types
 !
   type emis_eff_t
      real(r8), pointer :: eff(:) ! emissions efficiency factor
@@ -52,7 +54,6 @@ contains
 ! Method for getting FireEmis information for a named compound 
 !
 ! !USES:
-    use pftconMod , only : nc3crop
 ! !ARGUMENTS:
     character(len=*),intent(in)  :: comp_name      ! FireEmis compound name
     real(r8),        intent(out) :: factors(:)     ! vegetation type factors for the compound of interest
@@ -73,10 +74,10 @@ contains
        call endrun(errmes)
     endif
 
-    factors(:npfts) = comp_factors_table( ndx )%eff(:npfts)
-    if ( size(factors) > npfts )then
-       factors(npfts+1:) = comp_factors_table( ndx )%eff(nc3crop)
-    end if
+    factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
+    ! TODO: Remove this call
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
+    call handle_too_short_fire_emis_factor_file(factors, comp_factors_table(ndx)%eff)
     molecwght  = comp_factors_table( ndx )%wght
 
   end subroutine fire_emis_factors_get
@@ -96,7 +97,7 @@ contains
     use ncdio_pio, only : ncd_pio_openfile,ncd_inqdlen
     use pio, only : pio_inq_varid,pio_get_var,file_desc_t,pio_closefile
     use fileutils   , only : getfil
-    use clm_varpar  , only : mxpft
+    use clm_varpar, only : mxpft
 !
 ! !ARGUMENTS:
     character(len=*),intent(in) :: filename ! FireEmis factors input file
@@ -112,6 +113,7 @@ contains
     integer :: ierr, i, vid
     integer :: dimid, n_comps, n_pfts
     integer :: comp_ef_vid,comp_name_vid,comp_mw_vid
+    integer :: n_pfts_min
 
     real(r8),          allocatable :: comp_factors(:)
     character(len=64), allocatable :: comp_names(:)     ! FireEmis compound names
@@ -126,16 +128,28 @@ contains
     call ncd_inqdlen( ncid, dimid, n_comps, name='Comp_Num')
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
-    npfts = n_pfts
-    if ( npfts /= mxpft .and. npfts /= 16 )then
-       call endrun('Number of PFTs on fire emissions file is NOT correct. Its neither the total number of PFTS nor 16')
+    n_pfts_min = num_pfts_possible_natural + 1
+    ! TODO: Remove this check
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
+    if (n_pfts < n_pfts_min) then
+       write(iulog,*) 'n_pfts = ', n_pfts
+       write(iulog,*) 'num_pfts_possible_natural = ', num_pfts_possible_natural
+       write(iulog,*) 'n_pfts_min = ', n_pfts_min
+       call endrun('Number of PFTs on the fire emissions file needs to have at least the number of natural PFTs from the surface dataset plus one. The extra is intended for use by all missing crops (see handle_too_short_fire_emis_factor_file()), although due to what is probably a bug (https://github.com/ESCOMP/CTSM/issues/4120), it will be used by ALL crops.')
+    end if
+
+    ! TODO: Remove make this check an equality
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
+    if ( n_pfts > mxpft )then
+       write(iulog,*) ' n_pfts = ', n_pfts, ' mxpft = ', mxpft
+       call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')
     end if
 
     ierr = pio_inq_varid(ncid,'Comp_EF',  comp_ef_vid)
     ierr = pio_inq_varid(ncid,'Comp_Name',comp_name_vid)
     ierr = pio_inq_varid(ncid,'Comp_MW',  comp_mw_vid)
 
-    allocate( comp_factors(n_pfts) )
+    allocate( comp_factors(maxveg) )
     allocate( comp_names(n_comps) )
     allocate( comp_molecwghts(n_comps) )
 
@@ -146,7 +160,7 @@ contains
     call  bld_hash_table_indices( comp_names )
     do i=1,n_comps
        start=(/i,1/)
-       count=(/1,npfts/)
+       count=(/1,min(n_pfts,maxveg)/)
        ierr = pio_get_var( ncid, comp_ef_vid,  start, count, comp_factors )
 
        call enter_hash_data( trim(comp_names(i)), comp_factors, comp_molecwghts(i)  )

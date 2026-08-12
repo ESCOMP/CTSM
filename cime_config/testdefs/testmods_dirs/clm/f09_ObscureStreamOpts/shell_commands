@@ -1,0 +1,2 @@
+# -ignore_warnings is needed because we are turning on the Prigent streams even though they aren't needed
+./xmlchange --append CLM_BLDNML_OPTS=-ignore_warnings

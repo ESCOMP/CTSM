@@ -18,10 +18,6 @@
 <!-- Use future data as needed from the SSP3-7.0 scenario-->
 <ssp_rcp>SSP3-7.0</ssp_rcp>
 
-<stream_year_first_ndep use_cn=".true."   >2018</stream_year_first_ndep>
-<stream_year_last_ndep  use_cn=".true."   >2022</stream_year_last_ndep>
-<model_year_align_ndep  use_cn=".true."   >2018</model_year_align_ndep>
-
 <stream_year_first_popdens cnfireson=".true."   >2018</stream_year_first_popdens>
 <stream_year_last_popdens  cnfireson=".true."   >2022</stream_year_last_popdens>
 <model_year_align_popdens  cnfireson=".true."   >2018</model_year_align_popdens>

@@ -10,7 +10,7 @@ module controlMod
   !       Display the file in a browser to see it neatly formatted in html.
   !
   ! !USES:
-  use shr_kind_mod                     , only: r8 => shr_kind_r8, SHR_KIND_CL
+  use shr_kind_mod                     , only: r8 => shr_kind_r8
   use shr_nl_mod                       , only: shr_nl_find_group_name
   use shr_const_mod                    , only: SHR_CONST_CDAY
   use shr_log_mod                      , only: errMsg => shr_log_errMsg
@@ -20,9 +20,11 @@ module controlMod
   use decompInitMod                    , only: clump_pproc
   use clm_varcon                       , only: h2osno_max
   use clm_varpar                       , only: maxpatch_glc, numrad, nlevsno
+  use clm_varpar                       , only: clmfates_carbon_only
+  use clm_varpar                       , only: clmfates_carbon_nitrogen
   use fileutils                        , only: getavu, relavu, get_filename
   use histFileMod                      , only: max_tapes, max_namlen
-  use histFileMod                      , only: hist_empty_htapes, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
+  use histFileMod                      , only: hist_empty_htapes, hist_all_fields, hist_dov2xy, hist_avgflag_pertape, hist_type1d_pertape
   use histFileMod                      , only: hist_nhtfrq, hist_ndens, hist_mfilt, hist_fincl1, hist_fincl2, hist_fincl3
   use histFileMod                      , only: hist_fincl4, hist_fincl5, hist_fincl6, hist_fincl7, hist_fincl8
   use histFileMod                      , only: hist_fincl9, hist_fincl10
@@ -39,17 +41,19 @@ module controlMod
   use UrbanParamsType                  , only: UrbanReadNML
   use HumanIndexMod                    , only: HumanIndexReadNML
   use CNPrecisionControlMod            , only: CNPrecisionControlReadNML
-  use CNSharedParamsMod                , only: use_fun
+  use CNSharedParamsMod                , only: use_fun, use_matrixcn
   use CIsoAtmTimeseriesMod             , only: use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
-  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon
+  use SoilBiogeochemDecompCascadeConType, only : use_soil_matrixcn
+  use SoilBiogeochemCompetitionMod     , only: suplnitro, suplnNon, suplnAll
   use SoilBiogeochemLittVertTranspMod  , only: som_adv_flux, max_depth_cryoturb
   use SoilBiogeochemVerticalProfileMod , only: surfprof_exp
   use SoilBiogeochemNitrifDenitrifMod  , only: no_frozen_nitrif_denitrif
-  use SoilHydrologyMod                 , only: soilHydReadNML, hillslope_hydrology_ReadNML
+  use SoilHydrologyMod                 , only: hillslope_hydrology_ReadNML
   use CNFireFactoryMod                 , only: CNFireReadNML
   use CanopyFluxesMod                  , only: CanopyFluxesReadNML
   use shr_drydep_mod                   , only: n_drydep
   use clm_varctl
+
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -58,6 +62,7 @@ module controlMod
   public :: control_setNL ! Set namelist filename
   public :: control_init  ! initial run control information
   public :: control_print ! print run control information
+  public :: check_missing_initdata_status  ! check for missing finidat_interp_dest .status file
   !
   !
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -65,7 +70,7 @@ module controlMod
   !
   ! !PRIVATE TYPES:
   character(len=  7) :: runtyp(4)                        ! run type
-  character(len=SHR_KIND_CL) :: NLFilename = 'lnd.stdin' ! Namelist filename
+  character(len=fname_len) :: NLFilename = 'lnd.stdin' ! Namelist filename
 
 #if (defined _OPENMP)
   integer, external :: omp_get_max_threads  ! max number of threads that can execute concurrently in a single parallel region
@@ -117,10 +122,11 @@ contains
     !
     ! !USES:
     use CNMRespMod                       , only : CNMRespReadNML
-    use LunaMod                          , only : LunaReadNML
+    use CNFUNMod                         , only : CNFUNReadNML
     use CNNDynamicsMod                   , only : CNNDynamicsReadNML
     use CNPhenologyMod                   , only : CNPhenologyReadNML
     use landunit_varcon                  , only : max_lunit
+    use CNSoilMatrixMod                  , only : CNSoilMatrixInit
     !
     ! ARGUMENTS
     integer, intent(in) :: dtime    ! model time step (seconds)
@@ -145,13 +151,14 @@ contains
     ! Input datasets
 
     namelist /clm_inparm/  &
-         fsurdat, &
+         fsurdat, hillslope_file, &
          paramfile, fsnowoptics, fsnowaging
 
     ! History, restart options
 
     namelist /clm_inparm/  &
-         hist_empty_htapes, hist_dov2xy, &
+         hist_empty_htapes, hist_all_fields, &
+         hist_dov2xy, &
          hist_avgflag_pertape, hist_type1d_pertape, &
          hist_nhtfrq,  hist_ndens, hist_mfilt, &
          hist_fincl1,  hist_fincl2, hist_fincl3, &
@@ -185,6 +192,10 @@ contains
     namelist /clm_inparm / &
          deepmixing_depthcrit, deepmixing_mixfact, lake_melt_icealb
 
+    ! CN Matrix solution
+    namelist /clm_inparm / &
+         use_matrixcn, use_soil_matrixcn, hist_wrt_matrixcn_diag, spinup_matrixcn, nyr_forcing, nyr_sasu, iloop_avg
+
     ! lake_melt_icealb is of dimension numrad
 
     ! Glacier_mec info
@@ -200,18 +211,13 @@ contains
          create_crop_landunit, nsegspc, co2_ppmv, &
          albice, soil_layerstruct_predefined, soil_layerstruct_userdefined, &
          soil_layerstruct_userdefined_nlevsoi, use_subgrid_fluxes, &
-         snow_thermal_cond_method, snow_cover_fraction_method, &
+         snow_thermal_cond_method, snow_thermal_cond_glc_method, &
+         snow_thermal_cond_lake_method, snow_cover_fraction_method, &
          irrigate, run_zero_weight_urban, all_active, &
          crop_fsat_equals_zero, for_testing_run_ncdiopio_tests, &
          for_testing_use_second_grain_pool, for_testing_use_repr_structure_pool, &
          for_testing_no_crop_seed_replenishment, &
          z0param_method, use_z0m_snowmelt
-
-    ! NOTE: EBK 02/26/2024: dust_emis_method is here in CTSM temporarily until it's moved to CMEPS
-    ! See: https://github.com/ESCOMP/CMEPS/pull/429
-    ! Normally this should also need error checking and a broadcast, but since
-    ! there is only one hardcoded option right now that is unneeded.
-    namelist /clm_inparm/ dust_emis_method
 
     ! vertical soil mixing variables
     namelist /clm_inparm/  &
@@ -228,20 +234,36 @@ contains
 
     ! FATES Flags
     namelist /clm_inparm/ fates_paramfile, use_fates,   &
-          fates_spitfire_mode, use_fates_logging,       &
+          fates_spitfire_mode, fates_harvest_mode,      &
           use_fates_planthydro, use_fates_ed_st3,       &
           use_fates_cohort_age_tracking,                &
           use_fates_ed_prescribed_phys,                 &
           use_fates_inventory_init,                     &
+          use_fates_dbh_init,                           &
           use_fates_fixed_biogeog,                      &
           use_fates_nocomp,                             &
           use_fates_sp,                                 &
           use_fates_luh,                                &
+          use_fates_lupft,                              &
+          use_fates_potentialveg,                       &
           fluh_timeseries,                              &
+          flandusepftdat,                               &
           fates_inventory_ctrl_filename,                &
+          fates_stomatal_model,                         &
+          fates_stomatal_assimilation,                  &
+          fates_leafresp_model,                         &
+          fates_cstarvation_model,                      &
+          fates_regeneration_model,                     &
+          fates_radiation_model,                        &
+          fates_hydro_solver,                           &
+          fates_electron_transport_model,               &
           fates_parteh_mode,                            &
           fates_seeddisp_cadence,                       &
           use_fates_tree_damage,                        &
+          use_fates_daylength_factor,                   &
+          fates_photosynth_acclimation,                 &
+          use_fates_managed_fire,                       &
+          fates_lu_transition_logic,                    &
           fates_history_dimlevel
 
     ! Ozone vegetation stress method
@@ -256,7 +278,8 @@ contains
 
     namelist /clm_inparm/ use_soil_moisture_streams
 
-    namelist /clm_inparm/ use_excess_ice
+    ! excess ice flag
+    namelist /clm_inparm/ use_excess_ice 
 
     namelist /clm_inparm/ use_lai_streams
 
@@ -270,9 +293,9 @@ contains
 
     namelist /clm_inparm/ use_hillslope_routing
 
-    namelist /clm_inparm/ use_hydrstress
+    namelist /clm_inparm/ hillslope_fsat_equals_zero
 
-    namelist /clm_inparm/ use_dynroot
+    namelist /clm_inparm/ use_hydrstress
 
     namelist /clm_inparm/  &
          use_c14_bombspike, atm_c14_filename, use_c13_timeseries, atm_c13_filename
@@ -302,7 +325,7 @@ contains
          use_lch4, use_nitrif_denitrif, use_extralakelayers, &
          use_vichydro, use_cn, use_cndv, use_crop, use_fertilizer, &
          use_grainproduct, use_snicar_frc, use_vancouver, use_mexicocity, use_noio, &
-         use_nguardrail, crop_residue_removal_frac
+         use_nguardrail, crop_residue_removal_frac, flush_gdd20, use_nvmovement
 
     ! SNICAR
     namelist /clm_inparm/ &
@@ -323,6 +346,14 @@ contains
     runtyp(nsrStartup  + 1) = 'initial'
     runtyp(nsrContinue + 1) = 'restart'
     runtyp(nsrBranch   + 1) = 'branch '
+
+    if(use_fates)then
+       use_matrixcn = .false.
+       use_soil_matrixcn = .false.
+       hist_wrt_matrixcn_diag = .false.
+       spinup_matrixcn = .false.
+    end if
+    nyr_forcing = 10
 
     ! Set clumps per procoessor
 
@@ -466,12 +497,19 @@ contains
              use_fates_bgc = .true.
           end if
           
-          if (fates_parteh_mode == 1 .and. suplnitro == suplnNon .and. use_fates_bgc )then
-             write(iulog,*) ' When FATES with fates_parteh_mode == 1 (ie carbon only mode),'
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_only) .and. suplnitro == suplnNon)then
+             write(iulog,*) ' When fates_parteh_mode == carbon_only,'
              write(iulog,*) '  you must have supplemental nitrogen turned on, there will be'
              write(iulog,*) '  no nitrogen dynamics with the plants, and therefore no'
              write(iulog,*) '  meaningful limitations to nitrogen.'
-             call endrun(msg=' ERROR: fates_parteh_mode=1 must have suplnitro set to suplnAll.'//&
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_only must have suplnitro set to suplnAll.'//&
+                   errMsg(sourcefile, __LINE__))
+          end if
+          if (trim(fates_parteh_mode) == trim(clmfates_carbon_nitrogen) .and. use_fates_sp )then
+             write(iulog,*) ' When fates_parteh_mode == carbon_nirogen,'
+             write(iulog,*) '  you must have use_fates_bgc and not use_fates_sp.'
+             write(iulog,*) ' When you have use_fates_sp, then fates_parteh_mode should equal carbon_only.'
+             call endrun(msg=' ERROR: fates_parteh_mode=carbon_nitrogen and use_fates_sp are inconsistent.'//&
                    errMsg(sourcefile, __LINE__))
           end if
           
@@ -502,6 +540,11 @@ contains
 
           if (use_c13 .or. use_c14) then
              call endrun(msg=' ERROR: C13 and C14 dynamics are not compatible with FATES.'//&
+                  errMsg(sourcefile, __LINE__))
+          end if
+
+          if (z0param_method == 'Meier2022') then
+             call endrun(msg=' ERROR: Surface roughness parameterization Meier2022 is not compatible with FATES.'//&
                   errMsg(sourcefile, __LINE__))
           end if
 
@@ -571,7 +614,6 @@ contains
     call SnowHydrology_readnl   ( NLFilename )
     call UrbanReadNML           ( NLFilename )
     call HumanIndexReadNML      ( NLFilename )
-    call LunaReadNML            ( NLFilename )
 
     ! ----------------------------------------------------------------------
     ! Broadcast all control information if appropriate
@@ -585,9 +627,9 @@ contains
 
     if ( use_fun ) then
        call CNMRespReadNML( NLFilename )
+       call CNFUNReadNML( NLFilename )
     end if
 
-    call soilHydReadNML(   NLFilename )
     if ( use_hillslope ) then
        call hillslope_hydrology_ReadNML(   NLFilename )
     endif
@@ -598,9 +640,9 @@ contains
        call CNPhenologyReadNML       ( NLFilename )
     end if
 
-    ! ----------------------------------------------------------------------
-    ! Initialize the CN soil matrix namelist items
-    ! ----------------------------------------------------------------------
+    ! CN soil matrix
+
+    call CNSoilMatrixInit()
 
     ! ----------------------------------------------------------------------
     ! consistency checks
@@ -610,11 +652,6 @@ contains
     if (co2_type /= 'constant' .and. co2_type /= 'prognostic' .and. co2_type /= 'diagnostic') then
        write(iulog,*)'co2_type = ',co2_type,' is not supported'
        call endrun(msg=' ERROR:: choices are constant, prognostic or diagnostic'//&
-            errMsg(sourcefile, __LINE__))
-    end if
-
-    if ( use_dynroot .and. use_hydrstress ) then
-       call endrun(msg=' ERROR:: dynroot and hydrstress can NOT be on at the same time'//&
             errMsg(sourcefile, __LINE__))
     end if
 
@@ -705,12 +742,14 @@ contains
 
     call mpi_bcast (use_lch4, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nitrif_denitrif, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_nvmovement, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_extralakelayers, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_vichydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cn, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_cndv, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nguardrail, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_crop, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (flush_gdd20, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fertilizer, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_grainproduct, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (crop_residue_removal_frac, 1, MPI_REAL8, 0, mpicom, ier)
@@ -727,6 +766,7 @@ contains
     call mpi_bcast (finidat_interp_source, len(finidat_interp_source), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (finidat_interp_dest, len(finidat_interp_dest), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsurdat, len(fsurdat), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (hillslope_file, len(hillslope_file), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fatmlndfrc,len(fatmlndfrc),MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (paramfile, len(paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fsnowoptics, len(fsnowoptics),  MPI_CHARACTER, 0, mpicom, ier)
@@ -790,22 +830,39 @@ contains
     call mpi_bcast (for_testing_allow_interp_non_ciso_to_ciso, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (fates_spitfire_mode, 1, MPI_INTEGER, 0, mpicom, ier)
-    call mpi_bcast (use_fates_logging, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_lu_transition_logic, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (fates_harvest_mode, len(fates_harvest_mode) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_stomatal_model, len(fates_stomatal_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_stomatal_assimilation, len(fates_stomatal_assimilation) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_leafresp_model, len(fates_leafresp_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_cstarvation_model, len(fates_cstarvation_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_regeneration_model, len(fates_regeneration_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_radiation_model, len(fates_radiation_model) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_hydro_solver, len(fates_hydro_solver) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (fates_electron_transport_model, len(fates_electron_transport_model) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_fates_planthydro, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_tree_damage, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_cohort_age_tracking, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_st3, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_ed_prescribed_phys,  1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_inventory_init, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_dbh_init, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_fixed_biogeog, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_nocomp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_sp, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_luh, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_lupft, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_potentialveg, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_fates_bgc, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_fates_daylength_factor, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (fates_photosynth_acclimation, len(fates_photosynth_acclimation), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_inventory_ctrl_filename, len(fates_inventory_ctrl_filename), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_paramfile, len(fates_paramfile) , MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fluh_timeseries, len(fluh_timeseries) , MPI_CHARACTER, 0, mpicom, ier)
-    call mpi_bcast (fates_parteh_mode, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (flandusepftdat, len(flandusepftdat) , MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (use_fates_managed_fire, 1, MPI_LOGICAL, 0, mpicom, ier)
+
+    call mpi_bcast (fates_parteh_mode, len(fates_parteh_mode), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (fates_seeddisp_cadence, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (fates_history_dimlevel, 2, MPI_INTEGER, 0, mpicom, ier)
 
@@ -840,9 +897,16 @@ contains
 
     call mpi_bcast (use_hillslope_routing, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hillslope_fsat_equals_zero, 1, MPI_LOGICAL, 0, mpicom, ier)
 
-    call mpi_bcast (use_dynroot, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_soil_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_wrt_matrixcn_diag, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (spinup_matrixcn, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (nyr_forcing, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (nyr_sasu, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (iloop_avg, 1, MPI_INTEGER, 0, mpicom, ier)
+    call mpi_bcast (use_hydrstress, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     if (use_cn .or. use_fates) then
        ! vertical soil mixing variables
@@ -880,6 +944,8 @@ contains
     call mpi_bcast (nsegspc, 1, MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (use_subgrid_fluxes , 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (snow_thermal_cond_method, len(snow_thermal_cond_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snow_thermal_cond_glc_method, len(snow_thermal_cond_glc_method), MPI_CHARACTER, 0, mpicom, ier)
+    call mpi_bcast (snow_thermal_cond_lake_method, len(snow_thermal_cond_lake_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (snow_cover_fraction_method , len(snow_cover_fraction_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (z0param_method , len(z0param_method), MPI_CHARACTER, 0, mpicom, ier)
     call mpi_bcast (use_z0m_snowmelt, 1, MPI_LOGICAL, 0, mpicom, ier)
@@ -911,6 +977,7 @@ contains
 
     ! history file variables
     call mpi_bcast (hist_empty_htapes, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (hist_all_fields, 1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_dov2xy, size(hist_dov2xy), MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (hist_nhtfrq, size(hist_nhtfrq), MPI_INTEGER, 0, mpicom, ier)
     call mpi_bcast (hist_mfilt, size(hist_mfilt), MPI_INTEGER, 0, mpicom, ier)
@@ -977,12 +1044,14 @@ contains
     write(iulog,*) 'process control parameters:'
     write(iulog,*) '    use_lch4 = ', use_lch4
     write(iulog,*) '    use_nitrif_denitrif = ', use_nitrif_denitrif
+    write(iulog,*) '    use_nvmovement = ', use_nvmovement
     write(iulog,*) '    use_extralakelayers = ', use_extralakelayers
     write(iulog,*) '    use_vichydro = ', use_vichydro
     write(iulog,*) '    use_excess_ice = ', use_excess_ice
     write(iulog,*) '    use_cn = ', use_cn
     write(iulog,*) '    use_cndv = ', use_cndv
     write(iulog,*) '    use_crop = ', use_crop
+    write(iulog,*) '    flush_gdd20 = ', flush_gdd20
     write(iulog,*) '    use_fertilizer = ', use_fertilizer
     write(iulog,*) '    use_grainproduct = ', use_grainproduct
     write(iulog,*) '    crop_residue_removal_frac = ', crop_residue_removal_frac
@@ -999,6 +1068,11 @@ contains
        write(iulog,*) '   fsurdat, surface dataset not set'
     else
        write(iulog,*) '   surface data   = ',trim(fsurdat)
+    end if
+    if (hillslope_file == ' ') then
+       write(iulog,*) '   hillslope_file, hillslope dataset not set'
+    else
+       write(iulog,*) '   hillslope data   = ',trim(hillslope_file)
     end if
     if (fatmlndfrc == ' ') then
        write(iulog,*) '   fatmlndfrc not set, setting frac/mask to 1'
@@ -1124,13 +1198,13 @@ contains
 
     write(iulog,*) '   land-ice albedos      (unitless 0-1)   = ', albice
     write(iulog,*) '   hillslope hydrology    = ', use_hillslope
-    write(iulog,*) '   downscale hillslope meteorology    = ', downscale_hillslope_meteorology
+    write(iulog,*) '   downscale hillslope meteorology  = ', downscale_hillslope_meteorology
     write(iulog,*) '   hillslope routing      = ', use_hillslope_routing
+    write(iulog,*) '   hillslope_fsat_equals_zero       = ', hillslope_fsat_equals_zero
     write(iulog,*) '   pre-defined soil layer structure = ', soil_layerstruct_predefined
     write(iulog,*) '   user-defined soil layer structure = ', soil_layerstruct_userdefined
     write(iulog,*) '   user-defined number of soil layers = ', soil_layerstruct_userdefined_nlevsoi
     write(iulog,*) '   plant hydraulic stress = ', use_hydrstress
-    write(iulog,*) '   dynamic roots          = ', use_dynroot
     if (nsrest == nsrContinue) then
        write(iulog,*) 'restart warning:'
        write(iulog,*) '   Namelist not checked for agreement with initial run.'
@@ -1174,25 +1248,73 @@ contains
     write(iulog, *) '    use_fates = ', use_fates
     if (use_fates) then
        write(iulog, *) '    fates_spitfire_mode = ', fates_spitfire_mode
-       write(iulog, *) '    use_fates_logging = ', use_fates_logging
+       write(iulog, *) '    fates_harvest_mode = ', fates_harvest_mode
+       write(iulog, *) '    fates_lu_transition_logic = ', fates_lu_transition_logic
+       write(iulog, *) '    fates_stomatal_model = ', fates_stomatal_model
+       write(iulog, *) '    fates_stomatal_assimilation = ', fates_stomatal_assimilation
+       write(iulog, *) '    fates_leafresp_model = ', fates_leafresp_model
+       write(iulog, *) '    fates_cstarvation_model = ', fates_cstarvation_model
+       write(iulog, *) '    fates_regeneration_model = ', fates_regeneration_model
+       write(iulog, *) '    fates_radiation_model = ', fates_radiation_model
+       write(iulog, *) '    fates_hydro_solver = ', fates_hydro_solver
+       write(iulog, *) '    fates_electron_transport_model = ', fates_electron_transport_model
        write(iulog, *) '    fates_paramfile = ', fates_paramfile
        write(iulog, *) '    fates_parteh_mode = ', fates_parteh_mode
+       write(iulog, *) '    fates_photosynth_acclimation = ', trim(fates_photosynth_acclimation)
        write(iulog, *) '    use_fates_planthydro = ', use_fates_planthydro
        write(iulog, *) '    use_fates_tree_damage = ', use_fates_tree_damage
        write(iulog, *) '    use_fates_cohort_age_tracking = ', use_fates_cohort_age_tracking
+       write(iulog, *) '    use_fates_daylength_factor = ', use_fates_daylength_factor
        write(iulog, *) '    use_fates_ed_st3 = ',use_fates_ed_st3
        write(iulog, *) '    use_fates_ed_prescribed_phys = ',use_fates_ed_prescribed_phys
        write(iulog, *) '    use_fates_inventory_init = ',use_fates_inventory_init
+       write(iulog, *) '    use_fates_dbh_init = ',use_fates_dbh_init
        write(iulog, *) '    use_fates_fixed_biogeog = ', use_fates_fixed_biogeog
        write(iulog, *) '    use_fates_nocomp = ', use_fates_nocomp
        write(iulog, *) '    use_fates_sp = ', use_fates_sp
        write(iulog, *) '    use_fates_luh= ', use_fates_luh
+       write(iulog, *) '    use_fates_lupft= ', use_fates_lupft
+       write(iulog, *) '    use_fates_potentialveg = ', use_fates_potentialveg
        write(iulog, *) '    fluh_timeseries = ', trim(fluh_timeseries)
+       write(iulog, *) '    flandusepftdat = ', trim(flandusepftdat)
        write(iulog, *) '    fates_seeddisp_cadence = ', fates_seeddisp_cadence
        write(iulog, *) '    fates_seeddisp_cadence: 0, 1, 2, 3 => off, daily, monthly, or yearly dispersal'
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
+       write(iulog, *) '    use_fates_managed_fire= ', use_fates_managed_fire
     end if
   end subroutine control_print
+
+
+  !-----------------------------------------------------------------------
+  subroutine check_missing_initdata_status(finidat_interp_dest)
+   !
+   ! !DESCRIPTION:
+   ! Checks that the finidat_interp_dest .status file was written (i.e., that write of
+   ! finidat_interp_dest succeeded)
+   !
+   ! !ARGUMENTS:
+   character(len=*), intent(in)    :: finidat_interp_dest
+   !
+   ! !LOCAL VARIABLES:
+   logical                    :: lexists
+   integer                    :: klen
+   character(len=fname_len)   :: status_file
+   character(len=*), parameter :: subname = 'check_missing_initdata_status'
+   !-----------------------------------------------------------------------
+
+    klen = len_trim(finidat_interp_dest) - 3 ! remove the .nc
+    status_file = finidat_interp_dest(1:klen)//'.status'
+    inquire(file=trim(status_file), exist=lexists)
+    if (.not. lexists) then
+       if (masterproc) then
+          write(iulog,'(a)')' failed to find file '//trim(status_file)
+          write(iulog,'(a)')' this indicates a problem in creating '//trim(finidat_interp_dest)
+          write(iulog,'(a)')' remove '//trim(finidat_interp_dest)//' and try again'
+       end if
+       call endrun(subname//': finidat_interp_dest file exists but is probably bad')
+    end if
+
+  end subroutine check_missing_initdata_status
 
 
   !-----------------------------------------------------------------------
@@ -1217,7 +1339,7 @@ contains
     ! !LOCAL VARIABLES:
     logical                    :: lexists
     integer                    :: ncid
-    character(len=SHR_KIND_CL) :: initial_source_file
+    character(len=fname_len)   :: initial_source_file
     integer                    :: status
     character(len=*), parameter :: subname = 'apply_use_init_interp'
     !-----------------------------------------------------------------------
@@ -1245,6 +1367,10 @@ contains
 
     inquire(file=trim(finidat_interp_dest), exist=lexists)
     if (lexists) then
+
+       ! Check that the status file also exists (i.e., that finidat_interp_dest was written successfully)
+       call check_missing_initdata_status(finidat_interp_dest)
+
        ! open the input file and check for the name of the input source file
        status = nf90_open(trim(finidat_interp_dest), 0, ncid)
        if (status /= nf90_noerr) call handle_err(status)

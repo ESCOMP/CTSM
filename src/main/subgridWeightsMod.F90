@@ -193,7 +193,7 @@ contains
          avgflag='A', long_name='% of each landunit on grid cell', &
          ptr_lnd=subgrid_weights_diagnostics%pct_landunit)
 
-    if(.not.use_fates.or.use_fates_sp) then
+    if(.not.use_fates) then
        call hist_addfld2d (fname='PCT_NAT_PFT', units='%', type2d='natpft', &
              avgflag='A', long_name='% of each PFT on the natural vegetation (i.e., soil) landunit', &
              ptr_lnd=subgrid_weights_diagnostics%pct_nat_pft)
@@ -770,7 +770,7 @@ contains
     ! Note: (SPM, 10-20-15): If this isn't set then debug mode with intel and
     ! yellowstone will fail when trying to write pct_nat_pft since it contains
     ! all NaN's.
-    call set_pct_pft_diagnostics(bounds)
+    if(.not.use_fates) call set_pct_pft_diagnostics(bounds)
 
     call set_pct_glc_mec_diagnostics(bounds)
 

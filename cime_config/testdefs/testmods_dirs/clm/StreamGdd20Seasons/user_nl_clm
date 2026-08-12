@@ -1,0 +1,2 @@
+stream_gdd20_seasons = .true.
+allow_invalid_gdd20_season_inputs = .true.

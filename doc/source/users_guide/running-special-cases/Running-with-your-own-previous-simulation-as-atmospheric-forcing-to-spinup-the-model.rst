@@ -8,13 +8,13 @@
 
 Another way that you might want to spinup the model is to run your own simulation for a relatively short period (either a B, E, or F compset) and then use it as forcing for your "I" case later. By only running 20 to 50 years for the fully coupled case, you'll save a substantial amount of computer time rather than running the entire spinup period with a fully coupled model.
 
-The first thing we need to do is to run a fully coupled case and save the atmospheric coupling fields on a three hourly basis. In this example, we will run on cheyenne and archive the data to a local disk that we can then use in the next simulation.
+The first thing we need to do is to run a fully coupled case and save the atmospheric coupling fields on a three hourly basis. In this example, we will run on derecho and archive the data to a local disk that we can then use in the next simulation.
 
 Example: Fully Coupled Simulation to Create Data to Force Next Example Simulation
 ----------------------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case myB1850 -res f09_g17_gl4 -compset B1850
    > cd myB1850
    > ./case.setup
@@ -44,14 +44,14 @@ Example: Simulation Forced with Data from the Previous Simulation
 ------------------------------------------------------------------------------
 ::
 
-   > cd scripts
+   > cd cime/scripts
    > ./create_newcase -case frcwmyB1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup
    > cd frcWmyB1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
    > ./xmlchange DATM_CPLHIST_CASE="myB1850"
    # The following sets the align year and years to run over for atm forcing
    #  (you could also use an editor)
-   > ./xmlchange DATM_CPLHIST_YR_ALIGN="1",DATM_CPLHIST_YR_START=1,DATM_CPLHIST_YR_END=20
+   > ./xmlchange DATM_YR_ALIGN="1",DATM_YR_START=1,DATM_YR_END=20
    # Set the strm_datdir in the namelist_defaults_datm.xml
    # file to the archival path of the case above in the form of: /glade/home/achive/$USER/$DATM_CPLHIST_CASE/cpl/hist
    # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm50BgcSpinup COMPSET CASES MADE AFTER THIS!

@@ -1,0 +1,9 @@
+! Turn FATES-SP mode on
+use_fates_sp = .true.
+! Some settings that will be set when FATES-SP mode is turned on
+soil_decomp_method = 'None'
+use_lch4 = .false.
+fates_spitfire_mode = 0
+use_fates_fixed_biogeog = .true.
+use_fates_nocomp = .true.
+hist_ndens = 1

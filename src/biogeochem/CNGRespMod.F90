@@ -7,7 +7,7 @@ module CNGRespMod
   !
   ! !USES:
   use shr_kind_mod           , only : r8 => shr_kind_r8
-  use pftconMod              , only : npcropmin, pftcon
+  use pftconMod              , only : is_prognostic_crop, pftcon
   use CNVegcarbonfluxType    , only : cnveg_carbonflux_type
   use PatchType              , only : patch    
   use CanopyStateType        , only : canopystate_type              
@@ -60,7 +60,6 @@ contains
          woody                         =>    pftcon%woody                                              , & ! Input:  binary flag for woody lifeform (1=woody, 0=not woody)
          grperc                        =>    pftcon%grperc                                             , & ! Input:  growth respiration parameter
          grpnow                        =>    pftcon%grpnow                                             , & ! Input:  growth respiration parameter
-         leafcn                        =>    pftcon%leafcn                                             , & ! Input:  leaf C:N (gC/gN)                         
          livewdcn                      =>    pftcon%livewdcn                                           , & ! Input:  live wood (phloem and ray parenchyma) C:N (gC/gN)  
          
          laisun                        =>    canopystate_inst%laisun_patch                             , & ! Input:  [real(r8) (:)]  sunlit projected leaf area index      
@@ -146,7 +145,7 @@ contains
          respfact_livecroot_storage = 1.0_r8 	
          respfact_livestem_storage = 1.0_r8 	
          
-         if (ivt(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(ivt(p))) then ! skip 2 generic crops
             cpool_livestem_gr(p) = cpool_to_livestemc(p) * grperc(ivt(p)) * respfact_livestem     
 
             cpool_livestem_storage_gr(p) = cpool_to_livestemc_storage(p) * grperc(ivt(p)) * grpnow(ivt(p)) * &

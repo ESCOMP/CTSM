@@ -1,4 +1,1 @@
-
-hist_mfilt        = 365
-hist_nhtfrq       = -24
-
+use_fates_sp = .true.

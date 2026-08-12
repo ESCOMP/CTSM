@@ -163,7 +163,7 @@ begin
 
   fname = "/glade/work/oleson/ctsm_PLUMBERcsv/tools/site_and_regional/PLUMBER2_sites.csv"
   header = (/"#pftX-cth and pftX-cbh are the site=specific canopy top and bottom heights", \
-             "#start_year and end_year will be used to define DATM_YR_ALIGH, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
+             "#start_year and end_year will be used to define DATM_YR_ALIGN, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
              "#RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.", \
              "#ATM_NCPL is specified so that the time step of the model matches the time interval specified by the atm forcing data.", \
              ",Site,Lat,Lon,pft1,pft1-%,pft1-cth,pft1-cbh,pft2,pft2-%,pft2-cth,pft2-cbh,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)

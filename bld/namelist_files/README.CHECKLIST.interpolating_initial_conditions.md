@@ -14,8 +14,8 @@ interpolate:
    file. Note that there may be other options (like carbon isotopes)
    that also need to be turned on. While doing this, generate
    baselines. e.g., run
-   `SMS_Ld1.f09_g17.I1850Clm50Sp.cheyenne_intel.clm-default` or
-   `SMS_Ld1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel.clm-ciso`, with
+   `SMS_Ld1.f09_t232.I1850Clm50Sp.derecho_intel.clm-default` or
+   `SMS_Ld1.f09_t232.I1850Clm50BgcCrop.derecho_intel.clm-ciso`, with
    baseline generation.
    
    - Confirm that the test points to the desired, original finidat file,
@@ -32,7 +32,7 @@ interpolate:
    example:
    
    ```
-   ncatted -h -a Notes_190111,global,c,c,'Interpolated from clmi.I1850Clm50BgcCrop.1366-01-01.0.9x1.25_gx1v6_simyr1850_c171213.nc. This is the finidat_interp_dest.nc file from SMS_Ln1.f09_g17.I1850Clm50BgcCrop.cheyenne_intel, run from ctsm1.0.dev022. Updates from the previous file are: (1) uses gx1v7 rather than gx1v6; (2) many inactive points are absent.'
+   ncatted -h -a Notes_190111,global,c,c,'Interpolated from clmi.I1850Clm50BgcCrop.1366-01-01.0.9x1.25_gx1v6_simyr1850_c171213.nc. This is the finidat_interp_dest.nc file from SMS_Ln1.f09_g17.I1850Clm50BgcCrop.derecho_intel, run from ctsm1.0.dev022. Updates from the previous file are: (1) uses gx1v7 rather than gx1v6; (2) many inactive points are absent.'
    ```
    
 4. Using `ncdump -h`, diff the headers of the new and old files, and

@@ -9,7 +9,7 @@ module SoilStateType
   use abortutils      , only : endrun
   use clm_varpar      , only : nlevsoi, nlevgrnd, nlevlak, nlayer, nlevsno, nlevmaxurbgrnd
   use clm_varcon      , only : spval
-  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_dynroot, use_fates
+  use clm_varctl      , only : use_hydrstress, use_cn, use_lch4, use_fates
   use clm_varctl      , only : iulog, hist_wrtch4diag
   use LandunitType    , only : lun                
   use ColumnType      , only : col                
@@ -24,7 +24,7 @@ module SoilStateType
 
      ! sand/ clay/ organic matter
      real(r8), pointer :: sandfrac_patch       (:)   ! patch sand fraction
-     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction
+     real(r8), pointer :: clayfrac_patch       (:)   ! patch clay fraction 
      real(r8), pointer :: mss_frc_cly_vld_col  (:)   ! col mass fraction clay limited to 0.20
      real(r8), pointer :: cellorg_col          (:,:) ! col organic matter for gridcell containing column (1:nlevsoi)
      real(r8), pointer :: cellsand_col         (:,:) ! sand value for gridcell containing column (1:nlevsoi)
@@ -215,14 +215,16 @@ contains
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
     this%root_conductance_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
-         avgflag='A', long_name='root conductance each soil layer', &
-         ptr_patch=this%root_conductance_patch, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+!        avgflag='A', long_name='root conductance each soil layer', &
+!        ptr_patch=this%root_conductance_patch, default='inactive')
     
     this%soil_conductance_patch(begp:endp,:) = spval
-    call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
-         avgflag='A', long_name='soil conductance in each soil layer', &
-         ptr_patch=this%soil_conductance_patch, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+!        avgflag='A', long_name='soil conductance in each soil layer', &
+!        ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -230,20 +232,6 @@ contains
             avgflag='A', long_name='clap and hornberger B', &
             ptr_col=this%bsw_col, default='inactive')
     end if
-
-    if (use_dynroot) then
-       this%rootfr_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='ROOTFR', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='fraction of roots in each soil layer', &
-            ptr_patch=this%rootfr_patch, default='active')
-    end if
-
-    if ( use_dynroot ) then
-       this%root_depth_patch(begp:endp) = spval
-        call hist_addfld1d (fname='ROOT_DEPTH', units="m", &
-             avgflag='A', long_name='rooting depth', &
-             ptr_patch=this%root_depth_patch )
-     end if
 
     if (use_cn) then
        this%rootr_patch(begp:endp,:) = spval
@@ -272,9 +260,10 @@ contains
 
     this%thk_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%thk_col(:,-nlevsno+1:0)
-    call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
-         avgflag='A', long_name='Thermal conductivity', &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
+!        avgflag='A', long_name='Thermal conductivity', &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d (fname='SNO_TK_ICE', units='W/m-K', type2d='levsno', &
          avgflag='A', long_name='Thermal conductivity (ice landunits only)', &
@@ -294,7 +283,7 @@ contains
     this%soilalpha_u_col(begc:endc) = spval
     call hist_addfld1d (fname='SoilAlpha_U',  units='unitless',  &
          avgflag='A', long_name='urban factor limiting ground evap', &
-         ptr_col=this%soilalpha_u_col, set_nourb=spval, default='inactive')
+         ptr_col=this%soilalpha_u_col, set_nourb=spval)
 
     if (use_cn) then
        this%watsat_col(begc:endc,:) = spval 
@@ -305,9 +294,10 @@ contains
 
     if (use_cn) then
        this%eff_porosity_col(begc:endc,:) = spval
-       call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='effective porosity = porosity - vol_ice', &
-            ptr_col=this%eff_porosity_col, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
+!           avgflag='A', long_name='effective porosity = porosity - vol_ice', &
+!           ptr_col=this%eff_porosity_col, default='inactive')
     end if
 
     if (use_cn) then
@@ -393,15 +383,7 @@ contains
          scale_by_thickness=.true., &
          interpinic_flag='interp', readvar=readvar, data=this%hk_l_col)
 
-     if( use_dynroot ) then
-         call restartvar(ncid=ncid, flag=flag, varname='rootfr', xtype=ncd_double,  &
-              dim1name='pft', dim2name='levgrnd', switchdim=.true., &
-              long_name='root fraction', units='', &
-              scale_by_thickness=.false., &
-              interpinic_flag='interp', readvar=readrootfr, data=this%rootfr_patch)
-     else
-         readrootfr = .false.
-     end if
+     readrootfr = .false.
      if (flag=='read' .and. .not. readrootfr ) then
             if (masterproc) then
                write(iulog,*) "can't find rootfr in restart (or initial) file..."

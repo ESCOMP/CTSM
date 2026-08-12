@@ -28,7 +28,7 @@ use bigint;
 #use warnings;
 #use diagnostics;
 
-my @version_strings = ("clm4_5", "clm5_0", "clm5_1", "clm6_0");
+my @version_strings = ("clm4_5", "clm5_0", "clm6_0");
 
 #-------------------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ if ( ! defined(caller) && $#ARGV == -1 ) {
    sub testit {
       print "unit tester\n";
       my %lastv;
-      my @vers_list = ( "clm4_5", "clm5_0", "clm5_1", "clm6_0" );
+      my @vers_list = ( "clm4_5", "clm5_0", "clm6_0" );
       foreach my $vers ( @vers_list ) {
          my $phys = config_files::clm_phys_vers->new($vers);
          isa_ok($phys, "config_files::clm_phys_vers", "created clm_phys_vers object");

@@ -22,6 +22,7 @@ module lnd_import_export
   use shr_megan_mod           , only : shr_megan_readnl, shr_megan_mechcomps_n
   use nuopc_shr_methods       , only : chkerr
   use lnd_import_export_utils , only : check_for_errors, check_for_nans
+  use abortutils              , only : endrun
 
   implicit none
   private ! except
@@ -160,9 +161,11 @@ contains
 
     use shr_carma_mod     , only : shr_carma_readnl
     use shr_ndep_mod      , only : shr_ndep_readnl
+    use shr_dust_emis_mod , only : shr_dust_emis_readnl
     use shr_fire_emis_mod , only : shr_fire_emis_readnl
     use clm_varctl        , only : ndep_from_cpl
     use controlMod        , only : NLFilename
+    use spmdMod           , only : mpicom
 
     ! input/output variables
     type(ESMF_GridComp)            :: gcomp
@@ -237,6 +240,9 @@ contains
 
     ! The following namelist reads should always be called regardless of the send_to_atm value
 
+    ! Dust emissions from land to atmosphere
+    call shr_dust_emis_readnl( mpicom, "drv_flds_in")
+
     ! Dry Deposition velocities from land - ALSO initialize drydep here
     call shr_drydep_readnl("drv_flds_in", drydep_nflds)
 
@@ -248,7 +254,6 @@ contains
     if (shr_megan_mechcomps_n .ne. megan_nflds) call shr_sys_abort('ERROR: megan field count mismatch')
 
     ! CARMA volumetric soil water from land
-    ! TODO: is the following correct - the CARMA field exchange is very confusing in mct
     call shr_carma_readnl('drv_flds_in', carma_fields)
 
     ! export to atm
@@ -373,10 +378,19 @@ contains
 
     ! from atm - nitrogen deposition
     call shr_ndep_readnl("drv_flds_in", ndep_nflds)
-    if (ndep_nflds > 0) then
+    if ( ndep_nflds == 0 )then
+       if ( masterproc ) write(iulog,*) 'Nitrogen Deposition will be read in by CTSM'
+    else if (ndep_nflds == 2) then
        call fldlist_add(fldsToLnd_num, fldsToLnd, Faxa_ndep, ungridded_lbound=1, ungridded_ubound=ndep_nflds)
        ! This sets a variable in clm_varctl
        ndep_from_cpl = .true.
+       if ( masterproc ) then
+         write(iulog,*) 'Nitrogen Deposition is coming from the ATM model'
+       end if
+    else
+       write(iulog,*) 'ndep_fields = ', ndep_nflds
+       write(iulog,*) 'The number of ndep fields must be either 0 (to use datasets in CTSM) or 2 (to use fields from the ATM model)'
+       call endrun(msg="Invalid number of ndep fields, change ndep_list in the drv_flds_in namelist", line=__LINE__, file=u_FILE_u)
     end if
 
     ! from atm - co2 exchange scenarios
@@ -1319,7 +1333,6 @@ contains
     ! ----------------------------------------------------
     use ESMF             , only : ESMF_VMGetCurrent, ESMF_VMBroadcast, ESMF_VM
     use clm_nlUtilsMod   , only : find_nlgroup_name
-    use abortutils       , only : endrun
     use shr_log_mod      , only : errMsg => shr_log_errMsg
     ! !ARGUMENTS:
     character(len=*), intent(IN) :: NLFilename   ! Namelist filename

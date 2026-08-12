@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""Unit tests for add_tag_to_filename
-"""
+"""Unit tests for add_tag_to_filename"""
 
 import unittest
 

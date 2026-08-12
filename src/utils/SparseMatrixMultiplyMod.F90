@@ -1217,7 +1217,7 @@ contains
           call endrun( subname//" ERROR: missing required optional arguments" )
           return
        end if
-       SHR_ASSERT_FL((size(filter_actunit_A) > num_actunit_A), sourcefile, __LINE__)
+       SHR_ASSERT_FL((size(filter_actunit_A) >= num_actunit_A), sourcefile, __LINE__)
     end if
     if(present(num_actunit_B))then
        if(num_actunit_B < 0)then
@@ -1230,7 +1230,7 @@ contains
           call endrun( subname//" ERROR: missing required optional arguments" )
           return
        end if
-       SHR_ASSERT_FL((size(filter_actunit_B) > num_actunit_B), sourcefile, __LINE__)
+       SHR_ASSERT_FL((size(filter_actunit_B) >= num_actunit_B), sourcefile, __LINE__)
     end if
     if(present(num_actunit_C))then
        if(num_actunit_C < 0)then
@@ -1243,7 +1243,7 @@ contains
           call endrun( subname//" ERROR: missing required optional arguments" )
           return
        end if
-       SHR_ASSERT_FL((size(filter_actunit_C) > num_actunit_C), sourcefile, __LINE__)
+       SHR_ASSERT_FL((size(filter_actunit_C) >= num_actunit_C), sourcefile, __LINE__)
     end if
 
     if(.not. list_ready)then

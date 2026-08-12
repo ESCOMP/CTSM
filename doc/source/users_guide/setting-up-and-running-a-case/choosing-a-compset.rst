@@ -22,6 +22,43 @@ To get a list of the compsets use the ``query_config`` command as follows:
 
     $CTSMROOT/cime/scripts/query_config --compsets clm
 
+Compsets with different choices for the River "Runoff OutFlow" (ROF) Model
+--------------------------------------------------------------------------
+
+CTSM can be run with four different options for the ROF model: stub, MOSART, RTM, or the newly available component mizuRoute. The default for compsets is MOSART and as such it isn't mentioned in the compset aliases. Compsets with the stub ROF model usually have a "Rs" in the name to designate that a stub ROF is being used (for example the single point tower site compset I1PtClm60SpRs).
+Compset aliases for MOSART as it's the default don't have it in the name. Compsets with clm4_5 physics are with RTM as RTM was the default ROF model when CLM4.5 was created. Also since Paleo climate work uses RTM, the "NoAnthro" compset aliases use RTM. Compset aliases with "Miz" in the name use mizuRoute.
+
+Both MOSART and RTM run on a default half degree grid, that is selected as part of the standard grid aliases. mizuRoute also can use the standard grid aliases and will be run on it's half degree grid if so. See the next section for on the other options for mizuRoute grids.
+
+Compsets and grids with the mizuRoute ROF model
+-----------------------------------------------
+
+Compset aliases with "Miz" in the name use mizuRoute as the ROF model. For example, the compset alias I2000Clm60SpMizGs which is for present day with clm6_0 physics using Satellite Phenology with a stub glacier model.
+As mizuRoute is a ROF model grid alias for special grids for it include a "_r*" in the middle of the compset name (between the atmosphere/land grid and the ocean grid/mask).
+
+To get a list of the grid alises use the ``query_config`` command as follows:
+::
+
+    $CTSMROOT/cime/scripts/query_config --grids
+
+There are five mizuRoute ROF grids available (r05, rUSGS, rHDMA, rHDMAlk, rMERIT)
+
+- r05 is the default half degree grid
+- rUSGS is the lowest resolution mizuRoute HRU grid and only covering Continental US
+- rHDMA is the medium resolution mizuRoute HRU grid
+- rHDMAlk is the medium resolution mizuRoute HRU grid that includes lakes
+- rMERIT is the highest resolution mizuRoute HRU grid
+
+- r05 is the same as the default grid for MOSART and RTM, but just over land.
+- rUSGS is the USGS Geospatial Fabric for National Hydrologic Modeling. It has over 110k HRU's over the continental US.
+- rHDMA is the HydroSHEDS Derived Medium Resolution Global Hydrological Model. It has about 300k HRU's.
+- rHDMAlk is the HDMA grid with lakes added in. It has about 300k HRU's as well.
+- rMERIT is the Multi-Error-Removed Improved-Terrain global hydrological model. It has about 3 million HRU's.
+
+Unlike the other ROF models, the mizuRoute grids require mapping files in order to do the mapping in the coupler. This is because the grids have small overlaps and holes that the ESMF on the fly regridding currently has trouble with.
+As such we supply a limited number of mapping files for common atmosphere/land resolutions (NLDAS i.e. continental US, half-degree, 1-degree, and 2-degree using the CRU half degree grid hcru, and the finite-volume grids f09 and f19).
+The mizuRoute r05 and HDMA grids over the very limited 5x5 Amazon region are also available.
+
 Compsets coupled to active atmosphere with data ocean
 -----------------------------------------------------
 CAM compsets are compsets that start with "E" or "F" in the name. They are described more fully in the scripts documentation or the CAM documentation. "E" compsets have a slab ocean model while "F" compsets have a data ocean model.

@@ -47,6 +47,8 @@ module initVerticalMod
   type, private :: params_type
      real(r8) :: slopebeta      ! exponent for microtopography pdf sigma (unitless)
      real(r8) :: slopemax       ! max topographic slope for microtopography pdf sigma (unitless)
+     real(r8) :: zbedrock       ! parameter to substitute for zbedrock (m)
+     real(r8) :: zbedrock_sf    ! parameter to scale zbedrock (m)
   end type params_type
   type(params_type), private ::  params_inst
   !
@@ -78,6 +80,9 @@ contains
     call readNcdioScalar(ncid, 'slopebeta', subname, params_inst%slopebeta)
     ! Max topographic slope for microtopography pdf sigma (unitless) 
     call readNcdioScalar(ncid, 'slopemax', subname, params_inst%slopemax)
+
+    call readNcdioScalar(ncid, 'zbedrock', subname, params_inst%zbedrock)
+    call readNcdioScalar(ncid, 'zbedrock_sf', subname, params_inst%zbedrock_sf)
 
   end subroutine readParams
 
@@ -446,6 +451,12 @@ contains
           if (masterproc) then
              call endrun( 'ERROR:: zbedrock not found on surface data set, and use_bedrock is true.'//errmsg(sourcefile, __LINE__) )
           end if
+       end if
+       if (params_inst%zbedrock>=0._r8) then
+          zbedrock_in(:) = params_inst%zbedrock
+       end if
+       if (params_inst%zbedrock_sf/=1._r8) then
+          zbedrock_in(:) = params_inst%zbedrock_sf*zbedrock_in(:)
        end if
 
     !  if use_bedrock = false, set zbedrock to lowest layer bottom interface

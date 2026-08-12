@@ -14,7 +14,7 @@
 ! Set maxpatch_glc       with GLC_NEC                            option
 !----------------------------------------------------------------------------------
 
- hist_mfilt = 1,30
+ hist_mfilt = 1,1
  hist_nhtfrq = 0,-24
  hist_avgflag_pertape = 'A','A'
  hist_fincl1 = 'M_LEAFC_TO_FIRE','M_LEAFC_STORAGE_TO_FIRE','M_LEAFC_XFER_TO_FIRE','M_LIVESTEMC_TO_FIRE',

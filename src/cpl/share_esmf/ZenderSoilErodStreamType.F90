@@ -18,7 +18,7 @@ module ZenderSoilErodStreamType
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
 
@@ -42,9 +42,8 @@ module ZenderSoilErodStreamType
 
   ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
-     character(len=CL)  :: zender_soil_erod_source             ! if calculed in lnd or atm
-     character(len=CL)  :: stream_fldFileName_zendersoilerod   ! data Filename
-     character(len=CL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
+     character(len=FL)  :: stream_fldFileName_zendersoilerod   ! data Filename
+     character(len=FL)  :: stream_meshfile_zendersoilerod      ! mesh Filename
      character(len=CL)  :: zendersoilerod_mapalgo              ! map algo
      logical            :: namelist_set = .false.              ! if namelist was set yet
   contains
@@ -179,7 +178,7 @@ contains
     ! file is being used with it
     !
     ! !USES:
-    use clm_varctl, only : dust_emis_method
+    use shr_dust_emis_mod, only : is_dust_emis_zender, is_zender_soil_erod_from_land
     !
     ! !ARGUMENTS:
     implicit none
@@ -189,7 +188,7 @@ contains
     if ( .not. control%namelist_set )then
        call endrun(msg=' ERROR namelist NOT set before being used'//errMsg(sourcefile, __LINE__))
     end if
-    if ( (trim(dust_emis_method) == 'Zender_2003') .and. (control%zender_soil_erod_source == "lnd") )then
+    if ( is_dust_emis_zender() .and. is_zender_soil_erod_from_land() )then
        UseStreams = .true.
     else
        UseStreams = .false.
@@ -289,6 +288,7 @@ contains
    use shr_nl_mod       , only : shr_nl_find_group_name
    use shr_log_mod      , only : errMsg => shr_log_errMsg
    use shr_mpi_mod      , only : shr_mpi_bcast
+   use shr_dust_emis_mod, only : is_zender_soil_erod_from_land
    !
    ! arguments
    implicit none
@@ -300,18 +300,17 @@ contains
    integer            :: i         ! Indices
    integer            :: nu_nml    ! unit for namelist file
    integer            :: nml_error ! namelist i/o error flag
-   character(len=CL)  :: stream_fldFileName_zendersoilerod = ' '
-   character(len=CL)  :: stream_meshfile_zendersoilerod = ' '
+   character(len=FL)  :: stream_fldFileName_zendersoilerod = ' '
+   character(len=FL)  :: stream_meshfile_zendersoilerod = ' '
    character(len=CL)  :: zendersoilerod_mapalgo = ' '
-   character(len=CL)  :: tmp_file_array(3)
-   character(len=3)   :: zender_soil_erod_source = 'atm'
+   character(len=FL)  :: tmp_file_array(3)
    character(len=*), parameter :: namelist_name = 'zendersoilerod'    ! MUST agree with group name in namelist definition to read.
    character(len=*), parameter :: subName = "('zendersoilerod::ReadNML')"
    !-----------------------------------------------------------------------
 
    namelist /zendersoilerod/ &               ! MUST agree with namelist_name above
         zendersoilerod_mapalgo,  stream_fldFileName_zendersoilerod, &
-        stream_meshfile_zendersoilerod, zender_soil_erod_source
+        stream_meshfile_zendersoilerod
 
    ! Default values for namelist
 
@@ -330,12 +329,11 @@ contains
       close(nu_nml)
    endif
 
-   call shr_mpi_bcast(zender_soil_erod_source           , mpicom)
    call shr_mpi_bcast(zendersoilerod_mapalgo            , mpicom)
    call shr_mpi_bcast(stream_fldFileName_zendersoilerod , mpicom)
    call shr_mpi_bcast(stream_meshfile_zendersoilerod    , mpicom)
 
-   if (masterproc .and. (zender_soil_erod_source == "lnd") ) then
+   if (masterproc .and. is_zender_soil_erod_from_land() ) then
       write(iulog,*) ' '
       write(iulog,*) namelist_name, ' stream settings:'
       write(iulog,*) '  stream_fldFileName_zendersoilerod = ',stream_fldFileName_zendersoilerod
@@ -343,13 +341,10 @@ contains
       write(iulog,*) '  zendersoilerod_mapalgo            = ',zendersoilerod_mapalgo
    endif
 
-   if ( (trim(zender_soil_erod_source) /= 'atm') .and. (trim(zender_soil_erod_source) /= 'lnd')  )then
-      call endrun(msg=' ERROR zender_soil_erod_source must be either lnd or atm and is NOT'//errMsg(sourcefile, __LINE__))
-   end if
    tmp_file_array(1) = stream_fldFileName_zendersoilerod
    tmp_file_array(2) = stream_meshfile_zendersoilerod
    tmp_file_array(3) = zendersoilerod_mapalgo
-   if ( trim(zender_soil_erod_source) == 'lnd' )then
+   if ( is_zender_soil_erod_from_land() ) then
       do i = 1, size(tmp_file_array)
          if ( len_trim(tmp_file_array(i)) == 0 )then
             call endrun(msg=' ERROR '//trim(tmp_file_array(i))//' must be set when Zender_2003 is being used and zender_soil_erod_source is lnd'//errMsg(sourcefile, __LINE__))
@@ -365,7 +360,6 @@ contains
    this%stream_fldFileName_zendersoilerod = stream_fldFileName_zendersoilerod
    this%stream_meshfile_zendersoilerod    = stream_meshfile_zendersoilerod
    this%zendersoilerod_mapalgo            = zendersoilerod_mapalgo
-   this%zender_soil_erod_source           = zender_soil_erod_source
 
    this%namelist_set = .true.
 

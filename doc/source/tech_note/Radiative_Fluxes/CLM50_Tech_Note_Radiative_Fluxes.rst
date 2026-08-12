@@ -26,9 +26,7 @@ Solar Fluxes
 
 .. figure:: image1.png
 
- Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground.
-
-For clarity, terms involving :math:`T^{n+1} -T^{n}` are not shown in (c).
+ Schematic diagram of (a) direct beam radiation, (b) diffuse solar radiation, and (c) longwave radiation absorbed, transmitted, and reflected by vegetation and ground. For simplicity, terms involving :math:`T^{n+1} -T^{n}` (i.e. time stepping) are not shown in (c) but do get addressed later in this section.
 
 The total solar radiation absorbed by the vegetation and ground is
 
@@ -79,7 +77,7 @@ with :math:`L^{sun}` and :math:`L^{sha}` the sunlit and shaded plant area index,
 
    L^{sun} =\frac{1-e^{-K(L+S)} }{K}
 
-and the shaded leaf area index is :math:`L^{sha} =(L+S)-L^{sun}`. In calculating :math:`L^{sun}`,
+and the shaded plant area index is :math:`L^{sha} =(L+S)-L^{sun}`. In calculating :math:`L^{sun}`,
 
 .. math::
    :label: 4.8
@@ -141,9 +139,9 @@ where
 .. math::
    :label: 4.14
 
-   \begin{array}{l} {L_{vg} \, \uparrow =\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow } \\ {\qquad \qquad +\varepsilon _{v} \left[1+\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\right]\sigma \left(T_{v}^{n} \right)^{3} \left[T_{v}^{n} +4\left(T_{v}^{n+1} -T_{v}^{n} \right)\right]} \\ {\qquad \qquad +\varepsilon _{g} \left(1-\varepsilon _{v} \right)\sigma \left(T_{g}^{n} \right)^{4} } \\ {\qquad =\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow } \\ {\qquad \qquad +\varepsilon _{v} \sigma \left(T_{v}^{n} \right)^{4} } \\ {\qquad \qquad +\varepsilon _{v} \left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\sigma \left(T_{v}^{n} \right)^{4} } \\ {\qquad \qquad +4\varepsilon _{v} \sigma \left(T_{v}^{n} \right)^{3} \left(T_{v}^{n+1} -T_{v}^{n} \right)} \\ {\qquad \qquad +4\varepsilon _{v} \left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\sigma \left(T_{v}^{n} \right)^{3} \left(T_{v}^{n+1} -T_{v}^{n} \right)} \\ {\qquad \qquad +\varepsilon _{g} \left(1-\varepsilon _{v} \right)\sigma \left(T_{g}^{n} \right)^{4} } \end{array}
+   \begin{array}{l} {L_{vg} \, \uparrow =\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow } \\ {\qquad \qquad +\varepsilon _{v} \left[1+\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\right]\sigma \left(T_{v}^{n+1,k} \right)^{3} \left[T_{v}^{n+1,k} +4\left(T_{v}^{n+1,k+1} -T_{v}^{n+1,k} \right)\right]} \\ {\qquad \qquad +\varepsilon _{g} \left(1-\varepsilon _{v} \right)\sigma \left(T_{g}^{n} \right)^{4} } \\ {\qquad =\left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow } \\ {\qquad \qquad +\varepsilon _{v} \sigma \left(T_{v}^{n+1,k} \right)^{4} } \\ {\qquad \qquad +\varepsilon _{v} \left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\sigma \left(T_{v}^{n+1,k} \right)^{4} } \\ {\qquad \qquad +4\varepsilon _{v} \sigma \left(T_{v}^{n+1,k} \right)^{3} \left(T_{v}^{n+1,k+1} -T_{v}^{n+1,k} \right)} \\ {\qquad \qquad +4\varepsilon _{v} \left(1-\varepsilon _{g} \right)\left(1-\varepsilon _{v} \right)\sigma \left(T_{v}^{n+1,k} \right)^{3} \left(T_{v}^{n+1,k+1} -T_{v}^{n+1,k} \right)} \\ {\qquad \qquad +\varepsilon _{g} \left(1-\varepsilon _{v} \right)\sigma \left(T_{g}^{n} \right)^{4} } \end{array}
 
-where :math:`\varepsilon _{v}` is the vegetation emissivity and :math:`T_{v}^{n+1}` and :math:`T_{v}^{n}` are the vegetation temperatures at the current and previous time steps, respectively (:ref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The first term in the equation above is the atmospheric longwave radiation that is transmitted through the canopy, reflected by the ground, and transmitted through the canopy to the atmosphere. The second term is the longwave radiation emitted by the canopy directly to the atmosphere. The third term is the longwave radiation emitted downward from the canopy, reflected by the ground, and transmitted through the canopy to the atmosphere. The fourth term is the increase (decrease) in longwave radiation due to an increase (decrease) in canopy temperature that is emitted by the canopy directly to the atmosphere. The fifth term is the increase (decrease) in longwave radiation due to an increase (decrease) in canopy temperature that is emitted downward from the canopy, reflected from the ground, and transmitted through the canopy to the atmosphere. The last term is the longwave radiation emitted by the ground and transmitted through the canopy to the atmosphere.
+where :math:`\varepsilon _{v}` is the vegetation emissivity, :math:`T_{v}^{n+1,k+1}` and :math:`T_{v}^{n+1,k}` are the vegetation temperatures at the current time step and current and previous iteration, respectively, where :math:`k` is the iteration level (:ref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`). The first term in the equation above is the atmospheric longwave radiation that is transmitted through the canopy, reflected by the ground, and transmitted through the canopy to the atmosphere. The second term is the longwave radiation emitted by the canopy directly to the atmosphere. The third term is the longwave radiation emitted downward from the canopy, reflected by the ground, and transmitted through the canopy to the atmosphere. The fourth term is the increase (decrease) in longwave radiation due to an increase (decrease) in canopy temperature that is emitted by the canopy directly to the atmosphere. The fifth term is the increase (decrease) in longwave radiation due to an increase (decrease) in canopy temperature that is emitted downward from the canopy, reflected from the ground, and transmitted through the canopy to the atmosphere. The last term is the longwave radiation emitted by the ground and transmitted through the canopy to the atmosphere.
 
 The upward longwave radiation from the ground is
 
@@ -157,7 +155,7 @@ where :math:`L_{v} \, \downarrow` is the downward longwave radiation below the v
 .. math::
    :label: 4.16
 
-   L_{v} \, \downarrow =\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow +\varepsilon _{v} \sigma \left(T_{v}^{n} \right)^{4} +4\varepsilon _{v} \sigma \left(T_{v}^{n} \right)^{3} \left(T_{v}^{n+1} -T_{v}^{n} \right).
+   L_{v} \, \downarrow =\left(1-\varepsilon _{v} \right)L_{atm} \, \downarrow +\varepsilon _{v} \sigma \left(T_{v}^{n+1,k} \right)^{4} +4\varepsilon _{v} \sigma \left(T_{v}^{n+1,k} \right)^{3} \left(T_{v}^{n+1,k+1} -T_{v}^{n+1,k} \right).
 
 The net longwave radiation flux for the ground is (positive toward the atmosphere)
 
@@ -182,7 +180,7 @@ These equations assume that absorptivity equals emissivity. The emissivity of th
 
    \varepsilon _{g} =\varepsilon _{soi} \left(1-f_{sno} \right)+\varepsilon _{sno} f_{sno}
 
-where :math:`\varepsilon _{soi} =0.96` for soil, 0.97 for glacier, :math:`\varepsilon _{sno} =0.97`, and :math:`f_{sno}` is the fraction of ground covered by snow (section :numref:`Snow Covered Area Fraction`). The vegetation emissivity is
+where :math:`\varepsilon _{soi} =0.96` for soil, :math:`\varepsilon _{sno} =0.97` for snow, which is also the same for glacier, and :math:`f_{sno}` is the fraction of ground covered by snow (section :numref:`Snow Covered Area Fraction`). The vegetation emissivity is
 
 .. math::
    :label: 4.20

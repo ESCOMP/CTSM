@@ -1,5 +1,4 @@
-"""Utility functions related to getting paths to various important places
-"""
+"""Utility functions related to getting paths to various important places"""
 
 from __future__ import print_function
 
@@ -94,6 +93,16 @@ def add_cime_lib_to_path(standalone_only=False):
     cime_lib_path = os.path.join(cime_path, "CIME", "Tools")
     prepend_to_python_path(cime_lib_path)
     return cime_path
+
+
+def add_ctsm_systests_to_path(standalone_only=False):
+    """Adds the CTSM python SystemTests to the python path, to allow importing
+    modules from that library
+    """
+    cime_path = path_to_cime(standalone_only=standalone_only)
+    ctsm_systest_dir = os.path.join(cime_path, os.pardir, "cime_config")
+    prepend_to_python_path(ctsm_systest_dir)
+    sys.path.insert(1, ctsm_systest_dir)
 
 
 # ========================================================================

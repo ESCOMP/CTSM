@@ -51,6 +51,8 @@ Module SoilHydrologyType
      real(r8), pointer :: top_ice_col       (:)     ! col VIC ice len in top layers
      real(r8), pointer :: top_moist_limited_col(:)  ! col VIC soil moisture in top layers, limited to no greater than top_max_moist_col
      real(r8), pointer :: ice_col           (:,:)   ! col VIC soil ice (kg/m2) for VIC soil layers
+     real(r8), pointer :: qout_col          (:,:)   ! flux of water out of soil layer [mm H2O/s]
+     real(r8), pointer :: qin_col           (:,:)   ! flux of water into soil layer [mm H2O/s]
 
    contains
 
@@ -142,6 +144,8 @@ contains
     allocate(this%top_ice_col       (begc:endc))                 ; this%top_ice_col       (:)     = nan
     allocate(this%top_moist_limited_col(begc:endc))              ; this%top_moist_limited_col(:)  = nan
     allocate(this%ice_col           (begc:endc,nlayert))         ; this%ice_col           (:,:)   = nan
+    allocate(this%qout_col          (begc:endc,nlevsoi))         ; this%qout_col          (:,:)   = nan
+    allocate(this%qin_col           (begc:endc,nlevsoi))         ; this%qin_col           (:,:)   = nan
 
   end subroutine InitAllocate
 
@@ -149,7 +153,7 @@ contains
   subroutine InitHistory(this, bounds, use_aquifer_layer)
     !
     ! !USES:
-    use histFileMod    , only : hist_addfld1d
+    use histFileMod    , only : hist_addfld1d, hist_addfld2d
     !
     ! !ARGUMENTS:
     class(soilhydrology_type) :: this
@@ -191,6 +195,16 @@ contains
     call hist_addfld1d (fname='ZWT_PERCH',  units='m',  &
          avgflag='A', long_name='perched water table depth (natural vegetated and crop landunits only)', &
          ptr_col=this%zwt_perched_col, l2g_scale_type='veg')
+
+    this%qout_col(begc:endc, :) = spval
+    call hist_addfld2d (fname="QOUT", units='mm H2O/s',  type2d='levsoi', &
+         avgflag='A', long_name='flux of water out of soil layer', &
+         ptr_col=this%qout_col, default='inactive')
+
+    this%qin_col(begc:endc, :) = spval
+    call hist_addfld2d (fname="QIN", units='mm H2O/s',  type2d='levsoi', &
+         avgflag='A', long_name='flux of water into soil layer', &
+         ptr_col=this%qin_col, default='inactive')
 
   end subroutine InitHistory
 
@@ -287,7 +301,6 @@ contains
     character(len=*)  , intent(in)    :: flag   ! 'read' or 'write'
     !
     ! !LOCAL VARIABLES:
-    integer :: j,c ! indices
     logical :: readvar      ! determine if variable is on initial file
     !-----------------------------------------------------------------------
 

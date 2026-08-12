@@ -208,7 +208,6 @@
   <environment_variables>
     <env name="OMP_STACKSIZE">1024M</env>
     <env name="TMPDIR">/glade/derecho/scratch/$USER</env>
-    <env name="MPI_TYPE_DEPTH">16</env>
     <env name="MPI_USE_ARRAY"/>
   </environment_variables>
   <environment_variables comp_interface="nuopc">

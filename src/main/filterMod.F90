@@ -316,7 +316,7 @@ contains
     !
     ! !USES:
     use decompMod       , only : bounds_level_clump
-    use pftconMod       , only : npcropmin
+    use pftconMod       , only : is_prognostic_crop
     use landunit_varcon , only : istsoil, istcrop, istice
     !
     ! !ARGUMENTS:
@@ -479,7 +479,7 @@ contains
     do p = bounds%begp,bounds%endp
        if(.not.use_fates)then
           if (patch%active(p) .or. include_inactive) then
-             if (patch%itype(p) >= npcropmin) then !skips 2 generic crop types
+             if (is_prognostic_crop(patch%itype(p))) then !skips 2 generic crop types
                 fl = fl + 1
                 this_filter(nc)%pcropp(fl) = p
              else

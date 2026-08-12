@@ -1,0 +1,4 @@
+./xmlchange CLM_ACCELERATED_SPINUP=sasu
+./xmlchange DATM_YR_START=1901,DATM_YR_END=1902
+./xmlchange MOSART_MODE=NULL
+

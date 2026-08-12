@@ -89,6 +89,11 @@ contains
     ! Note that dynpft_init needs to be called from outside any loops over clumps - so
     ! this routine needs to be called from outside any loops over clumps.
     !
+    !
+    ! !USES:
+    use clm_varctl               , only : fates_harvest_mode
+    use dynFATESLandUseChangeMod , only : fates_harvest_clmlanduse
+    !
     ! !ARGUMENTS:
     type(bounds_type)       , intent(in)    :: bounds_proc ! processor-level bounds
     type(glc_behavior_type) , intent(in)    :: glc_behavior
@@ -123,7 +128,7 @@ contains
     ! flanduse_timeseries file. However, this could theoretically be changed so that the
     ! harvest data were separated from the pftdyn data, allowing them to differ in the
     ! years over which they apply.
-    if (get_do_harvest()) then
+    if (get_do_harvest() .or. trim(fates_harvest_mode) == fates_harvest_clmlanduse) then
        call dynHarvest_init(bounds_proc, harvest_filename=get_flanduse_timeseries())
     end if
 
@@ -201,7 +206,7 @@ contains
     ! OUTSIDE any loops over clumps in the driver.
     !
     ! !USES:
-    use clm_varctl              , only : use_cn, use_fates, use_fates_luh
+    use clm_varctl              , only : use_cn, use_fates, use_fates_luh, use_fates_potentialveg
     use dynInitColumnsMod       , only : initialize_new_columns
     use dynConsBiogeophysMod    , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod                , only : dyn_ED
@@ -290,7 +295,7 @@ contains
        call dynurban_interp(bounds_proc)
     end if
 
-    if (use_fates_luh) then
+    if (use_fates_luh .and. .not. use_fates_potentialveg) then
        call dynFatesLandUseInterp(bounds_proc)
     end if
 

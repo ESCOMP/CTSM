@@ -18,8 +18,9 @@ module lnd_set_decomp_and_domain
   use shr_sys_mod  , only : shr_sys_abort
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use spmdMod      , only : masterproc, mpicom
-  use clm_varctl   , only : iulog, inst_suffix
+  use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
+  use perf_mod     , only : t_startf, t_stopf
 
   implicit none
   private ! except
@@ -68,7 +69,7 @@ contains
     ! local variables
     type(ESMF_Mesh)        :: mesh_maskinput
     type(ESMF_Mesh)        :: mesh_lndinput
-    type(ESMF_DistGrid)    :: distgrid_ctsm
+    type(ESMF_DistGrid)    :: distgrid_ctsm   ! This appears to be local but is used later in lnd_import_export
     type(ESMF_Field)       :: field_lnd
     type(ESMF_Field)       :: field_ctsm
     type(ESMF_RouteHandle) :: rhandle_lnd2ctsm
@@ -83,10 +84,11 @@ contains
     integer  , pointer     :: gindex_ctsm(:)  ! global index space for land and ocean points
     integer  , pointer     :: lndmask_glob(:)
     real(r8) , pointer     :: lndfrac_glob(:)
-    real(r8) , pointer     :: lndfrac_loc_input(:)
+    real(r8) , pointer     :: lndfrac_loc_input(:) => null()
     real(r8) , pointer     :: dataptr1d(:)
     !-------------------------------------------------------------------------------
 
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: setup')
     rc = ESMF_SUCCESS
 
     ! Write diag info
@@ -105,7 +107,10 @@ contains
     ! Determine global 2d sizes from read of dimensions of surface dataset and allocate global memory
     call lnd_get_global_dims(ni, nj, gsize, isgrid2d)
 
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: setup')
+
     ! Read in the land mesh from the file
+    call t_startf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
     mesh_lndinput = ESMF_MeshCreate(filename=trim(meshfile_lnd), fileformat=ESMF_FILEFORMAT_ESMFMESH, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
@@ -142,9 +147,14 @@ contains
     else
        call shr_sys_abort('driver '//trim(driver)//' is not supported, must be lilac or cmeps')
     end if
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: final')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=ni, lnj=nj, amask=lndmask_glob)
+    call t_stopf ('decompInit_lnd')
 
     ! Determine ocn decomposition that will be used to create the full mesh
     ! note that the memory for gindex_ocn will be allocated in the following call
@@ -154,7 +164,7 @@ contains
     ! Get JUST gridcell processor bounds
     ! Remaining bounds (landunits, columns, patches) will be set after calling decompInit_glcp
     ! so get_proc_bounds is called twice and the gridcell information is just filled in twice
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
     begg = bounds%begg
     endg = bounds%endg
 
@@ -188,8 +198,10 @@ contains
           gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
+    call t_stopf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
 
     ! Generate a new mesh on the gindex decomposition
+    ! NOTE: The distgrid_ctsm will be used later in lnd_import_export, even though it appears to just be local
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -229,6 +241,9 @@ contains
              n = 1 + (g - begg)
              ldomain%frac(g) = dataptr1d(n)
           end do
+          ! Destroy the memory for the above ESMF objects that can be released
+          call from_readmesh_destroy_esmf_objects(rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
        else
           ! ASSUME that land fraction is identical to land mask in this case
           do g = begg, endg
@@ -247,9 +262,56 @@ contains
     end if
 
     ! Deallocate local pointer memory
-    deallocate(gindex_lnd)
-    deallocate(gindex_ocn)
-    deallocate(gindex_ctsm)
+    call from_readmesh_dealloc( )
+
+    call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
+
+
+    !===============================================================================
+    ! Internal subroutines for this subroutine
+    contains
+    !===============================================================================
+
+
+    subroutine from_readmesh_destroy_esmf_objects(rc)
+       use ESMF, only : ESMF_FieldRedistRelease, ESMF_DistGridDestroy, ESMF_FieldDestroy, ESMF_MeshDestroy
+       integer, intent(out) :: rc ! ESMF return code to indicate deallocate was successful
+
+       logical :: no_esmf_garbage = .true. ! If .true. release all ESMF data (which can be problematic if referenced again)
+
+       rc = ESMF_SUCCESS
+
+       ! Destroy or release all of the ESMF objects
+       call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       !--------------------------------------------------------------------------
+       ! NOTE: We can't destroy the distgrid -- because it will be used later
+       ! As such we don't do the following...  EBK 08/01/2025
+       !call ESMF_DistGridDestroy( distgrid_ctsm, rc=rc)
+       !if (chkerr(rc,__LINE__,u_FILE_u)) return
+       !--------------------------------------------------------------------------
+       call ESMF_FieldDestroy( field_lnd, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldDestroy( field_ctsm, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_maskinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_lndinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    end subroutine from_readmesh_destroy_esmf_objects
+
+    !-------------------------------------------------------------------------------
+    subroutine from_readmesh_dealloc( )
+
+       if ( associated(lndfrac_loc_input) ) deallocate(lndfrac_loc_input)
+       if ( associated(gindex_lnd) ) deallocate(gindex_lnd)
+       if ( associated(gindex_ocn) ) deallocate(gindex_ocn)
+       if ( associated(gindex_ctsm) ) deallocate(gindex_ctsm)
+
+    end subroutine from_readmesh_dealloc
+
+    !-------------------------------------------------------------------------------
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
@@ -315,10 +377,12 @@ contains
     !-------------------------------------------------------------------------------
 
     ! Determine decomp and ldomain
+    call t_startf ('decompInit_lnd')
     call decompInit_lnd(lni=1, lnj=1, amask=(/1/))
+    call t_stopf ('decompInit_lnd')
 
     ! Initialize processor bounds
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.) ! only_gridcell since decomp not fully initialized
 
     ! Initialize domain data structure
     call domain_init(domain=ldomain, isgrid2d=.false., ni=1, nj=1, nbeg=1, nend=1)
@@ -452,10 +516,11 @@ contains
     real(r8)               :: fmaxval = 1._r8
     logical                :: lexist
     logical                :: checkflag = .false.
-    character(len=CL)      :: flandfrac
+    character(len=FL)      :: flandfrac
     character(len=CL)      :: flandfrac_status
     !-------------------------------------------------------------------------------
 
+    call t_startf('lnd_set_lndmask_from_maskmesh')
     rc = ESMF_SUCCESS
 
     flandfrac = './init_generated_files/ctsm_landfrac'//trim(inst_suffix)//'.nc'
@@ -556,6 +621,7 @@ contains
        deallocate(lndmask_loc)
 
     end if
+    call t_stopf('lnd_set_lndmask_from_maskmesh')
 
   end subroutine lnd_set_lndmask_from_maskmesh
 

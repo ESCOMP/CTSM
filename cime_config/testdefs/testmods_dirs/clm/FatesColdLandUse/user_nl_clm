@@ -1,2 +1,7 @@
-flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.2.0/landuse.timeseries_4x5_hist_16_CMIP6_1850-2015_c230620.nc'
-do_harvest = .true.
+! FATES LandUse using the CTSM landuse timeseries file for the transitions
+! Turn off transient lakes and urban right now, until this is handled in
+! the build-namelist
+!    See:    https://github.com/ESCOMP/CTSM/issues/1617
+fates_harvest_mode = 'landuse_timeseries'
+do_transient_lakes = .false.
+do_transient_urban = .false.

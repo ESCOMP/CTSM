@@ -15,6 +15,7 @@ import xarray as xr
 
 from ctsm import unit_testing
 from ctsm.path_utils import path_to_ctsm_root
+from ctsm.longitude import Longitude
 from ctsm.modify_input_files.fsurdat_modifier import fsurdat_modifier_arg_process
 from ctsm.modify_input_files.fsurdat_modifier import read_cfg_subgrid
 from ctsm.modify_input_files.fsurdat_modifier import read_cfg_option_control
@@ -62,10 +63,11 @@ class TestFSurdatModifier(unittest.TestCase):
         self.config = ConfigParser()
         self.config.read(self.cfg_path)
         my_data = xr.open_dataset(self._fsurdat_in)
+        lon_type = 360
         self.modify_fsurdat = ModifyFsurdat(
             my_data=my_data,
-            lon_1=0.0,
-            lon_2=360.0,
+            lon_1=Longitude(0.0, lon_type),
+            lon_2=Longitude(360.0, lon_type),
             lat_1=90.0,
             lat_2=90.0,
             landmask_file=None,

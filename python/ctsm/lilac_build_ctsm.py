@@ -91,6 +91,7 @@ def build_ctsm(
     cime_path,
     build_dir,
     compiler,
+    *,
     no_build=False,
     machine=None,
     os_type=None,
@@ -603,6 +604,7 @@ def _create_build_dir(build_dir, existing_inputdata):
 
 
 def _fill_out_machine_files(
+    *,
     build_dir,
     os_type,
     compiler,
@@ -686,6 +688,7 @@ def _create_case(
     cime_path,
     build_dir,
     compiler,
+    *,
     machine=None,
     build_debug=False,
     build_with_openmp=False,
@@ -830,7 +833,7 @@ def _stage_runtime_inputs(build_dir, no_pnetcdf):
 
     shutil.copyfile(
         src=os.path.join(
-            path_to_ctsm_root(), "cime_config", "usermods_dirs", "lilac", "user_nl_ctsm"
+            path_to_ctsm_root(), "cime_config", "usermods_dirs", "clm", "lilac", "user_nl_ctsm"
         ),
         dst=os.path.join(build_dir, _RUNTIME_INPUTS_DIRNAME, "user_nl_ctsm"),
     )

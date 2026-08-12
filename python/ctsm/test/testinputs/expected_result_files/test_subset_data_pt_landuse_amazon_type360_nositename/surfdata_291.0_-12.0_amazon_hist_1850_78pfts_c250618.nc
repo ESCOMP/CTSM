@@ -1,0 +1,1 @@
+../test_subset_data_pt_landuse_amazon_type360/surfdata_TMP_amazon_hist_1850_78pfts_c250618.nc

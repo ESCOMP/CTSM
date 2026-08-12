@@ -20,20 +20,6 @@
       </goldbach>
    </namelistTest>
 
-   <tools_test_driver>
-         <yellowstone>
-            <INTEL>
-            </INTEL>
-         </yellowstone>
-         <goldbach>
-            <INTEL>
-               <entry testId="sm684" failType="FAIL">goldbach not recognized</entry>
-               <entry testId="smf84" failType="FAIL">goldbach not recognized</entry>
-               <entry testId="smfc4" failType="FAIL">goldbach not recognized</entry>
-            </INTEL>
-         </goldbach>
-   </tools_test_driver>
-
    <unit_tests>
          <yellowstone>
             <INTEL>

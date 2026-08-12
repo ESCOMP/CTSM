@@ -21,7 +21,7 @@ module ExcessIceStreamType
   use shr_kind_mod     , only : r8 => shr_kind_r8, CL => shr_kind_cl
   use shr_log_mod      , only : errMsg => shr_log_errMsg
   use spmdMod          , only : mpicom, masterproc
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use abortutils       , only : endrun
   use decompMod        , only : bounds_type
 
@@ -45,8 +45,8 @@ module ExcessIceStreamType
   end type excessicestream_type
     ! ! PRIVATE DATA:
   type, private :: streamcontrol_type
-     character(len=CL)  :: stream_fldFileName_exice   ! data Filename
-     character(len=CL)  :: stream_meshfile_exice      ! mesh Filename
+     character(len=FL)  :: stream_fldFileName_exice   ! data Filename
+     character(len=FL)  :: stream_meshfile_exice      ! mesh Filename
      character(len=CL)  :: stream_mapalgo_exice       ! map algo
   contains
      procedure, private :: ReadNML     ! Read in namelist
@@ -264,8 +264,8 @@ subroutine ReadNML(this, bounds, NLFilename)
   integer            :: nu_nml    ! unit for namelist file
   integer            :: nml_error ! namelist i/o error flag
   logical            :: use_excess_ice_streams = .false.         ! logical to turn on use of excess ice streams
-  character(len=CL)  :: stream_fldFileName_exice = ' '
-  character(len=CL)  :: stream_meshfile_exice = ' '
+  character(len=FL)  :: stream_fldFileName_exice = ' '
+  character(len=FL)  :: stream_meshfile_exice = ' '
   character(len=CL)  :: stream_mapalgo_exice = 'bilinear'
   character(len=*), parameter :: namelist_name = 'exice_streams'    ! MUST agree with name in namelist and read
   character(len=*), parameter :: subName = "('exice_streams::ReadNML')"

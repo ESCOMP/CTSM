@@ -73,9 +73,9 @@ module FrictionVelocityMod
      real(r8), pointer, public :: uaf_patch        (:)   ! patch canopy air speed [m/s]
      real(r8), pointer, public :: taf_patch        (:)   ! patch canopy air temperature [K]
      real(r8), pointer, public :: qaf_patch        (:)   ! patch canopy humidity [kg/kg]
-     real(r8), pointer, public :: obu_patch        (:)   ! patch Monin-Obukhov length [m]
+     real(r8), pointer, public :: obu_patch        (:)   ! patch Obukhov length scale [m]
      real(r8), pointer, public :: zeta_patch       (:)   ! patch dimensionless stability parameter
-     real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [Pa]
+     real(r8), pointer, public :: vpd_patch        (:)   ! patch vapor pressure deficit [kPa]
      real(r8), pointer, public :: num_iter_patch   (:)   ! patch number of iterations
      real(r8), pointer, public :: z0m_actual_patch (:)   ! patch roughness length actually used in flux calculations, momentum [m]
 
@@ -87,7 +87,9 @@ module FrictionVelocityMod
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
-     procedure, public :: MoninObukIni           ! Initialization of the Monin-Obukhov length
+     procedure, public :: MoninObukIni           ! Initialization of the Obukhov length scale
+
+     procedure, public  :: InitForTesting        ! version of Init meant for unit testing
 
      ! Private procedures
      procedure, private :: InitAllocate
@@ -121,6 +123,22 @@ contains
     call this%ReadParams(params_ncid)
 
   end subroutine Init
+
+  !------------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds)
+    ! Initialization for unit testing, hardcodes namelist and parameter file settings
+    class(frictionvel_type) :: this
+    type(bounds_type), intent(in) :: bounds
+
+    call this%InitAllocate(bounds)
+    call this%InitHistory(bounds)
+    call this%InitCold(bounds)
+    this%zetamaxstable = 0.5_r8
+    this%zsno = 0.00085_r8
+    this%zlnd = 0.000775_r8
+    this%zglc = 0.00230000005_r8
+
+  end subroutine InitForTesting
 
   !------------------------------------------------------------------------
   subroutine InitAllocate(this, bounds)
@@ -244,60 +262,69 @@ contains
             ptr_patch=this%ram1_patch, default='inactive')
     end if
 
-    if (use_cn) then
        this%fv_patch(begp:endp) = spval
        call hist_addfld1d (fname='FV', units='m/s', &
             avgflag='A', long_name='friction velocity', &
-            ptr_patch=this%fv_patch)
-    end if
+            ptr_patch=this%fv_patch, default='inactive')
 
-       call hist_addfld1d (fname='RAH1', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
-            ptr_patch=this%rah1_patch, default='inactive')
+       this%rah1_patch(begp:endp) = spval
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='RAH1', units='s/m', &
+!           avgflag='A', long_name='aerodynamical resistance ', &
+!           ptr_patch=this%rah1_patch, default='inactive')
        this%rah2_patch(begp:endp) = spval
-       call hist_addfld1d (fname='RAH2', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
-            ptr_patch=this%rah2_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='RAH2', units='s/m', &
+!           avgflag='A', long_name='aerodynamical resistance ', &
+!           ptr_patch=this%rah2_patch, default='inactive')
        this%raw1_patch(begp:endp) = spval
-       call hist_addfld1d (fname='RAW1', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
-            ptr_patch=this%raw1_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='RAW1', units='s/m', &
+!           avgflag='A', long_name='aerodynamical resistance ', &
+!           ptr_patch=this%raw1_patch, default='inactive')
        this%raw2_patch(begp:endp) = spval
-       call hist_addfld1d (fname='RAW2', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
-            ptr_patch=this%raw2_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='RAW2', units='s/m', &
+!           avgflag='A', long_name='aerodynamical resistance ', &
+!           ptr_patch=this%raw2_patch, default='inactive')
        this%ustar_patch(begp:endp) = spval
-       call hist_addfld1d (fname='USTAR', units='s/m', &
-            avgflag='A', long_name='aerodynamical resistance ', &
-            ptr_patch=this%ustar_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='USTAR', units='m/s', &
+!           avgflag='A', long_name='friction velocity ', &
+!           ptr_patch=this%ustar_patch, default='inactive')
        this%um_patch(begp:endp) = spval
-       call hist_addfld1d (fname='UM', units='m/s', &
-            avgflag='A', long_name='wind speed plus stability effect', &
-            ptr_patch=this%um_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='UM', units='m/s', &
+!           avgflag='A', long_name='wind speed plus stability effect', &
+!           ptr_patch=this%um_patch, default='inactive')
        this%uaf_patch(begp:endp) = spval
-       call hist_addfld1d (fname='UAF', units='m/s', &
-            avgflag='A', long_name='canopy air speed ', &
-            ptr_patch=this%uaf_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='UAF', units='m/s', &
+!           avgflag='A', long_name='canopy air speed ', &
+!           ptr_patch=this%uaf_patch, default='inactive')
        this%taf_patch(begp:endp) = spval
-       call hist_addfld1d (fname='TAF', units='K', &
-            avgflag='A', long_name='canopy air temperature', &
-            ptr_patch=this%taf_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='TAF', units='K', &
+!           avgflag='A', long_name='canopy air temperature', &
+!           ptr_patch=this%taf_patch, default='inactive')
        this%qaf_patch(begp:endp) = spval
-       call hist_addfld1d (fname='QAF', units='kg/kg', &
-            avgflag='A', long_name='canopy air humidity', &
-            ptr_patch=this%qaf_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='QAF', units='kg/kg', &
+!           avgflag='A', long_name='canopy air humidity', &
+!           ptr_patch=this%qaf_patch, default='inactive')
        this%obu_patch(begp:endp) = spval
        call hist_addfld1d (fname='OBU', units='m', &
-            avgflag='A', long_name='Monin-Obukhov length', &
+            avgflag='A', long_name='Obukhov length scale', &
             ptr_patch=this%obu_patch, default='inactive')
        this%zeta_patch(begp:endp) = spval
        call hist_addfld1d (fname='ZETA', units='unitless', &
             avgflag='A', long_name='dimensionless stability parameter', &
             ptr_patch=this%zeta_patch, default='inactive')
        this%vpd_patch(begp:endp) = spval
-       call hist_addfld1d (fname='VPD', units='Pa', &
-            avgflag='A', long_name='vpd', &
-            ptr_patch=this%vpd_patch, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='VPD', units='kPa', &
+!           avgflag='A', long_name='vapor pressure deficit', &
+!           ptr_patch=this%vpd_patch, default='inactive')
        this%num_iter_patch(begp:endp) = spval
        call hist_addfld1d (fname='num_iter', units='unitless', &
             avgflag='A', long_name='number of iterations', &
@@ -436,6 +463,11 @@ contains
          dim1name='column', &
          long_name='ground momentum roughness length', units='m', &
          interpinic_flag='interp', readvar=readvar, data=this%z0mg_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='OBU', xtype=ncd_double,  &
+         dim1name='pft', &
+         long_name='Obukhov length scale', units='m', &
+         interpinic_flag='interp', readvar=readvar, data=this%obu_patch)
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, varname='rb10', xtype=ncd_double,  &
@@ -745,7 +777,7 @@ contains
     real(r8) , intent(in)    :: z0m     ( lbn: )         ! roughness length over vegetation, momentum [m] [lbn:ubn]
     real(r8) , intent(in)    :: z0h     ( lbn: )         ! roughness length over vegetation, sensible heat [m] [lbn:ubn]
     real(r8) , intent(in)    :: z0q     ( lbn: )         ! roughness length over vegetation, latent heat [m] [lbn:ubn]
-    real(r8) , intent(in)    :: obu     ( lbn: )         ! monin-obukhov length (m) [lbn:ubn]
+    real(r8) , intent(in)    :: obu     ( lbn: )         ! Obukhov length scale (m) [lbn:ubn]
     integer  , intent(in)    :: iter                     ! iteration number
     real(r8) , intent(in)    :: ur      ( lbn: )         ! wind speed at reference height [m/s] [lbn:ubn]
     real(r8) , intent(in)    :: um      ( lbn: )         ! wind speed including the stablity effect [m/s] [lbn:ubn]
@@ -1126,7 +1158,7 @@ contains
   subroutine MoninObukIni (this, ur, thv, dthv, zldis, z0m, um, obu)
     !
     ! !DESCRIPTION:
-    ! Initialization of the Monin-Obukhov length.
+    ! Initialization of the Obukhov length scale.
     ! The scheme is based on the work of Zeng et al. (1998):
     ! Intercomparison of bulk aerodynamic algorithms for the computation
     ! of sea surface fluxes using TOGA CORE and TAO data. J. Climate,
@@ -1143,7 +1175,7 @@ contains
     real(r8), intent(in)  :: zldis ! reference height "minus" zero displacement heght [m]
     real(r8), intent(in)  :: z0m   ! roughness length, momentum [m]
     real(r8), intent(out) :: um    ! wind speed including the stability effect [m/s]
-    real(r8), intent(out) :: obu   ! monin-obukhov length (m)
+    real(r8), intent(out) :: obu   ! Obukhov length scale (m)
     !
     ! !LOCAL VARIABLES:
     real(r8) :: wc    ! convective velocity [m/s]

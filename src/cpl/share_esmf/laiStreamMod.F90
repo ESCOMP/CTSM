@@ -12,7 +12,7 @@ module laiStreamMod
   use dshr_strdata_mod , only : shr_strdata_type
   use decompMod        , only : bounds_type
   use abortutils       , only : endrun
-  use clm_varctl       , only : iulog
+  use clm_varctl       , only : iulog, FL => fname_len
   use perf_mod         , only : t_startf, t_stopf
   use spmdMod          , only : masterproc, mpicom, iam
   !
@@ -60,8 +60,8 @@ contains
     integer                 :: model_year_align_lai       ! align stream_year_first_lai with
     integer                 :: nu_nml                     ! unit for namelist file
     integer                 :: nml_error                  ! namelist i/o error flag
-    character(len=CL)       :: stream_fldFileName_lai     ! lai stream filename to read
-    character(len=CL)       :: stream_meshfile_lai        ! lai stream meshfile
+    character(len=FL)       :: stream_fldFileName_lai     ! lai stream filename to read
+    character(len=FL)       :: stream_meshfile_lai        ! lai stream meshfile
     real(r8)                :: lai_dtlimit = 1.5_r8       ! dlimit for lai stream to use
     character(len=CL)       :: lai_mapalgo = 'bilinear'   ! Mapping alogrithm
     character(len=CL)       :: lai_tintalgo = 'linear'    ! Time interpolation alogrithm
@@ -259,10 +259,10 @@ contains
        if (ivt /= noveg) then
           ! vegetated pft
           ig = g_to_ig(patch%gridcell(p))
-          canopystate_inst%tlai_patch(p) = dataptr2d(ig,ivt)
+          canopystate_inst%tlai_input_patch(p) = dataptr2d(ig,ivt)
        else
           ! non-vegetated pft
-          canopystate_inst%tlai_patch(p) = 0._r8
+          canopystate_inst%tlai_input_patch(p) = 0._r8
        endif
     end do
     deallocate(dataptr2d)

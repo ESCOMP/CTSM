@@ -99,7 +99,7 @@ contains
           patch%wtcol(p)   = dgvs_inst%fpcgrid_patch(p) + &
                     wt1 * (dgvs_inst%fpcgridold_patch(p) - dgvs_inst%fpcgrid_patch(p))
 
-          if (mon==1 .and. day==1 .and. sec==dtime .and. nstep>0) then
+          if (mon==1 .and. day==1 .and. sec==dtime) then
              dgvs_inst%fpcgridold_patch(p) = dgvs_inst%fpcgrid_patch(p)
           end if
        end if

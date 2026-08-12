@@ -28,8 +28,8 @@ However, geographically- and temporally-varying maps can also be used to prescri
    stream_meshfile_cropcal = '/glade/p/cesmdata/cseg/inputdata/share/meshes/360x720_120830_ESMFmesh_c20210507_cdf5.nc'
 
    ! First and last years on the sowing window datasets
-   stream_year_first_cropcal = 2000
-   stream_year_last_cropcal = 2000
+   stream_year_first_cropcal_swindows = 2000
+   stream_year_last_cropcal_swindows = 2000
 
 Sowing date
 -----------
@@ -39,7 +39,7 @@ Specific sowing *dates* can be prescribed for any crop in any gridcell by settin
 
 Maturity requirements
 ---------------------
-The heat unit accumulation required for a crop to reach maturity (and thus be harvested) is typically determined by a formula with crop-specific parameters that are specified on the parameter file. However, geographically- and temporally-varying maps of maturity requirement (in units of degree-days) can also be specified using the ``user_nl_clm`` input variable ``stream_fldFileName_cultivar_gdds``. (Note that ``stream_meshfile_cropcal``, ``stream_year_first_cropcal``, and ``stream_year_last_cropcal``---see above---are all also required.)
+The heat unit accumulation required for a crop to reach maturity (and thus be harvested) is typically determined by a formula with crop-specific parameters that are specified on the parameter file. However, geographically- and temporally-varying maps of maturity requirement (in units of degree-days) can also be specified using the ``user_nl_clm`` input variable ``stream_fldFileName_cultivar_gdds``. (Note that ``stream_meshfile_cropcal``, ``stream_year_first_cropcal_cultivar_gdds``, and ``stream_year_last_cropcal_cultivar_gdds``---see above---are all also required.)
 
 Generating maturity requirements
 --------------------------------
@@ -52,25 +52,25 @@ In a GDD-generating run, crops are planted on the specified sowing dates and are
    stream_fldFileName_swindow_start = '/path/to/sowing_date_file.nc'
    stream_fldFileName_swindow_end = '/path/to/sowing_date_file.nc'
    stream_meshfile_cropcal = '/path/to/mesh_file.nc'
-   stream_year_first_cropcal = YEAR
-   stream_year_last_cropcal = YEAR
+   stream_year_first_cropcal_swindows = YEAR
+   stream_year_last_cropcal_swindows = YEAR
 
    ! Special settings for "GDD-generating" run
    generate_crop_gdds = .true.
    use_mxmat = .false.
 
-   ! (h0) Save default variables monthly instead of daily to save space
+   ! (h0a) Save default variables monthly instead of daily to save space
    hist_nhtfrq = 0
    hist_mfilt = 12
 
-   ! (h1) Annual outputs for GDD generation
+   ! (h1i) Annual outputs for GDD generation
    hist_fincl2 = 'GRAINC_TO_FOOD_PERHARV', 'GRAINC_TO_FOOD_ANN', 'SDATES', 'SDATES_PERHARV', 'SYEARS_PERHARV', 'HDATES', 'GDDHARV_PERHARV', 'GDDACCUM_PERHARV', 'HUI_PERHARV', 'SOWING_REASON_PERHARV', 'HARVEST_REASON_PERHARV'
    hist_nhtfrq(2) = 17520
    hist_mfilt(2) = 999
    hist_type1d_pertape(2) = 'PFTS'
    hist_dov2xy(2) = .false.
    
-   ! (h2) Daily outputs for GDD generation
+   ! (h2a) Daily outputs for GDD generation
    hist_fincl3 = 'GDDACCUM', 'GDDHARV'
    hist_nhtfrq(3) = -24
    hist_mfilt(3) = 365
@@ -93,4 +93,4 @@ The entire process can be illustrated with the RXCROPMATURITY system test. E.g.:
 
 ::
 
-   run_sys_tests -t RXCROPMATURITY_Lm61.f10_f10_mg37.IHistClm51BgcCrop.cheyenne_intel.clm-cropMonthOutput --skip-generate --skip-compare
+   run_sys_tests -t RXCROPMATURITY_Lm61.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput --skip-generate --skip-compare

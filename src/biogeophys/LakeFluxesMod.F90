@@ -8,6 +8,8 @@ module LakeFluxesMod
   ! !USES
   use shr_kind_mod         , only : r8 => shr_kind_r8
   use shr_log_mod          , only : errMsg => shr_log_errMsg
+  use abortutils           , only : endrun
+  use clm_varctl           , only : iulog
   use decompMod            , only : bounds_type
   use atm2lndType          , only : atm2lnd_type
   use EnergyFluxType       , only : energyflux_type
@@ -41,6 +43,10 @@ module LakeFluxesMod
       real(r8) :: wind_min ! Minimum wind speed at the atmospheric forcing height (m/s)
   end type params_type
   type(params_type), private ::  params_inst
+
+
+  character(len=*), parameter, private :: sourcefile = &
+  __FILE__
   !-----------------------------------------------------------------------
 
 contains
@@ -96,6 +102,7 @@ contains
     use clm_varcon          , only : beta_param, nu_param, b1_param, b4_param
     use clm_varcon          , only : meier_param1, meier_param2, meier_param3
     use clm_varctl          , only : use_lch4, z0param_method, use_z0m_snowmelt
+    use clm_varctl          , only : snow_thermal_cond_lake_method
     use LakeCon             , only : betavis, z0frzlake, tdmax, emg_lake
     use LakeCon             , only : lake_use_old_fcrit_minz0
     use LakeCon             , only : minz0lake, cur0, cus, curm, fcrit
@@ -148,8 +155,8 @@ contains
     real(r8) :: dthv                               ! diff of vir. poten. temp. between ref. height and surface
     real(r8) :: dzsur(bounds%begc:bounds%endc)     ! 1/2 the top layer thickness (m)
     real(r8) :: htvp(bounds%begc:bounds%endc)      ! latent heat of vapor of water (or sublimation) [j/kg]
-    real(r8) :: obu(bounds%begp:bounds%endp)       ! monin-obukhov length (m)
-    real(r8) :: obuold(bounds%begp:bounds%endp)    ! monin-obukhov length of previous iteration
+    real(r8) :: obu(bounds%begp:bounds%endp)       ! Obukhov length scale (m)
+    real(r8) :: obuold(bounds%begp:bounds%endp)    ! Obukhov length scale of previous iteration
     real(r8) :: qsatg(bounds%begc:bounds%endc)     ! saturated humidity [kg/kg]
     real(r8) :: qsatgdT(bounds%begc:bounds%endc)   ! d(qsatg)/dT
     real(r8) :: qstar                              ! moisture scaling parameter
@@ -439,7 +446,7 @@ contains
          dthv     = dth(p)*(1._r8+0.61_r8*forc_q(c))+0.61_r8*forc_th(c)*dqh(p)
          zldis(p) = forc_hgt_u_patch(p) - 0._r8
 
-         ! Initialize Monin-Obukhov length and wind speed
+         ! Initialize Obukhov length scale and wind speed
 
          call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv, zldis(p), z0mg(p), um(p), obu(p))
 
@@ -480,7 +487,20 @@ contains
             else
                !Need to calculate thermal conductivity of the top snow layer
                bw = (h2osoi_ice(c,jtop(c))+h2osoi_liq(c,jtop(c)))/dz(c,jtop(c))
-               tksur(c) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
+               select case (snow_thermal_cond_lake_method)
+               case ('Jordan1991')
+                  tksur(c) = tkair + (7.75e-5_r8 *bw + 1.105e-6_r8*bw*bw)*(tkice-tkair)
+               case ('Sturm1997')
+                  if (bw <= 156) then
+                     tksur(c) = 0.023 + 0.234*(bw/1000)
+                  else
+                     tksur(c) = 0.138 - 1.01*(bw/1000) +(3.233*((bw/1000)*(bw/1000)))
+                  end if
+               case default
+                  write(iulog,*) ' ERROR: unknown snow_thermal_cond_lake_method value: ', snow_thermal_cond_lake_method
+                  call endrun(msg=errMsg(sourcefile, __LINE__))
+               end select
+
                tsur(c) = t_soisno(c,jtop(c))
             end if
 

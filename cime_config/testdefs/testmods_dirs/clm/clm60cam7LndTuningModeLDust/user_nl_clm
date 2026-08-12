@@ -1,0 +1,5 @@
+dust_emis_method = 'Leung_2023'
+! Add all of the Leung optional history fields
+hist_fincl1   += 'FV', 'DUST_EMIS_COEFF', 'WND_FRC_FT', 'WND_FRC_FT_DRY', 'WND_FRC_IT', 'WND_FRC_SOIL', 'LND_FRC_MBLE', 'GWC', 'LIQ_FRAC', 
+                  'U_S_MEAN', 'U_S_MEAN', 'ZETAOBU', 'U_FT', 'U_IT', 'ALPHA_TC_RATE', 'P_IT', 'ETA', 'SSR', 'VAI_OKIN',
+                  'FRC_THR_RGHN_FCT', 'WND_FRC_FT_STD', 'DPFCT_ROCK'

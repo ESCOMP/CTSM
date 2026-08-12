@@ -1,0 +1,168 @@
+from pathlib import Path
+import argparse, os, sys
+
+__version__ = "1.1.1"
+
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def print_help(self, file=None):
+        # First print the default help message
+        super().print_help(file)
+
+        # Then append the contents of README.md
+        candidate_paths = [
+            Path(sys.prefix) / "share" / "git_fleximod" / "README.md",
+            Path(__file__).resolve().parent.parent / "README.md",  # fallback for dev
+        ]
+        for path in candidate_paths:
+            if os.path.exists(path):
+                with open(path) as f:
+                    print(f.read(), file=file)
+                    return
+        print("README.md not found.", file=file)
+
+
+def find_root_dir(filename=".gitmodules"):
+    """
+    Finds the highest directory in tree which contains a file called filename.
+
+    >>> import tempfile, os
+    >>> cwd = os.getcwd()
+    >>> with tempfile.TemporaryDirectory() as tmp:
+    ...     subdir = Path(tmp) / 'subdir'
+    ...     subdir.mkdir()
+    ...     f = Path(tmp) / '.gitmodules'
+    ...     _ = f.write_text('')
+    ...     os.chdir(subdir)
+    ...     result = find_root_dir('.gitmodules') == str(tmp)
+    ...     os.chdir(cwd)
+    ...     result
+    True
+    """
+    d = Path.cwd()
+    root = Path(d.root)
+    dirlist = []
+    dl = d
+    while dl != root:
+        dirlist.append(dl)
+        dl = dl.parent
+    dirlist.append(root)
+    dirlist.reverse()
+
+    for dl in dirlist:
+        attempt = dl / filename
+        if attempt.is_file():
+            return str(dl)
+    return None
+
+
+def get_parser():
+    description = """
+    %(prog)s manages checking out groups of gitsubmodules with additional support for Earth System Models
+    """
+    parser = CustomArgumentParser(
+        description=description, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+
+    #
+    # user options
+    #
+    choices = ["update", "status", "test"]
+    parser.add_argument(
+        "action",
+        choices=choices,
+        default="update",
+        help=f"Subcommand of git-fleximod, choices are {choices[:-1]}",
+    )
+
+    parser.add_argument(
+        "components",
+        nargs="*",
+        help="Specific component(s) to checkout. By default, "
+        "all required submodules are checked out.",
+    )
+
+    parser.add_argument(
+        "-C",
+        "--path",
+        default=find_root_dir(),
+        help="Toplevel repository directory.  Defaults to top git directory relative to current.",
+    )
+
+    parser.add_argument(
+        "-g",
+        "--gitmodules",
+        nargs="?",
+        default=".gitmodules",
+        help="The submodule description filename. " "Default: %(default)s.",
+    )
+
+    parser.add_argument(
+        "-x",
+        "--exclude",
+        nargs="*",
+        help="Component(s) listed in the gitmodules file which should be ignored.",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        default=False,
+        help="Override cautions and update or checkout over locally modified repository.",
+    )
+
+    parser.add_argument(
+        "-o",
+        "--optional",
+        action="store_true",
+        default=False,
+        help="By default only the required submodules "
+        "are checked out. This flag will also checkout the "
+        "optional submodules relative to the toplevel directory.",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Output additional information to "
+        "the screen and log file. This flag can be "
+        "used up to two times, increasing the "
+        "verbosity level each time.",
+    )
+
+    parser.add_argument(
+        "--no-mods-details",
+        action="store_true",
+        default=False,
+        help="Suppress details on local mods in status output.",
+    )
+
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Print version and exit.",
+    )
+
+    #
+    # developer options
+    #
+    parser.add_argument(
+        "--backtrace",
+        action="store_true",
+        help="DEVELOPER: show exception backtraces as extra " "debugging output",
+    )
+
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+        help="DEVELOPER: output additional debugging "
+        "information to the screen and log file.",
+    )
+
+    return parser

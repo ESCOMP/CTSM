@@ -1,0 +1,79 @@
+name: Jobs shared by docs workflows
+
+on:
+  workflow_call:
+    inputs:
+      use_conda:
+        required: false
+        type: boolean
+        default: false
+      conda_env_file:
+        required: false
+        type: string
+        default: ""
+      conda_env_name:
+        required: false
+        type: string
+        default: ""
+    secrets: {}
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      # Do this if not using conda
+      # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
+      - name: Install python
+        if: ${{ ! inputs.use_conda }}
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with:
+          python-version: '3.13.2'  # needs to be coordinated with version in python/conda_env_ctsm_py.txt
+      - name: Cache pip
+        if: ${{ ! inputs.use_conda }}
+        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f  # v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install Python requirements
+        if: ${{ ! inputs.use_conda }}
+        run: |
+          pip install -r doc/ctsm-docs_container/requirements.txt
+
+      # Do this if using conda
+      - name: Set up conda environment
+        if: ${{ inputs.use_conda }}
+        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        with:
+          activate-environment: ${{ inputs.conda_env_name }}
+          environment-file: ${{ inputs.conda_env_file }}
+          channels: conda-forge
+          auto-activate-base: false
+
+      - name: Build Sphinx docs with makefile
+        run: |
+          if ${{ inputs.use_conda }}; then
+            conda run -n ${{ inputs.conda_env_name }} make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+          else
+            make SPHINXOPTS="-W --keep-going" BUILDDIR=${PWD}/_build -C doc/ html
+          fi
+
+      - name: Build Sphinx docs with doc-builder
+        if: success() || failure()
+        run: |
+          if ${{ inputs.use_conda }}; then
+            cd doc && conda run -n ${{ inputs.conda_env_name }} ./build_docs -b ${PWD}/_build -c
+          else
+            cd doc && ./build_docs -b ${PWD}/_build -c
+          fi

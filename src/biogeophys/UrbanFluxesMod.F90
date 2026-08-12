@@ -148,7 +148,7 @@ contains
     real(r8) :: zldis(bounds%begl:bounds%endl)                       ! reference height "minus" zero displacement height (m)
     real(r8) :: zeta_lunit(bounds%begl:bounds%endl)                  ! landunit-level dimensionless stability parameter
     real(r8) :: um(bounds%begl:bounds%endl)                          ! wind speed including the stablity effect (m/s)
-    real(r8) :: obu(bounds%begl:bounds%endl)                         ! Monin-Obukhov length (m)
+    real(r8) :: obu(bounds%begl:bounds%endl)                         ! Obukhov length scale (m)
     real(r8) :: taf_numer(bounds%begl:bounds%endl)                   ! numerator of taf equation (K m/s)
     real(r8) :: taf_denom(bounds%begl:bounds%endl)                   ! denominator of taf equation (m/s)
     real(r8) :: qaf_numer(bounds%begl:bounds%endl)                   ! numerator of qaf equation (kg m/kg s)
@@ -409,7 +409,7 @@ contains
          dthv     = dth(l)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(l)
          zldis(l) = forc_hgt_u_patch(lun%patchi(l)) - z_d_town(l)
 
-         ! Initialize Monin-Obukhov length and wind speed including convective velocity
+         ! Initialize Obukhov length scale and wind speed including convective velocity
 
          call frictionvel_inst%MoninObukIni(ur(l), thv_g(l), dthv, zldis(l), z_0_town(l), um(l), obu(l))
 
