@@ -6,29 +6,31 @@
  What are the CLM tools
 ========================
 
-There are several tools provided with CLM that allow you to create your own input datasets at resolutions you choose, or to interpolate initial conditions to a different resolution, or used to compare CLM history files between different cases. The tools are all available in the ``$CTSMROOT/tools`` directory. Most of the tools are FORTRAN stand-alone programs in their own directory, but there is also a suite of NCL scripts in the ``$CTSMROOT/tools//ncl_scripts`` directory, and some of the tools are scripts that may also call the ESMF regridding program. Some of the NCL scripts are very specialized and not meant for general use, and we won't document them here. They still contain documentation in the script itself and the README file in the tools directory.
+There are tools provided with CLM that allow you, for example, to create your own input datasets at resolutions you choose or to compare CLM history files between different cases. Tools are available in the ``$CTSMROOT/tools`` directory. Some tools are FORTRAN stand-alone programs in their own directory. There is a suite of NCL scripts in the ``$CTSMROOT/tools/unsupported`` directory. Some of the tools also call the ESMF regridding program.
 
-The tools produce files that can be used for CLM4.5 and |version|. They do **NOT** produce files that can be used for CLM4.0. If you need files for CLM4.0, you'll need to use a previous version of CLM.
+The tools produce files that can be used with |version|. If you need files for earlier versions of the model, you will likely need to use the tools present in the earlier versions.
 
-The list of generally important scripts and programs are as follows.
+The list of scripts and programs in ``$CTSMROOT/tools`` is as follows:
 
 1. ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
 
-#. ``$CIMEROOT/tools/cprnc`` to compare two NetCDF files.
+#. ``crop_calendars`` to regrid and process GGCMI sowing and harvest date files for use in CTSM
 
-In the sections to come we will go into detailed description of how to use each of these tools in turn. First, however we will discuss the common environment variables and options that are used by all of the FORTRAN tools. Second, we go over the outline of the entire file creation process for all input files needed by CLM for a new resolution, then we turn to each tool. In the last section we will discuss how to customize files for particular observational sites.
+#. ``site_and_regional`` contains scripts to handle input datasets for site and regional cases; these scripts help with creation of datasets using the standard process, or subsetting existing datasets, and also overwriting aspects for specific cases
 
-The FORTRAN tool (``mksurfdata_esmf``) runs, with a namelist and has a namelist builder for it.
+#. ``modify_input_files`` contains scripts to modify CTSM input files, in particular surface datasets and mesh files
 
-In the following sections, we will outline how to make these files available for build-namelist so that you can easily create simulations that include them. In the chapter on single-point and regional datasets we also give an alternative way to enter new datasets without having to edit files.
+#. ``unsupported`` contains miscellaneous useful unsupported tools contributed by users; these tools may or may not work
 
-------------------------------------
-Running FORTRAN tools with namelists
-------------------------------------
+#. ``cprnc`` to compare two NetCDF files. This is not in ``$CIMEROOT/tools`` and information is available in section :numref:`comparing-history-files`.
 
-``mksurfdata_esmf`` runs with a namelist that is read from standard input. First you create a namelist, then you create a jobscript that runs mksurfdata_esmf by redirecting the namelist file into standard input as follows::
+Subsequent sections provide details about these tools, while the following ``$CTSMROOT/tools/README.md`` goes through the complete process for creating input files needed to run the CLM:
 
-   ./program < namelist
+.. include:: ../../../../tools/README.md
+   :code: markdown
 
-There is a tool that generates the namelist called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.py``. The namelist contains information gathered from the file ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_namelist.xml``. There is also a tool that generates a jobscript for running, and this is called ``$CTSMROOT/tools/mksurfdata_esmf/gen_mksurfdata_jobscript_single.py``.
+The ``$CTSMROOT/tools/unsupported/README.md`` covers what you need to know about the unsupported tools:
+
+.. include:: ../../../../tools/unsupported/README.md
+   :code: markdown
 
