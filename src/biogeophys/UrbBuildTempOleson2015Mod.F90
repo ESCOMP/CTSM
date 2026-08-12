@@ -361,7 +361,6 @@ contains
     qaf               => waterdiagnosticbulk_inst%qaf_lun      , & ! Input:  [real(r8) (:)]  urban canopy air specific humidity (kg/kg)
     q_building        => waterdiagnosticbulk_inst%q_building_lun,& ! InOut:  [real(r8) (:)]  internal building air specific humidity (kg/kg)
     rh_building       => waterdiagnosticbulk_inst%rh_building_lun,& ! InOut: [real(r8) (:)]  internal building air relative humidity (%)
-    forc_pbot         => atm2lnd_inst%forc_pbot_not_downscaled_grc,& ! Input:[real(r8) (:)]  atmospheric pressure (Pa)
 
     eflx_building     => energyflux_inst%eflx_building_lun , & ! Output:  [real(r8) (:)]  building heat flux from change in interior building air temperature (and humidity, if prognosed indoor humidity) (W/m**2)
     eflx_urban_ac     => energyflux_inst%eflx_urban_ac_lun , & ! Output:  [real(r8) (:)]  urban air conditioning flux (W/m**2)

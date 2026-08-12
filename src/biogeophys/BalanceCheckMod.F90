@@ -561,7 +561,7 @@ contains
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
           qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
-          qflx_condensate_from_ac_col => waterflux_inst%qflx_condensate_from_ac_col, & ! Input: [real(r8) (:)]  column level condensate water flux from air-conditioning (mm H2O /s)
+          qflx_condensate_from_ac_col => waterflux_inst%qflx_condensate_from_ac_col & ! Input: [real(r8) (:)]  column level condensate water flux from air-conditioning (mm H2O /s)
           )
 
        ! Get step size and time step
