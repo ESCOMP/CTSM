@@ -41,7 +41,7 @@ On a machine that has *not* been ported to CIME, you will need to provide some a
 information. Run ``./lilac/build_ctsm -h`` for details, but the basic command will look
 like this::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-mkfile-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default/esmf.mk --max-mpitasks-per-node 4 --no-pnetcdf
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path ${NETCDF_PATH:-${MAC_PREFIX:-/opt/homebrew}} --esmf-mkfile-path ${ESMFMKFILE:-$HOME/software/esmf/esmf.mk} --max-mpitasks-per-node 4 --no-pnetcdf
 
 In both cases, you will then need to include the necessary information in the include and
 link lines of the atmosphere model's build. For a Makefile-based build, this can be done
@@ -230,7 +230,7 @@ model performance.
 
 Example usage for a Mac (a simple case) is::
 
-  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path /usr/local --esmf-mkfile-path /Users/sacks/ESMF/esmf8.0.0/lib/libO/Darwin.gfortranclang.64.mpich3.default/esmf.mk --max-mpitasks-per-node 4 --no-pnetcdf
+  ./lilac/build_ctsm ~/ctsm_build_dir --os Darwin --compiler gnu --netcdf-path ${NETCDF_PATH:-${MAC_PREFIX:-/opt/homebrew}} --esmf-mkfile-path ${ESMFMKFILE:-$HOME/software/esmf/esmf.mk} --max-mpitasks-per-node 4 --no-pnetcdf
 
 Example usage for NCAR's ``derecho`` machine (a more complex case) is::
 
