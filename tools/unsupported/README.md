@@ -1,5 +1,7 @@
-# $CTSMROOT/tools/unsupported/README.md
+# CTSM Unsupported Tools
+#### $CTSMROOT/tools/unsupported/README.md
 
+## History
 Updated 2026/08/11 slevis
 Written 2019/01/24 ekluzek
 
@@ -23,4 +25,3 @@ ncl script_name.ncl
 
 ## Note
 The separate repository `https://github.com/NCAR/CMIP7_inputdata_processing` includes contributions from the LMWG, each with README instructions.
-
