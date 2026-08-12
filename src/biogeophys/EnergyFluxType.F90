@@ -64,13 +64,13 @@ module EnergyFluxType
      real(r8), pointer :: eflx_anthro_patch       (:)   ! patch total anthropogenic heat flux (W/m**2)
      real(r8), pointer :: eflx_traffic_patch      (:)   ! patch traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_patch    (:)   ! patch sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible heat flux from building ventilation (W/m**2)
+     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible and latent heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_patch (:)   ! patch sensible heat flux put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_traffic_lun        (:)   ! lun traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_lun      (:)   ! lun sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible heat flux from building ventilation (W/m**2)
+     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible and latent heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_lun   (:)   ! lun sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
-     real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (W/m**2)
+     real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (and humidity, if prognosed indoor humidity) (W/m**2)
      real(r8), pointer :: eflx_urban_ac_lun       (:)   ! lun urban air conditioning flux (W/m**2)
      real(r8), pointer :: eflx_urban_ac_sen_lun   (:)   ! lun sensible heat component of air conditioning flux (W/m**2)
      real(r8), pointer :: eflx_urban_heat_lun     (:)   ! lun urban heating flux (W/m**2)
@@ -584,7 +584,7 @@ contains
     else
        this%eflx_building_lun(begl:endl) = spval
        call hist_addfld1d (fname='EFLXBUILD', units='W/m^2',  &
-            avgflag='A', long_name='building heat flux from change in interior building air temperature', &
+            avgflag='A', long_name='building heat flux from change in interior building air temperature (and humidity, if prognosed indoor humidity)', &
             ptr_lunit=this%eflx_building_lun, set_nourb=0._r8, l2g_scale_type='unity')
 
        this%eflx_urban_ac_lun(begl:endl) = spval
@@ -635,7 +635,7 @@ contains
     if ( is_prog_buildtemp )then
        this%eflx_ventilation_patch(begp:endp) = spval
        call hist_addfld1d (fname='VENTILATION', units='W/m^2',  &
-            avgflag='A', long_name='sensible heat flux from building ventilation', &
+            avgflag='A', long_name='sensible (and latent, if prognosed indoor humidity) heat flux from building ventilation', &
             ptr_patch=this%eflx_ventilation_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
     end if
 
@@ -886,7 +886,7 @@ contains
        end if
        call restartvar(ncid=ncid, flag=flag, varname='EFLX_VENTILATION', xtype=ncd_double, &
            dim1name='landunit', &
-           long_name='sensible heat flux from building ventilation', units='watt/m^2', &
+           long_name='sensible (and latent, if prognosed indoor humidity) heat flux from building ventilation', units='watt/m^2', &
            interpinic_flag='interp', readvar=readvar, data=this%eflx_ventilation_lun)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find EFLX_VENTILATION in initial file..."
