@@ -12,7 +12,7 @@ To get the ClmBgcCrop model to a steady state, you start it from arbitrary initi
 
 .. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_AD_Spinup-0.png
 
- BgcCrop AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
+ BgcCrop AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/unsupported/SpinupStability_BGC_v11.ncl.
 
 After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `env_run.xml`, see example below), and run for 300-350 simulation years. :numref:`Figure BgcCrop SASU spinup plot for 1850` shows spinup behavior for an 1850 BgcCrop SASU case using CRUJRA atmospheric forcing. The criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy and need not be met for this step.
 
@@ -20,7 +20,7 @@ After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `
 
 .. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_SASU_Spinup-0.png
 
- BgcCrop SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BgcCrop AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
+ BgcCrop SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BgcCrop AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/unsupported/SpinupStability_BGC_v11.ncl.
 
 After this you continue in standard mode for 200 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BgcCrop normal mode plot for 1850` shows spinup behavior for an 1850 BgcCrop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
 
@@ -28,7 +28,7 @@ After this you continue in standard mode for 200 years. We refer to this phase a
 
 .. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.png
 
- BgcCrop normal mode plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BgcCrop SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
+ BgcCrop normal mode plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BgcCrop SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/unsupported/SpinupStability_BGC_v11.ncl.
 
 As an alternative to spinning up, one may start from a default initial file that is setup as part of the selected compset. When the simulation's spatial resolution is identical to the initial file's resolution, it may still take 10 or more years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a new equilibrium state due to the different atmospheric forcing. Similarly, it may take 10 or more years for these variables to reach a new equilibrium when switching atmospheric CO2 from 1850 to a present-day value.
 
@@ -59,7 +59,7 @@ While this simulation progresses, use SpinupStability_BGC_v11.ncl to assess whet
 Using the SpinupStability.ncl scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In CLM's /tools/contrib directory there are three versions of this .ncl script:
+In CLM's /tools/unsupported directory there are three versions of this .ncl script:
 
 - SpinupStability_BGC_v11.ncl for Bgc and BgcCrop compsets run on 2D lat/lon grids.
 - SpinupStability_BGC_v12_SE.ncl for Bgc, BgcCrop, or Fates compsets run on certain spectral element grids (currently ne120, ne30, ne16).

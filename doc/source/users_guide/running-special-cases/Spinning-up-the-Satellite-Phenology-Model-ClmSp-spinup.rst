@@ -29,7 +29,7 @@ The following steps illustrate how to setup and run a 51 year Clm60Sp spinup fro
 
 Setting ``CLM_FORCE_COLDSTART=on`` forces the model to use arbitrary initial conditions (see Section :numref:`Initialization` for a description of these initial conditions).  This will result in ``finidat=' '`` in the ``lnd_in`` namelist. Spinups are generally started at year 1 (``RUN_STARTDATE=0001-01-01``). Here we've chosen to loop over years 1991-2000 (``DATM_YR_START=1991``, ``DATM_YR_END=2000``) of the atmospheric forcing (10 years total), align model year 1 (``DATM_YR_ALIGN=1``) with the first year of atmospheric forcing, and run for 51 years (``STOP_OPTION=nyears``, ``STOP_N=51``). Ten years of atmospheric forcing was chosen to introduce some interannual variability in the forcing, e.g., to increase the chances of the model being forced by wet and dry years.
 
-The spinup stability script available in the CLM checkout at ``tools/contrib/SpinupStability_SP_v10.ncl`` can be used to assess the stability or equilibrium of key model variables. Key settings in that script for this example simulation are
+The spinup stability script available in the CLM checkout at ``tools/unsupported/SpinupStability_SP_v10.ncl`` can be used to assess the stability or equilibrium of key model variables. Key settings in that script for this example simulation are
 ::
 
    caseid = "Clm60Sp_ctsm54030_1deg_CRUJRA2024_arbi_2000"
@@ -52,7 +52,7 @@ The ``subper`` setting tells the script how many years of atmospheric forcing we
 
 .. figure:: Clm60Sp_ctsm54030_1deg_CRUJRA2024_arbi_2000_SP_Spinup.png
 
- ClmSp spinup plot for arbitrary initial conditions. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using ``tools/contrib/SpinupStability_SP_v10.ncl``.
+ ClmSp spinup plot for arbitrary initial conditions. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using ``tools/unsupported/SpinupStability_SP_v10.ncl``.
 
 You can also start from a default initial file that is provided as part of the selected compset. The following steps illustrate how to setup and run a 51 year Clm60Sp spinup from default initial conditions again using the ``I2000Clm60SpCrujra`` compset and ``f09_t232`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
 ::
@@ -79,4 +79,4 @@ The difference from the previous simulation is that we don't set ``CLM_FORCE_COL
 
 .. figure:: Clm60Sp_ctsm54030_1deg_CRUJRA2024_fini_2000_SP_Spinup.png
 
- ClmSp spinup plot for default initial conditions. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using ``tools/contrib/SpinupStability_SP_v10.ncl``.
+ ClmSp spinup plot for default initial conditions. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using ``tools/unsupported/SpinupStability_SP_v10.ncl``.
