@@ -12,7 +12,7 @@ Any added dependencies should be discussed and approved by the CTSM-software tea
 
 - Are there other packages that are more stable or better maintained that would provide nearly the same level of value?
 
-- Tools that require extra packages should be done in a "contrib" type area out of the main part of tools (this would apply for advanced plotting capability for example), e.g. in /tools/unsupported
+- Tools that require extra packages (e.g., advanced plotting capability) should be put in `tools/unsupported/`.
 
 - We need to be able to reproduce working conda environments minimally on our test machines (currently derecho and izumi), but also on any machine that we run CTSM on. If there is a machine that we can run CTSM on that we can't build the conda environments or run the tools on, that needs to be fixed.
 
