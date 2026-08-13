@@ -36,6 +36,14 @@
     </phase>
   </test>
 
+  <!-- Hillslope test suite fails -->
+  <test name="SMS_D_Ld3.f10_f10_mg37.I1850Clm60Bgc.derecho_intel.clm-HillslopeFromFile">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#4169</issue>
+    </phase>
+  </test>
+
   <!-- aux_clm test suite failures -->
   <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujraRsGs.derecho_intel.clm-default">
     <phase name="NLCOMP">
