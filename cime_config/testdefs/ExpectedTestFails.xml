@@ -344,7 +344,13 @@
 
   <!-- decomp_init test list-->
 
-  <test name="SMS_Ln1_PL.mpasa3p75_mpasa3p75_mt13.I2000Clm45Sp.derecho_intel.clm-for_testing_fastsetup_bypassrun--clm-mpasa3p75">
+  <test name="SMS_Ln1.mpasa3p75_mpasa3p75_mt13.I2000Clm50Sp.derecho_intel.clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#4107</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ln1_PL.mpasa3p75_mpasa3p75_mt13.I2000Clm50Sp.derecho_intel.clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#4107</issue>
