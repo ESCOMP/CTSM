@@ -270,7 +270,7 @@ contains
     namelist /clm_inparm/ use_flexibleCN, use_luna
 
     ! [PORTED by Hui Tang: nvp (moss/lichen) namelist flags]
-    namelist /clm_inparm/ use_nvp, use_nvp_undersnow, nvp_rad_model_ground, use_nvp_temp_for_patch_gas_params
+    namelist /clm_inparm/ use_nvp, use_nvp_undersnow, nvp_rad_model_ground
 
     ! [PORTED by Hui Tang: nvp physics parameter namelist]
     namelist /nvp_inparm/ &
@@ -890,7 +890,6 @@ contains
     call mpi_bcast (use_nvp,              1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (use_nvp_undersnow,    1, MPI_LOGICAL, 0, mpicom, ier)
     call mpi_bcast (nvp_rad_model_ground, 1, MPI_LOGICAL, 0, mpicom, ier)
-    call mpi_bcast (use_nvp_temp_for_patch_gas_params, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     ! [PORTED by Hui Tang: broadcast nvp physics parameters]
     call mpi_bcast (nvp_frac_min,   1, MPI_REAL8, 0, mpicom, ier)
@@ -1275,7 +1274,6 @@ contains
     if (use_nvp) then
        write(iulog, *) '    use_nvp_undersnow    = ', use_nvp_undersnow
        write(iulog, *) '    nvp_rad_model_ground = ', nvp_rad_model_ground
-       write(iulog, *) '    use_nvp_temp_for_patch_gas_params = ', use_nvp_temp_for_patch_gas_params
        write(iulog, *) '    NVP physics parameters:'
        write(iulog, *) '      nvp_frac_min   = ', nvp_frac_min
        write(iulog, *) '      rnvp_min       = ', rnvp_min
@@ -1326,7 +1324,6 @@ contains
        write(iulog, *) '    fates_inventory_ctrl_filename = ', trim(fates_inventory_ctrl_filename)
        write(iulog, *) '    use_nvp= ', use_nvp
        write(iulog, *) '    use_nvp_undersnow= ', use_nvp_undersnow
-       write(iulog, *) '    use_nvp_temp_for_patch_gas_params= ', use_nvp_temp_for_patch_gas_params
        write(iulog, *) '    use_fates_managed_fire= ', use_fates_managed_fire
     end if
   end subroutine control_print

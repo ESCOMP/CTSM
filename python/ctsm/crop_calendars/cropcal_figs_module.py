@@ -213,7 +213,20 @@ def deal_with_ticklabels(cbar, cbar_max, ticklabels, ticklocations, units, im):
 
 def set_ticks(lonlat_bin_width, fontsize, x_or_y):
     """
-    Plot tick marks
+    Add evenly-spaced latitude or longitude tick marks to the current axes
+
+    Ticks are placed every lonlat_bin_width degrees across the whole axis: -180 through 180 for
+    longitude, -60 through 90 for latitude. Only even-numbered ticks get a label; odd-numbered
+    ticks get a tick mark with a blank label.
+
+    Args:
+        lonlat_bin_width (int): Spacing (degrees) between tick marks. A negative value produces
+                                no ticks at all; make_map() uses that to get the spacing that
+                                subplot row labels need without actually drawing any ticks.
+        fontsize (dict): Font sizes for the various parts of a figure. Only fontsize["ticklabels"]
+                         is used here.
+        x_or_y (str): "x" to set longitude (x-axis) ticks; anything else sets latitude (y-axis)
+                      ticks.
     """
     if x_or_y == "x":
         ticks = np.arange(-180, 181, lonlat_bin_width)

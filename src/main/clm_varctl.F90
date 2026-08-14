@@ -394,9 +394,6 @@ module clm_varctl
   ! false => Approach B: NVP as leaf layer in Norman solver, soil albedo as ground albedo
   logical, public :: nvp_rad_model_ground = .true.
 
-  ! true => use NVP temperature when getting entire patch's gas exchange parameters
-  logical, public :: use_nvp_temp_for_patch_gas_params  = .false.
-
   !----------------------------------------------------------
   !  LUNA switches
   !----------------------------------------------------------
