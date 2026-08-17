@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.051     erik 08/17/2026 Update compsets to use DGLC adjust Fates compsets/tests, remove clm4_5/VIC/BGCDV/NWP%BGC compsets/tests
+       ctsm5.4.050 samrabin 08/07/2026 Rework FATES SP testmods
+       ctsm5.4.049   r-ward 08/03/2026 Fix typo 'expontential' to 'exponential' in fates c starvation model
        ctsm5.4.048     erik 07/31/2026 Move b4b-dev to master
        ctsm5.4.047 samrabin 07/10/2026 Merge b4b-dev to master
        ctsm5.4.046 glemieux 06/22/2026 Remove variables to exclude for fates_sp user mod
