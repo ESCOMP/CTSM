@@ -284,7 +284,7 @@ The ``$CTSMROOT/cime_config/buildnml`` script already sets the resolution and ma
 
 #. ``-verbose``
 
-``-bgc_spinup`` is an option only available for |version| for any configuration when CN is turned on (so either CLMCN or CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See :ref:`spinning-up-clm-bgc` for an example using this option.
+``-bgc_spinup`` is an option only available for |version| for any configuration when BGC is turned on (CLMBGC). It can be set to "on" or "off". If "on" the model will go into Accelerated Decomposition mode, while for "off" (the default) it will have standard decomposition rates. If you are starting up from initial condition files the model will check what mode the initial condition file is in and do the appropriate action on the first time-step to change the Carbon pools to the appropriate spinup setting. See :ref:`spinning-up-clm-bgc` for an example using this option.
 
 .. todo::
     Update the above.
@@ -449,7 +449,7 @@ Thus a setting in ``CLM_BLDNML_OPTS`` will override a setting for the same thing
 Setting Your Initial Conditions File
 ------------------------------------
 
-Especially with CLMBGC and CLMCN starting from initial conditions is very important. Even with CLMSP it takes many simulation years to get the model fully spunup. There are a couple different ways to provide an initial condition file.
+Especially with CLMBGC starting from initial conditions is very important. Even with CLMSP it takes many simulation years to get the model fully spunup. There are a couple different ways to provide an initial condition file.
 
 - :ref:`doing-a-hybrid-sim-for-init-conds`
 - :ref:`doing-a-branch-sim-for-init-conds`
