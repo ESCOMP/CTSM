@@ -208,8 +208,8 @@
   <test name="ERP_Ly3_P64x2.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
-      <comment>Does this also relate to #2619?</comment>
       <issue>#4160</issue>
+      <comment>Does this also relate to #2619?</comment>
     </phase>
   </test>
 
