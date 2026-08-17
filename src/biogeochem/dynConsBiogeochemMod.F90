@@ -59,10 +59,10 @@ contains
     use shr_const_mod      , only : SHR_CONST_PDB
     use landunit_varcon    , only : istsoil, istcrop
     use clm_varpar         , only : nlevdecomp, i_litr_min, i_litr_max
-    use clm_varcon         , only : c13ratio, c14ratio, c3_r2, c4_r2
     use clm_time_manager   , only : get_step_size_real
     use dynPriorWeightsMod , only : prior_weights_type
     use dynPatchStateUpdaterMod, only : patch_state_updater_type
+    use CIsoAtmTimeseriesMod, only : C13TimeSeries
     !
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds        
@@ -125,6 +125,8 @@ contains
     real(r8), allocatable, target :: conv_c14flux(:)               ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
     real(r8), allocatable         :: wood_product_c14flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
     real(r8), allocatable         :: crop_product_c14flux(:)       ! patch-level mass loss due to weight shift (expressed per unit GRIDCELL area)
+
+   real(r8) :: rc13_atm                      ! atmospheric C13/C12 ratio
 
     logical  :: patch_initiating(bounds%begp:bounds%endp)
 
@@ -308,6 +310,8 @@ contains
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
     endif
+
+    if ( use_c13 ) call C13TimeSeries( rc13_atm )
     
     ! Get time step
     dt = get_step_size_real()
@@ -423,7 +427,7 @@ contains
              cnveg_nitrogenflux_inst%plant_nalloc_patch(p)        = 0._r8
 
              if ( use_c13 ) then
-                c13_cnveg_carbonflux_inst%xsmrpool_c13ratio_patch(p) = c13ratio
+                c13_cnveg_carbonflux_inst%xsmrpool_c13ratio_patch(p) = rc13_atm
              end if
 
              call photosyns_inst%NewPatchinit(p)
