@@ -120,3 +120,5 @@ Depends
 _build*/
 _publish*/
 doc/.coverage
+doc/ssh_key*
+*.ipynb_checkpoints/
