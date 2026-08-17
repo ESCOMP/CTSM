@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.051
 Originator(s): erik (Erik Kluzek)
-Date: Mon Aug 10 02:30:41 AM MDT 2026
+Date: Mon Aug 17 09:51:34 AM MDT 2026
 One-line Summary: Update compsets to use DGLC adjust Fates compsets/tests, remove clm4_5/VIC/BGCDV/NWP%BGC compsets/tests
 
 Purpose and description of changes
@@ -41,7 +41,7 @@ Does this tag change answers significantly for any of the following physics conf
 
 [x] clm5_0
 
-[ ] ctsm5_0-nwp
+[x] ctsm5_0-nwp
 
 (Since most compsets now use DGLC, answers are different over Greenland)
 
@@ -112,31 +112,31 @@ Testing summary:  regular++ (close to release testing)
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -
+    derecho - PASS
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
-    derecho -----
-    izumi -------
+    derecho ----- OK
+    izumi ------- OK
 
   any other testing (give details below):
 
   ctsm_sci
-     derecho ----
+     derecho ---- OK
   decomp_init
-     derecho ----
+     derecho ---- PASS
   uhr_decomp_init
-     derecho ----
-  hillslope, fire, ssp, interim-restart run with "--namelists-only" to verify that they function:
-     derecho ----
+     derecho ---- OK
+  hillslope, fire, ssp, interim-restart:
+     derecho ---- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
