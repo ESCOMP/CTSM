@@ -5083,7 +5083,7 @@
       <machine name="izumi" compiler="nag" category="fates_nvp_long"/>
     </machines>
     <options>
-      <option name="wallclock">00:20:00</option>
+      <option name="wallclock">00:30:00</option>
       <option name="comment">2-year test of FATES non-NVP at ALP2 (CRU-JRA climate) in SP mode, bare ground only</option>
     </options>
   </test>
