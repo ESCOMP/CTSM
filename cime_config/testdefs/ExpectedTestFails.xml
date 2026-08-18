@@ -44,6 +44,7 @@
       <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
     </phase>
   </test>
+
   <test name="SUBSETDATAPOINT_Ld5_D_Mmpi-serial.CLM_USRDAT.I2000Clm60BgcCropCrujra.derecho_intel.clm-default">
     <phase name="NLCOMP">
       <status>FAIL</status>

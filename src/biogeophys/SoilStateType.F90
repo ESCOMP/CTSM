@@ -82,6 +82,7 @@ module SoilStateType
 
      procedure, public  :: Init         
      procedure, public  :: Restart
+     procedure, public  :: SetValues
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -337,6 +338,8 @@ contains
     this%smp_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = -1000._r8
     this%hk_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = 0._r8
 
+    call this%SetValues(bounds, spval)
+
   end subroutine InitCold
 
   !------------------------------------------------------------------------
@@ -396,5 +399,27 @@ contains
          end if
     
   end subroutine Restart
+
+  !------------------------------------------------------------------------
+  subroutine SetValues(this, bounds, setval)
+    !
+    ! !DESCRIPTION:
+    ! Initialize diagnostic arrays to setval
+    !
+    ! !ARGUMENTS:
+    class(soilstate_type), intent(inout) :: this
+    type(bounds_type), intent(in)        :: bounds
+    real(r8), intent(in)                 :: setval
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+    !-----------------------------------------------------------------------
+
+    begp = bounds%begp; endp = bounds%endp
+
+    this%root_conductance_patch(begp:endp,:) = setval
+    this%soil_conductance_patch(begp:endp,:) = setval
+
+  end subroutine SetValues
 
 end module SoilStateType

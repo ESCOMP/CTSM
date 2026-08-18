@@ -207,6 +207,7 @@ contains
     !
     ! !USES:
     use clm_varctl              , only : use_cn, use_fates, use_fates_luh, use_fates_potentialveg
+    use clm_instMod             , only : frictionvel_inst
     use dynInitColumnsMod       , only : initialize_new_columns
     use dynConsBiogeophysMod    , only : dyn_hwcontent_init, dyn_hwcontent_final
     use dynEDMod                , only : dyn_ED
@@ -215,7 +216,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
-    type(soilstate_type)                 , intent(in)    :: soilstate_inst
+    type(soilstate_type)                 , intent(inout) :: soilstate_inst
     type(water_type)                     , intent(inout) :: water_inst
     type(lakestate_type)                 , intent(in)    :: lakestate_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
@@ -359,6 +360,8 @@ contains
                soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst, ch4_inst, &
                soilbiogeochem_state_inst)
        end if
+
+       call patch_state_updater%ResetDeactivatedDiagnostics(bounds_clump, frictionvel_inst, soilstate_inst)
 
     end do
     !$OMP END PARALLEL DO
