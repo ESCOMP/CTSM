@@ -653,8 +653,6 @@ contains
 
     call t_startf( 'SoilThermProp' )
 
-    call InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
-
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(cv)        == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tk)        == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
@@ -692,6 +690,8 @@ contains
          tksatu       =>    soilstate_inst%tksatu_col	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, saturated soil [W/m-K]
          thk          =>    soilstate_inst%thk_col             & ! Output: [real(r8) (:,:) ]  thermal conductivity of each layer  [W/m-K] 
          )
+
+       call InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
 
       ! Thermal conductivity of soil from Farouki (1981)
 

@@ -216,7 +216,7 @@ contains
     ! !ARGUMENTS:
     type(bounds_type)                    , intent(in)    :: bounds_proc  ! processor-level bounds
     type(urbanparams_type)               , intent(in)    :: urbanparams_inst
-    type(soilstate_type)                 , intent(in)    :: soilstate_inst
+    type(soilstate_type)                 , intent(inout) :: soilstate_inst
     type(water_type)                     , intent(inout) :: water_inst
     type(lakestate_type)                 , intent(in)    :: lakestate_inst
     type(temperature_type)               , intent(inout) :: temperature_inst
