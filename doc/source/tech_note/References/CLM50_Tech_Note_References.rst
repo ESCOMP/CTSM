@@ -221,10 +221,6 @@ Bytnerowicz, T. A., Akana, P. R., Griffin, K. L., & Menge, D. N. L. 2022: Temper
 
 Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
 
-.. _Castilloetal2012:
-
-Castillo, G., Kendra, C., Levis, S., and Thornton, P. 2012. Evaluation of the new CNDV option of the Community Land Model: effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702–3714.
-
 .. _Caoetal1996:
 
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and methane emissions from natural wetlands: Application of a process-based model. J. Geophys. Res. 101(D9):14,399-14,414.
@@ -544,10 +540,6 @@ Gomes, E.P.C., Mantovani, W., and Kageyama, P.Y. 2003. Mortality and recruitment
 .. _Goszetal1973:
 
 Gosz, J.R., Likens, G.E., and Bormann, F.H. 1973. Nutrient release from decomposing leaf and branch litter in the Hubbard Brook Forest, New Hampshire. Ecological Monographs 43:173-191.
-
-.. _GotangcoCastilloetal2012:
-
-Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV option of the Community Land Model: Effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702-3714. DOI:10.1175/JCLID-11-00372.1.
 
 .. _Grahametal1999:
 
@@ -1409,10 +1401,6 @@ Saggar, S., Tate, K.R., Feltham, C.W., Childs, C.W. and Parshotam, A., 1994. Car
 .. _Sakaguchietal2009:
 
 Sakaguchi, K., and Zeng, X. 2009. Effects of soil wetness, plant litter, and under-canopy atmospheric stability on ground evaporation in the Community Land Model (CLM3.5). J. Geophys. Res. 114:D01107. DOI:10.1029/2008JD010834.
-
-.. _sato2007:
-
-Sato, H., A. Itoh, and T. Kohyama, 2007. SEIB-DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach. Ecological Modelling 200.3, pp. 2793307.
 
 .. _Schaafetal2002:
 
