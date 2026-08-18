@@ -2435,13 +2435,13 @@ The constraint
 
 {U_c} = 0 & \zeta \geqslant {\text{0}} & {\text{(stable)}} \hfill \\
 
-{U_c} = \beta {w_ * } & \zeta < 0 & {\text{(unstable}}) \hfill \\
+{U_c} = \beta {w_*} & \zeta < 0 & {\text{(unstable}}) \hfill \\
 
 \end{gathered} \]
 
-where :math:`{w_ * }` is the convective velocity scale
+where :math:`{w_*}` is the convective velocity scale
 
-\[{w_ * } = {\left( {\frac{{ - g{u_ * }{\theta _{v * }}{z_i}}}{{\overline {{\theta _{v,\,atm}}} }}} \right)^{{1 \mathord{\left/
+\[{w_*} = {\left( {\frac{{ - g{u_*}{\theta_{v*}}{z_i}}}{{\overline {{\theta _{v,\,atm}}} }}} \right)^{{1 \mathord{\left/
 
 {\vphantom {1 3}} \right.
 
@@ -2884,17 +2884,17 @@ The iterative solution begins with the friction velocity :math:`{u_ * }` , poten
 
 \[\begin{gathered}
 
-{r_{ah}} = \frac{{{\theta _{atm}} - {\theta _s}}}{{{\theta _ * }{u_ * }}} = \frac{1}{{{k^2}{V_a}}}\left[ {\ln \left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{{{z_{0m,\,canopy}}}}} \right) - {\psi _m}\left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{L}} \right) + {\psi _m}\left( {\frac{{{z_{0m,\,canopy}}}}{L}} \right)} \right] \hfill \\
+{r_{ah}} = \frac{{{\theta_{atm}} - {\theta_s}}}{{{\theta_* }{u_*}}} = \frac{1}{{{k^2}{V_a}}}\left[ {\ln \left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{{{z_{0m,\,canopy}}}}} \right) - {\psi _m}\left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{L}} \right) + {\psi_m}\left( {\frac{{{z_{0m,\,canopy}}}}{L}} \right)} \right] \hfill \\
 
-& \left[ {\ln \left( {\frac{{{z_{atm,\,h}} - {d_{canopy}}}}{{{z_{0h,\;canopy}}}}} \right) - {\psi _h}\left( {\frac{{{z_{atm,\,h}} - {d_{canopy}}}}{L}} \right) + {\psi _h}\left( {\frac{{{z_{0h,\,canopy}}}}{L}} \right)} \right] \hfill \\
+& \left[ {\ln \left( {\frac{{{z_{atm,\,h}} - {d_{canopy}}}}{{{z_{0h,\;canopy}}}}} \right) - {\psi_h}\left( {\frac{{{z_{atm,\,h}} - {d_{canopy}}}}{L}} \right) + {\psi_h}\left( {\frac{{{z_{0h,\,canopy}}}}{L}} \right)} \right] \hfill \\
 
 \end{gathered} \],
 
 \[\begin{gathered}
 
-{r_{aw}} = \frac{{{q_{atm}} - {q_s}}}{{{q_ * }{u_ * }}} = \frac{1}{{{k^2}{V_a}}}\left[ {\ln \left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{{{z_{0m,\,canopy}}}}} \right) - {\psi _m}\left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{L}} \right) + {\psi _m}\left( {\frac{{{z_{0m,\,canopy}}}}{L}} \right)} \right] \hfill \\
+{r_{aw}} = \frac{{{q_{atm}} - {q_s}}}{{{q_*}{u_*}}} = \frac{1}{{{k^2}{V_a}}}\left[ {\ln \left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{{{z_{0m,\,canopy}}}}} \right) - {\psi_m}\left( {\frac{{{z_{atm,\,m}} - {d_{canopy}}}}{L}} \right) + {\psi_m}\left( {\frac{{{z_{0m,\,canopy}}}}{L}} \right)} \right] \hfill \\
 
-& \left[ {\ln \left( {\frac{{{z_{atm,\,w}} - {d_{canopy}}}}{{{z_{0w,\,canopy}}}}} \right) - {\psi _w}\left( {\frac{{{z_{atm,\,w}} - {d_{canopy}}}}{L}} \right) + {\psi _w}\left( {\frac{{{z_{0w,\,canopy}}}}{L}} \right)} \right] \hfill \\
+& \left[ {\ln \left( {\frac{{{z_{atm,\,w}} - {d_{canopy}}}}{{{z_{0w,\,canopy}}}}} \right) - {\psi_w}\left( {\frac{{{z_{atm,\,w}} - {d_{canopy}}}}{L}} \right) + {\psi_w}\left( {\frac{{{z_{0w,\,canopy}}}}{L}} \right)} \right] \hfill \\
 
 \end{gathered} \].
 
@@ -6125,7 +6125,7 @@ and aquifer water is reset to :math:`{W_a} \leqslant 5000` .
 
 For the case when the water table is within the soil column, there is no water exchange between the soil column and the underlying aquifer. However, variations of the water table depth are still calculated as
 
-\[{z_\nabla } = \left\{ \begin{gathered}
+\[{z_{nabla}} = \left\{ \begin{gathered}
 
 {z_{h,\,jwt + 1}} - \left[ {\frac{{{W_t} - {{10}^3} \times 25{S_y} - \sum\limits_{i = jwt + 2}^{{N_{levsoi}}} {\Delta {z_i}\left( {{\theta _{sat,\,i}} - {\theta _{ice,\,i}}} \right)} }}{{{{10}^3}\left( {{\theta _{sat,\,jwt + 1}} - {\theta _{ice,\,jwt + 1}}} \right)}}} \right] & jwt = 1, \ldots {N_{levsoi}} - 2 \hfill \\
 
