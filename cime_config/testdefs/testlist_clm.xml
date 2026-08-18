@@ -3018,7 +3018,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup_PLUMBER2">
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
