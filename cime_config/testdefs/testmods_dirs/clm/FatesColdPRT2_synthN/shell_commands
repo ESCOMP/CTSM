@@ -1,4 +1,4 @@
-SRCDIR=`./xmlquery SRCROOT --value`
+SRCDIR=`./xmlquery COMP_ROOT_DIR_LND --value`
 CASEDIR=`./xmlquery CASEROOT --value`
 FATESDIR=$SRCDIR/src/fates/
 FATESPARAMFILE=$CASEDIR/fates_params_prt2_prescribed_np.json

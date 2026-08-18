@@ -13,25 +13,20 @@
 
   <!-- Descriptions of all the different valid configurations for different model versions -->
   <description modifier_mode="1">
-    <desc lnd="CLM45[%SP][%SP-VIC][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP]"                  >clm4.5:</desc>
-    <desc lnd="CLM50[%SP][%SP-VIC][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGCDV][%BGCDV-CROP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm5.0:</desc>
-    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP][%NWP-BGC-CROP]">clm6.0:</desc>
+    <desc lnd="CLM50[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP]">clm5.0:</desc>
+    <desc lnd="CLM60[%SP][%SP-NOANTHRO][%BGC-NOANTHRO][%BGC][%BGC-CROP][%FATES][%FATES-SP][%BGC-CROP-CMIP6DECK][%BGC-CROP-CMIP6WACCMDECK][%NWP-SP]">clm6.0:</desc>
     <desc option="SP"              >Satellite phenology:</desc>
 
-    <desc option="SP-VIC"          >Satellite phenology with VIC hydrology:</desc>
     <desc option="SP-NOANTHRO"     >Satellite phenology without anthropomorphic influences</desc>
     <desc option="BGC"             >BGC (vert. resol. CN and methane):</desc>
     <desc option="BGC-CROP"        >BGC (vert. resol. CN and methane) with prognostic crop:</desc>
     <desc option="BGC-NOANTHRO"    >BGC (vert. resol. CN and methane) without anthropomorphic influences:</desc>
     <desc option="FATES"           >FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
     <desc option="FATES-SP"        >Satellite phenology with FATES (Functionally Assembled Terrestrial Ecosystem Simulator) Ecosystem Demography model: </desc>
-    <desc option="BGCDV"           >BGC (vert. resol. CN and methane) with dynamic vegetation:</desc>
-    <desc option="BGCDV-CROP"      >BGC (vert. resol. CN and methane) with dynamic vegetation and prognostic crop:</desc>
     <desc option="BGC-CROP-CMIP6DECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 DECK experiments:</desc>
     <desc option="BGC-CROP-CMIP6WACCMDECK">BGC (vert. resol. CN and methane) with prognostic crop, with modifications appropriate for CMIP6 WACCM DECK experiments:</desc>
 
     <desc option="NWP-SP"          >NWP configuration with satellite phenology:</desc>
-    <desc option="NWP-BGC-CROP"    >NWP configuration with BGC and CROP:</desc>
   </description>
   <entry id="COMP_LND">
     <type>char</type>
@@ -79,24 +74,9 @@
     </desc>
     <default_value>UNSET</default_value>
     <!-- List of forcing options for each CLM physics option: CRUJRA2024, CRUv7, GSWP3, cam7.0, cam6.0, cam5.0, cam4.0, QIAN, 1PT, NLDAS2, ERA5 -->
-    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUJRA2024,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm4_5_CRUv7,clm4_5_GSWP3v1,clm4_5_QIAN,clm4_5_cam6.0,clm4_5_cam7.0,clm4_5_cam5.0,clm4_5_cam4.0,clm4_5_1PT,clm4_5_NLDAS2,clm4_5_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_CRUJRA2024,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
+    <valid_values>clm5_0_cam6.0,clm5_0_cam7.0,clm5_0_cam5.0,clm5_0_cam4.0,clm5_0_GSWP3v1,clm5_0_CRUJRA2024,clm5_0_CRUv7,clm5_0_QIAN,clm5_0_1PT,clm5_0_NLDAS2,clm5_0_ERA5,clm6_0_CRUv7,clm6_0_GSWP3v1,clm6_0_CRUJRA2024,clm6_0_cam6.0,clm6_0_cam7.0,clm6_0_cam5.0,clm6_0_cam4.0,clm6_0_QIAN,clm6_0_1PT,clm6_0_NLDAS2,clm6_0_ERA5</valid_values>
     <values match="last">
       <!-- Options for atm forcing are: CRUJRA2024, CRUJRA2024b, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), cam5.0, cam4.0, QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
-      <!-- All the clm4_5 physics options -->
-      <value compset="SATM_CLM45"        >clm4_5_CRUv7</value>
-      <value compset="DATM%CRUv7_CLM45"  >clm4_5_CRUv7</value>
-      <value compset="DATM%GSWP3v1_CLM45">clm4_5_GSWP3v1</value>
-      <value compset="CAM[^_]+_CLM45"    >clm4_5_cam6.0</value>
-      <value compset="CAM40[^_]*_CLM45"  >clm4_5_cam4.0</value>
-      <value compset="CAM50[^_]*_CLM45"  >clm4_5_cam5.0</value>
-      <value compset="CAM60[^_]*_CLM45"  >clm4_5_cam6.0</value>
-      <value compset="CAM70[^_]*_CLM45"  >clm4_5_cam7.0</value>
-      <value compset="DATM%CPLHIST_CLM45">clm4_5_cam5.0</value>
-      <value compset="DATM%QIA_CLM45"    >clm4_5_QIAN</value>
-      <value compset="DATM%WISOQIA_CLM45">clm4_5_QIAN</value>
-      <value compset="DATM%1PT_CLM45"    >clm4_5_1PT</value>
-      <value compset="DATM%NLDAS2_CLM45" >clm4_5_NLDAS2</value>
-      <value compset="DATM%ERA5_CLM45"   >clm4_5_ERA5</value>
       <!-- All the clm5_0 physics options -->
       <value compset="DATM%CRUJRA2024[b]*_CLM50">clm5_0_CRUJRA2024</value>
       <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
@@ -146,7 +126,6 @@
          by the compset match. -->
     <default_value>UNSET</default_value>
     <values>
-      <value compset="_CLM45" >clm4_5</value>
       <value compset="_CLM50" >clm5_0</value>
       <value compset="_CLM60" >clm6_0</value>
     </values>
@@ -279,15 +258,6 @@ Caveats:
       <value compset="CAM[^_]*_CLM[^_]*BGC-CROP"  >--bgc bgc --crop --no-megan --no-drydep --no-fire_emis</value>
       <!-- ======================================= End of Coupled to CAM Options ===============================  -->
 
-      <!-- Options specific for CLM4.5 -->
-      <value compset="_CLM45%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM45%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
-      <value compset="_CLM45%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
-
-      <!-- Options specific for CLM5.0 -->
-      <value compset="_CLM50%[^_]*BGCDV"	 >-bgc bgc -dynamic_vegetation</value>
-      <value compset="_CLM50%[^_]*BGCDV-CROP"	 >-bgc bgc -dynamic_vegetation -crop</value>
-      <value compset="_CLM50%[^_]*SP-VIC"	 >-bgc sp -vichydro </value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>

@@ -17,7 +17,7 @@ Example: Irrigation Simulation
 
    # Note here we do a CLMSP simulation as that is what has been validated
    > cd cime/scripts
-   > ./create_newcase -case IRRIG -res f19_g17_gl4 -compset I1850Clm50BgcCrop
+   > ./create_newcase --case IRRIG --res f19_f19_mt232 --compset I1850Clm60BgcCrop
    > cd IRRIG
 
    # Append "-irrig on" to CLM_BLDNML_OPTS in env_run.xml (you could also use an editor)
