@@ -171,7 +171,7 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. Land cover and land use change including wood harvest (Chapter :numref:`rst_Transient Landcover Change`)
 
-#. Biogenic volatile organic compound emissions (Chapter :numref:`rst_Biogenic Volatile Organic Compounds (BVOCs)`)
+#. Biogenic volatile organic compound emissions and Dry deposition of atmospheric gases (Chapter :numref:`rst_Biogenic Volatile Organic Compounds (BVOCs) and Dry Dep`)
 
 #. Dust mobilization and deposition (Chapter :numref:`rst_Dust Model`)
 

@@ -11,7 +11,7 @@ Cropland tillage (Sect. :numref:`decomp_mgmt_modifiers`) is set to ``'low'`` by 
 
 Depth of tillage can be changed with the ``max_tillage_depth`` parameter (meters; default 0.26).
 
-Tillage multipliers for different soil pools and time since planting are defined on the parameter file, in variables ``bgc_till_decompk_multipliers`` (for CENTURY soil) and ``mimics_till_decompk_multipliers`` (for MIMICS soil). These variables were originally added with the script at ``tools/contrib/add_tillage_to_paramsfile.py``, which can be modified as needed to change tillage multipliers.
+Tillage multipliers for different soil pools and time since planting are defined on the parameter file, in variables ``bgc_till_decompk_multipliers`` (for CENTURY soil) and ``mimics_till_decompk_multipliers`` (for MIMICS soil). These variables were originally added with the script at ``tools/unsupported/add_tillage_to_paramsfile.py``, which can be modified as needed to change tillage multipliers.
 
 
 Example: Crop simulation with no tillage
