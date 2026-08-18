@@ -46,6 +46,10 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
+Added three new tests to testlist_clm.xml:
+SMS_Ly2_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu--clm-ADspinup
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.IHist1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ESLgS--clm-ADspinup
 
 Testing summary:
 ----------------
