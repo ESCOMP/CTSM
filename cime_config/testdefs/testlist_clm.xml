@@ -2988,7 +2988,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly2_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ARSLu--clm/ADspinup">
+  <test name="SMS_Ly2_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ARSLu--clm/ADspinup">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -3003,7 +3003,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="IHist1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ARSLu">
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="IHist1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ARSLu">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -3018,7 +3018,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60Bgc" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup">
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
