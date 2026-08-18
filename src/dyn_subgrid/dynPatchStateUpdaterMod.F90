@@ -76,6 +76,8 @@ module dynPatchStateUpdaterMod
      ! non-zero weight in this time step
      procedure, public :: patch_initiating
 
+     ! Resets diagnostic array fields to spval when a patch deactivates
+     procedure, public :: ResetDeactivatedDiagnostics
   end type patch_state_updater_type
 
   interface patch_state_updater_type
@@ -450,5 +452,45 @@ contains
 
   end function patch_initiating
 
+  !-----------------------------------------------------------------------
+  subroutine ResetDeactivatedDiagnostics(this, bounds, frictionvel_inst, soilstate_inst)
+    ! Reset diagnostic array fields to spval when a patch deactivates (pwtgcell_new == 0).
+    ! All patch-level diagnostic fields are set here to avoid carrying over stale values on deactivated patches,
+    ! modulo constant/geological parameters (e.g. bedrock depth) and per-timestep weather fields (e.g. snow conductivity).
+    use FrictionVelocityMod, only : frictionvel_type
+    use SoilStateType      , only : soilstate_type
+    use clm_varcon         , only : spval
+    class(patch_state_updater_type), intent(in) :: this
+    type(bounds_type)              , intent(in) :: bounds
+    type(frictionvel_type)         , intent(inout) :: frictionvel_inst
+    type(soilstate_type)           , intent(inout) :: soilstate_inst
+
+    integer :: p
+
+    do p = bounds%begp, bounds%endp
+       if (this%pwtgcell_new(p) == 0._r8 .and. this%pwtgcell_old(p) > 0._r8) then
+          frictionvel_inst%rah1_patch(p) = spval
+          frictionvel_inst%rah2_patch(p) = spval
+          frictionvel_inst%raw1_patch(p) = spval
+          frictionvel_inst%raw2_patch(p) = spval
+          frictionvel_inst%ustar_patch(p) = spval
+          frictionvel_inst%um_patch(p) = spval
+          frictionvel_inst%uaf_patch(p) = spval
+          frictionvel_inst%taf_patch(p) = spval
+          frictionvel_inst%qaf_patch(p) = spval
+          frictionvel_inst%obu_patch(p) = spval
+          frictionvel_inst%zeta_patch(p) = spval
+          frictionvel_inst%vpd_patch(p) = spval
+          frictionvel_inst%rb1_patch(p) = spval
+          frictionvel_inst%u10_patch(p) = spval
+          frictionvel_inst%u10_clm_patch(p) = spval
+          frictionvel_inst%ram1_patch(p) = spval
+
+          soilstate_inst%root_conductance_patch(p, :) = spval
+          soilstate_inst%soil_conductance_patch(p, :) = spval
+       end if
+    end do
+
+  end subroutine ResetDeactivatedDiagnostics
 
 end module dynPatchStateUpdaterMod
