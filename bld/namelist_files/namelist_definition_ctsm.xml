@@ -1365,13 +1365,13 @@ eg. if nyr_forcing = 20, nyr_SASU = 5, number of analytic solutions is 20/5=4
 <!-- ========================================================================================  -->
 <entry id="use_lch4" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
-Turn on methane model. Standard part of CLM45BGC model.
+Turn on methane model. Standard part of Clm45Bgc model.
 </entry>
 
 <entry id="use_cn" type="logical" category="bgc"
        group="clm_inparm" valid_values="" value=".false.">
 CLM Biogeochemistry mode : Carbon Nitrogen model (CN)
-(or CLM45BGC if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
+(or Clm45Bgc if phys=clm4_5, vsoilc_centbgc='on', and clm4me='on')
 </entry>
 
 <entry id="use_cndv" type="logical" category="bgc"
@@ -2484,7 +2484,7 @@ NOTE: THIS CORRESPONDS DIRECTLY TO THE env_run.xml VARIABLE OF THE SAME NAME.
        group="default_settings" valid_values="sp,bgc,fates" >
 Command line arguement for biogeochemistry mode for CLM4.5
    sp  = Satellitte Phenology
-   bgc = CLM4.5 BGC model with:
+   bgc = Clm45Bgc model with:
         CENTURY model pools
         Nitrification/De-nitrification
         Methane model

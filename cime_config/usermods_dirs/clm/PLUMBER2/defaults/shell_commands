@@ -59,7 +59,7 @@ if [[ $compset =~ .*CLM[0-9]+%[^_]*SP.* ]]; then
 	    'SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE','SOILLIQ',
 	    'SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT','TLAI',
 	    'WIND','FIRE','FCTR','FCEV','FGEV','FSM','COSZEN','H2OSOI','BTRANMN','TV','RSSUN',
-	    'RSSHA','FSH_G','RHAF','RH_LEAF','RH','T10','TG','SABG','SABV','FPSN','TBOT','TAUX',
+	    'RSSHA','FSH_G','RH_LEAF','RH','T10','TG','SABG','SABV','FPSN','TBOT','TAUX',
 	    'TAUY','QSNOEVAP','QFLX_SOLIDEVAP_FROM_TOP_LAYER','QFLX_SNOW_DRAIN','H2OSFC','FPSN'" >> user_nl_clm 
   else
     echo "lai_dtlimit=30." >> user_nl_clm
@@ -75,7 +75,7 @@ else  # for BGC cases
                'FSNO','SNO_T','RAIN','SNOW','QVEGT','QVEGE','QSOIL','QRUNOFF','QOVER','QH2OSFC',
                'QDRAI','QDRAI_PERCH','SNO_EXISTENCE','QSNOMELT','H2OCAN','H2OSNO','SNOCAN','SOILICE',
                'SOILLIQ','SOILWATER_10CM','TWS','SNOWLIQ','SNOWDP','RH2M','TSA','FLDS','Q2M','PBOT',
-               'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G','RHAF',
+               'TLAI','WIND','FIRE','FSM','COSZEN','BTRANMN','TV','RSSUN','RSSHA','FSH_G',
                'RH_LEAF','RH','T10','TG','SABG','SABV','TBOT','TAUX','TAUY','QSNOEVAP','H2OSFC'" >> user_nl_clm
     echo "" >> user_nl_clm
   fi

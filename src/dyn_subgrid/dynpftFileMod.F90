@@ -48,7 +48,7 @@ contains
   subroutine dynpft_init(bounds, dynpft_filename)
     !
     ! !DESCRIPTION:
-    ! Initialize dynamic pft dataset (position it to the right time samples
+    ! Initialize transient pft (landuse) dataset (position it to the right time samples
     ! that bound the initial model date)
     !
     ! !USES:

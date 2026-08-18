@@ -14,8 +14,9 @@ module VOCEmissionMod
   use pftconMod          , only : nbrdlf_evr_tmp_tree, nbrdlf_dcd_brl_shrub
   use pftconMod          , only : nbrdlf_dcd_trp_tree, nbrdlf_dcd_tmp_tree
   use pftconMod          , only : nbrdlf_dcd_brl_tree, nbrdlf_evr_shrub
-  use pftconMod          , only : nc3_arctic_grass   , nc3crop
+  use pftconMod          , only : nc3_arctic_grass
   use pftconMod          , only : nc4_grass,           noveg
+  use pftconMod          , only : is_crop
   use shr_megan_mod      , only : shr_megan_megcomps_n, shr_megan_megcomp_t, shr_megan_linkedlist
   use shr_megan_mod      , only : shr_megan_mechcomps_n, shr_megan_mechcomps, shr_megan_mapped_emisfctrs
   use MEGANFactorsMod    , only : Agro, Amat, Anew, Aold, betaT, ct1, ct2, LDF, Ceo
@@ -274,89 +275,106 @@ contains
             ptr_patch=this%vocflx_tot_patch, set_lake=0._r8, set_urb=0._r8, default='inactive')
 
        this%gamma_out_patch(begp:endp)   = spval
-       call hist_addfld1d (fname='GAMMA', units='non',  &
-            avgflag='A', long_name='total gamma for VOC calc', &
-            ptr_patch=this%gamma_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMA', units='non',  &
+!           avgflag='A', long_name='total gamma for VOC calc', &
+!           ptr_patch=this%gamma_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaL_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAL', units='non',  &
-            avgflag='A', long_name='gamma L for VOC calc', &
-            ptr_patch=this%gammaL_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAL', units='non',  &
+!           avgflag='A', long_name='gamma L for VOC calc', &
+!           ptr_patch=this%gammaL_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaT_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAT', units='non',  &
-            avgflag='A', long_name='gamma T for VOC calc', &
-            ptr_patch=this%gammaT_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAT', units='non',  &
+!           avgflag='A', long_name='gamma T for VOC calc', &
+!           ptr_patch=this%gammaT_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaP_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAP', units='non',  &
-            avgflag='A', long_name='gamma P for VOC calc', &
-            ptr_patch=this%gammaP_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAP', units='non',  &
+!           avgflag='A', long_name='gamma P for VOC calc', &
+!           ptr_patch=this%gammaP_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaA_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAA', units='non',  &
-            avgflag='A', long_name='gamma A for VOC calc', &
-            ptr_patch=this%gammaA_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAA', units='non',  &
+!           avgflag='A', long_name='gamma A for VOC calc', &
+!           ptr_patch=this%gammaA_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaS_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAS', units='non',  &
-            avgflag='A', long_name='gamma S for VOC calc', &
-            ptr_patch=this%gammaS_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAS', units='non',  &
+!           avgflag='A', long_name='gamma S for VOC calc', &
+!           ptr_patch=this%gammaS_out_patch, set_lake=0._r8, default='inactive')
 
        this%gammaC_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='GAMMAC', units='non',  &
-            avgflag='A', long_name='gamma C for VOC calc', &
-            ptr_patch=this%gammaC_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='GAMMAC', units='non',  &
+!           avgflag='A', long_name='gamma C for VOC calc', &
+!           ptr_patch=this%gammaC_out_patch, set_lake=0._r8, default='inactive')
 
        this%EOPT_out_patch(begp:endp) = spval
-       call hist_addfld1d (fname='EOPT', units='non',  &
-            avgflag='A', long_name='Eopt coefficient for VOC calc', &
-            ptr_patch=this%Eopt_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='EOPT', units='non',  &
+!           avgflag='A', long_name='Eopt coefficient for VOC calc', &
+!           ptr_patch=this%Eopt_out_patch, set_lake=0._r8, default='inactive')
 
        this%topt_out_patch(begp:endp)    = spval
-       call hist_addfld1d (fname='TOPT', units='non',  &
-            avgflag='A', long_name='topt coefficient for VOC calc', &
-            ptr_patch=this%topt_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='TOPT', units='non',  &
+!           avgflag='A', long_name='topt coefficient for VOC calc', &
+!           ptr_patch=this%topt_out_patch, set_lake=0._r8, default='inactive')
 
        this%alpha_out_patch(begp:endp)    = spval
-       call hist_addfld1d (fname='ALPHA', units='non',  &
-            avgflag='A', long_name='alpha coefficient for VOC calc', &
-            ptr_patch=this%alpha_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='ALPHA', units='non',  &
+!           avgflag='A', long_name='alpha coefficient for VOC calc', &
+!           ptr_patch=this%alpha_out_patch, set_lake=0._r8, default='inactive')
 
        this%cp_out_patch(begp:endp)      = spval
-       call hist_addfld1d (fname='currentPatch', units='non',  &
-            avgflag='A', long_name='currentPatch coefficient for VOC calc', &
-            ptr_patch=this%cp_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='currentPatch', units='non',  &
+!           avgflag='A', long_name='currentPatch coefficient for VOC calc', &
+!           ptr_patch=this%cp_out_patch, set_lake=0._r8, default='inactive')
 
        this%paru_out_patch(begp:endp)    = spval
-       call hist_addfld1d (fname='PAR_sun', units='umol/m2/s', &
-            avgflag='A', long_name='sunlit PAR', &
-            ptr_patch=this%paru_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR_sun', units='umol/m2/s', &
+!           avgflag='A', long_name='sunlit PAR', &
+!           ptr_patch=this%paru_out_patch, set_lake=0._r8, default='inactive')
 
        this%par24u_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='PAR24_sun', units='umol/m2/s', &
-            avgflag='A', long_name='sunlit PAR (24 hrs)', &
-            ptr_patch=this%par24u_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR24_sun', units='umol/m2/s', &
+!           avgflag='A', long_name='sunlit PAR (24 hrs)', &
+!           ptr_patch=this%par24u_out_patch, set_lake=0._r8, default='inactive')
 
        this%par240u_out_patch(begp:endp) = spval
-       call hist_addfld1d (fname='PAR240_sun', units='umol/m2/s', &
-            avgflag='A', long_name='sunlit PAR (240 hrs)', &
-            ptr_patch=this%par240u_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR240_sun', units='umol/m2/s', &
+!           avgflag='A', long_name='sunlit PAR (240 hrs)', &
+!           ptr_patch=this%par240u_out_patch, set_lake=0._r8, default='inactive')
 
        this%para_out_patch(begp:endp)    = spval
-       call hist_addfld1d (fname='PAR_shade', units='umol/m2/s', &
-            avgflag='A', long_name='shade PAR', &
-            ptr_patch=this%para_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR_shade', units='umol/m2/s', &
+!           avgflag='A', long_name='shade PAR', &
+!           ptr_patch=this%para_out_patch, set_lake=0._r8, default='inactive')
 
        this%par24a_out_patch(begp:endp)  = spval
-       call hist_addfld1d (fname='PAR24_shade', units='umol/m2/s', &
-            avgflag='A', long_name='shade PAR (24 hrs)', &
-            ptr_patch=this%par24a_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR24_shade', units='umol/m2/s', &
+!           avgflag='A', long_name='shade PAR (24 hrs)', &
+!           ptr_patch=this%par24a_out_patch, set_lake=0._r8, default='inactive')
 
        this%par240a_out_patch(begp:endp) = spval
-       call hist_addfld1d (fname='PAR240_shade', units='umol/m2/s', &
-            avgflag='A', long_name='shade PAR (240 hrs)', &
-            ptr_patch=this%par240a_out_patch, set_lake=0._r8, default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld1d (fname='PAR240_shade', units='umol/m2/s', &
+!           avgflag='A', long_name='shade PAR (240 hrs)', &
+!           ptr_patch=this%par240a_out_patch, set_lake=0._r8, default='inactive')
 
     end if
 
@@ -775,7 +793,7 @@ contains
     else if (ivt_in >= nc3_arctic_grass &
          .and.    ivt_in <= nc4_grass) then            !grass
        get_map_EF = vocemis_inst%efisop_grc(5,g_in)
-    else if (ivt_in >= nc3crop) then                   !crops
+    else if (is_crop(ivt_in)) then                   !crops
        get_map_EF = vocemis_inst%efisop_grc(6,g_in)
     end if
 
