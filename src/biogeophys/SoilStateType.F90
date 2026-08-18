@@ -82,7 +82,7 @@ module SoilStateType
 
      procedure, public  :: Init         
      procedure, public  :: Restart
-     procedure, public  :: TimestepInit
+     procedure, public  :: SetValues
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -334,6 +334,8 @@ contains
     this%smp_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = -1000._r8
     this%hk_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = 0._r8
 
+    call this%SetValues(bounds, spval)
+
   end subroutine InitCold
 
   !------------------------------------------------------------------------
@@ -395,17 +397,15 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine TimestepInit(this, bounds)
+  subroutine SetValues(this, bounds, setval)
     !
     ! !DESCRIPTION:
-    ! Initialize arrays that need to be reset to spval each timestep
-    !
-    ! !USES:
-    use clm_varcon, only : spval
+    ! Initialize diagnostic arrays to setval
     !
     ! !ARGUMENTS:
-    class(soilstate_type)         :: this
-    type(bounds_type), intent(in) :: bounds
+    class(soilstate_type), intent(inout) :: this
+    type(bounds_type), intent(in)        :: bounds
+    real(r8), intent(in)                 :: setval
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
@@ -413,9 +413,9 @@ contains
 
     begp = bounds%begp; endp = bounds%endp
 
-    this%root_conductance_patch(begp:endp,:) = spval
-    this%soil_conductance_patch(begp:endp,:) = spval
+    this%root_conductance_patch(begp:endp,:) = setval
+    this%soil_conductance_patch(begp:endp,:) = setval
 
-  end subroutine TimestepInit
+  end subroutine SetValues
 
 end module SoilStateType

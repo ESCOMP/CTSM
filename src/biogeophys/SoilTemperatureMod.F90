@@ -653,6 +653,8 @@ contains
 
     call t_startf( 'SoilThermProp' )
 
+    call InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
+
     ! Enforce expected array sizes
     SHR_ASSERT_ALL_FL((ubound(cv)        == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(tk)        == (/bounds%endc, nlevmaxurbgrnd/)), sourcefile, __LINE__)
@@ -737,11 +739,6 @@ contains
             endif
 
             ! Thermal conductivity of snow
-            ! Initialize bw and thk to spval for inactive snow layers
-            if (j <= 0) then
-               bw(c,j) = spval
-               thk(c,j) = spval
-            end if
             ! Only examine levels from snl(c)+1 -> 0 where snl(c) < 1
             if (snl(c)+1 < 1 .AND. (j >= snl(c)+1) .AND. (j <= 0)) then  
                bw(c,j) = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno(c)*dz(c,j))
@@ -2994,5 +2991,27 @@ end subroutine SetMatrix_Snow
   end subroutine BuildingHAC
 
   !-----------------------------------------------------------------------
+  subroutine InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
+    ! Initialize bw and thk to spval for inactive snow layers (j <= 0)
+    ! Note: Lake columns are handled separately by LakeTemperatureMod
+    use clm_varpar, only : nlevsno
+    use clm_varcon, only : spval
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in)           :: num_nolakec
+    integer, intent(in)           :: filter_nolakec(:)
+    real(r8), intent(inout)       :: bw(bounds%begc:,-nlevsno+1:)
+    real(r8), intent(inout)       :: thk(bounds%begc:,-nlevsno+1:)
+
+    integer :: fc, c, j
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          bw(c,j)  = spval
+          thk(c,j) = spval
+       end do
+    end do
+
+  end subroutine InitSnowThermPropDiagnostics
 
 end module SoilTemperatureMod

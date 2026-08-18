@@ -587,23 +587,9 @@ contains
     vocflx(bounds%begp:bounds%endp,:)   = 0._r8
     vocflx_tot(bounds%begp:bounds%endp) = 0._r8
 
-    gamma_out(bounds%begp:bounds%endp) = spval
-    gammaL_out(bounds%begp:bounds%endp) = spval
-    gammaT_out(bounds%begp:bounds%endp) = spval
-    gammaP_out(bounds%begp:bounds%endp) = spval
-    gammaA_out(bounds%begp:bounds%endp) = spval
-    gammaS_out(bounds%begp:bounds%endp) = spval
-    gammaC_out(bounds%begp:bounds%endp) = spval
-    Eopt_out(bounds%begp:bounds%endp) = spval
-    topt_out(bounds%begp:bounds%endp) = spval
-    alpha_out(bounds%begp:bounds%endp) = spval
-    cp_out(bounds%begp:bounds%endp) = spval
-    paru_out(bounds%begp:bounds%endp) = spval
-    par24u_out(bounds%begp:bounds%endp) = spval
-    par240u_out(bounds%begp:bounds%endp) = spval
-    para_out(bounds%begp:bounds%endp) = spval
-    par24a_out(bounds%begp:bounds%endp) = spval
-    par240a_out(bounds%begp:bounds%endp) = spval
+    call InitVOCDiagnostics(bounds, gamma_out, gammaL_out, gammaT_out, gammaP_out, &
+         gammaA_out, gammaS_out, gammaC_out, Eopt_out, topt_out, alpha_out, cp_out, &
+         paru_out, par24u_out, par240u_out, para_out, par24a_out, par240a_out)
 
     do imeg=1,shr_megan_megcomps_n
       meg_out(imeg)%flux_out(bounds%begp:bounds%endp) = 0._r8
@@ -1171,5 +1157,50 @@ contains
     get_gamma_C = gamma_ci * gamma_ca
 
   end function get_gamma_C
+
+  !-----------------------------------------------------------------------
+  subroutine InitVOCDiagnostics(bounds, gamma_out, gammaL_out, gammaT_out, gammaP_out, &
+       gammaA_out, gammaS_out, gammaC_out, Eopt_out, topt_out, alpha_out, cp_out, &
+       paru_out, par24u_out, par240u_out, para_out, par24a_out, par240a_out)
+    ! Initialize VOC emission diagnostic outputs to spval
+    use clm_varcon, only : spval
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(inout) :: gamma_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaL_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaT_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaP_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaA_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaS_out(bounds%begp:)
+    real(r8), intent(inout) :: gammaC_out(bounds%begp:)
+    real(r8), intent(inout) :: Eopt_out(bounds%begp:)
+    real(r8), intent(inout) :: topt_out(bounds%begp:)
+    real(r8), intent(inout) :: alpha_out(bounds%begp:)
+    real(r8), intent(inout) :: cp_out(bounds%begp:)
+    real(r8), intent(inout) :: paru_out(bounds%begp:)
+    real(r8), intent(inout) :: par24u_out(bounds%begp:)
+    real(r8), intent(inout) :: par240u_out(bounds%begp:)
+    real(r8), intent(inout) :: para_out(bounds%begp:)
+    real(r8), intent(inout) :: par24a_out(bounds%begp:)
+    real(r8), intent(inout) :: par240a_out(bounds%begp:)
+
+    gamma_out(bounds%begp:bounds%endp)   = spval
+    gammaL_out(bounds%begp:bounds%endp)  = spval
+    gammaT_out(bounds%begp:bounds%endp)  = spval
+    gammaP_out(bounds%begp:bounds%endp)  = spval
+    gammaA_out(bounds%begp:bounds%endp)  = spval
+    gammaS_out(bounds%begp:bounds%endp)  = spval
+    gammaC_out(bounds%begp:bounds%endp)  = spval
+    Eopt_out(bounds%begp:bounds%endp)    = spval
+    topt_out(bounds%begp:bounds%endp)    = spval
+    alpha_out(bounds%begp:bounds%endp)   = spval
+    cp_out(bounds%begp:bounds%endp)      = spval
+    paru_out(bounds%begp:bounds%endp)    = spval
+    par24u_out(bounds%begp:bounds%endp)  = spval
+    par240u_out(bounds%begp:bounds%endp) = spval
+    para_out(bounds%begp:bounds%endp)    = spval
+    par24a_out(bounds%begp:bounds%endp)  = spval
+    par240a_out(bounds%begp:bounds%endp) = spval
+
+  end subroutine InitVOCDiagnostics
 
 end module VOCEmissionMod
