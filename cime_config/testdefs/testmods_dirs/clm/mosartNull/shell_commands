@@ -1,7 +1,5 @@
 #!/bin/bash
 
-./xmlchange CLM_ACCELERATED_SPINUP="on"
-
 COMP_ROF=`./xmlquery --value COMP_ROF`
 if [[ $COMP_ROF == "mosart" ]]; then
    ./xmlchange MOSART_MODE="NULL"
