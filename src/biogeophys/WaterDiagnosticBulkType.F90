@@ -28,6 +28,7 @@ module WaterDiagnosticBulkType
   use WaterStateType, only : waterstate_type
   use WaterStateBulkType, only : waterstatebulk_type
   use WaterFluxType, only : waterflux_type
+  use UrbanParamsType, only : IsBuildingHumidityEnabled
   !
   implicit none
   save
@@ -63,6 +64,7 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
+     real(r8), pointer :: rh_building_lun        (:)   ! lun internal building air relative humidity (%) 
      real(r8), pointer :: rh_af_patch            (:)   ! patch fractional humidity of canopy air (dimensionless) ! private
      real(r8), pointer :: rh10_af_patch          (:)   ! 10-day mean patch fractional humidity of canopy air (dimensionless)
      real(r8), pointer :: dqgdT_col              (:)   ! col d(qg)/dT
@@ -154,7 +156,7 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)  ! Initial total snow water (mm H2O)
 
 
-    call this%Init(bounds, info, vars)
+    call this%Init(bounds, info, vars, IsBuildingHumidityEnabled())
 
     call this%InitBulkAllocate(bounds) 
 
@@ -219,6 +221,7 @@ contains
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
+    allocate(this%rh_building_lun        (begl:endl))                     ; this%rh_building_lun        (:)   = nan
     allocate(this%rh_af_patch            (begp:endp))                     ; this%rh_af_patch            (:)   = nan
     allocate(this%rh10_af_patch          (begp:endp))                     ; this%rh10_af_patch          (:)   = spval
 
@@ -356,6 +359,16 @@ contains
          avgflag='A', &
          long_name=this%info%lname('Urban 2m relative humidity'), &
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
+
+    if (IsBuildingHumidityEnabled()) then
+       this%rh_building_lun(begl:endl) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('RHBUILD'), &
+            units='%',  &
+            avgflag='A', &
+            long_name=this%info%lname('Internal urban building air relative humidity'), &
+            ptr_lunit=this%rh_building_lun, set_nourb=spval, default='inactive')
+    end if
 
     this%rh_af_patch(begp:endp) = spval
 !   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
@@ -815,7 +828,7 @@ contains
     !------------------------------------------------------------------------
 
 
-    call this%Restart(bounds, ncid, flag=flag)
+    call this%Restart(bounds, ncid, flag=flag, is_prog_buildhumidity=IsBuildingHumidityEnabled())
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, &

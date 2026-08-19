@@ -17,6 +17,7 @@ module WaterFluxType
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use UrbanParamsType, only : IsACDehumidificationEnabled
   !
   implicit none
   private
@@ -50,7 +51,9 @@ module WaterFluxType
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_liqevap_from_top_layer_patch(:) ! patch rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
      real(r8), pointer :: qflx_liqevap_from_top_layer_col(:)   ! col rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
-
+     real(r8), pointer :: qflx_condensate_from_ac_col(:) ! col condensate due to dehumidification from air-conditioning (mm H2O/S) [+]
+     real(r8), pointer :: qflx_condensate_from_ac_lun(:) ! lun condensate due to dehumidification from air-conditioning (mm H2O/S) [+]
+  
      ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
      ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
      real(r8), pointer :: qflx_snwcp_liq_col       (:)   ! col excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
@@ -269,6 +272,12 @@ contains
     call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_patch, name = 'qflx_liqevap_from_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
+    call AllocateVar1d(var = this%qflx_condensate_from_ac_col, name = 'qflx_condensate_from_ac_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, ival = 0.0_r8)
+    call AllocateVar1d(var = this%qflx_condensate_from_ac_lun, name = 'qflx_condensate_from_ac_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_landunit, ival = 0.0_r8)
 
     call AllocateVar1d(var = this%qflx_infl_col, name = 'qflx_infl_col', &
          container = tracer_vars, &
@@ -587,6 +596,23 @@ contains
          avgflag='A', &
          long_name=this%info%lname('Rural total runoff'), &
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
+
+    if (IsACDehumidificationEnabled()) then
+       this%qflx_condensate_from_ac_col(begc:endc) = 0.0_r8
+       call hist_addfld1d ( &
+            fname=this%info%fname('QCOND_FROM_AC'), &
+            units='mm/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('Condensed water flux from AC dehumidification'), &
+            ptr_col=this%qflx_condensate_from_ac_col, set_nourb=0.0_r8, c2l_scale_type='urbanf', default='inactive')
+       this%qflx_condensate_from_ac_lun(begl:endl) = 0.0_r8
+       call hist_addfld1d ( &
+            fname=this%info%fname('QCOND_FROM_AC_LUN'), &
+            units='mm/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('Condensed water flux from AC dehumidification (lun var)'), &
+            ptr_lunit=this%qflx_condensate_from_ac_lun, set_nourb=0.0_r8, l2g_scale_type='unity')
+    end if
 
     this%qflx_snomelt_col(begc:endc) = spval
     call hist_addfld1d ( &
