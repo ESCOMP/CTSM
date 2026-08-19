@@ -67,7 +67,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">No anthropogenic compset</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_D_Ld3_PS" grid="f09_t232" compset="I1850Clm60SpCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial--clm/nofireemis">
@@ -157,7 +157,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
@@ -316,7 +316,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No needn't run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -335,7 +335,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">mpasa low resolution grid, tested in CAM, so do both 1850 and 2000 with latest CLM version and include in the CTSM science test list</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -354,7 +354,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">mpasa low resolution grid, tested in CAM, so do both 1850 and 2000 with latest CLM version and include in the CTSM science test list</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -373,7 +373,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -392,7 +392,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Test that the workhorse mpasa resolution functions for CAM, for both Hist and 2000 with latest CLM version. No need to run this test with every tag, but include it in the less frequent ctsm_sci testing.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -411,7 +411,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningModeLDust--clm/nofireemis">
@@ -430,7 +430,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Higher resolution mpasa grid for CAM with latest CLM version. Include it in the less frequent ctsm_sci testing.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -448,7 +448,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">mpasa test with Crujra while Gswp is still the default, also nofireemis for SP</option>
+      <option name="comment">mpasa test with Crujra while Gswp is still the default, also nofireemis for Sp</option>
     </options>
   </test>
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
@@ -533,7 +533,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for 1850 with clm6_0 for SP mode at f09</option>
+      <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f09</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
@@ -551,7 +551,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for 1850 with clm6_0 for SP mode at f19</option>
+      <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f19</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
@@ -569,8 +569,8 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for 1850 with clm6_0 for SP mode at f09 with CAM7</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f09 with CAM7</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -588,8 +588,8 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for 1850 with clm6_0 for SP mode at f19 with CAM7</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f19 with CAM7</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -608,7 +608,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Include a test of prescribed soil-moisture, has to be at f09, should be 2000 and for SP</option>
+      <option name="comment">Include a test of prescribed soil-moisture, has to be at f09, should be 2000 and for Sp</option>
     </options>
   </test>
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/reduceOutput">
@@ -959,7 +959,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -978,7 +978,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -996,7 +996,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">Low res SE grid test with Crujra while Gswp is still the default, also nofireemis for SP</option>
+      <option name="comment">Low res SE grid test with Crujra while Gswp is still the default, also nofireemis for Sp</option>
     </options>
   </test>
   <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1005,7 +1005,7 @@
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
-      <option name="comment">ne3pg2 test with IHist compset, also nofireemis for SP</option>
+      <option name="comment">ne3pg2 test with IHist compset, also nofireemis for Sp</option>
     </options>
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1015,7 +1015,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1034,7 +1034,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test both 1850 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1053,7 +1053,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Medium resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, test IHist</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1072,7 +1072,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne30_g17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1091,7 +1091,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1110,7 +1110,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1129,7 +1129,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
    <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1148,7 +1148,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">Workhorse SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1167,7 +1167,7 @@
     <options>
       <option name="wallclock">00:60:00</option>
       <option name="comment">High resolution SE grid for running with CAM and with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -1185,7 +1185,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">high res SE grid test with Hist Crujra while Gswp is still the default, also nofireemis for SP</option>
+      <option name="comment">high res SE grid test with Hist Crujra while Gswp is still the default, also nofireemis for Sp</option>
     </options>
   </test>
   <!-- Historical clm5_0 physics BgcCrop science support -->
@@ -1204,7 +1204,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for Historical clm5_0 physics with BGC-Crop at f09</option>
+      <option name="comment">Science support for Historical clm5_0 physics with BgcCrop at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
@@ -1213,7 +1213,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for Historical clm5_0 physics with BGC-Crop at f19</option>
+      <option name="comment">Science support for Historical clm5_0 physics with BgcCrop at f19</option>
     </options>
   </test>
   <!-- Historical clm6_0 physics BgcCrop science support -->
@@ -1223,7 +1223,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for Historical clm6_0 physics with BGC-Crop at f09</option>
+      <option name="comment">Science support for Historical clm6_0 physics with BgcCrop at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
@@ -1241,7 +1241,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for Historical clm6_0 physics with BGC-Crop at f19</option>
+      <option name="comment">Science support for Historical clm6_0 physics with BgcCrop at f19</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
@@ -1424,7 +1424,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">ERP DEBUG historical Clm50 SP case with drydeposition but without MEGAN Also --nofireemis because this is a SP compset</option>
+      <option name="comment">ERP DEBUG historical Clm50Sp case with drydeposition but without MEGAN Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
@@ -2070,7 +2070,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK.</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
@@ -2236,7 +2236,7 @@
     <options>
       <option name="wallclock">04:00:00</option>
       <option name="tput_tolerance">0.5</option>
-      <option name="comment">20 year single point tests with BGC-Crop starting from cold start (crop keeps a 20 year running mean, so this tests the sequence of that running mean being established)</option>
+      <option name="comment">20 year single point tests with BgcCrop starting from cold start (crop keeps a 20 year running mean, so this tests the sequence of that running mean being established)</option>
     </options>
   </test>
   <test name="ERS_Ly20_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm50BgcCropQianRsGs" testmods="clm/cropMonthlyNoinitial--clm/matrixcnOn">
@@ -2323,7 +2323,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Exact restart short DEBUG SP test with clm60</option>
+      <option name="comment">Exact restart short DEBUG Sp test with clm60</option>
     </options>
   </test>
   <test name="ERS_Ly6_Mmpi-serial" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/cropMonthOutput">
@@ -2504,7 +2504,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Simple test to make sure the basic Fates-SP compset works"</option>
+      <option name="comment">Simple test to make sure the basic FatesSp compset works"</option>
     </options>
   </test>
   <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropSpinup" testmods="clm/cplhist">
@@ -2533,7 +2533,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="f19_f19_mg17" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2543,7 +2543,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run f19 for the same as the ne0ARCTIC case starting in 1979"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2553,7 +2553,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run POLARCAP for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
@@ -2563,7 +2563,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >POLARCAP test with clm50cam6"</option>
-      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+      <option name="comment"  >Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2573,7 +2573,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat POLARCAP test with Crujra while Gswp is still the default</option>
-      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+      <option name="comment"  >Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0NATLne30x8_ne0NATLne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2583,7 +2583,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">NATL test with Crujra while Gswp is still the default</option>
-      <option name="comment">Also --nofireemis for SP compsets</option>
+      <option name="comment">Also --nofireemis for Sp compsets</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2594,7 +2594,7 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run ARCTIC for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
       <option name="comment">Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
@@ -2605,7 +2605,7 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >ARCTIC test with cam6"</option>
       <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
-      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+      <option name="comment"  >Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2615,7 +2615,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat ARCTIC transient starting in 1979 for Clm60"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2635,7 +2635,7 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run ARCTICGRIS for transient case starting in 1979 as for AMIP CAM cases (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
       <option name="comment">Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
@@ -2646,7 +2646,7 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >ARCTICGRIS test with cam6"</option>
       <option name="comment"  >Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
-      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+      <option name="comment"  >Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2656,7 +2656,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat ARCTICGRIS transient starting in 1979 for Clm60"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
@@ -2694,7 +2694,7 @@
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run CONUS for transient case starting in 2013 as for CAM case (no need to run this high core count test with every tag, but include it in the less frequent ctsm_sci testing)"</option>
       <option name="comment">Clm50 because that is what CAM tests currently; remove when CAM tests for Clm60</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_2013Start--clm/nofireemis">
@@ -2704,7 +2704,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment"  >Repeat CONUS transient starting in 2013 for cam6"</option>
-      <option name="comment"  >Also --nofireemis because this is a SP compset</option>
+      <option name="comment"  >Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_2013Start--clm/nofireemis">
@@ -2714,7 +2714,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Repeat CONUS transient starting in 2013 for Clm60"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_2013Start--clm/nofireemis">
@@ -2733,7 +2733,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for historical clm5_0 physics with SP mode at f09</option>
+      <option name="comment">Science support for historical clm5_0 physics with Sp mode at f09</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
@@ -2742,8 +2742,8 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for historical clm5_0 physics with SP mode at f19</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Science support for historical clm5_0 physics with Sp mode at f19</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <!-- Historical science support for clm6_0 workhorse resolutions -->
@@ -2753,8 +2753,8 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for historical clm6_0 physics with SP mode at f09</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Science support for historical clm6_0 physics with Sp mode at f09</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
@@ -2772,8 +2772,8 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for historical clm6_0 physics with SP mode at f19</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Science support for historical clm6_0 physics with Sp mode at f19</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
@@ -2792,7 +2792,7 @@
     <options>
       <option name="wallclock">00:40:00</option>
       <option name="comment">Run ne30np4.pg2 to make sure will work for CAM"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
@@ -2822,7 +2822,7 @@
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="comment">Run coarse resolution ne3pg3_ne3pg3_mt232 to make sure will work for CAM"</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/crop">
@@ -2971,7 +2971,7 @@
     <options>
       <option name="wallclock">00:30:00</option>
       <option name="tput_tolerance">0.5</option>
-      <option name="comment">Add at least one test of a NEON site with SP</option>
+      <option name="comment">Add at least one test of a NEON site with Sp</option>
     </options>
   </test>
   <test name="SMS_Ld10_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60BgcRsGs" testmods="clm/NEON/MOAB--clm/PRISM">
@@ -3302,7 +3302,7 @@
     <options>
       <option name="wallclock">01:30:00</option>
       <option name="comment">Long enough test for SMB to be generated in bare land areas; add a month beyond the 3rd year to allow time for CLM to respond to CISM forcing from the 3rd year. (Note: if we had spun-up initial conditions for an IG compset, we could test this with much shorter test, if it also used the glc override options - much of the need for this long test is to allow the snow pack to spin up.)</option>
-      <option name="comment">Also --nofireemis because this is a SP compset</option>
+      <option name="comment">Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRsGs" testmods="clm/monthly">
@@ -4008,7 +4008,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Test with DEBUG on for FatesSP mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
+      <option name="comment">Test with DEBUG on for FatesSp mode, NOTE: FatesSp has the largest difference in CTSM code for any FATES mode</option>
     </options>
   </test>
   <!-- DISABLING UNTIL COMPATIBLE (RGK 051925) https://github.com/ESCOMP/CTSM/issues/1784
@@ -4018,7 +4018,7 @@
        </machines>
        <options>
        <option name="wallclock">00:20:00</option>
-       <option name="comment">Run a test with dry deposition on and FATES-SP</option>
+       <option name="comment">Run a test with dry deposition on and FatesSp</option>
        </options>
        </test>
        <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdMeganSatPhen">
@@ -4027,7 +4027,7 @@
        </machines>
        <options>
        <option name="wallclock">00:20:00</option>
-       <option name="comment">Run a test with MEGAN on and FATES-SP</option>
+       <option name="comment">Run a test with MEGAN on and FatesSp</option>
        </options>
        </test> -->
 
@@ -4037,7 +4037,7 @@
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
-      <option name="comment">Test with prescribed LAI and soil moisture with FatesSP mode</option>
+      <option name="comment">Test with prescribed LAI and soil moisture with FatesSp mode</option>
     </options>
   </test>
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdDailyHist">
@@ -4046,7 +4046,7 @@
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Smoke test that uses just the FATES SP compset.</option>
+      <option name="comment">Smoke test that uses just the FatesSp compset.</option>
     </options>
   </test>
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdDailyHist">
@@ -4208,7 +4208,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm">
         <options>
           <option name="wallclock">00:40:00</option>
-          <option name="comment">Smoke test that first runs the mksurfdata_esmf tool and then ensures that the CTSM does not fail using the just-generated fsurdat file. Global BGC CROP case.</option>
+          <option name="comment">Smoke test that first runs the mksurfdata_esmf tool and then ensures that the CTSM does not fail using the just-generated fsurdat file. Global BgcCrop case.</option>
         </options>
       </machine>
       <machine name="derecho" compiler="intel" category="clm_pymods">
@@ -4228,7 +4228,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Smoke test that first runs the fsurdat_modifier tool and then ensures that the CTSM does not fail using the just-generated modified fsurdat file. Regional SP case. A global BGC CROP case was confirmed to PASS when this regional SP case was introduced.</option>
+      <option name="comment">Smoke test that first runs the fsurdat_modifier tool and then ensures that the CTSM does not fail using the just-generated modified fsurdat file. Regional Sp case. A global BgcCrop case was confirmed to PASS when this regional Sp case was introduced.</option>
       <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
     </options>
   </test>
