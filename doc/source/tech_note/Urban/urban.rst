@@ -1,7 +1,8 @@
 .. _rst_Urban Model (CLMU converted from docx):
 
+**************************************
 Urban Model (CLMU converted from docx)
-======================================
+**************************************
 
 Introduction
 ===============
@@ -74,19 +75,13 @@ Table 1.1. Atmospheric input to urban model
 
 3These are provided by the atmospheric model but not used by the urban model.
 
-Density of air (
+Density of air ( :math:`\rho _{atm}` ) (kg m-3) is also required but is calculated directly from
 
 .. math::
 
- {\rho _{atm}}
+ \rho _{atm} = \frac{P_{atm} - 0.378e_{atm}}{R_{da}T_{atm}}
 
-) (kg m-3) is also required but is calculated directly from 
-
-.. math::
-
- {\rho _{atm}} = \frac{{{P_{atm}} - 0.378{e_{atm}}}}{{{R_{da}}{T_{atm}}}}
-
- where :math:`{P_{atm}}` is atmospheric pressure (Pa), :math:`{e_{atm}}` is atmospheric vapor pressure (Pa), :math:`{R_{da}}` is the gas constant for dry air (J kg-1 K-1) (Table 1.4), and :math:`{T_{atm}}` is the atmospheric temperature (K). The atmospheric vapor pressure :math:`{e_{atm}}` is derived from atmospheric specific humidity :math:`{q_{atm}}` (kg kg-1) as :math:`{e_{atm}} = \frac{{{q_{atm}}{P_{atm}}}}{{0.622 + 0.378{q_{atm}}}}` .
+where :math:`{P_{atm}}` is atmospheric pressure (Pa), :math:`{e_{atm}}` is atmospheric vapor pressure (Pa), :math:`{R_{da}}` is the gas constant for dry air (J kg-1 K-1) (Table 1.4), and :math:`{T_{atm}}` is the atmospheric temperature (K). The atmospheric vapor pressure :math:`{e_{atm}}` is derived from atmospheric specific humidity :math:`{q_{atm}}` (kg kg-1) as :math:`{e_{atm}} = \frac{{{q_{atm}}{P_{atm}}}}{{0.622 + 0.378{q_{atm}}}}` .
 
 Table 1.2. Urban model output to atmospheric model
 
