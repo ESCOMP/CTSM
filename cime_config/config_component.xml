@@ -307,6 +307,7 @@ Caveats:
     <default_value>FALSE</default_value>
     <values>
       <value compset="_CAM" >TRUE</value>
+      <value compset="_DATM%CPLHIST" >TRUE</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
