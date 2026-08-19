@@ -118,15 +118,13 @@ All urban columns consist of fifteen layers to be consistent with CLM4. Generall
 
 .. math::
 
- {W_a} = {W_t} = 4800
+ {W_a} = {W_t} = 4800 mm
 
- mm and water table depth 
+and water table depth
 
 .. math::
 
- {z_\nabla } = 4.8
-
- m.
+ {z_\nabla } = 4.8 m
 
 Surface Data
 ~~~~~~~~~~~~~~~~~~
@@ -139,13 +137,7 @@ Table 1.3. Input data required for the urban model
 
 1This fraction is relative to the canyon floor.
 
-2Required for layers 
-
-.. math::
-
- i = 1,{N_{imprvrd}}
-
-, derived from grid cell soil texture for other layers (section 4.3).
+2Required for layers :math:`i = 1,{N_{imprvrd}}`, derived from grid cell soil texture for other layers (section 4.3).
 
 3Derived from grid cell soil texture ( :math:`\% sand,\,\% clay` ) (section 4.3).
 
