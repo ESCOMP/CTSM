@@ -83,16 +83,22 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 
 [submodule "cmeps"]
 path = components/cmeps
-url = https://github.com/ESCOMP/CMEPS.git
-fxtag = cmeps1.1.47
+#url = https://github.com/ESCOMP/CMEPS.git
+url = https://github.com/ekluzek/CMEPS.git
+#fxtag = cmeps1.1.47
+#branch = co2a_for_cplhist
+fxtag = ac82c611d29c4a6d43a8a4fed444d32751d57504
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
 [submodule "cdeps"]
 path = components/cdeps
-url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.103
+#url = https://github.com/ESCOMP/CDEPS.git
+url = https://github.com/ekluzek/CDEPS.git
+#fxtag = cdeps1.0.105
+#branch = 1850_aero_ndep_ozone
+fxtag = b03bd5b8042a6df3f6630d20d06d31aa66f05239
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
