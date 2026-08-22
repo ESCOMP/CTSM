@@ -273,6 +273,7 @@ Caveats:
       <value compset="_BGC%BDRD"   >diagnostic</value>
       <value compset="_BGC%BPRP"   >prognostic</value>
       <value compset="HIST.*_DATM" >diagnostic</value>
+      <value compset="1850.*_DATM%CPLHIST" >diagnostic</value>
       <value compset="SSP.*_DATM"  >diagnostic</value>
     </values>
     <group>run_component_ctsm</group>
@@ -308,6 +309,7 @@ Caveats:
     <values>
       <value compset="_CAM" >TRUE</value>
       <value compset="_DATM%CPLHIST" >TRUE</value>
+      <value compset="1850_.*CLM60" >TRUE</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
