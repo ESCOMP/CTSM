@@ -16,7 +16,7 @@ https://groups.google.com/a/ucar.edu/forum/#!forum/ctsm-dev
 
 Use the help from the wiki below to setup a fork and personal branch in GitHub to put your developments
 on and keep up to date with the master branch of CTSM. Once the changes are sufficiently advanced you
-can form a Pull Request on GitHub. Either from your fork on GitHub, or from the main ESCOMP GitHub page
+can form a Pull Request (PR) on GitHub. Either from your fork on GitHub, or from the main ESCOMP GitHub page
 for CTSM (be sure to hit the "compare across forks" link at the top of the page when you first create
 the pull request).
 
@@ -24,8 +24,40 @@ https://github.com/ESCOMP/ctsm/pulls
 
 This allows you to show your proposed changes and start getting feedback on them (even if they aren't finished). 
 This also allows your changes to be planned for and slated for a time to come into CTSM master. In most 
-cases you won't merge the Pull Request yourself, but a software engineer responsible for CTSM will do 
-additional testing and bring the changes to CTSM master.
+cases you won't merge the PR yourself, but a software engineer responsible for CTSM will do 
+additional testing and bring the changes to CTSM maste
+
+In summary:
+
+- [ ] Create an issue on what you propose to do
+- [ ] Join ctsm-dev@ucar.edu group
+- [ ] Setup a fork and branch to do your work
+- [ ] Setup pre-commit (see below)
+- [ ] Get help and examine the CTSM resources below
+- [ ] Open a PR when the work is started so that we can give helpful advice on it
+- [ ] Run standard testing for your changes
+- [ ] Have the PR reviewed and priority evaluated
+- [ ] The CTSM SE team will bring it in and merge to main development
+
+## Running pre-commit and python testing
+
+We are using some formatters and code checkers to ensure the code is in reasonable shape when committed. You need to hae the ctsm_pylib to run these. The steps to do that are:
+
+Installing pre-commit:
+
+``` shell
+./py_env_create
+pre-commit install
+```
+
+Running python tests:
+
+``` shell
+./py_en_create
+cd python
+make all
+./run_ctsm_py_tests --sys
+```
 
 ### CTSM Developers Guide:
 
