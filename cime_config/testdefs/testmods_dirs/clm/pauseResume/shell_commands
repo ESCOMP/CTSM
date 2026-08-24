@@ -3,4 +3,4 @@
 # Set calendar, just because Gregorian is ussually used for DA
 ./xmlchange CALENDAR=GREGORIAN
 #Set DGLC coupling to half a day so 12hour tests can work
-./xmlchange GLC_NCPL=24
+./xmlchange GLC_NCPL=2
