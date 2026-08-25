@@ -98,7 +98,7 @@ path = components/cdeps
 url = https://github.com/ekluzek/CDEPS.git
 #fxtag = cdeps1.0.105
 #branch = 1850_aero_ndep_ozone
-fxtag = 8106de78384d84b2101d42ef5bbb65199bcf4c36
+fxtag = 816b01f1
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
