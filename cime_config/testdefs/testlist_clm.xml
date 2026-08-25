@@ -1,32 +1,69 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
+
+     Standard Testlists:
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm)
-        clm_short: The short CLM test for basic testing of a few configurations (subset of aux_clm)
         fates: The FATES testlist, run when FATES is updated
-        fates-landuse: FATES testlist running with transient landuse (subset of fates)
+
+     Release or pre-release Testlists:
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
+        ctsm_release: Runs the testlists: ctsm_sci, aux_clm, decomp_init, and uhr_decomp_init
+
+     CESM Testlists: (These are run when CESM alpha and beta tags are done) (these should all be in the aux_clm testlist)
         prelpha: Run before CESM alpha tags (subset of aux_clm tests)
         prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
         aux_cime_baselines: CESM cime baselines (subset of aux_clm tests) (these tests are run nightly with latest submodules on main machine)
-        hillslope: Experimental test list used for the hillslope option of the model
+
+     Development Testlists: (These are run during development of specific things) (all subsets of other testlists)
+        clm_short: The short CLM test for basic testing of a few configurations (subset of aux_clm)
+        fates-landuse: FATES testlist running with transient landuse (subset of fates)
+        hillslope: Experimental test list used for the hillslope option of the model (subset of ctsm_sci)
         rxcropmaturity: Short tests to be run during development related to prescribed crop maturity (subset of crop_calendars)
-        crop_calendars: Short tests to be run during development related to prescribed crop calendars
+        crop_calendars: Short tests to be run during development related to prescribed crop calendars (subset of ctsm_sci)
         matrixcn: Tests exercising the matrix-CN capability (subset of aux_clm)
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. (subset of aux_clm)
         subset_data: Tests exercising the subset_data tool and running CTSM with its output (subset of aux_clm)
+        interim_restart: Tests having to do with interim restart capability. (subset of ctsm_sci)
+        ssp: Tests for the CMIP6 SSP scenarios (subset of ctsm_sci)
+        fire: Tests related to the fire model (subset of ctsm_sci)
+
+      Performance Testlists:
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
-        interim_restart: Tests having to do with interim restart capability.
-        ssp: Tests for the CMIP6 SSP scenarios
-        fire: Tests related to the fire model
       CISM model test list: (in component/cism)
         aux_glc: CISM test list (runs some CLM I compsets)
       ROF model test lists: (in each component model)
         mosart: MOSART test list, run when MOSARt is updated
         rtm: RTM test list, run when RTM is updated
         mizu: mizuRoute test list, run when mizuRoute is updated
+
+    When do you run each testlist?
+
+    When merging to b4b-dev:
+        Normally run aux_clm on standard-machines .... or....
+        Run clm_pymod on main-machine (if only python changes made)
+        No testing, when changes are just to documentation
+
+    When making a regular tag:
+        Run aux_clm on standard machines
+        Run fates on standard-machines (if FATES was updated)
+
+    Additionally when making a regular tag, with submodule updates
+        Run ctsm_sci on main-machine
+
+    Additionally when making a release tag:
+        Run ctsm_release on standard-machines
+        Run rtm, mostart, and mizu on standard-machine
+
+    When undergoing development of specific features:
+        Run one of the development or performance testlists on main-machine targeting what you are working on
+
+    NOTE:
+       main-machine: Right now means Derecho
+       standard-machines: Right now means Derecho/Izumi
+
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
