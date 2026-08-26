@@ -21,7 +21,8 @@ endif
 PYLINT=pylint
 PYLINT_ARGS=-j 4 --rcfile=ctsm/.pylintrc
 PYLINT_SRC = \
-	ctsm
+	ctsm \
+        ../cime_config/testdefs/add_super_testlists.py
 #  NOTE: These don't pass pylint checking and should be added when we put into effort to get them to pass
 #       ../cime_config/SystemTests \
 #       ../cime_config/buildlib \
@@ -51,7 +52,7 @@ lint: FORCE
 # Run the black check on all of the python files here and undeneath.
 # Use the black configure file to explicitly set a few things and specifiy the exact files.
 black: FORCE
-	black --check --config pyproject.toml . ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml
+	black --check --config pyproject.toml . ../cime_config/SystemTests ../cime_config/buildlib ../cime_config/buildnml ../cime_config/testdefs/add_super_testlists.py
 
 .PHONY: run_black
 # Run black on all of the python files here and undeneath.
