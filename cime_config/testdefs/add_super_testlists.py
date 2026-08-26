@@ -134,6 +134,13 @@ for testlist in ctsm_sci_testlists:
    )
    text = new_text
 
+# Now run for the aux_clm super testlist for each of the testlists that should be subsets of it
+aux_clm_testlists = ["clm_pymods", "prealpha", "prebeta", "aux_cime_baselines", "clm_short", "matrixcn", "aux_clm_mpi_serial"]
+for testlist in aux_clm_testlists:
+   new_text = machines_pattern.sub(
+       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, super_testlist="aux_clm") + "</machines>", text
+   )
+   text = new_text
 # write only if changed
 if new_text == orig_text:
     print("No changes needed")

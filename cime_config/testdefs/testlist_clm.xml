@@ -4500,6 +4500,7 @@
       <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
