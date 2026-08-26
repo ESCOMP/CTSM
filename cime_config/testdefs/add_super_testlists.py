@@ -30,7 +30,7 @@ pattern = re.compile(r"<machines>(.*?)</machines>", re.S)
 
 
 def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_release"):
-    """Create a `<machine/>` XML line using attributes for the super_testlist from an existing machine.
+    """Create a `<machine/>` XML line using attributes for super_testlist from an existing machine.
 
     Args:
         attrs (str): Attribute string extracted from an existing `<machine/>` tag
@@ -94,7 +94,9 @@ def process_machine_block(block, super_testlist="ctsm_release"):
     return f"{block}\n{new_line}{closing_indent}"
 
 
-new_text = pattern.sub(lambda mo: "<machines>" + process_machine_block(mo.group(1)) + "</machines>", text)
+new_text = pattern.sub(
+    lambda mo: "<machines>" + process_machine_block(mo.group(1)) + "</machines>", text
+)
 
 # write only if changed
 if new_text == text:
