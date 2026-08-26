@@ -51,7 +51,7 @@ def make_new_machine_line_for_supertestlist(attrs, indent, testlist=None, super_
     return f"{indent}<machine {attrs_str}/>"
 
 
-def process_machine_block(block, testlist=None, testlist2=None, super_testlist="ctsm_release"):
+def process_machine_block(block, testlist=None, not_in_testlist=None, super_testlist="ctsm_release"):
     """Ensure a machine block contains an entry for the given super testlist.
 
     The function inspects the inner contents of a `<machines>...</machines>`
@@ -67,7 +67,7 @@ def process_machine_block(block, testlist=None, testlist2=None, super_testlist="
     Args:
         block (str): The inner content between `<machines>` and `</machines>`.
         testlist: The testlist to check for existance of, before adding super_testlist to the block
-        testlist2: Another testlist to check for existance of, before adding super_testlist to the block
+        not_in_testlist: Another testlist to verify it's not in before adding super_testlist to the block
         super_testlist (str): The testlist (i.e. category) to ensure is present.
 
     Returns:
@@ -85,9 +85,9 @@ def process_machine_block(block, testlist=None, testlist2=None, super_testlist="
     elif testlist not in block:
         return block
 
-    if testlist2 is None:
+    if not_in_testlist is None:
         pass
-    elif testlist2 in block:
+    elif not_in_testlist in block:
         return block
 
     # find first machine line
@@ -130,7 +130,7 @@ new_text = machines_pattern.sub(
 ctsm_sci_testlists = ["hillslope", "fire", "ssp", "crop_calendars", "interim_restart", "subset_data"] 
 for testlist in ctsm_sci_testlists:
    new_text = machines_pattern.sub(
-       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, testlist2="aux_clm", super_testlist="ctsm_sci") + "</machines>", text
+       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, not_in_testlist="aux_clm", super_testlist="ctsm_sci") + "</machines>", text
    )
    text = new_text
 
