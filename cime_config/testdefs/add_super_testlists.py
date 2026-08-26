@@ -150,6 +150,14 @@ for testlist in crop_cal_testlists:
    )
    text = new_text
 
+# Now run for the fates super testlist for each of the testlists that should be subsets of it
+fates_testlists = ["fates-landuse"]
+for testlist in fates_testlists:
+   new_text = machines_pattern.sub(
+       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, super_testlist="fates") + "</machines>", text
+   )
+   text = new_text
+
 # write only if changed
 if new_text == orig_text:
     print("No changes needed")
