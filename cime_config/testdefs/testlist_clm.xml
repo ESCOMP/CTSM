@@ -5058,6 +5058,7 @@
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">12:00:00</option>

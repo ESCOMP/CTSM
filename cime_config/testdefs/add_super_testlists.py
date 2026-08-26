@@ -141,6 +141,15 @@ for testlist in aux_clm_testlists:
        lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, super_testlist="aux_clm") + "</machines>", text
    )
    text = new_text
+
+# Now run for the crop_calendars super testlist for each of the testlists that should be subsets of it
+crop_cal_testlists = ["rxcropmaturity"]
+for testlist in crop_cal_testlists:
+   new_text = machines_pattern.sub(
+       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, super_testlist="crop_calendars") + "</machines>", text
+   )
+   text = new_text
+
 # write only if changed
 if new_text == orig_text:
     print("No changes needed")
