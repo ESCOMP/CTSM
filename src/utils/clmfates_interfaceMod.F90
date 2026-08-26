@@ -1400,6 +1400,7 @@ module CLMFatesInterfaceMod
                                          bounds_clump,     &
                                          waterdiagnosticbulk_inst,  &
                                          canopystate_inst, &
+                                         frictionvel_inst, &
                                          soilbiogeochem_carbonflux_inst, &
                                          .false.)
 
@@ -1569,7 +1570,7 @@ module CLMFatesInterfaceMod
    ! ===================================================================================
    
    subroutine wrap_update_hlmfates_dyn(this, nc, bounds_clump,      &
-        waterdiagnosticbulk_inst, canopystate_inst, &
+        waterdiagnosticbulk_inst, canopystate_inst, frictionvel_inst, &
         soilbiogeochem_carbonflux_inst, is_initing_from_restart)
 
       ! ---------------------------------------------------------------------------------
@@ -1583,8 +1584,8 @@ module CLMFatesInterfaceMod
      integer                 , intent(in)           :: nc
      type(waterdiagnosticbulk_type)   , intent(inout)        :: waterdiagnosticbulk_inst
      type(canopystate_type)  , intent(inout)        :: canopystate_inst
+     type(frictionvel_type)  , intent(inout)         :: frictionvel_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
-                   
 
      ! is this being called during a read from restart sequence (if so then use the restarted fates
      ! snow depth variable rather than the CLM variable).
@@ -1609,6 +1610,7 @@ module CLMFatesInterfaceMod
          htop => canopystate_inst%htop_patch , &
          hbot => canopystate_inst%hbot_patch , &
          z0m  => canopystate_inst%z0m_patch  , & ! Output: [real(r8) (:)   ] momentum roughness length (m)
+         z0mg => frictionvel_inst%z0mg_col   , & 
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
          snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
@@ -1622,6 +1624,7 @@ module CLMFatesInterfaceMod
           c = this%f2hmap(nc)%fcolumn(s)
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
           this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
+          this%fates(nc)%bc_in(s)%z0mg = z0mg(c)
        end do
 
        ! Only update the fates internal snow burial if this is not a restart
@@ -1638,7 +1641,8 @@ module CLMFatesInterfaceMod
        call update_hlm_dynamics(this%fates(nc)%nsites, &
             this%fates(nc)%sites,  &
             this%f2hmap(nc)%fcolumn, &
-            this%fates(nc)%bc_out )
+            this%fates(nc)%bc_out, &
+            this%fates(nc)%bc_in)
 
        !------------------------------------------------------------------------
        ! FATES calculation of ligninNratio
@@ -1811,7 +1815,7 @@ module CLMFatesInterfaceMod
    subroutine restart( this, bounds_proc, ncid, flag, waterdiagnosticbulk_inst, &
         waterstatebulk_inst, canopystate_inst, soilstate_inst, &
         active_layer_inst, soilbiogeochem_carbonflux_inst, &
-        soilbiogeochem_nitrogenflux_inst)
+        soilbiogeochem_nitrogenflux_inst, frictionvel_inst)
 
       ! ---------------------------------------------------------------------------------
       ! The ability to restart the model is handled through three different types of calls
@@ -1848,6 +1852,7 @@ module CLMFatesInterfaceMod
       type(active_layer_type)        , intent(in)    :: active_layer_inst
       type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
       type(soilbiogeochem_nitrogenflux_type), intent(inout) :: soilbiogeochem_nitrogenflux_inst
+      type(frictionvel_type)         , intent(inout) :: frictionvel_inst
       
       ! Locals
       type(bounds_type) :: bounds_clump
@@ -2124,7 +2129,7 @@ module CLMFatesInterfaceMod
                ! Update diagnostics of FATES ecosystem structure used in HLM.
                ! ------------------------------------------------------------------------
                call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
-                     waterdiagnosticbulk_inst,canopystate_inst, &
+                     waterdiagnosticbulk_inst,canopystate_inst, frictionvel_inst, &
                      soilbiogeochem_carbonflux_inst, .true.)
 
                ! ------------------------------------------------------------------------
@@ -2169,7 +2174,7 @@ module CLMFatesInterfaceMod
    !=====================================================================================
 
    subroutine init_coldstart(this, waterstatebulk_inst, waterdiagnosticbulk_inst, &
-        canopystate_inst, soilstate_inst, soilbiogeochem_carbonflux_inst)
+        canopystate_inst, soilstate_inst, soilbiogeochem_carbonflux_inst, frictionvel_inst)
 
 
      ! Arguments
@@ -2179,6 +2184,7 @@ module CLMFatesInterfaceMod
      type(canopystate_type)         , intent(inout) :: canopystate_inst
      type(soilstate_type)           , intent(inout) :: soilstate_inst
      type(soilbiogeochem_carbonflux_type), intent(inout) :: soilbiogeochem_carbonflux_inst
+     type(frictionvel_type)         , intent(inout) :: frictionvel_inst
 
      ! locals
      integer                                        :: nclumps
@@ -2325,7 +2331,7 @@ module CLMFatesInterfaceMod
            ! ------------------------------------------------------------------------
            call this%wrap_update_hlmfates_dyn(nc,bounds_clump, &
                 waterdiagnosticbulk_inst,canopystate_inst, &
-                soilbiogeochem_carbonflux_inst, .false.)
+                frictionvel_inst, soilbiogeochem_carbonflux_inst, .false.)
 
            ! ------------------------------------------------------------------------
            ! Flush and zero FATES history variables.
