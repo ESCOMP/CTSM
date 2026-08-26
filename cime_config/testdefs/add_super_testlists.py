@@ -26,10 +26,10 @@ inp = Path("testlist_clm.xml")
 out = Path("testlist_clm.xml.modified")
 text = inp.read_text()
 
-pattern = re.compile(r"<machines>(.*?)</machines>", re.S)
+machines_pattern = re.compile(r"<machines>(.*?)</machines>", re.S)
 
 
-def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_release"):
+def make_new_machine_line_for_supertestlist(attrs, indent, testlist=None, super_testlist="ctsm_release"):
     """Create a `<machine/>` XML line using attributes for super_testlist from an existing machine.
 
     Args:
@@ -51,7 +51,7 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
     return f"{indent}<machine {attrs_str}/>"
 
 
-def process_machine_block(block, super_testlist="ctsm_release"):
+def process_machine_block(block, testlist=None, super_testlist="ctsm_release"):
     """Ensure a machine block contains an entry for the given super testlist.
 
     The function inspects the inner contents of a `<machines>...</machines>`
@@ -59,17 +59,31 @@ def process_machine_block(block, super_testlist="ctsm_release"):
     inserts a new `<machine/>` line using the first machine entry's attributes
     and indentation. The closing indentation before `</machines>` is preserved.
 
+    When testlist is entered, check that the block has the testlist, before adding
+       the super_testlist machine for it to the block
+    When testlist is None, ignore it and add the super_testlist machine line for it
+       to every block.
+
     Args:
         block (str): The inner content between `<machines>` and `</machines>`.
-        super_testlist (str): The category name to ensure is present.
+        testlist: The testlist to check for existance of, before adding super_testlist to the block
         super_testlist (str): The testlist (i.e. category) to ensure is present.
 
     Returns:
         str: The modified block with the added `<machine/>` entry when needed.
     """
     # block is the inner content between <machines> and </machines>
+
+    # If the4 super_testlist is already in the block return the original block
     if super_testlist in block:
         return block
+
+    # Check if the input testlist is in the block and if not return
+    if testlist is None:
+        pass
+    elif testlist not in block:
+        return block
+
     # find first machine line
     m = re.search(r"(\n\s*)(<machine\s+([^/>]+)/>)", block)
     if not m:
@@ -80,7 +94,7 @@ def process_machine_block(block, super_testlist="ctsm_release"):
     if indent.startswith("\n"):
         indent = indent[1:]
     attrs = m.group(3)
-    new_line = make_new_machine_line_for_supertestlist(attrs, indent)
+    new_line = make_new_machine_line_for_supertestlist(attrs, indent, super_testlist=super_testlist)
     if not new_line:
         return block
 
@@ -94,7 +108,11 @@ def process_machine_block(block, super_testlist="ctsm_release"):
     return f"{block}\n{new_line}{closing_indent}"
 
 
-new_text = pattern.sub(
+# Substitute the addition of the new machine lines for the super_testlist in each machines block
+# machines_pattern catches the machines blocks (between <machines> and </machines>)
+# The replacement is the argument sent to .sub before the text argument
+# lambda runs prcoess_machine_block on each machines_block labeled mo, to create the replacement text
+new_text = machines_pattern.sub(
     lambda mo: "<machines>" + process_machine_block(mo.group(1)) + "</machines>", text
 )
 
