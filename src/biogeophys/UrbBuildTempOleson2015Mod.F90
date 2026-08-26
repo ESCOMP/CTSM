@@ -426,7 +426,7 @@ contains
             ! Indoor vapor pressure (Pa) from saturation vapor pressure. The saturation ratio is capped at 1 (100% saturation)
             ! so indoor vapor pressure does not exceed saturation vapor pressure
             p_vapor = min(1._r8, q_building_bef(l) / qsat_building) * esat_building
-            ! Desity (kg m-3) and specific heat capacity (J kg-1 K-1) of moist air at current temperature and pressure
+            ! Density (kg m-3) and specific heat capacity (J kg-1 K-1) of moist air at current temperature and pressure
             rho_air(l) = (forc_pbot(g) - p_vapor) / (rair * t_building_bef(l)) &
                  + p_vapor / (rwat * t_building_bef(l))
             cp_air(l) = cpair + cpwvap * q_building_bef(l)
@@ -988,7 +988,7 @@ contains
     end do
 
     ! Restrict internal building air temperature to between min and max
-    ! and restric internal building air specific humidity to below max, when AC dehumidification is enabled.
+    ! and restrict internal building air specific humidity to below max, when AC dehumidification is enabled.
     ! Calculate heating or air conditioning flux from energy required to change
     ! internal building air temperature to t_building_min or t_building_max
     ! and internal building specific humidity to below q_building_max, when AC dehumidification is enabled.
@@ -1092,7 +1092,7 @@ contains
           ! Error between the above and the Latent heat component of AC energy flux
           err_eflx_urban_ac_lat(l) = eflx_urban_ac_lat_derived(l) - (eflx_urban_ac(l) - eflx_urban_ac_sen(l))
           if (abs(err_eflx_urban_ac_lat(l)) > 1.e-5_r8 ) then
-             write (iulog,*) 'dehumidification energy flux dervied from condensate does not match condensate output'
+             write (iulog,*) 'dehumidification energy flux derived from condensate does not match condensate output'
              write (iulog,*) 'dehumidification energy flux derived from condensate [W/m2 urban]: ',eflx_urban_ac_lat_derived(l)
              write (iulog,*) 'total AC energy flux [W/m2 urban]: ',eflx_urban_ac(l)
              write (iulog,*) 'sensible heat component of AC energy flux [W/m2 urban]: ',eflx_urban_ac_sen(l)
@@ -1108,7 +1108,7 @@ contains
        ! Assign condensate water flux to roof column, which then goes directly to surface runoff.
        ! It is assigned to roof column rather than other columns as it is calculated per building footprint,
        ! which is equivalent to roof area.
-       ! Set condensate water lux to zero for all other columns.
+       ! Set condensate water flux to zero for all other columns.
        do fc = 1,num_urbanc
           c = filter_urbanc(fc)
           l = clandunit(c)
