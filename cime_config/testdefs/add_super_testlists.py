@@ -29,8 +29,8 @@ text = inp.read_text()
 pattern = re.compile(r"<machines>(.*?)</machines>", re.S)
 
 
-def make_new_machine(attrs, indent, super_testlist="ctsm_release"):
-    """Create a `<machine/>` XML line using attributes from an existing machine.
+def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_release"):
+    """Create a `<machine/>` XML line using attributes for the super_testlist from an existing machine.
 
     Args:
         attrs (str): Attribute string extracted from an existing `<machine/>` tag
@@ -51,7 +51,7 @@ def make_new_machine(attrs, indent, super_testlist="ctsm_release"):
     return f"{indent}<machine {attrs_str}/>"
 
 
-def process_block(block, super_testlist="ctsm_release"):
+def process_machine_block(block, super_testlist="ctsm_release"):
     """Ensure a machine block contains an entry for the given super testlist.
 
     The function inspects the inner contents of a `<machines>...</machines>`
@@ -80,7 +80,7 @@ def process_block(block, super_testlist="ctsm_release"):
     if indent.startswith("\n"):
         indent = indent[1:]
     attrs = m.group(3)
-    new_line = make_new_machine(attrs, indent)
+    new_line = make_new_machine_line_for_supertestlist(attrs, indent)
     if not new_line:
         return block
 
@@ -94,7 +94,7 @@ def process_block(block, super_testlist="ctsm_release"):
     return f"{block}\n{new_line}{closing_indent}"
 
 
-new_text = pattern.sub(lambda mo: "<machines>" + process_block(mo.group(1)) + "</machines>", text)
+new_text = pattern.sub(lambda mo: "<machines>" + process_machine_block(mo.group(1)) + "</machines>", text)
 
 # write only if changed
 if new_text == text:
