@@ -51,7 +51,7 @@ def make_new_machine_line_for_supertestlist(attrs, indent, testlist=None, super_
     return f"{indent}<machine {attrs_str}/>"
 
 
-def process_machine_block(block, testlist=None, super_testlist="ctsm_release"):
+def process_machine_block(block, testlist=None, testlist2=None, super_testlist="ctsm_release"):
     """Ensure a machine block contains an entry for the given super testlist.
 
     The function inspects the inner contents of a `<machines>...</machines>`
@@ -67,6 +67,7 @@ def process_machine_block(block, testlist=None, super_testlist="ctsm_release"):
     Args:
         block (str): The inner content between `<machines>` and `</machines>`.
         testlist: The testlist to check for existance of, before adding super_testlist to the block
+        testlist2: Another testlist to check for existance of, before adding super_testlist to the block
         super_testlist (str): The testlist (i.e. category) to ensure is present.
 
     Returns:
@@ -82,6 +83,11 @@ def process_machine_block(block, testlist=None, super_testlist="ctsm_release"):
     if testlist is None:
         pass
     elif testlist not in block:
+        return block
+
+    if testlist2 is None:
+        pass
+    elif testlist2 in block:
         return block
 
     # find first machine line
@@ -111,13 +117,25 @@ def process_machine_block(block, testlist=None, super_testlist="ctsm_release"):
 # Substitute the addition of the new machine lines for the super_testlist in each machines block
 # machines_pattern catches the machines blocks (between <machines> and </machines>)
 # The replacement is the argument sent to .sub before the text argument
-# lambda runs prcoess_machine_block on each machines_block labeled mo, to create the replacement text
+# lambda runs process_machine_block on each machines_block labeled mo, to create the replacement text
+
+orig_text = text
+# First run for the ctsm_release super testlist which should be in every block
 new_text = machines_pattern.sub(
     lambda mo: "<machines>" + process_machine_block(mo.group(1)) + "</machines>", text
 )
 
+# Now run for the ctsm_sci super testlist for each of the testlists that should be subsets of it
+# Don't add to ctsm_sci if already in the aux_clm testlist either
+ctsm_sci_testlists = ["hillslope", "fire", "ssp", "crop_calendars", "interim_restart", "subset_data"] 
+for testlist in ctsm_sci_testlists:
+   new_text = machines_pattern.sub(
+       lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, testlist2="aux_clm", super_testlist="ctsm_sci") + "</machines>", text
+   )
+   text = new_text
+
 # write only if changed
-if new_text == text:
+if new_text == orig_text:
     print("No changes needed")
     out.write_text(text)
     sys.exit(0)

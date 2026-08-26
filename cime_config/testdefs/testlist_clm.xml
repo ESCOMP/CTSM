@@ -3643,6 +3643,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3664,6 +3665,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3674,6 +3676,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5066,6 +5069,7 @@
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">6:00:00</option>
@@ -5101,6 +5105,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="hillslope"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5124,6 +5129,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5168,6 +5174,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -5178,6 +5185,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -5222,6 +5230,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5232,6 +5241,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5242,6 +5252,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">01:30:00</option>
@@ -5252,6 +5263,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="crop_calendars"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -5273,6 +5285,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
