@@ -123,7 +123,7 @@ contains
     real(r8) :: heatrem                                         ! used in case above [J/m^2]
     real(r8) :: heatsum(bounds%begc:bounds%endc)                ! used in case above [J/m^2]
     real(r8) :: qflx_dew_minus_sub_snow                         ! qflx_soliddew_to_top_layer - qflx_solidevap_from_top_layer [mm/s]
-    real(r8), parameter :: frac_sno_small = 1.e-6_r8            ! small value of frac_sno used when initiating a snow pack due to frost
+    real(r8), parameter :: frac_sno_albedo_small = 1.e-6_r8            ! small value of frac_sno_albedo used when initiating a snow pack due to frost
     real(r8), parameter :: snow_bd = 250._r8                    ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
     ! Should only be used for frost below.
     !-----------------------------------------------------------------------
@@ -172,8 +172,8 @@ contains
          snw_rds_top          =>  b_waterdiagnostic_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
          h2osno_top           =>  b_waterdiagnostic_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
          sno_liq_top          =>  b_waterdiagnostic_inst%sno_liq_top_col       , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
-         frac_sno             =>  b_waterdiagnostic_inst%frac_sno_col          , & ! Output: [real(r8) (:)   ]
-         frac_sno_eff         =>  b_waterdiagnostic_inst%frac_sno_eff_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
+         frac_sno_albedo             =>  b_waterdiagnostic_inst%frac_sno_albedo_col          , & ! Output: [real(r8) (:)   ]
+         frac_sno_fluxes         =>  b_waterdiagnostic_inst%frac_sno_fluxes_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
          frac_iceold          =>  b_waterdiagnostic_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
          snow_depth           =>  b_waterdiagnostic_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
          h2osno_no_layers     => b_waterstate_inst%h2osno_no_layers_col        , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
@@ -336,17 +336,17 @@ contains
           h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
           if (qflx_dew_minus_sub_snow > 0._r8) then
              ! If we're accumulating snow from dew, then ensure that we have at least a
-             ! small, non-zero frac_sno. (It complicates the code too much to call
+             ! small, non-zero frac_sno_albedo. (It complicates the code too much to call
              ! UpdateSnowDepthAndFrac for this purpose - see
              ! <https://github.com/ESCOMP/CTSM/issues/827#issuecomment-546163067>.)
-             if (frac_sno(c) <= 0._r8) then
-                frac_sno(c) = frac_sno_small
+             if (frac_sno_albedo(c) <= 0._r8) then
+                frac_sno_albedo(c) = frac_sno_albedo_small
              end if
           else if (qflx_dew_minus_sub_snow < 0._r8) then
              ! If we're losing snow from sublimation, and this has caused the snow pack
-             ! to completely vanish, then ensure that frac_sno is reset to 0.
+             ! to completely vanish, then ensure that frac_sno_albedo is reset to 0.
              if (h2osno_no_layers(c) == 0._r8) then
-                frac_sno(c) = 0._r8
+                frac_sno_albedo(c) = 0._r8
              end if
           end if
           if (h2osno_temp > 0._r8) then
@@ -364,14 +364,14 @@ contains
        end if
     end do
 
-    ! Since frac_sno may have been updated above, recalculate frac_sno_eff accordingly
+    ! Since frac_sno_albedo may have been updated above, recalculate frac_sno_fluxes accordingly
     call scf_method%CalcFracSnoEff(bounds, num_lakec, filter_lakec, &
          ! Inputs
          lun_itype_col = col%lun_itype(begc:endc), &
          urbpoi        = col%urbpoi(begc:endc), &
-         frac_sno      = frac_sno(begc:endc), &
+         frac_sno_albedo      = frac_sno_albedo(begc:endc), &
          ! Outputs
-         frac_sno_eff  = frac_sno_eff(begc:endc))
+         frac_sno_fluxes  = frac_sno_fluxes(begc:endc))
 
     ! patch averages must be done here -- BEFORE SNOW CALCULATIONS AS THEY USE IT.
     ! for output to history tape and other uses

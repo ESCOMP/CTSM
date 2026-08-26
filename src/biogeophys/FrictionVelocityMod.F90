@@ -587,7 +587,7 @@ contains
          displa           =>    canopystate_inst%displa_patch         , & ! Input: [real(r8) (:)   ] displacement height (m)
 
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
-         frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_albedo         =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
@@ -606,14 +606,14 @@ contains
 
        select case (z0param_method)
        case ('ZengWang2007')
-          if (frac_sno(c) > 0._r8) then
+          if (frac_sno_albedo(c) > 0._r8) then
              z0mg(c) = this%zsno
           else
              z0mg(c) = this%zlnd
           end if
        case ('Meier2022')           ! Bare ground and ice have a different value
           l = col%landunit(c)
-          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
+          if (frac_sno_albedo(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              if(use_z0m_snowmelt) then
                 if ( snomelt_accum(c) < 1.e-5_r8 )then
                     z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8

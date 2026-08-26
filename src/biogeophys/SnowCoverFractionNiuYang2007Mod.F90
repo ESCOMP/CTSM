@@ -50,7 +50,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine UpdateSnowDepthAndFrac(this, bounds, num_c, filter_c, &
        lun_itype_col, urbpoi, h2osno_total, snowmelt, int_snow, newsnow, bifall, &
-       snow_depth, frac_sno, frac_sno_eff)
+       snow_depth, frac_sno_albedo, frac_sno_fluxes)
     !
     ! !DESCRIPTION:
     ! Update snow depth and snow fraction using the NiuYang2007 parameterization
@@ -70,8 +70,8 @@ contains
     real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
     real(r8) , intent(inout) :: snow_depth( bounds%begc: )    ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_eff( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -87,8 +87,8 @@ contains
     SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(bifall, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(snow_depth, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno_eff, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_albedo, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_fluxes, 1) == bounds%endc), sourcefile, __LINE__)
 
     associate( &
          begc => bounds%begc, &
@@ -108,32 +108,32 @@ contains
        snow_depth(c) = snow_depth(c) + newsnow(c) / bifall(c)
 
        if (snow_depth(c) > 0.0_r8) then
-          frac_sno(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
+          frac_sno_albedo(c) = tanh(snow_depth(c) / (2.5_r8 * this%zlnd * &
                (min(800._r8,(h2osno_total(c)+ newsnow(c))/snow_depth(c))/100._r8)**1._r8) )
        else
-          frac_sno(c) = 0._r8
+          frac_sno_albedo(c) = 0._r8
        end if
 
        ! NOTE(wjs, 2019-08-03) I'm not sure what the intent is of the following block, and
        ! it feels to me like this should be looking at (h2osno_total+newsnow), both in the
        ! condition and in the min, but for now I'm keeping the pre-existing logic.
        if (h2osno_total(c) > 0.0_r8 .and. h2osno_total(c) < 1.0_r8) then
-          frac_sno(c) = min(frac_sno(c), h2osno_total(c))
+          frac_sno_albedo(c) = min(frac_sno_albedo(c), h2osno_total(c))
        end if
     end do
 
     call this%CalcFracSnoEff(bounds, num_c, filter_c, &
          lun_itype_col = lun_itype_col(begc:endc), &
          urbpoi        = urbpoi(begc:endc), &
-         frac_sno      = frac_sno(begc:endc), &
-         frac_sno_eff  = frac_sno_eff(begc:endc))
+         frac_sno_albedo      = frac_sno_albedo(begc:endc), &
+         frac_sno_fluxes  = frac_sno_fluxes(begc:endc))
 
     end associate
   end subroutine UpdateSnowDepthAndFrac
 
   !-----------------------------------------------------------------------
   subroutine AddNewsnowToIntsnow(this, bounds, num_c, filter_c, &
-       newsnow, h2osno_total, frac_sno, &
+       newsnow, h2osno_total, frac_sno_albedo, &
        int_snow)
     !
     ! !DESCRIPTION:
@@ -149,7 +149,7 @@ contains
 
     real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
     real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: frac_sno( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
     real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
@@ -160,7 +160,7 @@ contains
 
     SHR_ASSERT_FL((ubound(newsnow, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
-    SHR_ASSERT_FL((ubound(frac_sno, 1) == bounds%endc), sourcefile, __LINE__)
+    SHR_ASSERT_FL((ubound(frac_sno_albedo, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(int_snow, 1) == bounds%endc), sourcefile, __LINE__)
 
     do fc = 1, num_c
@@ -171,7 +171,7 @@ contains
   end subroutine AddNewsnowToIntsnow
 
   !-----------------------------------------------------------------------
-  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno)
+  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno_albedo)
     !
     ! !DESCRIPTION:
     ! Single-point function giving frac_snow during times when the snow pack is melting
@@ -182,7 +182,7 @@ contains
     ! the NiuYang07 method.
     !
     ! !ARGUMENTS:
-    real(r8) :: frac_sno  ! function result
+    real(r8) :: frac_sno_albedo  ! function result
     class(snow_cover_fraction_niu_yang_2007_type), intent(in) :: this
     integer , intent(in) :: c            ! column we're operating on
     real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
@@ -193,7 +193,7 @@ contains
     character(len=*), parameter :: subname = 'FracSnowDuringMelt'
     !-----------------------------------------------------------------------
 
-    frac_sno = nan
+    frac_sno_albedo = nan
 
   end function FracSnowDuringMelt
 

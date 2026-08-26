@@ -514,8 +514,8 @@ contains
           forc_snow_grc     =>    wateratm2lnd_inst%forc_snow_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level snow rate [mm/s]
 
           h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
-          frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
-          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_fluxes            =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
+          frac_sno_albedo                =>    waterdiagnosticbulk_inst%frac_sno_albedo_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
           begwb_grc               =>    waterbalance_inst%begwb_grc             , & ! Input:  [real(r8) (:)   ]  grid cell-level water mass begining of the time step
           endwb_grc               =>    waterbalance_inst%endwb_grc             , & ! Output: [real(r8) (:)   ]  grid cell-level water mass end of the time step
@@ -771,9 +771,9 @@ contains
 
                 if (lun%itype(l) == istdlak) then 
                    snow_sources(c) = qflx_snow_grnd_col(c) &
-                        + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
+                        + frac_sno_fluxes(c) * (qflx_liq_grnd_col(c) &
                         +  qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) 
-                   snow_sinks(c)   = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                   snow_sinks(c)   = frac_sno_fluxes(c) * (qflx_solidevap_from_top_layer(c) &
                         + qflx_liqevap_from_top_layer(c) ) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c)  &
                         + qflx_snwcp_discarded_ice_col(c) + qflx_snwcp_discarded_liq_col(c)  &
                         + qflx_snow_drain(c)  + qflx_sl_top_soil(c)
@@ -783,10 +783,10 @@ contains
                       lun%itype(l) == istcrop .or. lun%itype(l) == istwet .or. &
                       lun%itype(l) == istice) then
                    snow_sources(c) = (qflx_snow_grnd_col(c) - qflx_snow_h2osfc(c) ) &
-                          + frac_sno_eff(c) * (qflx_liq_grnd_col(c) &
+                          + frac_sno_fluxes(c) * (qflx_liq_grnd_col(c) &
                           + qflx_soliddew_to_top_layer(c) + qflx_liqdew_to_top_layer(c) ) &
                           + qflx_h2osfc_to_ice(c)
-                   snow_sinks(c) = frac_sno_eff(c) * (qflx_solidevap_from_top_layer(c) &
+                   snow_sinks(c) = frac_sno_fluxes(c) * (qflx_solidevap_from_top_layer(c) &
                           + qflx_liqevap_from_top_layer(c)) + qflx_snwcp_ice(c) + qflx_snwcp_liq(c) &
                           + qflx_snwcp_discarded_ice_col(c) + qflx_snwcp_discarded_liq_col(c) &
                           + qflx_snow_drain(c) + qflx_sl_top_soil(c)
@@ -823,7 +823,7 @@ contains
                  write(iulog,*)'errh2osno          = ',errh2osno(indexc)
                  write(iulog,*)'snl                = ',col%snl(indexc)
                  write(iulog,*)'snow_depth         = ',snow_depth(indexc)
-                 write(iulog,*)'frac_sno_eff       = ',frac_sno_eff(indexc)
+                 write(iulog,*)'frac_sno_fluxes       = ',frac_sno_fluxes(indexc)
                  write(iulog,*)'h2osno             = ',h2osno_total(indexc)
                  write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
                  write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
@@ -908,7 +908,7 @@ contains
           forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
-          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo                =>    waterdiagnosticbulk_inst%frac_sno_albedo_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
 
           dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)
@@ -1077,8 +1077,8 @@ contains
            if ( errseb_max_val > error_thresh ) then
               write(iulog,*)'CTSM is stopping because errseb > ', error_thresh, ' W/m2'
               write(iulog,*)'sabv           = ' ,sabv(indexp)
-              write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno(indexc))*sabg_soil(indexp) + &
-                   frac_sno(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
+              write(iulog,*)'sabg           = ' ,sabg(indexp), ((1._r8- frac_sno_albedo(indexc))*sabg_soil(indexp) + &
+                   frac_sno_albedo(indexc)*sabg_snow(indexp)),sabg_chk(indexp)
               write(iulog,*)'forc_tot      = '  ,forc_solad(indexg,1) + forc_solad(indexg,2) + &
                    forc_solai(indexg,1) + forc_solai(indexg,2)
 

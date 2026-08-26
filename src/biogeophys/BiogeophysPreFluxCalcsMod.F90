@@ -270,8 +270,8 @@ contains
          elai             =>    canopystate_inst%elai_patch           , & ! Input:  [real(r8) (:)   ] one-sided leaf area index with burying by snow
          esai             =>    canopystate_inst%esai_patch           , & ! Input:  [real(r8) (:)   ] one-sided stem area index with burying by snow
          forc_hgt_t_patch =>    frictionvel_inst%forc_hgt_t_patch     , & ! Input: [real(r8) (:)   ] observational height of temperature at patch level [m]
-         frac_sno_eff     =>    waterdiagnosticbulk_inst%frac_sno_eff_col      , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
-         frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col          , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes     =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col      , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_albedo         =>    waterdiagnosticbulk_inst%frac_sno_albedo_col          , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col        , & ! Input:  [real(r8) (:,:) ] liquid water (kg/m2)
@@ -332,8 +332,8 @@ contains
 
        ! ground temperature is weighted average of exposed soil, snow, and h2osfc
        if (snl(c) < 0) then
-          t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-               + (1.0_r8 - frac_sno_eff(c) - frac_h2osfc(c)) * t_soisno(c,1) &
+          t_grnd(c) = frac_sno_fluxes(c) * t_soisno(c,snl(c)+1) &
+               + (1.0_r8 - frac_sno_fluxes(c) - frac_h2osfc(c)) * t_soisno(c,1) &
                + frac_h2osfc(c) * t_h2osfc(c)
        else
           t_grnd(c) = (1 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)
@@ -345,7 +345,7 @@ contains
           if (lun%itype(l)==istice) then
              emg(c) = 0.97_r8
           else
-             emg(c) = (1._r8-frac_sno(c))*0.96_r8 + frac_sno(c)*0.97_r8
+             emg(c) = (1._r8-frac_sno_albedo(c))*0.96_r8 + frac_sno_albedo(c)*0.97_r8
           end if
        end if
 

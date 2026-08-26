@@ -311,7 +311,7 @@ contains
      ! !LOCAL VARIABLES:
      integer :: fc, c
      real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno
+     real(r8) :: fsno      ! copy of frac_sno_albedo
 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
@@ -330,7 +330,7 @@ contains
           qflx_ev_h2osfc          =>    waterfluxbulk_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
           qflx_sat_excess_surf    =>    waterfluxbulk_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
-          frac_sno_eff            =>    waterdiagnosticbulk_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_fluxes            =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )
 
@@ -348,7 +348,7 @@ contains
            ! if no snow layers, sublimation is removed from h2osoi_ice in drainage
            qflx_evap=qflx_liqevap_from_top_layer(c)
         else
-           fsno=frac_sno_eff(c)
+           fsno=frac_sno_fluxes(c)
            qflx_evap=qflx_ev_soil(c)
         endif
 
