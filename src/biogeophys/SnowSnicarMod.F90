@@ -612,7 +612,7 @@ contains
 
     associate(& 
          snl         =>   col%snl                           , & ! Input:  [integer (:)]  negative number of snow layers (col) [nbr]
-         frac_sno    =>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
+         frac_sno_eff=>   waterdiagnosticbulk_inst%frac_sno_eff_col    & ! Input:  [real(r8) (:)]  fraction of ground covered by snow (0 to 1)
          )
 
       ! initialize parameter and
@@ -1551,7 +1551,7 @@ contains
          qflx_snow_grnd_col => waterfluxbulk_inst%qflx_snow_grnd_col  , & ! Input:  [real(r8) (:)   ]  snow on ground after interception (col) [kg m-2 s-1]
          qflx_snofrz_lyr    => waterfluxbulk_inst%qflx_snofrz_lyr_col , & ! Input:  [real(r8) (:,:) ]  snow freezing rate (col,lyr) [kg m-2 s-1]
 
-         frac_sno           => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+         frac_sno_eff       => waterdiagnosticbulk_inst%frac_sno_eff_col   , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
          h2osno_no_layers   => waterstatebulk_inst%h2osno_no_layers_col    , & ! Input:  [real(r8) (:)   ]  snow that is not resolved into layers (col) [mm H2O]
          h2osoi_liq         => waterstatebulk_inst%h2osoi_liq_col     , & ! Input:  [real(r8) (:,:) ]  liquid water content (col,lyr) [kg m-2]
          h2osoi_ice         => waterstatebulk_inst%h2osoi_ice_col     , & ! Input:  [real(r8) (:,:) ]  ice content (col,lyr) [kg m-2]        
@@ -1576,7 +1576,7 @@ contains
          snl_btm = 0
          snl_top = snl(c_idx) + 1
 
-         cdz(snl_top:snl_btm)=frac_sno(c_idx)*dz(c_idx,snl_top:snl_btm)
+         cdz(snl_top:snl_btm)=frac_sno_eff(c_idx)*dz(c_idx,snl_top:snl_btm)
 
          ! loop over snow layers
          do i=snl_top,snl_btm,1

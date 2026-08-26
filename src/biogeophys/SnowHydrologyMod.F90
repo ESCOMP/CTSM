@@ -1926,7 +1926,7 @@ contains
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)
          imelt        => temperature_inst%imelt_col       , & ! Input:  [integer (:,:)  ] flag for melting (=1), freezing (=2), Not=0
 
-         frac_sno     => waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Input:  [real(r8) (:)   ] snow covered fraction
+         frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col , & ! Input:  [real(r8) (:)   ] snow covered fraction
          frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col  , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          swe_old      => waterdiagnosticbulk_inst%swe_old_col      , & ! Input:  [real(r8) (:,:) ] initial swe values
          int_snow     => waterstatebulk_inst%int_snow_col     , & ! Input:  [real(r8) (:)   ] integrated snowfall [mm]
@@ -1959,12 +1959,12 @@ contains
 
              wx = (h2osoi_ice(c,j) + h2osoi_liq(c,j))
              void = 1._r8 - (h2osoi_ice(c,j)/denice + h2osoi_liq(c,j)/denh2o)&
-                  /(frac_sno(c) * dz(c,j))
+                  /(frac_sno_eff(c) * dz(c,j))
 
              ! Allow compaction only for non-saturated node and higher ice lens node.
              if (void > 0.001_r8 .and. h2osoi_ice(c,j) > .1_r8) then
 
-                bi = h2osoi_ice(c,j) / (frac_sno(c) * dz(c,j))
+                bi = h2osoi_ice(c,j) / (frac_sno_eff(c) * dz(c,j))
                 fi = h2osoi_ice(c,j) / wx
                 td = tfrz-t_soisno(c,j)
                 dexpf = exp(-c4*td)
@@ -1977,7 +1977,7 @@ contains
 
                 ! Liquid water term
 
-                if (h2osoi_liq(c,j) > 0.01_r8*dz(c,j)*frac_sno(c)) ddz1=ddz1*c5
+                if (h2osoi_liq(c,j) > 0.01_r8*dz(c,j)*frac_sno_eff(c)) ddz1=ddz1*c5
 
                 select case (overburden_compaction_method)
                 case (OverburdenCompactionMethodAnderson1976)
@@ -2030,7 +2030,7 @@ contains
                             fsno_melt = 1._r8 - frac_h2osfc(c)
                          end if
 
-                         ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno(c))/frac_sno(c))
+                         ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno_eff(c))/frac_sno_eff(c))
                       endif
                       ddz3 = -1._r8/dtime * ddz3
                    else
@@ -2058,7 +2058,7 @@ contains
 
                 ! The change in dz due to compaction
                 ! Limit compaction to be no greater than fully saturated layer thickness
-                dz(c,j) = max(dz(c,j) * (1._r8+pdzdtc*dtime),(h2osoi_ice(c,j)/denice+ h2osoi_liq(c,j)/denh2o)/frac_sno(c))
+                dz(c,j) = max(dz(c,j) * (1._r8+pdzdtc*dtime),(h2osoi_ice(c,j)/denice+ h2osoi_liq(c,j)/denh2o)/frac_sno_eff(c))
 
              else
                 ! saturated node is immobile
@@ -2573,7 +2573,7 @@ contains
     associate( &
          t_soisno   => temperature_inst%t_soisno_col    , & ! Output: [real(r8) (:,:) ] soil temperature (Kelvin)
 
-         frac_sno   => b_waterdiagnostic_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_eff => b_waterdiagnostic_inst%frac_sno_eff_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
          snw_rds    => b_waterdiagnostic_inst%snw_rds_col      , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
 
          mss_bcphi  => aerosol_inst%mss_bcphi_col       , & ! Output: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
