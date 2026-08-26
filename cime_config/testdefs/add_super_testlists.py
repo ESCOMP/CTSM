@@ -127,7 +127,7 @@ new_text = machines_pattern.sub(
 
 # Now run for the ctsm_sci super testlist for each of the testlists that should be subsets of it
 # Don't add to ctsm_sci if already in the aux_clm testlist either
-ctsm_sci_testlists = ["hillslope", "fire", "ssp", "crop_calendars", "interim_restart", "subset_data"] 
+ctsm_sci_testlists = ["hillslope", "fire", "ssp", "crop_calendars", "interim_restart"]
 for testlist in ctsm_sci_testlists:
    new_text = machines_pattern.sub(
        lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, not_in_testlist="aux_clm", super_testlist="ctsm_sci") + "</machines>", text
@@ -135,7 +135,7 @@ for testlist in ctsm_sci_testlists:
    text = new_text
 
 # Now run for the aux_clm super testlist for each of the testlists that should be subsets of it
-aux_clm_testlists = ["clm_pymods", "prealpha", "prebeta", "aux_cime_baselines", "clm_short", "matrixcn", "aux_clm_mpi_serial"]
+aux_clm_testlists = ["clm_pymods", "prealpha", "prebeta", "aux_cime_baselines", "clm_short", "matrixcn", "aux_clm_mpi_serial", "subset_data"]
 for testlist in aux_clm_testlists:
    new_text = machines_pattern.sub(
        lambda mo: "<machines>" + process_machine_block(mo.group(1), testlist=testlist, super_testlist="aux_clm") + "</machines>", text
