@@ -367,7 +367,7 @@ contains
             units='%',  &
             avgflag='A', &
             long_name=this%info%lname('Internal urban building air relative humidity'), &
-            ptr_lunit=this%rh_building_lun, set_nourb=spval, default='inactive')
+            ptr_lunit=this%rh_building_lun, set_nourb=spval)
     end if
 
     this%rh_af_patch(begp:endp) = spval

@@ -190,8 +190,7 @@ module clm_varcon
   real(r8), public, parameter :: sh_floor = 880._r8     ! specific heat of floor - concrete (Salmanca et al. 2010, TAC) (J kg-1 K-1)
   real(r8), public :: cp_floor = dens_floor*sh_floor    ! volumetric heat capacity of floor - concrete (Salmanca et al. 2010, TAC) (J m-3 K-1)
   real(r8), public :: vent_ach = 0.3_r8                    ! ventilation rate (air exchanges per hour)
-  ! real(r8), public :: q_building_max = 0.013_r8         ! maximum internal building air specific humidity (kg/kg)
-  real(r8), public :: rh_building_max = 65._r8          ! maximum internal building air relative humidity (%)
+  real(r8), public :: rh_building_max = 65._r8          ! maximum internal building air relative humidity (Li et al. 2026, Nat Cities, which follows ASHRAE Standards 62.1-2022 and 62.1-2013) (%)
 
   real(r8), public :: wasteheat_limit = 100._r8         ! limit on wasteheat (W/m2)
 

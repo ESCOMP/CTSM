@@ -23,8 +23,8 @@ module UrbanParamsType
   public  :: CheckUrban        ! Check validity of urban points
   public  :: IsSimpleBuildTemp ! If using the simple building temperature method
   public  :: IsProgBuildTemp   ! If using the prognostic building temperature method
-  public  :: IsBuildingHumidityEnabled    ! If indoor building humidity is simulated
-  public  :: IsACDehumidificationEnabled  ! If AC dehumidification is simulated
+  public  :: IsBuildingHumidityEnabled    ! If indoor building humidity is prognosed
+  public  :: IsACDehumidificationEnabled  ! If air-conditioning dehumidification is enabled
   !
   ! !PRIVATE TYPE
   type urbinp_type

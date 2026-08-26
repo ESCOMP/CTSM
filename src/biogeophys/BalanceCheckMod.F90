@@ -500,7 +500,7 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
-     real(r8) :: qflx_condensate_from_ac_grc(bounds%begg:bounds%endg)  ! grid cell-level condensate from air-conditioning [mm H2O /s]
+     real(r8) :: qflx_condensate_from_ac_grc(bounds%begg:bounds%endg)   ! grid cell-level condensate water flux from air-conditioning [mm H2O /s]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -592,21 +592,23 @@ contains
           ! add qflx_drain_perched and qflx_flood
           if (col%active(c)) then
 
+             errh2o_col(c) = endwb_col(c) - begwb_col(c) &
+                  - (forc_rain_col(c)        &
+                  + forc_snow_col(c)         &
+                  + qflx_flood_col(c)        &
+                  + qflx_sfc_irrig_col(c)    &
+                  + qflx_glcice_dyn_water_flux_col(c) &
+                  - qflx_evap_tot_col(c)     &
+                  - qflx_surf_col(c)         &
+                  - qflx_qrgwl_col(c)        &
+                  - qflx_drain_col(c)        &
+                  - qflx_drain_perched_col(c) &
+                  - qflx_ice_runoff_col(c)   &
+                  - qflx_snwcp_discarded_liq_col(c) &
+                  - qflx_snwcp_discarded_ice_col(c)) * dtime
+
              if (IsACDehumidificationEnabled()) then
-                errh2o_col(c) = endwb_col(c) - begwb_col(c) &
-                     - (forc_rain_col(c) + forc_snow_col(c) + qflx_flood_col(c) &
-                     + qflx_sfc_irrig_col(c) + qflx_glcice_dyn_water_flux_col(c) &
-                     + qflx_condensate_from_ac_col(c) - qflx_evap_tot_col(c) &
-                     - qflx_surf_col(c) - qflx_qrgwl_col(c) - qflx_drain_col(c) &
-                     - qflx_drain_perched_col(c) - qflx_ice_runoff_col(c) &
-                     - qflx_snwcp_discarded_liq_col(c) - qflx_snwcp_discarded_ice_col(c)) * dtime
-             else
-                errh2o_col(c) = endwb_col(c) - begwb_col(c) &
-                     - (forc_rain_col(c) + forc_snow_col(c) + qflx_flood_col(c) &
-                     + qflx_sfc_irrig_col(c) + qflx_glcice_dyn_water_flux_col(c) &
-                     - qflx_evap_tot_col(c) - qflx_surf_col(c) - qflx_qrgwl_col(c) &
-                     - qflx_drain_col(c) - qflx_drain_perched_col(c) - qflx_ice_runoff_col(c) &
-                     - qflx_snwcp_discarded_liq_col(c) - qflx_snwcp_discarded_ice_col(c)) * dtime
+                errh2o_col(c) = errh2o_col(c) - qflx_condensate_from_ac_col(c) * dtime
              end if
 
           else
@@ -691,21 +693,23 @@ contains
        end if
 
        do g = bounds%begg, bounds%endg
+          errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
+               - (forc_rain_grc(g)        &
+               + forc_snow_grc(g)         &
+               + forc_flood_grc(g)        &
+               + qflx_sfc_irrig_grc(g)    &
+               + qflx_glcice_dyn_water_flux_grc(g) &
+               - qflx_evap_tot_grc(g)     &
+               - qflx_surf_grc(g)         &
+               - qflx_qrgwl_grc(g)        &
+               - qflx_drain_grc(g)        &
+               - qflx_drain_perched_grc(g) &
+               - qflx_ice_runoff_grc(g)   &
+               - qflx_snwcp_discarded_liq_grc(g) &
+               - qflx_snwcp_discarded_ice_grc(g)) * dtime
+
           if (IsACDehumidificationEnabled()) then
-             errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
-                  - (forc_rain_grc(g) + forc_snow_grc(g) + forc_flood_grc(g) &
-                  + qflx_sfc_irrig_grc(g) + qflx_glcice_dyn_water_flux_grc(g) &
-                  + qflx_condensate_from_ac_grc(g) - qflx_evap_tot_grc(g) &
-                  - qflx_surf_grc(g) - qflx_qrgwl_grc(g) - qflx_drain_grc(g) &
-                  - qflx_drain_perched_grc(g) - qflx_ice_runoff_grc(g) &
-                  - qflx_snwcp_discarded_liq_grc(g) - qflx_snwcp_discarded_ice_grc(g)) * dtime
-          else
-             errh2o_grc(g) = endwb_grc(g) - begwb_grc(g) &
-                  - (forc_rain_grc(g) + forc_snow_grc(g) + forc_flood_grc(g) &
-                  + qflx_sfc_irrig_grc(g) + qflx_glcice_dyn_water_flux_grc(g) &
-                  - qflx_evap_tot_grc(g) - qflx_surf_grc(g) - qflx_qrgwl_grc(g) &
-                  - qflx_drain_grc(g) - qflx_drain_perched_grc(g) - qflx_ice_runoff_grc(g) &
-                  - qflx_snwcp_discarded_liq_grc(g) - qflx_snwcp_discarded_ice_grc(g)) * dtime
+             errh2o_grc(g) = errh2o_grc(g) - qflx_condensate_from_ac_grc(g) * dtime
           end if
        end do
 
