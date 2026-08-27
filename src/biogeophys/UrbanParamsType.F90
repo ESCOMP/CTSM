@@ -95,6 +95,7 @@ module UrbanParamsType
    contains
 
      procedure, public :: Init
+     procedure, public :: InitForTesting
 
   end type urbanparams_type
   !
@@ -368,6 +369,34 @@ contains
     ! mode='finalize') because the arrays are needed for dynamic urban landunits.
 
   end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Version of Init routine just for unit tests
+    !
+    ! This version sets building_humidity_mode and then calls Init
+    !
+    ! !ARGUMENTS:
+    class(urbanparams_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitForTesting'
+    !-----------------------------------------------------------------------
+
+    ! Default setting (prognostic indoor humidity and dehumidification off)
+    building_humidity_mode = 0
+
+    ! We set this to .true. to enable the IsBuildingHumidityEnabled and 
+    ! IsACDehumidificationEnabled functions to be used for unit testing
+    ReadNamelist = .true.
+
+    call Init(this, bounds = bounds)
+
+  end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine UrbanInput(begg, endg, mode)
