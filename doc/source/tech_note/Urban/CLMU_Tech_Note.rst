@@ -1136,9 +1136,6 @@ The net longwave radiation absorbed by each urban surface after the :math:`i^{th
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}
 
-,
-
-
 
 .. math::
 
@@ -1147,10 +1144,10 @@ The net longwave radiation absorbed by each urban surface after the :math:`i^{th
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}
 
-,
 
-:math:`{\overrightarrow{L}}_{road,i} = {\overrightarrow{L}}_{imprvrd,i}\left( 1 - f_{prvrd} \right) + {\overrightarrow{L}}_{prvrd,i}f_{prvrd}`,
+.. math::
 
+   {\overrightarrow{L}}_{road,i} = {\overrightarrow{L}}_{imprvrd,i}\left( 1 - f_{prvrd} \right) + {\overrightarrow{L}}_{prvrd,i}f_{prvrd}`
 
 
 .. math::
@@ -1160,9 +1157,6 @@ The net longwave radiation absorbed by each urban surface after the :math:`i^{th
    & + L_{shdwall - sunwall,i - 1}\overset{r}{\uparrow} + L_{shdwall - sunwall}\overset{e}{\uparrow}
    \end{aligned} \right)
 
-,
-
-
 
 .. math::
 
@@ -1171,7 +1165,6 @@ The net longwave radiation absorbed by each urban surface after the :math:`i^{th
    & + L_{sunwall - shdwall,i - 1}\overset{r}{\uparrow} + L_{sunwall - shdwall}\overset{e}{\uparrow}
    \end{aligned} \right)
 
-.
 
 The longwave radiation from each urban surface after the :math:`i^{th}` reflection is distributed to sky, road, and walls according to
 
