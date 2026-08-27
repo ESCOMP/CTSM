@@ -1097,7 +1097,7 @@ The emitted longwave radiation is distributed to sky, walls, and road according 
 
 :math:`L_{sunwall - road}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - road}`,
 
-   :math:`L_{sunwall - shdwall}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - wall}`,
+:math:`L_{sunwall - shdwall}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - wall}`,
 
 :math:`L_{shdwall - sky}\overset{e}{\uparrow} = L_{shdwall}\overset{e}{\uparrow}\Psi_{wall - sky}`,
 
@@ -1830,20 +1830,7 @@ The UCL air temperature and specific humidity are determined by solving the foll
 
 :math:`H_{shdwall} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,shdwall}}{r_{s,shdwall}}`,
 
-
-
-.. math::
-
-   H = - \rho_{atm}C_{p}\frac{\theta_{atm} - T_{ac}}{r_{ah}}
-   
-
-\ 
-
-.. math::
-
-     = W_{roof}H_{roof} + \left( 1 - W_{roof} \right) \times 
-
-\ :math:`  \left\lbrack f_{prvrd}H_{prvrd} + \left( 1 - f_{prvrd} \right)H_{imprvrd} + \frac{H}{W}H_{sunwall} + \frac{H}{W}H_{shdwall} \right\rbrack`
+:math:`H = - \rho_{atm}C_{p}\frac{\theta_{atm} - T_{ac}}{r_{ah}} = W_{roof}H_{roof} + \left( 1 - W_{roof} \right) \times \left\lbrack f_{prvrd}H_{prvrd} + \left( 1 - f_{prvrd} \right)H_{imprvrd} + \frac{H}{W}H_{sunwall} + \frac{H}{W}H_{shdwall} \right\rbrack`
 
 where :math:`H` is sensible heat flux (W m\ :sup:`-2`) and :math:`T_{g}` is the surface temperature of each urban surface. The term :math:`W_{roof}` is the relative contribution of roof fluxes to the total urban landunit flux (Table 1.3). The term :math:`1 - W_{roof}` is then the relative contribution of the canyon to the total urban landunit flux. The term :math:`f_{prvrd}` is the fraction of road that is pervious (Table 1.3) and the term :math:`1 - f_{prvrd}` is the fraction of the road that is impervious. Note that the factor :math:`\frac{H}{W}` for the sunwall and shadewall converts the flux from watts per meter squared of surface area to watts per meter squared of ground area.
 
@@ -3641,9 +3628,9 @@ and snow pack properties are unchanged. The :math:`q_{snwcp,ice}` runoff is sent
 Offline Mode
 ============
 
-   In offline mode (uncoupled to an atmospheric model), the atmospheric forcing required by CLM (Table 1.1) is supplied by observed datasets. The standard forcing provided with the model is a 57-year (1948-2004) dataset that is described in Qian et al. (2006) though alternative observed forcing datasets could also be used. The forcing data is ingested into a data atmosphere model in three "streams"; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar radiation (:math:`S_{atm}`) (W m\ :sup:`-2`), and four other fields [atmospheric pressure :math:`P_{atm}` (Pa), atmospheric specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`), atmospheric temperature :math:`T_{atm}` (K), and atmospheric wind :math:`W_{atm}` (m s\ :sup:`-1`)]. These are separate streams because they are handled differently according to the type of field and the temporal resolution at which they are provided. In the Qian et al. (2006) dataset, the precipitation stream is provided at six hour intervals and the data atmosphere model prescribes the same precipitation rate for each model time step within the six hour period. The four fields that are grouped together in another stream (pressure, humidity, temperature, and wind) are provided at three hour intervals and the data atmosphere model linearly interpolates these fields to the time step of the model.
+In offline mode (uncoupled to an atmospheric model), the atmospheric forcing required by CLM (Table 1.1) is supplied by observed datasets. The standard forcing provided with the model is a 57-year (1948-2004) dataset that is described in Qian et al. (2006) though alternative observed forcing datasets could also be used. The forcing data is ingested into a data atmosphere model in three "streams"; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar radiation (:math:`S_{atm}`) (W m\ :sup:`-2`), and four other fields [atmospheric pressure :math:`P_{atm}` (Pa), atmospheric specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`), atmospheric temperature :math:`T_{atm}` (K), and atmospheric wind :math:`W_{atm}` (m s\ :sup:`-1`)]. These are separate streams because they are handled differently according to the type of field and the temporal resolution at which they are provided. In the Qian et al. (2006) dataset, the precipitation stream is provided at six hour intervals and the data atmosphere model prescribes the same precipitation rate for each model time step within the six hour period. The four fields that are grouped together in another stream (pressure, humidity, temperature, and wind) are provided at three hour intervals and the data atmosphere model linearly interpolates these fields to the time step of the model.
 
-   The total solar radiation is provided at six hour intervals. The data is fit to the model time step using a diurnal function that depends on the cosine of the solar zenith angle :math:`\mu` to provide a smoother diurnal cycle of solar radiation and to ensure that all of the solar radiation supplied by the six-hourly forcing data is actually used. The solar radiation at model time step :math:`t_{M}` is
+The total solar radiation is provided at six hour intervals. The data is fit to the model time step using a diurnal function that depends on the cosine of the solar zenith angle :math:`\mu` to provide a smoother diurnal cycle of solar radiation and to ensure that all of the solar radiation supplied by the six-hourly forcing data is actually used. The solar radiation at model time step :math:`t_{M}` is
 
 
 
@@ -3680,7 +3667,7 @@ and in the near-infrared :math:`R_{nir}` is
 
 where :math:`a_{0} = 0.17639,a_{1} = 0.00380,a_{2} = - 9.0039 \times 10^{- 6},a_{3} = 8.1351 \times 10^{- 9}` and :math:`b_{0} = 0.29548,b_{1} = 0.00504,b_{2} = - 1.4957 \times 10^{- 5},b_{3} = 1.4881 \times 10^{- 8}` are coefficients from polynomial fits to the CAM data.
 
-   The additional atmospheric forcing variables required by Table 1.1 are derived as follows. The atmospheric reference height :math:`z_{atm}^{'}` (m) is set to 30 m. The directional wind components are derived as :math:`u_{atm} = v_{atm} = \frac{W_{atm}}{\sqrt{2}}`. The potential temperature :math:`\overline{\theta_{atm}}` (K) is set to the atmospheric temperature :math:`T_{atm}`. The atmospheric longwave radiation :math:`L_{atm} \downarrow` (W m\ :sup:`-2`) is derived from the atmospheric vapor pressure :math:`e_{atm}` and temperature :math:`T_{atm}` (Idso 1981) as
+The additional atmospheric forcing variables required by Table 1.1 are derived as follows. The atmospheric reference height :math:`z_{atm}^{'}` (m) is set to 30 m. The directional wind components are derived as :math:`u_{atm} = v_{atm} = \frac{W_{atm}}{\sqrt{2}}`. The potential temperature :math:`\overline{\theta_{atm}}` (K) is set to the atmospheric temperature :math:`T_{atm}`. The atmospheric longwave radiation :math:`L_{atm} \downarrow` (W m\ :sup:`-2`) is derived from the atmospheric vapor pressure :math:`e_{atm}` and temperature :math:`T_{atm}` (Idso 1981) as
 
 :math:`L_{atm} \downarrow = 0.70 + 5.95 \times 10^{- 5} \times 0.01e_{atm}\exp\left( \frac{1500}{T_{atm}} \right)\sigma T_{atm}^{4}`
 
@@ -3698,29 +3685,29 @@ where
 
 :math:`f_{P} = 0 < 0.5\left( T_{atm} - T_{f} \right) < 1`.
 
-   If the user wishes to provide atmospheric forcing data from another source, the data format outlined above will need to be followed with the following exceptions. The data atmosphere model will accept a user-supplied relative humidity :math:`RH` (%) and derive specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`) from
+If the user wishes to provide atmospheric forcing data from another source, the data format outlined above will need to be followed with the following exceptions. The data atmosphere model will accept a user-supplied relative humidity :math:`RH` (%) and derive specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`) from
 
 :math:`q_{atm} = \frac{0.622e_{atm}}{P_{atm} - 0.378e_{atm}}`
 
-   where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the water (:math:`T_{atm} > T_{f}`) or ice (:math:`T_{atm} \leq T_{f}`) saturation vapor pressure :math:`e_{sat}^{T_{atm}}` as :math:`e_{atm} = \frac{RH}{100}e_{sat}^{T_{atm}}` where :math:`T_{f}` is the freezing temperature of water (K) (Table 1.4), and :math:`P_{atm}` is the pressure at height :math:`z_{atm}` (Pa). The data atmosphere model will also accept a user-supplied dew point temperature :math:`T_{dew}` (K) and derive specific humidity :math:`q_{atm}` from
+where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the water (:math:`T_{atm} > T_{f}`) or ice (:math:`T_{atm} \leq T_{f}`) saturation vapor pressure :math:`e_{sat}^{T_{atm}}` as :math:`e_{atm} = \frac{RH}{100}e_{sat}^{T_{atm}}` where :math:`T_{f}` is the freezing temperature of water (K) (Table 1.4), and :math:`P_{atm}` is the pressure at height :math:`z_{atm}` (Pa). The data atmosphere model will also accept a user-supplied dew point temperature :math:`T_{dew}` (K) and derive specific humidity :math:`q_{atm}` from
 
 :math:`q_{atm} = \frac{0.622e_{sat}^{T_{dew}}}{P_{atm} - 0.378e_{sat}^{T_{dew}}}`.
 
-   Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from Lowe's (1977) polynomials (section 3.3). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
+Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from Lowe's (1977) polynomials (section 3.3). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
 
 The user may provide the total direct and diffuse solar radiation, :math:`S_{atm} \downarrow^{\mu}` and :math:`S_{atm} \downarrow`. These will be time-interpolated using the procedure described above and then each term equally apportioned into the visible and near-infrared wavebands (e.g., :math:`S_{atm} \downarrow_{vis}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`, :math:`S_{atm} \downarrow_{nir}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`).
 
 Evaluation
 ==========
 
-   Oleson et al. (2008a, b) describe efforts to evaluate the urban model. This includes a quantitative evaluation of model performance at two specific urban sites, an examination of the robustness of the model through sensitivity studies, and a qualitative evaluation of the urban climate produced by the model, with a focus on the characteristics of the simulated heat island. An additional evaluation component not appearing in these two papers is presented below.
+Oleson et al. (2008a, b) describe efforts to evaluate the urban model. This includes a quantitative evaluation of model performance at two specific urban sites, an examination of the robustness of the model through sensitivity studies, and a qualitative evaluation of the urban climate produced by the model, with a focus on the characteristics of the simulated heat island. An additional evaluation component not appearing in these two papers is presented below.
 
 Nighttime longwave radiation and surface temperature
 ----------------------------------------------------
 
-   Nighttime net longwave radiation and air temperature data for an urban canyon in the Grandview district of Vancouver, British Columbia (49°N, 123°W) (Nunez and Oke, 1976, 1977) are used to examine the longwave radiation budget and surface temperatures simulated by the model. The canyon is oriented north-south and is located in a mixed light industrial and residential district. The canyon is 79m long, 7.54m wide, and the east and west walls are 7.31m and 5.59m in height, respectively. Walls are concrete, painted flat white with no windows. The canyon floor consists of a 3-5 cm layer of gravel and clay. Weather conditions on the night of September 9-10, 1973 were clear and calm. Air temperature and net longwave radiation measured at about 0.3m above the midpoint of the canyon floor and from the mid-height of each wall are compared with simulated canyon floor and wall surface temperature and net longwave radiation.
+Nighttime net longwave radiation and air temperature data for an urban canyon in the Grandview district of Vancouver, British Columbia (49°N, 123°W) (Nunez and Oke, 1976, 1977) are used to examine the longwave radiation budget and surface temperatures simulated by the model. The canyon is oriented north-south and is located in a mixed light industrial and residential district. The canyon is 79m long, 7.54m wide, and the east and west walls are 7.31m and 5.59m in height, respectively. Walls are concrete, painted flat white with no windows. The canyon floor consists of a 3-5 cm layer of gravel and clay. Weather conditions on the night of September 9-10, 1973 were clear and calm. Air temperature and net longwave radiation measured at about 0.3m above the midpoint of the canyon floor and from the mid-height of each wall are compared with simulated canyon floor and wall surface temperature and net longwave radiation.
 
-   The observation site has been used to validate other urban models such as SHIM (Surface Heat Island Model) (Johnson et al. 1991), the Town Energy Budget (TEB) scheme (Masson 2000), NSLUCM (Noah land surface model/Single-layer Urban Canopy Model) (Kusaka et al. 2001), and VUCM (Vegetated Urban Canopy Model) (Lee and Park 2007). Published data from Lee and Park (2007) were used to determine input parameters for the urban model as these data appeared to produce the best simulations compared to observations (Table 7.1). The canyon floor was modeled as a sandy clay soil with no moisture content. No anthropogenic fluxes were prescribed. Atmospheric wind speed at 10m height was set to 2 m s\ :sup:`-1` and specific humidity to 0.01 kg kg\ :sup:`-1` throughout the simulation (Lee and Park 2007). Atmospheric air temperature was initialized at 19°C and set to the calculated canyon air temperature on subsequent time steps to maintain a neutral temperature profile (no thermal turbulent fluxes between the canyon and the atmosphere) (Masson 2000). Specific humidity of canyon air is set to the atmospheric specific humidity. Downward longwave radiation was initialized to 339 W m\ :sup:`-2` and decreased linearly with the atmospheric air temperature (Masson 2000). Initial wall and canyon floor temperatures were set to 18.35°C and 18.5°C, respectively per Johnson et al. (1991).
+The observation site has been used to validate other urban models such as SHIM (Surface Heat Island Model) (Johnson et al. 1991), the Town Energy Budget (TEB) scheme (Masson 2000), NSLUCM (Noah land surface model/Single-layer Urban Canopy Model) (Kusaka et al. 2001), and VUCM (Vegetated Urban Canopy Model) (Lee and Park 2007). Published data from Lee and Park (2007) were used to determine input parameters for the urban model as these data appeared to produce the best simulations compared to observations (Table 7.1). The canyon floor was modeled as a sandy clay soil with no moisture content. No anthropogenic fluxes were prescribed. Atmospheric wind speed at 10m height was set to 2 m s\ :sup:`-1` and specific humidity to 0.01 kg kg\ :sup:`-1` throughout the simulation (Lee and Park 2007). Atmospheric air temperature was initialized at 19°C and set to the calculated canyon air temperature on subsequent time steps to maintain a neutral temperature profile (no thermal turbulent fluxes between the canyon and the atmosphere) (Masson 2000). Specific humidity of canyon air is set to the atmospheric specific humidity. Downward longwave radiation was initialized to 339 W m\ :sup:`-2` and decreased linearly with the atmospheric air temperature (Masson 2000). Initial wall and canyon floor temperatures were set to 18.35°C and 18.5°C, respectively per Johnson et al. (1991).
 
 Table 7.1. Urban model parameters for the Grandview site
 
@@ -3788,7 +3775,7 @@ Table 7.1. Urban model parameters for the Grandview site
 
 ..
 
-   Figure 7.1 shows the simulated surface temperatures and net longwave radiation for the walls and canyon floor compared to observations. The urban model does a good job simulating the nighttime cooling of canyon surfaces (note that the simulated west and east wall surface temperatures are the same). Temperature differences from observations are less than 1°C at all times. Net longwave radiation is also well simulated, differences from observations are less than about 3 W m\ :sup:`-2` for the west wall and canyon floor. The simulated net longwave radiation for the east wall is biased high by up to 7 W m\ :sup:`-2`. These results are quite similar to those from VUCM and generally slightly better than the models of Masson (2000), Johnson et al. (1991), and Kusaka et al. (2001) which generally have warmer surface temperatures as noted by Lee and Park (2007). However, one important difference between Lee and Park (2007) and the other studies is that the thermal admittance prescribed for the canyon floor is substantially lower in VUCM. When higher thermal admittance is prescribed in the urban model, warmer surface temperatures are simulated consistent with the other studies.
+Figure 7.1 shows the simulated surface temperatures and net longwave radiation for the walls and canyon floor compared to observations. The urban model does a good job simulating the nighttime cooling of canyon surfaces (note that the simulated west and east wall surface temperatures are the same). Temperature differences from observations are less than 1°C at all times. Net longwave radiation is also well simulated, differences from observations are less than about 3 W m\ :sup:`-2` for the west wall and canyon floor. The simulated net longwave radiation for the east wall is biased high by up to 7 W m\ :sup:`-2`. These results are quite similar to those from VUCM and generally slightly better than the models of Masson (2000), Johnson et al. (1991), and Kusaka et al. (2001) which generally have warmer surface temperatures as noted by Lee and Park (2007). However, one important difference between Lee and Park (2007) and the other studies is that the thermal admittance prescribed for the canyon floor is substantially lower in VUCM. When higher thermal admittance is prescribed in the urban model, warmer surface temperatures are simulated consistent with the other studies.
 
 Figure 7.1. Simulated surface temperatures (solid lines) and net longwave radiation (dashed lines) compared to observations (circles) for a) west (east-facing) wall, b) east wall, and c) canyon floor for the night of September 9-10, 1973 in an urban canyon in the Grandview district of Vancouver, British Columbia. Observed data were digitized from Figure 5 in Johnson et al. (1991).
 
