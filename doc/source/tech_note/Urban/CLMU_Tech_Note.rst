@@ -1345,7 +1345,7 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    \end{aligned} \right)\Psi_{wall - wall}
 
 
-Note that the emitted longwave term in equations - only applies to the first iteration. Subsequent iterations do not include this term, i.e.,
+Note that the emitted longwave term in equations NNN-NNN only applies to the first iteration. Subsequent iterations do not include this term, i.e.,
 
 
 
@@ -1375,7 +1375,7 @@ The net longwave at each iteration is added to the total net longwave for each u
 
 :math:`{\overrightarrow{L}}_{shdwall,i + 1} = {\overrightarrow{L}}_{shdwall,i - 1} + {\overrightarrow{L}}_{shdwall,i}`.
 
-The system of equations (equations -) is iterated for :math:`i = 50` reflections or until the absorption for the :math:`i^{th}` reflection is less than a nominal amount
+The system of equations (equations NNN-NNN) is iterated for :math:`i = 50` reflections or until the absorption for the :math:`i^{th}` reflection is less than a nominal amount
 
 :math:`\max\left( {\overrightarrow{L}}_{road,i},{\overrightarrow{L}}_{sunwall,i},{\overrightarrow{L}}_{shdwall,i} \right) < 1 \times 10^{- 3}`.
 
@@ -1769,7 +1769,7 @@ An initial guess for the wind speed :math:`V_{a}` (equation is obtained assuming
 
 :math:`\theta_{v,atm} - \theta_{v,s} = \left( \theta_{atm} - \theta_{s} \right)\left( 1 + 0.61q_{atm} \right) + 0.61\overline{\theta_{atm}}\left( q_{atm} - q_{s} \right)`.
 
-Here, :math:`\theta_{s} = T_{ac}` and :math:`q_{s} = q_{ac}` where :math:`T_{ac}` is the air temperature in the UCL (K) and :math:`q_{ac}` is the specific humidity in the UCL (kg kg\ :sup:`-1`) (Figure 3.1). The air temperature and specific humidity from the previous time step are used. The temperature :math:`\theta_{atm}` is defined by equation , :math:`\overline{\theta_{atm}}` is the atmospheric potential temperature (Table 1.1), and :math:`q_{atm}` is the atmospheric specific humidity (kg kg\ :sup:`-1`) (Table 1.1). An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equations and .
+Here, :math:`\theta_{s} = T_{ac}` and :math:`q_{s} = q_{ac}` where :math:`T_{ac}` is the air temperature in the UCL (K) and :math:`q_{ac}` is the specific humidity in the UCL (kg kg\ :sup:`-1`) (Figure 3.1). The air temperature and specific humidity from the previous time step are used. The temperature :math:`\theta_{atm}` is defined by equation , :math:`\overline{\theta_{atm}}` is the atmospheric potential temperature (Table 1.1), and :math:`q_{atm}` is the atmospheric specific humidity (kg kg\ :sup:`-1`) (Table 1.1). An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equations NNN and NNN.
 
 The iterative solution begins with the friction velocity :math:`u_{*}`, potential temperature scale :math:`\theta_{*}`, and humidity scale :math:`q_{*}` being calculated from equations NNN-NNN. Now that the friction velocity has been determined, the wind in the urban canopy, :math:`U_{ac}`, is calculated from equation NNN. The aerodynamic resistances (s m\ :sup:`-1`) to momentum, sensible heat, and latent heat transfer between the UCL air and the atmosphere are
 
@@ -1858,7 +1858,7 @@ In the absence of snow,
 
 where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (Oleson et al. 2004).
 
-In equations and , the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
+In equations NNN and NNN, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
 
 As noted in section 1.1.3, a simplified bulk parameterization approach is used to represent evaporation from the pervious surface. The pervious road specific humidity, :math:`q_{g,prvrd}`, is evaluated as a function of the wetness of the soil column. This allows all of the soil moisture to potentially be available for evaporation. The specific humidity is
 
@@ -1911,7 +1911,7 @@ The UCL specific humidity is then
 
 where :math:`c_{a}^{w}` is the latent heat conductance from the UCL air to the atmosphere (:math:`\frac{1}{r_{aw}}`), and :math:`c_{roof}`, :math:`c_{prvrd}`, and :math:`c_{imprvrd}` are the weighted heat conductances from urban surfaces to UCL air [:math:`\frac{W_{roof}}{r_{s,roof}}`, :math:`\frac{W_{prvrd}}{r_{s,prvrd}}`, :math:`\frac{W_{imprvrd}}{r_{s,imprvrd}}`, respectively, where :math:`W_{prvrd} = \left( 1 - W_{roof} \right)f_{prvrd}`, :math:`W_{imprvrd} = \left( 1 - W_{roof} \right)\left( 1 - f_{prvrd} \right)`].
 
-The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations - and . The wind speed including the convective velocity is reevaluated using equations and -. The Monin-Obukhov length is updated from equation NNN. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations -).
+The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations NNN-NNN and NNN. The wind speed including the convective velocity is reevaluated using equations NNN and NNN-NNN. The Monin-Obukhov length is updated from equation NNN. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations NNN-NNN).
 
 Final Fluxes and Adjustments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2117,7 +2117,7 @@ where :math:`z` is in the vertical direction (m) and is positive downward and :m
 
 :math:`c\frac{\partial T}{\partial t} = - \frac{\partial F_{z}}{\partial z}`
 
-where :math:`c` is the volumetric snow/soil heat capacity (J m\ :sup:`-3` K\ :sup:`-1`) and :math:`t` is time (s). Combining equations and yields the second law of heat conduction in one-dimensional form
+where :math:`c` is the volumetric snow/soil heat capacity (J m\ :sup:`-3` K\ :sup:`-1`) and :math:`t` is time (s). Combining equations NNN and NNN yields the second law of heat conduction in one-dimensional form
 
 :math:`c\frac{\partial T}{\partial t} = \frac{\partial}{\partial z}\left\lbrack \lambda\frac{\partial T}{\partial z} \right\rbrack`.
 
@@ -2294,7 +2294,7 @@ For a non-zero flux bottom boundary condition, :math:`\lambda\left\lbrack z_{h,i
 
 :math:`- \lambda_{i}\frac{T_{i} - T_{m}}{z_{h,i} - z_{i}} = - \lambda_{i + 1}\frac{T_{m} - T_{i + 1}}{z_{i + 1} - z_{h,i}}`
 
-where :math:`T_{m}` is the temperature at the interface of layers :math:`i` and :math:`i + 1`. Solving equation for :math:`T_{m}` and substituting :math:`T_{m}` back into the left side of equation yields equations and .
+where :math:`T_{m}` is the temperature at the interface of layers :math:`i` and :math:`i + 1`. Solving equation for :math:`T_{m}` and substituting :math:`T_{m}` back into the left side of equation yields equations NNN and NNN.
 
 | 
 | Figure 4.1. Schematic diagram of numerical scheme used to solve for layer temperatures. Shown are three layers, :math:`i - 1`, :math:`i`, and :math:`i + 1`. The thermal conductivity :math:`\lambda`, specific heat capacity :math:`c`, and temperature :math:`T` are defined at the layer node depth :math:`z`. :math:`T_{m}` is the interface temperature. The thermal conductivity :math:`\lambda\left\lbrack z_{h} \right\rbrack` is defined at the interface of two layers :math:`z_{h}`. The layer thickness is :math:`\Delta z`. The heat fluxes :math:`F_{i - 1}` and :math:`F_{i}` are defined as positive upwards.
@@ -2382,13 +2382,13 @@ where the partial derivative of the net longwave radiation is
 
 :math:`\frac{\partial{\overrightarrow{L}}_{g}}{\partial T_{g}} = 4\varepsilon_{g}\sigma\left( T_{g}^{n} \right)^{3}`
 
-and the partial derivatives of the sensible and latent heat fluxes are given by equations -. :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (Table 1.4) and :math:`\varepsilon_{g}` is the surface emissivity (section 2.7).
+and the partial derivatives of the sensible and latent heat fluxes are given by equations NNN-NNN. :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (Table 1.4) and :math:`\varepsilon_{g}` is the surface emissivity (section 2.7).
 
 The top layer for roofs and walls is thin enough such that the layer-averaged temperature calculated above is considered to be equivalent to the surface temperature :math:`T_{g}^{n + 1}`. For pervious and impervious road, the top layer temperature has somewhat reduced diurnal amplitude compared with surface temperature. An accurate surface temperature is provided that compensates for this effect and numerical error by tuning the heat capacity of the top layer (through adjustment of the layer thickness) to give an exact match to the analytic solution for diurnal heating. The layer thickness for :math:`i = snl + 1` is given by
 
 :math:`\Delta z_{i*} = 0.5\left\lbrack z_{i} - z_{h,i - 1} + c_{a}\left( z_{i + 1} - z_{h,i - 1} \right) \right\rbrack`
 
-where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. Yang 1998, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations -.
+where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. Yang 1998, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations NNN-NNN.
 
 For the pervious and impervious road, the boundary condition at the bottom is zero heat flux, :math:`F_{i} = 0`, resulting in, for :math:`i = N_{levgrnd}`,
 
@@ -3074,7 +3074,7 @@ The maximum snow layer thickness, :math:`\Delta z_{\max}`, depends on the number
 Subdivision
 ^^^^^^^^^^^
 
-The snow layers are subdivided when the layer thickness exceeds a prescribed maximum thickness :math:`\Delta z_{\max}` with lower and upper bounds that depend on the number of snow layers (Table 5.1). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (Table 5.1), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\mspace{6mu} i}` and :math:`w_{ice,\mspace{6mu} i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations -. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}`) and the splitting layer (:math:`T_{2}`) and constraining the new temperatures (:math:`T_{2}^{n + 1}`, :math:`T_{3}^{n + 1}`) to lie along this slope. The temperature of the lower layer is first evaluated from
+The snow layers are subdivided when the layer thickness exceeds a prescribed maximum thickness :math:`\Delta z_{\max}` with lower and upper bounds that depend on the number of snow layers (Table 5.1). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (Table 5.1), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\mspace{6mu} i}` and :math:`w_{ice,\mspace{6mu} i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations NNN-NNN. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}`) and the splitting layer (:math:`T_{2}`) and constraining the new temperatures (:math:`T_{2}^{n + 1}`, :math:`T_{3}^{n + 1}`) to lie along this slope. The temperature of the lower layer is first evaluated from
 
 :math:`T_{3}^{'} = T_{2}^{n} - \left( \frac{T_{1}^{n} - T_{2}^{n}}{\frac{\left( \Delta z_{1}^{n} + \Delta z_{2}^{n} \right)}{2}} \right)\left( \frac{\Delta z_{2}^{n + 1}}{2} \right)`,
 
@@ -3212,7 +3212,7 @@ so that
 
 :math:`q = - k\left\lbrack \frac{\partial\left( \psi - \psi_{E} \right)}{\partial z} \right\rbrack`.
 
-where :math:`\psi_{E}`\ is the equilibrium soil matric potential (mm). Substitution of equations and into equation yields Zeng and Decker's (2009) modified Richards equation
+where :math:`\psi_{E}`\ is the equilibrium soil matric potential (mm). Substitution of equations NNN and NNN into equation yields Zeng and Decker's (2009) modified Richards equation
 
 :math:`\frac{\partial\theta}{\partial t} = \frac{\partial}{\partial z}\left\lbrack k\left( \frac{\partial\left( \psi - \psi_{E} \right)}{\partial z} \right) \right\rbrack - Q`
 
@@ -3322,7 +3322,7 @@ where
 
 The tridiagonal equation set is solved over :math:`i = 1,\ldots,N_{levsoi} + 1` where the layer :math:`i = N_{levsoi} + 1` is a virtual layer representing the aquifer.
 
-The finite-difference forms of the fluxes and partial derivatives in equations - can be obtained from equation NNN as
+The finite-difference forms of the fluxes and partial derivatives in equations NNN-NNN can be obtained from equation NNN as
 
 :math:`q_{i - 1}^{n} = - k\left\lbrack z_{h,i - 1} \right\rbrack\left\lbrack \frac{\left( \psi_{i - 1} - \psi_{i} \right) + \left( \psi_{E,i} - \psi_{E,i - 1} \right)}{z_{i} - z_{i - 1}} \right\rbrack`
 
