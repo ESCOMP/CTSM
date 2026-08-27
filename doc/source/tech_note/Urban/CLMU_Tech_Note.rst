@@ -622,7 +622,6 @@ The direct incident solar radiation conserves energy as
    S_{atm} \downarrow_{\Lambda}^{\mu} = f_{roof}S_{roof} \downarrow_{\Lambda}^{\mu} + \left( 1 - f_{roof} \right)
    \left\lbrack S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}^{\mu}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right) \right\rbrack
 
-.
 
 Note that the factor :math:`\frac{H}{W}` for the sunlit wall and shaded wall converts the flux from watts per meter squared of wall area to watts per meter squared of ground area.
 
@@ -703,7 +702,6 @@ The diffuse incident solar radiation conserves energy as
    S_{atm} \downarrow_{\Lambda} = f_{roof}S_{roof} \downarrow_{\Lambda} + \left( 1 - f_{roof} \right)
    \left\lbrack S_{imprvrd} \downarrow_{\Lambda}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right) \right\rbrack
 
-.
 
 2.5 Absorbed and reflected solar radiation
 ------------------------------------------
@@ -1014,7 +1012,6 @@ where :math:`L_{atm} \downarrow` is the longwave radiation from the atmosphere. 
    L_{atm} \downarrow = f_{roof}L_{roof} \downarrow + \left( 1 - f_{roof} \right)
    \left\lbrack L_{imprvrd} \downarrow \left( 1 - f_{prvrd} \right) + L_{prvrd} \downarrow f_{prvrd} + \frac{H}{W}\left( L_{sunwall} \downarrow + L_{shdwall} \downarrow \right) \right\rbrack
 
-.
 
 Absorbed, reflected, and emitted longwave radiation
 ---------------------------------------------------
@@ -1352,7 +1349,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{sunwall - shdwall,i - 1}\overset{r}{\uparrow} + L_{sunwall - shdwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - wall}
 
-.
 
 Note that the emitted longwave term in equations - only applies to the first iteration. Subsequent iterations do not include this term, i.e.,
 
@@ -1363,7 +1359,6 @@ Note that the emitted longwave term in equations - only applies to the first ite
    L_{road - sunwall}\overset{e}{\uparrow} = L_{road - shdwall}\overset{e}{\uparrow} = L_{sunwall - road}\overset{e}{\uparrow} = L_{shdwall - road}\overset{e}{\uparrow}
    = L_{shdwall - sunwall}\overset{e}{\uparrow} = L_{sunwall - shdwall}\overset{e}{\uparrow} = 0
 
-.
 
 The reflected longwave radiation to the sky is added to the total upward longwave radiation for each urban surface as
 
@@ -1402,7 +1397,6 @@ while the total reflected plus emitted longwave radiation is
    L_{uc} \uparrow = L_{imprvrd,n + 1} \uparrow \left( 1 - f_{prvrd} \right) + L_{prvrd,n + 1} \uparrow f_{prvrd}
    + \left( L_{sunwall,n + 1} \uparrow + L_{shdwall,n + 1} \uparrow \right)\frac{H}{W}
 
-.
 
 Longwave radiation in the urban canyon is conserved as
 
@@ -1681,7 +1675,6 @@ Using :math:`\varphi_{h} = \varphi_{m}^{2} = (1 - 16\zeta)^{- \frac{1}{2}}` for 
    \zeta = \frac{R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)}{1 - 5\min\left( R_{iB},0.19 \right)} 0.01 \leq \zeta \leq 2 \text{for }R_{iB} \geq 0\ (\text{neutral or stable})
    \zeta = R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)  - 100 \leq \zeta \leq - 0.01 \text{for }R_{iB} < 0\ (\text{unstable})
 
-.
 
 Upon iteration, the following is used to determine :math:`\zeta` and thus :math:`L`
 
@@ -1696,7 +1689,6 @@ where
    0.01 \leq \zeta \leq 2 \text{for }\zeta \geq 0\ (\text{neutral or stable})
    \text{-100} \leq \zeta \leq \text{-0.01} \text{for }\zeta < 0\ (\text{unstable})
 
-.
 
 The momentum, sensible heat, and water vapor fluxes between the surface and the atmosphere can also be written in the form
 
@@ -1766,7 +1758,6 @@ For wake interference flow (:math:`\frac{0.5 \leq H}{W < \text{1.0}}`),
    U_{can} = V_{r}\left\lbrack 1 + 2\left( \frac{2}{\pi} - 1 \right)\left( \frac{H}{W} - \frac{1}{2} \right) \right\rbrack\frac{\ln\left( \frac{H - d_{canopy}}{z_{0m,canopy}} \right)}{\ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right)}
    \times \exp\left( - 0.5\left( \frac{H}{W} \right)\left( 1 - \frac{H_{w}}{H} \right) \right)
 
-.
 
 The magnitude of the reference level atmospheric wind is
 
@@ -1785,9 +1776,9 @@ An initial guess for the wind speed :math:`V_{a}` (equation is obtained assuming
 
 Here, :math:`\theta_{s} = T_{ac}` and :math:`q_{s} = q_{ac}` where :math:`T_{ac}` is the air temperature in the UCL (K) and :math:`q_{ac}` is the specific humidity in the UCL (kg kg\ :sup:`-1`) (Figure 3.1). The air temperature and specific humidity from the previous time step are used. The temperature :math:`\theta_{atm}` is defined by equation , :math:`\overline{\theta_{atm}}` is the atmospheric potential temperature (Table 1.1), and :math:`q_{atm}` is the atmospheric specific humidity (kg kg\ :sup:`-1`) (Table 1.1). An initial guess for the Monin-Obukhov length :math:`L` is obtained from the bulk Richardson number using equations and .
 
-The iterative solution begins with the friction velocity :math:`u_{*}`, potential temperature scale :math:`\theta_{*}`, and humidity scale :math:`q_{*}` being calculated from equations -. Now that the friction velocity has been determined, the wind in the urban canopy, :math:`U_{ac}`, is calculated from equation . The aerodynamic resistances (s m\ :sup:`-1`) to momentum, sensible heat, and latent heat transfer between the UCL air and the atmosphere are
+The iterative solution begins with the friction velocity :math:`u_{*}`, potential temperature scale :math:`\theta_{*}`, and humidity scale :math:`q_{*}` being calculated from equations NNN-NNN. Now that the friction velocity has been determined, the wind in the urban canopy, :math:`U_{ac}`, is calculated from equation NNN. The aerodynamic resistances (s m\ :sup:`-1`) to momentum, sensible heat, and latent heat transfer between the UCL air and the atmosphere are
 
-:math:`r_{am} = \frac{V_{a}}{u_{*}^{2}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack^{2}`,
+:math:`r_{am} = \frac{V_{a}}{u_{*}^{2}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack^{2}`
 
 
 
@@ -1796,8 +1787,6 @@ The iterative solution begins with the friction velocity :math:`u_{*}`, potentia
    r_{ah} = \frac{\theta_{atm} - \theta_{s}}{\theta_{*}u_{*}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack
    \left\lbrack \ln\left( \frac{z_{atm,h} - d_{canopy}}{z_{0h,\mspace{6mu} canopy}} \right) - \psi_{h}\left( \frac{z_{atm,h} - d_{canopy}}{L} \right) + \psi_{h}\left( \frac{z_{0h,canopy}}{L} \right) \right\rbrack
 
-,
-
 
 
 .. math::
@@ -1805,7 +1794,6 @@ The iterative solution begins with the friction velocity :math:`u_{*}`, potentia
    r_{aw} = \frac{q_{atm} - q_{s}}{q_{*}u_{*}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack
    \left\lbrack \ln\left( \frac{z_{atm,w} - d_{canopy}}{z_{0w,canopy}} \right) - \psi_{w}\left( \frac{z_{atm,w} - d_{canopy}}{L} \right) + \psi_{w}\left( \frac{z_{0w,canopy}}{L} \right) \right\rbrack
 
-.
 
 The resistances to sensible heat and latent heat transfer between canyon surfaces (roof, sunlit and shaded wall, pervious and impervious road) and the UCL depend only on canyon wind speed following Masson (2000). Thus, the surface resistances, :math:`r_{s,roof}`, :math:`r_{s,sunwall}`, :math:`r_{s,shdwall}`, :math:`r_{s,prvrd}`, :math:`r_{s,imprvrd}`, (s m\ :sup:`-1`) are identical and are determined from (Rowley et al. 1930)
 
@@ -1928,12 +1916,12 @@ The UCL specific humidity is then
 
 where :math:`c_{a}^{w}` is the latent heat conductance from the UCL air to the atmosphere (:math:`\frac{1}{r_{aw}}`), and :math:`c_{roof}`, :math:`c_{prvrd}`, and :math:`c_{imprvrd}` are the weighted heat conductances from urban surfaces to UCL air [:math:`\frac{W_{roof}}{r_{s,roof}}`, :math:`\frac{W_{prvrd}}{r_{s,prvrd}}`, :math:`\frac{W_{imprvrd}}{r_{s,imprvrd}}`, respectively, where :math:`W_{prvrd} = \left( 1 - W_{roof} \right)f_{prvrd}`, :math:`W_{imprvrd} = \left( 1 - W_{roof} \right)\left( 1 - f_{prvrd} \right)`].
 
-The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations - and . The wind speed including the convective velocity is reevaluated using equations and -. The Monin-Obukhov length is updated from equation . This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations -).
+The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations - and . The wind speed including the convective velocity is reevaluated using equations and -. The Monin-Obukhov length is updated from equation NNN. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations -).
 
 Final Fluxes and Adjustments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The sensible and latent heat fluxes and momentum flux from urban surfaces are then calculated from equations -, -, and - using the updated UCL air temperature and specific humidity. The water vapor flux from the pervious road, :math:`E_{prvrd}`, is assigned to ground evaporation, :math:`E_{g,prvrd}`, or a evapotranspiration term, :math:`E_{prvrd}^{et}`, as follows
+The sensible and latent heat fluxes and momentum flux from urban surfaces are then calculated from equations NNN-NNN, NNN-NNN, and NNN-NNN using the updated UCL air temperature and specific humidity. The water vapor flux from the pervious road, :math:`E_{prvrd}`, is assigned to ground evaporation, :math:`E_{g,prvrd}`, or a evapotranspiration term, :math:`E_{prvrd}^{et}`, as follows
 
 
 
@@ -2159,7 +2147,6 @@ where :math:`\Delta z` is the total thickness of the roof or wall (Table 1.3) an
    & z_{N_{levgrnd}} - z_{N_{levgrnd} - 1} i = N_{levgrnd}
    \end{aligned} \right\}
 
-.
 
 The depths at the layer interfaces :math:`z_{h,i}` (m) are
 
@@ -2173,13 +2160,12 @@ The depths at the layer interfaces :math:`z_{h,i}` (m) are
    & z_{N_{levgrnd}} + 0.5\Delta z_{N_{levgrnd}} i = N_{levgrnd}
    \end{aligned} \right\}
 
-.
 
 Pervious and impervious road are discretized into fifteen layers as well with node depth
 
 :math:`z_{i} = f_{s}\left\{ \exp\left\lbrack 0.5(i - 0.5) \right\rbrack - 1 \right\}`
 
-where :math:`f_{s} = 0.025` is a scaling factor. Layer thicknesses and interface depths are calculated from equations and .
+where :math:`f_{s} = 0.025` is a scaling factor. Layer thicknesses and interface depths are calculated from equations NNN and NNN.
 
 The overlying snow pack for the roof and road is modeled with up to five layers depending on the total snow depth. The layers from top to bottom are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0`, which permits the accumulation or ablation of snow at the top of the snow pack without renumbering the layers. Layer :math:`i = 0` is the snow layer next to the urban surface and layer :math:`i = snl + 1` is the top layer, where the variable :math:`snl` is the negative of the number of snow layers. The number of snow layers and the thickness of each layer is a function of snow depth :math:`z_{sno}` (m) as follows.
 
@@ -2192,8 +2178,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = z_{sno} \text{for 0.01} \leq z_{\text{sno}} \leq 0.03
    \end{aligned} \right\}
 
-,
-
 
 
 .. math::
@@ -2204,8 +2188,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = \Delta z_{- 1}
    \end{aligned} \right\}
 
-,
-
 
 
 .. math::
@@ -2215,8 +2197,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{- 1} = 0.02 \text{for 0.04} < z_{\text{sno}} \leq 0.07 \\
    & \Delta z_{0} = z_{sno} - \Delta z_{- 1}
    \end{aligned} \right\}
-
-,
 
 
 
@@ -2229,8 +2209,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = \Delta z_{- 1}
    \end{aligned} \right\}
 
-,
-
 
 
 .. math::
@@ -2241,8 +2219,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{- 1} = 0.05 \text{for 0.12} < z_{\text{sno}} \leq 0.18 \\
    & \Delta z_{0} = z_{sno} - \Delta z_{- 2} - \Delta z_{- 1}
    \end{aligned} \right\}
-
-,
 
 
 
@@ -2256,8 +2232,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = \Delta z_{- 1}
    \end{aligned} \right\}
 
-,
-
 
 
 .. math::
@@ -2269,8 +2243,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{- 1} = 0.11 \\
    & \Delta z_{0} = z_{sno} - \Delta z_{- 3} - \Delta z_{- 2} - \Delta z_{- 1}
    \end{aligned} \right\}
-
-,
 
 
 
@@ -2285,8 +2257,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = \Delta z_{- 1}
    \end{aligned} \right\}
 
-,
-
 
 
 .. math::
@@ -2300,7 +2270,6 @@ The overlying snow pack for the roof and road is modeled with up to five layers 
    & \Delta z_{0} = z_{sno} - \Delta z_{- 4} - \Delta z_{- 3} - \Delta z_{- 2} - \Delta z_{- 1}
    \end{aligned} \right\}
 
-.
 
 The node depths, which are located at the midpoint of the snow layers, and the layer interfaces are both referenced from the urban surface and are defined as negative values
 
@@ -2325,7 +2294,6 @@ where the thermal conductivity at the interface :math:`\lambda\left\lbrack z_{h,
    & 0 i = N_{levgrnd}
    \end{aligned} \right\}
 
-.
 
 For a non-zero flux bottom boundary condition, :math:`\lambda\left\lbrack z_{h,i = N_{levgrnd}} \right\rbrack = \lambda_{i = N_{levgrnd}}`. These equations are derived, with reference to Figure 4.1, assuming that the heat flux from :math:`i` (depth :math:`z_{i}`) to the interface between :math:`i` and :math:`i + 1` (depth :math:`z_{h,i}`) equals the heat flux from the interface to :math:`i + 1` (depth :math:`z_{i + 1}`), i.e.,
 
@@ -2404,9 +2372,14 @@ where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (section 
    H_{aircond,prvrd} = H_{aircond,imprvrd} = \frac{H_{aircond}}{1 - W_{roof}}
    \end{cases}
 
-\ :math:`H_{aircond,sunwall} = H_{aircond,shdwall} = H_{aircond,roof} = 0`.
 
-where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations and . Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (section 3.2.4). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
+\
+
+.. math::
+
+   H_{aircond,sunwall} = H_{aircond,shdwall} = H_{aircond,roof} = 0
+
+where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations NNN and NNN. Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (section 3.2.4). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
 
 :math:`\frac{\partial h}{\partial T_{g}} = - \frac{\partial{\overrightarrow{L}}_{g}}{\partial T_{g}} - \frac{\partial H_{g}}{\partial T_{g}} - \frac{\partial\lambda E_{g}}{\partial T_{g}}`
 
@@ -2524,7 +2497,6 @@ The total waste heat from space heating/air conditioning is
     & f_{heat}F_{heat,shdwall} + f_{cool}F_{cool,shdwall}
    \end{aligned} \right) \leq H_{wasteheat,\max}
 
-\ :math:` `
 
 where :math:`f_{heat} = \frac{1}{0.75}` and :math:`f_{cool} = \frac{1}{0.25}` are factors describing the efficiency of space heating/air conditioning systems and :math:`H_{wasteheat,\max}` W m\ :sup:`-2` is a maximum limit on waste heat at any given time step. The heat removed by air conditioning is
 
@@ -2548,7 +2520,13 @@ Phase change may take place in any snow/soil layers of the pervious road and in 
 
    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > 0 i = snl + 1,\ldots,0 \text{freezing}
 
-\ :math:`T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}`
+
+\
+
+.. math::
+
+    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
+
 
 where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (Table 1.4). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from Niu and Yang (2006) is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
 
@@ -2573,7 +2551,7 @@ The rate of phase change is assessed from the energy excess (or deficit) needed 
 
 
 
-where :math:`F_{i}^{n + 1}` and :math:`F_{i - 1}^{n + 1}` are calculated from equations and using :math:`T_{i}^{n + 1}`. For roof and walls, :math:`F_{i = N_{levgrnd}}^{n + 1}` is calculated from equation . If the melting criteria is met (equation ) and :math:`H_{m} = \frac{H_{i}\Delta t}{L_{f}} > 0`, then the ice mass is readjusted as
+where :math:`F_{i}^{n + 1}` and :math:`F_{i - 1}^{n + 1}` are calculated from equations NNN and NNN using :math:`T_{i}^{n + 1}`. For roof and walls, :math:`F_{i = N_{levgrnd}}^{n + 1}` is calculated from equation NNN. If the melting criteria is met (equation ) and :math:`H_{m} = \frac{H_{i}\Delta t}{L_{f}} > 0`, then the ice mass is readjusted as
 
 :math:`w_{ice,i}^{n + 1} = w_{ice,i}^{n} - H_{m} \geq 0 i = snl + 1,\ldots,N_{levgrnd}`.
 
@@ -2631,7 +2609,7 @@ If there is excess energy (:math:`H_{1*} > 0`), this energy becomes available to
 
 :math:`H_{1} = H_{1*}`.
 
-The ice mass, liquid water content, and temperature of the top layer are then determined from equations , , and using the recalculated energy from equation . Snow melt :math:`M_{1S}` (kg m\ :sup:`-2` s\ :sup:`-1`) and phase change energy :math:`E_{p,1S}` (W m\ :sup:`-2`) for this special case are
+The ice mass, liquid water content, and temperature of the top layer are then determined from equations NNN, NNN, and NNN using the recalculated energy from equation NNN. Snow melt :math:`M_{1S}` (kg m\ :sup:`-2` s\ :sup:`-1`) and phase change energy :math:`E_{p,1S}` (W m\ :sup:`-2`) for this special case are
 
 :math:`M_{1S} = \frac{W_{sno}^{n} - W_{sno}^{n + 1}}{\Delta t} \geq 0`
 
@@ -2747,7 +2725,7 @@ For the special case when snow is present (:math:`W_{sno} > 0`) but there are no
 
 :math:`c_{1} = c_{1}^{*} + \frac{C_{ice}W_{sno}}{\Delta z_{1}}`
 
-where :math:`c_{1}^{*}` is calculated from equation .
+where :math:`c_{1}^{*}` is calculated from equation NNN.
 
 Hydrology
 =========
@@ -2920,7 +2898,12 @@ If there are no existing snow layers (:math:`snl + 1 = 1`) but :math:`z_{sno} \g
    w_{ice,0} = W_{sno}
    \end{cases}
 
-\ :math:`w_{liq,0} = 0`.
+
+\
+
+.. math::
+
+   w_{liq,0} = 0
 
 Snow Compaction
 ~~~~~~~~~~~~~~~
@@ -3111,7 +3094,7 @@ then adjusted as,
 
 
 
-where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations and .
+where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations NNN and NNN.
 
 Surface Runoff and Infiltration
 -------------------------------
@@ -3125,7 +3108,6 @@ For the roof and impervious road, water on these surfaces in excess of a maximum
    q_{over} = \frac{w_{liq,1}}{\Delta t} + q_{liq,0} - q_{seva} - \frac{w_{pond,\max}}{\Delta t}
    q_{over} = q_{liq,0} snl < 0
 
-.
 
 where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from rain (section 5.1) and/or snowmelt (section 5.1.2) and :math:`q_{seva}` is the evaporation of liquid water from the top layer (section 3.4). The liquid water content of the top layer is adjusted to
 
@@ -3136,7 +3118,6 @@ where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from ra
    w_{liq,1} = {wover}_{pond,\max}
    w_{liq,1} = w_{liq,1} + \left( q_{liq,0} - q_{seva} \right)\Delta t \geq 0 q_{over} = 0
 
-.
 
 For the pervious road, the simple TOPMODEL-based (Beven and Kirkby 1979) runoff model (SIMTOP) described by Niu et al. (2005) is implemented. A key concept underlying this approach is that of fractional saturated/impermeable area :math:`f_{sat}`, which is determined by the topographic characteristics and soil moisture state of a grid cell. The surface runoff consists of overland flow due to saturation excess (Dunne runoff) and infiltration excess (Hortonian runoff) mechanisms
 
@@ -3224,7 +3205,7 @@ Substitution of this equation into equation with :math:`Q = 0`, yields the Richa
 
 :math:`\frac{\partial\theta}{\partial t} = \frac{\partial}{\partial z}\left\lbrack k\left( \frac{\partial\theta}{\partial z}\frac{\partial\psi}{\partial\theta} \right) + 1 \right\rbrack`.
 
-Zeng and Decker (2009) note that this :math:`\theta` -based form of the Richards equation cannot maintain the hydrostatic equilibrium soil moisture distribution because of the truncation errors of the finite-difference numerical scheme. They show that this deficiency can be overcome by subtracting the equilibrium state from equation as
+Zeng and Decker (2009) note that this :math:`\theta` -based form of the Richards equation cannot maintain the hydrostatic equilibrium soil moisture distribution because of the truncation errors of the finite-difference numerical scheme. They show that this deficiency can be overcome by subtracting the equilibrium state from equation NNN as
 
 :math:`q = - k\left\lbrack \frac{\partial(\psi + z - C)}{\partial z} \right\rbrack`
 
@@ -3346,7 +3327,7 @@ where
 
 The tridiagonal equation set is solved over :math:`i = 1,\ldots,N_{levsoi} + 1` where the layer :math:`i = N_{levsoi} + 1` is a virtual layer representing the aquifer.
 
-The finite-difference forms of the fluxes and partial derivatives in equations - can be obtained from equation as
+The finite-difference forms of the fluxes and partial derivatives in equations - can be obtained from equation NNN as
 
 :math:`q_{i - 1}^{n} = - k\left\lbrack z_{h,i - 1} \right\rbrack\left\lbrack \frac{\left( \psi_{i - 1} - \psi_{i} \right) + \left( \psi_{E,i} - \psi_{E,i - 1} \right)}{z_{i} - z_{i - 1}} \right\rbrack`
 
@@ -3388,12 +3369,11 @@ The derivatives of the hydraulic conductivity at the layer interface are derived
    \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i}} = \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i + 1}} = \left( 1 - \frac{f_{frz,i} + f_{frz,i + 1}}{2} \right)\left( 2B_{i} + 3 \right)k_{sat}\left\lbrack z_{h,i} \right\rbrack \times
    \left\lbrack \frac{0.5\left( \theta_{i} + \theta_{i + 1} \right)}{0.5\left( \theta_{sat,i} + \theta_{sat,i + 1} \right)} \right\rbrack^{2B_{i} + 2}\left( \frac{0.5}{\theta_{sat,i}} \right)
 
-.
 
 Equilibrium soil matric potential and volumetric moisture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The equilibrium soil matric potential :math:`\psi_{E}` can be derived from equation as
+The equilibrium soil matric potential :math:`\psi_{E}` can be derived from equation NNN as
 
 :math:`\psi_{E} = \psi_{sat}\left( \frac{\theta_{E}(z)}{\theta_{sat}} \right)^{- B}`
 
@@ -3502,7 +3482,7 @@ where
 
 :math:`s_{N_{levsoi} + 1} = 0.5\left( \frac{\theta_{sat,N_{levsoi}} + \theta_{N_{levsoi}}}{\theta_{sat,N_{levsoi}}} \right) 0.01 \leq s_{N_{levsoi} + 1} \leq 1`,
 
-:math:`\psi_{E,N_{levsoi} + 1}` is evaluated from equations and , and
+:math:`\psi_{E,N_{levsoi} + 1}` is evaluated from equations NNN and NNN, and
 
 :math:`\frac{\partial\psi_{N_{levsoi} + 1}}{\partial\theta_{liq,N_{levsoi} + 1}} = - B_{N_{levsoi}}\frac{\psi_{N_{levsoi} + 1}}{s_{N_{levsoi}}\theta_{sat,N_{levsoi}}}`.
 
@@ -3550,7 +3530,7 @@ In either case, :math:`W_{t}` is first updated as
 
 :math:`W_{t}^{n + 1} = W_{t}^{n} + \left( q_{recharge} - q_{drai} \right)\Delta t`
 
-where :math:`\Delta t` is the model time step (s), :math:`q_{recharge}` is the recharge to the aquifer (kg m\ :sup:`-2` s\ :sup:`-1`), and the drainage :math:`q_{drai}` calculated from equation is equivalent to the groundwater discharge.
+where :math:`\Delta t` is the model time step (s), :math:`q_{recharge}` is the recharge to the aquifer (kg m\ :sup:`-2` s\ :sup:`-1`), and the drainage :math:`q_{drai}` calculated from equation NNN is equivalent to the groundwater discharge.
 
 For the case when the water table is below the soil column, the water stored in the unconfined aquifer :math:`W_{a}` (mm) is updated as
 
