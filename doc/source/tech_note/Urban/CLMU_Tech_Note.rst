@@ -558,9 +558,8 @@ Since the road is a horizontal surface, :math:`S_{road} \downarrow_{\Lambda}^{\m
    & \left( 1 - \frac{H}{W}\tan\mu \right)S_{atm} \downarrow_{\Lambda}^{\mu} \mu \leq \mu_{0}
    \end{aligned} \right\}
 
-.
 
-Equations and for the walls and equation for the road can now be expanded to account for any canyon orientation (:math:`0 \leq \theta \leq \frac{\pi}{2}`). If :math:`\theta` is the angle between the sun direction and the along-canyon axis (Figure 2.2), then the expression for the incidence angle is now :math:`\cos i = \sin\mu\sin\theta` and equation becomes
+Equations NNN and NNN for the walls and equation for the road can now be expanded to account for any canyon orientation (:math:`0 \leq \theta \leq \frac{\pi}{2}`). If :math:`\theta` is the angle between the sun direction and the along-canyon axis (Figure 2.2), then the expression for the incidence angle is now :math:`\cos i = \sin\mu\sin\theta` and equation becomes
 
 :math:`S_{sunwall} \downarrow_{\Lambda}^{\mu}(\theta) = \sin\theta\tan\mu S_{atm} \downarrow_{\Lambda}^{\mu} \mu \leq \mu_{0}`.
 
@@ -585,13 +584,12 @@ Similarly, for the road (:math:`\mu \leq \mu_{0}`), :math:`S_{road} \downarrow_{
    & \left( 1 - \frac{H}{W}\sin\theta\tan\mu \right)S_{atm} \downarrow_{\Lambda}^{\mu} \mu \leq \mu_{0}
    \end{aligned} \right\}
 
-.
 
 Note that the critical solar zenith angle is now
 
 :math:`\mu_{0} = \tan^{- 1}\left( \frac{\frac{W}{\sin\theta}}{H} \right)`.
 
-Equations , , and are integrated over all canyon orientations (:math:`0 \leq \theta \leq \frac{\pi}{2}`). The integration is done in two parts, first from :math:`\theta = 0` to :math:`\theta = \theta_{0}`, and second from :math:`\theta = \theta_{0}` to :math:`\theta = \frac{\pi}{2}`, where :math:`\theta_{0}` is the critical canyon orientation for which the road is no longer illuminated. This can be derived from Equation and is
+Equations NNN, NNN, and NNN are integrated over all canyon orientations (:math:`0 \leq \theta \leq \frac{\pi}{2}`). The integration is done in two parts, first from :math:`\theta = 0` to :math:`\theta = \theta_{0}`, and second from :math:`\theta = \theta_{0}` to :math:`\theta = \frac{\pi}{2}`, where :math:`\theta_{0}` is the critical canyon orientation for which the road is no longer illuminated. This can be derived from Equation NNN and is
 
 :math:`\theta_{0} = \sin^{- 1}\left\lbrack \min\left( \frac{W}{H\tan\mu},1 \right) \right\rbrack`.
 
@@ -945,13 +943,11 @@ while the total absorbed is
 
 
 
-
 .. math::
 
    {\overrightarrow{S}}_{uc,\Lambda} = {\overrightarrow{S}}_{imprvrd,\Lambda,i = n}\left( 1 - f_{prvrd} \right) + {\overrightarrow{S}}_{prvrd,\Lambda,i = n}f_{prvrd}
    + \left( {\overrightarrow{S}}_{sunwall,\Lambda,i = n} + {\overrightarrow{S}}_{shdwall,\Lambda,i = n} \right)\frac{H}{W}
 
-.
 
 Solar radiation in the urban canyon is conserved as
 
@@ -962,7 +958,6 @@ Solar radiation in the urban canyon is conserved as
    S_{road} \downarrow_{\Lambda}^{\mu} + \left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right)\frac{H}{W} + S_{road} \downarrow_{\Lambda} + \left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right)\frac{H}{W}
    - \left( {\overrightarrow{S}}_{uc,\Lambda}^{\mu} + {\overrightarrow{S}}_{uc,\Lambda} + S_{uc} \uparrow_{\Lambda}^{\mu} + S_{uc} \uparrow_{\Lambda} \right) = 0
 
-.
 
 The direct beam and diffuse urban canyon albedos are
 
@@ -2532,7 +2527,7 @@ where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridi
 
 :math:`w_{liq,{max,}i} = \Delta z_{i}\theta_{sat,i}\left\lbrack \frac{10^{3}L_{f}\left( T_{f} - T_{i} \right)}{gT_{i}\psi_{sat,i}} \right\rbrack^{\frac{- 1}{B_{i}}} T_{i} < T_{f}`
 
-where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (Table 1.4), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (Table 1.4), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and Clapp and Hornberger (1978) exponent (section 5.3.1). Equation applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
+where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (Table 1.4), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (Table 1.4), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and Clapp and Hornberger (1978) exponent (section 5.3.1). Equation NNN applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
 
 For the special case when snow is present (snow mass :math:`W_{sno} > 0`) but there are no explicit snow layers (:math:`snl = 0`) (i.e., there is not enough snow present to meet the minimum snow depth requirement of 0.01 m), snow melt will take place for soil layer :math:`i = 1` if the soil layer temperature is greater than the freezing temperature (:math:`T_{1}^{n + 1} > T_{f}`).
 
@@ -3389,7 +3384,7 @@ which when integrated yields
 
 :math:`\overline{\theta_{E,i}} = \frac{\theta_{sat, i}\psi_{sat,i}}{\left( z_{h,i} - z_{h,i - 1} \right)\left( 1 - \frac{1}{B_{i}} \right)}\left\lbrack \left( \frac{\psi_{sat,i} - z_{\nabla} + z_{h,i}}{\psi_{sat,i}} \right)^{1 - \frac{1}{B_{i}}} - \left( \frac{\psi_{sat,i} - z_{\nabla} + z_{h,i - 1}}{\psi_{sat,i}} \right)^{1 - \frac{1}{B_{i}}} \right\rbrack`.
 
-Equation is valid when the water table :math:`z_{\nabla}` is deeper than both interface depths :math:`z_{h,i - 1}` and :math:`z_{h,i}`. Since the water table can be within the soil column, the equation is modified if the water table is within soil layer :math:`i` (:math:`z_{h,i - 1} < z_{\nabla} < z_{h,i}`) as a weighted average of the saturated part and the unsaturated part
+Equation NNN is valid when the water table :math:`z_{\nabla}` is deeper than both interface depths :math:`z_{h,i - 1}` and :math:`z_{h,i}`. Since the water table can be within the soil column, the equation is modified if the water table is within soil layer :math:`i` (:math:`z_{h,i - 1} < z_{\nabla} < z_{h,i}`) as a weighted average of the saturated part and the unsaturated part
 
 :math:`\overline{\theta_{E,i}} = \overline{\theta_{E,sat,i}}\left( \frac{z_{h,i} - z_{\nabla}}{z_{h,i} - z_{h,i - 1}} \right) + \overline{\theta_{E,unsat,i}}\left( \frac{z_{\nabla} - z_{h,i - 1}}{z_{h,i} - z_{h,i - 1}} \right)`
 
