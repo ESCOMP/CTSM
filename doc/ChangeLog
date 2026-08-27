@@ -1,4 +1,61 @@
 ===============================================================
+Tag name: ctsm5.4.053
+Originator(s): oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+Date: Wed Aug 19 03:19:08 PM MDT 2026
+One-line Summary: Resolve problems with running PLUMBER2 sites
+
+Purpose and description of changes
+----------------------------------
+
+Fix failures in running PLUMBER2 sites.
+See https://github.com/ESCOMP/CTSM/pull/4092 for details.
+
+List of CTSM issues fixed
+Resolves #4023 PLUMBER2 wetland sites fail at creation
+Resolves #4081 Several PLUMBER2 sites fail at run time
+Resolves #4105 PLUMBER2 postad run failure
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+Documention updated by https://github.com/ESCOMP/CTSM/pull/4135
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+Added three new tests to testlist_clm.xml:
+SMS_Ly2_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu--clm-ADspinup
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.IHist1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ESLgS--clm-ADspinup
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+      derecho ----- OK
+      izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+Summarize any changes to answers, i.e.,
+- what code configurations: PLUMBER2 site simulations
+- what platforms/compilers: All
+- nature of change: Same climate (larger than roundoff likely) for PLUMBER2 sites that ran previously; sites that didn't run previously, now run
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+cdeps1.0.96 -> cdeps1.0.103
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/4092
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.052
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon Aug 17 05:09:21 PM MDT 2026
