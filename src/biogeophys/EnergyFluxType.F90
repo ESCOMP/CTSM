@@ -52,7 +52,7 @@ module EnergyFluxType
      real(r8), pointer :: eflx_snomelt_u_col      (:)   ! col urban snow melt heat flux (W/m**2)
      real(r8), pointer :: eflx_gnet_patch         (:)   ! patch net heat flux into ground  (W/m**2)
      real(r8), pointer :: eflx_grnd_lake_patch    (:)   ! patch net heat flux into lake / snow surface, excluding light transmission (W/m**2)
-     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2)
+     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_bot_col            (:)   ! col heat flux from beneath the soil or ice column (W/m**2)
      real(r8), pointer :: eflx_fgr12_col          (:)   ! col ground heat flux between soil layers 1 and 2 (W/m**2)
      real(r8), pointer :: eflx_fgr_col            (:,:) ! col (rural) soil downward heat flux (W/m2) (1:nlevgrnd)  (pos upward; usually eflx_bot >= 0)
@@ -309,7 +309,7 @@ contains
 
     this%eflx_dynbal_grc(begg:endg) = spval 
     call hist_addfld1d (fname='EFLX_DYNBAL',  units='W/m^2',  &
-         avgflag='A', long_name='dynamic land cover change conversion energy flux', &
+         avgflag='A', long_name='dynamic land cover change conversion energy flux [+ to atm]', &
          ptr_lnd=this%eflx_dynbal_grc)
 
     this%eflx_snomelt_col(begc:endc) = spval

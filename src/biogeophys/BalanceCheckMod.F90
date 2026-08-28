@@ -279,18 +279,14 @@ contains
        enddo
     endif
     
-    ! Account for the dynbal storage pools. These pools hold the delta state,
-    ! (end - beg), arising from dynamic landunit adjustments; this amount is released
-    ! gradually to the dynbal fluxes. Thus, the amount released is the negative of the
-    ! amount held in the storage pools, so conservation requires us to subtract the
-    ! storage.
-    ! This sign convention is opposite to the convention chosen for the
-    ! dribble terms used in the carbon balance. At some point it may be worth making the
-    ! two conventions consistent.
+    ! Add the dynbal storage pools. These pools hold the amount of water that must be
+    ! added to the gridcell's total water content in order for that total to be conserved
+    ! across dynamic landunit adjustments; this water is released gradually to the dynbal
+    ! fluxes.
     do g = begg, endg
        wb_grc(g) = wb_grc(g) &
-            - waterstate_inst%dynbal_liq_storage_grc(g) &
-            - waterstate_inst%dynbal_ice_storage_grc(g)
+            + waterstate_inst%dynbal_liq_storage_grc(g) &
+            + waterstate_inst%dynbal_ice_storage_grc(g)
     end do
 
     ! Map wb_grc to beginning/ending water balance according to flag

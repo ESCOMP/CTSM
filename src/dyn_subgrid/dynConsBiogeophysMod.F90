@@ -575,9 +575,12 @@ contains
          liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(begg:endg), &
          delta_heat = delta_heat(begg:endg))
 
+    ! Add this time step's spurious heat gain to the storage pool (with a negative to use
+    ! the proper sign convention for this pool), then release a portion of the pool as
+    ! this time step's flux.
     dtime = get_step_size_real()
     do g = begg, endg
-       dynbal_heat_storage(g) = dynbal_heat_storage(g) + delta_heat(g)
+       dynbal_heat_storage(g) = dynbal_heat_storage(g) - delta_heat(g)
        eflx_dynbal(g) = dynbal_heat_storage(g) * dynbal_storage_turnover_rate
        dynbal_heat_storage(g) = dynbal_heat_storage(g) - (eflx_dynbal(g) * dtime)
     end do
@@ -649,13 +652,16 @@ contains
        end do
     end if
 
+    ! Add this time step's spurious water gain to the storage pools (with a negative to
+    ! use the proper sign convention for these pools), then release a portion of each pool
+    ! as this time step's flux.
     dtime = get_step_size_real()
     do g = begg, endg
-       dynbal_liq_storage(g) = dynbal_liq_storage(g) + delta_liq(g)
+       dynbal_liq_storage(g) = dynbal_liq_storage(g) - delta_liq(g)
        qflx_liq_dynbal(g) = dynbal_liq_storage(g) * dynbal_storage_turnover_rate
        dynbal_liq_storage(g) = dynbal_liq_storage(g) - (qflx_liq_dynbal(g) * dtime)
 
-       dynbal_ice_storage(g) = dynbal_ice_storage(g) + delta_ice(g)
+       dynbal_ice_storage(g) = dynbal_ice_storage(g) - delta_ice(g)
        qflx_ice_dynbal(g) = dynbal_ice_storage(g) * dynbal_storage_turnover_rate
        dynbal_ice_storage(g) = dynbal_ice_storage(g) - (qflx_ice_dynbal(g) * dtime)
     end do

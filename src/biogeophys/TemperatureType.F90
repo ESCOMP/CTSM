@@ -106,7 +106,7 @@ module TemperatureType
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
      real(r8), pointer :: liquid_water_temp2_grc   (:)   ! grc post land cover change weighted average liquid water temperature (K)
-     real(r8), pointer :: dynbal_heat_storage_grc  (:)   ! grc heat storage from dynbal adjustments, to be released gradually [J/m^2]
+     real(r8), pointer :: dynbal_heat_storage_grc  (:)   ! grc heat storage from dynbal adjustments, to be released gradually; positive means heat that still needs to be released to the atmosphere [J/m^2]
 
      ! Flags
      integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd)

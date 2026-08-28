@@ -52,7 +52,9 @@ module WaterStateType
      real(r8), pointer :: dynbal_baseline_ice_col(:)    ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
      ! Storage pools holding the water added / removed by dynamic landunit adjustments;
-     ! these are released gradually to the dynbal fluxes
+     ! these are released gradually to the dynbal fluxes. For these variables, positive
+     ! values indicate mass that still needs to be released to runoff; negative values
+     ! indicate mass that still needs to be drawn back in from elsewhere.
      real(r8), pointer :: dynbal_liq_storage_grc(:)     ! grc liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
      real(r8), pointer :: dynbal_ice_storage_grc(:)     ! grc ice storage from dynbal adjustments, to be released gradually (mm H2O)
 

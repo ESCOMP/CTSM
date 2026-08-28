@@ -97,8 +97,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
-     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
-     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
+     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
+     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
 
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
@@ -531,7 +531,8 @@ contains
          fname=this%info%fname('QFLX_LIQ_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('liq dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'liq dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_liq_dynbal_grc)     
 
     this%qflx_ice_dynbal_grc(begg:endg) = spval
@@ -539,7 +540,8 @@ contains
          fname=this%info%fname('QFLX_ICE_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('ice dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'ice dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_ice_dynbal_grc)
 
     this%qflx_runoff_col(begc:endc) = spval
