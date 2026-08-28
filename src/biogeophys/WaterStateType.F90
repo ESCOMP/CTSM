@@ -51,6 +51,11 @@ module WaterStateType
      real(r8), pointer :: dynbal_baseline_liq_col(:)    ! baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
      real(r8), pointer :: dynbal_baseline_ice_col(:)    ! baseline ice content subtracted from each column's total ice calculation (mm H2O)
 
+     ! Storage pools holding the water added / removed by dynamic landunit adjustments;
+     ! these are released gradually to the dynbal fluxes
+     real(r8), pointer :: dynbal_liq_storage_grc(:)     ! grc liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
+     real(r8), pointer :: dynbal_ice_storage_grc(:)     ! grc ice storage from dynbal adjustments, to be released gradually (mm H2O)
+
      real(r8) :: aquifer_water_baseline                 ! baseline value for water in the unconfined aquifer (wa_col) for this bulk / tracer (mm)
 
      real(r8), pointer :: excess_ice_col         (:,:)  ! col excess ice (kg/m2) (new) (-nlevsno+1:nlevgrnd)
@@ -160,6 +165,12 @@ contains
     call AllocateVar1d(var = this%dynbal_baseline_ice_col, name = 'dynbal_baseline_ice_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column)
+    call AllocateVar1d(var = this%dynbal_liq_storage_grc, name = 'dynbal_liq_storage_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
+    call AllocateVar1d(var = this%dynbal_ice_storage_grc, name = 'dynbal_ice_storage_grc', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_gridcell)
     call AllocateVar1d(var = this%stream_water_volume_lun, name = 'stream_water_volume_lun', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_landunit)
@@ -291,6 +302,22 @@ contains
             long_name=this%info%lname('water in the unconfined aquifer (natural vegetated and crop landunits only)'), &
             ptr_col=this%wa_col, l2g_scale_type='veg')
     end if
+
+    this%dynbal_liq_storage_grc(begg:endg) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('DYNBAL_LIQ_STORAGE'), &
+         units='mm', &
+         avgflag='A', &
+         long_name=this%info%lname('gridcell liquid water storage from dynamic landunit adjustments'), &
+         ptr_lnd=this%dynbal_liq_storage_grc, default='inactive')
+
+    this%dynbal_ice_storage_grc(begg:endg) = spval
+    call hist_addfld1d ( &
+         fname=this%info%fname('DYNBAL_ICE_STORAGE'), &
+         units='mm', &
+         avgflag='A', &
+         long_name=this%info%lname('gridcell ice storage from dynamic landunit adjustments'), &
+         ptr_lnd=this%dynbal_ice_storage_grc, default='inactive')
 
     if (use_hillslope) then
        this%stream_water_volume_lun(begl:endl) = spval
@@ -549,6 +576,10 @@ contains
       this%dynbal_baseline_liq_col(bounds%begc:bounds%endc) = 0._r8
       this%dynbal_baseline_ice_col(bounds%begc:bounds%endc) = 0._r8
 
+      ! The dynbal storage pools start out empty
+      this%dynbal_liq_storage_grc(bounds%begg:bounds%endg) = 0._r8
+      this%dynbal_ice_storage_grc(bounds%begg:bounds%endg) = 0._r8
+
       !Initialize excess ice
       this%exice_bulk_init(bounds%begc:bounds%endc) = exice_init_conc_col(bounds%begc:bounds%endc)
       this%excess_ice_col(bounds%begc:bounds%endc,:) = 0.0_r8
@@ -713,6 +744,22 @@ contains
          long_name=this%info%lname("baseline ice mass subtracted from each column's total ice calculation"), &
          units='kg/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_ice_col)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_LIQ_STORAGE'), &
+         xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name=this%info%lname('liquid water storage from dynbal adjustments'), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_liq_storage_grc)
+
+    call restartvar(ncid=ncid, flag=flag, &
+         varname=this%info%fname('DYNBAL_ICE_STORAGE'), &
+         xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name=this%info%lname('ice storage from dynbal adjustments'), &
+         units='kg/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_ice_storage_grc)
 
     call restartvar(ncid=ncid, flag=flag, &
          varname=this%info%fname('STREAM_WATER_VOLUME'), &

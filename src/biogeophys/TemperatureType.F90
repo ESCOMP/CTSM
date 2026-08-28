@@ -106,6 +106,7 @@ module TemperatureType
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
      real(r8), pointer :: liquid_water_temp2_grc   (:)   ! grc post land cover change weighted average liquid water temperature (K)
+     real(r8), pointer :: dynbal_heat_storage_grc  (:)   ! grc heat storage from dynbal adjustments, to be released gradually [J/m^2]
 
      ! Flags
      integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd)
@@ -288,6 +289,7 @@ contains
     allocate(this%heat2_grc                (begg:endg))                      ; this%heat2_grc                (:)   = nan
     allocate(this%liquid_water_temp1_grc   (begg:endg))                      ; this%liquid_water_temp1_grc   (:)   = nan
     allocate(this%liquid_water_temp2_grc   (begg:endg))                      ; this%liquid_water_temp2_grc   (:)   = nan
+    allocate(this%dynbal_heat_storage_grc  (begg:endg))                      ; this%dynbal_heat_storage_grc  (:)   = nan
 
     ! flags
     allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%imelt_col                (:,:) = huge(1)
@@ -554,6 +556,11 @@ contains
     call hist_addfld1d (fname='LIQUID_WATER_TEMP1', units='K', &
          avgflag='A', long_name='initial gridcell weighted average liquid water temperature', &
          ptr_lnd=this%liquid_water_temp1_grc, default='inactive')
+
+    this%dynbal_heat_storage_grc(begg:endg) = spval
+    call hist_addfld1d (fname='DYNBAL_HEAT_STORAGE', units='J/m^2', &
+         avgflag='A', long_name='gridcell heat storage from dynamic landunit adjustments', &
+         ptr_lnd=this%dynbal_heat_storage_grc, default='inactive')
 
     this%snot_top_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTTOPL', units='K', &
@@ -919,6 +926,9 @@ contains
     ! set.
     this%dynbal_baseline_heat_col(bounds%begc:bounds%endc) = 0._r8
 
+    ! The dynbal storage pools start out empty
+    this%dynbal_heat_storage_grc(bounds%begg:bounds%endg) = 0._r8
+
   end subroutine InitCold
 
   !------------------------------------------------------------------------
@@ -1074,6 +1084,12 @@ contains
          long_name="baseline heat content subtracted from each column's total heat calculation", &
          units='J/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_heat_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='DYNBAL_HEAT_STORAGE', xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name="heat storage from dynbal adjustments", &
+         units='J/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_heat_storage_grc)
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='gdd1020', xtype=ncd_double,  &

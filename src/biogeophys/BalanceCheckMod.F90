@@ -161,7 +161,6 @@ contains
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
-            water_inst%bulk_and_tracers(i)%waterflux_inst, &
             use_aquifer_layer = use_aquifer_layer, flag = flag)
     end do
 
@@ -212,7 +211,7 @@ contains
   subroutine WaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        lakestate_inst, waterstate_inst, waterdiagnostic_inst, &
-       waterbalance_inst, waterflux_inst, use_aquifer_layer, flag)
+       waterbalance_inst, use_aquifer_layer, flag)
     !
     ! !DESCRIPTION:
     ! Grid cell-level water balance for bulk or a single tracer
@@ -232,7 +231,6 @@ contains
     class(waterstate_type)     , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)   , intent(inout) :: waterbalance_inst
-    class(waterflux_type)      , intent(inout) :: waterflux_inst
     logical                    , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     character(len=5)           , intent(in)    :: flag  ! specifies begwb or endwb
     !
@@ -241,8 +239,6 @@ contains
     integer :: begc, endc, begl, endl, begg, endg  ! bounds
     real(r8) :: wb_col(bounds%begc:bounds%endc)  ! temporary column-level water mass
     real(r8) :: wb_grc(bounds%begg:bounds%endg)  ! temporary grid cell-level water mass
-    real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux
-    real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux
     real(r8) :: wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg)  ! grc mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
 
     character(len=*), parameter :: subname = 'WaterGridcellBalanceSingle'
@@ -283,38 +279,18 @@ contains
        enddo
     endif
     
-    ! Call the beginning or ending version of the subroutine according
-    ! to flag value
-    if (flag == 'begwb') then
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, &
-         qflx_liq_dynbal_left_to_dribble(begg:endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, &
-         qflx_ice_dynbal_left_to_dribble(begg:endg))
-    else if (flag == 'endwb') then
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_liq_dynbal_left_to_dribble(begg:endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_ice_dynbal_left_to_dribble(begg:endg))
-    else
-       write(iulog,*) 'Unknown flag passed into this subroutine.'
-       write(iulog,*) 'Expecting either begwb or endwb.'
-       call endrun(msg=errmsg(sourcefile, __LINE__))
-    end if
-
-    ! These dynbal dribblers store the delta state, (end - beg). Thus, the
-    ! amount dribbled out is the negative of the amount stored in the
-    ! dribblers. Therefore, conservation requires us to subtract the amount
-    ! remaining to dribble.
+    ! Account for the dynbal storage pools. These pools hold the delta state,
+    ! (end - beg), arising from dynamic landunit adjustments; this amount is released
+    ! gradually to the dynbal fluxes. Thus, the amount released is the negative of the
+    ! amount held in the storage pools, so conservation requires us to subtract the
+    ! storage.
     ! This sign convention is opposite to the convention chosen for the
-    ! respective dribble terms used in the carbon balance. At some point
-    ! it may be worth making the two conventions consistent.
+    ! dribble terms used in the carbon balance. At some point it may be worth making the
+    ! two conventions consistent.
     do g = begg, endg
-       wb_grc(g) = wb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
-                             - qflx_ice_dynbal_left_to_dribble(g)
+       wb_grc(g) = wb_grc(g) &
+            - waterstate_inst%dynbal_liq_storage_grc(g) &
+            - waterstate_inst%dynbal_ice_storage_grc(g)
     end do
 
     ! Map wb_grc to beginning/ending water balance according to flag
@@ -343,6 +319,10 @@ contains
        do g = begg, endg
           endwb_grc(g) = wb_grc(g) - wa_reset_nonconservation_gain_grc(g)
        end do
+    else
+       write(iulog,*) 'Unknown flag passed into this subroutine.'
+       write(iulog,*) 'Expecting either begwb or endwb.'
+       call endrun(msg=errmsg(sourcefile, __LINE__))
     end if
 
     end associate

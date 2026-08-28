@@ -11,6 +11,7 @@ module dynConsBiogeophysMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
+  use shr_const_mod           , only : SHR_CONST_CDAY
   use decompMod               , only : bounds_type
   use UrbanParamsType         , only : urbanparams_type
   use EnergyFluxType          , only : energyflux_type
@@ -40,6 +41,7 @@ module dynConsBiogeophysMod
   use landunit_varcon         , only : istsoil, istice
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
   use filterColMod            , only : filter_col_type, col_filter_from_ltypes
+  use clm_time_manager        , only : get_step_size_real
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -56,6 +58,16 @@ module dynConsBiogeophysMod
   private :: dyn_water_content_final      ! compute grid-level water content and dynbal fluxes after landcover change, for a single water tracer or bulk water
   private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
+
+  !
+  ! !PRIVATE DATA MEMBERS:
+
+  ! Turnover rate of the dynbal storage pools [1/s]. Note that we specify the time in
+  ! years and then convert it to seconds. (It isn't important to account for leap years
+  ! here: we just want a value that roughly equates to our desired residence time in
+  ! years: it doesn't need to be exact.)
+  real(r8), parameter, private :: dynbal_storage_turnover_rate = &
+       1._r8 / (20._r8 * (365._r8 * SHR_CONST_CDAY))
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -506,6 +518,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: i
     integer  :: g     ! grid cell index
+    real(r8) :: dtime ! model time step [s]
     real(r8) :: this_delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk or one tracer
     real(r8) :: delta_liq_bulk(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk water
     real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
@@ -513,7 +526,10 @@ contains
 
     associate( &
          begg => bounds%begg, &
-         endg => bounds%endg)
+         endg => bounds%endg, &
+         dynbal_heat_storage => temperature_inst%dynbal_heat_storage_grc, & ! Output: [real(r8) (:)] heat storage from dynbal adjustments, to be released gradually (J/m^2)
+         eflx_dynbal => energyflux_inst%eflx_dynbal_grc  &                  ! Output: [real(r8) (:)] dynamic land cover change conversion energy flux (W/m^2)
+         )
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
@@ -559,10 +575,12 @@ contains
          liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(begg:endg), &
          delta_heat = delta_heat(begg:endg))
 
-    call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_heat(begg:endg))
-    call energyflux_inst%eflx_dynbal_dribbler%get_curr_flux(bounds, &
-         energyflux_inst%eflx_dynbal_grc(begg:endg))
+    dtime = get_step_size_real()
+    do g = begg, endg
+       dynbal_heat_storage(g) = dynbal_heat_storage(g) + delta_heat(g)
+       eflx_dynbal(g) = dynbal_heat_storage(g) * dynbal_storage_turnover_rate
+       dynbal_heat_storage(g) = dynbal_heat_storage(g) - (eflx_dynbal(g) * dtime)
+    end do
 
     end associate
 
@@ -586,7 +604,7 @@ contains
     integer                     , intent(in)    :: filter_nolakec(:)
     integer                     , intent(in)    :: num_lakec
     integer                     , intent(in)    :: filter_lakec(:)
-    class(waterstate_type)      , intent(in)    :: waterstate_inst
+    class(waterstate_type)      , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type) , intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)    , intent(inout) :: waterbalance_inst
     class(waterflux_type)       , intent(inout) :: waterflux_inst
@@ -595,6 +613,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: g
+    real(r8) :: dtime ! model time step [s]
     real(r8) :: delta_ice(bounds%begg:bounds%endg)  ! change in gridcell h2o ice content
 
     character(len=*), parameter :: subname = 'dyn_water_content_final'
@@ -604,7 +623,12 @@ contains
 
     associate( &
          begg => bounds%begg, &
-         endg => bounds%endg)
+         endg => bounds%endg, &
+         dynbal_liq_storage => waterstate_inst%dynbal_liq_storage_grc, & ! Output: [real(r8) (:)] liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
+         dynbal_ice_storage => waterstate_inst%dynbal_ice_storage_grc, & ! Output: [real(r8) (:)] ice storage from dynbal adjustments, to be released gradually (mm H2O)
+         qflx_liq_dynbal => waterflux_inst%qflx_liq_dynbal_grc, &        ! Output: [real(r8) (:)] liq dynamic land cover change conversion runoff flux (mm H2O/s)
+         qflx_ice_dynbal => waterflux_inst%qflx_ice_dynbal_grc  &        ! Output: [real(r8) (:)] ice dynamic land cover change conversion runoff flux (mm H2O/s)
+         )
 
     call dyn_water_content(bounds, &
          num_nolakec, filter_nolakec, &
@@ -625,15 +649,16 @@ contains
        end do
     end if
 
-    call waterflux_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_liq(begg:endg))
-    call waterflux_inst%qflx_liq_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_liq_dynbal_grc(begg:endg))
+    dtime = get_step_size_real()
+    do g = begg, endg
+       dynbal_liq_storage(g) = dynbal_liq_storage(g) + delta_liq(g)
+       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * dynbal_storage_turnover_rate
+       dynbal_liq_storage(g) = dynbal_liq_storage(g) - (qflx_liq_dynbal(g) * dtime)
 
-    call waterflux_inst%qflx_ice_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_ice(begg:endg))
-    call waterflux_inst%qflx_ice_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_ice_dynbal_grc(begg:endg))
+       dynbal_ice_storage(g) = dynbal_ice_storage(g) + delta_ice(g)
+       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * dynbal_storage_turnover_rate
+       dynbal_ice_storage(g) = dynbal_ice_storage(g) - (qflx_ice_dynbal(g) * dtime)
+    end do
 
     end associate
 
