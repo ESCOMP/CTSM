@@ -2878,6 +2878,11 @@ starting a startup or hybrid run from a partially or entirely spun-up
 state. This will reset the baseline values based on the state at the
 start of this run.
 
+This flag also resets the dynbal storage pools to zero. (These pools hold the
+still-to-be-distributed water and energy from earlier dynamic column/landunit area
+changes. So resetting these to zero means forgetting about these earlier changes, which is
+somewhat analogous to the other resetting done by this flag.)
+
 Note that setting this flag can break water and energy conservation!
 Specifically, any water and energy that has previously been added to or
 removed from states that contribute to these baselines (currently, (a)

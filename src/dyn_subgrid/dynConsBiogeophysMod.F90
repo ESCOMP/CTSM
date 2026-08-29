@@ -96,6 +96,13 @@ contains
     ! the dynbal fluxes; however, it can break conservation. (So, for example, it can be
     ! done when transitioning from an offline spinup to a coupled run, but it should not
     ! be done when transitioning from a coupled historical run to a future scenario.)
+    !
+    ! Setting reset_all_baselines also resets the dynbal storage pools to zero. (These
+    ! pools hold the still-to-be-distributed water and energy from earlier dynamic
+    ! column/landunit area changes. So resetting these to zero means forgetting about
+    ! these earlier changes, which is somewhat analogous to the other resetting done by
+    ! this flag.)
+    !
     ! Other reset_* flags are described below.
     !
     ! !ARGUMENTS:
@@ -203,7 +210,9 @@ contains
 
     associate( &
          dynbal_baseline_liq => waterstate_inst%dynbal_baseline_liq_col, & ! Output: [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
-         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col  & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
+         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col, & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
+         dynbal_liq_storage => waterstate_inst%dynbal_liq_storage_grc, &   ! Output: [real(r8) (:)   ]  liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
+         dynbal_ice_storage => waterstate_inst%dynbal_ice_storage_grc &    ! Output: [real(r8) (:)   ]  ice storage from dynbal adjustments, to be released gradually (mm H2O)
          )
 
     if (reset_all_baselines) then
@@ -229,6 +238,9 @@ contains
        call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_ice_mass_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_ice(bounds%begc:bounds%endc))
+
+       dynbal_liq_storage(bounds%begg:bounds%endg) = 0._r8
+       dynbal_ice_storage(bounds%begg:bounds%endg) = 0._r8
     end if
 
     if (reset_all_baselines .or. reset_lake_baselines) then
@@ -295,7 +307,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate( &
-         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         dynbal_heat_storage => temperature_inst%dynbal_heat_storage_grc  &   ! Output: [real(r8) (:)   ]  heat storage from dynbal adjustments, to be released gradually (J/m^2)
          )
 
     if (reset_all_baselines) then
@@ -327,6 +340,8 @@ contains
        call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_heat_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_heat(bounds%begc:bounds%endc))
+
+       dynbal_heat_storage(bounds%begg:bounds%endg) = 0._r8
     end if
 
     if (reset_all_baselines .or. reset_lake_baselines) then
