@@ -2,7 +2,7 @@
 ./xmlchange LND_DATA_ASSIMILATION=TRUE
 ./xmlchange MULTI_DRIVER=TRUE
 
-#Set DGLC coupling to half a day so 12hour tests can work
+#Set DGLC coupling from once to twice a day so 12hour tests can work
 ./xmlchange GLC_NCPL=2
 
 # Set calendar, just because Gregorian is ussually used for DA
