@@ -70,6 +70,13 @@ def get_parser():
     )
 
     parser.add_argument(
+        "--check-only",
+        help="Only check if the testlist is correct, don't write a new file "
+        + "even if it needs modifications",
+        action="store_true",
+        dest="check_only",
+    )
+    parser.add_argument(
         "--testlist-file",
         help="Testlist XML file to read in and check for missing super-testlist entries.",
         action="store",
@@ -79,8 +86,10 @@ def get_parser():
     )
     parser.add_argument(
         "--output",
-        help="File to write the (possibly modified) testlist to."
-        " Defaults to '<testlist-file>.modified'.",
+        help="Filename to write the modified testlist to"
+        + " (only writes it if there are changes required)."
+        " Defaults to '<testlist-file>.modified'."
+        " Set to None if the --check-only option is used",
         action="store",
         dest="output_file",
         type=str,
@@ -187,6 +196,10 @@ def process_machine_block(
     if not new_line:
         return block
 
+    # Log about this block needing to be modified
+    logger.warning("Found a block that needs to be modified and %s added to it", super_testlist)
+    logger.warning(block)
+
     # Preserve the existing XML formatting: add the new machine entry as a
     # separate line with the same indentation as the surrounding entries,
     # and preserve the original indentation that preceded the closing
@@ -256,12 +269,35 @@ def main():
     text = add_super_testlist(text, "fates", testlists=FATES_TESTLISTS)
 
     if text == orig_text:
-        logger.info("No changes needed")
-        args.output_file.write_text(orig_text)
+        logger.info("No changes needed, so output file NOT written to")
+        logger.info("Successfully validated that the testlist.xml file is correct")
         return
+    #
+    # If changes are needed report on how it failed
+    #
 
-    args.output_file.write_text(text)
-    logger.info("WROTE %s", args.output_file)
+    # Output modified file if the --check-only option wasn't used
+    if not args.check_only:
+        args.output_file.write_text(text)
+        logger.warning("WROTE %s", args.output_file)
+        logger.warning("Use %s to correct the testlist_clm.xml file", args.output_file)
+    # Otherwise: Document the steps to do to fix the problem
+    else:
+        logger.warning("Modified file was NOT written, because the --check-only option was used")
+        logger.warning("If this failed from a github workflow run -- do the following steps")
+        logger.warning(
+            "1.) Run %s To both see the fails and also create a modified file with the fixes",
+            __file__,
+        )
+        logger.warning(
+            "2.) Copy the modified file to testlist_clm.xml and verify the changes are correct"
+        )
+        logger.warning("3.) git commit and git push the changes")
+        logger.warning("4.) Verify the workflow runs correctly now -- or repeat the process")
+
+    # Exit with an error
+    logger.warning("The testlist file had problems and needs some updates")
+    abort("The testlist didn't validate")
 
 
 if __name__ == "__main__":
