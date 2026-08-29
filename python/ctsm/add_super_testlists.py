@@ -131,13 +131,13 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
     name = re.search(r'name\s*=\s*"([^"]+)"', attrs)
     comp = re.search(r'compiler\s*=\s*"([^"]+)"', attrs)
     if not name or not comp:
-        logger.warning(
+        logger.error(
             "Could not find name and/or compiler attributes in machine line, "
             "so cannot add a %s entry for it: %s",
             super_testlist,
             attrs,
         )
-        return None
+        abort( "This block doesn't have a machine line for it" )
     attrs_str = f'name="{name.group(1)}" compiler="{comp.group(1)}" category="{super_testlist}"'
     return f"{indent}<machine {attrs_str}/>"
 
@@ -182,11 +182,12 @@ def process_machine_block(
     # find first machine line
     match = re.search(r"(\n\s*)(<machine\s+([^/>]+)/>)", block)
     if not match:
-        # cannot find machine, skip
-        logger.debug(
+        # cannot find machine, die with an error as this is a problem
+        logger.error(
             "No <machine/> line found in block, so cannot add a %s entry to it", super_testlist
         )
-        return block
+        logger.error( block )
+        abort( "block doesn't have a machine line for it, so aborting" )
     indent = match.group(1)
     # strip the leading newline so indent contains only spaces
     if indent.startswith("\n"):
