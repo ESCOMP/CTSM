@@ -75,8 +75,11 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 
 [submodule "cime"]
 path = cime
-url = https://github.com/ESMCI/cime
-fxtag = cime6.2.2
+#url = https://github.com/ESMCI/cime
+url = https://github.com/ekluzek/cime
+#fxtag = cime6.2.2
+#branch = add_coupling_mode_to_attributes_for_config_component
+fxtag = ab02c95a0715acb892f26633781c07977aa6f27a
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
