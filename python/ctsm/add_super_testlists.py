@@ -151,7 +151,7 @@ def process_machine_block(
     Args:
         block (str): The inner content between `<machines>` and `</machines>`.
         testlist: The testlist to check for existance of, before adding super_testlist to the block
-        not_in_testlist: Another testlist to verify it's not in before adding super_testlist to the block
+        not_in_testlist: testlist to verify it's NOT in before adding super_testlist to the block
         super_testlist (str): The testlist (i.e. category) to ensure is present.
 
     Returns:
