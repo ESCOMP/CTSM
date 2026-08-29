@@ -137,7 +137,7 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
             super_testlist,
             attrs,
         )
-        abort( "This block doesn't have a machine line for it" )
+        abort("This block doesn't have a machine line for it")
     attrs_str = f'name="{name.group(1)}" compiler="{comp.group(1)}" category="{super_testlist}"'
     return f"{indent}<machine {attrs_str}/>"
 
@@ -186,8 +186,8 @@ def process_machine_block(
         logger.error(
             "No <machine/> line found in block, so cannot add a %s entry to it", super_testlist
         )
-        logger.error( block )
-        abort( "block doesn't have a machine line for it, so aborting" )
+        logger.error(block)
+        abort("block doesn't have a machine line for it, so aborting")
     indent = match.group(1)
     # strip the leading newline so indent contains only spaces
     if indent.startswith("\n"):
