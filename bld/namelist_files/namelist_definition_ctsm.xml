@@ -2893,6 +2893,32 @@ continue run; it is an error for this to be set in a branch
 run. Furthermore, this setting has no effect in a cold start run.
 </entry>
 
+<entry id="dynbal_storage_residence_time" type="real" category="physics"
+       group="dynamic_subgrid" valid_values="">
+Residence time (in years) of the dynbal storage pools.
+
+Dynamic landunit adjustments change a grid cell's total water and energy content with no
+associated physical flux. The resulting spurious gain or loss is put in a storage pool for
+each of heat (DYNBAL_HEAT_STORAGE), liquid water (DYNBAL_LIQ_STORAGE) and ice
+(DYNBAL_ICE_STORAGE); each pool is then released gradually to a corresponding conservation
+flux (EFLX_DYNBAL, QFLX_LIQ_DYNBAL and QFLX_ICE_DYNBAL). This setting controls how
+gradually: each pool is drained with a turnover rate of 1 / dynbal_storage_residence_time,
+so a larger value spreads the correction over a longer period, giving smaller
+instantaneous fluxes.
+
+The model's own water and energy budgets close every time step regardless of the value
+chosen, because the storage pools are counted as part of each grid cell's total water and
+energy. What is deferred is the compensating exchange with real, physical state variables:
+at any moment, the coupled system carries an outstanding imbalance equal to the current
+contents of the dynbal storage pools. Since the pools only approach 0 asymptotically, this
+is only fully settled in the limit as time goes to infinity, and larger values (longer
+residence times) leave the coupled system further out of balance for longer.
+
+Must be greater than 0. This can be set to less than 1 year, but should be much longer
+than the model time step: if the residence time approaches the length of a time step, the
+pools will overshoot and the fluxes will oscillate.
+</entry>
+
 <entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, allow area changes at times other than the year boundary. This should

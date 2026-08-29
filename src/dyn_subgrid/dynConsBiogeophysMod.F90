@@ -11,7 +11,6 @@ module dynConsBiogeophysMod
   ! !USES:
   use shr_kind_mod            , only : r8 => shr_kind_r8
   use shr_log_mod             , only : errMsg => shr_log_errMsg
-  use shr_const_mod           , only : SHR_CONST_CDAY
   use decompMod               , only : bounds_type
   use UrbanParamsType         , only : urbanparams_type
   use EnergyFluxType          , only : energyflux_type
@@ -40,6 +39,7 @@ module dynConsBiogeophysMod
   use clm_varcon              , only : tfrz, cpliq, hfus, ispval
   use landunit_varcon         , only : istsoil, istice
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
+  use dynSubgridControlMod    , only : get_dynbal_storage_turnover_rate
   use filterColMod            , only : filter_col_type, col_filter_from_ltypes
   use clm_time_manager        , only : get_step_size_real
   !
@@ -61,13 +61,6 @@ module dynConsBiogeophysMod
 
   !
   ! !PRIVATE DATA MEMBERS:
-
-  ! Turnover rate of the dynbal storage pools [1/s]. Note that we specify the time in
-  ! years and then convert it to seconds. (It isn't important to account for leap years
-  ! here: we just want a value that roughly equates to our desired residence time in
-  ! years: it doesn't need to be exact.)
-  real(r8), parameter, private :: dynbal_storage_turnover_rate = &
-       1._r8 / (20._r8 * (365._r8 * SHR_CONST_CDAY))
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -519,6 +512,7 @@ contains
     integer  :: i
     integer  :: g     ! grid cell index
     real(r8) :: dtime ! model time step [s]
+    real(r8) :: turnover_rate ! turnover rate of the dynbal storage pools [1/s]
     real(r8) :: this_delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk or one tracer
     real(r8) :: delta_liq_bulk(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk water
     real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
@@ -579,9 +573,10 @@ contains
     ! the proper sign convention for this pool), then release a portion of the pool as
     ! this time step's flux.
     dtime = get_step_size_real()
+    turnover_rate = get_dynbal_storage_turnover_rate()
     do g = begg, endg
        dynbal_heat_storage(g) = dynbal_heat_storage(g) - delta_heat(g)
-       eflx_dynbal(g) = dynbal_heat_storage(g) * dynbal_storage_turnover_rate
+       eflx_dynbal(g) = dynbal_heat_storage(g) * turnover_rate
        dynbal_heat_storage(g) = dynbal_heat_storage(g) - (eflx_dynbal(g) * dtime)
     end do
 
@@ -617,6 +612,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g
     real(r8) :: dtime ! model time step [s]
+    real(r8) :: turnover_rate ! turnover rate of the dynbal storage pools [1/s]
     real(r8) :: delta_ice(bounds%begg:bounds%endg)  ! change in gridcell h2o ice content
 
     character(len=*), parameter :: subname = 'dyn_water_content_final'
@@ -656,13 +652,14 @@ contains
     ! use the proper sign convention for these pools), then release a portion of each pool
     ! as this time step's flux.
     dtime = get_step_size_real()
+    turnover_rate = get_dynbal_storage_turnover_rate()
     do g = begg, endg
        dynbal_liq_storage(g) = dynbal_liq_storage(g) - delta_liq(g)
-       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * dynbal_storage_turnover_rate
+       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * turnover_rate
        dynbal_liq_storage(g) = dynbal_liq_storage(g) - (qflx_liq_dynbal(g) * dtime)
 
        dynbal_ice_storage(g) = dynbal_ice_storage(g) - delta_ice(g)
-       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * dynbal_storage_turnover_rate
+       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * turnover_rate
        dynbal_ice_storage(g) = dynbal_ice_storage(g) - (qflx_ice_dynbal(g) * dtime)
     end do
 

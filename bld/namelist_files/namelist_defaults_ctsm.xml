@@ -2750,6 +2750,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <do_transient_lakes>.false.</do_transient_lakes>
 <do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+<dynbal_storage_residence_time>20.d00</dynbal_storage_residence_time>
 <vars_1dwt_w_time do_transient_pfts=".true.">.true.</vars_1dwt_w_time>
 <vars_1dwt_w_time do_transient_crops=".true.">.true.</vars_1dwt_w_time>
 <vars_1dwt_w_time do_transient_lakes=".true.">.true.</vars_1dwt_w_time>

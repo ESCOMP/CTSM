@@ -2827,6 +2827,12 @@ sub setup_logic_dynamic_subgrid {
         &remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) eq "branch") {
       $log->fatal_error("reset_dynbal_baselines has no effect in a branch run");
    }
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dynbal_storage_residence_time');
+   my $dynbal_storage_residence_time = $nl->get_value('dynbal_storage_residence_time');
+   if ( $dynbal_storage_residence_time <= 0.0 ) {
+      $log->fatal_error("dynbal_storage_residence_time must be greater than 0");
+   }
 }
 
 sub setup_logic_do_transient_pfts {
