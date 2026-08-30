@@ -2276,6 +2276,7 @@
   <test name="ERP_P64x2_Ld366" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
        <option name="wallclock">00:30:00</option>
@@ -2285,6 +2286,7 @@
   <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3686,6 +3688,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:20:00</option>
@@ -4143,6 +4146,7 @@
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4152,6 +4156,7 @@
   <test name="SMS_D_Ld10" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/tracer_consistency">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4715,6 +4720,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
        <option name="wallclock">00:40:00</option>
