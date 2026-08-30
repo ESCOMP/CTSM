@@ -1,7 +1,8 @@
 # CIME cmake macro drop-in for the CTSM CI container. Carries the two
 # container-specific settings CIME needs and ccs_config does not provide:
-# where pFUnit is, and the gfortran flags ccs_config's own version guard
-# cannot apply during a unit-test build (see the two sections below).
+# where pFUnit is, the gfortran flags ccs_config's own version guard cannot
+# apply during a unit-test build, and which ESMF flavor a serial build gets
+# (see the sections below).
 #
 # WHY THIS FILE EXISTS
 # cime/scripts/fortran_unit_testing/run_tests.py locates pFUnit in
@@ -83,3 +84,28 @@ endif()
 # PFUNIT_PATH only for the intel builds on derecho, casper and izumi, so the
 # gnu unit-test path is effectively untravelled.
 string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
+
+# ---------------------------------------------------------------------------
+# ESMF flavor for serial (unit-test) builds
+# ---------------------------------------------------------------------------
+# run_tests.py forces mpilib="mpi-serial", so test executables link with plain
+# gfortran and no MPI library -- but CTSM's src/CMakeLists.txt calls
+# find_package(ESMF REQUIRED) and link_libraries(esmf) unconditionally. Linking
+# the image's default ESMF_COMM=mpich ESMF into a serial executable fails with
+# "libesmf.so: undefined reference to symbol 'MPI_Bcast' ... DSO missing from
+# command line", because nothing on the link line provides libmpi.
+#
+# derecho has a separate ESMF for this case, and its config_machines.xml
+# selects it on exactly this condition: mpilib="mpi-serial" loads esmf/8.6.0
+# rather than esmf/8.6.0-debug, even when DEBUG="TRUE". That install reports
+# ESMF_COMM=mpiuni and carries no -lmpi. Mirror that here.
+#
+# FindESMF.cmake (share/cmake) honors an already-defined ESMFMKFILE variable
+# before consulting the environment, and this file is included from
+# CIME_initial_setup at src/CMakeLists.txt line 4 -- well before the
+# find_package(ESMF) at line 24 -- so setting it here wins over the image's
+# baked-in ENV ESMFMKFILE. Non-serial builds fall through and keep that
+# default, so create_test is unaffected.
+if (MPILIB STREQUAL "mpi-serial")
+  set(ESMFMKFILE "/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk")
+endif()
