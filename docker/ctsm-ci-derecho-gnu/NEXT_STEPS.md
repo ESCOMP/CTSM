@@ -1,8 +1,10 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-07-23. The image builds and validates end-to-end on
-Casper; the CI repoint, Dockerfile promotion, and README are done. **Only
-publishing to a registry remains.**_
+_Last updated: 2026-08-30. The image builds and validates end-to-end on
+Casper. pFUnit and CTSM's Fortran unit tests now work in the container, but
+that was proven with a derived probe image; **the folded `Dockerfile` has not
+yet been rebuilt from scratch**. That rebuild and publishing to a registry are
+what remain._
 
 ## Where things stand
 
@@ -25,6 +27,20 @@ publishing to a registry remains.**_
   published) with the now-baked-in Perl-install step and `USER=`/
   `CESMDATAROOT=` exports removed.
 - `README.md` is updated for the from-scratch build.
+- **pFUnit + CTSM unit tests work in the container (2026-08-30).** Proven with
+  a throwaway derived image (`Dockerfile.pfunit`, now deleted): all 55 CTSM
+  unit tests pass under `run_tests.py --machine container`. Three things were
+  needed, all now in `Dockerfile`:
+  - pFUnit 4.8.0, noMPI/noOpenMP, at `/usr/local/pfunit-4.8.0`.
+  - a third ESMF flavor, `ESMF_COMM=mpiuni` / `BOPT=O`, because the
+    unit-test link is serial and an mpich ESMF fails it. derecho splits the
+    same way; see README "ESMF flavors".
+  - `cime-macros/gnu_container.cmake`, dropped into `$HOME/.cime`, carrying
+    `PFUNIT_PATH`, `-fallow-argument-mismatch`, and the serial `ESMFMKFILE`.
+    See README "Running CTSM's unit tests".
+
+  Helper scripts: `smoke-test-pfunit.sh` (no checkout needed) and
+  `run-unit-tests-in-container.sh` (the real thing).
 
 ## Build & validate on Casper
 
@@ -77,27 +93,51 @@ podman save -o /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar localhost/ctsm
 The known-good save on disk today is
 `/glade/work/$USER/ctsm-ci-gh_20260723.tar` (3.3 GB). It predates the
 ctsm-ci-gh -> ctsm-ci-derecho-gnu rename and so restores as
-`localhost/ctsm-ci-gh:dev`; re-tag it after loading, or anything doing
-`FROM localhost/ctsm-ci-derecho-gnu:dev` will try to reach a registry named
-`localhost` and fail:
+`localhost/ctsm-ci-gh:dev`; re-tag it after loading, or anything referring to
+`localhost/ctsm-ci-derecho-gnu:dev` will try to reach a registry named
+`localhost` and fail with "pinging container registry localhost ... connection
+refused":
 
 ```
 podman load -i /glade/work/$USER/ctsm-ci-gh_20260723.tar
 podman tag localhost/ctsm-ci-gh:dev localhost/ctsm-ci-derecho-gnu:dev
 ```
 
-Its recipe is still current: the only commits touching the Dockerfile since
-that save were the `Dockerfile.scratch` -> `Dockerfile` promotion and the
-rename, and the two are identical ignoring comments. Re-save under the new
-name next time the image is rebuilt.
+That save is now **out of date**: it predates the pFUnit, serial-ESMF and
+cime-macros layers. It is still a useful cache for a rebuild (podman can reuse
+its layers up to the first change, which is the serial ESMF), but it cannot
+run the unit tests. Re-save under the new name after the next rebuild.
 
-## Remaining step
+## Remaining steps
 
-**Publish** the image to a registry (GHCR vs Docker Hub — undecided), then
-replace the `ctsm-ci-derecho-gnu:PUBLISH_TBD` placeholder in `cirrus-testing.yml`
-`simple-build-create_test` with the published ref. The repo already has a
-build-and-publish-to-GHCR pattern in
-`.github/workflows/docker-image-build-publish.yml` (for `ctsm-docs`) to model
-it on.
+1. **Rebuild `Dockerfile` from scratch and re-validate.** The pFUnit and
+   serial-ESMF layers were proven in a derived image; the folded Dockerfile
+   itself is unverified. Run `build-on-casper.sh`, then `smoke-test.sh`,
+   `smoke-test-pfunit.sh`, and `run-unit-tests-in-container.sh` (expect 55
+   passing). Then re-save to GLADE under the new name.
+2. **Publish** the image to a registry (GHCR vs Docker Hub — undecided), then
+   replace the `ctsm-ci-derecho-gnu:PUBLISH_TBD` placeholder in
+   `cirrus-testing.yml` `simple-build-create_test` with the published ref. The
+   repo already has a build-and-publish-to-GHCR pattern in
+   `.github/workflows/docker-image-build-publish.yml` (for `ctsm-docs`) to
+   model it on.
+3. **Add a unit-test job to `cirrus-testing.yml`** once the image is
+   published. It needs the `$HOME/.cime` copy step (GHA overrides `HOME`); see
+   README "Running CTSM's unit tests".
+4. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
+   Casper/Derecho reading live derecho versions, opening a GitHub issue on
+   drift and emailing on success. Planned as one of the last steps.
 
-Everything else (CI repoint, Dockerfile promotion, README) is done.
+## Worth raising upstream
+
+`-fallow-argument-mismatch` never reaches a CTSM unit-test build on any
+machine: ccs_config's `gnu.cmake` guards it on
+`CMAKE_Fortran_COMPILER_VERSION >= 10`, but `src/CMakeLists.txt` includes
+`CIME_initial_setup` (and so the macros) at line 4 and does not call
+`project()` until line 10, so CMake has not probed the compiler yet and the
+variable is empty. It has gone unnoticed because ccs_config defines
+`PFUNIT_PATH` only for the intel builds on derecho, casper and izumi, so the
+gnu unit-test path is effectively untravelled. The container works around it
+in `gnu_container.cmake`; a real fix belongs in ccs_config or in
+`src/biogeochem/ch4varcon.F90` (which calls `mpi_bcast` through an implicit
+interface with both `LOGICAL` and `INTEGER`).
