@@ -79,6 +79,62 @@ RUN cd /tmp \
     && make install \
     && rm -rf /tmp/pFUnit-v${PFUNIT_VERSION}*
 
+# ---- ESMF, serial flavor (ESMF_COMM=mpiuni, BOPT=O) ----
+# run_tests.py forces mpilib="mpi-serial", so the unit-test executables link
+# with plain gfortran and no MPI library. Both ESMF flavors in the base image
+# are ESMF_COMM=mpich, and linking one of those into a serial executable fails:
+#
+#   /usr/bin/ld: /usr/local/esmf-8.6.0-debug/lib/libesmf.so: undefined
+#       reference to symbol 'MPI_Bcast'
+#   /usr/bin/ld: /opt/mpich/3.4.3/lib/libmpi.so.12: error adding symbols:
+#       DSO missing from command line
+#
+# CTSM cannot avoid pulling ESMF into these links: src/CMakeLists.txt does
+# find_package(ESMF REQUIRED) and link_libraries(esmf) unconditionally.
+#
+# derecho keeps a separate ESMF for exactly this and this mirrors it. Its
+# config_machines.xml loads esmf/8.6.0 -- NOT esmf/8.6.0-debug -- whenever
+# mpilib="mpi-serial", even under DEBUG="TRUE", and that install's esmf.mk
+# reports ESMF_COMM=mpiuni, ESMF_BOPT=O, and a link line with no -lmpi. So
+# mpiuni + BOPT=O here; the debug mismatch is deliberate, matching derecho.
+#
+# Selected via ESMFMKFILE from cime-macros/gnu_container.cmake when
+# MPILIB=mpi-serial. The image's baked-in ENV ESMFMKFILE still points at the
+# debug mpich flavor, so ordinary create_test builds are untouched.
+#
+# ESMF_VERSION is redeclared because ARGs do not cross FROM; when these layers
+# are folded into the real Dockerfile it reuses the ARG already declared there.
+ARG ESMF_VERSION=8.6.0
+RUN cd /tmp \
+    && wget -nv "https://github.com/esmf-org/esmf/archive/refs/tags/v${ESMF_VERSION}.tar.gz" \
+    && tar xzf "v${ESMF_VERSION}.tar.gz" \
+    && cd "esmf-${ESMF_VERSION}" \
+    && sed -i 's|make VERBOSE=1 -f ./Makefile|$(MAKE) VERBOSE=1 -f ./Makefile|; s|make -f ./Makefile install|$(MAKE) -f ./Makefile install|' \
+        src/Infrastructure/IO/PIO/makefile \
+    && export ESMF_DIR="$PWD" ESMF_COMPILER=gfortran ESMF_COMM=mpiuni ESMF_BOPT=O \
+        ESMF_NETCDF=nc-config \
+        ESMF_INSTALL_PREFIX="/usr/local/esmf-${ESMF_VERSION}-mpiuni" \
+        ESMF_INSTALL_HEADERDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/include" \
+        ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/mod" \
+        ESMF_INSTALL_LIBDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib" \
+        ESMF_INSTALL_BINDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/bin" \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
+
+# Encode the failure this flavor exists to prevent: if the serial ESMF ever
+# comes out linking MPI again, fail at image-build time, not at test link time.
+RUN set -eu; \
+    mk="/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib/esmf.mk"; \
+    [ -f "$mk" ] || { echo "ERROR: $mk missing" >&2; exit 1; }; \
+    grep -q 'ESMF_COMM=mpiuni' "$mk" \
+        || { echo "ERROR: $mk is not an ESMF_COMM=mpiuni build" >&2; exit 1; }; \
+    if grep -E '^ESMF_F90ESMFLINKLIBS=' "$mk" | grep -qw -- '-lmpi'; then \
+        echo "ERROR: $mk still links -lmpi; serial unit-test links will fail" >&2; \
+        exit 1; \
+    fi; \
+    echo "serial ESMF OK: $mk"
+
 # ---- CIME macro drop-in that points run_tests.py at the install above ----
 # See the file itself for why PFUNIT_PATH cannot simply be an env var or a
 # -D flag. Baked at a fixed path AND dropped in /root/.cime: the fixed path is
