@@ -27,11 +27,25 @@
 #   mkdir -p "$HOME/.cime"
 #   cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
 #
+# WHY THE SHARED PREFIX AND NOT THE PFUNIT-4.8 SUBDIRECTORY
+# run_tests.py turns this value into -DCMAKE_PREFIX_PATH for the test build.
+# pFUnit installs four sibling packages under one prefix -- PFUNIT-4.8,
+# GFTL-1.11, GFTL_SHARED-1.7, FARGPARSE-1.6 -- and PFUNITConfig.cmake locates
+# its own three dependencies ONLY by set()-ing GFTL_ROOT / GFTL_SHARED_ROOT /
+# FARGPARSE_ROOT before find_dependency(). Those <pkg>_ROOT variables are
+# honored only under policy CMP0074, and CTSM's src/CMakeLists.txt opens with
+# cmake_minimum_required(VERSION 2.8), which leaves CMP0074 unset -- so CMake
+# ignores them and reports "PFUNIT could not be found because dependency GFTL
+# could not be found", after which add_pfunit_ctest is never defined.
+#
+# Naming the shared prefix sidesteps the policy entirely: find_package locates
+# all four as siblings. Do not "tighten" this to the PFUNIT-4.8 subdirectory.
+#
 # The env-var branch lets an alternate pFUnit build be tested without
 # rebuilding the image. An environment variable is not a CMake variable, so
 # set()-ing it here is precisely what makes it visible to find_pfunit().
 if (DEFINED ENV{PFUNIT_PATH})
   set(PFUNIT_PATH "$ENV{PFUNIT_PATH}")
 else()
-  set(PFUNIT_PATH "/usr/local/pfunit-4.8.0/PFUNIT-4.8")
+  set(PFUNIT_PATH "/usr/local/pfunit-4.8.0")
 endif()

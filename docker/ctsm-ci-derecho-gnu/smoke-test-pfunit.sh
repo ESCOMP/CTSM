@@ -35,12 +35,26 @@ echo "HOME=$HOME  (GitHub Actions overrides this; see the macro file)"
 echo "### pFUnit install layout"
 pf="$(sed -n 's/^ *set(PFUNIT_PATH "\([^"]*\)").*/\1/p' "$macro" | tail -1)"
 echo "PFUNIT_PATH (macro default) = $pf"
-[ -f "$pf/cmake/PFUNITConfig.cmake" ] || fail "no PFUNITConfig.cmake under $pf"
-[ -x "$pf/bin/funitproc" ]            || fail "no funitproc under $pf/bin"
-ls "$pf/lib" | head
+# PFUNIT_PATH must name the SHARED PREFIX holding all four sibling packages,
+# not the PFUNIT-4.8 subdirectory. PFUNITConfig.cmake finds its dependencies
+# only via GFTL_ROOT / GFTL_SHARED_ROOT / FARGPARSE_ROOT, which CMake honors
+# only under CMP0074 -- and CTSM's src/CMakeLists.txt declares
+# cmake_minimum_required(VERSION 2.8), leaving that policy unset. Checking
+# only PFUNIT here would pass while the real CTSM build failed on GFTL.
+for pkg in PFUNIT GFTL GFTL_SHARED FARGPARSE; do
+    cfg="$(ls -d "$pf"/${pkg}-*/cmake/${pkg}Config.cmake 2>/dev/null | head -1)"
+    [ -n "$cfg" ] || fail "no ${pkg}Config.cmake under $pf/${pkg}-*/cmake/"
+    echo "  $pkg -> $cfg"
+done
+
+pflib="$(ls -d "$pf"/PFUNIT-*/lib 2>/dev/null | head -1)"
+[ -n "$pflib" ] || fail "no PFUNIT-*/lib under $pf"
+funitproc="$(ls -d "$pf"/PFUNIT-*/bin/funitproc 2>/dev/null | head -1)"
+[ -n "$funitproc" ] && [ -x "$funitproc" ] || fail "no funitproc under $pf/PFUNIT-*/bin"
+ls "$pflib" | head
 
 echo "### pFUnit is a serial build (no MPI symbols linked in)"
-if ls "$pf/lib" | grep -qi 'mpi'; then
+if ls "$pflib" | grep -qi 'mpi'; then
     fail "found an MPI-flavored pFUnit library; expected SKIP_MPI=YES"
 fi
 
@@ -91,8 +105,13 @@ contains
 
 end module test_trivial
 EOF
+# cmake_minimum_required(VERSION 2.8) deliberately MATCHES CTSM's
+# src/CMakeLists.txt. Declaring 3.12 here would set policy CMP0074 to NEW,
+# make CMake honor pFUnit's GFTL_ROOT hints, and let this probe pass against
+# an install layout that CTSM's own build cannot use -- which is exactly the
+# false pass this check exists to prevent.
 cat > CMakeLists.txt <<'EOF'
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 2.8)
 project(pfunit_probe LANGUAGES Fortran)
 find_package(PFUNIT REQUIRED)
 enable_testing()

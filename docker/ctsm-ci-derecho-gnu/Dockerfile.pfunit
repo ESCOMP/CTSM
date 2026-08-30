@@ -62,8 +62,9 @@ ARG MAKE_JOBS=16
 # defaults it to Debug, which is also what run_tests.py builds by default
 # (debug = not build_optimized).
 #
-# pFUnit installs its package config under <prefix>/PFUNIT-<major>.<minor>/,
-# so the prefix below is NOT the path CIME wants; see cime-macros/.
+# pFUnit installs FOUR sibling packages under this prefix -- PFUNIT-4.8,
+# GFTL-1.11, GFTL_SHARED-1.7, FARGPARSE-1.6 -- and the prefix itself, not the
+# PFUNIT-4.8 subdirectory, is what CIME must be pointed at; see cime-macros/.
 RUN cd /tmp \
     && wget -nv "https://github.com/Goddard-Fortran-Ecosystem/pFUnit/releases/download/v${PFUNIT_VERSION}/pFUnit-v${PFUNIT_VERSION}.tar" \
     && tar xf "pFUnit-v${PFUNIT_VERSION}.tar" \
@@ -90,16 +91,24 @@ RUN mkdir -p /root/.cime \
 
 # Fail the build, not the test run, if the hardcoded default in the macro ever
 # drifts from where pFUnit actually landed (e.g. a PFUNIT_VERSION bump).
+# All four must resolve from the single prefix the macro names, because that
+# is exactly what find_package does at test-build time under CTSM's
+# CMP0074-unset CMakeLists. Checking only PFUNIT here would pass while the
+# real build still failed on a missing GFTL.
 RUN set -eu; \
     macro=/opt/ctsm-container/cime-macros/gnu_container.cmake; \
     d="$(sed -n 's/^ *set(PFUNIT_PATH "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
     echo "macro default PFUNIT_PATH=$d"; \
-    if [ ! -f "$d/cmake/PFUNITConfig.cmake" ]; then \
-        echo "ERROR: $macro points PFUNIT_PATH at $d, but there is no" >&2; \
-        echo "       $d/cmake/PFUNITConfig.cmake. Update the default path in" >&2; \
-        echo "       that file to match PFUNIT_VERSION=${PFUNIT_VERSION}." >&2; \
-        exit 1; \
-    fi
+    for pkg in PFUNIT GFTL GFTL_SHARED FARGPARSE; do \
+        cfg="$(ls -d "$d"/${pkg}-*/cmake/${pkg}Config.cmake 2>/dev/null | head -1)"; \
+        if [ -z "$cfg" ]; then \
+            echo "ERROR: $macro points PFUNIT_PATH at $d, but there is no" >&2; \
+            echo "       $d/${pkg}-*/cmake/${pkg}Config.cmake. PFUNIT_PATH must be" >&2; \
+            echo "       the shared install prefix holding all four packages." >&2; \
+            exit 1; \
+        fi; \
+        echo "  $pkg -> $cfg"; \
+    done
 
 LABEL pfunit="${PFUNIT_VERSION}" \
       org.opencontainers.image.description="THROWAWAY probe: ctsm-ci-derecho-gnu + pFUnit"
