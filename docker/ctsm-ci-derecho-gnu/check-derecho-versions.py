@@ -14,6 +14,8 @@ Dockerfile's version ARGs to that config, in three modes:
   snapshot  - the derecho version is bundled inside another Spack module and has
               NO standalone entry in config_machines.xml, so the ARG is compared
               to a hand-recorded value (HDF5, netCDF-Fortran).
+  pfunit    - derecho has no pFUnit module at all; the version is embedded in
+              the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
 
 Recorded values (snapshot + deviation guard) live in derecho-versions.ini.
 
@@ -33,6 +35,10 @@ DOCKERFILE = os.path.join(SCRIPT_DIR, "Dockerfile")
 SNAPSHOT = os.path.join(SCRIPT_DIR, "derecho-versions.ini")
 CONFIG_XML = os.path.join(
     REPO_ROOT, "ccs_config", "machines", "derecho", "config_machines.xml"
+)
+# derecho defines PFUNIT_PATH only for intel; see get_derecho_pfunit_version.
+PFUNIT_CMAKE = os.path.join(
+    REPO_ROOT, "ccs_config", "machines", "derecho", "intel_derecho.cmake"
 )
 
 COMPILER = "gnu"
@@ -64,6 +70,7 @@ CHECKS = [
         "mode": "snapshot",
         "snap": ("snapshot", "netcdf_fortran"),
     },
+    {"arg": "PFUNIT_VERSION", "mode": "pfunit"},
 ]
 
 
@@ -138,6 +145,47 @@ def resolve_config_version(versions, module, strip_suffix=None):
     return vers.pop(), None
 
 
+def get_derecho_pfunit_version(path):
+    """Return (version, None) or (None, reason) for derecho's pFUnit.
+
+    derecho has no pFUnit module, so there is nothing to read from
+    config_machines.xml. CTSM's unit tests locate pFUnit through PFUNIT_PATH,
+    whose value embeds the version:
+
+        set(PFUNIT_PATH "$ENV{CESMDATAROOT}/tools/pFUnit/\
+            pFUnit4.8.0_derecho_Intel2023.2.1_noMPI_noOpenMP")
+
+    ccs_config sets that only in the intel macros -- there is no gnu
+    PFUNIT_PATH for derecho -- so the container's gnu-built pFUnit is matched
+    to the intel one by version. The compiler necessarily differs; the version
+    is the part worth guarding, and this reads it live rather than recording a
+    snapshot that could silently rot.
+    """
+    if not os.path.isfile(path):
+        raise FileNotFoundError(
+            f"intel_derecho.cmake not found at {path}. In CI make sure the "
+            "'bin/git-fleximod update ccs_config' step ran; locally, run that "
+            "first."
+        )
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    matches = re.findall(
+        r"""set\s*\(\s*PFUNIT_PATH\s+"[^"]*?pFUnit([0-9]+(?:\.[0-9]+)*)_""", text
+    )
+    if not matches:
+        return None, (
+            "no set(PFUNIT_PATH ... pFUnit<version>_ ...) found in "
+            f"{os.path.basename(path)}; derecho may have moved or renamed its "
+            "pFUnit install"
+        )
+    if len(set(matches)) != 1:
+        return None, (
+            f"conflicting pFUnit versions {sorted(set(matches))} in "
+            f"{os.path.basename(path)}; cannot pick one"
+        )
+    return matches[0], None
+
+
 def load_snapshot(path):
     if not os.path.isfile(path):
         raise FileNotFoundError(f"snapshot file not found at {path}")
@@ -204,6 +252,25 @@ def main():
                     f"❌ derecho {chk['module']} changed {recorded} (recorded) "
                     f"-> {live}. Re-evaluate the {arg}={arg_val} stand-in and "
                     "update [deviation_guard] in derecho-versions.ini."
+                )
+                ok = False
+
+        elif mode == "pfunit":
+            derecho_val, reason = get_derecho_pfunit_version(PFUNIT_CMAKE)
+            if derecho_val is None:
+                print(f"❌ {arg}: {reason}")
+                ok = False
+            elif arg_val == derecho_val:
+                print(
+                    f"✅ {arg}={arg_val} matches derecho pFUnit {derecho_val} "
+                    "(from PFUNIT_PATH in intel_derecho.cmake; the container "
+                    "builds it with gnu, a known compiler deviation)"
+                )
+            else:
+                print(
+                    f"❌ {arg}={arg_val} != derecho pFUnit {derecho_val} "
+                    "(PFUNIT_PATH in intel_derecho.cmake). Update the "
+                    "Dockerfile ARG, or derecho changed its pFUnit."
                 )
                 ok = False
 
