@@ -74,6 +74,23 @@ podman save -o /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar localhost/ctsm
 # restore later:  podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar
 ```
 
+The known-good save on disk today is
+`/glade/work/$USER/ctsm-ci-gh_20260723.tar` (3.3 GB). It predates the
+ctsm-ci-gh -> ctsm-ci-derecho-gnu rename and so restores as
+`localhost/ctsm-ci-gh:dev`; re-tag it after loading, or anything doing
+`FROM localhost/ctsm-ci-derecho-gnu:dev` will try to reach a registry named
+`localhost` and fail:
+
+```
+podman load -i /glade/work/$USER/ctsm-ci-gh_20260723.tar
+podman tag localhost/ctsm-ci-gh:dev localhost/ctsm-ci-derecho-gnu:dev
+```
+
+Its recipe is still current: the only commits touching the Dockerfile since
+that save were the `Dockerfile.scratch` -> `Dockerfile` promotion and the
+rename, and the two are identical ignoring comments. Re-save under the new
+name next time the image is rebuilt.
+
 ## Remaining step
 
 **Publish** the image to a registry (GHCR vs Docker Hub — undecided), then

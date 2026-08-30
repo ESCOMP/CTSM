@@ -7,9 +7,20 @@
 # Dockerfile and this file is deleted. Nothing should come to depend on the
 # tag this produces.
 #
-# Build (from the repo root, on Casper):
+# PREREQUISITE: the base image must already be in local podman storage under
+# the name below. Node-local storage is wiped when the allocation ends, so
+# after a fresh login restore it from the GLADE save first -- and note that
+# save predates the ctsm-ci-gh -> ctsm-ci-derecho-gnu rename, so it has to be
+# re-tagged:
+#   podman load -i /glade/work/$USER/ctsm-ci-gh_20260723.tar
+#   podman tag localhost/ctsm-ci-gh:dev localhost/ctsm-ci-derecho-gnu:dev
+# Without that, podman reads "localhost/" as a registry hostname and fails
+# with "pinging container registry localhost ... connection refused".
+#
+# Build (from the repo root, on Casper). --pull=never keeps a missing base
+# image an immediate, legible error instead of a registry round trip:
 #   DOCKERFILE=Dockerfile.pfunit IMAGE_TAG=ctsm-ci-derecho-gnu-pfunit:probe \
-#       docker/ctsm-ci-derecho-gnu/build-on-casper.sh
+#       docker/ctsm-ci-derecho-gnu/build-on-casper.sh --pull=never
 # Verify:
 #   IMAGE_TAG=localhost/ctsm-ci-derecho-gnu-pfunit:probe \
 #       docker/ctsm-ci-derecho-gnu/smoke-test-pfunit.sh
