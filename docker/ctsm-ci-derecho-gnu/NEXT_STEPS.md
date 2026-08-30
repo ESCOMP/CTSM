@@ -1,10 +1,11 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
 _Last updated: 2026-08-30. The image builds and validates end-to-end on
-Casper. pFUnit and CTSM's Fortran unit tests now work in the container, but
-that was proven with a derived probe image; **the folded `Dockerfile` has not
-yet been rebuilt from scratch**. That rebuild and publishing to a registry are
-what remain._
+Casper, including pFUnit and CTSM's Fortran unit tests (55/55), and is
+**published and public** at
+`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830`. `cirrus-testing.yml` is
+pointed at it. What remains is a unit-test CI job and the Phase 2 drift
+cron._
 
 ## Where things stand
 
@@ -22,10 +23,9 @@ what remain._
     passes all phases and builds `cesm.exe`.
 - The old derived-image recipe (FROM the CISL base) has been **deleted**;
   `Dockerfile` is now the from-scratch recipe (formerly `Dockerfile.scratch`).
-- `.github/workflows/cirrus-testing.yml` `simple-build-create_test` is
-  **repointed** at the image (placeholder `ctsm-ci-derecho-gnu:PUBLISH_TBD` until it is
-  published) with the now-baked-in Perl-install step and `USER=`/
-  `CESMDATAROOT=` exports removed.
+- `.github/workflows/cirrus-testing.yml` `simple-build-create_test` runs in the
+  published image, pinned to the dated tag, with the now-baked-in Perl-install
+  step and `USER=`/`CESMDATAROOT=` exports removed.
 - `README.md` is updated for the from-scratch build.
 - **pFUnit + CTSM unit tests work in the container (2026-08-30).** Proven with
   a throwaway derived image (`Dockerfile.pfunit`, now deleted): all 55 CTSM
@@ -108,30 +108,33 @@ cime-macros layers. It is still a useful cache for a rebuild (podman can reuse
 its layers up to the first change, which is the serial ESMF), but it cannot
 run the unit tests. Re-save under the new name after the next rebuild.
 
+## Done 2026-08-30
+
+- **Rebuilt from scratch and re-validated.** ~50 min on Casper.
+  `smoke-test.sh`, `smoke-test-pfunit.sh` and
+  `run-unit-tests-in-container.sh` (55/55) all pass. Saved to
+  `/glade/work/$USER/ctsm-ci-derecho-gnu_20260830.tar`.
+- **Published** to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu`, tags `20260830`
+  and `latest`, package set public (verified pullable anonymously).
+  `cirrus-testing.yml` pins the dated tag.
+
+  Publishing is a **manual push from Casper**, not a workflow — see README
+  "Publishing to GHCR". Decided **not** to model it on
+  `.github/workflows/docker-image-build-publish.yml` (the `ctsm-docs`
+  pattern): that builds on `ubuntu-latest`, which has ~14 GB free disk against
+  a 3.5 GB image whose build compiles GCC and three ESMF trees from source,
+  and 4 cores against a build that takes ~50 min on Casper's 16. A CI publish
+  workflow is possible with a disk-reclaim step and amd64-only, but is
+  follow-up work, not a blocker. The consequence: **nothing republishes
+  automatically** — a Dockerfile change needs a manual rebuild, re-validate,
+  push, and a tag bump in `cirrus-testing.yml`.
+
 ## Remaining steps
 
-1. **Rebuild `Dockerfile` from scratch and re-validate.** The pFUnit and
-   serial-ESMF layers were proven in a derived image; the folded Dockerfile
-   itself is unverified. Run `build-on-casper.sh`, then `smoke-test.sh`,
-   `smoke-test-pfunit.sh`, and `run-unit-tests-in-container.sh` (expect 55
-   passing). Then re-save to GLADE under the new name.
-2. **Publish** to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing from
-   Casper — see README "Publishing to GHCR" for the procedure, the SAML-SSO
-   token gotcha, and the make-it-public step. Then replace the
-   `ctsm-ci-derecho-gnu:PUBLISH_TBD` placeholder in `cirrus-testing.yml`
-   `simple-build-create_test` with the dated tag.
-
-   Decided 2026-08-30 **not** to model this on
-   `.github/workflows/docker-image-build-publish.yml` (the `ctsm-docs`
-   pattern): that builds on `ubuntu-latest`, which has ~14 GB free disk
-   against a 3.5 GB image whose build compiles GCC and three ESMF trees from
-   source, and 4 cores against a build that takes ~50 min on Casper's 16. A
-   CI publish workflow is possible with a disk-reclaim step and amd64-only,
-   but is follow-up work, not a blocker.
-3. **Add a unit-test job to `cirrus-testing.yml`** once the image is
-   published. It needs the `$HOME/.cime` copy step (GHA overrides `HOME`); see
-   README "Running CTSM's unit tests".
-4. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
+1. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
+   the `$HOME/.cime` copy step (GHA overrides `HOME`); see README "Running
+   CTSM's unit tests".
+2. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
 

@@ -47,11 +47,12 @@ jobs:
     runs-on: ubuntu-latest
     
     container:
-      # TODO(publish): point at the published ctsm-ci-derecho-gnu image once it is
-      # pushed to a registry (final step in docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md),
-      # e.g. ghcr.io/<owner>/ctsm-ci-derecho-gnu:<tag>. Until then this job cannot pull
-      # the image and will fail at container startup -- expected pre-publish.
-      image: ctsm-ci-derecho-gnu:PUBLISH_TBD
+      # Built from docker/ctsm-ci-derecho-gnu/ and published by hand from Casper;
+      # see that directory's README ("Publishing to GHCR"). The dated tag is
+      # pinned deliberately rather than :latest, so a republish cannot silently
+      # change what CI tested -- bump it here when a new image is published.
+      # The package is public, so no credentials block is needed.
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830
 
     steps:
 
