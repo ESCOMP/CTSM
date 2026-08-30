@@ -115,12 +115,19 @@ run the unit tests. Re-save under the new name after the next rebuild.
    itself is unverified. Run `build-on-casper.sh`, then `smoke-test.sh`,
    `smoke-test-pfunit.sh`, and `run-unit-tests-in-container.sh` (expect 55
    passing). Then re-save to GLADE under the new name.
-2. **Publish** the image to a registry (GHCR vs Docker Hub — undecided), then
-   replace the `ctsm-ci-derecho-gnu:PUBLISH_TBD` placeholder in
-   `cirrus-testing.yml` `simple-build-create_test` with the published ref. The
-   repo already has a build-and-publish-to-GHCR pattern in
-   `.github/workflows/docker-image-build-publish.yml` (for `ctsm-docs`) to
-   model it on.
+2. **Publish** to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing from
+   Casper — see README "Publishing to GHCR" for the procedure, the SAML-SSO
+   token gotcha, and the make-it-public step. Then replace the
+   `ctsm-ci-derecho-gnu:PUBLISH_TBD` placeholder in `cirrus-testing.yml`
+   `simple-build-create_test` with the dated tag.
+
+   Decided 2026-08-30 **not** to model this on
+   `.github/workflows/docker-image-build-publish.yml` (the `ctsm-docs`
+   pattern): that builds on `ubuntu-latest`, which has ~14 GB free disk
+   against a 3.5 GB image whose build compiles GCC and three ESMF trees from
+   source, and 4 cores against a build that takes ~50 min on Casper's 16. A
+   CI publish workflow is possible with a disk-reclaim step and amd64-only,
+   but is follow-up work, not a blocker.
 3. **Add a unit-test job to `cirrus-testing.yml`** once the image is
    published. It needs the `$HOME/.cime` copy step (GHA overrides `HOME`); see
    README "Running CTSM's unit tests".

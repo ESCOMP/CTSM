@@ -150,6 +150,60 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
     cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
 ```
 
+## Publishing to GHCR
+
+The image is published to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing
+from Casper, **not** by a GitHub Actions workflow. That is deliberate: the
+build needs far more than a standard hosted runner's ~14 GB of free disk (the
+image alone is 3.5 GB, and the build compiles GCC and three ESMF trees from
+source), and at 4 cores it would take 3-4 h against a 6 h job limit. Pushing
+from Casper also publishes exactly the artifact that was validated there.
+
+The consequence is that publishing is a **manual step after any Dockerfile
+change** — nothing republishes automatically.
+
+Prerequisites, one time:
+
+- A GitHub personal access token (classic) with `write:packages`. If the
+  ESCOMP org uses SAML SSO, the token must also be **SSO-authorized for
+  ESCOMP**, or the push fails with a 403 even though the token looks correct.
+- `podman login ghcr.io -u <your-github-username>` and paste the token at the
+  password prompt. Do not put the token in a file in this repo.
+
+To publish, after `build-on-casper.sh` and all three validation scripts pass:
+
+```bash
+tag=$(date +%Y%m%d)          # e.g. 20260830
+img=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu
+
+podman tag localhost/ctsm-ci-derecho-gnu:dev "${img}:${tag}"
+podman tag localhost/ctsm-ci-derecho-gnu:dev "${img}:latest"
+podman push "${img}:${tag}"
+podman push "${img}:latest"
+```
+
+**A new GHCR package is private until you change it.** After the first push,
+open the package on GitHub (Packages -> ctsm-ci-derecho-gnu -> Package
+settings) and set visibility to public, otherwise `cirrus-testing.yml` cannot
+pull it. While it is private, a workflow needs explicit credentials:
+
+```yaml
+container:
+  image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:<tag>
+  credentials:
+    username: ${{ github.actor }}
+    password: ${{ secrets.GITHUB_TOKEN }}
+```
+
+That works for runs in the repo itself, but not reliably for pull requests
+from forks, where `GITHUB_TOKEN` is read-limited — so public is the simpler
+answer. Also link the package to this repository in the same settings page, so
+it inherits the repo's visibility and shows up on the repo page.
+
+Workflows should pin the **dated** tag, not `latest`, so a CI run is
+reproducible and a republish cannot silently change what CI tested. `latest`
+exists for humans.
+
 ## Bumping versions
 
 Component versions are `ARG`s near the top of the `Dockerfile`
