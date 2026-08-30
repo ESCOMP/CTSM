@@ -170,7 +170,16 @@ Prerequisites, one time:
 - `podman login ghcr.io -u <your-github-username>` and paste the token at the
   password prompt. Do not put the token in a file in this repo.
 
-To publish, after `build-on-casper.sh` and all three validation scripts pass:
+To publish, after `build-on-casper.sh` and all three validation scripts pass.
+Podman's storage does not survive the session, so if you have logged out since
+building, restore the image first — it saves and restores under the same
+`localhost/ctsm-ci-derecho-gnu:dev` name, so nothing needs re-tagging:
+
+```bash
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar
+```
+
+Then:
 
 ```bash
 tag=$(date +%Y%m%d)          # e.g. 20260830
