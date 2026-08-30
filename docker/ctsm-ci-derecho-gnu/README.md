@@ -38,7 +38,8 @@ The toolchain (GCC, MPICH) lives under `/opt`; libraries install under
 | netCDF-C | netcdf-mpi/4.9.2 | 4.9.2 | |
 | netCDF-Fortran | bundled in netcdf/4.9.2 | 4.6.1 | confirmed on derecho: `nf-config --version` with ncarenv/23.09 + netcdf-mpi/4.9.2 |
 | PnetCDF | parallel-netcdf/1.12.3 | 1.12.3 | |
-| ESMF | esmf/8.6.0-debug and esmf/8.6.0 | 8.6.0, both flavors | see "ESMF flavors" below |
+| ESMF | esmf/8.6.0-debug, esmf/8.6.0 (the mpi-serial build is `ESMF_COMM=mpiuni`) | 8.6.0, three flavors | see "ESMF flavors" below |
+| pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
 | BLAS/LAPACK | cray-libsci | reference `lapack`/`blas` (dnf) | libsci is proprietary |
 | PIO | parallelio/2.6.2 module | none installed | CIME builds PIO from CTSM's pinned ParallelIO submodule during the case build |
 | conda, nco | loaded on derecho | not included | not needed for build-only CI; revisit when tests actually run |
@@ -51,16 +52,32 @@ be `dnf install`ed here because that pulls in `openssh`, whose setuid
 
 ## ESMF flavors
 
-Two ESMF 8.6.0 trees are installed:
+Three ESMF 8.6.0 trees are installed:
 
-- `/usr/local/esmf-8.6.0-debug` (`ESMF_BOPT=g`) — mirrors the
-  `esmf/8.6.0-debug` module derecho loads for gnu `DEBUG=TRUE` builds.
+- `/usr/local/esmf-8.6.0-debug` (`ESMF_BOPT=g`, `ESMF_COMM=mpich`) — mirrors
+  the `esmf/8.6.0-debug` module derecho loads for gnu `DEBUG=TRUE` builds.
   **This is the default** (`ESMFMKFILE` points here) because the current CI
   test is `SMS_D...` (debug).
-- `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`) — mirrors `esmf/8.6.0`, for
-  non-debug tests.
+- `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors
+  `esmf/8.6.0`, for non-debug tests.
+- `/usr/local/esmf-8.6.0-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`) — a
+  **serial** build, used only by the unit tests. Selected automatically; you
+  should not need to set `ESMFMKFILE` for it.
 
-To use the optimized flavor in a workflow step:
+The serial flavor exists because `run_tests.py` forces `mpilib=mpi-serial`, so
+unit-test executables link with plain `gfortran` and no MPI library — while
+CTSM's `src/CMakeLists.txt` calls `find_package(ESMF REQUIRED)` and
+`link_libraries(esmf)` unconditionally. Linking an `ESMF_COMM=mpich` ESMF into
+such an executable fails with `libesmf.so: undefined reference to symbol
+'MPI_Bcast' ... DSO missing from command line`.
+
+derecho has exactly the same split: its `config_machines.xml` loads
+`esmf/8.6.0` rather than `esmf/8.6.0-debug` whenever `mpilib="mpi-serial"`,
+even under `DEBUG="TRUE"`, and that install reports `ESMF_COMM=mpiuni` with
+`ESMF_BOPT=O`. The debug/optimized mismatch here is deliberate, matching
+derecho.
+
+To use the optimized MPI flavor in a workflow step:
 
 ```yaml
 env:
@@ -89,13 +106,56 @@ plain build works:
 podman build -t ctsm-ci-derecho-gnu:dev docker/ctsm-ci-derecho-gnu/   # or: docker build ...
 ```
 
-Validate a built image with `docker/ctsm-ci-derecho-gnu/smoke-test.sh`.
+Validate a built image with `docker/ctsm-ci-derecho-gnu/smoke-test.sh` (the
+core stack) and `smoke-test-pfunit.sh` (pFUnit and the CIME macro plumbing).
+Neither needs a CTSM checkout.
+
+## Running CTSM's unit tests
+
+```bash
+docker/ctsm-ci-derecho-gnu/run-unit-tests-in-container.sh
+```
+
+This mounts the repo at `/ctsm` and runs
+`cime/scripts/fortran_unit_testing/run_tests.py` the way
+[src/README.unit_testing](../../src/README.unit_testing) describes, plus two
+flags the container needs: `--machine container` (CIME cannot detect the
+machine from a container's hostname) and `--enable-genf90` (CTSM's `.F90.in`
+templates have no committed `.F90` counterparts, and `run_tests.py` points
+CMake at the bundled `genf90.pl` only when that flag is set). Expect 55 tests.
+
+Three container-specific settings make this work, all in
+`cime-macros/gnu_container.cmake`, which is baked in at
+`/opt/ctsm-container/cime-macros/` and copied to `/root/.cime/`. CIME's
+`copy_local_macros_to_dir()` copies `$HOME/.cime/*.cmake` into the case, and
+`Macros.cmake` includes `${COMPILER}_${MACH}.cmake` last, so that file wins
+over everything ccs_config ships without shadowing anything (ccs_config has no
+`gnu_container.cmake`). It sets:
+
+- **`PFUNIT_PATH`** — `run_tests.py` scrapes this from the CMake macros and
+  reads neither the environment nor `--cmake-args`, so it must come from a
+  macro *file*. It names the shared install prefix, not the `PFUNIT-4.8`
+  subdirectory; see the comments in that file for why.
+- **`-fallow-argument-mismatch`** — ccs_config's `gnu.cmake` adds this, but
+  guards it on a compiler version CMake has not probed yet at that point in a
+  unit-test build.
+- **`ESMFMKFILE`** — selects the serial ESMF when `MPILIB=mpi-serial`.
+
+**In GitHub Actions**, `HOME` is overridden (to `/github/home`), so the
+`/root/.cime` copy is not found. A workflow step must place it:
+
+```yaml
+- run: |
+    mkdir -p "$HOME/.cime"
+    cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
+```
 
 ## Bumping versions
 
 Component versions are `ARG`s near the top of the `Dockerfile`
 (`GCC_VERSION`, `MPICH_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`,
-`NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`), plus
+`NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`,
+`PFUNIT_VERSION`), plus
 `GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
 
 `check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
@@ -106,6 +166,14 @@ that file. HDF5 and netCDF-Fortran (bundled in `netcdf-mpi`, so not standalone
 modules there) and the intentional `cray-mpich`→MPICH deviation are recorded
 by hand in `derecho-versions.ini`; update that file too when they change
 (verify on derecho with `module show netcdf-mpi` / `nf-config --version`).
+
+pFUnit is read live too, but from a different place: derecho has no pFUnit
+module, so the check parses the version out of the `PFUNIT_PATH` that
+`ccs_config/machines/derecho/intel_derecho.cmake` sets (e.g.
+`pFUnit4.8.0_derecho_Intel2023.2.1_noMPI_noOpenMP`). Bumping `PFUNIT_VERSION`
+also means updating the hardcoded install path in
+`cime-macros/gnu_container.cmake` — the Dockerfile asserts the two agree at
+build time, so a mismatch fails the build rather than a later test run.
 
 ## Baked-in environment (why each matters)
 
