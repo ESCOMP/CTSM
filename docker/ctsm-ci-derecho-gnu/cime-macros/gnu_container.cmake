@@ -1,5 +1,7 @@
-# CIME cmake macro drop-in for the CTSM CI container: tell CIME's Fortran
-# unit-test driver where pFUnit is.
+# CIME cmake macro drop-in for the CTSM CI container. Carries the two
+# container-specific settings CIME needs and ccs_config does not provide:
+# where pFUnit is, and the gfortran flags ccs_config's own version guard
+# cannot apply during a unit-test build (see the two sections below).
 #
 # WHY THIS FILE EXISTS
 # cime/scripts/fortran_unit_testing/run_tests.py locates pFUnit in
@@ -49,3 +51,35 @@ if (DEFINED ENV{PFUNIT_PATH})
 else()
   set(PFUNIT_PATH "/usr/local/pfunit-4.8.0")
 endif()
+
+# ---------------------------------------------------------------------------
+# gfortran >= 10 argument-mismatch flags
+# ---------------------------------------------------------------------------
+# CTSM's mpi-serial code calls mpi_bcast through an implicit interface with
+# different actual argument types -- e.g. src/biogeochem/ch4varcon.F90 passes
+# a LOGICAL at line 153 and an INTEGER at line 157 -- which gfortran 10+
+# rejects outright:
+#
+#   Error: Type mismatch between actual argument at (1) and actual argument
+#          at (2) (INTEGER(4)/LOGICAL(4)).
+#
+# ccs_config's cmake_macros/gnu.cmake adds -fallow-argument-mismatch for
+# exactly this, but guards it on CMAKE_Fortran_COMPILER_VERSION >= 10. That
+# guard cannot fire here: CTSM's src/CMakeLists.txt includes
+# CIME_initial_setup (which pulls in Macros.cmake, and so this file) at line
+# 4, but does not call project() until line 10 -- so when the guard is
+# evaluated CMake has not yet probed the compiler and the version variable is
+# empty. gnu.cmake's own "Fortran compiler version is" message prints blank in
+# the build log, which is the visible symptom.
+#
+# The container pins gfortran to 12.2.0 in the Dockerfile, so the version test
+# has a known answer and the flags can be set unconditionally. This file is
+# included last (${COMPILER}_${MACH}.cmake), after gnu.cmake, so appending to
+# FFLAGS here reaches CIME_utils.cmake's
+#     set(CMAKE_Fortran_FLAGS "${CPPDEFS} ${FFLAGS}")
+#
+# Not a container-only problem: any machine running CTSM's unit tests with
+# gnu hits it. It goes unnoticed upstream because ccs_config defines
+# PFUNIT_PATH only for the intel builds on derecho, casper and izumi, so the
+# gnu unit-test path is effectively untravelled.
+string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
