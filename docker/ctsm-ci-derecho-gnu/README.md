@@ -213,6 +213,27 @@ Workflows should pin the **dated** tag, not `latest`, so a CI run is
 reproducible and a republish cannot silently change what CI tested. `latest`
 exists for humans.
 
+### amd64 only (unlike ctsm-docs)
+
+[doc/ctsm-docs_container/README.md](../../doc/ctsm-docs_container/README.md)
+publishes a multi-architecture manifest via `podman manifest create` plus
+`podman build --platform linux/amd64,linux/arm64`. **Do not try that here.**
+
+That works for `ctsm-docs` because it is a ~241 MB image of pip/conda packages
+that compiles almost nothing, so QEMU emulation costs little. This image
+compiles GCC, MPICH, HDF5, netCDF-C/Fortran, PnetCDF, three ESMF trees, git
+and pFUnit from source — about 50 minutes on 16 native cores. Emulated arm64
+is 10-20x slower per core, i.e. days.
+
+It is not merely slow, it is unavailable: Casper is x86_64 with no
+`qemu-user-static` and no QEMU binfmt handlers registered, and registering
+them needs root, which rootless podman here does not have. NCAR has no arm64
+hardware to build natively on either.
+
+Note also that an arm64 image would not be replicating derecho, which is
+x86_64 — the whole premise of this image. Building one would be a separate
+project aimed at local development on Apple Silicon, not a tag on this one.
+
 ## Bumping versions
 
 Component versions are `ARG`s near the top of the `Dockerfile`
