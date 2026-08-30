@@ -1,21 +1,22 @@
 #!/usr/bin/env bash
-# Smoke-test the pFUnit probe image (Dockerfile.pfunit). Verifies that pFUnit
-# installed where the CIME macro drop-in says it did, that a real pFUnit test
+# Smoke-test the pFUnit half of the ctsm-ci-derecho-gnu image. Verifies that
+# pFUnit installed where the CIME macro drop-in says it did, that a real pFUnit
+# test
 # preprocesses/compiles/links/runs, and -- the part that actually answers the
 # design question -- that PFUNIT_PATH survives the variable filter in
 # ccs_config's Macros.cmake, which is how run_tests.py's find_pfunit() sees it.
 #
 # This needs no CTSM checkout: it exercises the mechanism, not the CTSM tests.
-# Building CTSM's own unit tests is the next step after this passes.
+# Run it alongside smoke-test.sh, which covers the rest of the stack; then
+# run-unit-tests-in-container.sh for CTSM's own unit tests.
 #
 # Usage: docker/ctsm-ci-derecho-gnu/smoke-test-pfunit.sh
-#   IMAGE_TAG overrides the image
-#     (default localhost/ctsm-ci-derecho-gnu-pfunit:probe)
+#   IMAGE_TAG overrides the image (default localhost/ctsm-ci-derecho-gnu:dev)
 set -eo pipefail
 
 module load podman 2>/dev/null || true
 
-image="${IMAGE_TAG:-localhost/ctsm-ci-derecho-gnu-pfunit:probe}"
+image="${IMAGE_TAG:-localhost/ctsm-ci-derecho-gnu:dev}"
 echo "Smoke-testing ${image}"
 
 # Runs INSIDE a fresh container so we exercise exactly the baked-in
