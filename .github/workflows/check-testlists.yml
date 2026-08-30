@@ -16,7 +16,7 @@ on:
       - 'cime_config/testlist_clm.xml'
 
 jobs:
-  testlist-supertestlists
+  testlist-supertestlists:
     runs-on: ubuntu-latest
     steps:
       # Checkout the code
