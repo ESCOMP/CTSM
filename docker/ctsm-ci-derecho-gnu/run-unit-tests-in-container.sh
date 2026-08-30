@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Step 2 of the pFUnit probe: run CTSM's own Fortran unit tests inside the
-# container, which is what actually answers "is the pFUnit in the image
-# usable by CIME?". Step 1 (smoke-test-pfunit.sh) only proves the mechanism.
+# Run CTSM's own Fortran unit tests inside the container -- the end-to-end
+# check that the image's pFUnit is actually usable by CIME. smoke-test-pfunit.sh
+# proves the plumbing without needing a CTSM checkout; this proves the real
+# thing. Expect 55 tests, all passing.
 #
 # Usage:
 #   docker/ctsm-ci-derecho-gnu/run-unit-tests-in-container.sh [extra run_tests.py args]
 # Overridable via environment:
-#   IMAGE_TAG   image to run    (default localhost/ctsm-ci-derecho-gnu-pfunit:probe)
+#   IMAGE_TAG   image to run    (default localhost/ctsm-ci-derecho-gnu:dev)
 #   BUILD_DIR   build dir INSIDE the container (default /tmp/unit_tests.temp).
 #               Defaults to container-local scratch rather than the mounted
 #               repo: the build writes many small files and glade is a
@@ -22,7 +23,7 @@ module load podman 2>/dev/null || true
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="$(cd "${here}/../.." && pwd)"
 
-image="${IMAGE_TAG:-localhost/ctsm-ci-derecho-gnu-pfunit:probe}"
+image="${IMAGE_TAG:-localhost/ctsm-ci-derecho-gnu:dev}"
 build_dir="${BUILD_DIR:-/tmp/unit_tests.temp}"
 
 echo "Running CTSM unit tests in ${image}"
