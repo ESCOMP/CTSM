@@ -164,8 +164,9 @@ def run_sys_tests(
     extra_create_test_args (str): any extra arguments to create_test, as a single,
         space-delimited string
     testlist: list of strings giving test names to run
-    wait (bool): if True, wait for the launched create_test to complete and return its
-        exit status (rather than returning as soon as it is launched)
+    wait (bool): if True, wait for all launched create_test processes to complete and
+        return a nonzero exit status if any of them failed (rather than returning as
+        soon as they have been launched)
 
     """
     num_provided_options = (
@@ -175,6 +176,12 @@ def run_sys_tests(
     )
     if num_provided_options != 1:
         raise RuntimeError("Exactly one of suite_name, testfile or testlist must be provided")
+
+    if wait and not machine.job_launcher.supports_waiting():
+        raise RuntimeError(
+            "--wait requires the no-batch job launcher; this machine's job launcher "
+            "is a {}".format(type(machine.job_launcher).__name__)
+        )
 
     if testid_base is None:
         testid_base = _get_testid_base(machine.name)
@@ -275,7 +282,7 @@ def run_sys_tests(
         )
 
     if wait and not dry_run:
-        return machine.job_launcher.wait_for_last_process_to_complete()
+        return machine.job_launcher.wait_for_processes_to_complete()
     return 0
 
 
@@ -515,10 +522,12 @@ or tests listed individually on the command line (via the -t/--testname argument
         "status, rather than returning as soon as it has been launched.\n"
         "This makes a failing test produce a nonzero exit status.\n"
         "Only supported with the no-batch job launcher.\n"
-        "Note that this waits for the LAST create_test launched, so if the\n"
-        "suite spans multiple compilers it returns when the final one is done.\n"
+        "If the suite spans multiple compilers, this waits for ALL of the\n"
+        "launched create_test processes to finish, and exits with a nonzero\n"
+        "status if any of them failed.\n"
         "Needed when running inside a container, which would otherwise be torn\n"
-        "down while create_test was still running.",
+        "down - killing any create_test processes still running - as soon as\n"
+        "run_sys_tests exits.",
     )
 
     parser.add_argument(
@@ -555,6 +564,8 @@ or tests listed individually on the command line (via the -t/--testname argument
 def _check_arg_validity(args):
     if args.suite_compiler and not args.suite_name:
         raise RuntimeError("--suite-compiler can only be specified if using --suite-name")
+    if args.xml_machine and not args.suite_name:
+        raise RuntimeError("--xml-machine can only be specified if using --suite-name")
     if args.rerun_existing_failures and not args.testid_base:
         raise RuntimeError("With --rerun-existing-failures, must also specify --testid-base")
 

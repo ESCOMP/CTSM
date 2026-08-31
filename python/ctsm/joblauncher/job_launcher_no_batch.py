@@ -20,7 +20,7 @@ class JobLauncherNoBatch(JobLauncherBase):
         nice_level: Level used for the nice command (larger = lower priority, up to 19)
         """
         JobLauncherBase.__init__(self)
-        self._process = None
+        self._processes = []
         if nice_level is None:
             # We have a default value of None rather than 0 in the argument list because
             # objects of this class may be created via a few layers, and we want to allow
@@ -47,9 +47,10 @@ class JobLauncherNoBatch(JobLauncherBase):
             # Note that preexec_fn is POSIX-only; also, it may be unsafe in the presence
             # of threads (hence the need for disabling the pylint warning)
             # pylint: disable=subprocess-popen-preexec-fn
-            self._process = subprocess.Popen(
+            process = subprocess.Popen(
                 command, stdout=outfile, stderr=errfile, preexec_fn=self._preexec
             )
+            self._processes.append(process)
 
     def run_command_logger_message(self, command, stdout_path, stderr_path):
         message = (
@@ -61,12 +62,26 @@ class JobLauncherNoBatch(JobLauncherBase):
         )
         return message
 
-    def wait_for_last_process_to_complete(self):
-        """Waits for the last process started by run_command_impl (if any) to complete
+    def supports_waiting(self):
+        """This launcher can wait for its launched process(es) to complete"""
+        return True
 
-        Returns that process's return code, or 0 if no process was started -
-        which is the case after a dry run.
+    def wait_for_processes_to_complete(self):
+        """Waits for every process started by run_command_impl to complete
+
+        We wait for ALL of them (not just the first one found to have failed),
+        so that - e.g. when running inside a container - every launched
+        create_test gets a chance to finish before we return and the caller
+        potentially exits, which inside a container would tear down the PID
+        namespace and kill any processes still running.
+
+        Returns the first nonzero return code encountered, in launch order, or
+        0 if all of them succeeded (or if none was started - which is the
+        case after a dry run).
         """
-        if self._process is not None:
-            return self._process.wait()
-        return 0
+        first_failure = 0
+        for process in self._processes:
+            return_code = process.wait()
+            if return_code != 0 and first_failure == 0:
+                first_failure = return_code
+        return first_failure

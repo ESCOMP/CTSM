@@ -3,6 +3,7 @@
 """Unit tests for run_sys_tests"""
 
 from __future__ import print_function
+import argparse
 import unittest
 import tempfile
 import shutil
@@ -13,10 +14,10 @@ from unittest import mock
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing
-from ctsm.run_sys_tests import run_sys_tests, _get_testmod_list
+from ctsm.run_sys_tests import run_sys_tests, _get_testmod_list, _check_arg_validity
 from ctsm.machine_defaults import MACHINE_DEFAULTS
 from ctsm.machine import create_machine
-from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE
+from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_FAKE, JOB_LAUNCHER_QSUB
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
@@ -291,6 +292,36 @@ class TestRunSysTests(unittest.TestCase):
             r"--test-id +{}_gnu(\s|$)".format(self._expected_testid()),
         )
 
+    def test_createTestCommands_testsuiteXmlMachineAndCompilers(self):
+        """With --xml-machine and an explicit --suite-compiler together
+
+        This is exactly the combination the container wrapper uses: it already
+        knows which compiler to run (so no auto-discovery is needed), but it
+        still needs to query a different machine's testlist entries via
+        xml_machine. get_tests_from_xml must NOT be called in this case, since
+        suite_compilers is already given.
+        """
+        machine = self._make_machine()
+        with mock.patch("ctsm.run_sys_tests.datetime") as mock_date, mock.patch(
+            "ctsm.run_sys_tests.get_tests_from_xml"
+        ) as mock_get_tests:
+            mock_date.now.side_effect = self._fake_now
+            run_sys_tests(
+                machine=machine,
+                cime_path=self._cime_path(),
+                suite_name="my_suite",
+                suite_compilers=["gnu"],
+                xml_machine="derecho",
+            )
+
+        mock_get_tests.assert_not_called()
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 1)
+        command = all_commands[0].cmd
+        self.assertRegex(command, r"--xml-machine +derecho(\s|$)")
+        self.assertRegex(command, r"--xml-category +my_suite(\s|$)")
+        self.assertRegex(command, r"--xml-compiler +gnu(\s|$)")
+
     def test_withDryRun_nothingDone(self):
         """With dry_run=True, no directories should be created, and no commands should be run"""
         machine = self._make_machine()
@@ -335,6 +366,60 @@ class TestRunSysTests(unittest.TestCase):
         )
         self.assertEqual(return_code, 0)
 
+    def test_wait_multiCompiler_firstFails_returnsNonzero(self):
+        """With wait=True and a multi-compiler suite, a failure in the FIRST-launched
+        compiler's create_test must still produce a nonzero exit status, even though the
+        last-launched compiler succeeds.
+
+        This is exactly the scenario --wait exists to protect against: inside a
+        container, run_sys_tests exiting tears down the PID namespace and kills any
+        create_test processes still running, so we must wait for (and check the status
+        of) every launched process, not just the last one. Under the old
+        wait-for-last-only behavior, this would incorrectly return 0.
+        """
+        machine = self._make_machine()
+        with mock.patch("ctsm.run_sys_tests.get_tests_from_xml") as mock_get_tests:
+            mock_get_tests.return_value = [
+                {"compiler": "intel"},
+                {"compiler": "pgi"},
+            ]
+            # Compilers are launched in sorted order (intel, then pgi); the
+            # first-launched (intel) fails, the last-launched (pgi) succeeds.
+            machine.job_launcher.set_return_codes([5, 0])
+            return_code = run_sys_tests(
+                machine=machine,
+                cime_path=self._cime_path(),
+                suite_name="my_suite",
+                wait=True,
+            )
+        self.assertEqual(return_code, 5)
+
+    def test_wait_withoutNoBatchLauncher_raisesBeforeLaunching(self):
+        """--wait with a launcher that can't wait (e.g. qsub) must fail fast
+
+        This must raise before any create_test is launched, rather than after
+        submitting jobs via qsub (which the test environment can't actually
+        run) and only then failing.
+        """
+        machine = create_machine(
+            machine_name=self._MACHINE_NAME,
+            defaults=MACHINE_DEFAULTS,
+            job_launcher_type=JOB_LAUNCHER_QSUB,
+            scratch_dir=self._scratch,
+            account="fakeaccount",
+            job_launcher_queue="somequeue",
+            job_launcher_walltime="00:10:00",
+        )
+        with self.assertRaises(RuntimeError):
+            run_sys_tests(
+                machine=machine,
+                cime_path=self._cime_path(),
+                testlist=["foo"],
+                wait=True,
+            )
+        # Nothing should have been launched
+        self.assertEqual(os.listdir(self._scratch), [])
+
     def test_getTestmodList_suite(self):
         """Ensure that _get_testmod_list() works correctly with suite-style input"""
         testmod_list_input = [
@@ -378,6 +463,22 @@ class TestRunSysTests(unittest.TestCase):
         target = ["clm-crop", "clm-default"]
         output = _get_testmod_list(testmod_list_input)
         self.assertEqual(output, target)
+
+    def test_checkArgValidity_xmlMachineWithoutSuiteName_raises(self):
+        """--xml-machine without --suite-name does nothing, so it must be rejected
+
+        This mirrors the pre-existing check that --suite-compiler requires
+        --suite-name.
+        """
+        args = argparse.Namespace(
+            suite_name=None,
+            suite_compiler=None,
+            xml_machine="derecho",
+            rerun_existing_failures=False,
+            testid_base=None,
+        )
+        with self.assertRaises(RuntimeError):
+            _check_arg_validity(args)
 
     def test_getTestmodList_twomods(self):
         """

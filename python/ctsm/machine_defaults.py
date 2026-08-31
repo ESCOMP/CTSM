@@ -44,7 +44,7 @@ MachineDefaults = namedtuple(
 QsubDefaults = namedtuple("QsubDefaults", ["queue", "walltime", "extra_args", "required_args"])
 
 MACHINE_DEFAULTS = {
-    "container": MachineDefaults(
+    "ctsm-ci-container": MachineDefaults(
         # The ctsm-ci-derecho-gnu container (docker/ctsm-ci-derecho-gnu/).
         # NOTE: unlike every other machine here, these paths are NOT
         # get_user()-derived. Inside the container the mounts are always at

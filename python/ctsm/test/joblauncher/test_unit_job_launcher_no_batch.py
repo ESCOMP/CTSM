@@ -46,7 +46,7 @@ class TestJobLauncherNoBatch(unittest.TestCase):
             stdout_path=stdout,
             stderr_path=os.path.join(self._testdir, "stderr"),
         )
-        job_launcher.wait_for_last_process_to_complete()
+        job_launcher.wait_for_processes_to_complete()
         self.assertTrue(os.path.isfile(stdout))
         self.assertFileContentsEqual("hello world\n", stdout)
 
@@ -59,10 +59,10 @@ class TestJobLauncherNoBatch(unittest.TestCase):
             stderr_path=os.path.join(self._testdir, "stderr"),
             dry_run=True,
         )
-        # There shouldn't be a "last process", but in case there is, wait for it to
-        # complete so we can be confident that the test isn't passing simply because the
+        # There shouldn't be any launched processes, but in case there are, wait for them
+        # to complete so we can be confident that the test isn't passing simply because a
         # process hasn't completed yet. (This relies on there being logic in
-        # wait_for_last_process_to_complete so that it succeeds even if there is no "last
-        # process".)
-        job_launcher.wait_for_last_process_to_complete()
+        # wait_for_processes_to_complete so that it succeeds even if no process was
+        # launched.)
+        job_launcher.wait_for_processes_to_complete()
         self.assertEqual(os.listdir(self._testdir), [])

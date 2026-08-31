@@ -108,8 +108,8 @@ class TestCreateMachine(unittest.TestCase):
         )
         self.assertNoBatchInfo(machine)
 
-    def test_containerMachine_defaults(self):
-        """Tests the container machine
+    def test_ctsmCiContainerMachine_defaults(self):
+        """Tests the ctsm-ci-container machine
 
         Unlike the other machines, its paths are container-absolute rather than
         user-specific, because the container's mounts are always at the same
@@ -118,10 +118,10 @@ class TestCreateMachine(unittest.TestCase):
         out so this doesn't depend on the environment the test runs in.
         """
         with mock.patch("ctsm.machine._get_account", return_value=None):
-            machine = create_machine("container", MACHINE_DEFAULTS)
+            machine = create_machine("ctsm-ci-container", MACHINE_DEFAULTS)
         self.assertMachineInfo(
             machine=machine,
-            name="container",
+            name="ctsm-ci-container",
             scratch_dir=os.path.join(os.path.sep, "scratch"),
             baseline_dir=os.path.join(os.path.sep, "scratch", "baselines"),
             account=None,
