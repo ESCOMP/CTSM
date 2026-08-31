@@ -170,6 +170,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -181,6 +182,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -204,6 +206,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -824,6 +827,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -939,6 +943,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -960,6 +965,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -971,6 +977,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1471,6 +1478,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1577,6 +1585,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1747,6 +1756,7 @@
       <!-- Add to the decomp_init testlist so a standard test is run there -->
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1886,6 +1896,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1970,6 +1981,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2103,6 +2115,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2383,6 +2396,7 @@
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2567,6 +2581,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2614,6 +2629,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -2766,6 +2782,8 @@
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="nvhpc" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3140,6 +3158,9 @@
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3167,6 +3188,8 @@
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3209,6 +3232,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3257,6 +3281,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3273,6 +3298,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3287,6 +3313,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3301,6 +3328,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3317,6 +3345,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3333,6 +3362,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3349,6 +3379,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3380,6 +3411,7 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3396,6 +3428,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3796,6 +3829,8 @@
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3809,6 +3844,8 @@
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3830,6 +3867,7 @@
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3862,6 +3900,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -3905,6 +3944,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3916,6 +3956,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -3948,6 +3989,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3969,6 +4011,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3980,6 +4023,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -3991,6 +4035,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4057,6 +4102,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4170,6 +4217,7 @@
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4241,6 +4289,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -4272,6 +4321,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4283,6 +4333,7 @@
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4324,6 +4375,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4345,6 +4397,7 @@
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4369,6 +4422,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4380,6 +4434,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4479,6 +4534,7 @@
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4584,6 +4640,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4654,6 +4711,7 @@
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -4787,6 +4845,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4882,6 +4942,7 @@
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4894,6 +4955,8 @@
       <machine name="derecho" compiler="gnu" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -5020,6 +5083,7 @@
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
