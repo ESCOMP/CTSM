@@ -149,7 +149,7 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
         str or None: The formatted `<machine .../>` line (without a trailing
         newline) or `None` if required attributes are missing.
     """
-    (name, comp, cat) = get_machine_compiler_category_from_machine_line(attrs)
+    (name, comp, _cat) = get_machine_compiler_category_from_machine_line(attrs)
     attrs_str = f'name="{name}" compiler="{comp}" category="{super_testlist}"'
     return f"{indent}<machine {attrs_str}/>"
 
@@ -180,8 +180,7 @@ def process_machines_block(
     """
     # block is the inner content between <machines> and </machines>
     # find the matches for each machine line in the block
-    MACHINE_LINE_MATCH = r"(\n\s*)(<machine\s+([^/>]+)/>)"
-    machine_lines = re.findall(MACHINE_LINE_MATCH, block)
+    machine_lines = re.findall(r"(\n\s*)(<machine\s+([^/>]+)/>)", block)
     if not machine_lines:
         # cannot find machine, die with an error as this is a problem
         logger.error(
