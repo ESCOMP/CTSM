@@ -263,5 +263,23 @@ rebuild/revalidate/republish/tag-bump cycle.
 - A host-side podman job launcher.
 - Wiring any of this into `cirrus-testing.yml` (`NEXT_STEPS.md` step 2, which
   still needs the `/glade`-visibility probe on `gha-runner-ctsm`).
-- Waiting for more than one launched process; the wrapper always forces a
-  single compiler.
+- ~~Waiting for more than one launched process; the wrapper always forces a
+  single compiler.~~ **REVERSED after the final whole-change review
+  (2026-08-31).** The stated reason does not hold: the wrapper injects
+  `--suite-compiler gnu` only when the user has not passed their own, so a
+  single compiler is a convention, not an enforcement -- and
+  `--job-launcher-nobatch` reaches the same code path on any machine.
+
+  The consequence is worse than "the other exit statuses are discarded",
+  which is how this was first characterized. `JobLauncherNoBatch.run_command_impl`
+  reassigns `self._process` on every call without waiting, so
+  `_run_test_suite`'s per-compiler loop leaves N `create_test` processes
+  running concurrently and only the last-launched one is ever waited on. On a
+  login node the others survive, because `preexec_fn` ignores SIGHUP and they
+  are reparented. **In a container they do not**: `run_sys_tests` exits, podman
+  tears down the PID namespace, and the still-running `create_test` processes
+  are killed mid-test -- exactly the failure `--wait` exists to prevent.
+
+  So `--wait` now waits for **every** launched process and returns nonzero if
+  any of them failed. The launcher tracks a list of processes rather than one,
+  and the method is named for that. See the post-review fix commits.
