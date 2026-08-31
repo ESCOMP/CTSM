@@ -157,7 +157,8 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
 ## Running cases and tests
 
 The image can build **and run** cases, not only compile them. That needs one
-thing a build does not: the CESM input data. Two wrappers handle it.
+thing a build does not: the CESM input data. Three wrappers handle it: the
+two below, plus `run-sys-tests-in-container.sh` in the next section.
 
 ```bash
 # a single-point test, end to end
