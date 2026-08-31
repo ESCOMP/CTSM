@@ -489,7 +489,7 @@ Opt-in, so no existing invocation changes."
 - Consumes: `MACHINE_DEFAULTS["container"]` (Task 1), `--xml-machine` (Task 2), `--wait` (Task 3). From `container-common.sh`: `ctsm_host_setup`, `ctsm_has_arg <flag> "$@"`, `ctsm_podman_run <cmd...>`, `ctsm_container_setup`, and the variables `CTSM_CASES_DIR`, `CTSM_SCRATCH_DIR`, `CTSM_INPUTDATA`.
 - Produces: the executable wrapper.
 
-- [ ] **Step 1: Write the wrapper**
+- [x] **Step 1: Write the wrapper**
 
 Create `docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh`:
 
@@ -666,7 +666,7 @@ fi
 exit "${rc}"
 ```
 
-- [ ] **Step 2: Verify the script parses and is executable**
+- [x] **Step 2: Verify the script parses and is executable**
 
 ```bash
 chmod +x docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh
@@ -674,7 +674,7 @@ bash -n docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh && echo "syntax
 ```
 Expected: `syntax OK`.
 
-- [ ] **Step 3: Verify argument assembly without a container**
+- [x] **Step 3: Verify argument assembly without a container**
 
 `DRY_RUN` is honored by `ctsm_podman_run`, so this exercises the injection logic on the host. Run all four and check the `running run_sys_tests ...` line:
 
@@ -696,7 +696,7 @@ Expected, in order:
 
 If test 3 shows only `--debug`, or drops it, the merge loop is wrong — fix before continuing.
 
-- [ ] **Step 4: Commit the wrapper**
+- [x] **Step 4: Commit the wrapper**
 
 ```bash
 git add docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh
@@ -712,7 +712,9 @@ run_sys_tests never passes to create_test itself; and for suites,
 --suite-compiler gnu."
 ```
 
-- [ ] **Step 5: Validate on Casper, in order**
+- [ ] **Step 5: Validate on Casper, in order** -- DEFERRED TO THE USER.
+  Needs an interactive compute-node session; not done as part of this plan.
+  Tracked in `docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md` under Remaining steps.
 
 The wrapper reads `"$@"`, like the other three, so it takes no arguments
 through `qsub -v`. Validate from an **interactive** session, which is also how
@@ -750,7 +752,7 @@ command will misleadingly say `image not known`; ask for more memory.
 
 Confirm for each: the testroot appears under `$SCRATCH/cases_devcontainer/`, `cs.status.fails` exists inside it, and — for a run with a failing test — the job's exit status is nonzero.
 
-- [ ] **Step 6: Document in the container README**
+- [x] **Step 6: Document in the container README**
 
 In `docker/ctsm-ci-derecho-gnu/README.md`, extend the "Running cases and tests" section with a `run_sys_tests` subsection covering: the two example invocations from the script header; the injected-defaults table; that `-s` reads **derecho's** testlist via `--xml-machine`, overridable with `XML_MACHINE`; that the testroot holds cases, `bld/` and `run/` together, unlike the other wrappers; that the `/cases` symlink dangles when read from the host; and the ctsm_pylib caveat below.
 
@@ -767,13 +769,13 @@ Add this note verbatim, since it is the one surprising behavior:
 > up front with `ModuleNotFoundError`, because that path checks
 > unconditionally.
 
-- [ ] **Step 7: Record status in NEXT_STEPS.md**
+- [x] **Step 7: Record status in NEXT_STEPS.md**
 
 Add an "Added 2026-08-31: run_sys_tests wrapper" section recording: the four CTSM-side changes and why each was needed; that `container` now exists in `MACHINE_DEFAULTS`; that `--xml-machine` and `--wait` are upstreamable on their own merits and default to prior behavior; and that **no image rebuild was needed**, because everything runs from the repo mounted at `/ctsm`.
 
 Also update the "Remaining steps" list: this work does not close any of the four items, but step 2 ("Wire runs into CI") should now note that `run_sys_tests --wait` gives CI the nonzero exit status it needs.
 
-- [ ] **Step 8: Commit the docs**
+- [x] **Step 8: Commit the docs**
 
 ```bash
 git add docker/ctsm-ci-derecho-gnu/README.md docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md
