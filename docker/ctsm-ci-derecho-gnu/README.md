@@ -187,7 +187,10 @@ effects.
 
 ### Running run_sys_tests
 
-A third wrapper drives `./run_sys_tests` rather than `create_test` directly:
+A third wrapper -- third of the three that run cases and tests (this section's
+two above plus this one); fourth overall in this directory, after
+`run-unit-tests-in-container.sh` -- drives `./run_sys_tests` rather than
+`create_test` directly:
 
 ```bash
 # one test by name
@@ -209,8 +212,8 @@ Like the other two, every argument passes straight through to
 
 | Flag | Why |
 |---|---|
-| `--machine-name container` | picks up `MACHINE_DEFAULTS["container"]`: the no-batch launcher, `/scratch` as the testroot base, `/scratch/baselines`, and no account requirement |
-| `--wait` | `run_sys_tests` otherwise backgrounds `create_test` and returns, and podman would tear the container down while it was still running |
+| `--machine-name ctsm-ci-container` | picks up `MACHINE_DEFAULTS["ctsm-ci-container"]`: the no-batch launcher, `/scratch` as the testroot base, `/scratch/baselines`, and no account requirement |
+| `--wait` (`run_sys_tests`'s own flag, distinct from `create_test`'s -- see "No batch system" below) | `run_sys_tests` otherwise backgrounds `create_test` and returns, and podman would tear the container down, killing it mid-run, while it was still running. With `--wait`, `run_sys_tests` waits for every `create_test` it launched and exits nonzero if any of them failed |
 | `--extra-create-test-args "--machine container --compiler gnu"` | `run_sys_tests` never passes `--machine` to `create_test` itself, only `--xml-machine`, so without this CIME tries to auto-detect the machine from the container hostname and fails. A value you pass with `--extra-create-test-args` is **merged** with this, not replaced |
 
 and, only when you asked for a suite with `-s`/`--suite-name`:
@@ -220,19 +223,36 @@ and, only when you asked for a suite with `-s`/`--suite-name`:
 | `--xml-machine derecho` | whose testlist to read. The container has no entries of its own in `cime_config/testdefs/testlist_clm.xml`, and replicating derecho is the image's purpose. Override with `$XML_MACHINE` |
 | `--suite-compiler gnu` | the only compiler in the image |
 
-**The testroot holds cases, `bld/` and `run/` together**, unlike the other
-two wrappers. `run_sys_tests` names it
-`tests_<MMDD-HHMMSS><first 2 chars of the machine name>` (so `co` here) under
-`$SCRATCH_DIR`, and passes `--output-root <testroot>` to `create_test`, so
-case directories, `bld/` and `run/` all land inside it -- there is no
-separate `--test-root` / `--output-root` to configure as there is for the
-other wrappers.
+**The testroot holds cases, `bld/` and `run/` together**, unlike
+`run-case-in-container.sh` and `run-test-in-container.sh`. `run_sys_tests`
+names it `tests_<MMDD-HHMMSS><first 2 chars of the machine name>` (so `ct`
+here) under `$SCRATCH_DIR`, and passes `--output-root <testroot>` to
+`create_test`, so case directories, `bld/` and `run/` all land inside it --
+there is no separate `--test-root` / `--output-root` to configure as there is
+for the other two wrappers.
 
 **The `/cases` symlink dangles when read from the host.** `run_sys_tests`
 also makes a symlink to the testroot in its working directory (`/cases`
 inside the container), but that link points at the *container* path
 (`/scratch/tests_...`), so from the host it is a dangling symlink. Use the
 testroot path the wrapper prints instead.
+
+**Test output does not appear in the job log, and that silence is not a
+hang.** `run_sys_tests` launches `create_test` through the no-batch job
+launcher, which redirects its stdout/stderr straight to
+`<testroot>/STDOUT.<testid>` and `STDERR.<testid>` -- never through this
+wrapper's own tee'd log. With `--wait`, nothing streams to the log between
+"Running: <create_test ...>" and the final exit code, so a silent PBS log for
+a 12-hour suite is expected, not evidence of a hang. Watch those two files
+under the testroot for progress instead.
+
+**`cs.status` does not work from the host.** `create_cs_status` bakes
+absolute paths into the `cs.status` / `cs.status.fails` scripts it generates
+in the testroot -- `/ctsm/cime/CIME/Tools` and the container's own testroot
+path -- so those generated scripts run only *inside* the container. From the
+host, use `cime/CIME/Tools/cs.status --test-root <host testroot>` instead.
+This is the same class of problem as the dangling `/cases` symlink above:
+absolute container paths baked in where the host expects host paths.
 
 > **`-s` skips the ctsm_pylib check.** `run_sys_tests` only checks that
 > python prerequisites are importable when it has to discover the suite's
@@ -320,7 +340,9 @@ checking the mounts without an allocation.
 
 ### Injected defaults
 
-Both wrappers add flags only where you have not passed them yourself:
+`run-case-in-container.sh` and `run-test-in-container.sh` add flags only
+where you have not passed them yourself (`run-sys-tests-in-container.sh` has
+its own, separate table above, in "Running run_sys_tests"):
 
 | Flag | Why |
 |---|---|
@@ -412,24 +434,32 @@ What needs no work at all, and should not be "fixed":
 
 `BATCH_SYSTEM=none` in the machine config means CIME infers no-batch mode and
 runs the model in the **foreground**; `case.submit` and `create_test` each
-detect it, so neither `--no-batch` nor `--wait` is needed. `create_test`
-consequently blocks until the tests finish and reports a real PASS/FAIL rather
-than "submitted".
+detect it, so neither `create_test`'s own `--no-batch` nor its `--wait` is
+needed for `run-case-in-container.sh` or `run-test-in-container.sh`.
+`create_test` consequently blocks until the tests finish and reports a real
+PASS/FAIL rather than "submitted". This is a different flag from
+`run_sys_tests --wait` (see "Running run_sys_tests" above), which
+`run-sys-tests-in-container.sh` always injects: `run_sys_tests` backgrounds
+`create_test` itself regardless of `BATCH_SYSTEM`, so it needs its own
+`--wait` to block and propagate the exit status even though `create_test`
+underneath it is still running in no-batch mode.
 
 Do **not** add `--queue`: CIME asserts a queue is never combined with no-batch
 mode, so it fails outright.
 
 Because the run is in the foreground, these scripts want a compute allocation.
-Both carry PBS headers, so `qsub` them directly -- or run them inside an
-existing interactive session, which a single-point `Ld1` case is small enough
-for.
+`run-case-in-container.sh`, `run-test-in-container.sh` and
+`run-sys-tests-in-container.sh` all carry PBS headers, so `qsub` any of them
+directly -- or run them inside an existing interactive session, which a
+single-point `Ld1` case is small enough for.
 
 ### When input data is missing
 
 The read-only mount means CIME cannot download anything. Left alone it fails
 in a wall of `wget failed` errors (or, where the parent directory does not
 exist yet, `OSError: [Errno 30] Read-only file system`), neither of which
-obviously means "a file is missing", so both wrappers catch it and say so.
+obviously means "a file is missing", so each of these three wrappers catches
+it and says so.
 
 **Check the dangling-symlink cause first** -- see the mounts table above. It
 presents as missing data but is not.
@@ -441,6 +471,12 @@ presents as missing data but is not.
 - `run-test-in-container.sh` cannot insert a step, because `create_test`
   drives its own phases, so it recognizes the read-only-filesystem error in
   the log afterwards and explains it.
+- `run-sys-tests-in-container.sh` does the same after-the-fact recognition,
+  but has to search further: `run_sys_tests` launches `create_test` through a
+  launcher that redirects its stdout/stderr to `<testroot>/STDOUT.<testid>` /
+  `STDERR.<testid>` rather than through this wrapper's own log (see "Running
+  run_sys_tests" above), so it greps those files too whenever it can find the
+  testroot.
 
 Either way the fix is to run `./check_input_data --download` in the case from
 a normal host shell, where the inputdata tree is writable, then re-run.

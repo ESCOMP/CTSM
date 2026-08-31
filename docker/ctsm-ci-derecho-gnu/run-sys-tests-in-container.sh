@@ -34,7 +34,8 @@
 #   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run
 #
 # These defaults are injected only if you did not pass them yourself:
-#   --machine-name container  picks up MACHINE_DEFAULTS["container"]: the
+#   --machine-name ctsm-ci-container  picks up
+#                             MACHINE_DEFAULTS["ctsm-ci-container"]: the
 #                             no-batch launcher, /scratch as the testroot base,
 #                             /scratch/baselines, and no account requirement
 #   --wait                    run_sys_tests otherwise backgrounds create_test and
@@ -88,9 +89,18 @@ for arg in "$@"; do
     esac
 done
 
+# A trailing valueless --extra-create-test-args (nothing left after it in the
+# argument list) would otherwise silently vanish: skip_next stays 1 and
+# nothing ever assigns to user_extra. Catch it explicitly rather than let it
+# pass through unnoticed.
+if [ "${skip_next}" -eq 1 ]; then
+    echo "ERROR: --extra-create-test-args requires a value" >&2
+    exit 1
+fi
+
 cime_args=()
 ctsm_has_arg --machine-name "${args[@]+"${args[@]}"}" \
-    || cime_args+=(--machine-name container)
+    || cime_args+=(--machine-name ctsm-ci-container)
 ctsm_has_arg --wait "${args[@]+"${args[@]}"}" \
     || cime_args+=(--wait)
 cime_args+=(--extra-create-test-args "${injected_extra}${user_extra:+ ${user_extra}}")
@@ -109,16 +119,28 @@ fi
 cime_args+=("${args[@]+"${args[@]}"}")
 
 # run_sys_tests names the testroot tests_<MMDD-HHMMSS><first 2 chars of the
-# machine name>, so "co" here. Unlike the other wrappers there is no separate
+# machine name>, so "ct" here. Unlike the other wrappers there is no separate
 # --test-root / --output-root: run_sys_tests passes --output-root <testroot> to
 # create_test, so case dirs, bld/ and run/ all land inside the testroot.
 echo "host-side directories:"
-echo "  testroot   ${CTSM_SCRATCH_DIR}/tests_<MMDD-HHMMSS>co"
+echo "  testroot   ${CTSM_SCRATCH_DIR}/tests_<MMDD-HHMMSS>ct"
 echo "             (cases, bld/ and run/ all land inside it)"
 echo "  baselines  ${CTSM_SCRATCH_DIR}/baselines"
 echo "note: run_sys_tests also links the testroot into ${CTSM_CASES_DIR},"
 echo "      but that link points at the CONTAINER path and so is dangling"
 echo "      when read from the host. Use the testroot path above."
+echo "note: create_test's own stdout/stderr do NOT appear in the log below --"
+echo "      run_sys_tests launches it through the no-batch launcher, which"
+echo "      redirects them straight to STDOUT.<testid> / STDERR.<testid>"
+echo "      inside the testroot. With --wait, this script prints nothing"
+echo "      between 'Running: <create_test ...>' and the final exit code, so"
+echo "      a silent PBS log for a 12-hour suite is expected, not a hang --"
+echo "      watch those files for progress."
+echo "note: cs.status / cs.status.fails, which run_sys_tests generates in the"
+echo "      testroot, bake in CONTAINER paths (/ctsm/cime/CIME/Tools and the"
+echo "      container testroot), so the generated scripts only run inside"
+echo "      the container. From the host, use instead:"
+echo "        cime/CIME/Tools/cs.status --test-root <host testroot>"
 
 log="${CTSM_SCRATCH_DIR}/run_sys_tests.$(date +%Y%m%d%H%M%S).log"
 echo "log        ${log}"
@@ -141,12 +163,36 @@ INSIDE
 rc=${PIPESTATUS[0]}
 set -e
 
-# Same failure mode as run-test-in-container.sh: CIME cannot fetch missing
-# inputdata through a read-only mount, and the first suspect is dangling
-# symlinks rather than genuinely absent data. See that script for the full
-# explanation of the wording matched here.
+# create_test's own output never reaches ${log} (see the "host-side
+# directories" note above), so the inputdata-failure grep below has to look
+# in the testroot's STDOUT.<testid>/STDERR.<testid> too, not just ${log}.
+# run_sys_tests prints "Testroot: <container path>" as soon as it creates the
+# testroot -- that print IS run_sys_tests' own logging, so it IS in ${log}.
+# The host path is ${CTSM_SCRATCH_DIR} plus that path's basename. If the line
+# is absent (a failure before the testroot was made, or a dry run), fall back
+# to searching ${log} alone, exactly as before -- this must not trip `set -u`
+# or itself error.
+testroot_line=$(grep -m1 -E '^Testroot: ' "${log}" || true)
+testroot_host=""
+if [ -n "${testroot_line}" ]; then
+    testroot_host="${CTSM_SCRATCH_DIR}/$(basename "${testroot_line#Testroot: }")"
+fi
+
+grep_targets=("${log}")
+if [ -n "${testroot_host}" ] && [ -d "${testroot_host}" ]; then
+    for f in "${testroot_host}"/STDOUT.* "${testroot_host}"/STDERR.*; do
+        if [ -e "${f}" ]; then
+            grep_targets+=("${f}")
+        fi
+    done
+fi
+
+# Same root failure mode as run-test-in-container.sh: CIME cannot fetch
+# missing inputdata through a read-only mount, and the first suspect is
+# dangling symlinks rather than genuinely absent data. See that script for
+# the full explanation of the wording matched here.
 if [ "${rc}" -ne 0 ] \
-   && grep -qE 'Could not find all inputdata on any server|wget failed|Read-only file system|Errno 30' "${log}"; then
+   && grep -qE 'Could not find all inputdata on any server|wget failed|Read-only file system|Errno 30' "${grep_targets[@]}"; then
     cat >&2 <<MSG
 
 =====================================================================
@@ -163,6 +209,7 @@ INPUTDATA_SYMLINK_ROOT (default /glade/campaign) to the tree the
 symlinks point into.
 
 Full log: ${log}
+${testroot_host:+create_test's own output: ${testroot_host}/STDOUT.<testid> and STDERR.<testid>}
 =====================================================================
 MSG
 fi

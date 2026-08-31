@@ -253,39 +253,59 @@ an allocation with real memory, e.g.
 
 ## Added 2026-08-31: run_sys_tests wrapper (written, not yet validated on Casper)
 
-A fourth wrapper, `run-sys-tests-in-container.sh`, drives `./run_sys_tests`
-rather than `create_test` directly -- the bookkeeping a real test suite needs
-that the bare `create_test` wrapper does not provide: a dated testroot,
+The fourth wrapper script in this directory (after `run-case-in-container.sh`,
+`run-test-in-container.sh` and `run-unit-tests-in-container.sh`),
+`run-sys-tests-in-container.sh`, drives `./run_sys_tests` rather than
+`create_test` directly -- the bookkeeping a real test suite needs that the
+bare `create_test` wrapper does not provide: a dated testroot,
 `cs.status`/`cs.status.fails` aggregation, a recorded `SRCROOT_GIT_STATUS`,
 baseline compare/generate, and retry. See README "Running run_sys_tests".
 
 Four small CTSM-side changes made this possible, none touching `ccs_config`
 or `testlist_clm.xml`:
 
-- **`MACHINE_DEFAULTS["container"]`** (`python/ctsm/machine_defaults.py`,
-  commit `75727441f`). Without it, `run_sys_tests` falls through to its
-  unknown-machine branch: `scratch_dir` and `baseline_dir` come back `None`,
-  making `--testroot-base` mandatory and `--compare`/`--generate` unusable.
-  `container` now exists in `MACHINE_DEFAULTS`, giving the no-batch launcher,
-  `/scratch` as the testroot base, `/scratch/baselines`, and no account
-  requirement.
+- **`MACHINE_DEFAULTS["ctsm-ci-container"]`**
+  (`python/ctsm/machine_defaults.py`, commit `75727441f`). Without it,
+  `run_sys_tests` falls through to its unknown-machine branch: `scratch_dir`
+  and `baseline_dir` come back `None`, making `--testroot-base` mandatory and
+  `--compare`/`--generate` unusable. Named `ctsm-ci-container` rather than
+  the shorter `container` because `ccs_config/machines/container/` already
+  defines a generic CIME machine named `container` (`MACH="container"` in its
+  `config_machines.xml`); a `MACHINE_DEFAULTS["container"]` key would collide
+  with that unrelated machine. `ctsm-ci-container` now exists in
+  `MACHINE_DEFAULTS`, giving the no-batch launcher, `/scratch` as the
+  testroot base, `/scratch/baselines`, and no account requirement. One
+  consequence: `run_sys_tests` derives the testid prefix as the first two
+  characters of the machine name, so the testroot is
+  `tests_<MMDD-HHMMSS>ct`, not `...co`.
 - **`run_sys_tests --xml-machine`** (`python/ctsm/run_sys_tests.py`, commit
   `97ff51c85`). Separates "what machine am I" from "whose testlist do I
   read" -- previously `--xml-machine` was hardcoded to the machine name, so a
   machine with no `testlist_clm.xml` entries of its own (the container)
   could not use suite mode (`-s`) at all. Defaults to the machine name, so no
-  existing invocation changes.
+  existing invocation changes. Now also rejected up front when passed
+  without `--suite-name`, since it is meaningless on the `-t`/`-f` paths.
 - **`run_sys_tests --wait`** (`python/ctsm/run_sys_tests.py` +
-  `joblauncher/`, commit `0be3c0f8e`). The no-batch launcher `Popen`s
-  `create_test` and returns without waiting for it -- right on a login node,
-  where the job should outlive the shell, but fatal in a container: the
-  wrapper's shell exits, podman tears down the PID namespace, and
-  `create_test` dies with it. Opt-in, so no existing invocation changes.
-- **`wait_for_last_process_to_complete()` now returns the launched process's
-  return code** instead of discarding it (`job_launcher_base.py`, same
-  commit as `--wait`). It already existed with no production caller,
-  exercised only by its own unit tests; `--wait` is now that caller, and it
-  is what lets a failing test surface as a nonzero exit status.
+  `joblauncher/`, commit `0be3c0f8e`, corrected post-review). The no-batch
+  launcher `Popen`s `create_test` and returns without waiting for it -- right
+  on a login node, where the job should outlive the shell, but fatal in a
+  container: the wrapper's shell exits, podman tears down the PID namespace,
+  and kills any `create_test` still running underneath it. `--wait` now waits
+  for every `create_test` process `run_sys_tests` launched -- including when
+  a suite spans multiple compilers and launches more than one -- and exits
+  nonzero if any of them failed. Also now rejected up front on a launcher
+  that cannot wait (e.g. qsub), rather than failing only after `create_test`
+  has already been dispatched. Opt-in, so no existing invocation changes.
+- **The no-batch job launcher's wait method** (`joblauncher/`, same commit as
+  `--wait`, corrected post-review) now waits for every process it launched,
+  not just the most recently launched one, and returns nonzero if any of
+  them failed. The base launcher class's own version of this method already
+  existed (since commit `0be3c0f8e`) purely to raise for launcher types that
+  cannot wait at all (e.g. qsub); that behavior is unchanged here, but the
+  base class also gained a separate predicate that `--wait`'s new pre-flight
+  check (above) queries directly, so an incompatible launcher is now rejected
+  before `create_test` is dispatched rather than only discovered afterward
+  via the raise.
 
 `--xml-machine` and `--wait` are both upstreamable on their own merits, not
 container-specific plumbing masquerading as general features: each defaults
@@ -296,7 +316,7 @@ CTSM-side changes run entirely from the repo mounted read-write at `/ctsm`
 (see `container-common.sh`); nothing here touches the `Dockerfile`.
 
 **Not yet run on Casper.** The wrapper is written, syntax-checked, and its
-argument-injection logic -- `--machine-name container`, `--wait`, the
+argument-injection logic -- `--machine-name ctsm-ci-container`, `--wait`, the
 `--extra-create-test-args` merge, and the suite-only `--xml-machine`/
 `--suite-compiler` injections -- is verified on the login node under
 `DRY_RUN=1`, which makes `ctsm_podman_run` print the assembled `podman run`
@@ -315,19 +335,75 @@ not yet been run against the actual container on a Casper compute node; see
    Whether container jobs on that runner see `/glade` is **unknown** -- the
    existing `list-glade-cesm-input` job proves only that the *host* does. Worth
    a probe workflow in the style of `probe-derecho-modules.yml`. Now that
-   `run_sys_tests --wait` blocks on the launched test and exits with its
-   status, CI has the nonzero exit code it needs to fail the job on a test
-   failure -- that piece is no longer a gap.
+   `run_sys_tests --wait` blocks on every launched test and exits nonzero if
+   any of them failed, CI has the exit code it needs to fail the job on a
+   test failure -- that piece is no longer a gap.
 3. **Validate `run-sys-tests-in-container.sh` on Casper.** Written, syntax
    checked, and dry-run-verified on the login node only (see "Added
    2026-08-31: run_sys_tests wrapper" above) -- it has not yet been run
-   against the actual container on a compute node. Needs an interactive
-   session (image load, then in order): one known-good test
-   (`-t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`), suite resolution
-   via `-s aux_clm_mpi_serial --dry-run`, and a real short suite
-   (`-s clm_short`). For each, confirm the testroot appears under
-   `$SCRATCH/cases_devcontainer/`, `cs.status.fails` exists inside it, and a
-   run with a failing test exits nonzero.
+   against the actual container on a compute node. Each step below is
+   ordered by what it actually proves; do them in order and do not skip one
+   because a later step looks like it would cover it too.
+
+   1. `cime/CIME/scripts/query_testlists.py --xml-machine derecho
+      --xml-category aux_clm_mpi_serial --xml-compiler gnu --count` -- real
+      suite resolution against derecho's testlist, on the host, in seconds,
+      no container or allocation needed. This is the step that actually
+      calls `get_tests_from_xml`; nothing below does.
+   2. The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not**
+      prove suite resolution -- the wrapper always injects
+      `--suite-compiler gnu`, which makes `run_sys_tests` skip
+      `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`,
+      and `--dry-run` stops `create_test` from running at all. What it does
+      prove: `run_sys_tests` imports and runs under the container's
+      `python3`; `create_machine("ctsm-ci-container")` resolves;
+      `git`/`bin/git-fleximod status` succeed against the bind-mounted
+      `/ctsm`; and the testroot is named as predicted
+      (`tests_<MMDD-HHMMSS>ct`).
+   3. One known-good test through the wrapper --
+      `-t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`, then `echo $?`.
+      This is the **only** step that proves `--wait` actually blocks and
+      that the exit status propagates through podman to PBS -- the entire
+      reason the `--wait` work exists, and until this runs it is untested
+      outside unit tests against a fake launcher. Confirm the testroot
+      appears under `$SCRATCH/cases_devcontainer/` and the case PASSes.
+   4. A deliberately failing test, to confirm the exit status is nonzero --
+      `-t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` is a convenient
+      choice, since it is already known to fail here for a documented reason
+      (missing python modules; see the `-s` / ctsm_pylib note in README
+      "Running run_sys_tests"). Confirm `echo $?` is nonzero.
+   5. The full `-s aux_clm_mpi_serial`. Judge this run by `cs.status.fails`
+      inside the testroot, **not** by the wrapper's exit code: a nonzero
+      exit is *expected* on a first full run of this suite, for reasons
+      unrelated to this change --
+      `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules
+      the image lacks (same as step 4), and the suite's NEON/`CLM_USRDAT`
+      and FATES entries need user datasets and FATES build support that this
+      change does not touch. Do **not** use `-s clm_short` as a substitute
+      "quick suite" -- it has exactly two derecho/gnu entries,
+      `ERP_D_P64x2_Ld3.f10_f10_mg37.I1850Clm50BgcCrop` and
+      `ERS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop`, neither mpi-serial, and
+      `P64x2` wants 64 MPI tasks against a machine config with
+      `MAX_MPITASKS_PER_NODE=4` inside an 8-cpu PBS reservation; it will
+      fail for reasons that have nothing to do with this change.
+
+   **What to watch for**, highest-risk failure modes first:
+   - `_record_git_status` can abort `run_sys_tests` up front if git's
+     dubious-ownership / `safe.directory` check trips on the bind-mounted
+     repo. Mitigation: pass `--skip-git-status`.
+   - The silent job log described in README "Running run_sys_tests" (Test
+     output does not appear in the job log): with `--wait`, nothing streams
+     to the PBS log between "Running: <create_test ...>" and the final exit
+     code, so a long quiet job is expected, not a hang -- watch
+     `<testroot>/STDOUT.<testid>` / `STDERR.<testid>` instead.
+   - `MAX_MPITASKS_PER_NODE=4` together with `GMAKE_J=4` means CIME may build
+     and run up to 4 tests at once inside the 8-cpu PBS reservation these
+     wrappers request -- expect concurrency, not one test running at a time.
+   - The `podman load` OOM (exit 137, prints nothing, `podman tag`/`podman
+     run` then fail with the misleading "image not known") already
+     documented above under "Resolved 2026-08-31: mpi-serial runs work"
+     applies here too: load the image from a session with real memory before
+     running any of the above.
 4. **Decide whether `MPI_SERIAL_VERSION` and `PIO_VERSION` belong in
    `check-derecho-versions.py`.** Both are new `Dockerfile` ARGs that nothing
    checks, so they can drift from derecho silently -- they are the only ARGs in

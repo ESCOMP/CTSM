@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Shared plumbing for the ctsm-ci-derecho-gnu container wrappers,
-# run-case-in-container.sh and run-test-in-container.sh.
+# Shared plumbing for the ctsm-ci-derecho-gnu container wrappers:
+# run-case-in-container.sh, run-test-in-container.sh,
+# run-sys-tests-in-container.sh, and run-unit-tests-in-container.sh.
 #
 # Nothing here runs at source time: this file only defines functions, one set
 # for each side of the container boundary.
