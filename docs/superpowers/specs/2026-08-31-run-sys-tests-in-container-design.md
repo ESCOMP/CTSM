@@ -88,7 +88,10 @@ launching and exits with `create_test`'s status. A failing test therefore makes
 `run_sys_tests` exit nonzero, since `create_test`'s code is propagated verbatim.
 
 `wait_for_last_process_to_complete()` already exists on `JobLauncherNoBatch`,
-is public, is documented, and is called by nobody.
+is public, and is documented. It is called only by its own unit tests in
+`python/ctsm/test/joblauncher/test_unit_job_launcher_no_batch.py`; no
+production code path calls it. Those tests also already exercise the
+no-process case, which is why returning `0` when nothing was launched is safe.
 
 *Rejected:* solving teardown entirely in the wrapper. Bash cannot `wait` on the
 orphan -- `wait` consults bash's own jobs table and a reparented process was
