@@ -778,7 +778,10 @@ The two view factors needed to compute the incident diffuse solar radiation are 
 
    S_{imprvrd} \downarrow_{\Lambda} = S_{prvrd} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - road}
 
-:math:`S_{shdwall} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - wall}`,
+.. math::
+   :label: eq-s_shdwall_downlambda
+
+   S_{shdwall} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - wall}
 
 .. math::
    :label: eq-0122
@@ -837,16 +840,25 @@ Steps 2-5 are repeated until a convergence criterion (absorbed radiation per uni
 
 The initial direct beam absorption (:math:`i = 0`) (step 1) by each urban surface is
 
-:math:`{\overrightarrow{S}}_{imprvrd,\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{imprvrd,\Lambda}^{\mu} \right)`,
+.. math::
+   :label: eq-s_imprvrd
+
+   {\overrightarrow{S}}_{imprvrd,\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{imprvrd,\Lambda}^{\mu} \right)
 
 .. math::
    :label: eq-0493
 
    {\overrightarrow{S}}_{prvrd,\Lambda,i = 0}^{\mu} = S_{prvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{prvrd,\Lambda}^{\mu} \right)
 
-:math:`{\overrightarrow{S}}_{sunwall,\Lambda,i = 0}^{\mu} = S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{sunwall,\Lambda}^{\mu} \right)`,
+.. math::
+   :label: eq-s_sunwall
 
-:math:`{\overrightarrow{S}}_{shdwall,\Lambda,i = 0}^{\mu} = S_{shdwall} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{shdwall,\Lambda}^{\mu} \right)`,
+   {\overrightarrow{S}}_{sunwall,\Lambda,i = 0}^{\mu} = S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{sunwall,\Lambda}^{\mu} \right)
+
+.. math::
+   :label: eq-s_shdwall
+
+   {\overrightarrow{S}}_{shdwall,\Lambda,i = 0}^{\mu} = S_{shdwall} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{shdwall,\Lambda}^{\mu} \right)
 
 .. math::
    :label: eq-0127
@@ -1198,7 +1210,10 @@ Solar radiation in the urban canyon is conserved as
 
 The direct beam and diffuse urban canyon albedos are
 
-:math:`\alpha_{uc,\Lambda}^{\mu} = \frac{S_{uc} \uparrow_{\Lambda}^{\mu}}{S_{road} \downarrow_{\Lambda}^{\mu} + \left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right)\frac{H}{W}}`,
+.. math::
+   :label: eq-alpha_uc
+
+   \alpha_{uc,\Lambda}^{\mu} = \frac{S_{uc} \uparrow_{\Lambda}^{\mu}}{S_{road} \downarrow_{\Lambda}^{\mu} + \left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right)\frac{H}{W}}
 
 .. math::
    :label: eq-0161
@@ -1245,7 +1260,10 @@ Similar to incident diffuse solar radiation, the longwave radiation incident on 
 
    L_{imprvrd} \downarrow = L_{prvrd} \downarrow = L_{atm} \downarrow \Psi_{sky - road}
 
-:math:`L_{shdwall} \downarrow = L_{atm} \downarrow \Psi_{sky - wall}`,
+.. math::
+   :label: eq-L_shdwall
+
+   L_{shdwall} \downarrow = L_{atm} \downarrow \Psi_{sky - wall}
 
 .. math::
    :label: eq-0163
@@ -1349,23 +1367,50 @@ The emitted (:math:`e`) longwave radiation from each surface is
 
 The initial reflected longwave radiation is distributed to sky, walls, and road according to view factors as
 
-:math:`L_{imprvrd - sky,i = 0}\overset{r}{\uparrow} = L_{imprvrd,i = 0}\overset{r}{\uparrow}\Psi_{road - sky}`,
+.. math::
+   :label: eq-L_imprvrd-sky
 
-:math:`L_{prvrd - sky,i = 0}\overset{r}{\uparrow} = L_{prvrd,i = 0}\overset{r}{\uparrow}\Psi_{road - sky}`,
+   L_{imprvrd - sky,i = 0}\overset{r}{\uparrow} = L_{imprvrd,i = 0}\overset{r}{\uparrow}\Psi_{road - sky}
 
-:math:`L_{road - sunwall,i = 0}\overset{r}{\uparrow} = L_{road,i = 0}\overset{r}{\uparrow}\Psi_{road - wall}`,
+.. math::
+   :label: eq-L_prvrd-sky
 
-:math:`L_{road - shdwall,i = 0}\overset{r}{\uparrow} = L_{road,i = 0}\overset{r}{\uparrow}\Psi_{road - wall}`,
+   L_{prvrd - sky,i = 0}\overset{r}{\uparrow} = L_{prvrd,i = 0}\overset{r}{\uparrow}\Psi_{road - sky}
 
-:math:`L_{sunwall - sky,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - sky}`,
+.. math::
+   :label: eq-L_road-sunwall
 
-:math:`L_{sunwall - road,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - road}`,
+   L_{road - sunwall,i = 0}\overset{r}{\uparrow} = L_{road,i = 0}\overset{r}{\uparrow}\Psi_{road - wall}
 
-:math:`L_{sunwall - shdwall,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - wall}`,
+.. math::
+   :label: eq-L_road-shdwall
 
-:math:`L_{shdwall - sky,i = 0}\overset{r}{\uparrow} = L_{shdwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - sky}`,
+   L_{road - shdwall,i = 0}\overset{r}{\uparrow} = L_{road,i = 0}\overset{r}{\uparrow}\Psi_{road - wall}
 
-:math:`L_{shdwall - road,i = 0}\overset{r}{\uparrow} = L_{shdwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - road}`,
+.. math::
+   :label: eq-L_sunwall-sky
+
+   L_{sunwall - sky,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - sky}
+
+.. math::
+   :label: eq-L_sunwall-road
+
+   L_{sunwall - road,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - road}
+
+.. math::
+   :label: eq-L_sunwall-shdwall_reflected
+
+   L_{sunwall - shdwall,i = 0}\overset{r}{\uparrow} = L_{sunwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - wall}
+
+.. math::
+   :label: eq-L_shdwall-sky
+
+   L_{shdwall - sky,i = 0}\overset{r}{\uparrow} = L_{shdwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - sky}
+
+.. math::
+   :label: eq-L_shdwall-road
+
+   L_{shdwall - road,i = 0}\overset{r}{\uparrow} = L_{shdwall,i = 0}\overset{r}{\uparrow}\Psi_{wall - road}
 
 .. math::
    :label: eq-0170
@@ -1404,7 +1449,10 @@ The emitted longwave radiation is distributed to sky, walls, and road according 
 
    L_{sunwall - road}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - road}
 
-:math:`L_{sunwall - shdwall}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - wall}`,
+.. math::
+   :label: eq-L_sunwall-shdwall_emitted
+
+   L_{sunwall - shdwall}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - wall}
 
 .. math::
    :label: eq-0513
@@ -1523,8 +1571,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - sky}
 
-,
-
 
 
 .. math::
@@ -1534,8 +1580,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & L_{sunwall - road,i - 1}\overset{r}{\uparrow} + L_{sunwall - road}\overset{e}{\uparrow} \\
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - wall}
-
-,
 
 
 
@@ -1547,8 +1591,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - wall}
 
-,
-
 
 
 .. math::
@@ -1558,8 +1600,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & L_{sunwall - road,i - 1}\overset{r}{\uparrow} + L_{sunwall - road}\overset{e}{\uparrow} \\
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - sky}
-
-,
 
 
 
@@ -1571,8 +1611,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - wall}
 
-,
-
 
 
 .. math::
@@ -1582,8 +1620,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & L_{sunwall - road,i - 1}\overset{r}{\uparrow} + L_{sunwall - road}\overset{e}{\uparrow} \\
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}\Psi_{road - wall}
-
-,
 
 
 
@@ -1602,8 +1638,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    \end{aligned} \right)\frac{H}{W}f_{prvrd}
    \end{aligned} \right\rbrack\Psi_{road - sky}
 
-,
-
 
 
 .. math::
@@ -1620,8 +1654,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{shdwall - road,i - 1}\overset{r}{\uparrow} + L_{shdwall - road}\overset{e}{\uparrow}
    \end{aligned} \right)\frac{H}{W}f_{prvrd}
    \end{aligned} \right\rbrack\Psi_{road - wall}
-
-,
 
 
 
@@ -1640,8 +1672,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    \end{aligned} \right)\frac{H}{W}f_{prvrd}
    \end{aligned} \right\rbrack\Psi_{road - wall}
 
-,
-
 
 
 .. math::
@@ -1651,8 +1681,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & \frac{L_{road - sunwall,i - 1}\overset{r}{\uparrow} + L_{road - sunwall}\overset{e}{\uparrow}}{\frac{H}{W}} \\
    & + L_{shdwall - sunwall,i - 1}\overset{r}{\uparrow} + L_{shdwall - sunwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - sky}
-
-,
 
 
 
@@ -1664,8 +1692,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{shdwall - sunwall,i - 1}\overset{r}{\uparrow} + L_{shdwall - sunwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - road}
 
-,
-
 
 
 .. math::
@@ -1675,8 +1701,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & \frac{L_{road - sunwall,i - 1}\overset{r}{\uparrow} + L_{road - sunwall}\overset{e}{\uparrow}}{\frac{H}{W}} \\
    & + L_{shdwall - sunwall,i - 1}\overset{r}{\uparrow} + L_{shdwall - sunwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - wall}
-
-,
 
 
 
@@ -1688,8 +1712,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & + L_{sunwall - shdwall,i - 1}\overset{r}{\uparrow} + L_{sunwall - shdwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - sky}
 
-,
-
 
 
 .. math::
@@ -1699,8 +1721,6 @@ The longwave radiation from each urban surface after the :math:`i^{th}` reflecti
    & \frac{L_{road - shdwall,i - 1}\overset{r}{\uparrow} + L_{road - shdwall}\overset{e}{\uparrow}}{\frac{H}{W}} \\
    & + L_{sunwall - shdwall,i - 1}\overset{r}{\uparrow} + L_{sunwall - shdwall}\overset{e}{\uparrow}
    \end{aligned} \right)\Psi_{wall - road}
-
-,
 
 
 
@@ -1726,11 +1746,20 @@ Note that the emitted longwave term in equations :eq:`eq-0019`-:eq:`eq-0038` onl
 
 The reflected longwave radiation to the sky is added to the total upward longwave radiation for each urban surface as
 
-:math:`L_{imprvrd,i + 1} \uparrow = L_{imprvrd,i - 1} \uparrow + L_{imprvrd - sky,i} \uparrow`,
+.. math::
+   :label: eq-L_imprvrd_up
 
-:math:`L_{prvrd,i + 1} \uparrow = L_{prvrd,i - 1} \uparrow + L_{prvrd - sky,i} \uparrow`,
+   L_{imprvrd,i + 1} \uparrow = L_{imprvrd,i - 1} \uparrow + L_{imprvrd - sky,i} \uparrow
 
-:math:`L_{sunwall,i + 1} \uparrow = L_{sunwall,i - 1} \uparrow + L_{sunwall - sky,i} \uparrow`,
+.. math::
+   :label: eq-L_prvrd
+
+   L_{prvrd,i + 1} \uparrow = L_{prvrd,i - 1} \uparrow + L_{prvrd - sky,i} \uparrow
+
+.. math::
+   :label: eq-L_sunwall
+
+   L_{sunwall,i + 1} \uparrow = L_{sunwall,i - 1} \uparrow + L_{sunwall - sky,i} \uparrow
 
 .. math::
    :label: eq-0174
@@ -1739,14 +1768,20 @@ The reflected longwave radiation to the sky is added to the total upward longwav
 
 The net longwave at each iteration is added to the total net longwave for each urban surface as
 
-:math:`{\overrightarrow{L}}_{imprvrd,i + 1} = {\overrightarrow{L}}_{imprvrd,i - 1} + {\overrightarrow{L}}_{imprvrd,i}`,
+.. math::
+   :label: eq-L_imprvrd_net
+
+   {\overrightarrow{L}}_{imprvrd,i + 1} = {\overrightarrow{L}}_{imprvrd,i - 1} + {\overrightarrow{L}}_{imprvrd,i}
 
 .. math::
    :label: eq-0521
 
    {\overrightarrow{L}}_{prvrd,i + 1} = {\overrightarrow{L}}_{prvrd,i - 1} + {\overrightarrow{L}}_{prvrd,i}
 
-:math:`{\overrightarrow{L}}_{sunwall,i + 1} = {\overrightarrow{L}}_{sunwall,i - 1} + {\overrightarrow{L}}_{sunwall,i}`,
+.. math::
+   :label: eq-L_sunwall_net
+
+   {\overrightarrow{L}}_{sunwall,i + 1} = {\overrightarrow{L}}_{sunwall,i - 1} + {\overrightarrow{L}}_{sunwall,i}
 
 .. math::
    :label: eq-0175
@@ -2032,47 +2067,33 @@ where :math:`w_{*}` is the convective velocity scale
 
 The momentum flux gradient relations are (Zeng et al. 1998)
 
-
-
 .. math::
    :label: eq-0042
 
-   \varphi_{m}(\zeta) = 0.7k^{\frac{2}{3}}( - \zeta)^{\frac{1}{3}} \text{for }\zeta < - 1.574\ (\text{very unstable})
-   
-
-\ 
-
-.. math::
-   :label: eq-0043
-
    \begin{cases}
+   \varphi_{m}(\zeta) = 0.7k^{\frac{2}{3}}( - \zeta)^{\frac{1}{3}} \text{for }\zeta < - 1.574\ (\text{very unstable})
+
    \varphi_{m}(\zeta) = (1 - 16\zeta)^{- \frac{1}{4}} & \text{for -1.574} \leq \zeta < 0\ (\text{unstable}) \\
-   \varphi_{m}(\zeta) = 1 + 5\zeta & \text{for }0 \leq \zeta \leq 1\ (\text{stable})
+
+   \varphi_{m}(\zeta) = 1 + 5\zeta \text{for }0 \leq \zeta \leq 1\ (\text{stable})
+
+   \varphi_{m}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
-\ :math:`\varphi_{m}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable}).`
-
 The sensible and latent heat flux gradient relations are (Zeng et al. 1998)
-
-
 
 .. math::
    :label: eq-0044
 
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 0.9k^{\frac{4}{3}}( - \zeta)^{\frac{- 1}{3}} \text{for }\zeta < - 0.465\ (\text{very unstable})
-   
-
-\ 
-
-.. math::
-   :label: eq-0045
-
    \begin{cases}
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = (1 - 16\zeta)^{- \frac{1}{2}} & \text{for -0.465} \leq \zeta < 0\ (\text{unstable}) \\
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 1 + 5\zeta & \text{for }0 \leq \zeta \leq 1\ (\text{stable})
-   \end{cases}
+   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 0.9k^{\frac{4}{3}}( - \zeta)^{\frac{- 1}{3}} \text{for }\zeta < - 0.465\ (\text{very unstable})
 
-\ :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable}).`
+   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = (1 - 16\zeta)^{- \frac{1}{2}} & \text{for -0.465} \leq \zeta < 0\ (\text{unstable}) \\
+
+   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 1 + 5\zeta \text{for }0 \leq \zeta \leq 1\ (\text{stable})
+
+   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
+   \end{cases}
 
 To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (Zeng et al. 1998). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
 
@@ -2202,6 +2223,7 @@ Using :math:`\varphi_{h} = \varphi_{m}^{2} = (1 - 16\zeta)^{- \frac{1}{2}}` for 
    :label: eq-0046
 
    \zeta = \frac{R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)}{1 - 5\min\left( R_{iB},0.19 \right)} 0.01 \leq \zeta \leq 2 \text{for }R_{iB} \geq 0\ (\text{neutral or stable})
+
    \zeta = R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)  - 100 \leq \zeta \leq - 0.01 \text{for }R_{iB} < 0\ (\text{unstable})
 
 
@@ -2212,15 +2234,7 @@ Upon iteration, the following is used to determine :math:`\zeta` and thus :math:
 
    \zeta = \frac{\left( z_{atm,m} - d \right)kg\theta_{v*}}{u_{*}^{2}\overline{\theta_{v,atm}}}
 
-where
-
-
-
-.. math::
-   :label: eq-0047
-
-   0.01 \leq \zeta \leq 2 \text{for }\zeta \geq 0\ (\text{neutral or stable})
-   \text{-100} \leq \zeta \leq \text{-0.01} \text{for }\zeta < 0\ (\text{unstable})
+where :math:`0.01 \leq \zeta \leq 2 \text{for }\zeta \geq 0\ (\text{neutral or stable})` and :math:`-100 \leq \zeta \leq -0.01 \text{for }\zeta < 0\ (\text{unstable})`.
 
 
 The momentum, sensible heat, and water vapor fluxes between the surface and the atmosphere can also be written in the form
@@ -2607,7 +2621,10 @@ The partial derivatives of the urban surface fluxes with respect to surface temp
 
    \frac{\partial H_{sunwall}}{\partial T_{g,sunwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{shdwall}}{W_{shdwall}} \right)\frac{c_{sunwall}}{W_{sunwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
 
-:math:`\frac{\partial H_{shdwall}}{\partial T_{g,shdwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} \right)\frac{c_{shdwall}}{W_{shdwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}`,
+.. math::
+   :label: delH_shdwall_delTg_shdwall
+
+   \frac{\partial H_{shdwall}}{\partial T_{g,shdwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} \right)\frac{c_{shdwall}}{W_{shdwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
 
 .. math::
    :label: eq-0534
@@ -3160,33 +3177,20 @@ The heat flux into each urban surface :math:`h` is
 
 where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (section 2.5), :math:`{\overrightarrow{L}}_{g}` is the net longwave radiation (section 2.7), and :math:`H_{g}` and :math:`\lambda E_{g}` are the sensible and latent heat fluxes (section 3.2). The terms :math:`H_{wasteheat,g}` and :math:`H_{aircond,g}` are the waste heat from space heating/air conditioning and heat removed by air conditioning applied only to the pervious and impervious road
 
-
-
 .. math::
    :label: eq-0068
 
-   H_{wasteheat,prvrd} = H_{wasteheat,imprvrd} = \frac{H_{wasteheat}}{1 - W_{roof}}
-   
-
-\ 
-
-.. math::
-   :label: eq-0069
-
    \begin{cases}
+   H_{wasteheat,prvrd} = H_{wasteheat,imprvrd} = \frac{H_{wasteheat}}{1 - W_{roof}}
+
    H_{wasteheat,sunwall} = H_{wasteheat,shdwall} = H_{wasteheat,roof} = 0 \\
+
    H_{aircond,prvrd} = H_{aircond,imprvrd} = \frac{H_{aircond}}{1 - W_{roof}}
-   \end{cases}
-
-
-\
-
-.. math::
-   :label: eq-0070
 
    H_{aircond,sunwall} = H_{aircond,shdwall} = H_{aircond,roof} = 0
+   \end{cases}
 
-where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations :eq:`eq-0074` and :eq:`eq-0314`. Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (section 3.2.4). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
+where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations :eq:`eq-0073` and :eq:`eq-0314`. Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (section 3.2.4). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
 
 .. math::
    :label: eq-0292
@@ -3285,10 +3289,13 @@ This boundary condition yields, for :math:`i = N_{levgrnd}`,
 
 where
 
-:math:`F_{i} = - \lambda\left\lbrack z_{h,i} \right\rbrack\left( \frac{\alpha T_{i}^{n} - T_{iB}^{n}}{z_{h,i} - z_{i}} \right)`,
+.. math::
+   :label: eq-F_i
+
+   F_{i} = - \lambda\left\lbrack z_{h,i} \right\rbrack\left( \frac{\alpha T_{i}^{n} - T_{iB}^{n}}{z_{h,i} - z_{i}} \right)
 
 .. math::
-   :label: eq-0307
+   :label: eq-F_i-1
 
    F_{i - 1} = - \frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack}{z_{i} - z_{i - 1}}\left( T_{i - 1}^{n} - T_{i}^{n} \right)
 
@@ -3356,18 +3363,10 @@ where
 
 The total waste heat from space heating/air conditioning is
 
-
-
 .. math::
    :label: eq-0073
 
    H_{wasteheat} = W_{roof}\left( f_{heat}F_{heat,roof} + f_{cool}F_{cool,roof} \right) +
-   
-
-\ 
-
-.. math::
-   :label: eq-0074
 
     \left( 1 - W_{roof} \right)\frac{H}{W}\left( \begin{aligned}
     & f_{heat}F_{heat,sunwall} + f_{cool}F_{cool,sunwall} + \\
@@ -3394,21 +3393,9 @@ Phase change may take place in any snow/soil layers of the pervious road and in 
 
    T_{i}^{n + 1} > T_{f}\text{ and }w_{ice,i} > 0 i = snl + 1,\ldots,N_{levgrnd} \text{melting}
    
-
-\ 
-
-.. math::
-   :label: eq-0076
-
    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > 0 i = snl + 1,\ldots,0 \text{freezing}
 
-
-\
-
-.. math::
-   :label: eq-0077
-
-    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
+   T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
 
 
 where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from Niu and Yang (2006) is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
@@ -3587,6 +3574,7 @@ Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is f
    & K_{e,i}\lambda_{sat,i} + \left( 1 - K_{e,i} \right)\lambda_{dry,i} S_{r,i} > 1 \times 10^{- 7} \\
    & \lambda_{dry,i} S_{r,i} \leq 1 \times 10^{- 7}
    \end{aligned} \right\} i = 1,\ldots,N_{levsoi}
+
    \lambda_{i} = \lambda_{bedrock} i = N_{levsoi} + 1,\ldots N_{levgrnd}
 
 
@@ -3664,11 +3652,11 @@ The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soi
 where the heat capacity of soil solids :math:`c_{s,i}` (J m\ :sup:`-3` K\ :sup:`-1`) is
 
 
-
 .. math::
    :label: eq-0084
 
    c_{s,i} = \left( \frac{2.128\ (\% sand)_{i} + \text{2.385 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}} \right) \times 10^{6} i = 1,\ldots,N_{levsoi}
+
    c_{s,i} = c_{s,bedrock} i = N_{levsoi} + 1,\ldots,N_{levgrnd}
 
 
@@ -3905,32 +3893,21 @@ Initialization of snow layer
 If there are no existing snow layers (:math:`snl + 1 = 1`) but :math:`z_{sno} \geq 0.01` m after accounting for solid precipitation :math:`q_{sno}`, then a snow layer is initialized (:math:`snl = - 1`) as follows
 
 
-
 .. math::
    :label: eq-0088
 
    \Delta z_{0} = z_{sno}
    
+   z_{o} = - 0.5\Delta z_{0}
 
-\ 
+   z_{h, - 1} = - \Delta z_{0}
 
-.. math::
-   :label: eq-0089
+   T_{0} = \min\left( T_{f},T_{atm} \right)
 
-   \begin{cases}
-   z_{o} = - 0.5\Delta z_{0} \\
-   z_{h, - 1} = - \Delta z_{0} \\
-   T_{0} = \min\left( T_{f},T_{atm} \right) \\
    w_{ice,0} = W_{sno}
-   \end{cases}
-
-
-\
-
-.. math::
-   :label: eq-0090
 
    w_{liq,0} = 0
+
 
 Snow Compaction
 ~~~~~~~~~~~~~~~
@@ -3961,24 +3938,17 @@ Compaction as a result of destructive metamorphism :math:`C_{R1,\mspace{6mu} i}`
 where :math:`c_{3} = 2.777 \times 10^{- 6}` (s\ :sup:`-1`) is the fractional compaction rate for :math:`T_{i} = T_{f}`, :math:`c_{4} = 0.04` K\ :sup:`-1`, and
 
 
-
 .. math::
    :label: eq-0091
 
    c_{1} = 1 \frac{w_{ice,i}}{\Delta z_{i}} \leq 100\text{ kg }\text{m}^{\text{-3}}
    
-
-\ 
-
-.. math::
-   :label: eq-0092
-
-   \begin{cases}
    c_{1} = \exp\left\lbrack - 0.046\left( \frac{w_{ice,i}}{\Delta z_{i}} - 100 \right) \right\rbrack & \frac{w_{ice,i}}{\Delta z_{i}} > 100\text{ kg }\text{m}^{\text{-3}} \\
+
    c_{2} = 2 & \frac{w_{liq,i}}{\Delta z_{i}} > 0.01
    \end{cases}
 
-\ :math:`c_{2} = 1 \frac{w_{liq,i}}{\Delta z_{i}} \leq 0.01`
+   c_{2} = 1 \frac{w_{liq,i}}{\Delta z_{i}} \leq 0.01
 
 where :math:`\frac{w_{ice,i}}{\Delta z_{i}}` and :math:`\frac{w_{liq,i}}{\Delta z_{i}}` are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
@@ -4183,6 +4153,7 @@ then adjusted as,
    :label: eq-0093
 
    T_{3}^{n + 1} = T_{2}^{n} T_{3}^{'} \geq T_{f}
+
    T_{2}^{n + 1} = T_{2}^{n} + \left( \frac{T_{1}^{n} - T_{2}^{n}}{\frac{\left( \Delta z_{1} + \Delta z_{2}^{n} \right)}{2}} \right)\left( \frac{\Delta z_{2}^{n + 1}}{2} \right) T_{3}^{'} < T_{f}
 
 
@@ -4195,11 +4166,11 @@ Surface Runoff and Infiltration
 For the roof and impervious road, water on these surfaces in excess of a maximum ponding limit :math:`w_{pond,\max}` (kg m\ :sup:`-2`) is routed to surface runoff as
 
 
-
 .. math::
    :label: eq-0094
 
    q_{over} = \frac{w_{liq,1}}{\Delta t} + q_{liq,0} - q_{seva} - \frac{w_{pond,\max}}{\Delta t}
+
    q_{over} = q_{liq,0} snl < 0
 
 
@@ -4211,6 +4182,7 @@ where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from ra
    :label: eq-0095
 
    w_{liq,1} = {wover}_{pond,\max}
+
    w_{liq,1} = w_{liq,1} + \left( q_{liq,0} - q_{seva} \right)\Delta t \geq 0 q_{over} = 0
 
 
@@ -4254,6 +4226,7 @@ The liquid water content of the top soil layer relative to effective porosity an
    :label: eq-0096
 
    s = \frac{\frac{\theta_{liq,1}}{\max\left( \theta_{imp},\theta_{sat,1} - \theta_{ice,1} \right)} - f_{sat}}{1 - f_{sat}} \geq 0 \frac{\theta_{liq,1}}{\max\left( \theta_{imp},\theta_{sat,1} - \theta_{ice,1} \right)} \geq 0.01
+
    1 - f_{sat} \geq 0.01
 
 
@@ -5010,6 +4983,7 @@ The total solar radiation is provided at six hour intervals. The data is fit to 
    :label: eq-0102
 
    S_{atm}\left( t_{M} \right) = \frac{\frac{\Delta t_{FD}}{\Delta t_{M}}S_{atm}\left( t_{FD} \right)\mu\left( t_{M} \right)}{\sum_{i = 1}^{\frac{\Delta t_{FD}}{\Delta t_{M}}}{\mu\left( t_{M_{i}} \right)}} \text{for }\mu\left( t_{M} \right) > 0.001
+
    S_{atm}\left( t_{M} \right) = 0 \text{for }\mu\left( t_{M} \right) \leq 0.001
 
 
