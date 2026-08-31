@@ -39,15 +39,14 @@ podman run --rm -i \
 set -eu
 build_dir="$1"; shift
 
-# GitHub Actions container jobs override HOME, so the /root/.cime copy baked
-# into the image is not necessarily where CIME will look. Place it wherever
-# HOME actually points. This is the same two lines the CI job will need.
+# Shared with the run-case/run-test wrappers: places gnu_container.cmake where
+# CIME will look (GitHub Actions overrides HOME, so the image's /root/.cime
+# copy is not necessarily it), preferring the MOUNTED REPO's copy over the
+# snapshot baked into the image -- otherwise a macro edit silently has no
+# effect here until the image is rebuilt.
+source /ctsm/docker/ctsm-ci-derecho-gnu/container-common.sh
+ctsm_container_setup
 echo "HOME=$HOME"
-if [ ! -f "$HOME/.cime/gnu_container.cmake" ]; then
-    echo "installing gnu_container.cmake into $HOME/.cime"
-    mkdir -p "$HOME/.cime"
-    cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
-fi
 
 # --machine container: CIME cannot detect the machine from the hostname in
 #   here, and the container machine is what the image is built to satisfy.
