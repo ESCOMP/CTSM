@@ -722,35 +722,37 @@ the other wrappers were validated:
 
 ```bash
 execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=04:00:00
-```
-
-Inside that session, load the image once (it lives on node-local podman
-storage and does not survive the session), then run the three checks in order:
-
-```bash
 module load podman
 podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
-
-cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
-
-# 1. one known-good test through the new layer. It already passes via
-#    run-test-in-container.sh, so a failure here is the run_sys_tests layer,
-#    not the model.
-docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
-
-# 2. suite resolution only: confirms --xml-machine derecho finds the tests
-#    and that --suite-compiler gnu filters out intel and izumi/nag
-docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run
-
-# 3. a real short suite
-docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s clm_short
 ```
 
 If `podman load` is killed with exit 137, it was OOM-killed and the next
 command will misleadingly say `image not known`; ask for more memory.
 
-Confirm for each: the testroot appears under `$SCRATCH/cases_devcontainer/`, `cs.status.fails` exists inside it, and — for a run with a failing test — the job's exit status is nonzero.
+**The canonical five-step sequence lives in
+`docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md`, "Remaining steps" item 3** --
+follow it there rather than duplicating it here, since it also records what
+each step does and does *not* prove, and the highest-risk failure modes.
+In outline: (1) `query_testlists.py` on the host for real suite resolution;
+(2) the wrapper with `-s aux_clm_mpi_serial --dry-run`; (3) one known-good
+test with `-t`, checking `echo $?`; (4) a deliberately failing test, checking
+`echo $?` is nonzero; (5) the full `-s aux_clm_mpi_serial`, judged by
+`cs.status.fails` rather than the exit code.
+
+Two validation steps written into an earlier draft of this plan were wrong
+and were corrected there:
+
+- **`-s ... --dry-run` does not prove suite resolution.** The wrapper always
+  injects `--suite-compiler gnu`, which makes `run_sys_tests` skip
+  `_get_compilers_for_suite` -- the only caller of `get_tests_from_xml`. Only
+  `query_testlists.py` exercises that path.
+- **`-s clm_short` is not a usable "quick suite" here.** It has exactly two
+  `derecho`/`gnu` entries, neither mpi-serial, and one of them (`P64x2`)
+  wants 64 MPI tasks against `MAX_MPITASKS_PER_NODE=4`.
+
+Confirm across the sequence: the testroot appears under
+`$SCRATCH/cases_devcontainer/` named `tests_<MMDD-HHMMSS>ct`, `cs.status.fails`
+exists inside it, and a run containing a failing test exits nonzero.
 
 - [x] **Step 6: Document in the container README**
 
