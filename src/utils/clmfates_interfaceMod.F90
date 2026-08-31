@@ -2324,6 +2324,12 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_out(s), &
                     is_restarting = .false.)
 
+              ! Pass in the bareground roughness lengths if not using 
+              ! interstitial bareground in FATES
+              if (.not.use_fates_interstitial_bareground) then
+                 call frictionvel_inst%SetRoughnessLengthsOverGround(waterdiagnosticbulk_inst, c)
+              end if
+
            end do
 
            ! ------------------------------------------------------------------------

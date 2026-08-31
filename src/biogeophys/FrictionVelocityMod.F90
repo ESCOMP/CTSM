@@ -85,6 +85,7 @@ module FrictionVelocityMod
      procedure, public :: Init
      procedure, public :: Restart
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
+     procedure, public :: SetRoughnessLengthsOverGround             ! Set roughness lengths over ground for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
      procedure, public :: MoninObukIni           ! Initialization of the Obukhov length scale
@@ -537,8 +538,6 @@ contains
     ! !DESCRIPTION:
     ! Set roughness lengths and forcing heights for non-lake points
     !
-    ! !USES:
-    use clm_varcon  , only : rpi, b1_param, b4_param, meier_param1, meier_param2
     ! !ARGUMENTS:
     class(frictionvel_type)        , intent(inout) :: this
     type(bounds_type)              , intent(in)    :: bounds    
@@ -577,8 +576,6 @@ contains
          displa           =>    canopystate_inst%displa_patch         , & ! Input: [real(r8) (:)   ] displacement height (m)
 
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
-         frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
          z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)
@@ -593,36 +590,10 @@ contains
 
        ! Ground roughness lengths over non-lake columns (includes bare ground, ground
        ! underneath canopy, wetlands, etc.)
-
-       select case (z0param_method)
-       case ('ZengWang2007')
-          if (frac_sno(c) > 0._r8) then
-             z0mg(c) = this%zsno
-          else
-             z0mg(c) = this%zlnd
-          end if
-       case ('Meier2022')           ! Bare ground and ice have a different value
-          l = col%landunit(c)
-          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
-             if(use_z0m_snowmelt) then
-                if ( snomelt_accum(c) < 1.e-5_r8 )then
-                    z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
-                else
-                    z0mg(c) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
-                end if
-             else
-                z0mg(c) = this%zsno
-             end if
-          else if (lun%itype(l) == istice) then
-             z0mg(c) = this%zglc
-          else
-             z0mg(c) = this%zlnd
-          end if
-       end select
+       call SetRoughnessLengthsOverGround(this, waterdiagnosticbulk_inst, c)
 
        z0hg(c) = z0mg(c)            ! initial set only
        z0qg(c) = z0mg(c)            ! initial set only
-
 
     end do
 
@@ -673,6 +644,63 @@ contains
     end associate
 
   end subroutine SetRoughnessLengthsAndForcHeightsNonLake
+
+  !-----------------------------------------------------------------------
+  
+   subroutine SetRoughnessLengthsOverGround(this, waterdiagnosticbulk_inst, c)
+   
+    ! ! !DESCRIPTION:
+    ! Set roughness lengths over ground for non-lake columns.
+    ! 
+    ! This is broken out into a separate subroutine because it is called from the
+    ! CLM-FATES interface module during initialization so that the roughness lengths
+    ! over ground can be passed to FATES prior to the first model timestep.
+    !
+    ! !USES:
+    use clm_varcon  , only : rpi, b1_param, b4_param, meier_param1, meier_param2
+
+    ! !ARGUMENTS:
+    class(frictionvel_type), intent(inout) :: this
+    type(waterdiagnosticbulk_type), intent(in) :: waterdiagnosticbulk_inst
+    integer, intent(in) :: c
+   
+    ! !LOCAL VARIABLES:
+    integer :: l    ! landunit index
+
+    associate( &
+         frac_sno => waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         snomelt_accum => waterdiagnosticbulk_inst%snomelt_accum_col & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
+         )
+
+       select case (z0param_method)
+       case ('ZengWang2007')
+          if (frac_sno(c) > 0._r8) then
+             this%z0mg_col(c) = this%zsno
+          else
+             this%z0mg_col(c) = this%zlnd
+          end if
+       case ('Meier2022')           ! Bare ground and ice have a different value
+          l = col%landunit(c)
+          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
+             if(use_z0m_snowmelt) then
+                if ( snomelt_accum(c) < 1.e-5_r8 )then
+                    this%z0mg_col(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8
+                else
+                    this%z0mg_col(c) = exp(b1_param * (atan((log10(snomelt_accum(c)) + meier_param1) / meier_param2)) + b4_param) * 1.e-3_r8
+                end if
+             else
+                this%z0mg_col(c) = this%zsno
+             end if
+          else if (lun%itype(l) == istice) then
+             this%z0mg_col(c) = this%zglc
+          else
+             this%z0mg_col(c) = this%zlnd
+          end if
+       end select
+
+       end associate
+
+   end subroutine SetRoughnessLengthsOverGround
 
   !-----------------------------------------------------------------------
   subroutine SetActualRoughnessLengths(this, bounds, &
