@@ -62,6 +62,11 @@ class JobLauncherNoBatch(JobLauncherBase):
         return message
 
     def wait_for_last_process_to_complete(self):
-        """Waits for the last process started by run_command_impl (if any) to complete"""
+        """Waits for the last process started by run_command_impl (if any) to complete
+
+        Returns that process's return code, or 0 if no process was started -
+        which is the case after a dry run.
+        """
         if self._process is not None:
-            self._process.wait()
+            return self._process.wait()
+        return 0

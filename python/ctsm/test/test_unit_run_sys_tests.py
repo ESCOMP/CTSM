@@ -298,6 +298,43 @@ class TestRunSysTests(unittest.TestCase):
         self.assertEqual(os.listdir(self._scratch), [])
         self.assertEqual(machine.job_launcher.get_commands(), [])
 
+    def test_wait_returnsCreateTestStatus(self):
+        """With wait=True, run_sys_tests returns create_test's exit status
+
+        A failing test therefore surfaces as a nonzero exit, which is what CI
+        needs and what makes the container wrapper report failures.
+        """
+        machine = self._make_machine()
+        machine.job_launcher.set_return_code(3)
+        return_code = run_sys_tests(
+            machine=machine, cime_path=self._cime_path(), testlist=["foo"], wait=True
+        )
+        self.assertEqual(return_code, 3)
+
+    def test_noWait_returnsZero(self):
+        """Without wait, run_sys_tests returns 0 even if create_test would fail
+
+        This is the pre-existing behavior and must not change: run_sys_tests
+        normally returns as soon as the job is launched.
+        """
+        machine = self._make_machine()
+        machine.job_launcher.set_return_code(3)
+        return_code = run_sys_tests(machine=machine, cime_path=self._cime_path(), testlist=["foo"])
+        self.assertEqual(return_code, 0)
+
+    def test_wait_withDryRun_returnsZero(self):
+        """With dry_run there is no process to wait for, so the status is 0"""
+        machine = self._make_machine()
+        machine.job_launcher.set_return_code(3)
+        return_code = run_sys_tests(
+            machine=machine,
+            cime_path=self._cime_path(),
+            testlist=["foo"],
+            wait=True,
+            dry_run=True,
+        )
+        self.assertEqual(return_code, 0)
+
     def test_getTestmodList_suite(self):
         """Ensure that _get_testmod_list() works correctly with suite-style input"""
         testmod_list_input = [

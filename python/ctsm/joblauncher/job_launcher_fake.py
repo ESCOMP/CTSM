@@ -15,6 +15,7 @@ class JobLauncherFake(JobLauncherBase):
     def __init__(self):
         JobLauncherBase.__init__(self)
         self._commands = []
+        self._return_code = 0
 
     def run_command_impl(self, command, stdout_path, stderr_path):
         self._commands.append(Command(cmd=" ".join(command), out=stdout_path, err=stderr_path))
@@ -33,3 +34,11 @@ class JobLauncherFake(JobLauncherBase):
         Each element of the list is a Command namedtuple (see above)
         """
         return self._commands
+
+    def set_return_code(self, return_code):
+        """Set the value returned by wait_for_last_process_to_complete"""
+        self._return_code = return_code
+
+    def wait_for_last_process_to_complete(self):
+        """Pretend to wait; returns the canned return code set by set_return_code"""
+        return self._return_code
