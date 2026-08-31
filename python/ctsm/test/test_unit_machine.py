@@ -4,6 +4,7 @@
 
 import unittest
 import os
+from unittest import mock
 
 from ctsm import add_cime_to_path  # pylint: disable=unused-import
 from ctsm import unit_testing
@@ -104,6 +105,26 @@ class TestCreateMachine(unittest.TestCase):
             scratch_dir=None,
             baseline_dir=None,
             account="a123",
+        )
+        self.assertNoBatchInfo(machine)
+
+    def test_containerMachine_defaults(self):
+        """Tests the container machine
+
+        Unlike the other machines, its paths are container-absolute rather than
+        user-specific, because the container's mounts are always at the same
+        place regardless of who ran it. It also requires no account, so
+        create_machine must succeed with account=None; _get_account is mocked
+        out so this doesn't depend on the environment the test runs in.
+        """
+        with mock.patch("ctsm.machine._get_account", return_value=None):
+            machine = create_machine("container", MACHINE_DEFAULTS)
+        self.assertMachineInfo(
+            machine=machine,
+            name="container",
+            scratch_dir=os.path.join(os.path.sep, "scratch"),
+            baseline_dir=os.path.join(os.path.sep, "scratch", "baselines"),
+            account=None,
         )
         self.assertNoBatchInfo(machine)
 
