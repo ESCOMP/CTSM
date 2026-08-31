@@ -2,6 +2,18 @@
 
 **Date:** 2026-08-31
 
+> **Corrections applied after the final review.** Two things this document
+> names were changed during implementation and are NOT accurate below:
+>
+> - The `MACHINE_DEFAULTS` key is **`ctsm-ci-container`**, not `container`.
+>   `ccs_config/machines/container/config_machines.xml` already defines an
+>   unrelated generic CIME machine with `MACH="container"`. The testid prefix
+>   is therefore `ct`, not `co`.
+> - `--wait` waits for **every** launched `create_test`, not just the last
+>   one, and exits nonzero if any of them failed. Waiting only for the last
+>   would let a container tear down its PID namespace and kill the tests still
+>   running -- the exact failure `--wait` exists to prevent.
+
 ## Problem
 
 `docker/ctsm-ci-derecho-gnu/` has three wrappers that run CTSM inside the
