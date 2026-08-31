@@ -289,7 +289,7 @@ Defaults to the machine name, so no existing invocation changes."
 - Consumes: `run_sys_tests(...)` from Task 2.
 - Produces: `run_sys_tests(..., wait=False)` keyword argument; `run_sys_tests()` now **returns an int** (0 unless `wait=True`, in which case `create_test`'s return code); the `--wait` command-line option; `JobLauncherBase.wait_for_last_process_to_complete()` raising `RuntimeError`; `JobLauncherFake.set_return_code(int)`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `class TestRunSysTests` in `python/ctsm/test/test_unit_run_sys_tests.py`:
 
@@ -334,14 +334,14 @@ Add to `class TestRunSysTests` in `python/ctsm/test/test_unit_run_sys_tests.py`:
         self.assertEqual(return_code, 0)
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 ```bash
 cd python && python -m unittest ctsm.test.test_unit_run_sys_tests.TestRunSysTests.test_wait_returnsCreateTestStatus -v
 ```
 Expected: FAIL with `AttributeError: 'JobLauncherFake' object has no attribute 'set_return_code'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 **(a)** In `python/ctsm/joblauncher/job_launcher_base.py`, add this method to `JobLauncherBase`, after `run_command_logger_message`:
 
@@ -439,21 +439,21 @@ Finally in `main()`, pass the flag and exit with the result. Replace the bare `r
 
 `sys` is already imported at the top of the module.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd python && python -m unittest ctsm.test.test_unit_run_sys_tests ctsm.test.joblauncher.test_unit_job_launcher_no_batch -v
 ```
 Expected: all PASS. The two pre-existing no-batch launcher tests already call `wait_for_last_process_to_complete()`, including once after a dry run, so they cover the `return 0` path.
 
-- [ ] **Step 5: Run the whole unit suite for regressions**
+- [x] **Step 5: Run the whole unit suite for regressions**
 
 ```bash
 cd python && ./run_ctsm_py_tests --unit
 ```
 Expected: no new failures against the pre-change baseline. If any test failed before your changes, note it and confirm it is unrelated rather than assuming.
 
-- [ ] **Step 6: Format and commit**
+- [x] **Step 6: Format and commit**
 
 ```bash
 cd python && black --config pyproject.toml ctsm && cd ..
