@@ -1,4 +1,123 @@
 ===============================================================
+Tag name: ctsm5.4.054
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Aug 31 05:35:20 AM MDT 2026
+One-line Summary: Update submodules to the latest needed for cesm3_0_alpha10a
+
+Purpose and description of changes
+----------------------------------
+
+Update submodules: ccs_config, cime, cdeps, cmeps, share
+Current latest submodules that will be coming in cesm3_0_beta10
+
+cesm3_0_beta09 had: cime6.4.1, share1.0.21, cdeps1.0.101, cmeps1.1.54
+
+Also fix the two multi-instance tests that were failing, by making sure DGLC couples less times than ROF.
+
+And add new ctsm_release testlist which runs every test. And make sure the list of tests that should be subsets of aux_clm or ctsm_sci are so (as well as fates, and crop_cal). And bring in a script that checks the testlist for these features and will also fix them. And bring that script into a github workflow so the testlist is checked for basic requirements.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes Some multi-instance tests fail with DGLC #4161
+ Fixes Add a new ctsm_release testlist that runs all other testlists #4157
+ Fixes Have matrixcn, aux_clm_mpi_serial, prealpha, prebeta, clm_pymods, clm_short, aux_cime_baselines, subset_data testlists be subsets of the aux_clm testlist #4158
+ Fixes Make: hillslope, fire, interim-restart, ssp, crop_calendars testlists a subset of ctsm_sci #4156
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Highlights of a few changes with the submodule updates
+
+  CIME:
+    create_test has new options: --no-batch-build, --ninja, --gmake
+
+  ccs_config:
+    New MOM grid for 2-degree tx2_0v1, used in ne16pg3_t201 alias
+
+  CMEPS:
+    move CALENDAR to env_run.xml
+    Reduce mediator memory
+    Fix single column logic
+
+  CDEPS:
+    Confirm that mesh size matches expected size
+    Fix some single column logic
+
+Contributors: @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The script that checks the testlists is called add_super_testslists and is in cime_config/testdef.
+   That script is in a github workflow that runs when the testlist changes.
+   If the workflow fails, you should run the script by hand, and then copy in the modified output file to testlist_clm.xml.
+   Verify the changes by hand and then check it in and push to ESCOMP. The workflow should run again and is hopefully fine, otherwise repeat the steps.
+
+   The script is largely based on Regular Expression magic, and doesn't understand XML syntax. It makes
+   some assumptions about how the testlist XML file is put together, and would break if the structure of
+   the file is changed significantly (or XML tagnames changed). CIME allows for a little more variance in the structure than is tested for here.
+
+   Assumptions made. There's a single <machines> block that contains a single line for each test. Options shouldn't be in the <machines> block, but only afterwards. It's also assumed there shouldn't be duplicate tests in the machines block, and that the machines block shouldn't be empty.
+
+   Since, the testlist format seems unlikely to change, and deeper knowledge of the XML structure doesn't seem needed, this seems likely to be OK. It could be rewritten using XML readers in CIME for the entry_id testlist, which would be able to be updated if the testlist format changes with CIME.
+
+   But, all in all the assumptions seem reasonable for now.
+
+Changes to tests or testing:
+   Ran add_super_testlists script to make sure all testlists are properly subsets of other testlists notably aux_clm or ctsm_sci
+   And that any test added is also added to ctsm_release
+   The checker for this also has a git workflow and will run when the testlist is updated
+
+Testing summary:   extended
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: b4b
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   ccs_config to -> ccs_config_cesm1.0.88
+   cime to -> cime6.5.5
+   cmeps to -> cmeps1.1.64
+   cdeps to -> cdeps1.0.105
+   share to -> share1.1.21
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    - #4182
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.053
 Originator(s): oleson (Keith Oleson,UCAR/TSS,303-497-1332)
 Date: Wed Aug 19 03:19:08 PM MDT 2026
