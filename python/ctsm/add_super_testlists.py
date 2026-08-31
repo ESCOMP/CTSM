@@ -113,8 +113,9 @@ def process_and_check_args(args):
 
     return args
 
-def get_machine_compiler_category_from_machine_line( attrs ):
-    """ Get the machine, compiler and category from a machine line
+
+def get_machine_compiler_category_from_machine_line(attrs):
+    """Get the machine, compiler and category from a machine line
     Args:
         attrs (str): Attribute string extracted from an existing `<machine/>` tag
             (e.g. ' name="derecho" compiler="intel" category="aux_clm"').
@@ -132,7 +133,8 @@ def get_machine_compiler_category_from_machine_line( attrs ):
             attrs,
         )
         abort("This machine block doesn't have a name, compiler or category attributes for it")
-    return( name.group(1), comp.group(1), cat.group(1) )
+    return (name.group(1), comp.group(1), cat.group(1))
+
 
 def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_release"):
     """Create a `<machine/>` XML line using attributes for super_testlist from an existing machine.
@@ -147,9 +149,10 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
         str or None: The formatted `<machine .../>` line (without a trailing
         newline) or `None` if required attributes are missing.
     """
-    (name, comp, cat) = get_machine_compiler_category_from_machine_line( attrs )
+    (name, comp, cat) = get_machine_compiler_category_from_machine_line(attrs)
     attrs_str = f'name="{name}" compiler="{comp}" category="{super_testlist}"'
     return f"{indent}<machine {attrs_str}/>"
+
 
 def process_machines_block(
     block, testlist=None, not_in_testlist=None, super_testlist="ctsm_release"
@@ -189,9 +192,7 @@ def process_machines_block(
 
     # Ensure no duplicates
     if len(machine_lines) != len(set(machine_lines)):
-        logger.error(
-            "There are duplicated tests in a machines block"
-        )
+        logger.error("There are duplicated tests in a machines block")
         logger.error(block)
         abort("block has duplicated tests, so aborting")
     #
@@ -205,7 +206,7 @@ def process_machines_block(
     for this_machine_line in machine_lines:
         indent = str(this_machine_line[0])
         attrs = str(this_machine_line[1])
-        (name, comp, cat) = get_machine_compiler_category_from_machine_line( attrs )
+        (name, comp, cat) = get_machine_compiler_category_from_machine_line(attrs)
         mach_comp_cat.setdefault(name, {}).setdefault(comp, set()).add(cat)
         representative_line.setdefault((name, comp), (indent, attrs))
     #
@@ -228,13 +229,19 @@ def process_machines_block(
         # strip the leading newline so indent contains only spaces
         if indent.startswith("\n"):
             indent = indent[1:]
-        new_line = make_new_machine_line_for_supertestlist(attrs, indent, super_testlist=super_testlist)
+        new_line = make_new_machine_line_for_supertestlist(
+            attrs, indent, super_testlist=super_testlist
+        )
         if not new_line:
             return block
 
         # Log about this block needing to be modified
-        logger.warning("Found a block that needs to be modified and %s added to it for %s_%s",
-                        super_testlist, name, comp)
+        logger.warning(
+            "Found a block that needs to be modified and %s added to it for %s_%s",
+            super_testlist,
+            name,
+            comp,
+        )
         logger.warning(block)
 
         # Preserve the existing XML formatting: add the new machine entry as a
@@ -245,7 +252,7 @@ def process_machines_block(
         closing_indent = closing_indent_m.group(1) if closing_indent_m else "\n"
         block = block.rstrip()
         block = f"{block}\n{new_line}{closing_indent}"
-    
+
     return block
 
 

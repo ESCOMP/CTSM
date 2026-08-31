@@ -155,9 +155,7 @@ class TestProcessMachinesBlock(unittest.TestCase):
     def test_process_machines_block_not_in_testlist_present(self):
         """Tests that the block is left unchanged if not_in_testlist is present"""
         block = '\n      <machine name="derecho" compiler="intel" category="aux_clm"/>\n    '
-        result = process_machines_block(
-            block, not_in_testlist="aux_clm", super_testlist="ctsm_sci"
-        )
+        result = process_machines_block(block, not_in_testlist="aux_clm", super_testlist="ctsm_sci")
         self.assertEqual(result, block)
 
     def test_process_machines_block_adds_missing_entry(self):
@@ -165,7 +163,7 @@ class TestProcessMachinesBlock(unittest.TestCase):
 
         block = '\n      <machine name="derecho" compiler="intel" category="aux_clm"/>\n    '
         result = process_machines_block(block, super_testlist="ctsm_release")
-        print( result )
+        print(result)
         self.assertIn('category="ctsm_release"', result)
         self.assertIn('category="aux_clm"', result)
 
