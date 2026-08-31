@@ -82,6 +82,7 @@ def main(cime_path):
         testfile=args.testfile,
         testlist=args.testname,
         suite_compilers=args.suite_compiler,
+        xml_machine=args.xml_machine,
         testid_base=args.testid_base,
         testroot_base=args.testroot_base,
         rerun_existing_failures=args.rerun_existing_failures,
@@ -106,6 +107,7 @@ def run_sys_tests(
     testfile=None,
     testlist=None,
     suite_compilers=None,
+    xml_machine=None,
     testid_base=None,
     testroot_base=None,
     rerun_existing_failures=False,
@@ -134,6 +136,9 @@ def run_sys_tests(
     suite_compilers (list of strings): compilers to use in the test suite; only applicable
         with suite_name; if not specified, use all compilers that are defined for this
         test suite
+    xml_machine (str or None): machine name to use when querying which tests are in
+        the given suite (only used with suite_name); if not specified, use
+        machine.name
     testid_base (str): test id, or start of the test id in the case of a test suite (if
         not provided, will be generated automatically)
     testroot_base (str): path to the directory that will contain the testroot (if not
@@ -229,6 +234,7 @@ def run_sys_tests(
             cime_path=cime_path,
             suite_name=suite_name,
             suite_compilers=suite_compilers,
+            xml_machine=xml_machine,
             machine=machine,
             testid_base=testid_base,
             testroot=testroot,
@@ -502,6 +508,19 @@ or tests listed individually on the command line (via the -t/--testname argument
         "Defaults to current machine: {}".format(machine_name),
     )
 
+    parser.add_argument(
+        "--xml-machine",
+        default=None,
+        help="Machine name to use when looking up which tests are in a suite.\n"
+        "This is separate from --machine-name, which says what machine we are\n"
+        "actually running on. Separating them lets one machine run another\n"
+        "machine's tests - e.g. a container that replicates derecho running\n"
+        "derecho's suites, since the container has no testlist entries of its\n"
+        "own.\n"
+        "Only used together with --suite-name.\n"
+        "Default: the value of --machine-name.",
+    )
+
     add_logging_args(parser)
 
     args = parser.parse_args()
@@ -683,6 +702,7 @@ def _run_test_suite(
     cime_path,
     suite_name,
     suite_compilers,
+    xml_machine,
     machine,
     testid_base,
     testroot,
@@ -690,14 +710,17 @@ def _run_test_suite(
     dry_run,
     running_ctsm_py_tests,
 ):
+    xml_machine_final = xml_machine if xml_machine else machine.name
     if not suite_compilers:
-        suite_compilers = _get_compilers_for_suite(suite_name, machine.name, running_ctsm_py_tests)
+        suite_compilers = _get_compilers_for_suite(
+            suite_name, xml_machine_final, running_ctsm_py_tests
+        )
     for compiler in suite_compilers:
         test_args = [
             "--xml-category",
             suite_name,
             "--xml-machine",
-            machine.name,
+            xml_machine_final,
             "--xml-compiler",
             compiler,
         ]

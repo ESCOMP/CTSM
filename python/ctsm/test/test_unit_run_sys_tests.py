@@ -258,6 +258,39 @@ class TestRunSysTests(unittest.TestCase):
         self.assertRegex(all_commands[0].cmd, r"--xml-compiler +comp1a(\s|$)")
         self.assertRegex(all_commands[1].cmd, r"--xml-compiler +comp2b(\s|$)")
 
+    def test_createTestCommands_testsuiteXmlMachine(self):
+        """With xml_machine given, the suite is queried for THAT machine
+
+        The machine we are actually running on is unchanged: the testid still
+        carries this machine's prefix. This is what lets the container run
+        derecho's testlist without claiming to be derecho.
+        """
+        machine = self._make_machine()
+        with mock.patch("ctsm.run_sys_tests.datetime") as mock_date, mock.patch(
+            "ctsm.run_sys_tests.get_tests_from_xml"
+        ) as mock_get_tests:
+            mock_date.now.side_effect = self._fake_now
+            mock_get_tests.return_value = [{"compiler": "gnu"}]
+            run_sys_tests(
+                machine=machine,
+                cime_path=self._cime_path(),
+                suite_name="my_suite",
+                xml_machine="derecho",
+            )
+
+        mock_get_tests.assert_called_once_with(xml_machine="derecho", xml_category="my_suite")
+        all_commands = machine.job_launcher.get_commands()
+        self.assertEqual(len(all_commands), 1)
+        self.assertRegex(all_commands[0].cmd, r"--xml-machine +derecho(\s|$)")
+        self.assertNotRegex(
+            all_commands[0].cmd, r"--xml-machine +{}(\s|$)".format(self._MACHINE_NAME)
+        )
+        # The machine we are running on is unaffected: testid prefix is still "fa"
+        self.assertRegex(
+            all_commands[0].cmd,
+            r"--test-id +{}_gnu(\s|$)".format(self._expected_testid()),
+        )
+
     def test_withDryRun_nothingDone(self):
         """With dry_run=True, no directories should be created, and no commands should be run"""
         machine = self._make_machine()
