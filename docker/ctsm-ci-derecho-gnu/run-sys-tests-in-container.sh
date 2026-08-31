@@ -140,7 +140,9 @@ echo "note: cs.status / cs.status.fails, which run_sys_tests generates in the"
 echo "      testroot, bake in CONTAINER paths (/ctsm/cime/CIME/Tools and the"
 echo "      container testroot), so the generated scripts only run inside"
 echo "      the container. From the host, use instead:"
-echo "        cime/CIME/Tools/cs.status --test-root <host testroot>"
+echo "        cime/CIME/Tools/cs.status <host testroot>/*/TestStatus"
+echo "      (--test-root alone prints NOTHING and exits 0: cs.status only"
+echo "      consults it when --test-id is also given.)"
 
 log="${CTSM_SCRATCH_DIR}/run_sys_tests.$(date +%Y%m%d%H%M%S).log"
 echo "log        ${log}"
@@ -208,8 +210,8 @@ collections, which resolve only if that tree is mounted too. Check the
 INPUTDATA_SYMLINK_ROOT (default /glade/campaign) to the tree the
 symlinks point into.
 
-Full log: ${log}
-${testroot_host:+create_test's own output: ${testroot_host}/STDOUT.<testid> and STDERR.<testid>}
+Full log: ${log}${testroot_host:+
+create_test's own output: ${testroot_host}/STDOUT.<testid> and STDERR.<testid>}
 =====================================================================
 MSG
 fi

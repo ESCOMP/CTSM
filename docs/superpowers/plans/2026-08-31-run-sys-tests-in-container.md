@@ -21,6 +21,10 @@
 >   one, and exits nonzero if any of them failed. Waiting only for the last
 >   would let a container tear down its PID namespace and kill the tests still
 >   running -- the exact failure `--wait` exists to prevent.
+> - The launcher method is now **`wait_for_processes_to_complete()`**, renamed
+>   from `wait_for_last_process_to_complete()`, and the launchers gained
+>   `supports_waiting()` (used for a pre-flight check) and, on the fake,
+>   `set_return_codes()`. Code blocks below still show the old name.
 
 ## Global Constraints
 

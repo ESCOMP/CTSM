@@ -248,7 +248,20 @@ under the testroot for progress instead.
 absolute paths into the `cs.status` / `cs.status.fails` scripts it generates
 in the testroot -- `/ctsm/cime/CIME/Tools` and the container's own testroot
 path -- so those generated scripts run only *inside* the container. From the
-host, use `cime/CIME/Tools/cs.status --test-root <host testroot>` instead.
+host, point `cs.status` at the `TestStatus` files positionally:
+
+```bash
+cime/CIME/Tools/cs.status <host testroot>/*/TestStatus
+```
+
+**Do not use `--test-root` on its own** -- `cs.status` consults it only inside
+`for test_id in test_ids` (`cime/CIME/Tools/cs.status`), and `--test-id`
+defaults to empty, so `--test-root <testroot>` with no `--test-id` prints
+nothing at all and exits 0. That silence is indistinguishable from a suite
+that produced no results. The `--test-id` form works if you prefer it, but
+note the id carries a 3-character compiler suffix (`_NUM_COMPILER_CHARS = 3`
+in `run_sys_tests.py`), so it is `<MMDD-HHMMSS>ct_gnu`, not `<MMDD-HHMMSS>ct`.
+
 This is the same class of problem as the dangling `/cases` symlink above:
 absolute container paths baked in where the host expects host paths.
 

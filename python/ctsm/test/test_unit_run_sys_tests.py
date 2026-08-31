@@ -393,6 +393,10 @@ class TestRunSysTests(unittest.TestCase):
                 wait=True,
             )
         self.assertEqual(return_code, 5)
+        # The fake launcher's canned return codes are independent of what was actually
+        # launched, so assert the launch count too: without this, the test would pass
+        # even if the multi-compiler loop stopped launching a create_test per compiler.
+        self.assertEqual(len(machine.job_launcher.get_commands()), 2)
 
     def test_wait_withoutNoBatchLauncher_raisesBeforeLaunching(self):
         """--wait with a launcher that can't wait (e.g. qsub) must fail fast
