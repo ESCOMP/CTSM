@@ -41,8 +41,10 @@ The toolchain (GCC, MPICH) lives under `/opt`; libraries install under
 | ESMF | esmf/8.6.0-debug, esmf/8.6.0 (the mpi-serial build is `ESMF_COMM=mpiuni`) | 8.6.0, three flavors | see "ESMF flavors" below |
 | pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
 | BLAS/LAPACK | cray-libsci | reference `lapack`/`blas` (dnf) | libsci is proprietary |
-| PIO | parallelio/2.6.2 module | none installed | CIME builds PIO from CTSM's pinned ParallelIO submodule during the case build |
-| conda, nco | loaded on derecho | not included | not needed for build-only CI; revisit when tests actually run |
+| PIO | parallelio/2.6.2 module | 2.6.2, mpi-serial only | CIME builds its own PIO from CTSM's pinned ParallelIO submodule for the case; the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial") |
+| serial netCDF stack | netcdf/4.9.2 (loaded for mpilib=mpi-serial) | HDF5 1.12.2 + netCDF-C 4.9.2 + netCDF-Fortran 4.6.1 under `/usr/local/serial`, static | mpi-serial builds must not link the parallel, MPICH-linked netCDF |
+| mpi-serial | mpi-serial/2.3.0 module | 2.5.4 under `/usr/local/mpi-serial` | only to compile the ESMF-external PIO against; the case build compiles its own from CTSM's submodule |
+| conda, nco | loaded on derecho | not included | not needed to build, nor to run the single-point tests; particular testmods or post-processing may want `nco` |
 
 `git` is also built from source (it is not part of derecho's stack): CIME's
 cprnc and PIO builds clone `genf90` via git during the case build. git can't
@@ -60,9 +62,11 @@ Three ESMF 8.6.0 trees are installed:
   test is `SMS_D...` (debug).
 - `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors
   `esmf/8.6.0`, for non-debug tests.
-- `/usr/local/esmf-8.6.0-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`) — a
-  **serial** build, used only by the unit tests. Selected automatically; you
-  should not need to set `ESMFMKFILE` for it.
+- `/usr/local/esmf-8.6.0-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`, and
+  **`ESMF_PIO=external`** against the mpi-serial PIO) — the **serial** build,
+  used by the unit tests *and* by every `mpi-serial` case. Selected
+  automatically; you should not need to set `ESMFMKFILE` for it. The external
+  PIO is what lets CDEPS read its stream meshes; see "mpi-serial".
 
 The serial flavor exists because `run_tests.py` forces `mpilib=mpi-serial`, so
 unit-test executables link with plain `gfortran` and no MPI library — while
@@ -150,6 +154,246 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
     cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
 ```
 
+## Running cases and tests
+
+The image can build **and run** cases, not only compile them. That needs one
+thing a build does not: the CESM input data. Two wrappers handle it.
+
+```bash
+# a single-point test, end to end
+docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
+
+# or a case you define yourself
+docker/ctsm-ci-derecho-gnu/run-case-in-container.sh \
+    --case brazil_test --compset IHistClm60Bgc --res 1x1_brazil \
+    --mpilib mpi-serial --run-unsupported
+```
+
+`--run-unsupported` appears in the case example but not the test one because
+CIME skips the scientifically-supported check for test cases
+(`cime/CIME/case/case.py`, `if not test and not run_unsupported ...`) -- so
+`create_newcase` needs it for an unsupported grid/compset pairing and
+`create_test` never does.
+
+Each is a thin wrapper: **every argument passes straight through** to
+`create_test` and `create_newcase` respectively. `run-case-in-container.sh`
+then runs the `case.setup` -> `preview_namelists` -> `check_input_data` ->
+`case.build` -> `case.submit` chain. Shared plumbing lives in
+`container-common.sh`, which is sourced on *both* sides of the container
+boundary -- the repo is mounted at `/ctsm`, so the in-container half sources
+that same file. It therefore defines only functions, with no top-level side
+effects.
+
+### Getting the image onto a compute node
+
+podman's image store here is **node-local** -- `podman info --format
+'{{.Store.GraphRoot}}'` reports a path under `/var/tmp` -- so a fresh compute
+node starts with an empty store. A `qsub`ed run therefore has to load the
+image before the wrapper can use it:
+
+```bash
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar
+```
+
+The save restores as `localhost/ctsm-ci-derecho-gnu:dev`, which is the
+wrappers' default `IMAGE_TAG`, so nothing needs re-tagging. Alternatively pull
+the published image and point `IMAGE_TAG` at it:
+
+```bash
+podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830
+IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830 \
+    docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
+```
+
+Budget disk for this. Rootless podman here uses the `vfs` storage driver,
+which duplicates every layer rather than sharing them, so the on-disk cost is
+several times the image's nominal size.
+
+### Mounts
+
+| Host | Container | Mode | Holds |
+|---|---|---|---|
+| the repo | `/ctsm` | rw | this checkout |
+| `/glade/campaign/cesm/cesmdata/cseg/inputdata` | `/opt/cesmdata/inputdata` | **ro** | `DIN_LOC_ROOT` |
+| `$HOME/cases_devcontainer` | `/cases` | rw | case directories |
+| `$SCRATCH/cases_devcontainer` | `/scratch` | rw | `bld/`, `run/`, `archive/` |
+| `/glade/campaign` | `/glade/campaign` | **ro** | targets of inputdata's symlinks |
+
+**Why that last mount exists.** Much of the CESM inputdata tree is not files
+but *absolute symlinks* into sibling campaign collections -- the GSWP3 datm
+forcing, for instance, points at
+`/glade/campaign/collections/gdex/data/d651077/cesmdata/...`. A bind mount
+does not rewrite symlink targets, so with only the `inputdata` mount those
+absolute paths do not exist inside the container and every such file looks
+**missing**. CIME then tries to download it, the read-only mount refuses, and
+the run dies in a wall of `wget failed ... No such file or directory` ending
+in `ERROR: Could not find all inputdata on any server`.
+
+Mounting the enclosing tree *at its own path* makes the symlinks resolve. This
+is not a corner case: of the 744 distinct files a single-point
+`IHistClm60Bgc` test first reported missing, **all 744** were symlinks and
+every one pointed under `/glade/campaign`. Override the tree with
+`INPUTDATA_SYMLINK_ROOT`, or set it empty to skip the mount.
+
+The inputdata mount lands exactly on `$CESMDATAROOT/inputdata`, which the
+Dockerfile creates empty, so `DIN_LOC_ROOT` resolves with **no** `xmlchange`
+and no `CESMDATAROOT` override. It is read-only because nothing in a run
+should write to the shared tree.
+
+The two persistent directories carry a `_devcontainer` suffix because cases
+built here use a different toolchain than a native derecho or casper build;
+keeping them apart stops the two from being confused. Container paths are
+fixed (`/cases`, `/scratch`) rather than `$HOME`-relative, because `HOME`
+differs by context -- `/root` under podman, `/github/home` in GitHub Actions.
+
+`DOUT_S_ROOT` is redirected to `/scratch/archive/$CASE`, since the machine
+config's default (`$ENV{HOME}/archive/$CASE`) would be ephemeral container
+storage.
+
+Override with `IMAGE_TAG`, `INPUTDATA`, `CASES_DIR`, `SCRATCH_DIR`, `MAKE_J`,
+`MOUNT_OPTS` or `DEFAULT_TEST`. **`DRY_RUN=1`** prints the `podman` command
+and the assembled CIME argument list without running anything -- handy for
+checking the mounts without an allocation.
+
+### Injected defaults
+
+Both wrappers add flags only where you have not passed them yourself:
+
+| Flag | Why |
+|---|---|
+| `--machine container` | CIME cannot detect the machine from a container hostname |
+| `--compiler gnu` | the only compiler in the image. Fills in the compiler for tests named on the command line; a test name that encodes one (`..._gnu`) still wins |
+| `--xml-compiler gnu` | *test wrapper only.* The filter for `--xml-*` suite queries -- a **different** knob from `--compiler` -- so a mixed-compiler suite does not try to run its intel entries |
+| `--test-root /cases` | *test wrapper only* |
+| `--output-root /scratch` | `bld/` and `run/` on the persistent mount |
+
+### mpi-serial
+
+CTSM's single-point tests in `cime_config/testdefs/testlist_clm.xml` are
+written `_Mmpi-serial`, and they run here:
+
+```
+PASS SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc.container_gnu RUN
+```
+
+**The governing constraint is that exactly ONE MPI implementation may exist in
+the executable.** CTSM's mpi-serial build statically links mpi-serial, which
+defines every `MPI_*` symbol the executable needs -- measured, `nm -D
+--undefined-only cesm.exe` reports **zero** undefined `MPI_*`. Anything else
+that drags in a second MPI breaks the run, because only mpi-serial is ever
+initialized and the other MPI is called uninitialized:
+
+```
+Attempting to use an MPI routine before initializing MPICH
+```
+
+Two things in a default build would do exactly that, so both are redirected by
+`cime-macros/gnu_container.cmake` on `MPILIB=mpi-serial`:
+
+| Redirect | Why |
+|---|---|
+| `NETCDF_PATH=/usr/local/serial` | the default netCDF is `--enable-parallel` against MPICH (`ldd libnetcdf.so` shows `libmpi.so.12`) |
+| `ESMFMKFILE` → the mpiuni ESMF | a real-MPI `libesmf.so` carries its own `DT_NEEDED` on `libmpi.so.12` |
+
+`cime/CIME/Tools/Makefile` turns `NETCDF_PATH` into `INC_NETCDF`/`LIB_NETCDF`,
+and already drops `PNETCDF_PATH` for mpi-serial. The serial stack is built
+**static** so the loader cannot silently pick the parallel `.so` that
+`/etc/ld.so.conf.d/ctsm.conf` puts on the default path.
+
+**The mpiuni ESMF needs PIO, and that is the subtle part.** CDEPS calls
+`ESMF_MeshCreateFromFile` to read its stream meshes, which requires ESMF to
+have been built with PIO. Without it the run aborts during ATM initialization
+with a message that appears **only in `PET0.ESMF_LogFile`**, never in
+`cesm.log` -- so it presents as a silent crash:
+
+```
+ESMCI_mesh_create_from_file() Library needed by ESMF not present
+  - This functionality requires ESMF to be built with the PIO library enabled.
+```
+
+ESMF force-disables PIO for `ESMF_COMM=mpiuni`, and `ESMF_PIO=internal` cannot
+be forced back on -- ESMF's bundled PIO fails to compile without an `mpi.h`.
+The supported route is `ESMF_PIO=external` against a PIO built for mpi-serial,
+which is what the image does and what **derecho does too**. Read from
+derecho's own install (`esmf/8.6.0` under its `mpi-serial` module hierarchy,
+the one gnu mpi-serial builds load):
+
+```
+ESMF_COMM:         mpiuni
+ESMF_PIO:          external
+ESMF_PIO_INCLUDE:  .../parallelio/2.6.2/mpi-serial/2.3.0/gcc/12.2.0/.../include
+ESMF_PIO_LIBS:     -lpioc
+ESMF_NETCDF:       serial netcdf-c 4.9.2 + netcdf-fortran 4.6.1
+```
+
+So the image builds, under `/usr/local/serial`: serial HDF5, netCDF-C,
+netCDF-Fortran, and PIO (`PIO_USE_MPISERIAL`, no pnetcdf, no MPI-IO); plus
+mpi-serial under `/usr/local/mpi-serial` purely to compile that PIO against.
+`ESMF_PIO_LIBS` is `-lpioc -lmpi-serial`, because PIO compiled against
+mpi-serial's headers emits real `MPI_*` names that ESMF's renamed mpiuni stubs
+do not satisfy. The Dockerfile asserts all of this at build time, so a
+PIO-less or MPI-linking serial ESMF fails the build rather than a later run.
+
+What needs no work at all, and should not be "fixed":
+
+- CIME builds mpi-serial from CTSM's own `libraries/mpi-serial` submodule
+  (`cime/CIME/config.py`).
+- `<MPILIBS>mpich</MPILIBS>` does not block it: `Machines.is_valid_MPIlib()`
+  special-cases `mpi-serial`.
+- No `<mpirun mpilib="mpi-serial">` entry is needed; its *absence* is how CIME
+  says "launch with no `mpirun`".
+- It forces `NTASKS=1`, which a 1x1 grid needs, and selects
+  `PIO_TYPENAME=netcdf`.
+
+### No batch system
+
+`BATCH_SYSTEM=none` in the machine config means CIME infers no-batch mode and
+runs the model in the **foreground**; `case.submit` and `create_test` each
+detect it, so neither `--no-batch` nor `--wait` is needed. `create_test`
+consequently blocks until the tests finish and reports a real PASS/FAIL rather
+than "submitted".
+
+Do **not** add `--queue`: CIME asserts a queue is never combined with no-batch
+mode, so it fails outright.
+
+Because the run is in the foreground, these scripts want a compute allocation.
+Both carry PBS headers, so `qsub` them directly -- or run them inside an
+existing interactive session, which a single-point `Ld1` case is small enough
+for.
+
+### When input data is missing
+
+The read-only mount means CIME cannot download anything. Left alone it fails
+in a wall of `wget failed` errors (or, where the parent directory does not
+exist yet, `OSError: [Errno 30] Read-only file system`), neither of which
+obviously means "a file is missing", so both wrappers catch it and say so.
+
+**Check the dangling-symlink cause first** -- see the mounts table above. It
+presents as missing data but is not.
+
+- `run-case-in-container.sh` runs `./check_input_data` (**without**
+  `--download`, so it only reports and never writes) before building, and
+  stops with a message naming the host path if anything is missing -- before
+  wasting a build.
+- `run-test-in-container.sh` cannot insert a step, because `create_test`
+  drives its own phases, so it recognizes the read-only-filesystem error in
+  the log afterwards and explains it.
+
+Either way the fix is to run `./check_input_data --download` in the case from
+a normal host shell, where the inputdata tree is writable, then re-run.
+
+### If the model segfaults immediately
+
+Look for `Setting resource.RLIMIT_STACK` in the log. The machine config asks
+for an unlimited stack (Fortran automatic arrays and compiler-generated array
+temporaries live there), and CIME raises only the *soft* limit, leaving the
+hard limit alone. That works wherever the hard limit is already unlimited,
+which is the normal case on NCAR HPC. If it is not, add
+`--ulimit stack=-1:-1` to the `podman run` arguments in
+`container-common.sh`.
+
 ## Publishing to GHCR
 
 The image is published to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing
@@ -164,16 +408,55 @@ change** — nothing republishes automatically.
 
 Prerequisites, one time:
 
-- A GitHub personal access token (classic) with `write:packages`. If the
-  ESCOMP org uses SAML SSO, the token must also be **SSO-authorized for
-  ESCOMP**, or the push fails with a 403 even though the token looks correct.
-- `podman login ghcr.io -u <your-github-username>` and paste the token at the
-  password prompt. Do not put the token in a file in this repo.
+- A [GitHub Personal Access Token
+  (Classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#personal-access-tokens-classic)
+  with the `write:packages` permission. Existing ones are listed
+  [here](https://github.com/settings/tokens); [this
+  link](https://github.com/settings/tokens/new?scopes=write:packages) starts
+  the setup for a new one. If the ESCOMP org uses SAML SSO, the token must
+  also be **SSO-authorized for ESCOMP**, or the push fails with a 403 even
+  though the token looks correct.
+- Authenticate for the session, keeping the token out of your shell history --
+  the same recipe as
+  [doc/ctsm-docs_container/README.md](../../doc/ctsm-docs_container/README.md),
+  "Pushing to GitHub Container Registry":
+
+  ```bash
+  # bash: in this session, commands with a leading space are not saved to history
+  export HISTCONTROL=ignoreboth
+
+  # NOTE THE LEADING SPACES, so the secret token is not written to history
+     echo YOUR_PERSONAL_ACCESS_TOKEN_CLASSIC | podman login ghcr.io -u YOUR_USERNAME --password-stdin
+  ```
+
+  Do not put the token in a file in this repo.
 
 To publish, after `build-on-casper.sh` and all three validation scripts pass.
 Podman's storage does not survive the session, so if you have logged out since
 building, restore the image first — it saves and restores under the same
-`localhost/ctsm-ci-derecho-gnu:dev` name, so nothing needs re-tagging:
+`localhost/ctsm-ci-derecho-gnu:dev` name, so nothing needs re-tagging.
+
+**Give the session real memory, or the load is silently OOM-killed.** Podman
+here uses the `vfs` storage driver, which duplicates every layer rather than
+sharing them, so unpacking the ~3.9 GB archive peaks around 54 GB. An
+interactive session started without an explicit `mem=` gets a small default
+and `podman load` is SIGKILLed: it prints *nothing*, exits 137, and the next
+command fails with the thoroughly misleading
+
+```
+Error: localhost/ctsm-ci-derecho-gnu:dev: image not known
+```
+
+which points at the tag rather than at memory. (`podman images` may print
+`Killed` too.) Get a session with headroom first:
+
+```bash
+execcasper -A <PROJECT> -l select=1:ncpus=4:mem=96GB -l walltime=02:00:00
+```
+
+Do the load, the `podman login` and the `podman push` all in that same
+session -- podman's store is node-local, so an image loaded elsewhere will not
+be visible:
 
 ```bash
 podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_YYYYMMDD.tar
@@ -266,6 +549,6 @@ build time, so a mismatch fails the build rather than a later test run.
 | `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt` mpich + gcc | non-login GHA shells need the toolchain on `PATH` without profile scripts |
 | `CC/CXX/FC/F77` | MPICH wrappers (`mpicc`, …) | build everything against MPICH |
 | `ESMFMKFILE` | `/usr/local/esmf-8.6.0-debug/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it |
-| `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run` |
+| `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests") |
 | `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
 | `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain |

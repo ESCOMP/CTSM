@@ -52,7 +52,7 @@ jobs:
       # pinned deliberately rather than :latest, so a republish cannot silently
       # change what CI tested -- bump it here when a new image is published.
       # The package is public, so no credentials block is needed.
-      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831
 
     steps:
 

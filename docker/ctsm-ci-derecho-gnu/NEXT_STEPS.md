@@ -1,11 +1,12 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-08-30. The image builds and validates end-to-end on
+_Last updated: 2026-08-31. The image builds and validates end-to-end on
 Casper, including pFUnit and CTSM's Fortran unit tests (55/55), and is
 **published and public** at
 `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830`. `cirrus-testing.yml` is
-pointed at it. What remains is a unit-test CI job and the Phase 2 drift
-cron._
+pointed at it. Wrappers for **running** cases and tests on Casper are written
+but **not yet executed** -- that is the immediate next step. Then a unit-test
+CI job, wiring runs into CI, and the Phase 2 drift cron._
 
 ## Where things stand
 
@@ -129,12 +130,134 @@ run the unit tests. Re-save under the new name after the next rebuild.
   automatically** — a Dockerfile change needs a manual rebuild, re-validate,
   push, and a tag bump in `cirrus-testing.yml`.
 
+## Added 2026-08-31: run wrappers (VALIDATED on Casper)
+
+Scripts that make the image do real runs, not just builds. **A single-point
+CTSM case now runs to completion in the container**, reading inputdata from a
+read-only campaign mount:
+
+```
+PASS SMS_D_P1_Ld1.1x1_brazil.IHistClm60Bgc.container_gnu RUN   (161.6 s)
+```
+
+- `container-common.sh` -- shared plumbing, sourced on **both** sides of the
+  container boundary (the repo is mounted at `/ctsm`), hence functions only
+  and no top-level side effects.
+- `run-case-in-container.sh` -- thin wrapper over `create_newcase`, then
+  `case.setup` -> `preview_namelists` -> `check_input_data` -> `case.build` ->
+  `case.submit`. **Not yet exercised on Casper** (the test wrapper was).
+- `run-test-in-container.sh` -- thin wrapper over `create_test` (no
+  `--no-run`). Verified PASS.
+
+See README "Running cases and tests". Findings worth not re-deriving:
+
+- **inputdata is full of absolute symlinks, and that breaks naively.** Much of
+  the tree points into sibling campaign collections (e.g. GSWP3 datm forcing
+  -> `/glade/campaign/collections/gdex/data/...`). A bind mount does not
+  rewrite symlink targets, so with only the `inputdata` mount they dangle and
+  every such file looks *missing*; CIME then tries to download it and dies in
+  a wall of `wget failed`. Of the 744 distinct files the first run reported
+  missing, **all 744** existed on the host, **all 744** were symlinks, and
+  every one pointed under `/glade/campaign`. Hence the second read-only mount
+  of `/glade/campaign` at its own path (`INPUTDATA_SYMLINK_ROOT`).
+- **podman's image store is node-local** (`/var/tmp/...`), so a `qsub`ed run
+  must `podman load` the image first; the tarball restores as
+  `localhost/ctsm-ci-derecho-gnu:dev`, already the wrappers' default. Load
+  takes ~75 s.
+- **No batch flags are needed** -- `BATCH_SYSTEM=none` makes CIME infer
+  no-batch mode, which also makes `create_test` block for a real PASS/FAIL, so
+  `--wait` is redundant and `--queue` is a hard error.
+- **mpi-serial needs no `ccs_config` change** -- CIME builds it from CTSM's
+  `libraries/mpi-serial` submodule, `is_valid_MPIlib()` special-cases it, and
+  a missing `<mpirun mpilib="mpi-serial">` entry *is* how CIME says "no
+  launcher". Do not "fix" the machine config.
+- `--compiler` and `--xml-compiler` are different knobs; suite queries filter
+  on the latter.
+- **`RLIMIT_STACK` was a non-issue** -- no `--ulimit` needed.
+- Peak memory for load+build+run was ~54-56 GB, so request well above 64 GB.
+
+## Resolved 2026-08-31: mpi-serial runs work
+
+`_Mmpi-serial` tests -- how CTSM writes all its single-point tests -- now run
+in the container:
+
+```
+PASS SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc.container_gnu RUN
+```
+
+with no regression: 55/55 unit tests and the mpich `_P1` run still pass.
+
+**The one rule that explains every failure along the way: exactly ONE MPI
+implementation may exist in the executable.** CTSM's mpi-serial build
+statically defines every `MPI_*` symbol (`nm -D --undefined-only cesm.exe`
+reports zero undefined `MPI_*`), so anything dragging in a second MPI leaves
+that MPI uninitialized -> `Attempting to use an MPI routine before
+initializing MPICH`.
+
+Three attempts were eliminated by evidence, and should not be revisited:
+
+| Attempt | Killed by |
+|---|---|
+| real-MPI ESMF for cases | `libesmf.so` has its own `DT_NEEDED` on `libmpi.so.12`; ESMF's calls go to MPICH while CTSM's go to mpi-serial. Also unfixable by exporting symbols -- ESMF is compiled against MPICH headers |
+| mpiuni ESMF as shipped | no PIO, and CDEPS needs `ESMF_MeshCreateFromFile` |
+| `ESMF_PIO=internal` + mpiuni | ESMF's bundled PIO: `pio.h:16: fatal error: mpi.h`. Matches ESMF's own note that internal PIO "does not support mpiuni mode" |
+
+**The working recipe, which is what derecho does.** derecho's install is
+readable from Casper, and its `esmf/8.6.0` under the `mpi-serial` module
+hierarchy (spack hash `him6`) reports:
+
+```
+ESMF_COMM: mpiuni     ESMF_PIO: external
+ESMF_PIO_INCLUDE: .../parallelio/2.6.2/mpi-serial/2.3.0/gcc/12.2.0/.../include
+ESMF_PIO_LIBS: -lpioc          ESMF_NETCDF: serial netcdf-c + netcdf-fortran
+```
+
+Now in `Dockerfile`: serial HDF5 + netCDF-C + netCDF-Fortran + PIO 2.6.2
+(`PIO_USE_MPISERIAL`, no pnetcdf/MPI-IO) under `/usr/local/serial`, static;
+mpi-serial 2.5.4 under `/usr/local/mpi-serial` purely to compile that PIO
+against; and the mpiuni ESMF rebuilt with `ESMF_PIO=external` and
+`ESMF_PIO_LIBS="-lpioc -lmpi-serial"`. In `cime-macros/gnu_container.cmake`,
+`MPILIB=mpi-serial` selects that ESMF and `NETCDF_PATH=/usr/local/serial`.
+
+Gotchas worth not rediscovering:
+
+- **ESMF errors go to `PET0.ESMF_LogFile`, not `cesm.log`.** The PIO failure
+  presented as a totally silent crash for hours because nothing looked there.
+  Check it first for any run that dies during initialization.
+- mpi-serial's `make install` is broken upstream (`$(INSTALL)` and
+  `$(MKINSTALLDIRS)` are never defined), so the artifacts are copied by hand,
+  as CIME's own `buildlib.mpi-serial` does.
+- PIO compiled against mpi-serial emits real `MPI_*` symbol names, which
+  ESMF's renamed mpiuni stubs do not satisfy -- hence `-lmpi-serial` in
+  `ESMF_PIO_LIBS`. Only the archive is copied into `/usr/local/serial/lib`;
+  the header stays out so it cannot shadow the case build's own `mpi.h`.
+- The image bakes a snapshot of `gnu_container.cmake`, which silently shadowed
+  edits during debugging. All three wrapper scripts now prefer the mounted
+  repo's copy.
+
+`Dockerfile.serial-netcdf` was the throwaway probe used to prove all this. It
+has been folded into `Dockerfile` and deleted, exactly as `Dockerfile.pfunit`
+was before it. Rebuilt and re-validated from scratch on 2026-08-31; saved to
+`/glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar`.
+
 ## Remaining steps
 
-1. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
+1. **Republish.** The image now contains the serial stack, so it must be
+   rebuilt from scratch, re-validated, pushed to GHCR, and the dated tag bumped
+   in `cirrus-testing.yml`. Publishing needs a GHCR token; see "Publishing to
+   GHCR".
+2. **Exercise `run-case-in-container.sh`** -- only the test wrapper has been
+   run on Casper so far.
+3. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
    the `$HOME/.cime` copy step (GHA overrides `HOME`); see README "Running
    CTSM's unit tests".
-2. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
+4. **Wire runs into CI.** `simple-build-create_test` currently runs on
+   `ubuntu-latest`, which has no `/glade` at all, so a run job has to move to
+   `runs-on: gha-runner-ctsm` and bind-mount inputdata into the container job.
+   Whether container jobs on that runner see `/glade` is **unknown** -- the
+   existing `list-glade-cesm-input` job proves only that the *host* does. Worth
+   a probe workflow in the style of `probe-derecho-modules.yml`.
+5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
 
