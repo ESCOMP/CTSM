@@ -33,6 +33,13 @@ ARG NETCDF_FORTRAN_VERSION=4.6.1
 ARG PNETCDF_VERSION=1.12.3
 ARG ESMF_VERSION=8.6.0
 ARG PFUNIT_VERSION=4.8.0
+# mpi-serial matches CTSM's libraries/mpi-serial submodule (MPIserial_2.5.4)
+# rather than derecho's 2.3.0, so the mpi-serial PIO below is compiled against
+# exactly the mpi-serial a case build links. PIO matches derecho's
+# parallelio/2.6.2. Both exist only to give the mpiuni ESMF an external PIO;
+# see "ESMF, serial flavor" below.
+ARG MPI_SERIAL_VERSION=2.5.4
+ARG PIO_VERSION=2.6.2
 
 # Parallelism for the source builds below. Bounded (not $(nproc)) because
 # podman inside a PBS job can report the whole node's CPU count rather than
@@ -233,6 +240,123 @@ RUN cd /tmp \
     && make install \
     && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
 
+# WHY /usr/local/serial AND WHY STATIC
+# A separate prefix keeps the parallel stack at /usr/local untouched, so
+# ordinary mpich builds are unaffected. Static (--disable-shared) is
+# deliberate: the base image lists /usr/local/lib in
+# /etc/ld.so.conf.d/ctsm.conf, so a SHARED serial libnetcdf.so would link
+# correctly and then silently load the PARALLEL one at runtime -- the same bug
+# again, in a much harder-to-see form. Static makes that impossible.
+# -fPIC because ESMF links these into position-independent objects.
+ENV SERIAL_PREFIX=/usr/local/serial
+
+# ---- HDF5 (serial) ----
+# Note the compilers: the base image sets ENV CC=mpicc/FC=mpifort, which is
+# exactly what must NOT be used here. Override to the plain gcc toolchain.
+RUN cd /tmp \
+    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-${HDF5_VERSION//./_}.tar.gz" \
+    && tar xzf "hdf5-${HDF5_VERSION//./_}.tar.gz" \
+    && cd "hdf5-hdf5-${HDF5_VERSION//./_}" \
+    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+       CXX="/opt/gcc/${GCC_VERSION}/bin/g++" \
+       FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       CFLAGS=-fPIC CXXFLAGS=-fPIC FCFLAGS=-fPIC \
+       ./configure --prefix="${SERIAL_PREFIX}" --enable-hl --with-zlib \
+        --disable-shared --enable-static \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && rm -rf /tmp/hdf5-*
+
+# ---- netCDF-C (serial) ----
+RUN cd /tmp \
+    && wget -nv "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_C_VERSION}/netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
+    && tar xzf "netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
+    && cd "netcdf-c-${NETCDF_C_VERSION}" \
+    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+       CFLAGS=-fPIC \
+       CPPFLAGS="-I${SERIAL_PREFIX}/include" \
+       LDFLAGS="-L${SERIAL_PREFIX}/lib" \
+       ./configure --prefix="${SERIAL_PREFIX}" --enable-netcdf-4 \
+        --disable-shared --enable-static --disable-dap --disable-byterange \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && rm -rf /tmp/netcdf-c-*
+
+# ---- netCDF-Fortran (serial) ----
+RUN cd /tmp \
+    && wget -nv "https://downloads.unidata.ucar.edu/netcdf-fortran/${NETCDF_FORTRAN_VERSION}/netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
+    && tar xzf "netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
+    && cd "netcdf-fortran-${NETCDF_FORTRAN_VERSION}" \
+    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+       FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       F77="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       CFLAGS=-fPIC FCFLAGS=-fPIC FFLAGS=-fPIC \
+       CPPFLAGS="-I${SERIAL_PREFIX}/include" \
+       LDFLAGS="-L${SERIAL_PREFIX}/lib" \
+       LIBS="$(${SERIAL_PREFIX}/bin/nc-config --libs)" \
+       ./configure --prefix="${SERIAL_PREFIX}" --disable-shared --enable-static \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && rm -rf /tmp/netcdf-fortran-*
+
+# ---- mpi-serial, solely to build ESMF's external PIO against ----
+# Installed under its OWN prefix, not ${SERIAL_PREFIX}, so its mpi.h cannot
+# shadow anything for the CTSM case build (which compiles its own mpi-serial
+# from CTSM's submodule).
+#
+# The files are copied by hand rather than via `make install`: mpi-serial's
+# install rule expands $(INSTALL) and $(MKINSTALLDIRS), and neither is defined
+# anywhere in the release, so the rule runs "libmpi-serial.a -m 644 ..." and
+# dies with "libmpi-serial.a: No such file or directory". CIME's own
+# buildlib.mpi-serial copies the artifacts directly for the same reason.
+ENV MPISERIAL_PREFIX=/usr/local/mpi-serial
+RUN cd /tmp \
+    && wget -nv "https://github.com/ESMCI/mpi-serial/archive/refs/tags/MPIserial_${MPI_SERIAL_VERSION}.tar.gz" \
+    && tar xzf "MPIserial_${MPI_SERIAL_VERSION}.tar.gz" \
+    && cd "mpi-serial-MPIserial_${MPI_SERIAL_VERSION}" \
+    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+       FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+       CFLAGS=-fPIC FCFLAGS=-fPIC \
+       ./configure --prefix="${MPISERIAL_PREFIX}" \
+    && make -j"${MAKE_JOBS}" \
+    && mkdir -p "${MPISERIAL_PREFIX}/lib" "${MPISERIAL_PREFIX}/include" \
+    && cp libmpi-serial.a "${MPISERIAL_PREFIX}/lib/" \
+    && cp mpi.h mpif.h "${MPISERIAL_PREFIX}/include/" \
+    && cp libmpi-serial.a "${SERIAL_PREFIX}/lib/" \
+    && (cp mpi.mod "${MPISERIAL_PREFIX}/include/" 2>/dev/null || true) \
+    && rm -rf /tmp/mpi-serial-* /tmp/MPIserial_*
+
+# ---- PIO for ESMF, built against mpi-serial + the serial netCDF ----
+# ESMF links only -lpioc, so the Fortran interface is not needed. No pnetcdf
+# and no MPI-IO: both would reintroduce a real-MPI dependency, which is the
+# whole thing we are avoiding. Mirrors the flags CIME itself uses for a
+# PIO_USE_MPISERIAL build.
+RUN cd /tmp \
+    && wget -nv "https://github.com/NCAR/ParallelIO/archive/refs/tags/pio${PIO_VERSION//./_}.tar.gz" \
+    && tar xzf "pio${PIO_VERSION//./_}.tar.gz" \
+    && cd "ParallelIO-pio${PIO_VERSION//./_}" \
+    && mkdir build && cd build \
+    && cmake \
+        -DCMAKE_INSTALL_PREFIX="${SERIAL_PREFIX}" \
+        -DCMAKE_C_COMPILER="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+        -DCMAKE_C_FLAGS=-fPIC \
+        -DNetCDF_PATH="${SERIAL_PREFIX}" \
+        -DWITH_PNETCDF=FALSE \
+        -DPIO_USE_MPIIO=FALSE \
+        -DPIO_USE_MPISERIAL=TRUE \
+        -DMPISERIAL_PATH="${MPISERIAL_PREFIX}" \
+        -DMPI_C_INCLUDE_PATH="${MPISERIAL_PREFIX}/include" \
+        -DMPI_C_LIBRARIES="${MPISERIAL_PREFIX}/lib/libmpi-serial.a" \
+        -DPIO_ENABLE_FORTRAN=OFF \
+        -DPIO_ENABLE_TESTS=OFF \
+        -DPIO_ENABLE_TIMING=OFF \
+        -DPIO_ENABLE_EXAMPLES=OFF \
+        .. \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && test -f "${SERIAL_PREFIX}/lib/libpioc.a" -o -f "${SERIAL_PREFIX}/lib/libpioc.so" \
+    && rm -rf /tmp/ParallelIO-* /tmp/pio*.tar.gz
+
 # ---- ESMF, serial flavor (ESMF_COMM=mpiuni, BOPT=O) ----
 # run_tests.py forces mpilib="mpi-serial", so the unit-test executables link
 # with plain gfortran and no MPI library. Both ESMF flavors in the base image
@@ -261,8 +385,13 @@ RUN cd /tmp \
     && cd "esmf-${ESMF_VERSION}" \
     && sed -i 's|make VERBOSE=1 -f ./Makefile|$(MAKE) VERBOSE=1 -f ./Makefile|; s|make -f ./Makefile install|$(MAKE) -f ./Makefile install|' \
         src/Infrastructure/IO/PIO/makefile \
+    && export PATH="${SERIAL_PREFIX}/bin:${PATH}" \
     && export ESMF_DIR="$PWD" ESMF_COMPILER=gfortran ESMF_COMM=mpiuni ESMF_BOPT=O \
         ESMF_NETCDF=nc-config \
+        ESMF_PIO=external \
+        ESMF_PIO_INCLUDE="${SERIAL_PREFIX}/include" \
+        ESMF_PIO_LIBPATH="${SERIAL_PREFIX}/lib" \
+        ESMF_PIO_LIBS="-lpioc -lmpi-serial" \
         ESMF_INSTALL_PREFIX="/usr/local/esmf-${ESMF_VERSION}-mpiuni" \
         ESMF_INSTALL_HEADERDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/include" \
         ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}-mpiuni/mod" \
@@ -272,17 +401,32 @@ RUN cd /tmp \
     && make install \
     && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
 
-# Encode the failure this flavor exists to prevent: if the serial ESMF ever
-# comes out linking MPI again, fail at image-build time, not at test link time.
+# Encode the failures this flavor exists to prevent, at image-build time
+# rather than at test link/run time: it must stay mpiuni, must not link -lmpi
+# (serial unit-test links would fail), and must have PIO -- via ESMF_PIO=external,
+# because ESMF force-disables an internal PIO for mpiuni.
+#
+# The -lmpi test splits the link line into tokens and matches EXACTLY, because
+# the link line legitimately contains -lmpi-serial now (ESMF_PIO_LIBS). A
+# `grep -w -- -lmpi` matches inside "-lmpi-serial" -- '-' is not a word
+# character -- and failed this build for an hour on a false positive.
 RUN set -eu; \
     mk="/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib/esmf.mk"; \
     [ -f "$mk" ] || { echo "ERROR: $mk missing" >&2; exit 1; }; \
     grep -q 'ESMF_COMM=mpiuni' "$mk" \
         || { echo "ERROR: $mk is not an ESMF_COMM=mpiuni build" >&2; exit 1; }; \
-    if grep -E '^ESMF_F90ESMFLINKLIBS=' "$mk" | grep -qw -- '-lmpi'; then \
+    if grep -E '^ESMF_F90ESMFLINKLIBS=' "$mk" | tr ' ' '\n' | grep -qx -- '-lmpi'; then \
         echo "ERROR: $mk still links -lmpi; serial unit-test links will fail" >&2; \
         exit 1; \
     fi; \
+    grep -q -- '-DESMF_PIO=1' "$mk" \
+        || { echo "ERROR: $mk was built WITHOUT PIO. CDEPS calls" >&2; \
+             echo "       ESMF_MeshCreateFromFile, which needs it; an mpi-serial run" >&2; \
+             echo "       would abort in ATM init with 'Library needed by ESMF not" >&2; \
+             echo "       present', logged only to PET0.ESMF_LogFile." >&2; exit 1; }; \
+    grep -qE '^#  ?ESMF_PIO: *external' "$mk" \
+        || { echo "ERROR: expected ESMF_PIO=external in $mk. Internal PIO does" >&2; \
+             echo "       not support mpiuni -- it fails on a missing mpi.h." >&2; exit 1; }; \
     echo "serial ESMF OK: $mk"
 
 # ---- git (built from source; NO openssh dependency) ----
