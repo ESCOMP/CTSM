@@ -4,7 +4,7 @@ To allow running out-of-the-box on other machines, add code here."""
 
 from collections import namedtuple
 import os
-from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_QSUB
+from ctsm.joblauncher.job_launcher_factory import JOB_LAUNCHER_QSUB, JOB_LAUNCHER_NOBATCH
 from ctsm.machine import CREATE_TEST_QUEUE_UNSPECIFIED
 from ctsm.machine_utils import get_user
 
@@ -67,6 +67,22 @@ MACHINE_DEFAULTS = {
                 required_args="-l select=1:ncpus=36:mpiprocs=1 -V -r n -l inception=login -k oed",
             )
         },
+    ),
+    "container": MachineDefaults(
+        # The ctsm-ci-derecho-gnu container (docker/ctsm-ci-derecho-gnu/).
+        # NOTE: unlike every other machine here, these paths are NOT
+        # get_user()-derived. Inside the container the mounts are always at
+        # /scratch and /cases no matter who ran it; the host-side directories
+        # they map to are chosen by the wrapper scripts.
+        job_launcher_type=JOB_LAUNCHER_NOBATCH,
+        scratch_dir=os.path.join(os.path.sep, "scratch"),
+        baseline_dir=os.path.join(os.path.sep, "scratch", "baselines"),
+        account_required=False,
+        create_test_retry=0,
+        create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED,
+        # The container has BATCH_SYSTEM=none, so there is no queue to
+        # configure and no non-default launcher worth having defaults for.
+        job_launcher_defaults={},
     ),
     "derecho": MachineDefaults(
         job_launcher_type=JOB_LAUNCHER_QSUB,
