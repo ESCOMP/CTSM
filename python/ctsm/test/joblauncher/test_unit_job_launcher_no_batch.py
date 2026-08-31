@@ -50,6 +50,35 @@ class TestJobLauncherNoBatch(unittest.TestCase):
         self.assertTrue(os.path.isfile(stdout))
         self.assertFileContentsEqual("hello world\n", stdout)
 
+    def test_waitForProcesses_waitsForAllAndReportsFailure(self):
+        """With multiple launched processes, wait for all of them and report a failure
+
+        The first-launched process fails immediately while the second is still
+        running. We must (a) still be waiting for that second process when the
+        first has already exited, and (b) return the failing status. This is what
+        protects a containerized run: run_sys_tests returning early would let
+        podman tear down the PID namespace and kill the processes still going.
+        """
+        job_launcher = create_job_launcher(job_launcher_type=JOB_LAUNCHER_NOBATCH)
+        slow_stdout = os.path.join(self._testdir, "stdout_slow")
+        job_launcher.run_command(
+            command=["sh", "-c", "exit 5"],
+            stdout_path=os.path.join(self._testdir, "stdout_fail"),
+            stderr_path=os.path.join(self._testdir, "stderr_fail"),
+        )
+        job_launcher.run_command(
+            command=["sh", "-c", "sleep 1; echo slow done"],
+            stdout_path=slow_stdout,
+            stderr_path=os.path.join(self._testdir, "stderr_slow"),
+        )
+
+        return_code = job_launcher.wait_for_processes_to_complete()
+
+        self.assertEqual(return_code, 5)
+        # If we had only waited for the last process, or had returned as soon as the
+        # first one failed, this file would still be empty.
+        self.assertFileContentsEqual("slow done\n", slow_stdout)
+
     def test_runCommand_dryRun(self):
         """With dry_run, testdir should be empty"""
         job_launcher = create_job_launcher(job_launcher_type=JOB_LAUNCHER_NOBATCH)
