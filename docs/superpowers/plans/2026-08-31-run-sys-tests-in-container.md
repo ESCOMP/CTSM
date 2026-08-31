@@ -461,9 +461,10 @@ Expected: all PASS. The two pre-existing no-batch launcher tests already call `w
 - [x] **Step 5: Run the whole unit suite for regressions**
 
 ```bash
-cd python && ./run_ctsm_py_tests --unit
+cd python && python -m pytest ctsm -q -k "not test_sys"
 ```
-Expected: no new failures against the pre-change baseline. If any test failed before your changes, note it and confirm it is unrelated rather than assuming.
+Expected: 319 passed, 0 failed (87 `test_sys_*` deselected). **Use pytest, not
+`./run_ctsm_py_tests --unit`** -- see the implementer note at the bottom.
 
 - [x] **Step 6: Format and commit**
 
@@ -806,5 +807,6 @@ testroot layout, the host-dangling symlink, and the one surprise: injecting
 
 - **Do not create or survey python environments.** Use `ctsm_pylib` and nothing else. If it is missing or broken, stop and ask rather than investigating alternatives.
 - **Tasks 1–3 are testable without a container or a compute node.** Only Task 4 Step 5 needs Casper.
-- **If a `run_ctsm_py_tests --unit` failure predates your change**, say so explicitly with the evidence rather than fixing it silently or assuming it is unrelated.
+- **Run the python tests with pytest, never with `./run_ctsm_py_tests --unit`.** From `python/`: `python -m pytest ctsm -q -k "not test_sys"` (319 passed, 0 failed; drop the `-k` to include system tests). `run_ctsm_py_tests --unit` uses unittest discovery, which runs everything in one process and leaks global state between files, producing 5 failures unrelated to anything you changed -- two in `test_unit_mesh_maker`, three in `test_unit_subset_data`. The same files pass under pytest. Do not "fix" them here.
+- **If a test failure genuinely predates your change**, say so explicitly with the evidence rather than fixing it silently or assuming it is unrelated.
 - **`git status` should be clean between tasks.** Each task commits its own files and nothing else.
