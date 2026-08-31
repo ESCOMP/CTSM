@@ -184,6 +184,66 @@ boundary -- the repo is mounted at `/ctsm`, so the in-container half sources
 that same file. It therefore defines only functions, with no top-level side
 effects.
 
+### Running run_sys_tests
+
+A third wrapper drives `./run_sys_tests` rather than `create_test` directly:
+
+```bash
+# one test by name
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
+
+# derecho's mpi-serial suite, filtered to this image's one compiler
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
+```
+
+Why this rather than `run-test-in-container.sh`: `run_sys_tests` adds the
+bookkeeping a real test suite needs that a bare `create_test` wrapper does
+not -- a dated testroot, `cs.status` / `cs.status.fails` aggregation, a
+recorded `SRCROOT_GIT_STATUS`, baseline compare/generate, and retry. It is
+also what a CTSM developer actually types.
+
+Like the other two, every argument passes straight through to
+`run_sys_tests`; this wrapper only injects flags you did not pass yourself:
+
+| Flag | Why |
+|---|---|
+| `--machine-name container` | picks up `MACHINE_DEFAULTS["container"]`: the no-batch launcher, `/scratch` as the testroot base, `/scratch/baselines`, and no account requirement |
+| `--wait` | `run_sys_tests` otherwise backgrounds `create_test` and returns, and podman would tear the container down while it was still running |
+| `--extra-create-test-args "--machine container --compiler gnu"` | `run_sys_tests` never passes `--machine` to `create_test` itself, only `--xml-machine`, so without this CIME tries to auto-detect the machine from the container hostname and fails. A value you pass with `--extra-create-test-args` is **merged** with this, not replaced |
+
+and, only when you asked for a suite with `-s`/`--suite-name`:
+
+| Flag | Why |
+|---|---|
+| `--xml-machine derecho` | whose testlist to read. The container has no entries of its own in `cime_config/testdefs/testlist_clm.xml`, and replicating derecho is the image's purpose. Override with `$XML_MACHINE` |
+| `--suite-compiler gnu` | the only compiler in the image |
+
+**The testroot holds cases, `bld/` and `run/` together**, unlike the other
+two wrappers. `run_sys_tests` names it
+`tests_<MMDD-HHMMSS><first 2 chars of the machine name>` (so `co` here) under
+`$SCRATCH_DIR`, and passes `--output-root <testroot>` to `create_test`, so
+case directories, `bld/` and `run/` all land inside it -- there is no
+separate `--test-root` / `--output-root` to configure as there is for the
+other wrappers.
+
+**The `/cases` symlink dangles when read from the host.** `run_sys_tests`
+also makes a symlink to the testroot in its working directory (`/cases`
+inside the container), but that link points at the *container* path
+(`/scratch/tests_...`), so from the host it is a dangling symlink. Use the
+testroot path the wrapper prints instead.
+
+> **`-s` skips the ctsm_pylib check.** `run_sys_tests` only checks that
+> python prerequisites are importable when it has to discover the suite's
+> compilers itself. Because this wrapper injects `--suite-compiler gnu`,
+> that check is skipped. The practical effect is narrow: of the 20
+> `derecho`/`gnu` tests in `aux_clm_mpi_serial`, only
+> `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the
+> image lacks, and it now fails on its own rather than aborting the other 19
+> before any of them run. Naming that test explicitly with `-t` still fails
+> up front with `ModuleNotFoundError`, because that path checks
+> unconditionally.
+
 ### Getting the image onto a compute node
 
 podman's image store here is **node-local** -- `podman info --format
