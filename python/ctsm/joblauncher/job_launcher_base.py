@@ -116,6 +116,20 @@ class JobLauncherBase(object):
         """
         raise NotImplementedError
 
+    def wait_for_last_process_to_complete(self):
+        """Wait for the last process started by run_command to complete
+
+        Returns that process's return code.
+
+        Only launchers that run the job synchronously under this process can
+        support this. For launchers whose job outlives us (e.g. qsub) there is
+        nothing to wait for, so this raises.
+        """
+        raise RuntimeError(
+            "Waiting for the launched job is only supported with the no-batch "
+            "job launcher; this is a {}".format(type(self).__name__)
+        )
+
     def __repr__(self):
         return (
             type(self).__name__ + "(queue='{queue}', "

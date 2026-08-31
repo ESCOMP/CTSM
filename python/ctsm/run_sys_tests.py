@@ -72,7 +72,7 @@ def main(cime_path):
     )
     logger.debug("Machine info: %s", machine)
 
-    run_sys_tests(
+    return_code = run_sys_tests(
         machine=machine,
         cime_path=cime_path,
         skip_testroot_creation=args.skip_testroot_creation,
@@ -93,7 +93,9 @@ def main(cime_path):
         queue=args.queue,
         retry=args.retry,
         extra_create_test_args=args.extra_create_test_args,
+        wait=args.wait,
     )
+    sys.exit(return_code)
 
 
 def run_sys_tests(
@@ -118,6 +120,7 @@ def run_sys_tests(
     queue=None,
     retry=None,
     extra_create_test_args="",
+    wait=False,
 ):
     """Implementation of run_sys_tests command
 
@@ -161,6 +164,8 @@ def run_sys_tests(
     extra_create_test_args (str): any extra arguments to create_test, as a single,
         space-delimited string
     testlist: list of strings giving test names to run
+    wait (bool): if True, wait for the launched create_test to complete and return its
+        exit status (rather than returning as soon as it is launched)
 
     """
     num_provided_options = (
@@ -268,6 +273,10 @@ def run_sys_tests(
             create_test_args=create_test_args,
             dry_run=dry_run,
         )
+
+    if wait and not dry_run:
+        return machine.job_launcher.wait_for_last_process_to_complete()
+    return 0
 
 
 # ========================================================================
@@ -497,6 +506,19 @@ or tests listed individually on the command line (via the -t/--testname argument
         action="store_true",
         help="Print what would happen, but do not run any commands.\n"
         "(Generally should be run with --verbose.)\n",
+    )
+
+    parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="Wait for the launched create_test to finish, and exit with its\n"
+        "status, rather than returning as soon as it has been launched.\n"
+        "This makes a failing test produce a nonzero exit status.\n"
+        "Only supported with the no-batch job launcher.\n"
+        "Note that this waits for the LAST create_test launched, so if the\n"
+        "suite spans multiple compilers it returns when the final one is done.\n"
+        "Needed when running inside a container, which would otherwise be torn\n"
+        "down while create_test was still running.",
     )
 
     parser.add_argument(
