@@ -141,7 +141,7 @@ place regardless of who ran it."
 - Consumes: `MACHINE_DEFAULTS["container"]` from Task 1 (not directly exercised here).
 - Produces: `run_sys_tests(..., xml_machine=None)` keyword argument, and the `--xml-machine` command-line option (`args.xml_machine`). When `None`, behavior is identical to today.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `class TestRunSysTests` in `python/ctsm/test/test_unit_run_sys_tests.py`, after `test_createTestCommands_testsuiteSpecifiedCompilers`:
 
@@ -178,14 +178,14 @@ Add to `class TestRunSysTests` in `python/ctsm/test/test_unit_run_sys_tests.py`,
         )
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 cd python && python -m unittest ctsm.test.test_unit_run_sys_tests.TestRunSysTests.test_createTestCommands_testsuiteXmlMachine -v
 ```
 Expected: FAIL with `TypeError: run_sys_tests() got an unexpected keyword argument 'xml_machine'`.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Three edits in `python/ctsm/run_sys_tests.py`.
 
@@ -247,14 +247,14 @@ Then in `_run_test_suite()`, add `xml_machine` to its keyword-only parameters an
 
 Note `_get_compilers_for_suite` already takes the machine name as its second parameter and uses it both for the `get_tests_from_xml` query and for its "No tests found for suite {} on machine {}" error, so passing `xml_machine_final` makes that error name the machine actually queried. No change is needed inside that function.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd python && python -m unittest ctsm.test.test_unit_run_sys_tests -v
 ```
 Expected: all PASS. `test_createTestCommands_testsuite` is the no-regression check — it asserts `--xml-machine fake_machine` when `xml_machine` is not given.
 
-- [ ] **Step 5: Format and commit**
+- [x] **Step 5: Format and commit**
 
 ```bash
 cd python && black --config pyproject.toml ctsm && cd ..
