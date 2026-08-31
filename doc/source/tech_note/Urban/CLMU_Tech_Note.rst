@@ -533,7 +533,10 @@ The albedo of each urban surface is a weighted combination of snow-free "ground"
 
 where :math:`f_{u,sno}` is the fraction of the urban surface covered with snow which is calculated from (Bonan 1996)
 
-:math:`f_{u,sno} = \frac{z_{u,sno}}{0.05} \leq 1` .
+.. math::
+   :label: eq-0485
+
+   f_{u,sno} = \frac{z_{u,sno}}{0.05} \leq 1
 
 The direct and diffuse "ground" albedos, :math:`\alpha_{g,\Lambda}^{\mu}` and :math:`\alpha_{g,\Lambda}`, where :math:`\Lambda` denotes either the visible (VIS) or near-infrared (NIR) waveband, are provided by the surface dataset (:numref:`table-input-data`), and :math:`z_{u,sno}` is the depth of snow (m) (section 5.1). An estimate of snow albedo is made based on the parameterization of Marshall (1989) in which albedo depends on solar zenith angle, grain size, and soot content (e.g., as adopted by the Land Surface Model (LSM) (Bonan 1996)). Here, however, several simplifying assumptions are made due to uncertainties in how to apply such a parameterization to urban surfaces. A snow grain radius of 100 :math:`\mu m` (new powder snow, aged a few days) and a soot mass fraction of 1.5\ :math:`\times 10^{- 5}` (arrived at by noting that the LSM global soot mass fraction is 5\ :math:`\times 10^{- 6}` and Chylek et al. (1987) observed that soot concentrations in urban snowpacks averaged three times the concentration in rural snowpacks) are assumed. Direct and diffuse albedos are assumed to be equal. This yields :math:`\alpha_{sno,VIS}^{\mu} = \alpha_{sno,VIS} = 0.66` and :math:`\alpha_{sno,NIR}^{\mu} = \alpha_{sno,NIR} = 0.56` which fall about in the middle of the range given by Oke (1987).
 
@@ -640,11 +643,20 @@ and
 
 The direct beam solar radiation incident on the roof, walls and road is therefore
 
-:math:`S_{roof} \downarrow_{\Lambda}^{\mu} = S_{atm} \downarrow_{\Lambda}^{\mu}`,
+.. math::
+   :label: eq-0486
 
-:math:`S_{shdwall} \downarrow_{\Lambda}^{\mu} = 0`,
+   S_{roof} \downarrow_{\Lambda}^{\mu} = S_{atm} \downarrow_{\Lambda}^{\mu}
 
-:math:`S_{sunwall} \downarrow_{\Lambda}^{\mu} = 2S_{atm} \downarrow_{\Lambda}^{\mu}\left\lbrack \frac{W}{H}\left( \frac{1}{2} - \frac{\theta_{0}}{\pi} \right) + \frac{1}{\pi}\tan\mu\left( 1 - \cos\theta_{0} \right) \right\rbrack`,
+.. math::
+   :label: eq-0487
+
+   S_{shdwall} \downarrow_{\Lambda}^{\mu} = 0
+
+.. math::
+   :label: eq-0488
+
+   S_{sunwall} \downarrow_{\Lambda}^{\mu} = 2S_{atm} \downarrow_{\Lambda}^{\mu}\left\lbrack \frac{W}{H}\left( \frac{1}{2} - \frac{\theta_{0}}{\pi} \right) + \frac{1}{\pi}\tan\mu\left( 1 - \cos\theta_{0} \right) \right\rbrack
 
 .. math::
    :label: eq-0113
@@ -718,11 +730,17 @@ Similarly, the view factor for radiation from the sky to the road and from road 
 
 By symmetry,
 
-:math:`\Psi_{wall - road} = \Psi_{wall - sky}`,
+.. math::
+   :label: eq-0489
+
+   \Psi_{wall - road} = \Psi_{wall - sky}
 
 and the other view factors can be deduced from conservation of energy as
 
-:math:`\Psi_{road - wall} = \frac{1}{2}\left( 1 - \Psi_{road - sky} \right)`,
+.. math::
+   :label: eq-0490
+
+   \Psi_{road - wall} = \frac{1}{2}\left( 1 - \Psi_{road - sky} \right)
 
 .. math::
    :label: eq-0121
@@ -750,9 +768,15 @@ Incident diffuse solar radiation
 
 The two view factors needed to compute the incident diffuse solar radiation are :math:`\Psi_{sky - road}` (equation :eq:`eq-0119` ) and :math:`\Psi_{sky - wall}` (equation :eq:`eq-0120` ). The diffuse solar radiation incident on roof, walls and road is then
 
-:math:`S_{roof} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}`,
+.. math::
+   :label: eq-0491
 
-:math:`S_{imprvrd} \downarrow_{\Lambda} = S_{prvrd} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - road}`,
+   S_{roof} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}
+
+.. math::
+   :label: eq-0492
+
+   S_{imprvrd} \downarrow_{\Lambda} = S_{prvrd} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - road}
 
 :math:`S_{shdwall} \downarrow_{\Lambda} = S_{atm} \downarrow_{\Lambda}\Psi_{sky - wall}`,
 
@@ -815,7 +839,10 @@ The initial direct beam absorption (:math:`i = 0`) (step 1) by each urban surfac
 
 :math:`{\overrightarrow{S}}_{imprvrd,\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{imprvrd,\Lambda}^{\mu} \right)`,
 
-:math:`{\overrightarrow{S}}_{prvrd,\Lambda,i = 0}^{\mu} = S_{prvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{prvrd,\Lambda}^{\mu} \right)`,
+.. math::
+   :label: eq-0493
+
+   {\overrightarrow{S}}_{prvrd,\Lambda,i = 0}^{\mu} = S_{prvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{prvrd,\Lambda}^{\mu} \right)
 
 :math:`{\overrightarrow{S}}_{sunwall,\Lambda,i = 0}^{\mu} = S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( 1 - \alpha_{sunwall,\Lambda}^{\mu} \right)`,
 
@@ -828,18 +855,30 @@ The initial direct beam absorption (:math:`i = 0`) (step 1) by each urban surfac
 
 where, for example, :math:`S_{imprvrd} \downarrow_{\Lambda}^{\mu}` is the incident direct solar radiation for the impervious road (equation :eq:`eq-0113` ) and :math:`\alpha_{imprvrd,\Lambda}^{\mu}` is the direct albedo for the impervious road after adjustment for snow (section 2.1). Similarly, the initial reflections from each urban surface are
 
-:math:`S_{imprvrd} \uparrow_{\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( \alpha_{imprvrd,\Lambda}^{\mu} \right)`,
+.. math::
+   :label: eq-0494
 
-:math:`S_{prvrd} \uparrow_{\Lambda,i = 0}^{\mu} = S_{prvrd} \downarrow_{\Lambda}^{\mu}\left( \alpha_{prvrd,\Lambda}^{\mu} \right)`,
+   S_{imprvrd} \uparrow_{\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( \alpha_{imprvrd,\Lambda}^{\mu} \right)
+
+.. math::
+   :label: eq-0495
+
+   S_{prvrd} \uparrow_{\Lambda,i = 0}^{\mu} = S_{prvrd} \downarrow_{\Lambda}^{\mu}\left( \alpha_{prvrd,\Lambda}^{\mu} \right)
 
 .. math::
    :label: eq-0128
 
    S_{road} \uparrow_{\Lambda,i = 0}^{\mu} = S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}^{\mu}f_{prvrd}
 
-:math:`S_{sunwall} \uparrow_{\Lambda,i = 0}^{\mu} = S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( \alpha_{sunwall,\Lambda}^{\mu} \right)`,
+.. math::
+   :label: eq-0496
 
-:math:`S_{shdwall} \uparrow_{\Lambda,i = 0}^{\mu} = S_{shdwall} \downarrow_{\Lambda}^{\mu}\left( \alpha_{shdwall,\Lambda}^{\mu} \right)`,
+   S_{sunwall} \uparrow_{\Lambda,i = 0}^{\mu} = S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( \alpha_{sunwall,\Lambda}^{\mu} \right)
+
+.. math::
+   :label: eq-0497
+
+   S_{shdwall} \uparrow_{\Lambda,i = 0}^{\mu} = S_{shdwall} \downarrow_{\Lambda}^{\mu}\left( \alpha_{shdwall,\Lambda}^{\mu} \right)
 
 The initial reflected solar radiation is distributed to sky, walls, and road according to view factors as
 
@@ -1196,9 +1235,15 @@ The canyon albedo (excluding the roof albedo) shown in :numref:`fig-canyon-albed
 
 Similar to incident diffuse solar radiation, the longwave radiation incident on walls and roads depends on view factors. The longwave radiation incident on roof, walls and road is
 
-:math:`L_{roof} \downarrow = L_{atm} \downarrow`,
+.. math::
+   :label: eq-0498
 
-:math:`L_{imprvrd} \downarrow = L_{prvrd} \downarrow = L_{atm} \downarrow \Psi_{sky - road}`,
+   L_{roof} \downarrow = L_{atm} \downarrow
+
+.. math::
+   :label: eq-0499
+
+   L_{imprvrd} \downarrow = L_{prvrd} \downarrow = L_{atm} \downarrow \Psi_{sky - road}
 
 :math:`L_{shdwall} \downarrow = L_{atm} \downarrow \Psi_{sky - wall}`,
 
@@ -1244,22 +1289,31 @@ Similar to albedo, the emissivity of each urban surface is a weighted combinatio
 
    \varepsilon_{u} = \varepsilon_{u}\left( 1 - f_{u,sno} \right) + \varepsilon_{sno}f_{u,sno}
 
-where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (Oleson et al. 2004), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation (2.3)).
+where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (Oleson et al. 2004), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation :eq:`eq-0485`).
 
-As with solar radiation, the longwave interactions within the urban canyon are determined numerically by allowing for multiple reflections until a convergence criteria is met (the absorbed longwave radiation for a given reflection is less than :math:`1 \times 10^{- 3}`). The following equation (2.3) assume that absorptivity equals emissivity.
+As with solar radiation, the longwave interactions within the urban canyon are determined numerically by allowing for multiple reflections until a convergence criteria is met (the absorbed longwave radiation for a given reflection is less than :math:`1 \times 10^{- 3}`). The following equation :eq:`eq-0485` assume that absorptivity equals emissivity.
 
 The initial reflected (:math:`r`) longwave radiation from each urban surface is
 
-:math:`L_{imprvrd,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{imprvrd} \right)L_{imprvrd} \downarrow`,
+.. math::
+   :label: eq-0500
 
-:math:`L_{prvrd,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{prvrd} \right)L_{prvrd} \downarrow`,
+   L_{imprvrd,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{imprvrd} \right)L_{imprvrd} \downarrow
+
+.. math::
+   :label: eq-0501
+
+   L_{prvrd,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{prvrd} \right)L_{prvrd} \downarrow
 
 .. math::
    :label: eq-0167
 
    L_{road,i = 0}\overset{r}{\uparrow} = L_{imprvrd,i = 0}\overset{r}{\uparrow}\left( 1 - f_{prvrd} \right) + L_{prvrd,i = 0}\overset{r}{\uparrow}f_{prvrd}
 
-:math:`L_{sunwall,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{wall} \right)L_{sunwall} \downarrow`,
+.. math::
+   :label: eq-0502
+
+   L_{sunwall,i = 0}\overset{r}{\uparrow} = \left( 1 - \varepsilon_{wall} \right)L_{sunwall} \downarrow
 
 .. math::
    :label: eq-0168
@@ -1268,13 +1322,25 @@ The initial reflected (:math:`r`) longwave radiation from each urban surface is
 
 The emitted (:math:`e`) longwave radiation from each surface is
 
-:math:`L_{imprvrd}\overset{e}{\uparrow} = \varepsilon_{imprvrd}\sigma\left( T_{imprvrd} \right)^{4}`,
+.. math::
+   :label: eq-0503
 
-:math:`L_{prvrd}\overset{e}{\uparrow} = \varepsilon_{prvrd}\sigma\left( T_{prvrd} \right)^{4}`,
+   L_{imprvrd}\overset{e}{\uparrow} = \varepsilon_{imprvrd}\sigma\left( T_{imprvrd} \right)^{4}
 
-:math:`L_{road}\overset{e}{\uparrow} = \varepsilon_{imprvrd}\sigma\left( T_{imprvrd} \right)^{4}\left( 1 - f_{prvrd} \right) + \varepsilon_{prvrd}\sigma\left( T_{prvrd} \right)^{4}f_{prvrd}`,
+.. math::
+   :label: eq-0504
 
-:math:`L_{sunwall}\overset{e}{\uparrow} = \varepsilon_{wall}\sigma\left( T_{sunwall} \right)^{4}`,
+   L_{prvrd}\overset{e}{\uparrow} = \varepsilon_{prvrd}\sigma\left( T_{prvrd} \right)^{4}
+
+.. math::
+   :label: eq-0505
+
+   L_{road}\overset{e}{\uparrow} = \varepsilon_{imprvrd}\sigma\left( T_{imprvrd} \right)^{4}\left( 1 - f_{prvrd} \right) + \varepsilon_{prvrd}\sigma\left( T_{prvrd} \right)^{4}f_{prvrd}
+
+.. math::
+   :label: eq-0506
+
+   L_{sunwall}\overset{e}{\uparrow} = \varepsilon_{wall}\sigma\left( T_{sunwall} \right)^{4}
 
 .. math::
    :label: eq-0169
@@ -1308,23 +1374,47 @@ The initial reflected longwave radiation is distributed to sky, walls, and road 
 
 The emitted longwave radiation is distributed to sky, walls, and road according to view factors as
 
-:math:`L_{imprvrd - sky}\overset{e}{\uparrow} = L_{imprvrd}\overset{e}{\uparrow}\Psi_{road - sky}`,
+.. math::
+   :label: eq-0507
 
-:math:`L_{prvrd - sky}\overset{e}{\uparrow} = L_{prvrd}\overset{e}{\uparrow}\Psi_{road - sky}`,
+   L_{imprvrd - sky}\overset{e}{\uparrow} = L_{imprvrd}\overset{e}{\uparrow}\Psi_{road - sky}
 
-:math:`L_{road - sunwall}\overset{e}{\uparrow} = L_{road}\overset{e}{\uparrow}\Psi_{road - wall}`,
+.. math::
+   :label: eq-0508
 
-:math:`L_{road - shdwall}\overset{e}{\uparrow} = L_{road}\overset{e}{\uparrow}\Psi_{road - wall}`,
+   L_{prvrd - sky}\overset{e}{\uparrow} = L_{prvrd}\overset{e}{\uparrow}\Psi_{road - sky}
 
-:math:`L_{sunwall - sky}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - sky}`,
+.. math::
+   :label: eq-0509
 
-:math:`L_{sunwall - road}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - road}`,
+   L_{road - sunwall}\overset{e}{\uparrow} = L_{road}\overset{e}{\uparrow}\Psi_{road - wall}
+
+.. math::
+   :label: eq-0510
+
+   L_{road - shdwall}\overset{e}{\uparrow} = L_{road}\overset{e}{\uparrow}\Psi_{road - wall}
+
+.. math::
+   :label: eq-0511
+
+   L_{sunwall - sky}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - sky}
+
+.. math::
+   :label: eq-0512
+
+   L_{sunwall - road}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - road}
 
 :math:`L_{sunwall - shdwall}\overset{e}{\uparrow} = L_{sunwall}\overset{e}{\uparrow}\Psi_{wall - wall}`,
 
-:math:`L_{shdwall - sky}\overset{e}{\uparrow} = L_{shdwall}\overset{e}{\uparrow}\Psi_{wall - sky}`,
+.. math::
+   :label: eq-0513
 
-:math:`L_{shdwall - road}\overset{e}{\uparrow} = L_{shdwall}\overset{e}{\uparrow}\Psi_{wall - road}`,
+   L_{shdwall - sky}\overset{e}{\uparrow} = L_{shdwall}\overset{e}{\uparrow}\Psi_{wall - sky}
+
+.. math::
+   :label: eq-0514
+
+   L_{shdwall - road}\overset{e}{\uparrow} = L_{shdwall}\overset{e}{\uparrow}\Psi_{wall - road}
 
 .. math::
    :label: eq-0171
@@ -1333,11 +1423,20 @@ The emitted longwave radiation is distributed to sky, walls, and road according 
 
 The initial absorption (net longwave) (:math:`i = 0`) by each urban surface is
 
-:math:`{\overrightarrow{L}}_{imprvrd,i = 0} = L_{imprvrd}\overset{e}{\uparrow} - \varepsilon_{imprvrd}L_{imprvrd} \downarrow`,
+.. math::
+   :label: eq-0515
 
-:math:`{\overrightarrow{L}}_{prvrd,i = 0} = L_{prvrd}\overset{e}{\uparrow} - \varepsilon_{prvrd}L_{prvrd} \downarrow`,
+   {\overrightarrow{L}}_{imprvrd,i = 0} = L_{imprvrd}\overset{e}{\uparrow} - \varepsilon_{imprvrd}L_{imprvrd} \downarrow
 
-:math:`{\overrightarrow{L}}_{sunwall,i = 0} = L_{sunwall}\overset{e}{\uparrow} - \varepsilon_{wall}L_{sunwall} \downarrow`,
+.. math::
+   :label: eq-0516
+
+   {\overrightarrow{L}}_{prvrd,i = 0} = L_{prvrd}\overset{e}{\uparrow} - \varepsilon_{prvrd}L_{prvrd} \downarrow
+
+.. math::
+   :label: eq-0517
+
+   {\overrightarrow{L}}_{sunwall,i = 0} = L_{sunwall}\overset{e}{\uparrow} - \varepsilon_{wall}L_{sunwall} \downarrow
 
 .. math::
    :label: eq-0172
@@ -1346,11 +1445,20 @@ The initial absorption (net longwave) (:math:`i = 0`) by each urban surface is
 
 The initial emitted plus reflected longwave radiation to the sky is
 
-:math:`L_{imprvrd - sky,i = 0}\overset{}{\uparrow} = L_{imprvrd - sky}\overset{e}{\uparrow} + L_{imprvrd - sky,i = 0}\overset{r}{\uparrow}`,
+.. math::
+   :label: eq-0518
 
-:math:`L_{prvrd - sky,i = 0}\overset{}{\uparrow} = L_{prvrd - sky}\overset{e}{\uparrow} + L_{prvrd - sky,i = 0}\overset{r}{\uparrow}`,
+   L_{imprvrd - sky,i = 0}\overset{}{\uparrow} = L_{imprvrd - sky}\overset{e}{\uparrow} + L_{imprvrd - sky,i = 0}\overset{r}{\uparrow}
 
-:math:`L_{sunwall - sky,i = 0}\overset{}{\uparrow} = L_{sunwall - sky}\overset{e}{\uparrow} + L_{sunwall - sky,i = 0}\overset{r}{\uparrow}`,
+.. math::
+   :label: eq-0519
+
+   L_{prvrd - sky,i = 0}\overset{}{\uparrow} = L_{prvrd - sky}\overset{e}{\uparrow} + L_{prvrd - sky,i = 0}\overset{r}{\uparrow}
+
+.. math::
+   :label: eq-0520
+
+   L_{sunwall - sky,i = 0}\overset{}{\uparrow} = L_{sunwall - sky}\overset{e}{\uparrow} + L_{sunwall - sky,i = 0}\overset{r}{\uparrow}
 
 .. math::
    :label: eq-0173
@@ -1633,7 +1741,10 @@ The net longwave at each iteration is added to the total net longwave for each u
 
 :math:`{\overrightarrow{L}}_{imprvrd,i + 1} = {\overrightarrow{L}}_{imprvrd,i - 1} + {\overrightarrow{L}}_{imprvrd,i}`,
 
-:math:`{\overrightarrow{L}}_{prvrd,i + 1} = {\overrightarrow{L}}_{prvrd,i - 1} + {\overrightarrow{L}}_{prvrd,i}`,
+.. math::
+   :label: eq-0521
+
+   {\overrightarrow{L}}_{prvrd,i + 1} = {\overrightarrow{L}}_{prvrd,i - 1} + {\overrightarrow{L}}_{prvrd,i}
 
 :math:`{\overrightarrow{L}}_{sunwall,i + 1} = {\overrightarrow{L}}_{sunwall,i - 1} + {\overrightarrow{L}}_{sunwall,i}`,
 
@@ -1912,7 +2023,10 @@ The constraint :math:`V_{a} \geq 1` is required simply for numerical reasons to 
 
 where :math:`w_{*}` is the convective velocity scale
 
-:math:`w_{*} = \left( \frac{- gu_{*}\theta_{v*}z_{i}}{\overline{\theta_{v,atm}}} \right)^{\frac{1}{3}}`,
+.. math::
+   :label: eq-0522
+
+   w_{*} = \left( \frac{- gu_{*}\theta_{v*}z_{i}}{\overline{\theta_{v,atm}}} \right)^{\frac{1}{3}}
 
 :math:`z_{i} = 1000` is the convective boundary layer height (m), and :math:`\beta = 1`.
 
@@ -2268,15 +2382,30 @@ The resistances to sensible heat and latent heat transfer between canyon surface
 
 The UCL air temperature and specific humidity are determined by solving the following systems of equations. For :math:`T_{ac}`
 
-:math:`H_{roof} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,roof}}{r_{s,roof}}`,
+.. math::
+   :label: eq-0523
 
-:math:`H_{prvrd} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,prvrd}}{r_{s,prvrd}}`,
+   H_{roof} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,roof}}{r_{s,roof}}
 
-:math:`H_{imprvrd} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,imprvrd}}{r_{s,imprvrd}}`,
+.. math::
+   :label: eq-0524
 
-:math:`H_{sunwall} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,sunwall}}{r_{s,sunwall}}`,
+   H_{prvrd} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,prvrd}}{r_{s,prvrd}}
 
-:math:`H_{shdwall} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,shdwall}}{r_{s,shdwall}}`,
+.. math::
+   :label: eq-0525
+
+   H_{imprvrd} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,imprvrd}}{r_{s,imprvrd}}
+
+.. math::
+   :label: eq-0526
+
+   H_{sunwall} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,sunwall}}{r_{s,sunwall}}
+
+.. math::
+   :label: eq-0527
+
+   H_{shdwall} = - \rho_{atm}C_{p}\frac{T_{ac} - T_{g,shdwall}}{r_{s,shdwall}}
 
 .. math::
    :label: eq-0240
@@ -2285,7 +2414,7 @@ The UCL air temperature and specific humidity are determined by solving the foll
 
 where :math:`H` is sensible heat flux (W m\ :sup:`-2`) and :math:`T_{g}` is the surface temperature of each urban surface. The term :math:`W_{roof}` is the relative contribution of roof fluxes to the total urban landunit flux (:numref:`table-input-data`). The term :math:`1 - W_{roof}` is then the relative contribution of the canyon to the total urban landunit flux. The term :math:`f_{prvrd}` is the fraction of road that is pervious (:numref:`table-input-data`) and the term :math:`1 - f_{prvrd}` is the fraction of the road that is impervious. Note that the factor :math:`\frac{H}{W}` for the sunwall and shadewall converts the flux from watts per meter squared of surface area to watts per meter squared of ground area.
 
-In Oleson et al. (2008a), an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations (3.69)-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (section 4.1).
+In Oleson et al. (2008a), an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations :eq:`eq-0523`-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (section 4.1).
 
 equation :eq:`eq-0240` can be solved for the UCL air temperature as
 
@@ -2305,15 +2434,30 @@ where :math:`c_{a}^{h}` is the sensible heat conductance from the UCL to the atm
 
 Similarly, the system of equations for the UCL air specific humidity, :math:`q_{ac}`, is
 
-:math:`E_{roof} = - \rho_{atm}\frac{f_{wet,roof}\left( q_{ac} - q_{g,roof} \right)}{r_{s,roof}}`,
+.. math::
+   :label: eq-0528
 
-:math:`E_{prvrd} = - \rho_{atm}\frac{q_{ac} - q_{g,prvrd}}{r_{s,prvrd}}`,
+   E_{roof} = - \rho_{atm}\frac{f_{wet,roof}\left( q_{ac} - q_{g,roof} \right)}{r_{s,roof}}
 
-:math:`E_{imprvrd} = - \rho_{atm}\frac{f_{wet,imprvrd}\left( q_{ac} - q_{g,imprvrd} \right)}{r_{s,imprvrd}}`,
+.. math::
+   :label: eq-0529
 
-:math:`E_{sunwall} = 0`,
+   E_{prvrd} = - \rho_{atm}\frac{q_{ac} - q_{g,prvrd}}{r_{s,prvrd}}
 
-:math:`E_{shdwall} = 0`,
+.. math::
+   :label: eq-0530
+
+   E_{imprvrd} = - \rho_{atm}\frac{f_{wet,imprvrd}\left( q_{ac} - q_{g,imprvrd} \right)}{r_{s,imprvrd}}
+
+.. math::
+   :label: eq-0531
+
+   E_{sunwall} = 0
+
+.. math::
+   :label: eq-0532
+
+   E_{shdwall} = 0
 
 
 
@@ -2341,11 +2485,14 @@ In the absence of snow,
 
 where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (Oleson et al. 2004).
 
-In equations (3.76) and (3.78), the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
+In equations :eq:`eq-0528` and :eq:`eq-0530`, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
 
 As noted in section 1.1.3, a simplified bulk parameterization approach is used to represent evaporation from the pervious surface. The pervious road specific humidity, :math:`q_{g,prvrd}`, is evaluated as a function of the wetness of the soil column. This allows all of the soil moisture to potentially be available for evaporation. The specific humidity is
 
-:math:`q_{g,prvrd} = \alpha q_{sat}^{T_{g}}`,
+.. math::
+   :label: eq-0533
+
+   q_{g,prvrd} = \alpha q_{sat}^{T_{g}}
 
 where :math:`q_{sat}^{T_{g}}` is the saturated specific humidity at the surface temperature :math:`T_{g}` (section 4.1). The factor :math:`\alpha` is a weighted combination of values for the soil column and snow
 
@@ -2354,7 +2501,7 @@ where :math:`q_{sat}^{T_{g}}` is the saturated specific humidity at the surface 
 
    \alpha = \alpha_{soi}\left( 1 - f_{sno} \right) + \alpha_{sno}f_{sno}
 
-where :math:`f_{sno}` is the fraction of ground covered by snow (equation (2.3) ), and :math:`\alpha_{sno} = 1.0`. The term :math:`\alpha_{soi}` is a function ranging from one when the soil column is wet to zero when the soil is dry
+where :math:`f_{sno}` is the fraction of ground covered by snow (equation :eq:`eq-0485` ), and :math:`\alpha_{sno} = 1.0`. The term :math:`\alpha_{soi}` is a function ranging from one when the soil column is wet to zero when the soil is dry
 
 .. math::
    :label: eq-0244
@@ -2419,12 +2566,12 @@ The UCL specific humidity is then
 
 where :math:`c_{a}^{w}` is the latent heat conductance from the UCL air to the atmosphere (:math:`\frac{1}{r_{aw}}`), and :math:`c_{roof}`, :math:`c_{prvrd}`, and :math:`c_{imprvrd}` are the weighted heat conductances from urban surfaces to UCL air [:math:`\frac{W_{roof}}{r_{s,roof}}`, :math:`\frac{W_{prvrd}}{r_{s,prvrd}}`, :math:`\frac{W_{imprvrd}}{r_{s,imprvrd}}`, respectively, where :math:`W_{prvrd} = \left( 1 - W_{roof} \right)f_{prvrd}`, :math:`W_{imprvrd} = \left( 1 - W_{roof} \right)\left( 1 - f_{prvrd} \right)`].
 
-The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations :eq:`eq-0213`-:eq:`eq-0220` and :eq:`eq-0197`. The wind speed including the convective velocity is reevaluated using equations :eq:`eq-0204` and :eq:`eq-0041`-(3.30). The Monin-Obukhov length is updated from equation :eq:`eq-0224`. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations :eq:`eq-0208`-:eq:`eq-0211`).
+The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations :eq:`eq-0213`-:eq:`eq-0220` and :eq:`eq-0197`. The wind speed including the convective velocity is reevaluated using equations :eq:`eq-0204` and :eq:`eq-0041`-:eq:`eq-0522`. The Monin-Obukhov length is updated from equation :eq:`eq-0224`. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations :eq:`eq-0208`-:eq:`eq-0211`).
 
 Final Fluxes and Adjustments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The sensible and latent heat fluxes and momentum flux from urban surfaces are then calculated from equations (3.69)-(3.73), (3.76)-(3.80), and :eq:`eq-0185`-:eq:`eq-0186` using the updated UCL air temperature and specific humidity. The water vapor flux from the pervious road, :math:`E_{prvrd}`, is assigned to ground evaporation, :math:`E_{g,prvrd}`, or a evapotranspiration term, :math:`E_{prvrd}^{et}`, as follows
+The sensible and latent heat fluxes and momentum flux from urban surfaces are then calculated from equations :eq:`eq-0523`-:eq:`eq-0527`, :eq:`eq-0528`-:eq:`eq-0532`, and :eq:`eq-0185`-:eq:`eq-0186` using the updated UCL air temperature and specific humidity. The water vapor flux from the pervious road, :math:`E_{prvrd}`, is assigned to ground evaporation, :math:`E_{g,prvrd}`, or a evapotranspiration term, :math:`E_{prvrd}^{et}`, as follows
 
 
 
@@ -2462,13 +2609,25 @@ The partial derivatives of the urban surface fluxes with respect to surface temp
 
 :math:`\frac{\partial H_{shdwall}}{\partial T_{g,shdwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} \right)\frac{c_{shdwall}}{W_{shdwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}`,
 
-:math:`\frac{\partial E_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{f_{wet,roof}c_{roof}}{W_{roof}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,roof}}{dT_{g,roof}}`,
+.. math::
+   :label: eq-0534
 
-:math:`\frac{\partial E_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,prvrd}}{dT_{g,prvrd}}`,
+   \frac{\partial E_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{f_{wet,roof}c_{roof}}{W_{roof}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,roof}}{dT_{g,roof}}
 
-:math:`\frac{\partial E_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,\mspace{6mu} roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} \right)\frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,imprvrd}}{dT_{g,imprvrd}}`,
+.. math::
+   :label: eq-0535
 
-:math:`\frac{\partial E_{sunwall}}{\partial T_{g,sunwall}} = 0`,
+   \frac{\partial E_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,prvrd}}{dT_{g,prvrd}}
+
+.. math::
+   :label: eq-0536
+
+   \frac{\partial E_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,\mspace{6mu} roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} \right)\frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,imprvrd}}{dT_{g,imprvrd}}
+
+.. math::
+   :label: eq-0537
+
+   \frac{\partial E_{sunwall}}{\partial T_{g,sunwall}} = 0
 
 .. math::
    :label: eq-0255
@@ -2486,7 +2645,10 @@ where :math:`q_{sat}^{T_{ac}}` is the saturated specific humidity at UCL air tem
 
 The sensible heat and water vapor fluxes are based on the urban surface temperature from the previous time step, :math:`T_{g}^{n}`, and are used as the surface forcing for the solution of the soil temperature equations (section 4). This solution yields a new surface temperature :math:`T_{g}^{n + 1}`. The sensible heat and water vapor fluxes are updated to :math:`H_{g}^{'}` and :math:`E_{g}^{'}`\ for the new temperature as
 
-:math:`H_{g}^{'} = H_{g} + \left( T_{g}^{n + 1} - T_{g}^{n} \right)\frac{\partial H_{g}}{\partial T_{g}}`,
+.. math::
+   :label: eq-0538
+
+   H_{g}^{'} = H_{g} + \left( T_{g}^{n + 1} - T_{g}^{n} \right)\frac{\partial H_{g}}{\partial T_{g}}
 
 .. math::
    :label: eq-0257
@@ -2495,7 +2657,10 @@ The sensible heat and water vapor fluxes are based on the urban surface temperat
 
 where :math:`H_{g}` and :math:`E_{g}` are the sensible heat and water vapor fluxes derived above, and :math:`g` denotes each of the five urban surfaces. One further adjustment is made to the fluxes for the roof, pervious and impervious road. If the surface moisture (i.e., the ponded water in the case of the roof and impervious road, and top layer moisture for the pervious road) is not sufficient to supported the updated evaporation, i.e., if :math:`E_{g}^{'} > 0` and :math:`f_{evap} < 1` where
 
-:math:`f_{evap} = \frac{\frac{\left( w_{ice,\mspace{6mu} snl + 1} + w_{liq,snl + 1} \right)}{\Delta t}}{E_{g}^{'}} \leq 1`,
+.. math::
+   :label: eq-0539
+
+   f_{evap} = \frac{\frac{\left( w_{ice,\mspace{6mu} snl + 1} + w_{liq,snl + 1} \right)}{\Delta t}}{E_{g}^{'}} \leq 1
 
 an adjustment is made to reduce the ground evaporation accordingly as
 
@@ -3442,7 +3607,10 @@ where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lam
 
 where the thermal conductivity of soil solids :math:`\lambda_{s,i}` varies with the sand and clay content
 
-:math:`\lambda_{s,i} = \frac{8.80\ (\% sand)_{i} + \text{2.92 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}}`,
+.. math::
+   :label: eq-0540
+
+   \lambda_{s,i} = \frac{8.80\ (\% sand)_{i} + \text{2.92 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}}
 
 and :math:`\theta_{sat,i}` is the volumetric water content at saturation (porosity) (section 5.3.1). The thermal conductivity of dry natural soil :math:`\lambda_{dry,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the bulk density :math:`\rho_{d,i} = 2700\left( 1 - \theta_{sat,i} \right)` (kg m\ :sup:`-3`) as
 
@@ -3710,7 +3878,10 @@ where the volumetric liquid water :math:`\theta_{liq,i}` and ice :math:`\theta_{
 
    \theta_{ice,i} = \frac{w_{ice,i}}{\Delta z_{i}\rho_{ice}} \leq 1
 
-:math:`\theta_{liq,i} = \frac{w_{liq,i}}{\Delta z_{i}\rho_{liq}} \leq 1 - \theta_{ice,i}`,
+.. math::
+   :label: eq-0541
+
+   \theta_{liq,i} = \frac{w_{liq,i}}{\Delta z_{i}\rho_{liq}} \leq 1 - \theta_{ice,i}
 
 and :math:`S_{r} = 0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (Anderson 1976)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,i}` calculated in Equations :eq:`eq-0352`-:eq:`eq-0355` , unless the underlying layer is the surface layer, as
 
@@ -3903,7 +4074,10 @@ If the snow depth :math:`0 < z_{sno} < 0.01` m, the number of snow layers is set
 
 When two snow layers are combined (denoted here as :math:`1` and :math:`2`), their thickness combination (:math:`c`) is
 
-:math:`\Delta z_{c} = \Delta z_{1} + \Delta z_{2}`,
+.. math::
+   :label: eq-0542
+
+   \Delta z_{c} = \Delta z_{1} + \Delta z_{2}
 
 their mass combination is
 
@@ -3912,7 +4086,10 @@ their mass combination is
 
    w_{liq,c} = w_{liq,1} + w_{liq,2}
 
-:math:`w_{ice,c} = w_{ice,1} + w_{ice,2}`,
+.. math::
+   :label: eq-0543
+
+   w_{ice,c} = w_{ice,1} + w_{ice,2}
 
 and their temperatures are combined as
 
@@ -3991,9 +4168,12 @@ The maximum snow layer thickness, :math:`\Delta z_{\max}`, depends on the number
 Subdivision
 ^^^^^^^^^^^
 
-The snow layers are subdivided when the layer thickness exceeds a prescribed maximum thickness :math:`\Delta z_{\max}` with lower and upper bounds that depend on the number of snow layers (:numref:`table-snow-layer-thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`table-snow-layer-thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\mspace{6mu} i}` and :math:`w_{ice,\mspace{6mu} i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations (5.38)-:eq:`eq-0370`. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}`) and the splitting layer (:math:`T_{2}`) and constraining the new temperatures (:math:`T_{2}^{n + 1}`, :math:`T_{3}^{n + 1}`) to lie along this slope. The temperature of the lower layer is first evaluated from
+The snow layers are subdivided when the layer thickness exceeds a prescribed maximum thickness :math:`\Delta z_{\max}` with lower and upper bounds that depend on the number of snow layers (:numref:`table-snow-layer-thickness`). For example, if there is only one layer, then the maximum thickness of that layer is 0.03 m, however, if there is more than one layer, then the maximum thickness of the top layer is 0.02 m. Layers are checked sequentially from top to bottom for this limit. If there is only one snow layer and its thickness is greater than 0.03 m (:numref:`table-snow-layer-thickness`), the layer is subdivided into two layers of equal thickness, liquid water and ice contents, and temperature. If there is an existing layer below the layer to be subdivided, the thickness :math:`\Delta z_{i}`, liquid water and ice contents, :math:`w_{liq,\mspace{6mu} i}` and :math:`w_{ice,\mspace{6mu} i}`, and temperature :math:`T_{i}` of the excess snow are combined with the underlying layer according to equations :eq:`eq-0542`-:eq:`eq-0370`. If there is no underlying layer after adjusting the layer for the excess snow, the layer is subdivided into two layers of equal thickness, liquid water and ice contents. The vertical snow temperature profile is maintained by calculating the slope between the layer above the splitting layer (:math:`T_{1}`) and the splitting layer (:math:`T_{2}`) and constraining the new temperatures (:math:`T_{2}^{n + 1}`, :math:`T_{3}^{n + 1}`) to lie along this slope. The temperature of the lower layer is first evaluated from
 
-:math:`T_{3}^{'} = T_{2}^{n} - \left( \frac{T_{1}^{n} - T_{2}^{n}}{\frac{\left( \Delta z_{1}^{n} + \Delta z_{2}^{n} \right)}{2}} \right)\left( \frac{\Delta z_{2}^{n + 1}}{2} \right)`,
+.. math::
+   :label: eq-0544
+
+   T_{3}^{'} = T_{2}^{n} - \left( \frac{T_{1}^{n} - T_{2}^{n}}{\frac{\left( \Delta z_{1}^{n} + \Delta z_{2}^{n} \right)}{2}} \right)\left( \frac{\Delta z_{2}^{n + 1}}{2} \right)
 
 then adjusted as,
 
@@ -4629,7 +4809,10 @@ The :math:`i = N_{levsoi} + 1` terms are evaluated using
 
 where
 
-:math:`s_{N_{levsoi} + 1} = 0.5\left( \frac{\theta_{sat,N_{levsoi}} + \theta_{N_{levsoi}}}{\theta_{sat,N_{levsoi}}} \right) 0.01 \leq s_{N_{levsoi} + 1} \leq 1`,
+.. math::
+   :label: eq-0545
+
+   s_{N_{levsoi} + 1} = 0.5\left( \frac{\theta_{sat,N_{levsoi}} + \theta_{N_{levsoi}}}{\theta_{sat,N_{levsoi}}} \right) 0.01 \leq s_{N_{levsoi} + 1} \leq 1
 
 :math:`\psi_{E,N_{levsoi} + 1}` is evaluated from equations :eq:`eq-0424` and :eq:`eq-0426`, and
 
@@ -4894,7 +5077,10 @@ where
 
 and :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`table-physical-constants`). The fraction of precipitation :math:`P` (mm s\ :sup:`-1`) falling as rain and/or snow is
 
-:math:`q_{rain} = P\left( f_{P} \right)`,
+.. math::
+   :label: eq-0546
+
+   q_{rain} = P\left( f_{P} \right)
 
 .. math::
    :label: eq-0481
