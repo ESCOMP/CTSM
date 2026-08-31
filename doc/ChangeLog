@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.054
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
-Date: Mon Aug 31 12:59:39 AM MDT 2026
+Date: Mon Aug 31 05:35:20 AM MDT 2026
 One-line Summary: Update submodules to the latest needed for cesm3_0_alpha10a
 
 Purpose and description of changes
@@ -75,10 +75,6 @@ Changes to tests or testing:
 Testing summary:   extended
 ----------------
  [PASS means all tests PASS; OK means tests PASS other than expected fails.]
-
-  build-namelist tests (if CLMBuildNamelist.pm has changed):
-
-    derecho - OK
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
