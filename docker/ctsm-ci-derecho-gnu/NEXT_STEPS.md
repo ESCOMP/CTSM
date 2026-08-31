@@ -1,12 +1,13 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
 _Last updated: 2026-08-31. The image builds and validates end-to-end on
-Casper, including pFUnit and CTSM's Fortran unit tests (55/55), and is
-**published and public** at
-`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830`. `cirrus-testing.yml` is
-pointed at it. Wrappers for **running** cases and tests on Casper are written
-but **not yet executed** -- that is the immediate next step. Then a unit-test
-CI job, wiring runs into CI, and the Phase 2 drift cron._
+Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point
+**runs** with both mpi-serial and mpich -- and is **published and public** at
+`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831`, which `cirrus-testing.yml`
+pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
+NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
+have now been exercised on Casper. What is left: a unit-test CI job, wiring
+runs into CI, the version-check question below, and the Phase 2 drift cron._
 
 ## Where things stand
 
@@ -145,7 +146,8 @@ PASS SMS_D_P1_Ld1.1x1_brazil.IHistClm60Bgc.container_gnu RUN   (161.6 s)
   and no top-level side effects.
 - `run-case-in-container.sh` -- thin wrapper over `create_newcase`, then
   `case.setup` -> `preview_namelists` -> `check_input_data` -> `case.build` ->
-  `case.submit`. **Not yet exercised on Casper** (the test wrapper was).
+  `case.submit`. Verified on Casper: exit 0, having written
+  `*.clm2.r.1850-01-06-00000.nc` to the archive mount.
 - `run-test-in-container.sh` -- thin wrapper over `create_test` (no
   `--no-run`). Verified PASS.
 
@@ -238,26 +240,46 @@ Gotchas worth not rediscovering:
 `Dockerfile.serial-netcdf` was the throwaway probe used to prove all this. It
 has been folded into `Dockerfile` and deleted, exactly as `Dockerfile.pfunit`
 was before it. Rebuilt and re-validated from scratch on 2026-08-31; saved to
-`/glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar`.
+`/glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar`, **published** as
+`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831`, and pinned in
+`cirrus-testing.yml`.
+
+One publishing gotcha, since it presents as something else entirely: if
+`podman load` is OOM-killed, it exits **137** having printed nothing, and the
+next `podman tag` fails with the misleading `image not known`. `vfs` storage
+duplicates every layer, so a 3.9 GB archive peaks around 54 GB -- load it from
+an allocation with real memory, e.g.
+`execcasper -A <PROJECT> -l select=1:ncpus=4:mem=96GB -l walltime=02:00:00`.
 
 ## Remaining steps
 
-1. **Republish.** The image now contains the serial stack, so it must be
-   rebuilt from scratch, re-validated, pushed to GHCR, and the dated tag bumped
-   in `cirrus-testing.yml`. Publishing needs a GHCR token; see "Publishing to
-   GHCR".
-2. **Exercise `run-case-in-container.sh`** -- only the test wrapper has been
-   run on Casper so far.
-3. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
+1. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
    the `$HOME/.cime` copy step (GHA overrides `HOME`); see README "Running
    CTSM's unit tests".
-4. **Wire runs into CI.** `simple-build-create_test` currently runs on
+2. **Wire runs into CI.** `simple-build-create_test` currently runs on
    `ubuntu-latest`, which has no `/glade` at all, so a run job has to move to
    `runs-on: gha-runner-ctsm` and bind-mount inputdata into the container job.
    Whether container jobs on that runner see `/glade` is **unknown** -- the
    existing `list-glade-cesm-input` job proves only that the *host* does. Worth
    a probe workflow in the style of `probe-derecho-modules.yml`.
-5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
+3. **Decide whether `MPI_SERIAL_VERSION` and `PIO_VERSION` belong in
+   `check-derecho-versions.py`.** Both are new `Dockerfile` ARGs that nothing
+   checks, so they can drift from derecho silently -- they are the only ARGs in
+   that position. Neither is a plain `direct` check:
+   - derecho's mpi-serial is **2.3.0**; the container deliberately uses
+     **2.5.4**, the version CTSM's own `libraries/mpi-serial` submodule pins.
+     That is the `deviation` shape (assert derecho still says 2.3.0, recorded
+     under `[deviation_guard]`, without comparing the ARG) -- the same shape as
+     `cray-mpich` -> MPICH.
+   - `PIO_VERSION` 2.6.2 *does* match derecho, but its parallelio module lives
+     in the mpi-serial hierarchy and is absent from `config_machines.xml`, so
+     it would have to be a `snapshot` entry.
+
+   The prior question is a design call, not a mechanical addition, which is why
+   this was left undone: for the serial stack, do we **track derecho** or
+   **track CTSM's submodules**? They disagree today, and the answer decides
+   which mode each ARG gets.
+4. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
 
