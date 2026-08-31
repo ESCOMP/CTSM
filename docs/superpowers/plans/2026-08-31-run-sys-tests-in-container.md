@@ -10,6 +10,18 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-31-run-sys-tests-in-container-design.md`
 
+> **Corrections applied after the final review.** Two things this document
+> names were changed during implementation and are NOT accurate below:
+>
+> - The `MACHINE_DEFAULTS` key is **`ctsm-ci-container`**, not `container`.
+>   `ccs_config/machines/container/config_machines.xml` already defines an
+>   unrelated generic CIME machine with `MACH="container"`. The testid prefix
+>   is therefore `ct`, not `co`.
+> - `--wait` waits for **every** launched `create_test`, not just the last
+>   one, and exits nonzero if any of them failed. Waiting only for the last
+>   would let a container tear down its PID namespace and kill the tests still
+>   running -- the exact failure `--wait` exists to prevent.
+
 ## Global Constraints
 
 - **Python environment: `ctsm_pylib`.** All python unit tests run there. Do NOT create, modify, or survey any other environment; if `ctsm_pylib` is unavailable, stop and ask.
