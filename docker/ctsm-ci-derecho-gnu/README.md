@@ -187,9 +187,7 @@ effects.
 
 ### Running run_sys_tests
 
-A third wrapper -- third of the three that run cases and tests (this section's
-two above plus this one); fourth overall in this directory, after
-`run-unit-tests-in-container.sh` -- drives `./run_sys_tests` rather than
+The third of those wrappers drives `./run_sys_tests` rather than
 `create_test` directly:
 
 ```bash
