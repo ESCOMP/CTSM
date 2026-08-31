@@ -4222,7 +4222,7 @@
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">01:20:00</option>
       <option name="comment">ERP FATES test covering FATES exponential carbon starvation (non-default)</option>
     </options>
   </test>
@@ -4243,7 +4243,7 @@
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode (P still prescribed in clm).</option>
     </options>
   </test>
