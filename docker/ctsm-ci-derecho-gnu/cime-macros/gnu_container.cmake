@@ -106,6 +106,33 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # find_package(ESMF) at line 24 -- so setting it here wins over the image's
 # baked-in ENV ESMFMKFILE. Non-serial builds fall through and keep that
 # default, so create_test is unaffected.
+# EVERYTHING in an mpi-serial executable must speak ONE MPI.
+#
+# CTSM's mpi-serial build statically links mpi-serial, which defines every
+# MPI_* symbol the executable needs (measured: `nm -D --undefined-only
+# cesm.exe` reports ZERO undefined MPI_* symbols). A real-MPI ESMF cannot be
+# mixed in: libesmf.so carries its own DT_NEEDED on libmpi.so.12, so ESMF's
+# MPI calls bind to MPICH while CTSM's bind to mpi-serial. Only mpi-serial is
+# then initialized, and the run dies immediately with a 59-byte cesm.log:
+#     Attempting to use an MPI routine before initializing MPICH
+# Nor can it be fixed by exporting the executable's symbols: ESMF is compiled
+# against MPICH headers, so handing it mpi-serial's implementation would mean
+# MPICH's MPI_COMM_WORLD constant reaching mpi-serial's functions.
+#
+# So: the mpiuni ESMF, for unit tests AND cases. It needs PIO built in for the
+# CDEPS mesh reads (see the Dockerfile); ESMF disables PIO for mpiuni unless
+# ESMF_PIO is set in the environment at build time.
+#
+# The serial netCDF matters for the same one-MPI reason: the image's default
+# netCDF is built --enable-parallel against MPICH (`ldd libnetcdf.so` shows
+# libmpi.so.12), so linking it would put a second, uninitialized MPI in the
+# executable. derecho splits exactly this way, loading serial netcdf/4.9.2 for
+# mpilib="mpi-serial". cime/CIME/Tools/Makefile turns NETCDF_PATH into
+# INC_NETCDF/LIB_NETCDF and already drops PNETCDF_PATH for mpi-serial.
+#
+# /usr/local/serial is static, so the loader cannot silently pick the parallel
+# .so that /etc/ld.so.conf.d/ctsm.conf puts on the default path.
 if (MPILIB STREQUAL "mpi-serial")
   set(ESMFMKFILE "/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk")
+  set(NETCDF_PATH "/usr/local/serial")
 endif()
