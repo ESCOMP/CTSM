@@ -40,9 +40,9 @@ This will be somewhat easier if your CTSM checkout is in (or symlinked to) your 
 
 The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then open the `index.html` file (or use the right click view with Firefox option). (If your checkout isn't in your home directory, you'll need to click on `Devices > /` in the sidebar of the window that opens, then navigate all the way to your checkout.) That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
 
->[!NOTE]
->
-> You need to do this in a live VNC Desktop session. There's also an option to go through a directory browser in the session-id, but that option is not able to view files through Firefox, it only displays the raw HTML format.
+```{hint}
+You need to do this in a live VNC Desktop session. There's also an option to go through a directory browser in the session-id, but that option is not able to view files through Firefox, it only displays the raw HTML format. Also note that if you wait too long to go into the "Launch Casper Login VNC Desktop" button -- it goes away and the session completes.
+```
 
 If you rebuild the documentation but don't see your changes updated in the webpage, and the reload button doesn't work, you may need to navigate to a different page and then come back.
 
