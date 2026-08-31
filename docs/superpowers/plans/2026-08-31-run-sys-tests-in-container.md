@@ -35,7 +35,7 @@ Adds the `MACHINE_DEFAULTS` entry whose absence makes `create_machine` log "mach
 - Consumes: nothing from earlier tasks.
 - Produces: `MACHINE_DEFAULTS["container"]`, a `MachineDefaults` namedtuple with `job_launcher_type=JOB_LAUNCHER_NOBATCH`, `scratch_dir="/scratch"`, `baseline_dir="/scratch/baselines"`, `account_required=False`, `create_test_retry=0`, `create_test_queue=CREATE_TEST_QUEUE_UNSPECIFIED`, `job_launcher_defaults={}`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `python/ctsm/test/test_unit_machine.py`, add `mock` to the imports at the top of the file (it is not currently imported):
 
@@ -67,7 +67,7 @@ Then add this method to `class TestCreateMachine`, after `test_unknownMachine_de
         self.assertNoBatchInfo(machine)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 ```bash
@@ -75,7 +75,7 @@ cd python && python -m unittest ctsm.test.test_unit_machine.TestCreateMachine.te
 ```
 Expected: FAIL with `AssertionError: None != '/scratch'`. (`defaults.get("container")` returns `None`, so `create_machine` takes its unknown-machine branch rather than raising.)
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `python/ctsm/machine_defaults.py`, extend the import at the top — it currently imports only `JOB_LAUNCHER_QSUB`:
 
@@ -104,14 +104,14 @@ Then add this entry to the `MACHINE_DEFAULTS` dict, after the `"cheyenne"` entry
     ),
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 ```bash
 cd python && python -m unittest ctsm.test.test_unit_machine -v
 ```
 Expected: all PASS, including the eight pre-existing tests.
 
-- [ ] **Step 5: Format and commit**
+- [x] **Step 5: Format and commit**
 
 ```bash
 cd python && black --config pyproject.toml ctsm && cd ..
