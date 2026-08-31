@@ -113,6 +113,26 @@ def process_and_check_args(args):
 
     return args
 
+def get_machine_compiler_category_from_machine_line( attrs ):
+    """ Get the machine, compiler and category from a machine line
+    Args:
+        attrs (str): Attribute string extracted from an existing `<machine/>` tag
+            (e.g. ' name="derecho" compiler="intel" category="aux_clm"').
+
+    Returns:
+        a tuple of name, compiler, category as strings
+    """
+    # attrs is string like ' name="derecho" compiler="intel" category="aux_clm"'
+    name = re.search(r'name\s*=\s*"([^"]+)"', attrs)
+    comp = re.search(r'compiler\s*=\s*"([^"]+)"', attrs)
+    cat = re.search(r'category\s*=\s*"([^"]+)"', attrs)
+    if not name or not comp or not cat:
+        logger.error(
+            "Could not find name, compiler and/or category attributes in machine line: %s",
+            attrs,
+        )
+        abort("This machine block doesn't have a name, compiler or category attributes for it")
+    return( name.group(1), comp.group(1), cat.group(1) )
 
 def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_release"):
     """Create a `<machine/>` XML line using attributes for super_testlist from an existing machine.
@@ -127,35 +147,24 @@ def make_new_machine_line_for_supertestlist(attrs, indent, super_testlist="ctsm_
         str or None: The formatted `<machine .../>` line (without a trailing
         newline) or `None` if required attributes are missing.
     """
-    # attrs is string like ' name="derecho" compiler="intel" category="aux_clm"'
-    name = re.search(r'name\s*=\s*"([^"]+)"', attrs)
-    comp = re.search(r'compiler\s*=\s*"([^"]+)"', attrs)
-    if not name or not comp:
-        logger.error(
-            "Could not find name and/or compiler attributes in machine line, "
-            "so cannot add a %s entry for it: %s",
-            super_testlist,
-            attrs,
-        )
-        abort("This block doesn't have a machine line for it")
-    attrs_str = f'name="{name.group(1)}" compiler="{comp.group(1)}" category="{super_testlist}"'
+    (name, comp, cat) = get_machine_compiler_category_from_machine_line( attrs )
+    attrs_str = f'name="{name}" compiler="{comp}" category="{super_testlist}"'
     return f"{indent}<machine {attrs_str}/>"
 
-
-def process_machine_block(
+def process_machines_block(
     block, testlist=None, not_in_testlist=None, super_testlist="ctsm_release"
 ):
-    """Ensure a machine block contains an entry for the given super testlist.
+    """Ensure a machines block contains an entry for the given super testlist.
 
     The function inspects the inner contents of a `<machines>...</machines>`
     block and, if an entry for `super_testlist` is missing, creates and
-    inserts a new `<machine/>` line using the first machine entry's attributes
+    inserts a new `<machine/>` line using the machine entry's attributes
     and indentation. The closing indentation before `</machines>` is preserved.
 
     When testlist is entered, check that the block has the testlist, before adding
        the super_testlist machine for it to the block
     When testlist is None, ignore it and add the super_testlist machine line for it
-       to every block.
+       to every block and machine/compiler combination.
 
     Args:
         block (str): The inner content between `<machines>` and `</machines>`.
@@ -164,57 +173,86 @@ def process_machine_block(
         super_testlist (str): The testlist (i.e. category) to ensure is present.
 
     Returns:
-        str: The modified block with the added `<machine/>` entry when needed.
+        str: The modified block with the added `<machine/>` entries when needed.
     """
     # block is the inner content between <machines> and </machines>
-
-    # If the super_testlist is already in the block return the original block
-    if super_testlist in block:
-        return block
-
-    # Check if the input testlist is in the block and if not return
-    if testlist is not None and testlist not in block:
-        return block
-
-    if not_in_testlist is not None and not_in_testlist in block:
-        return block
-
-    # find first machine line
-    match = re.search(r"(\n\s*)(<machine\s+([^/>]+)/>)", block)
-    if not match:
+    # find the matches for each machine line in the block
+    MACHINE_LINE_MATCH = r"(\n\s*)(<machine\s+([^/>]+)/>)"
+    machine_lines = re.findall(MACHINE_LINE_MATCH, block)
+    if not machine_lines:
         # cannot find machine, die with an error as this is a problem
         logger.error(
             "No <machine/> line found in block, so cannot add a %s entry to it", super_testlist
         )
         logger.error(block)
         abort("block doesn't have a machine line for it, so aborting")
-    indent = match.group(1)
-    # strip the leading newline so indent contains only spaces
-    if indent.startswith("\n"):
-        indent = indent[1:]
-    attrs = match.group(3)
-    new_line = make_new_machine_line_for_supertestlist(attrs, indent, super_testlist=super_testlist)
-    if not new_line:
-        return block
 
-    # Log about this block needing to be modified
-    logger.warning("Found a block that needs to be modified and %s added to it", super_testlist)
-    logger.warning(block)
+    # Ensure no duplicates
+    if len(machine_lines) != len(set(machine_lines)):
+        logger.error(
+            "There are duplicated tests in a machines block"
+        )
+        logger.error(block)
+        abort("block has duplicated tests, so aborting")
+    #
+    # Iterate over the machine lines to figure out, for each machine/compiler
+    # combination, the full set of categories (testlists) it's already in.
+    # Also remember one representative (indent, attrs) line per machine/compiler
+    # to use as a template if we need to add a new entry for it.
+    #
+    mach_comp_cat = {}
+    representative_line = {}
+    for this_machine_line in machine_lines:
+        indent = str(this_machine_line[0])
+        attrs = str(this_machine_line[1])
+        (name, comp, cat) = get_machine_compiler_category_from_machine_line( attrs )
+        mach_comp_cat.setdefault(name, {}).setdefault(comp, set()).add(cat)
+        representative_line.setdefault((name, comp), (indent, attrs))
+    #
+    # Iterate over each unique machine/compiler combination to process the block
+    #
+    for (name, comp), (indent, attrs) in representative_line.items():
+        categories = mach_comp_cat[name][comp]
 
-    # Preserve the existing XML formatting: add the new machine entry as a
-    # separate line with the same indentation as the surrounding entries,
-    # and preserve the original indentation that preceded the closing
-    # </machines> tag so the closing tag lines up as before.
-    closing_indent_m = re.search(r"(\n[ \t]*)\Z", block)
-    closing_indent = closing_indent_m.group(1) if closing_indent_m else "\n"
-    block = block.rstrip()
-    return f"{block}\n{new_line}{closing_indent}"
+        # If the super_testlist is already in the block for this machine/compiler, skip it
+        if super_testlist in categories:
+            continue
+
+        # Check if the input testlist is in the block for this machine/compiler and if not skip it
+        if testlist is not None and testlist not in categories:
+            continue
+
+        if not_in_testlist is not None and not_in_testlist in categories:
+            continue
+
+        # strip the leading newline so indent contains only spaces
+        if indent.startswith("\n"):
+            indent = indent[1:]
+        new_line = make_new_machine_line_for_supertestlist(attrs, indent, super_testlist=super_testlist)
+        if not new_line:
+            return block
+
+        # Log about this block needing to be modified
+        logger.warning("Found a block that needs to be modified and %s added to it for %s_%s",
+                        super_testlist, name, comp)
+        logger.warning(block)
+
+        # Preserve the existing XML formatting: add the new machine entry as a
+        # separate line with the same indentation as the surrounding entries,
+        # and preserve the original indentation that preceded the closing
+        # </machines> tag so the closing tag lines up as before.
+        closing_indent_m = re.search(r"(\n[ \t]*)\Z", block)
+        closing_indent = closing_indent_m.group(1) if closing_indent_m else "\n"
+        block = block.rstrip()
+        block = f"{block}\n{new_line}{closing_indent}"
+    
+    return block
 
 
 def add_super_testlist(text, super_testlist, testlists=(None,), not_in_testlist=None):
     """Add missing super_testlist machine entries to every `<machines>` block in text.
 
-    Runs process_machine_block over every `<machines>` block in text once per entry in
+    Runs process_machines_block over every `<machines>` block in text once per entry in
     testlists, accumulating the changes from each pass.
 
     Args:
@@ -232,7 +270,7 @@ def add_super_testlist(text, super_testlist, testlists=(None,), not_in_testlist=
     for testlist in testlists:
         text = MACHINES_PATTERN.sub(
             lambda mo, testlist=testlist: "<machines>"
-            + process_machine_block(
+            + process_machines_block(
                 mo.group(1),
                 testlist=testlist,
                 not_in_testlist=not_in_testlist,

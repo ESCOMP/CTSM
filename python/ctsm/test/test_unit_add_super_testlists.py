@@ -111,13 +111,13 @@ class TestMakeNewMachineLineForSupertestlist(unittest.TestCase):
     def test_make_new_machine_line_missing_name(self):
         """Tests that missing a name attribute aborts"""
         attrs = ' compiler="intel" category="aux_clm"'
-        with self.assertRaisesRegex(SystemExit, "doesn't have a machine line"):
+        with self.assertRaisesRegex(SystemExit, "doesn't have a name, compiler or category"):
             make_new_machine_line_for_supertestlist(attrs, "  ")
 
     def test_make_new_machine_line_missing_compiler(self):
         """Tests that missing a compiler attribute aborts"""
         attrs = ' name="derecho" category="aux_clm"'
-        with self.assertRaisesRegex(SystemExit, "doesn't have a machine line"):
+        with self.assertRaisesRegex(SystemExit, "doesn't have a name, compiler or category"):
             make_new_machine_line_for_supertestlist(attrs, "  ")
 
 
