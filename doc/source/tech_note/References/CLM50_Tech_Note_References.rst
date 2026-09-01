@@ -1907,3 +1907,403 @@ Zhuang, Q., et al. 2004. Methane fluxes between terrestrial ecosystems and the a
 
 Zilitinkevich, S.S. 1970. Dynamics of the Atmospheric Boundary Layer. Leningrad Gidrometeor.
 
+
+.. _arnfield2003:
+
+Arnfield, A.J. 2003. Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat island. Int. J. Climatol. 23:1-26.
+
+.. _atkinson2003:
+
+Atkinson, B.W. 2003. Numerical modeling of urban heat-island intensity. Bound.-Layer Meteor. 109:285-310.
+
+.. _auchetal2004:
+
+Auch, R., Taylor, J., and Acevedo, W. 2004. Urban growth in American cities: Glimpses of U.S. urbanization. Circular 1252, U.S. Geological Survey, U.S. Department of the Interior, 52 pp.
+
+.. _avissar1996:
+
+Avissar, R. 1996. Potential effects of vegetation on the urban thermal environment. Atmos. Environ. 30:437-448.
+
+.. _best2005:
+
+Best, M.J. 2005. Representing urban areas within operational numerical weather prediction models. Bound.-Layer Meteor. 114:91-109.
+
+.. _best2006:
+
+Best, M.J. 2006. Progress towards better weather forecasts for city dwellers: from short range to climate change. Theor. Appl. Climatol. 84:47-55. DOI:10.1007/s00704-005-0143-2.
+
+.. _betts2001:
+
+Betts, R.A. 2001. Biogeophysical impacts of land use on present-day climate: near-surface temperature change and radiative forcing. Atmos. Sci. Lett. 2:39-51. DOI:10.1006/asle.2001.0023.
+
+.. _bevenandkirkby1979:
+
+Beven, K.J., and Kirkby, M.J. 1979. A physically based variable contributing area model of basin hydrology. Hydrol. Sci. Bull. 24: 43-69.
+
+.. _bonan1996:
+
+Bonan, G.B. 1996. A land surface model (LSM version 1.0) for ecological, hydrological, and atmospheric studies: technical description and user's guide. NCAR Technical Note NCAR/TN-417+STR, National Center for Atmospheric Research, Boulder, CO, 150 pp.
+
+.. _bonan2002:
+
+Bonan, G.B. 2002. Ecological climatology: concepts and applications. Cambridge University Press, 678 pp.
+
+.. _bounouaetal2002:
+
+Bounoua, L., DeFries, R., Collatz, G.J., Sellers, P., and Khan, H. 2002. Effects of land cover conversion on surface climate. Clim. Change 52:29-64.
+
+.. _brovkinetal2004:
+
+Brovkin, V., Sitch, S., von Bloh, W., Claussen, M., Bauer, E., and Cramer, W. 2004. Role of land cover changes for atmospheric CO\ :sub:`2` increase and climate change during the last 150 years. Global Change Biol. 10:1253-1266. DOI:10.1111/j.1365-2486.2004.00812.x.
+
+.. _brown2000:
+
+Brown, M. 2000. Urban parameterizations for mesoscale meteorological models. pp. 193-255. In: Z. Boybeyi (editor) Mesoscale Atmospheric Dispersion. WIT Press, Southampton, Boston.
+
+.. _changnon1992:
+
+Changnon, S.A. 1992. Inadvertent weather modification in urban areas: Lessons for global climate change. Bull. Amer. Meteor. Soc. 73:619-627.
+
+.. _chyleketal1987:
+
+Chylek, P., Srivastava, V., Cahenzli, L., Pinnick, R.G., Dod, R.L., Novakov, T., Cook, T.L., and Hinds, B.D. 1987. Aerosol and graphitic carbon content of snow. J. Geophys. Res. 92:9801-9809.
+
+.. _ciesin2004:
+
+CIESIN (Center for International Earth Science Information Network), Columbia University; International Food Policy Research Institute (IPFRI), the World Bank; and Centro Internacional de Agricultura Tropical (CIAT), 2004. Global Rural-Urban Mapping Project (GRUMP): Urban Extents. Palisades, NY: CIESIN, Columbia University. Available at http://beta.sedac.ciesin.columbia.edu/gpw.
+
+.. _clappandhornberger1978:
+
+Clapp, R.B., and Hornberger, G.M. 1978. Empirical equations for some soil hydraulic properties. Water Resour. Res. 14:601-604.
+
+.. _clauserandhuenges1995:
+
+Clauser, C., and Huenges, E. 1995. Thermal conductivity of rocks and minerals. pp. 105-126. In: T. J. Ahrens (editor) Rock Physics and Phase Relations: A Handbook of Physical Constants. Washington, D.C.
+
+.. _comrie2000:
+
+Comrie, A.C. 2000. Mapping a wind-modified urban heat island in Tucson, Arizona (with comments on integrating research and undergraduate learning). Bull. Amer. Meteor. Soc. 81:2417-2431.
+
+.. _copelandetal1996:
+
+Copeland, J.H., Pielke, R.A., and Kittel, T.G.F. 1996. Potential climatic impacts of vegetation change: a regional modeling study. J. Geophys. Res. 101:7409-7418.
+
+.. _cosbyetal1984:
+
+Cosby, B.J., Hornberger, G.M., Clapp, R.B., and Ginn, T.R. 1984. A statistical exploration of the relationships of soil moisture characteristics to the physical properties of soils. Water Resour. Res. 20:682-690.
+
+.. _cramer2001:
+
+Cramer, W., et al. 2001. Global response of terrestrial ecosystem structure and function to CO\ :sub:`2` and climate change: results from six dynamic global vegetation models. Global Change Biol. 7:357-373.
+
+.. _daiandzeng1997:
+
+Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Part I: formulation and validation in off-line experiments. Adv. Atmos. Sci. 14:433-460.
+
+.. _dandouetal2005:
+
+Dandou, A., Tombrou, M., Akylas, E., Soulakellis, N., and Bossioli, E. 2005. Development and evaluation of an urban parameterization scheme in the Penn State/NCAR Mesoscale Model (MM5). J. Geophys. Res. 110:D10102. DOI: 10.1029/2004JD005192.
+
+.. _dobsonetal2000:
+
+Dobson, J.E., Bright, E.A., Coleman, P.R., Durfee, R.C., and Worley, B.A. 2000. LandScan: A global population database for estimating populations at risk. Photo­grammetric Engineering and Remote Sensing 66(7):849-857.
+
+.. _vries1963:
+
+de Vries, D.A. 1963. Thermal Properties of Soils. In: W.R. van Wijk (editor) Physics of the Plant Environment. North-Holland, Amsterdam.
+
+.. _eastmanetal2001:
+
+Eastman, J.L., Coughenour, M.B., and Pielke Sr., R.A. 2001. The regional effects of CO\ :sub:`2` and landscape change using a coupled plant and meteorological model. Global Change Biol. 7:797-815.
+
+.. _elvidgeetal2004:
+
+Elvidge, C.D., Sutton, P.C., Wagner, T.W., Ryzner, R., Vogelmann, J.E., Goetz, S.J., Smith, A.J., Jantz, C., Seto, K.C., Imhoff, M.L., Wang, Y.Q., Milesi, C. and Nemani, R. 2004. Urbanization. pp. 315-328. In: G. Gutman, A. C. Janetos, C.O. Justice, E.F. Moran, J.F. Mustard, R.R. Rindfuss, D. Skole, B.L. Turner II, and M.A Cochrane (editors), Land Change Science: Observing, Monitoring and Understanding Trajectories of Change on the Earth's Surface. Kluwer Academic Publishers, The Netherlands.
+
+.. _entekhabiandeagleson1989:
+
+Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization for atmospheric general circulation models including subgrid scale spatial variability. J. Climate 2:816-831.
+
+.. _farouki1981:
+
+Farouki, O.T. 1981. The thermal properties of soils in cold regions. Cold Regions Sci. and Tech. 5:67-75.
+
+.. _feddemaetal2005:
+
+Feddema, J.J., Oleson, K.W., Bonan, G., Mearns, L.O., Buja, L.E., Meehl, G.A., and Washington, W.M. 2005: The importance of land cover change in simulating future climates. Science 310:1674-1678.
+
+.. _flatauetal1992:
+
+Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation vapor pressure. J. Appl. Meteor. 31:1507-1513.
+
+.. _foley2005:
+
+Foley, J.A., et al. 2005. Global consequences of land use. Science 309:570-574.
+
+.. _fu2003:
+
+Fu, C. 2003. Potential impacts of human-induced land cover change in East Asia monsoon. Glob. Planet. Change 37:219-229. DOI:10.1016/S0921-8181(02)00207-2.
+
+.. _grimmondetal1991:
+
+Grimmond, C.S.B., Cleugh, H.A., and Oke, T.R. 1991. An objective urban heat storage model and its comparison with other schemes. Atmos. Environ. 25B:311-326.
+
+.. _grimmondandoke1999:
+
+Grimmond, C.S.B., and Oke, T.R. 1999. Aerodynamic properties of urban areas derived from analysis of surface form. J. Appl. Meteor. 38:1262-1292.
+
+.. _grimmondandoke2002:
+
+Grimmond, C.S.B., and Oke, T.R. 2002. Turbulent heat fluxes in urban areas: observations and a local-scale urban meteorological parameterization scheme (LUMPS). J. Appl. Meteor. 41:792-810.
+
+.. _harmanetal2004:
+
+Harman, I.N., Best, M.J., and Belcher, S.E. 2004. Radiative exchange in an urban street canyon. Bound.-Layer Meteor. 110:301-316.
+
+.. _houghtonetal2001:
+
+Houghton, J.T., Ding, Y., Griggs, D.J., Noguer, M., van der Linden, P.J., Dai, X., Maskell, K., and Johnson, C.A. (editors) 2001. Climate Change 2001: The Scientific Basis. Cambridge University Press, 881 pp.
+
+.. _ichinoseetal1999:
+
+Ichinose, T., Shimodozono, K., Hanaki, K. 1999. Impact of anthropogenic heat on urban climate in Tokyo. Atmos. Environ. 33:3897-3909.
+
+.. _idso1981:
+
+Idso, S.B. 1981. A set of equations for full spectrum and 8- to 14-:math:`\mu`\ m and 10.5- to 12.5-:math:`\mu`\ m thermal radiation from cloudless skies. Water Resour. Res. 17:295-304.
+
+.. _jacksonetal2010:
+
+Jackson, T.L., Feddema, J.J., Oleson, K.W., Bonan, G.B., and Bauer, J.T. 2010. Parameterization of urban characteristics for global climate modeling. A. Assoc. Am. Geog., in press.
+
+.. _jinetal2005:
+
+Jin, M., Dickinson, R.E., and Zhang, D.-L. 2005. The footprint of urban areas on global climate as characterized by MODIS. J. Climate 18:1551-1565.
+
+.. _johnsonetal1991:
+
+Johnson, G.T., Oke, T.R., Lyons, T.J., Steyn, D.G., Watson, I.D., and Voogt, J.A. 1991. Simulation of surface urban heat islands under 'ideal' conditions at night. Part 1: Theory and tests against field data. Bound.-Layer Meteor. 56:275-294.
+
+.. _jordan1991:
+
+Jordan, R. 1991. A One-dimensional Temperature Model for a Snow Cover: Technical Documentation for SNTHERM.89. U.S. Army Cold Regions Research and Engineering Laboratory, Special Report 91-16.
+
+.. _kalnayandcai2003:
+
+Kalnay, E., and Cai, M. 2003. Impact of urbanization and land-use change on climate. Nature 423:528-531.
+
+.. _kusakaetal2001:
+
+Kusaka, H., Kondo, H., Kikegawa, Y., and Kimura, F. 2001. A simple single-layer urban canopy model for atmospheric models: comparison with multi-layer and slab models. Bound.-Layer Meteor. 101:329-358.
+
+.. _kusakaandkimura2004:
+
+Kusaka, H., and Kimura, F. 2004. Thermal effects of urban canyon structure on the nocturnal heat island: numerical experiment using a mesoscale model coupled with an urban canopy model. J. Appl. Meteor. 43:1899-1910.
+
+.. _landsberg1981:
+
+Landsberg, H.E. 1981. The Urban Climate. New York, Academic Press, 275 pp.
+
+.. _lawrenceandslater2008:
+
+Lawrence, D.M., and Slater, A.G. 2008. Incorporating organic soil into a global climate model. Clim. Dyn. 30. DOI:10.1007/s00382-007-0278-1.
+
+.. _leeandpark2007:
+
+Lee, S.-H., and Park, S.-U. 2007. A vegetated urban canopy model for meteorological and environmental modeling. Bound.-Layer Meteor. DOI:10:1007/s10546-007-9221-6.
+
+.. _lemonsuandmasson2002:
+
+Lemonsu, A., and Masson, V. 2002. Simulation of a summer urban breeze over Paris. Bound.-Layer Meteor. 104:463-490.
+
+.. _lemonsuetal2004:
+
+Lemonsu, A., Grimmond, C.S.B., and Masson, V. 2004. Modeling the surface energy balance of the core of an old Mediterranean city: Marseille. J. Appl. Meteor. 43:312-327.
+
+.. _lowe1977:
+
+Lowe, P.R. 1977. An approximating polynomial for the computation of saturation vapor pressure. J. Appl. Meteor. 16:100-103.
+
+.. _macdonaldetal1998:
+
+Macdonald, R.W., Griffiths, R.F., and Hall, D.J. 1998. An improved method for the estimation of surface roughness of obstacle arrays. Atmos. Environ. 32:1857-1864.
+
+.. _marshall1989:
+
+Marshall, S.E. 1989. A physical parameterization of snow albedo for use in climate models. NCAR Cooperative Thesis NCAR/CT-123, National Center for Atmospheric Research, Boulder, CO.
+
+.. _martillietal2002:
+
+Martilli, A., Clappier, A., Rotach, M.W. 2002. An urban surface exchange parameterization for mesoscale models. Bound.-Layer Meteor. 104:261-304.
+
+.. _masson2000:
+
+Masson, V. 2000. A physically-based scheme for the urban energy budget in atmospheric models. Bound.-Layer Meteor. 94:357-397.
+
+.. _massonetal2002:
+
+Masson, V., Grimmond, C.S.B., and Oke, T.R. 2002. Evaluation of the Town Energy Balance (TEB) scheme with direct measurements from dry districts in two cities. J. Appl. Meteor. 41:1011-1026.
+
+.. _masson2006:
+
+Masson, V. 2006. Urban surface modeling and the meso-scale impact of cities. Theor. Appl. Climatol. 84:35-45.
+
+.. _mathewsetal2004:
+
+Mathews, H.D., Weaver, A.J., Meissner, K.J., Gillett, N.P., and Eby, M. 2004. Natural and anthropogenic climate change: incorporating historical land cover change, vegetation dynamics and the global carbon cycle. Clim. Dyn. 22:461-479. DOI:10.1007/s00382-004-0392-2.
+
+.. _myhreandmyhre2003:
+
+Myhre, G., and Myhre, A. 2003. Uncertainties in radiative forcing due to surface albedo changes caused by land-use changes. J. Climate 16:1511-1524.
+
+.. _narismaandpitman2003:
+
+Narisma, G.T., and Pitman, A.J. 2003. The impact of 2000 years of land cover change on the Australian near-surface climate. J. Hydrometeor. 4:424-436.
+
+.. _niuetal2005:
+
+Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., and Gulden, L.E. 2005. A simple TOPMODEL-based runoff parameterization (SIMTOP) for use in global climate models. J. Geophys. Res. 110:D21106. DOI: 10.1029/2005JD006111.
+
+.. _niuandyang2006:
+
+Niu, G.-Y., and Yang, Z.-L. 2006. Effects of frozen soil on snowmelt runoff and soil water storage at a continental scale. J. Hydrometeor. 7:937-952.
+
+.. _niuetal2007:
+
+Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., Gulden, L.E., and Su, H. 2007. Development of a simple groundwater model for use in climate models and evaluation with Gravity Recovery and Climate Experiment data. J. Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
+
+.. _nunezandoke1976:
+
+Nunez, M., and Oke, T.R. 1976. Long-wave radiative flux divergence and nocturnal cooling of the urban atmosphere. II: Within and urban canyon. Bound.-Layer Meteor. 10:121-135.
+
+.. _nunezandoke1977:
+
+Nunez, M., and Oke, T.R. 1977. The energy balance of an urban canyon. J. Appl. Meterorol. 16:11-19.
+
+.. _oke1981:
+
+Oke, T.R. 1981. Canyon geometry and the nocturnal urban heat island: comparison of scale model and field observations. J. Climatol. 1:237-254.
+
+.. _oke1982:
+
+Oke, T.R. 1982. The energetic basis of the urban heat island. Quart. J. Royal Meteor. Soc. 108:1-24.
+
+.. _oke1987:
+
+Oke, T.R. 1987. Boundary Layer Climates (2\ :sup:`nd` edition). London, Routledge, 435 pp.
+
+.. _okeandcleugh1987:
+
+Oke, T.R., and Cleugh, H.A. 1987. Urban heat storage derived as energy balance residuals. Bound.-Layer Meteor. 39:233-245.
+
+.. _okeetal1991:
+
+Oke, T.R., Johnson, G.T., Steyn, D.G., and Watson, I.D. 1991. Simulation of surface urban heat islands under "ideal" conditions at night, part 2: diagnosis of causation. Bound.-Layer Meteor. 56:339-358.
+
+.. _oleson2004:
+
+Oleson, K.W., et al. 2004. Technical description of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-461+STR, National Center for Atmospheric Research, Boulder, CO, 173 pp.
+
+.. _olesonetal2008a:
+
+Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Grimmond, C.S.B. 2008a. An urban parameterization for a global climate model. 1. Formulation and evaluation for two cities. J. Appl. Meteor. Clim. 47:1038-1060.
+
+.. _olesonetal2008b:
+
+Oleson, K.W., Bonan, G.B., Feddema, J., and Vertenstein, M. 2008b. An urban parameterization for a global climate model. 2. Sensitivity to input parameters and the simulated urban heat island in offline simulations. J. Appl. Meteor. Clim. 47:1061-1076.
+
+.. _olesonetal2010a:
+
+Oleson, K.W., Bonan, G.B., and Feddema, J. 2010a. The effects of white roofs on urban temperature in a global climate model. Geophys. Res. Lett. 37:L03701. DOI:10.1029/2009GL042194.
+
+.. _oleson2010b:
+
+Oleson, K.W., et al. 2010b. Technical description of version 4.0 of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-478+STR, National Center for Atmospheric Research, Boulder, CO, 257 pp.
+
+.. _otteetal2004:
+
+Otte, T.L., Lacser, A., Dupont, S., and Ching, J.K.S. 2004. Implementation of an urban canopy parameterization in a mesoscale meteorological model. J. Appl. Meteor. 43:1648-1665.
+
+.. _panofskyanddutton1984:
+
+Panofsky, H.A., and Dutton, J.A. 1984. Atmospheric Turbulence: Models and Methods for Engineering Applications. John Wiley and Sons, New York.
+
+.. _pielkeetal2002:
+
+Pielke Sr., R.A., Marland, G., Betts, R.A., Chase, T.N., Eastman, J.L., Niles, J.O., Niyogi, D.D.S., and Running, S.W. 2002. The influence of land-use change and landscape dynamics on the climate system: relevance to climate-change policy beyond the radiative effect of greenhouse gases. Phil. Trans. R. Soc. Lond. A, 360:1705-1719.
+
+.. _piringeretal2002:
+
+Piringer, M., Grimmond, C.S.B., Joffre, S.M., Mestayer, P., Middleton, D.R., Rotach, A. Baklanov, M.W., De Ridder, K., Ferreira, J., Guilloteau, E., Karppinen, A., Martilli, A., Masson, V., and Tombrou, M. 2002. Investigating the surface energy balance in urban areas - recent advances and future needs. Water, Air, Soil Pollution: Focus, 2:1-16.
+
+.. _pressetal1992:
+
+Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
+
+.. _qianetal2006:
+
+Qian, T., Dai, A., Trenberth, K.E., and Oleson, K.W. 2006. Simulation of global land surface conditions from 1948 to 2004: Part I: Forcing data and evaluations. J. Hydrometeor. 7:953-975.
+
+.. _rowleyetal1930:
+
+Rowley, F.B., Algren, A.B., and Blackshaw, J.L. 1930. Surface conductances as affected by air velocity, temperature, and character of surface. ASHRAE Trans. 36:429-446.
+
+.. _sailor1995:
+
+Sailor, D.J. 1995. Simulated urban climate response to modifications in surface albedo and vegetative cover. J. App. Meteor. 34:1694-1704.
+
+.. _sailorandlu2004:
+
+Sailor, D.J., and Lu, L. 2004. A top-down methodology for developing diurnal and seasonal anthropogenic heating profiles for urban areas. Atmos. Environ. 38:2737-2748.
+
+.. _sakakibara1996:
+
+Sakakibara, Y. 1996. A numerical study of the effect of urban geometry upon the surface energy budget. Atmos. Environ. 30:487-496.
+
+.. _sellersetal1997:
+
+Sellers, P.J., Dickinson, R.E., Randall, D.A., Betts, A.K., Hall, F.G., Berry, J.A., Collatz, G.J., Denning, A.S., Mooney, H.A., Nobre, C.A., Sato, N., Field, C.B., and Henderson-Sellers, A. 1997. Modeling the exchanges of energy, water, and carbon between continents and the atmosphere. Science 275:502-509.
+
+.. _shepherd2005:
+
+Shepherd, J.M. 2005. A review of current investigations of urban-induced rainfall and recommendations for the future. Earth Interact. 9:1-27.
+
+.. _sparrowandcess1978:
+
+Sparrow, E.M., and Cess, R.D. 1978. Radiation Heat Transfer. Hemisphere Publishing Corporation, 366 pp.
+
+.. _stohlgrenetal1998:
+
+Stohlgren, T.J., Chase, T.N., Pielke Sr., R.A., Kittel, T.G.F., and Baron, J.S. 1998. Evidence that local land use practices influence regional climate, vegetation, and stream flow patterns in adjacent natural areas. Global Change Biol. 4:495-504.
+
+.. _stull1988:
+
+Stull, R.B. 1988. An Introduction to Boundary Layer Meteorology. Kluwer Academic Publishers, Dordrecht.
+
+.. _taha1999:
+
+Taha, H. 1999. Modifying a mesoscale meteorological model to better incorporate urban heat storage: a bulk-parameterization approach. J. Appl. Meteor. 38:466-473.
+
+.. _upmanisetal1998:
+
+Upmanis, H., Eliasson, I., and Lindqvist, S. 1998. The influence of green areas on nocturnal temperatures in a high latitude city (Göteborg, Sweden). Int. J. Climatol. 18:681-700.
+
+.. _wangetal2003:
+
+Wang, H., Pitman, A.J., Zhao, M., and Leemans, R. 2003. The impact of land-cover modification on the June meteorology of China since 1700, simulated using a regional climate model. Int. J. Climatol. 23:511-527.
+
+.. _yang1998:
+
+Yang, Z.-L. 1998. Technical note of a 10-layer soil moisture and temperature model. Unpublished manuscript.
+
+.. _zengandzhao1998:
+
+Zeng, X., Zhao, M., and Dickinson R.E. 1998. Intercomparison of bulk aerodynamic algorithms for the computation of sea surface fluxes using the TOGA COARE and TAO data. J. Climate 11:2628-2644.
+
+.. _zenganddecker2009:
+
+Zeng, X., and Decker, M. 2009. Improving the numerical solution of soil moisture-based Richards equation for land models with a deep or shallow water table. J. Hydrometeor. 10:308-319.
+
+.. _zhouetal2004:
+
+Zhou, L., Dickinson, R.E., Tian, Y., Fang, J., Li, Q., Kaufmann, R.K., Tucker, C.J., and Myneni, R.B. 2004. Evidence for a significant urbanization effect on climate in China. Proc. Natl. Acad. Sci. U.S.A. 101:9540-9544.

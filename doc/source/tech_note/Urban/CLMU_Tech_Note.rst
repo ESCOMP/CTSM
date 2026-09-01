@@ -9,7 +9,7 @@ Introduction
 
 This technical note describes the physical parameterizations and numerical implementation of a Community Land Model Urban (CLMU) parameterization as coupled to version 4 of the Community Land Model (CLM4). CLM4 serves as the land surface model component of the Community Atmosphere Model (CAM) and the Community Climate System Model (CCSM). This note documents the global implementation of the urban model. Other model versions may exist for specific applications.
 
-Chapters 1-5 constitute the description of the urban parameterization when coupled to CAM or CCSM, while Chapter 6 describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). Chapter 7 describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008a, 2008b). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010a) <ref-olesonetal2010a>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010b <ref-oleson2010b>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
+Chapters 1-5 constitute the description of the urban parameterization when coupled to CAM or CCSM, while Chapter 6 describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). Chapter 7 describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008a, 2008b). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010a) <olesonetal2010a>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010b <oleson2010b>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
 
 Model Overview
 --------------
@@ -17,47 +17,47 @@ Model Overview
 Motivation
 ~~~~~~~~~~
 
-Land use and land cover change is increasingly being recognized as an important yet poorly quantified component of global climate change (:ref:`Houghton et al. 2001 <ref-houghtonetal2001>`). Land use/cover change mechanisms include both the transformation of natural land surfaces to those serving human needs (i.e., direct anthropogenic change) (e.g., the conversion of tropical forest to agriculture) as well as changes in land cover on longer time-scales due to biogeophysical feedbacks between the atmosphere and the land (i.e., indirect change) (:ref:`Cramer et al. 2001 <ref-cramer2001>`, :ref:`Foley et al. 2005 <ref-foley2005>`). Global and regional models have been used extensively to investigate the effects of direct and indirect land use/cover change mechanisms on climate (:ref:`Copeland et al. 1996 <ref-copelandetal1996>`, :ref:`Stohlgren et al. 1998 <ref-stohlgrenetal1998>`, :ref:`Betts 2001 <ref-betts2001>`, :ref:`Eastman et al. 2001 <ref-eastmanetal2001>`, :ref:`Bounoua et al. 2002 <ref-bounouaetal2002>`, :ref:`Pielke et al. 2002 <ref-pielkeetal2002>`, :ref:`Fu 2003 <ref-fu2003>`, :ref:`Myhre and Myhre 2003 <ref-myhreandmyhre2003>`, :ref:`Narisma and Pitman 2003 <ref-narismaandpitman2003>`, :ref:`Wang et al. 2003 <ref-wangetal2003>`, :ref:`Brovkin et al. 2004 <ref-brovkinetal2004>`, :ref:`Mathews et al. 2004 <ref-mathewsetal2004>`, :ref:`Feddema et al. 2005 <ref-feddemaetal2005>`). However, all of these studies have focused on land use/cover related to changes in vegetation types. Urbanization, or the expansion of built-up areas, is an important yet less studied aspect of anthropogenic land use/cover change in climate science.
+Land use and land cover change is increasingly being recognized as an important yet poorly quantified component of global climate change (:ref:`Houghton et al. 2001 <houghtonetal2001>`). Land use/cover change mechanisms include both the transformation of natural land surfaces to those serving human needs (i.e., direct anthropogenic change) (e.g., the conversion of tropical forest to agriculture) as well as changes in land cover on longer time-scales due to biogeophysical feedbacks between the atmosphere and the land (i.e., indirect change) (:ref:`Cramer et al. 2001 <cramer2001>`, :ref:`Foley et al. 2005 <foley2005>`). Global and regional models have been used extensively to investigate the effects of direct and indirect land use/cover change mechanisms on climate (:ref:`Copeland et al. 1996 <copelandetal1996>`, :ref:`Stohlgren et al. 1998 <stohlgrenetal1998>`, :ref:`Betts 2001 <betts2001>`, :ref:`Eastman et al. 2001 <eastmanetal2001>`, :ref:`Bounoua et al. 2002 <bounouaetal2002>`, :ref:`Pielke et al. 2002 <pielkeetal2002>`, :ref:`Fu 2003 <fu2003>`, :ref:`Myhre and Myhre 2003 <myhreandmyhre2003>`, :ref:`Narisma and Pitman 2003 <narismaandpitman2003>`, :ref:`Wang et al. 2003 <wangetal2003>`, :ref:`Brovkin et al. 2004 <brovkinetal2004>`, :ref:`Mathews et al. 2004 <mathewsetal2004>`, :ref:`Feddema et al. 2005 <feddemaetal2005>`). However, all of these studies have focused on land use/cover related to changes in vegetation types. Urbanization, or the expansion of built-up areas, is an important yet less studied aspect of anthropogenic land use/cover change in climate science.
 
-Although currently only about 1-3% of the global land surface is urbanized, the spatial extent and intensity of urban development is expected to increase dramatically in the future (:ref:`Shepherd 2005 <ref-shepherd2005>`, :ref:`CIESIN et al. 2004 <ref-ciesin2004>`). More than one-half of the world's population currently lives in urban areas and in Europe, North America, and Japan at least 80% of the population resides in urban areas (:ref:`Elvidge et al. 2004 <ref-elvidgeetal2004>`). Policymakers and the public are most interested in the effects of climate change on people where they live. Because urban and non-urban areas may have different sensitivities to climate change, it is possible that the true climate change signal within urban areas may only be estimated if urban areas are explicitly modeled in climate change simulations (:ref:`Best 2006 <ref-best2006>`). Indeed, the "footprint" of urbanization on climate can be detected from surface observations and satellite data (:ref:`Changnon 1992 <ref-changnon1992>`, :ref:`Kalnay and Cai 2003 <ref-kalnayandcai2003>`, :ref:`Zhou et al. 2004 <ref-zhouetal2004>`, :ref:`Jin et al. 2005 <ref-jinetal2005>`). :ref:`Changnon (1992) <ref-changnon1992>` points out that the average urban warming over the last 100 years in certain regions is comparable to the increase in global surface temperature predicted by climate models for the next 100 years. Thus, it is important for developers of land surface models to begin to consider the parameterization of urban surfaces.
+Although currently only about 1-3% of the global land surface is urbanized, the spatial extent and intensity of urban development is expected to increase dramatically in the future (:ref:`Shepherd 2005 <shepherd2005>`, :ref:`CIESIN et al. 2004 <ciesin2004>`). More than one-half of the world's population currently lives in urban areas and in Europe, North America, and Japan at least 80% of the population resides in urban areas (:ref:`Elvidge et al. 2004 <elvidgeetal2004>`). Policymakers and the public are most interested in the effects of climate change on people where they live. Because urban and non-urban areas may have different sensitivities to climate change, it is possible that the true climate change signal within urban areas may only be estimated if urban areas are explicitly modeled in climate change simulations (:ref:`Best 2006 <best2006>`). Indeed, the "footprint" of urbanization on climate can be detected from surface observations and satellite data (:ref:`Changnon 1992 <changnon1992>`, :ref:`Kalnay and Cai 2003 <kalnayandcai2003>`, :ref:`Zhou et al. 2004 <zhouetal2004>`, :ref:`Jin et al. 2005 <jinetal2005>`). :ref:`Changnon (1992) <changnon1992>` points out that the average urban warming over the last 100 years in certain regions is comparable to the increase in global surface temperature predicted by climate models for the next 100 years. Thus, it is important for developers of land surface models to begin to consider the parameterization of urban surfaces.
 
-Urbanization now appropriates significant proportions of land in certain regions. For example, the expansion of service-based industries and conversion of farmland for housing in the Chicago area has increased the amount of developed land from about 800 square miles in 1973 to 1000 square miles in 1992 (:ref:`Auch et al. 2004 <ref-auchetal2004>`). A T85 resolution climate model grid cell (the resolution of the CCSM3 climate change simulations submitted for the IPCC AR4) encompassing the Chicago region represents about 7100 square miles, which suggests that this grid cell should be modeled as about 14% urbanized land. For mesoscale or regional models, where grid cells are on the order of a few kilometers, an urban area this size will occupy a significant number of grid cells that would otherwise be modeled as natural surfaces. The now common use of multiple "tiles" in models enables the co-existence of multiple surface types within a single gridcell. Thus, urban areas should and can be included in a global climate model (:ref:`Best 2006 <ref-best2006>`).
+Urbanization now appropriates significant proportions of land in certain regions. For example, the expansion of service-based industries and conversion of farmland for housing in the Chicago area has increased the amount of developed land from about 800 square miles in 1973 to 1000 square miles in 1992 (:ref:`Auch et al. 2004 <auchetal2004>`). A T85 resolution climate model grid cell (the resolution of the CCSM3 climate change simulations submitted for the IPCC AR4) encompassing the Chicago region represents about 7100 square miles, which suggests that this grid cell should be modeled as about 14% urbanized land. For mesoscale or regional models, where grid cells are on the order of a few kilometers, an urban area this size will occupy a significant number of grid cells that would otherwise be modeled as natural surfaces. The now common use of multiple "tiles" in models enables the co-existence of multiple surface types within a single gridcell. Thus, urban areas should and can be included in a global climate model (:ref:`Best 2006 <best2006>`).
 
-Numerical modeling of the urban energy budget was first attempted nearly 40 years ago [see :ref:`Brown (2000) <ref-brown2000>` for a comprehensive historical overview of modeling efforts]. However, until recently, most modern land surface models [i.e., second- or third-generation models (:ref:`Sellers et al. 1997 <ref-sellersetal1997>`)] have not formally included urban parameterizations. :ref:`Masson (2006) <ref-masson2006>` classifies urban parameterizations in three general categories: 1) empirical models, 2) vegetation models, with and without drag terms, adapted to include an urban canopy, 3) single-layer and multi-layer models that include a three-dimensional representation of the urban canopy. Empirical models (e.g., :ref:`Oke and Cleugh 1987 <ref-okeandcleugh1987>`) rely on statistical relationships determined from observed data. As such, they are generally limited to the range of conditions experienced during the observation campaign. Vegetation models adapted for the urban canopy generally focus on modifying important surface parameters to better represent urban surfaces [e.g., surface albedo, roughness length, displacement height, surface emissivity, heat capacity, thermal conductivity (:ref:`Taha 1999 <ref-taha1999>`, :ref:`Atkinson 2003 <ref-atkinson2003>`, :ref:`Best 2005 <ref-best2005>`)].
+Numerical modeling of the urban energy budget was first attempted nearly 40 years ago [see :ref:`Brown (2000) <brown2000>` for a comprehensive historical overview of modeling efforts]. However, until recently, most modern land surface models [i.e., second- or third-generation models (:ref:`Sellers et al. 1997 <sellersetal1997>`)] have not formally included urban parameterizations. :ref:`Masson (2006) <masson2006>` classifies urban parameterizations in three general categories: 1) empirical models, 2) vegetation models, with and without drag terms, adapted to include an urban canopy, 3) single-layer and multi-layer models that include a three-dimensional representation of the urban canopy. Empirical models (e.g., :ref:`Oke and Cleugh 1987 <okeandcleugh1987>`) rely on statistical relationships determined from observed data. As such, they are generally limited to the range of conditions experienced during the observation campaign. Vegetation models adapted for the urban canopy generally focus on modifying important surface parameters to better represent urban surfaces [e.g., surface albedo, roughness length, displacement height, surface emissivity, heat capacity, thermal conductivity (:ref:`Taha 1999 <taha1999>`, :ref:`Atkinson 2003 <atkinson2003>`, :ref:`Best 2005 <best2005>`)].
 
-These relatively simple approaches (i.e., categories 1 and 2 above) may arguably be justified based on the fact that detail in complex models may be lost when averaged to a coarse grid (:ref:`Taha 1999 <ref-taha1999>`). However, they may not have sufficient functionality to be suitable for inclusion in global climate models and may require the global derivation of parameters that are difficult to interpret physically [e.g., the surface type-dependent empirical coefficients for storage heat flux in the Objective Hysteresis Model (:ref:`Grimmond et al. 1991 <ref-grimmondetal1991>`)]. Furthermore, such approaches may not fully describe the fundamental processes that determine urban effects on climate (:ref:`Piringer et al. 2002 <ref-piringeretal2002>`). For example, cities are known to have unique characteristics that cause them to be warmer than surrounding rural areas, an effect known as the urban heat island (:ref:`Oke 1987 <ref-oke1987>`). In the absence of anthropogenic heat flux, the urban heat island is thought to be greatest on clear, calm nights when local conditions generally dominate over synoptic. Candidate causes for this phenomenon include decreased surface longwave radiation loss and increased absorption of solar radiation because of canyon geometry, anthropogenic emissions of heat, reduction of evapotranspiration due to the replacement of vegetation with impervious surfaces, increased downwelling longwave radiation from the atmosphere due to pollution and warmer atmospheric temperatures, increased storage of sensible heat within urban materials, and reduced transfer of heat due to sheltering from buildings (:ref:`Oke 1982 <ref-oke1982>`, :ref:`Oke 1987 <ref-oke1987>`, :ref:`Oke et al. 1991 <ref-okeetal1991>`). Single-layer or multi-layer urban canopy models are likely needed to investigate the relative contribution of these factors to the heat island effect (:ref:`Piringer et al. 2002 <ref-piringeretal2002>`). For example, specification of an urban albedo may provide no insight into the effects of the individual albedo of roofs, walls, and roads and the interaction of shortwave radiation between these surfaces that yields urban albedos that are typically lower than those of most rural sites. Similarly, assessments of the effectiveness of techniques proposed to ameliorate heat islands, such as "green roofs" or tree planting, require more detailed models.
+These relatively simple approaches (i.e., categories 1 and 2 above) may arguably be justified based on the fact that detail in complex models may be lost when averaged to a coarse grid (:ref:`Taha 1999 <taha1999>`). However, they may not have sufficient functionality to be suitable for inclusion in global climate models and may require the global derivation of parameters that are difficult to interpret physically [e.g., the surface type-dependent empirical coefficients for storage heat flux in the Objective Hysteresis Model (:ref:`Grimmond et al. 1991 <grimmondetal1991>`)]. Furthermore, such approaches may not fully describe the fundamental processes that determine urban effects on climate (:ref:`Piringer et al. 2002 <piringeretal2002>`). For example, cities are known to have unique characteristics that cause them to be warmer than surrounding rural areas, an effect known as the urban heat island (:ref:`Oke 1987 <oke1987>`). In the absence of anthropogenic heat flux, the urban heat island is thought to be greatest on clear, calm nights when local conditions generally dominate over synoptic. Candidate causes for this phenomenon include decreased surface longwave radiation loss and increased absorption of solar radiation because of canyon geometry, anthropogenic emissions of heat, reduction of evapotranspiration due to the replacement of vegetation with impervious surfaces, increased downwelling longwave radiation from the atmosphere due to pollution and warmer atmospheric temperatures, increased storage of sensible heat within urban materials, and reduced transfer of heat due to sheltering from buildings (:ref:`Oke 1982 <oke1982>`, :ref:`Oke 1987 <oke1987>`, :ref:`Oke et al. 1991 <okeetal1991>`). Single-layer or multi-layer urban canopy models are likely needed to investigate the relative contribution of these factors to the heat island effect (:ref:`Piringer et al. 2002 <piringeretal2002>`). For example, specification of an urban albedo may provide no insight into the effects of the individual albedo of roofs, walls, and roads and the interaction of shortwave radiation between these surfaces that yields urban albedos that are typically lower than those of most rural sites. Similarly, assessments of the effectiveness of techniques proposed to ameliorate heat islands, such as "green roofs" or tree planting, require more detailed models.
 
-On the other hand, the level of complexity in a model is limited by the availability of data that the model requires, the computational burden imposed, and difficulty in understanding the complex behavior of the model. Here, following recent developments in detailed urban parameterizations designed for mesoscale models (:ref:`Masson 2000 <ref-masson2000>`, :ref:`Martilli et al. 2002 <ref-martillietal2002>`, :ref:`Grimmond and Oke 2002 <ref-grimmondandoke2002>`, :ref:`Kusaka and Kimura 2004 <ref-kusakaandkimura2004>`, :ref:`Otte et al. 2004 <ref-otteetal2004>`, :ref:`Dandou et al. 2005 <ref-dandouetal2005>`), we describe a model that is simple enough to be compatible with structural, computational, and data constraints of a land surface model coupled to a global climate model, yet complex enough to enable exploration of physically-based processes known to be important in determining urban climatology. Several of the parameterizations are based on the Town Energy Balance (TEB) Model (:ref:`Masson 2000 <ref-masson2000>`, :ref:`Masson et al. 2002 <ref-massonetal2002>`, :ref:`Lemonsu et al. 2004 <ref-lemonsuetal2004>`).
+On the other hand, the level of complexity in a model is limited by the availability of data that the model requires, the computational burden imposed, and difficulty in understanding the complex behavior of the model. Here, following recent developments in detailed urban parameterizations designed for mesoscale models (:ref:`Masson 2000 <masson2000>`, :ref:`Martilli et al. 2002 <martillietal2002>`, :ref:`Grimmond and Oke 2002 <grimmondandoke2002>`, :ref:`Kusaka and Kimura 2004 <kusakaandkimura2004>`, :ref:`Otte et al. 2004 <otteetal2004>`, :ref:`Dandou et al. 2005 <dandouetal2005>`), we describe a model that is simple enough to be compatible with structural, computational, and data constraints of a land surface model coupled to a global climate model, yet complex enough to enable exploration of physically-based processes known to be important in determining urban climatology. Several of the parameterizations are based on the Town Energy Balance (TEB) Model (:ref:`Masson 2000 <masson2000>`, :ref:`Masson et al. 2002 <massonetal2002>`, :ref:`Lemonsu et al. 2004 <lemonsuetal2004>`).
 
 Urban Ecosystems and Climate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Characteristics of urban ecosystems and their effects on climate are summarized in :ref:`Landsberg (1981) <ref-landsberg1981>`, :ref:`Oke (1987) <ref-oke1987>`, :ref:`Bonan (2002) <ref-bonan2002>`, and :ref:`Arnfield (2003) <ref-arnfield2003>`. Urban ecosystems can significantly alter the radiative, thermal, moisture, and aerodynamic characteristics of a region. The three-dimensional structure and geometrical arrangement of building walls and horizontal surfaces such as roads, sidewalks, parking lots, etc. combine to reduce the albedo of urban surfaces due to radiation trapping. Unlike solar radiation reflected from a horizontal surface, solar radiation impinging on urban surfaces such as walls and roads can experience multiple reflections and absorptions, resulting in increased absorption of radiation. Similarly, longwave radiation emitted by urban surfaces can be re-absorbed by these surfaces resulting in less longwave radiation loss to the atmosphere. The ratio of building height to canyon floor width is important in determining the degree of radiation trapping (:ref:`Oke 1981 <ref-oke1981>`, :ref:`Oke et al. 1991 <ref-okeetal1991>`).
+Characteristics of urban ecosystems and their effects on climate are summarized in :ref:`Landsberg (1981) <landsberg1981>`, :ref:`Oke (1987) <oke1987>`, :ref:`Bonan (2002) <bonan2002>`, and :ref:`Arnfield (2003) <arnfield2003>`. Urban ecosystems can significantly alter the radiative, thermal, moisture, and aerodynamic characteristics of a region. The three-dimensional structure and geometrical arrangement of building walls and horizontal surfaces such as roads, sidewalks, parking lots, etc. combine to reduce the albedo of urban surfaces due to radiation trapping. Unlike solar radiation reflected from a horizontal surface, solar radiation impinging on urban surfaces such as walls and roads can experience multiple reflections and absorptions, resulting in increased absorption of radiation. Similarly, longwave radiation emitted by urban surfaces can be re-absorbed by these surfaces resulting in less longwave radiation loss to the atmosphere. The ratio of building height to canyon floor width is important in determining the degree of radiation trapping (:ref:`Oke 1981 <oke1981>`, :ref:`Oke et al. 1991 <okeetal1991>`).
 
-The materials used for the construction of buildings and roads (e.g., dense concrete and asphalt) generally have higher heat capacity and thermal conductivity than some natural surfaces such as dry soils (:ref:`Oke 1987 <ref-oke1987>`). This results in higher thermal admittance and contributes to the ability of urban surfaces to store sensible heat during the day and release it at night. The importance of thermal properties in contributing to differences between urban and rural sites depends on the types of materials used in urban construction, the contrast in thermal admittance between the urban region and surrounding rural environs, and the building geometry which establishes the relative surface area and importance of roof, walls, and canyon floor (:ref:`Oke et al. 1991 <ref-okeetal1991>`).
+The materials used for the construction of buildings and roads (e.g., dense concrete and asphalt) generally have higher heat capacity and thermal conductivity than some natural surfaces such as dry soils (:ref:`Oke 1987 <oke1987>`). This results in higher thermal admittance and contributes to the ability of urban surfaces to store sensible heat during the day and release it at night. The importance of thermal properties in contributing to differences between urban and rural sites depends on the types of materials used in urban construction, the contrast in thermal admittance between the urban region and surrounding rural environs, and the building geometry which establishes the relative surface area and importance of roof, walls, and canyon floor (:ref:`Oke et al. 1991 <okeetal1991>`).
 
-Energy consumption due to building heating and cooling, manufacturing, transportation, and human metabolism releases waste heat to the urban environment. Such anthropogenic sources of heat can be substantial in some cases and should be accounted for in studies of the urban energy budget. As an extreme example, :ref:`Ichinose et al. (1999) <ref-ichinoseetal1999>` found that the total anthropogenic heat flux in central Tokyo exceeded 400 W m\ :sup:`-2` in daytime and a maximum value of 1590 W m\ :sup:`-2` in winter. The contribution of waste heat sources from building heating and cooling may depend on population density, external climate, and socio-economic factors such as human adaptability and comfort levels, and economic status. The presence of insulation, characterized by low thermal admittance, may reduce the contribution of waste heat from heating and cooling. Waste heat fluxes from transportation have a distinct diurnal cycle due to morning/evening rush hours (:ref:`Sailor and Lu, 2004 <ref-sailorandlu2004>`). Generally, human metabolism contributes less than 5% of total anthropogenic flux in the U.S. (:ref:`Sailor and Lu, 2004 <ref-sailorandlu2004>`).
+Energy consumption due to building heating and cooling, manufacturing, transportation, and human metabolism releases waste heat to the urban environment. Such anthropogenic sources of heat can be substantial in some cases and should be accounted for in studies of the urban energy budget. As an extreme example, :ref:`Ichinose et al. (1999) <ichinoseetal1999>` found that the total anthropogenic heat flux in central Tokyo exceeded 400 W m\ :sup:`-2` in daytime and a maximum value of 1590 W m\ :sup:`-2` in winter. The contribution of waste heat sources from building heating and cooling may depend on population density, external climate, and socio-economic factors such as human adaptability and comfort levels, and economic status. The presence of insulation, characterized by low thermal admittance, may reduce the contribution of waste heat from heating and cooling. Waste heat fluxes from transportation have a distinct diurnal cycle due to morning/evening rush hours (:ref:`Sailor and Lu, 2004 <sailorandlu2004>`). Generally, human metabolism contributes less than 5% of total anthropogenic flux in the U.S. (:ref:`Sailor and Lu, 2004 <sailorandlu2004>`).
 
-The urban surface is characterized by a preponderance of impervious surfaces, which reduce water storage capacity and surface moisture availability (:ref:`Oke 1982 <ref-oke1982>`). The evapotranspiration flux in urban regions is thus generally lower compared to vegetated surfaces, which may increase surface and air temperatures. On the other hand, vegetated surfaces within urban areas are frequently irrigated (e.g., lawns and parks) resulting in more water availability and higher latent heat fluxes than might be expected from natural vegetation. The presence and amount of vegetated or pervious surfaces can influence the magnitude of the heat island effect (:ref:`Sailor 1995 <ref-sailor1995>`, :ref:`Upmanis et al. 1998 <ref-upmanisetal1998>`, :ref:`Avissar 1996 <ref-avissar1996>`). Impervious surfaces also affect the hydrological cycle by reducing infiltration compared to rural areas, thereby converting more precipitation into surface runoff (:ref:`Oke 1987 <ref-oke1987>`, :ref:`Bonan 2002 <ref-bonan2002>`).
+The urban surface is characterized by a preponderance of impervious surfaces, which reduce water storage capacity and surface moisture availability (:ref:`Oke 1982 <oke1982>`). The evapotranspiration flux in urban regions is thus generally lower compared to vegetated surfaces, which may increase surface and air temperatures. On the other hand, vegetated surfaces within urban areas are frequently irrigated (e.g., lawns and parks) resulting in more water availability and higher latent heat fluxes than might be expected from natural vegetation. The presence and amount of vegetated or pervious surfaces can influence the magnitude of the heat island effect (:ref:`Sailor 1995 <sailor1995>`, :ref:`Upmanis et al. 1998 <upmanisetal1998>`, :ref:`Avissar 1996 <avissar1996>`). Impervious surfaces also affect the hydrological cycle by reducing infiltration compared to rural areas, thereby converting more precipitation into surface runoff (:ref:`Oke 1987 <oke1987>`, :ref:`Bonan 2002 <bonan2002>`).
 
-The arrangement of large roughness elements (e.g., buildings, trees) in an urban region generally increases the frictional drag of the surface on the atmospheric winds and thus reduces the mean wind speed and turbulent mixing within the urban canopy compared to more open rural areas (:ref:`Oke 1987 <ref-oke1987>`). A notable exception to this may occur during periods of weak regional winds when warm urban air creates low-level rural-urban breezes. Lower within-canopy winds can reduce total turbulent heat transport from urban surfaces and increase their surface temperature. The synoptic wind speed is an important control on the urban heat island (:ref:`Landsberg 1981 <ref-landsberg1981>`). Higher winds may effectively remove heat faster than the urban fabric generates it.
+The arrangement of large roughness elements (e.g., buildings, trees) in an urban region generally increases the frictional drag of the surface on the atmospheric winds and thus reduces the mean wind speed and turbulent mixing within the urban canopy compared to more open rural areas (:ref:`Oke 1987 <oke1987>`). A notable exception to this may occur during periods of weak regional winds when warm urban air creates low-level rural-urban breezes. Lower within-canopy winds can reduce total turbulent heat transport from urban surfaces and increase their surface temperature. The synoptic wind speed is an important control on the urban heat island (:ref:`Landsberg 1981 <landsberg1981>`). Higher winds may effectively remove heat faster than the urban fabric generates it.
 
-The geographic location of urban areas and the characteristics of the surrounding rural area influence the urban climate. For instance, many tropical heat islands are smaller than expected based on population size. Where cities are surrounded by wet rural surfaces, slower cooling by these rural surfaces due to higher thermal admittance may reduce heat island magnitudes, especially in tropical climates (:ref:`Oke et al. 1991 <ref-okeetal1991>`). Local wind systems may impact urban climates as well. For example, coastal cities may experience cooling of urban temperatures when ocean surface temperatures are cooler than the land and winds blow onshore. Cold-air drainage from surrounding mountainous areas may reduce urban warming as well at certain times (:ref:`Comrie 2000 <ref-comrie2000>`).
+The geographic location of urban areas and the characteristics of the surrounding rural area influence the urban climate. For instance, many tropical heat islands are smaller than expected based on population size. Where cities are surrounded by wet rural surfaces, slower cooling by these rural surfaces due to higher thermal admittance may reduce heat island magnitudes, especially in tropical climates (:ref:`Oke et al. 1991 <okeetal1991>`). Local wind systems may impact urban climates as well. For example, coastal cities may experience cooling of urban temperatures when ocean surface temperatures are cooler than the land and winds blow onshore. Cold-air drainage from surrounding mountainous areas may reduce urban warming as well at certain times (:ref:`Comrie 2000 <comrie2000>`).
 
-Urban regions have increased downward longwave radiation from the overlying atmosphere due to trapping and re-emission from polluted layers and/or from vertical advection of warm surface air above the city. Reduced incoming solar radiation due to reflection from atmospheric aerosols may compensate for this increase in longwave forcing. Note that in order to model these particular urban effects, the land model must also deliver biogeochemical fluxes (e.g., particulates, sulphur compounds, hydrocarbons, etc.) to the atmospheric model in addition to heat and moisture fluxes. The atmospheric model must then be able to diffuse or transport these trace species and determine their interaction with radiation and clouds. It has also been established that urban regions have effects on clouds and precipitation although the underlying mechanisms are still being debated. Climate modeling systems with detailed urban parameterizations may help to understand these mechanisms (:ref:`Shepherd 2005 <ref-shepherd2005>`).
+Urban regions have increased downward longwave radiation from the overlying atmosphere due to trapping and re-emission from polluted layers and/or from vertical advection of warm surface air above the city. Reduced incoming solar radiation due to reflection from atmospheric aerosols may compensate for this increase in longwave forcing. Note that in order to model these particular urban effects, the land model must also deliver biogeochemical fluxes (e.g., particulates, sulphur compounds, hydrocarbons, etc.) to the atmospheric model in addition to heat and moisture fluxes. The atmospheric model must then be able to diffuse or transport these trace species and determine their interaction with radiation and clouds. It has also been established that urban regions have effects on clouds and precipitation although the underlying mechanisms are still being debated. Climate modeling systems with detailed urban parameterizations may help to understand these mechanisms (:ref:`Shepherd 2005 <shepherd2005>`).
 
 As mentioned briefly in the previous section, many of the characteristics of the urban ecosystem discussed above contribute to one of the most striking effects of the urban environment on climate, the heat island effect. The present model is designed to represent the urban energy balance and provide insight into issues such as the urban heat island, its causes and potential mitigation strategies, as well as the effects of climate change on urban areas. When coupled to an atmospheric model, interactions between the urban surface and the atmosphere can be investigated.
 
 Atmospheric Coupling and Model Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The atmospheric model within CCSM requires fluxes of sensible and latent heat and momentum between the surface and lowest atmospheric model level as well as emitted longwave and reflected shortwave radiation (:numref:`fig-atm-urban-coupling`). These must be provided at a time step that resolves the diurnal cycle. Over other types of land surfaces, the fluxes are determined by current parameterizations in CLM. An objective of this technical note is to describe a set of parameterizations that determines the fluxes from an urban surface. The vertical spatial domain of the urban model extends from the top of the urban canopy layer (UCL) down to the depth of zero vertical heat flux in the ground (:ref:`Oke 1987 <ref-oke1987>`). The current state of the atmosphere and downwelling fluxes (:numref:`table-atm-input`) at a given time step is used to force the urban model. The urban model provides fluxes that are area-averaged with other land cover (e.g., forests, cropland) if present within the grid cell. The area-averaged fluxes (:numref:`table-atm-output`) are used as lower boundary conditions by the atmospheric model.
+The atmospheric model within CCSM requires fluxes of sensible and latent heat and momentum between the surface and lowest atmospheric model level as well as emitted longwave and reflected shortwave radiation (:numref:`fig-atm-urban-coupling`). These must be provided at a time step that resolves the diurnal cycle. Over other types of land surfaces, the fluxes are determined by current parameterizations in CLM. An objective of this technical note is to describe a set of parameterizations that determines the fluxes from an urban surface. The vertical spatial domain of the urban model extends from the top of the urban canopy layer (UCL) down to the depth of zero vertical heat flux in the ground (:ref:`Oke 1987 <oke1987>`). The current state of the atmosphere and downwelling fluxes (:numref:`table-atm-input`) at a given time step is used to force the urban model. The urban model provides fluxes that are area-averaged with other land cover (e.g., forests, cropland) if present within the grid cell. The area-averaged fluxes (:numref:`table-atm-output`) are used as lower boundary conditions by the atmospheric model.
 
 Land surface heterogeneity in the Community Land Model (CLM) is represented as a nested subgrid hierarchy (:numref:`fig-clm-subgrid-hierarchy`) in which grid cells are composed of multiple landunits, snow/soil columns, and plant functional types (PFTs). Each grid cell can have a different number of landunits, each landunit can have a different number of columns, and each column can have multiple PFTs. The first subgrid level, the landunit, is intended to capture the broadest spatial patterns of subgrid heterogeneity. The model described here is designed to represent urban landunits. Further division of the urban surface into urban landuse classes such as, for example, city core, industrial/commercial, and suburban is possible by specifying these classes as individual landunits.
 
-The representation of the urban landunit is based on the canyon concept of :ref:`Oke (1987) <ref-oke1987>`. In this approach, the considerable complexity of the urban surface is reduced to a single urban canyon consisting of a canyon floor of width :math:`W` bordered by two facing buildings of height :math:`H` (:numref:`fig-urban-canyon`). Although the canyon floor is intended to represent various surfaces such as roads, parking lots, sidewalks, and residential lawns, etc., for convenience we henceforth refer to the canyon floor as a road. The urban canyon consists of roof, sunlit and shaded wall, and pervious and impervious road, each of which are treated as columns within the landunit (:numref:`fig-clm-subgrid-hierarchy`). The impervious road is intended to represent surfaces that are impervious to water infiltration (e.g., roads, parking lots, sidewalks) while the pervious road is intended to represent surfaces such as residential lawns and parks which may have active hydrology.
+The representation of the urban landunit is based on the canyon concept of :ref:`Oke (1987) <oke1987>`. In this approach, the considerable complexity of the urban surface is reduced to a single urban canyon consisting of a canyon floor of width :math:`W` bordered by two facing buildings of height :math:`H` (:numref:`fig-urban-canyon`). Although the canyon floor is intended to represent various surfaces such as roads, parking lots, sidewalks, and residential lawns, etc., for convenience we henceforth refer to the canyon floor as a road. The urban canyon consists of roof, sunlit and shaded wall, and pervious and impervious road, each of which are treated as columns within the landunit (:numref:`fig-clm-subgrid-hierarchy`). The impervious road is intended to represent surfaces that are impervious to water infiltration (e.g., roads, parking lots, sidewalks) while the pervious road is intended to represent surfaces such as residential lawns and parks which may have active hydrology.
 
-The approach used here to represent pervious surfaces is different than many urban schemes designed for use within mesoscale and global models. Most urban schemes use a separate land surface model scheme to represent the effects of pervious surfaces on urban climate. For example, the urban surface in the mesoscale model Meso-NH is modeled using the TEB and ISBA (Interactions between Soil, Biosphere, and Atmosphere) schemes for urban and pervious (e.g., vegetated) surfaces, respectively (:ref:`Lemonsu and Masson 2002 <ref-lemonsuandmasson2002>`). Fluxes from each scheme are combined according to their relative areas. A comparable approach could be implemented using the CLM scheme for vegetated surfaces; however, this presents several disadvantages for our application. First, the pervious surface would need to be assigned to an additional landunit and specially identified to distinguish it from the other vegetated landunit within the gridcell. Second, the pervious and urban landunits would then need to be aggregated according to their relative areas in a post-processing sense to estimate the composite urban effects. Third, in the Meso-NH approach, the pervious surface only interacts indirectly with the canyon air through its influence on the atmospheric model. Here, including the pervious surface within the urban canyon solves these difficulties. Thus, the pervious surface is an integral part of the urban system and interacts directly with UCL air properties such as temperature and specific humidity. Yet, implementation of a sophisticated scheme for the pervious surface, such as the vegetation scheme in CLM, within the urban canyon is problematic because of computational and data requirements. Here, we choose a simplified bulk parameterization scheme to represent latent heat flux from pervious urban surfaces (Chapter 3).
+The approach used here to represent pervious surfaces is different than many urban schemes designed for use within mesoscale and global models. Most urban schemes use a separate land surface model scheme to represent the effects of pervious surfaces on urban climate. For example, the urban surface in the mesoscale model Meso-NH is modeled using the TEB and ISBA (Interactions between Soil, Biosphere, and Atmosphere) schemes for urban and pervious (e.g., vegetated) surfaces, respectively (:ref:`Lemonsu and Masson 2002 <lemonsuandmasson2002>`). Fluxes from each scheme are combined according to their relative areas. A comparable approach could be implemented using the CLM scheme for vegetated surfaces; however, this presents several disadvantages for our application. First, the pervious surface would need to be assigned to an additional landunit and specially identified to distinguish it from the other vegetated landunit within the gridcell. Second, the pervious and urban landunits would then need to be aggregated according to their relative areas in a post-processing sense to estimate the composite urban effects. Third, in the Meso-NH approach, the pervious surface only interacts indirectly with the canyon air through its influence on the atmospheric model. Here, including the pervious surface within the urban canyon solves these difficulties. Thus, the pervious surface is an integral part of the urban system and interacts directly with UCL air properties such as temperature and specific humidity. Yet, implementation of a sophisticated scheme for the pervious surface, such as the vegetation scheme in CLM, within the urban canyon is problematic because of computational and data requirements. Here, we choose a simplified bulk parameterization scheme to represent latent heat flux from pervious urban surfaces (Chapter 3).
 
 Note that the urban columns interact radiatively with one another through multiple exchanges of longwave and shortwave radiation (chapter 2). The heat and moisture fluxes from each surface interact with each other through a bulk air mass that represents air in the UCL for which specific humidity and temperature are predicted (chapter 3). We model the UCL plus the air above the roof (:numref:`fig-atm-urban-coupling`). This allows for mixing of above-roof air with canyon air.
 
@@ -231,7 +231,7 @@ Biogeophysical processes are simulated for each of the five urban columns and ea
 
 -  Momentum, sensible heat, and latent heat fluxes (chapter 3)
 
--  Anthropogenic heat fluxes to the canyon air due to waste heat from building heating/air conditioning (chapter 3). An example of parameterizing traffic heat fluxes is given in :ref:`Oleson et al. (2008b) <ref-olesonetal2008b>`, however, traffic heat fluxes are not currently included in the global implementation of the model.
+-  Anthropogenic heat fluxes to the canyon air due to waste heat from building heating/air conditioning (chapter 3). An example of parameterizing traffic heat fluxes is given in :ref:`Oleson et al. (2008b) <olesonetal2008b>`, however, traffic heat fluxes are not currently included in the global implementation of the model.
 
 -  Heat transfer in roofs, building walls, and the road including phase change (chapter 4)
 
@@ -250,9 +250,9 @@ All urban columns consist of fifteen layers to be consistent with CLM4. Generall
 Surface Data
 ~~~~~~~~~~~~
 
-Required input data for urban landunits are listed in :numref:`table-input-data` This data is provided by the surface dataset at the required spatial resolution (see the CLM4 User's Guide). Present day global urban extent and urban properties were developed by :ref:`Jackson et al. (2010) <ref-jacksonetal2010>`. Urban extent, defined for four classes [tall building district (TBD), and high, medium, and low density (HD, MD, LD)] was derived from LandScan 2004, a population density dataset derived from census data, nighttime lights satellite observations, road proximity, and slope (:ref:`Dobson et al., 2000 <ref-dobsonetal2000>`). The urban extent data is aggregated from the original 1 km resolution to a 0.5° by 0.5° global grid. For this particular implementation, only the sum of the TBD, HD, and MD classes are used to define urban extent as the LD class is highly rural and likely better modeled as a vegetated surface.
+Required input data for urban landunits are listed in :numref:`table-input-data` This data is provided by the surface dataset at the required spatial resolution (see the CLM4 User's Guide). Present day global urban extent and urban properties were developed by :ref:`Jackson et al. (2010) <jacksonetal2010>`. Urban extent, defined for four classes [tall building district (TBD), and high, medium, and low density (HD, MD, LD)] was derived from LandScan 2004, a population density dataset derived from census data, nighttime lights satellite observations, road proximity, and slope (:ref:`Dobson et al., 2000 <dobsonetal2000>`). The urban extent data is aggregated from the original 1 km resolution to a 0.5° by 0.5° global grid. For this particular implementation, only the sum of the TBD, HD, and MD classes are used to define urban extent as the LD class is highly rural and likely better modeled as a vegetated surface.
 
-For each of 33 distinct regions across the globe, thermal (e.g., heat capacity and thermal conductivity), radiative (e.g., albedo and emissivity) and morphological (e.g., height to width ratio, roof fraction, average building height, and pervious fraction of the canyon floor) properties of roof/wall/road are provided by :ref:`Jackson et al. (2010) <ref-jacksonetal2010>` for each of the four density classes. Building interior minimum and maximum temperatures are prescribed based on climate and socioeconomic considerations. Urban parameters are determined for the 0.5° by 0.5° global grid based on the dominant density class by area. This prevents potentially unrealistic parameter values that may result if the density classes are averaged. As a result, the current global representation of urban is almost exclusively medium density. Future implementations of the model could represent each of the density classes as a separate landunit. The surface dataset creation routines (see CLM4 User's Guide) aggregate the data to the desired resolution. It is surmised that the MODIS-based vegetation dataset used in CLM4 classifies built areas as bare soil, thus the urban extent preferentially replaces bare soil when it exists within the grid cell. A very small minimum threshold of 0.1% of the grid cell by area is used to resolve urban areas. An elevation threshold of 2200 m is used to eliminate urban areas where the grid cell surface elevation is significantly higher than the elevation the cities are actually at because of the coarse spatial resolution of the model. This prevents overestimates of anthropogenic heating in winter due to unrealistically cold temperatures.
+For each of 33 distinct regions across the globe, thermal (e.g., heat capacity and thermal conductivity), radiative (e.g., albedo and emissivity) and morphological (e.g., height to width ratio, roof fraction, average building height, and pervious fraction of the canyon floor) properties of roof/wall/road are provided by :ref:`Jackson et al. (2010) <jacksonetal2010>` for each of the four density classes. Building interior minimum and maximum temperatures are prescribed based on climate and socioeconomic considerations. Urban parameters are determined for the 0.5° by 0.5° global grid based on the dominant density class by area. This prevents potentially unrealistic parameter values that may result if the density classes are averaged. As a result, the current global representation of urban is almost exclusively medium density. Future implementations of the model could represent each of the density classes as a separate landunit. The surface dataset creation routines (see CLM4 User's Guide) aggregate the data to the desired resolution. It is surmised that the MODIS-based vegetation dataset used in CLM4 classifies built areas as bare soil, thus the urban extent preferentially replaces bare soil when it exists within the grid cell. A very small minimum threshold of 0.1% of the grid cell by area is used to resolve urban areas. An elevation threshold of 2200 m is used to eliminate urban areas where the grid cell surface elevation is significantly higher than the elevation the cities are actually at because of the coarse spatial resolution of the model. This prevents overestimates of anthropogenic heating in winter due to unrealistically cold temperatures.
 
 .. list-table:: Input data required for the urban model
    :widths: auto
@@ -514,7 +514,7 @@ Physical constants, shared by all of the components in the CCSM, are presented i
 Albedos and Radiative Fluxes
 ============================
 
-The effects of geometry on the radiation balance of urban surfaces are a key driver of urban-rural energy balance differences (:ref:`Oke et al. 1991 <ref-okeetal1991>`). Shadowing of urban surfaces affects the incident radiation and thus temperature. Similar to vegetated surfaces, multiple reflections of radiation between urban surfaces must be accounted for (:ref:`Harman et al. 2004 <ref-harmanetal2004>`). The net solar radiation and net longwave radiation, the net of which is the net radiation, are needed for each urban surface to drive turbulent and ground heat fluxes. The atmospheric model also requires radiative fluxes and albedo from the urban landunit, which are appropriately averaged with other landunits within the gridcell. The urban canyon unit is used to represent these radiative processes. Several simplifying assumptions are made. The effects of absorption, emission, and scattering of radiation by the canyon air are neglected and surfaces are assumed to be isotropic.
+The effects of geometry on the radiation balance of urban surfaces are a key driver of urban-rural energy balance differences (:ref:`Oke et al. 1991 <okeetal1991>`). Shadowing of urban surfaces affects the incident radiation and thus temperature. Similar to vegetated surfaces, multiple reflections of radiation between urban surfaces must be accounted for (:ref:`Harman et al. 2004 <harmanetal2004>`). The net solar radiation and net longwave radiation, the net of which is the net radiation, are needed for each urban surface to drive turbulent and ground heat fluxes. The atmospheric model also requires radiative fluxes and albedo from the urban landunit, which are appropriately averaged with other landunits within the gridcell. The urban canyon unit is used to represent these radiative processes. Several simplifying assumptions are made. The effects of absorption, emission, and scattering of radiation by the canyon air are neglected and surfaces are assumed to be isotropic.
 
 Albedo
 ------
@@ -531,19 +531,19 @@ The albedo of each urban surface is a weighted combination of snow-free "ground"
 
    \alpha_{u,\Lambda} = \alpha_{g,\Lambda}\left( 1 - f_{u,sno} \right) + \alpha_{sno,\Lambda}f_{u,sno}
 
-where :math:`f_{u,sno}` is the fraction of the urban surface covered with snow which is calculated from (:ref:`Bonan 1996 <ref-bonan1996>`)
+where :math:`f_{u,sno}` is the fraction of the urban surface covered with snow which is calculated from (:ref:`Bonan 1996 <bonan1996>`)
 
 .. math::
    :label: eq-0485
 
    f_{u,sno} = \frac{z_{u,sno}}{0.05} \leq 1
 
-The direct and diffuse "ground" albedos, :math:`\alpha_{g,\Lambda}^{\mu}` and :math:`\alpha_{g,\Lambda}`, where :math:`\Lambda` denotes either the visible (VIS) or near-infrared (NIR) waveband, are provided by the surface dataset (:numref:`table-input-data`), and :math:`z_{u,sno}` is the depth of snow (m) (section 5.1). An estimate of snow albedo is made based on the parameterization of :ref:`Marshall (1989) <ref-marshall1989>` in which albedo depends on solar zenith angle, grain size, and soot content (e.g., as adopted by the Land Surface Model (LSM) (:ref:`Bonan 1996 <ref-bonan1996>`)). Here, however, several simplifying assumptions are made due to uncertainties in how to apply such a parameterization to urban surfaces. A snow grain radius of 100 :math:`\mu m` (new powder snow, aged a few days) and a soot mass fraction of 1.5\ :math:`\times 10^{- 5}` (arrived at by noting that the LSM global soot mass fraction is 5\ :math:`\times 10^{- 6}` and :ref:`Chylek et al. (1987) <ref-chyleketal1987>` observed that soot concentrations in urban snowpacks averaged three times the concentration in rural snowpacks) are assumed. Direct and diffuse albedos are assumed to be equal. This yields :math:`\alpha_{sno,VIS}^{\mu} = \alpha_{sno,VIS} = 0.66` and :math:`\alpha_{sno,NIR}^{\mu} = \alpha_{sno,NIR} = 0.56` which fall about in the middle of the range given by :ref:`Oke (1987) <ref-oke1987>`.
+The direct and diffuse "ground" albedos, :math:`\alpha_{g,\Lambda}^{\mu}` and :math:`\alpha_{g,\Lambda}`, where :math:`\Lambda` denotes either the visible (VIS) or near-infrared (NIR) waveband, are provided by the surface dataset (:numref:`table-input-data`), and :math:`z_{u,sno}` is the depth of snow (m) (section 5.1). An estimate of snow albedo is made based on the parameterization of :ref:`Marshall (1989) <marshall1989>` in which albedo depends on solar zenith angle, grain size, and soot content (e.g., as adopted by the Land Surface Model (LSM) (:ref:`Bonan 1996 <bonan1996>`)). Here, however, several simplifying assumptions are made due to uncertainties in how to apply such a parameterization to urban surfaces. A snow grain radius of 100 :math:`\mu m` (new powder snow, aged a few days) and a soot mass fraction of 1.5\ :math:`\times 10^{- 5}` (arrived at by noting that the LSM global soot mass fraction is 5\ :math:`\times 10^{- 6}` and :ref:`Chylek et al. (1987) <chyleketal1987>` observed that soot concentrations in urban snowpacks averaged three times the concentration in rural snowpacks) are assumed. Direct and diffuse albedos are assumed to be equal. This yields :math:`\alpha_{sno,VIS}^{\mu} = \alpha_{sno,VIS} = 0.66` and :math:`\alpha_{sno,NIR}^{\mu} = \alpha_{sno,NIR} = 0.56` which fall about in the middle of the range given by :ref:`Oke (1987) <oke1987>`.
 
 Incident direct solar radiation
 -------------------------------
 
-Unlike the horizontal roof surface, the direct beam solar radiation received by the walls and the road must be adjusted for orientation and shadowing. The analytical solution given below follows :ref:`Masson (2000) <ref-masson2000>`. First, let :math:`\theta` be the angle between the sun direction and the along-canyon axis and consider the case where the along-canyon axis is perpendicular to the sun direction (:math:`\theta = \frac{\pi}{2}`). In this case, as shown in :numref:`fig-solar-elevation-view`, if the solar zenith angle :math:`\mu` is greater than the critical solar zenith angle :math:`\mu_{0}` (:math:`\mu_{0} = \tan^{- 1}\left( \frac{W}{H} \right)`), the road is in full shade, and the sunlit wall is in partial sun. Conversely, if :math:`\mu` is less than :math:`{\overrightarrow{L}}_{uc} - \left( L_{uc} \uparrow - L_{atm} \downarrow \right) = 0`, the road is in partial sun and the sunlit wall is in full sun. Note that, radiatively, the pervious and impervious road are treated the same, although their albedos are specified separately and may differ (:numref:`table-input-data`).
+Unlike the horizontal roof surface, the direct beam solar radiation received by the walls and the road must be adjusted for orientation and shadowing. The analytical solution given below follows :ref:`Masson (2000) <masson2000>`. First, let :math:`\theta` be the angle between the sun direction and the along-canyon axis and consider the case where the along-canyon axis is perpendicular to the sun direction (:math:`\theta = \frac{\pi}{2}`). In this case, as shown in :numref:`fig-solar-elevation-view`, if the solar zenith angle :math:`\mu` is greater than the critical solar zenith angle :math:`\mu_{0}` (:math:`\mu_{0} = \tan^{- 1}\left( \frac{W}{H} \right)`), the road is in full shade, and the sunlit wall is in partial sun. Conversely, if :math:`\mu` is less than :math:`{\overrightarrow{L}}_{uc} - \left( L_{uc} \uparrow - L_{atm} \downarrow \right) = 0`, the road is in partial sun and the sunlit wall is in full sun. Note that, radiatively, the pervious and impervious road are treated the same, although their albedos are specified separately and may differ (:numref:`table-input-data`).
 
 .. figure:: image4.jpeg
    :width: 5.40625in
@@ -559,7 +559,7 @@ If the direct beam solar radiation received by a horizontal surface (i.e., as re
 
    S_{sunwall} \downarrow_{\Lambda}^{\mu}\left( \theta = \frac{\pi}{2} \right) = \tan(\mu)S_{atm} \downarrow_{\Lambda}^{\mu} \mu \leq \mu_{0}
 
-Note that this is twice the radiation received by the wall in :ref:`Masson (2000) <ref-masson2000>` because here we force the other (shaded) wall to receive no solar radiation (:math:`S_{shdwall} \downarrow_{\Lambda}^{\mu} = 0`). In the case of :math:`\mu > \mu_{0}`, the illuminated fraction is :math:`\frac{(H - y)}{H}` and :math:`S_{sunwall} \downarrow_{\Lambda}^{\mu} = \left\lbrack \frac{(H - y)}{H} \right\rbrack\tan\mu S_{atm} \downarrow_{\Lambda}^{\mu}`. Since :math:`\tan\mu = \frac{W}{(H - y)}` this simplifies to
+Note that this is twice the radiation received by the wall in :ref:`Masson (2000) <masson2000>` because here we force the other (shaded) wall to receive no solar radiation (:math:`S_{shdwall} \downarrow_{\Lambda}^{\mu} = 0`). In the case of :math:`\mu > \mu_{0}`, the illuminated fraction is :math:`\frac{(H - y)}{H}` and :math:`S_{sunwall} \downarrow_{\Lambda}^{\mu} = \left\lbrack \frac{(H - y)}{H} \right\rbrack\tan\mu S_{atm} \downarrow_{\Lambda}^{\mu}`. Since :math:`\tan\mu = \frac{W}{(H - y)}` this simplifies to
 
 .. math::
    :label: eq-0106
@@ -679,21 +679,21 @@ Note that the factor :math:`\frac{H}{W}` for the sunlit wall and shaded wall con
 View factors
 ------------
 
-The interaction of diffuse radiation (i.e., longwave and scattered solar radiation) between urban surfaces depends on angle (view) factors, i.e., the fraction of diffusely distributed energy leaving one "surface" (e.g., sky) that arrives at another surface (e.g., wall) (:ref:`Sparrow and Cess 1978 <ref-sparrowandcess1978>`). If :math:`E_{ij}` is the diffuse radiative flux density on surface :math:`j` that originated from surface :math:`i` and :math:`E_{i}` is the radiative flux from surface :math:`i`, then
+The interaction of diffuse radiation (i.e., longwave and scattered solar radiation) between urban surfaces depends on angle (view) factors, i.e., the fraction of diffusely distributed energy leaving one "surface" (e.g., sky) that arrives at another surface (e.g., wall) (:ref:`Sparrow and Cess 1978 <sparrowandcess1978>`). If :math:`E_{ij}` is the diffuse radiative flux density on surface :math:`j` that originated from surface :math:`i` and :math:`E_{i}` is the radiative flux from surface :math:`i`, then
 
 .. math::
    :label: eq-0114
 
    E_{ij} = F_{ij}E_{i}
 
-where :math:`F_{ij}` is the view factor. The view factors depend only on the geometrical configurations of the involved surfaces. A table of view factors for various configurations is provided in Appendix A of :ref:`Sparrow and Cess (1978) <ref-sparrowandcess1978>`. For instance, the view factor for the radiation from the wall to the sky can be derived from configuration nine of Appendix A. If :math:`dA_{1}` is an infinitesimal element on surface 1 (i.e., wall) and :math:`A_{2}` is a finite surface (i.e., sky) (:numref:`fig-view-factor-schematic`), then the angle factor :math:`F_{dA_{1} - A_{2}}` for diffuse radiation leaving element :math:`dA_{1}` and arriving at :math:`A_{2}` is
+where :math:`F_{ij}` is the view factor. The view factors depend only on the geometrical configurations of the involved surfaces. A table of view factors for various configurations is provided in Appendix A of :ref:`Sparrow and Cess (1978) <sparrowandcess1978>`. For instance, the view factor for the radiation from the wall to the sky can be derived from configuration nine of Appendix A. If :math:`dA_{1}` is an infinitesimal element on surface 1 (i.e., wall) and :math:`A_{2}` is a finite surface (i.e., sky) (:numref:`fig-view-factor-schematic`), then the angle factor :math:`F_{dA_{1} - A_{2}}` for diffuse radiation leaving element :math:`dA_{1}` and arriving at :math:`A_{2}` is
 
 .. math::
    :label: eq-0115
 
    F_{dA_{1} - A_{2}} = \frac{1}{2\pi}\left( \tan^{- 1}\frac{1}{Y} - AY\tan^{- 1}A \right)
 
-where :math:`A = \frac{1}{\sqrt{X^{2} + Y^{2}}}`, :math:`X = \frac{a}{b}`, and :math:`Y = c/b`. Following :ref:`Sakakibara (1996) <ref-sakakibara1996>` and :ref:`Kusaka et al. (2001) <ref-kusakaetal2001>`, for an infinitely long canyon, :math:`b = \infty`, :math:`a = W`, and so the wall-sky view factor at distance :math:`c` from a point on the wall to the canyon top is
+where :math:`A = \frac{1}{\sqrt{X^{2} + Y^{2}}}`, :math:`X = \frac{a}{b}`, and :math:`Y = c/b`. Following :ref:`Sakakibara (1996) <sakakibara1996>` and :ref:`Kusaka et al. (2001) <kusakaetal2001>`, for an infinitely long canyon, :math:`b = \infty`, :math:`a = W`, and so the wall-sky view factor at distance :math:`c` from a point on the wall to the canyon top is
 
 .. math::
    :label: eq-0116
@@ -707,7 +707,7 @@ The total wall-sky view factor can be found by integrating the above equation ov
 
    \Psi_{wall - sky} = \frac{1}{H}\int_{c = 0}^{c = H}{\frac{1}{2}\left( 1 - \frac{c}{\sqrt{c^{2} + W^{2}}} \right)dc} = \frac{\frac{1}{2}\left( \frac{H}{W} + 1 - \sqrt{1 + \left( \frac{H}{W} \right)^{2}} \right)}{\frac{H}{W}}
 
-By the reciprocity rule (:math:`A_{1}F_{A_{1} - A_{2}} = A_{2}F_{A_{2} - A_{1}}`) (:ref:`Sparrow and Cess 1978 <ref-sparrowandcess1978>`), the sky-wall view factor is
+By the reciprocity rule (:math:`A_{1}F_{A_{1} - A_{2}} = A_{2}F_{A_{2} - A_{1}}`) (:ref:`Sparrow and Cess 1978 <sparrowandcess1978>`), the sky-wall view factor is
 
 .. math::
    :label: eq-0118
@@ -747,14 +747,14 @@ and the other view factors can be deduced from conservation of energy as
 
    \Psi_{wall - wall} = 1 - \Psi_{wall - sky} - \Psi_{wall - road}
 
-The view factors are presented graphically in :numref:`fig-view-factors-hw-ratio` Note that the view factors for radiation from the walls to the other surfaces sum to one (:math:`\Psi_{wall - wall} + \Psi_{wall - road} + \Psi_{wall - sky} = 1`). Similarly, the view factors for radiation from the road to the other surfaces also sum to one (:math:`\Psi_{road - wall} + \Psi_{road - wall} + \Psi_{road - sky} = 1`). As :ref:`Harman et al. (2004) <ref-harmanetal2004>` notes, at low height to width ratios, the road-sky view factor is close to one, the wall-wall view factor is close to zero, and the wall sky view factor is close to one half. However, at these low height to width ratios, the wall area is small compared to the road or sky area, indicating that most of the radiative exchange occurs between the road and sky, as it would for a flat surface. At height to width ratios greater than one, most of the radiative interactions take place between the two walls and the wall and the road. These view factors are consistent with those given by both :ref:`Masson (2000) <ref-masson2000>` and :ref:`Harman et al. (2004) <ref-harmanetal2004>`.
+The view factors are presented graphically in :numref:`fig-view-factors-hw-ratio` Note that the view factors for radiation from the walls to the other surfaces sum to one (:math:`\Psi_{wall - wall} + \Psi_{wall - road} + \Psi_{wall - sky} = 1`). Similarly, the view factors for radiation from the road to the other surfaces also sum to one (:math:`\Psi_{road - wall} + \Psi_{road - wall} + \Psi_{road - sky} = 1`). As :ref:`Harman et al. (2004) <harmanetal2004>` notes, at low height to width ratios, the road-sky view factor is close to one, the wall-wall view factor is close to zero, and the wall sky view factor is close to one half. However, at these low height to width ratios, the wall area is small compared to the road or sky area, indicating that most of the radiative exchange occurs between the road and sky, as it would for a flat surface. At height to width ratios greater than one, most of the radiative interactions take place between the two walls and the wall and the road. These view factors are consistent with those given by both :ref:`Masson (2000) <masson2000>` and :ref:`Harman et al. (2004) <harmanetal2004>`.
 
 .. figure:: image6.jpeg
    :width: 6in
    :height: 4.79167in
    :name: fig-view-factor-schematic
 
-   Schematic representation of angle (view) factor between infinitesimal element :math:`dA_{1}` (e.g., a point on the wall) and finite surface :math:`A_{2}` (e.g., the sky) (after :ref:`Sparrow and Cess (1978) <ref-sparrowandcess1978>`).
+   Schematic representation of angle (view) factor between infinitesimal element :math:`dA_{1}` (e.g., a point on the wall) and finite surface :math:`A_{2}` (e.g., the sky) (after :ref:`Sparrow and Cess (1978) <sparrowandcess1978>`).
 
 .. figure:: image7.png
    :width: 5.98958in
@@ -1236,7 +1236,7 @@ The total absorbed solar radiation for the urban canopy (road, walls, and roof) 
 
    Solar radiation absorbed by urban surfaces for solar zenith angles of 30° (top) and 60° (bottom). The atmospheric solar radiation is :math:`S_{atm} \downarrow_{\Lambda}^{\mu} = 400` and :math:`S_{atm} \downarrow_{\Lambda} = 200` W m\ :sup:`-2`. Note that the sunlit and shaded wall fluxes are per unit wall area. The solar radiation absorbed by the canyon is the sum of road and wall fluxes after converting the walls fluxes to per unit ground area using the height to width ratio.
 
-The canyon albedo (excluding the roof albedo) shown in :numref:`fig-canyon-albedo` has the same functional relationships with solar zenith angle and height to width ratio as TEB (:ref:`Masson 2000 <ref-masson2000>`). In general, the direct and diffuse canyon albedo decreases with height to width ratio as more solar radiation is trapped and absorbed within the canyon. The trapping of solar radiation is less effective at larger solar zenith angles. At these large solar zenith angles and small height to width ratio, the albedo increases because the higher albedo walls dominate the radiative exchange.
+The canyon albedo (excluding the roof albedo) shown in :numref:`fig-canyon-albedo` has the same functional relationships with solar zenith angle and height to width ratio as TEB (:ref:`Masson 2000 <masson2000>`). In general, the direct and diffuse canyon albedo decreases with height to width ratio as more solar radiation is trapped and absorbed within the canyon. The trapping of solar radiation is less effective at larger solar zenith angles. At these large solar zenith angles and small height to width ratio, the albedo increases because the higher albedo walls dominate the radiative exchange.
 
 .. figure:: image9.png
    :width: 5.98958in
@@ -1307,7 +1307,7 @@ Similar to albedo, the emissivity of each urban surface is a weighted combinatio
 
    \varepsilon_{u} = \varepsilon_{u}\left( 1 - f_{u,sno} \right) + \varepsilon_{sno}f_{u,sno}
 
-where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (:ref:`Oleson et al. 2004 <ref-oleson2004>`), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation :eq:`eq-0485`).
+where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (:ref:`Oleson et al. 2004 <oleson2004>`), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation :eq:`eq-0485`).
 
 As with solar radiation, the longwave interactions within the urban canyon are determined numerically by allowing for multiple reflections until a convergence criteria is met (the absorbed longwave radiation for a given reflection is less than :math:`1 \times 10^{- 3}`). The following equation :eq:`eq-0485` assume that absorptivity equals emissivity.
 
@@ -1839,7 +1839,7 @@ The total net longwave radiation for the urban canopy (road, walls, and roof) is
 Solar Zenith Angle
 ------------------
 
-The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010b) <ref-oleson2010b>` (see section 3.3) and does not differ for urban surfaces.
+The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010b) <oleson2010b>` (see section 3.3) and does not differ for urban surfaces.
 
 .. _section-2:
 
@@ -1853,7 +1853,7 @@ The net radiation for the urban canopy (:math:`\overrightarrow{S} - \overrightar
 
    \overrightarrow{S} - \overrightarrow{L} = H + \lambda E + G
 
-where :math:`H` is the sensible heat flux (W m\ :sup:`-2`), :math:`E` is the water vapor flux (kg m\ :sup:`-2` s\ :sup:`-1`), :math:`G` is the ground heat flux, and :math:`\lambda` is the latent heat of vaporization (or sublimation). The urban surfaces have unique radiative, thermal and hydrologic properties and environments. Thus, their sensible and latent heat fluxes are likely to be very different from each other. For example, the pervious road may have significant latent heat flux compared to the walls, which are assumed to be hydrologically inactive. Thus, the fluxes from individual urban surfaces must be modeled separately. However, CLM directly interacts with the atmospheric model at only the lowest atmospheric layer, which is well above the roof level of the urban model at the horizontal scales to be modeled. As a consequence, fluxes from individual urban surfaces must be combined to obtain the total sensible and latent heat flux to be provided to the atmospheric model. Allowing the urban surface fluxes to interact with each other through a bulk urban air mass is an acceptable approach analogous to the simulation of vegetated canopy fluxes (:numref:`fig-sensible-latent-heat-schematic`). This also allows for the solution of UCL air temperature and humidity, which are of interest in many applications. The approach shown in :numref:`fig-sensible-latent-heat-schematic` is slightly different from that of :ref:`Masson (2000) <ref-masson2000>` in that here, fluxes from the roof interact directly with the UCL air whereas in :ref:`Masson (2000) <ref-masson2000>` the roof and urban canyon are modeled as two independent sources of heat and moisture fluxes to the atmosphere. Here, we assume that the actual roofs are at various heights in the UCL and hence interact directly with the well-mixed UCL air.
+where :math:`H` is the sensible heat flux (W m\ :sup:`-2`), :math:`E` is the water vapor flux (kg m\ :sup:`-2` s\ :sup:`-1`), :math:`G` is the ground heat flux, and :math:`\lambda` is the latent heat of vaporization (or sublimation). The urban surfaces have unique radiative, thermal and hydrologic properties and environments. Thus, their sensible and latent heat fluxes are likely to be very different from each other. For example, the pervious road may have significant latent heat flux compared to the walls, which are assumed to be hydrologically inactive. Thus, the fluxes from individual urban surfaces must be modeled separately. However, CLM directly interacts with the atmospheric model at only the lowest atmospheric layer, which is well above the roof level of the urban model at the horizontal scales to be modeled. As a consequence, fluxes from individual urban surfaces must be combined to obtain the total sensible and latent heat flux to be provided to the atmospheric model. Allowing the urban surface fluxes to interact with each other through a bulk urban air mass is an acceptable approach analogous to the simulation of vegetated canopy fluxes (:numref:`fig-sensible-latent-heat-schematic`). This also allows for the solution of UCL air temperature and humidity, which are of interest in many applications. The approach shown in :numref:`fig-sensible-latent-heat-schematic` is slightly different from that of :ref:`Masson (2000) <masson2000>` in that here, fluxes from the roof interact directly with the UCL air whereas in :ref:`Masson (2000) <masson2000>` the roof and urban canyon are modeled as two independent sources of heat and moisture fluxes to the atmosphere. Here, we assume that the actual roofs are at various heights in the UCL and hence interact directly with the well-mixed UCL air.
 
 .. figure:: image11.jpeg
    :width: 5.78125in
@@ -1903,7 +1903,7 @@ Likewise, :math:`\theta_{s}` and :math:`q_{s}` are defined at heights :math:`z_{
 
    \theta_{atm} = T_{atm} + \Gamma_{d}z_{atm,h}
 
-where :math:`T_{atm}` is the air temperature (K) at height :math:`z_{atm,h}` and :math:`\Gamma_{d} = 0.0098` K m\ :sup:`-1` is the negative of the dry adiabatic lapse rate [this expression is first-order equivalent to :math:`\theta_{atm} = T_{atm}\left( \frac{P_{srf}}{P_{atm}} \right)^{\frac{R_{da}}{C_{p}}}` (:ref:`Stull 1988 <ref-stull1988>`), where :math:`P_{srf}` is the surface pressure (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`R_{da}` is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`table-physical-constants`)]. By definition, :math:`\theta_{s} = T_{s}`. The density of moist air (kg m\ :sup:`-3`) is
+where :math:`T_{atm}` is the air temperature (K) at height :math:`z_{atm,h}` and :math:`\Gamma_{d} = 0.0098` K m\ :sup:`-1` is the negative of the dry adiabatic lapse rate [this expression is first-order equivalent to :math:`\theta_{atm} = T_{atm}\left( \frac{P_{srf}}{P_{atm}} \right)^{\frac{R_{da}}{C_{p}}}` (:ref:`Stull 1988 <stull1988>`), where :math:`P_{srf}` is the surface pressure (Pa), :math:`P_{atm}` is the atmospheric pressure (Pa), and :math:`R_{da}` is the gas constant for dry air (J kg\ :sup:`-1` K\ :sup:`-1`) (:numref:`table-physical-constants`)]. By definition, :math:`\theta_{s} = T_{s}`. The density of moist air (kg m\ :sup:`-3`) is
 
 .. math::
    :label: eq-0188
@@ -1920,7 +1920,7 @@ where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the at
 Monin-Obukhov Similarity Theory
 -------------------------------
 
-The surface vertical kinematic fluxes of momentum :math:`\overline{u^{'}w^{'}}` and :math:`\overline{v^{'}w^{'}}` (m\ :sup:`2` s\ :sup:`-2`), sensible heat :math:`\overline{\theta^{'}w^{'}}` (K m s\ :sup:`-1`), and latent heat :math:`\overline{q^{'}w^{'}}` (kg kg\ :sup:`-1` m s\ :sup:`-1`), where :math:`u^{'}`, :math:`v^{'}`, :math:`w^{'}`, :math:`\theta^{'}`, and :math:`q^{'}` are zonal horizontal wind, meridional horizontal wind, vertical velocity, potential temperature, and specific humidity turbulent fluctuations about the mean, are defined from Monin-Obukhov similarity applied to the surface layer. This theory states that when scaled appropriately, the dimensionless mean horizontal wind speed, mean potential temperature, and mean specific humidity profile gradients depend on unique functions of :math:`\zeta = \frac{z - d}{L}` (:ref:`Zeng et al. 1998 <ref-zengandzhao1998>`) as
+The surface vertical kinematic fluxes of momentum :math:`\overline{u^{'}w^{'}}` and :math:`\overline{v^{'}w^{'}}` (m\ :sup:`2` s\ :sup:`-2`), sensible heat :math:`\overline{\theta^{'}w^{'}}` (K m s\ :sup:`-1`), and latent heat :math:`\overline{q^{'}w^{'}}` (kg kg\ :sup:`-1` m s\ :sup:`-1`), where :math:`u^{'}`, :math:`v^{'}`, :math:`w^{'}`, :math:`\theta^{'}`, and :math:`q^{'}` are zonal horizontal wind, meridional horizontal wind, vertical velocity, potential temperature, and specific humidity turbulent fluctuations about the mean, are defined from Monin-Obukhov similarity applied to the surface layer. This theory states that when scaled appropriately, the dimensionless mean horizontal wind speed, mean potential temperature, and mean specific humidity profile gradients depend on unique functions of :math:`\zeta = \frac{z - d}{L}` (:ref:`Zeng et al. 1998 <zengandzhao1998>`) as
 
 .. math::
    :label: eq-0190
@@ -1972,7 +1972,7 @@ where :math:`g` is the acceleration of gravity (m s\ :sup:`-2`) (:numref:`table-
 
 where :math:`\overline{\theta_{atm}}` is the atmospheric potential temperature.
 
-Following :ref:`Panofsky and Dutton (1984) <ref-panofskyanddutton1984>`, the differential equations for :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)` can be integrated formally without commitment to their exact forms. Integration between two arbitrary heights in the surface layer :math:`z_{2}` and :math:`z_{1}` (:math:`z_{2} > z_{1}`) with horizontal winds :math:`|u|_{1}` and :math:`|u|_{2}`, potential temperatures :math:`\theta_{1}` and :math:`\theta_{2}`, and specific humidities :math:`q_{1}` and :math:`q_{2}` results in
+Following :ref:`Panofsky and Dutton (1984) <panofskyanddutton1984>`, the differential equations for :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)` can be integrated formally without commitment to their exact forms. Integration between two arbitrary heights in the surface layer :math:`z_{2}` and :math:`z_{1}` (:math:`z_{2} > z_{1}`) with horizontal winds :math:`|u|_{1}` and :math:`|u|_{2}`, potential temperatures :math:`\theta_{1}` and :math:`\theta_{2}`, and specific humidities :math:`q_{1}` and :math:`q_{2}` results in
 
 .. math::
    :label: eq-0198
@@ -2065,7 +2065,7 @@ where :math:`w_{*}` is the convective velocity scale
 
 :math:`z_{i} = 1000` is the convective boundary layer height (m), and :math:`\beta = 1`.
 
-The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <ref-zengandzhao1998>`)
+The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <zengandzhao1998>`)
 
 .. math::
    :label: eq-0042
@@ -2080,7 +2080,7 @@ The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <ref-zengandzha
    \varphi_{m}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
-The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <ref-zengandzhao1998>`)
+The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <zengandzhao1998>`)
 
 .. math::
    :label: eq-0044
@@ -2095,7 +2095,7 @@ The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998
    \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
-To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (:ref:`Zeng et al. 1998 <ref-zengandzhao1998>`). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
+To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (:ref:`Zeng et al. 1998 <zengandzhao1998>`). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
 
 Very unstable :math:`(\zeta < - 1.574)`
 
@@ -2208,7 +2208,7 @@ Using the definitions of :math:`u_{*}`, :math:`\theta_{*}`, and :math:`q_{*}`, a
 
    R_{iB} = \frac{\theta_{v,atm} - \theta_{v,s}}{\overline{\theta_{v,atm}}}\frac{g\left( z_{atm,m} - d \right)}{V_{a}^{2}}
 
-is related to :math:`\zeta` (:ref:`Arya 2001 <ref-arya2001>`) as
+is related to :math:`\zeta` (:ref:`Arya 2001 <arya2001>`) as
 
 .. math::
    :label: eq-0223
@@ -2269,7 +2269,7 @@ The solution for the heat and momentum fluxes is presented in roughly the order 
 Roughness Length and Displacement Height
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The roughness length and displacement height for the urban canopy are needed. :ref:`Grimmond and Oke (1999) <ref-grimmondandoke1999>` review approaches to calculate these parameters from morphometric methods. Here, we use the :ref:`Macdonald et al. (1998) <ref-macdonaldetal1998>` approach, which appears to be a reasonable compromise between minimizing input requirements and yielding acceptable results. The subscript "canopy" is used to distinguish between an aerodynamic parameter for the urban canopy versus a parameter for an individual urban surface (e.g., roof).
+The roughness length and displacement height for the urban canopy are needed. :ref:`Grimmond and Oke (1999) <grimmondandoke1999>` review approaches to calculate these parameters from morphometric methods. Here, we use the :ref:`Macdonald et al. (1998) <macdonaldetal1998>` approach, which appears to be a reasonable compromise between minimizing input requirements and yielding acceptable results. The subscript "canopy" is used to distinguish between an aerodynamic parameter for the urban canopy versus a parameter for an individual urban surface (e.g., roof).
 
 The canopy displacement height :math:`d_{canopy}` (m) is
 
@@ -2308,14 +2308,14 @@ Several checks are made to ensure that the derived aerodynamic parameters are co
 Wind Speed in the Urban Canyon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Following :ref:`Masson (2000) <ref-masson2000>` and :ref:`Lemonsu et al. (2004) <ref-lemonsuetal2004>`, the wind speed in the canyon is the combination of the mean horizontal canyon wind :math:`U_{can}` (m s\ :sup:`-1`) and the turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`)
+Following :ref:`Masson (2000) <masson2000>` and :ref:`Lemonsu et al. (2004) <lemonsuetal2004>`, the wind speed in the canyon is the combination of the mean horizontal canyon wind :math:`U_{can}` (m s\ :sup:`-1`) and the turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`)
 
 .. math::
    :label: eq-0233
 
    U_{ac} = \sqrt{{U_{can}}^{2} + {W_{can}}^{2}}
 
-To calculate the horizontal wind speed in the canyon :math:`U_{can}` (m s\ :sup:`-1`), a horizontal wind speed at the top of the canyon is derived by assuming a logarithmic wind profile from the atmospheric reference height to the canyon top. The wind is then extrapolated to a height inside the canyon using an exponential profile. For skimming flow (:math:`\frac{H}{W} \geq 1`) (:ref:`Oke 1987 <ref-oke1987>`), a zero :math:`U_{can}` is assumed when the mean flow is perpendicular to the canyon orientation. After integration over 360° (to account for all street orientations),
+To calculate the horizontal wind speed in the canyon :math:`U_{can}` (m s\ :sup:`-1`), a horizontal wind speed at the top of the canyon is derived by assuming a logarithmic wind profile from the atmospheric reference height to the canyon top. The wind is then extrapolated to a height inside the canyon using an exponential profile. For skimming flow (:math:`\frac{H}{W} \geq 1`) (:ref:`Oke 1987 <oke1987>`), a zero :math:`U_{can}` is assumed when the mean flow is perpendicular to the canyon orientation. After integration over 360° (to account for all street orientations),
 
 .. math::
    :label: eq-0234
@@ -2347,7 +2347,7 @@ The magnitude of the reference level atmospheric wind is
 
    V_{r} = \sqrt{u_{atm}^{2} + v_{atm}^{2}} \geq 1
 
-where zonal and meridional winds :math:`u_{atm}` and :math:`v_{atm}` (m s\ :sup:`-1`) are at height :math:`z_{atm,m}`. The turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`) is assumed to be equal to the friction velocity (:ref:`Masson 2000 <ref-masson2000>`), which is determined from the solution for turbulent fluxes (section 3.2.3).
+where zonal and meridional winds :math:`u_{atm}` and :math:`v_{atm}` (m s\ :sup:`-1`) are at height :math:`z_{atm,m}`. The turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`) is assumed to be equal to the friction velocity (:ref:`Masson 2000 <masson2000>`), which is determined from the solution for turbulent fluxes (section 3.2.3).
 
 Iterative Solution for Urban Canopy Air Temperature and Humidity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2387,7 +2387,7 @@ The iterative solution begins with the friction velocity :math:`u_{*}`, potentia
    \left\lbrack \ln\left( \frac{z_{atm,w} - d_{canopy}}{z_{0w,canopy}} \right) - \psi_{w}\left( \frac{z_{atm,w} - d_{canopy}}{L} \right) + \psi_{w}\left( \frac{z_{0w,canopy}}{L} \right) \right\rbrack
 
 
-The resistances to sensible heat and latent heat transfer between canyon surfaces (roof, sunlit and shaded wall, pervious and impervious road) and the UCL depend only on canyon wind speed following :ref:`Masson (2000) <ref-masson2000>`. Thus, the surface resistances, :math:`r_{s,roof}`, :math:`r_{s,sunwall}`, :math:`r_{s,shdwall}`, :math:`r_{s,prvrd}`, :math:`r_{s,imprvrd}`, (s m\ :sup:`-1`) are identical and are determined from (:ref:`Rowley et al. 1930 <ref-rowleyetal1930>`)
+The resistances to sensible heat and latent heat transfer between canyon surfaces (roof, sunlit and shaded wall, pervious and impervious road) and the UCL depend only on canyon wind speed following :ref:`Masson (2000) <masson2000>`. Thus, the surface resistances, :math:`r_{s,roof}`, :math:`r_{s,sunwall}`, :math:`r_{s,shdwall}`, :math:`r_{s,prvrd}`, :math:`r_{s,imprvrd}`, (s m\ :sup:`-1`) are identical and are determined from (:ref:`Rowley et al. 1930 <rowleyetal1930>`)
 
 .. math::
    :label: eq-0239
@@ -2428,7 +2428,7 @@ The UCL air temperature and specific humidity are determined by solving the foll
 
 where :math:`H` is sensible heat flux (W m\ :sup:`-2`) and :math:`T_{g}` is the surface temperature of each urban surface. The term :math:`W_{roof}` is the relative contribution of roof fluxes to the total urban landunit flux (:numref:`table-input-data`). The term :math:`1 - W_{roof}` is then the relative contribution of the canyon to the total urban landunit flux. The term :math:`f_{prvrd}` is the fraction of road that is pervious (:numref:`table-input-data`) and the term :math:`1 - f_{prvrd}` is the fraction of the road that is impervious. Note that the factor :math:`\frac{H}{W}` for the sunwall and shadewall converts the flux from watts per meter squared of surface area to watts per meter squared of ground area.
 
-In :ref:`Oleson et al. (2008a) <ref-olesonetal2008a>`, an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations :eq:`eq-0523`-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (section 4.1).
+In :ref:`Oleson et al. (2008a) <olesonetal2008a>`, an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations :eq:`eq-0523`-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (section 4.1).
 
 equation :eq:`eq-0240` can be solved for the UCL air temperature as
 
@@ -2497,7 +2497,7 @@ In the absence of snow,
 
    f_{wet} = \left( \frac{w_{liq,snl + 1} + w_{ice,snl + 1}}{w_{pond,\max}}()^{\frac{2}{3}} \right)
 
-where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <ref-oleson2004>`).
+where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <oleson2004>`).
 
 In equations :eq:`eq-0528` and :eq:`eq-0530`, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
 
@@ -2750,7 +2750,7 @@ where :math:`\lambda_{sub}` and :math:`\lambda_{vap}` are the latent heat of sub
 Saturation Specific Humidity
 ----------------------------
 
-Saturation vapor pressure :math:`e_{sat}^{T}` (Pa) and its derivative :math:`\frac{de_{sat}^{T}}{dT}`, as a function of temperature :math:`T` (°C), are calculated from the eighth-order polynomial fits of :ref:`Flatau et al. (1992) <ref-flatauetal1992>`
+Saturation vapor pressure :math:`e_{sat}^{T}` (Pa) and its derivative :math:`\frac{de_{sat}^{T}}{dT}`, as a function of temperature :math:`T` (°C), are calculated from the eighth-order polynomial fits of :ref:`Flatau et al. (1992) <flatauetal1992>`
 
 .. math::
    :label: eq-0266
@@ -3213,7 +3213,7 @@ The top layer for roofs and walls is thin enough such that the layer-averaged te
 
    \Delta z_{i*} = 0.5\left\lbrack z_{i} - z_{h,i - 1} + c_{a}\left( z_{i + 1} - z_{h,i - 1} \right) \right\rbrack
 
-where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. :ref:`Yang 1998 <ref-yang1998>`, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations (4.20)-:eq:`eq-0289`.
+where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. :ref:`Yang 1998 <yang1998>`, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations (4.20)-:eq:`eq-0289`.
 
 For the pervious and impervious road, the boundary condition at the bottom is zero heat flux, :math:`F_{i} = 0`, resulting in, for :math:`i = N_{levgrnd}`,
 
@@ -3384,7 +3384,7 @@ where :math:`f_{heat} = \frac{1}{0.75}` and :math:`f_{cool} = \frac{1}{0.25}` ar
 Phase Change
 ------------
 
-Phase change may take place in any snow/soil layers of the pervious road and in the ponded water on roofs and impervious road. Note that the ponded water is treated as part of the top layer. Upon solution of the tridiagonal equation set (:ref:`Press et al. 1992 <ref-pressetal1992>`), the temperatures are evaluated to determine if phase change will take place as
+Phase change may take place in any snow/soil layers of the pervious road and in the ponded water on roofs and impervious road. Note that the ponded water is treated as part of the top layer. Upon solution of the tridiagonal equation set (:ref:`Press et al. 1992 <pressetal1992>`), the temperatures are evaluated to determine if phase change will take place as
 
 
 
@@ -3398,14 +3398,14 @@ Phase change may take place in any snow/soil layers of the pervious road and in 
    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
 
 
-where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from :ref:`Niu and Yang (2006) <ref-niuandyang2006>` is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
+where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from :ref:`Niu and Yang (2006) <niuandyang2006>` is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
 
 .. math::
    :label: eq-0315
 
    w_{liq,{max,}i} = \Delta z_{i}\theta_{sat,i}\left\lbrack \frac{10^{3}L_{f}\left( T_{f} - T_{i} \right)}{gT_{i}\psi_{sat,i}} \right\rbrack^{\frac{- 1}{B_{i}}} T_{i} < T_{f}
 
-where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <ref-clappandhornberger1978>` exponent (section 5.3.1). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
+where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` exponent (section 5.3.1). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
 
 For the special case when snow is present (snow mass :math:`W_{sno} > 0`) but there are no explicit snow layers (:math:`snl = 0`) (i.e., there is not enough snow present to meet the minimum snow depth requirement of 0.01 m), snow melt will take place for soil layer :math:`i = 1` if the soil layer temperature is greater than the freezing temperature (:math:`T_{1}^{n + 1} > T_{f}`).
 
@@ -3561,9 +3561,9 @@ where :math:`G` is the ground heat flux (section 3.2.4) and the last term is the
 Thermal Properties
 ------------------
 
-The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in section 1.2.2 and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <ref-lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
+The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in section 1.2.2 and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
 
-Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is from :ref:`Farouki (1981) <ref-farouki1981>`
+Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is from :ref:`Farouki (1981) <farouki1981>`
 
 
 
@@ -3579,7 +3579,7 @@ Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is f
 
 
 
-where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lambda_{dry,i}` is the dry thermal conductivity, :math:`K_{e,i}` is the Kersten number, :math:`S_{r,i}` is the wetness of the soil with respect to saturation, and :math:`\lambda_{bedrock} = 3` W m\ :sup:`-1` K\ :sup:`-1` is the thermal conductivity assumed for the deep ground layers (typical of saturated granitic rock; :ref:`Clauser and Huenges, 1995 <ref-clauserandhuenges1995>`). The saturated thermal conductivity :math:`\lambda_{sat,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal conductivities of the soil solid, liquid water, and ice constituents
+where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lambda_{dry,i}` is the dry thermal conductivity, :math:`K_{e,i}` is the Kersten number, :math:`S_{r,i}` is the wetness of the soil with respect to saturation, and :math:`\lambda_{bedrock} = 3` W m\ :sup:`-1` K\ :sup:`-1` is the thermal conductivity assumed for the deep ground layers (typical of saturated granitic rock; :ref:`Clauser and Huenges, 1995 <clauserandhuenges1995>`). The saturated thermal conductivity :math:`\lambda_{sat,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal conductivities of the soil solid, liquid water, and ice constituents
 
 
 
@@ -3628,7 +3628,7 @@ where
 
    S_{r,i} = \left( \frac{w_{liq,i}}{\rho_{liq}\Delta z_{i}} + \frac{w_{ice,i}}{\rho_{ice}\Delta z_{i}} \right)\frac{1}{\theta_{sat,i}} = \frac{\theta_{liq,i} + \theta_{ice,i}}{\theta_{sat,i}} \leq 1
 
-Thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow is from :ref:`Jordan (1991) <ref-jordan1991>`
+Thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) for snow is from :ref:`Jordan (1991) <jordan1991>`
 
 .. math::
    :label: eq-0333
@@ -3642,7 +3642,7 @@ where :math:`\lambda_{air}` and :math:`\lambda_{ice}` are the thermal conductivi
 
    \rho_{sno,i} = \frac{w_{ice,i} + w_{liq,i}}{\Delta z_{i}}
 
-The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from de :ref:`Vries (1963) <ref-vries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
+The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from de :ref:`Vries (1963) <vries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
 
 .. math::
    :label: eq-0335
@@ -3734,7 +3734,7 @@ Solid precipitation reaching the surface, :math:`q_{grnd,ice}\Delta t`, is added
 Snow
 ----
 
-The parameterizations for snow are based primarily on :ref:`Anderson (1976) <ref-anderson1976>`, :ref:`Jordan (1991) <ref-jordan1991>`, and :ref:`Dai and Zeng (1997) <ref-daiandzeng1997>`. Snow can have up to five layers. These layers are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0` where layer :math:`i = 0` is the snow layer next to the top soil layer and layer :math:`i = - 4` is the top layer of a five-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl + 1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`fig-snow-pack-example` for an example of the snow layer structure for a three layer snow pack.
+The parameterizations for snow are based primarily on :ref:`Anderson (1976) <anderson1976>`, :ref:`Jordan (1991) <jordan1991>`, and :ref:`Dai and Zeng (1997) <daiandzeng1997>`. Snow can have up to five layers. These layers are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0` where layer :math:`i = 0` is the snow layer next to the top soil layer and layer :math:`i = - 4` is the top layer of a five-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl + 1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`fig-snow-pack-example` for an example of the snow layer structure for a three layer snow pack.
 
 .. figure:: image17.jpeg
    :width: 6in
@@ -3785,7 +3785,7 @@ where
 
    \Delta z_{sno} = \frac{q_{grnd,ice}\Delta t}{\rho_{sno}}
 
-and :math:`\rho_{sno}` is the bulk density of newly fallen snow (kg m\ :sup:`-3`) (:ref:`Anderson 1976 <ref-anderson1976>`)
+and :math:`\rho_{sno}` is the bulk density of newly fallen snow (kg m\ :sup:`-3`) (:ref:`Anderson 1976 <anderson1976>`)
 
 
 
@@ -3871,7 +3871,7 @@ where the volumetric liquid water :math:`\theta_{liq,i}` and ice :math:`\theta_{
 
    \theta_{liq,i} = \frac{w_{liq,i}}{\Delta z_{i}\rho_{liq}} \leq 1 - \theta_{ice,i}
 
-and :math:`S_{r} = 0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson 1976 <ref-anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,i}` calculated in Equations :eq:`eq-0352`-:eq:`eq-0355` , unless the underlying layer is the surface layer, as
+and :math:`S_{r} = 0.033` is the irreducible water saturation (snow holds a certain amount of liquid water due to capillary retention after drainage has ceased (:ref:`Anderson 1976 <anderson1976>`)). The water holding capacity of the underlying layer limits the flow of water :math:`q_{liq,i}` calculated in Equations :eq:`eq-0352`-:eq:`eq-0355` , unless the underlying layer is the surface layer, as
 
 .. math::
    :label: eq-0354
@@ -3928,7 +3928,7 @@ Compaction is not allowed if the layer is saturated
 
 or if the ice content is below a minimum value (:math:`w_{ice,i} \leq 0.1`).
 
-Compaction as a result of destructive metamorphism :math:`C_{R1,\mspace{6mu} i}` (s\ :sup:`-1`) is temperature dependent (:ref:`Anderson 1976 <ref-anderson1976>`)
+Compaction as a result of destructive metamorphism :math:`C_{R1,\mspace{6mu} i}` (s\ :sup:`-1`) is temperature dependent (:ref:`Anderson 1976 <anderson1976>`)
 
 .. math::
    :label: eq-0358
@@ -3952,7 +3952,7 @@ where :math:`c_{3} = 2.777 \times 10^{- 6}` (s\ :sup:`-1`) is the fractional com
 
 where :math:`\frac{w_{ice,i}}{\Delta z_{i}}` and :math:`\frac{w_{liq,i}}{\Delta z_{i}}` are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
-The compaction rate as a result of overburden :math:`C_{R2,\mspace{6mu} i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,i}` (kg m\ :sup:`-2`) (:ref:`Anderson 1976 <ref-anderson1976>`)
+The compaction rate as a result of overburden :math:`C_{R2,\mspace{6mu} i}` (s\ :sup:`-1`) is a linear function of the snow load pressure :math:`P_{s,i}` (kg m\ :sup:`-2`) (:ref:`Anderson 1976 <anderson1976>`)
 
 .. math::
    :label: eq-0359
@@ -3999,7 +3999,7 @@ The snow layer thickness after compaction is then
 Snow Layer Combination and Subdivision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the determination of snow temperature including phase change (chapter 4), snow hydrology (sections 5.2.1, 5.2.2, and 5.2.3), and the compaction calculations (5.2.4), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <ref-jordan1991>`.
+After the determination of snow temperature including phase change (chapter 4), snow hydrology (sections 5.2.1, 5.2.2, and 5.2.3), and the compaction calculations (5.2.4), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <jordan1991>`.
 
 Combination
 ^^^^^^^^^^^
@@ -4186,23 +4186,23 @@ where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from ra
    w_{liq,1} = w_{liq,1} + \left( q_{liq,0} - q_{seva} \right)\Delta t \geq 0 q_{over} = 0
 
 
-For the pervious road, the simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <ref-bevenandkirkby1979>`) runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <ref-niuetal2005>` is implemented. A key concept underlying this approach is that of fractional saturated/impermeable area :math:`f_{sat}`, which is determined by the topographic characteristics and soil moisture state of a grid cell. The surface runoff consists of overland flow due to saturation excess (Dunne runoff) and infiltration excess (Hortonian runoff) mechanisms
+For the pervious road, the simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <bevenandkirkby1979>`) runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <niuetal2005>` is implemented. A key concept underlying this approach is that of fractional saturated/impermeable area :math:`f_{sat}`, which is determined by the topographic characteristics and soil moisture state of a grid cell. The surface runoff consists of overland flow due to saturation excess (Dunne runoff) and infiltration excess (Hortonian runoff) mechanisms
 
 .. math::
    :label: eq-0374
 
    q_{over} = f_{sat}q_{liq,0} + \left( 1 - f_{sat} \right)\max\left( 0,q_{liq,0} - q_{infl,\max}() \right)
 
-where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any melt water from snow (kg m\ :sup:`-2` s\ :sup:`-1`) and :math:`q_{infl,\max}` is a maximum soil infiltration capacity (kg m\ :sup:`-2` s\ :sup:`-1`). In :ref:`Niu et al. (2005) <ref-niuetal2005>`, :math:`f_{sat}` was a function of soil moisture whose potential or maximum value,\ :math:`f_{\max}`, was solely determined by topographic characteristics. :ref:`Niu and Yang (2006) <ref-niuandyang2006>` modified the expression for :math:`f_{sat}` to include a dependence on impermeable area fraction in frozen soil, :math:`f_{frz,1}`, of the top :math:`i = 1` soil layer as
+where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any melt water from snow (kg m\ :sup:`-2` s\ :sup:`-1`) and :math:`q_{infl,\max}` is a maximum soil infiltration capacity (kg m\ :sup:`-2` s\ :sup:`-1`). In :ref:`Niu et al. (2005) <niuetal2005>`, :math:`f_{sat}` was a function of soil moisture whose potential or maximum value,\ :math:`f_{\max}`, was solely determined by topographic characteristics. :ref:`Niu and Yang (2006) <niuandyang2006>` modified the expression for :math:`f_{sat}` to include a dependence on impermeable area fraction in frozen soil, :math:`f_{frz,1}`, of the top :math:`i = 1` soil layer as
 
 .. math::
    :label: eq-0375
 
    f_{sat} = \left( 1 - f_{frz,1} \right){f{\exp\left( - 0.5f_{over}z_{\nabla} \right)}_{frz,1}}_{\max}
 
-where :math:`f_{\max}` is the maximum saturated fraction, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth (m) (section 5.4). The maximum saturated fraction, :math:`f_{\max}`, is defined as the discrete cumulative distribution function (CDF) of the topographic index when the grid cell mean water table depth is zero. Thus, :math:`f_{\max}` is the percent of pixels in a grid cell whose topographic index is larger than or equal to the grid cell mean topographic index. It should be calculated explicitly from the CDF at each grid cell at the resolution that the model is run. However, because this is a computationally intensive task for global applications, :math:`f_{\max}` is calculated once from the CDF at a spatial resolution of 0.5° by 0.5° following :ref:`Niu et al. (2005) <ref-niuetal2005>` and then area-averaged to the desired resolution. The 0.5° resolution is compatible with the resolution of other CLM input surface datasets (e.g., plant functional types, leaf area index). The decay factor :math:`f_{over}` for global simulations was determined through sensitivity analysis and comparison with observed runoff to be 0.5 m\ :sup:`-1`.
+where :math:`f_{\max}` is the maximum saturated fraction, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth (m) (section 5.4). The maximum saturated fraction, :math:`f_{\max}`, is defined as the discrete cumulative distribution function (CDF) of the topographic index when the grid cell mean water table depth is zero. Thus, :math:`f_{\max}` is the percent of pixels in a grid cell whose topographic index is larger than or equal to the grid cell mean topographic index. It should be calculated explicitly from the CDF at each grid cell at the resolution that the model is run. However, because this is a computationally intensive task for global applications, :math:`f_{\max}` is calculated once from the CDF at a spatial resolution of 0.5° by 0.5° following :ref:`Niu et al. (2005) <niuetal2005>` and then area-averaged to the desired resolution. The 0.5° resolution is compatible with the resolution of other CLM input surface datasets (e.g., plant functional types, leaf area index). The decay factor :math:`f_{over}` for global simulations was determined through sensitivity analysis and comparison with observed runoff to be 0.5 m\ :sup:`-1`.
 
-The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soil ice content (:ref:`Niu and Yang 2006 <ref-niuandyang2006>`)
+The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soil ice content (:ref:`Niu and Yang 2006 <niuandyang2006>`)
 
 .. math::
    :label: eq-0376
@@ -4211,7 +4211,7 @@ The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soi
 
 where :math:`\alpha = 3` is an adjustable scale-dependent parameter, and :math:`w_{ice,i}` and :math:`w_{liq,i}` are the ice and liquid water contents of soil layer :math:`i` (kg m\ :sup:`-2`).
 
-The maximum infiltration capacity :math:`q_{infl,\max}` in equation :eq:`eq-0374` is determined from soil texture and soil moisture (:ref:`Entekhabi and Eagleson 1989 <ref-entekhabiandeagleson1989>`) as
+The maximum infiltration capacity :math:`q_{infl,\max}` in equation :eq:`eq-0374` is determined from soil texture and soil moisture (:ref:`Entekhabi and Eagleson 1989 <entekhabiandeagleson1989>`) as
 
 .. math::
    :label: eq-0377
@@ -4245,7 +4245,7 @@ where :math:`\Delta z_{1}` is the thickness of the top soil layer (mm) and
 
    \left( \frac{d\psi}{ds} \right)_{s = 1} = - B_{1}\psi_{sat,1}
 
-The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <ref-clappandhornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (section 5.3.1).
+The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (section 5.3.1).
 
 Infiltration into the surface soil layer of the pervious road is defined as the residual of the surface water balance
 
@@ -4273,7 +4273,7 @@ The infiltration for urban surfaces other than pervious road is
 Soil Water for the Pervious Road
 --------------------------------
 
-Soil water for the pervious road is predicted from a multi-layer model, in which the vertical soil moisture transport is governed by infiltration, surface and sub-surface runoff, gradient diffusion, gravity, evapotranspiration through root extraction, and interactions with groundwater (:numref:`fig-hydrologic-processes-pervious-road`). Vegetation is not represented explicitly, however, the total evaporation calculated in section 3.2.4, if not assigned to surface evaporation, is removed from each soil layer through an evapotranspiration loss (:math:`s` in the equation below). The following derivation generally follows that of Z.-L. Yang (1998, unpublished manuscript) with modifications by :ref:`Zeng and Decker (2009) <ref-zenganddecker2009>`.
+Soil water for the pervious road is predicted from a multi-layer model, in which the vertical soil moisture transport is governed by infiltration, surface and sub-surface runoff, gradient diffusion, gravity, evapotranspiration through root extraction, and interactions with groundwater (:numref:`fig-hydrologic-processes-pervious-road`). Vegetation is not represented explicitly, however, the total evaporation calculated in section 3.2.4, if not assigned to surface evaporation, is removed from each soil layer through an evapotranspiration loss (:math:`s` in the equation below). The following derivation generally follows that of Z.-L. Yang (1998, unpublished manuscript) with modifications by :ref:`Zeng and Decker (2009) <zenganddecker2009>`.
 
 For one-dimensional vertical water flow in soils, the conservation of mass is stated as
 
@@ -4319,7 +4319,7 @@ Substitution of this equation into equation :eq:`eq-0383` with :math:`Q = 0`, yi
 
    \frac{\partial\theta}{\partial t} = \frac{\partial}{\partial z}\left\lbrack k\left( \frac{\partial\theta}{\partial z}\frac{\partial\psi}{\partial\theta} \right) + 1 \right\rbrack
 
-:ref:`Zeng and Decker (2009) <ref-zenganddecker2009>` note that this :math:`\theta` -based form of the Richards equation cannot maintain the hydrostatic equilibrium soil moisture distribution because of the truncation errors of the finite-difference numerical scheme. They show that this deficiency can be overcome by subtracting the equilibrium state from equation :eq:`eq-0386` as
+:ref:`Zeng and Decker (2009) <zenganddecker2009>` note that this :math:`\theta` -based form of the Richards equation cannot maintain the hydrostatic equilibrium soil moisture distribution because of the truncation errors of the finite-difference numerical scheme. They show that this deficiency can be overcome by subtracting the equilibrium state from equation :eq:`eq-0386` as
 
 .. math::
    :label: eq-0389
@@ -4340,7 +4340,7 @@ so that
 
    q = - k\left\lbrack \frac{\partial\left( \psi - \psi_{E} \right)}{\partial z} \right\rbrack
 
-where :math:`\psi_{E}`\ is the equilibrium soil matric potential (mm). Substitution of equations :eq:`eq-0390` and :eq:`eq-0389` into equation :eq:`eq-0388` yields :ref:`Zeng and Decker's (2009) <ref-zenganddecker2009>` modified Richards equation
+where :math:`\psi_{E}`\ is the equilibrium soil matric potential (mm). Substitution of equations :eq:`eq-0390` and :eq:`eq-0389` into equation :eq:`eq-0388` yields :ref:`Zeng and Decker's (2009) <zenganddecker2009>` modified Richards equation
 
 .. math::
    :label: eq-0392
@@ -4352,7 +4352,7 @@ where the soil moisture source/sink term :math:`Q` is now included.
 Hydraulic Properties
 ~~~~~~~~~~~~~~~~~~~~
 
-The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, section 1.2.2) based on the work of :ref:`Clapp and Hornberger (1978) <ref-clappandhornberger1978>` and :ref:`Cosby et al. (1984) <ref-cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <ref-lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
+The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, section 1.2.2) based on the work of :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` and :ref:`Cosby et al. (1984) <cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
 
 The hydraulic conductivity is defined at the depth of the interface of two adjacent layers :math:`z_{h,i}` (:numref:`fig-soil-water-flux-scheme`) and is a function of the saturated hydraulic conductivity :math:`k_{sat}\left\lbrack z_{h,i} \right\rbrack`, the total (ice plus liquid) volumetric soil moisture of the two layers :math:`\theta_{i}` and :math:`\theta_{i + 1}` and the impermeable fraction :math:`f_{frz,i}`
 
@@ -4368,7 +4368,7 @@ The hydraulic conductivity is defined at the depth of the interface of two adjac
 
 
 
-where :math:`f_{frz,i}` is defined in equation :eq:`eq-0376`. The saturated hydraulic conductivity :math:`k_{sat}\left\lbrack z_{h,i} \right\rbrack` (mm s\ :sup:`-1`) depends on soil texture (:ref:`Cosby et al. 1984 <ref-cosbyetal1984>`) as
+where :math:`f_{frz,i}` is defined in equation :eq:`eq-0376`. The saturated hydraulic conductivity :math:`k_{sat}\left\lbrack z_{h,i} \right\rbrack` (mm s\ :sup:`-1`) depends on soil texture (:ref:`Cosby et al. 1984 <cosbyetal1984>`) as
 
 .. math::
    :label: eq-0393
@@ -4816,7 +4816,7 @@ The coefficients for the aquifer layer :math:`i = N_{levsoi} + 1` are then
 
    r_{i} = q_{i - 1}^{n}
 
-Upon solution of the tridiagonal equations :eq:`eq-0424` and :eq:`eq-0426` set (:ref:`Press et al. 1992 <ref-pressetal1992>`), the liquid water contents are updated as follows
+Upon solution of the tridiagonal equations :eq:`eq-0424` and :eq:`eq-0426` set (:ref:`Press et al. 1992 <pressetal1992>`), the liquid water contents are updated as follows
 
 .. math::
    :label: eq-0455
@@ -4833,10 +4833,10 @@ The volumetric water content is
 Groundwater-Soil Water Interactions for the Pervious Road
 ---------------------------------------------------------
 
-Drainage or sub-surface runoff for the pervious road is based on the SIMTOP scheme (:ref:`Niu et al. 2005 <ref-niuetal2005>`) with a modification to account for reduced drainage in frozen soils. In the work of :ref:`Niu et al. (2005) <ref-niuetal2005>`, the drainage :math:`q_{drai}` (kg m\ :sup:`-2` s\ :sup:`-1`) was formulated as
+Drainage or sub-surface runoff for the pervious road is based on the SIMTOP scheme (:ref:`Niu et al. 2005 <niuetal2005>`) with a modification to account for reduced drainage in frozen soils. In the work of :ref:`Niu et al. (2005) <niuetal2005>`, the drainage :math:`q_{drai}` (kg m\ :sup:`-2` s\ :sup:`-1`) was formulated as
 
 | :math:`q_{drai} = {q\exp\left( - f_{drai}z_{\nabla} \right)}_{drai,\max}`.
-| Here, the water table depth :math:`z_{\nabla}` has units of meters. To restrict drainage in frozen soils, :ref:`Niu et al. (2005) <ref-niuetal2005>` added the following condition
+| Here, the water table depth :math:`z_{\nabla}` has units of meters. To restrict drainage in frozen soils, :ref:`Niu et al. (2005) <niuetal2005>` added the following condition
 
 .. math::
    :label: eq-0457
@@ -4859,7 +4859,7 @@ where :math:`f_{imp}` is the fraction of impermeable area determined from the ic
 
 where :math:`\alpha = 3` is an adjustable scale-dependent parameter, :math:`jwt` is the index of the layer directly above the water table, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the ice and liquid water contents of soil layer :math:`i` (kg m\ :sup:`-2`), and :math:`\Delta z_{i}` is the layer thickness (m). This expression is functionally the same as that used to determine the impermeable fraction (equation :eq:`eq-0376`). In equation (5.140), the decay factor :math:`f_{drai} = 2.5` m\ :sup:`-1` and the maximum drainage when the water table depth is at the surface :math:`{q - 3}_{drai,\max}` kg m\ :sup:`-2` s\ :sup:`-1` were determined for global simulations through sensitivity analysis and comparison with observed runoff.
 
-Determination of water table depth :math:`z_{\nabla}` is based on work by :ref:`Niu et al. (2007) <ref-niuetal2007>`. In this approach, a groundwater component is added in the form of an unconfined aquifer lying below the soil column (:numref:`fig-hydrologic-processes-pervious-road`). The groundwater solution is dependent on whether the water table is within or below the soil column. Two water stores are used to account for these solutions. The first, :math:`W_{a}`, is the water stored in the unconfined aquifer (mm) and is proportional to the change in water table depth when the water table is below the lower boundary of the hydrologically-active soil column. The second, :math:`W_{t}`, is the actual groundwater which can include water within the soil column. When the water table is below the soil column :math:`W_{t} = W_{a}`. When the water table is within the soil column, :math:`W_{a}` is constant because there is no water exchange between the soil column and the underlying aquifer, while :math:`W_{t}` varies with soil moisture conditions.
+Determination of water table depth :math:`z_{\nabla}` is based on work by :ref:`Niu et al. (2007) <niuetal2007>`. In this approach, a groundwater component is added in the form of an unconfined aquifer lying below the soil column (:numref:`fig-hydrologic-processes-pervious-road`). The groundwater solution is dependent on whether the water table is within or below the soil column. Two water stores are used to account for these solutions. The first, :math:`W_{a}`, is the water stored in the unconfined aquifer (mm) and is proportional to the change in water table depth when the water table is below the lower boundary of the hydrologically-active soil column. The second, :math:`W_{t}`, is the actual groundwater which can include water within the soil column. When the water table is below the soil column :math:`W_{t} = W_{a}`. When the water table is within the soil column, :math:`W_{a}` is constant because there is no water exchange between the soil column and the underlying aquifer, while :math:`W_{t}` varies with soil moisture conditions.
 
 In either case, :math:`W_{t}` is first updated as
 
@@ -4891,7 +4891,7 @@ where :math:`\Delta\theta_{liq,N_{levsoi} + 1} = \theta_{liq,N_{levsoi} + 1}^{n 
 
    \Delta z_{N_{levsoi} + 1} = z_{\nabla}^{n} - z_{h,N_{levsoi}}
 
-The water table depth is calculated from the aquifer water storage scaled by the average specific yield :math:`S_{y} = 0.2` [the fraction of water volume that can be drained by gravity in an unconfined aquifer (:ref:`Niu et al. 2007 <ref-niuetal2007>`)]
+The water table depth is calculated from the aquifer water storage scaled by the average specific yield :math:`S_{y} = 0.2` [the fraction of water volume that can be drained by gravity in an unconfined aquifer (:ref:`Niu et al. 2007 <niuetal2007>`)]
 
 .. math::
    :label: eq-0464
@@ -4921,7 +4921,7 @@ For the case when the water table is within the soil column, there is no water e
 
 
 
-where :math:`jwt` is the index of the layer directly above the water table, and limits are placed on the water table depth as :math:`0.05 \leq z_{\nabla} \leq 80`. In the work of :ref:`Niu et al. (2007) <ref-niuetal2007>`, the water table depth in this case was calculated with the specific yield determined by the volume of air pores (the pore space not filled with water) within the soil to convert :math:`W_{t}` to a water table depth. However, this was found to result in unstable water table calculations for a significant proportion of grid cells in global simulations. More specifically, when repeatedly forcing the model with a single year of atmospheric data, the temporal evolution of water table depth was significantly different from year to year for some grid cells, with occasional rapid (within a few days) movement of the water table to the soil surface in some cases. This occurred in grid cells with soil water contents near saturation because of the small amount of available pore space. This had deleterious implications for stability of surface fluxes and temperature. In equation :eq:`eq-0101` , the calculation is based on effective porosity (:math:`\theta_{sat,i} - \theta_{ice,i} \geq 0.01`) only. Although less defensible from a physical viewpoint, the approach stabilizes the water table calculation for these grid cells and eliminates unrealistic oscillations in surface fluxes and temperature.
+where :math:`jwt` is the index of the layer directly above the water table, and limits are placed on the water table depth as :math:`0.05 \leq z_{\nabla} \leq 80`. In the work of :ref:`Niu et al. (2007) <niuetal2007>`, the water table depth in this case was calculated with the specific yield determined by the volume of air pores (the pore space not filled with water) within the soil to convert :math:`W_{t}` to a water table depth. However, this was found to result in unstable water table calculations for a significant proportion of grid cells in global simulations. More specifically, when repeatedly forcing the model with a single year of atmospheric data, the temporal evolution of water table depth was significantly different from year to year for some grid cells, with occasional rapid (within a few days) movement of the water table to the soil surface in some cases. This occurred in grid cells with soil water contents near saturation because of the small amount of available pore space. This had deleterious implications for stability of surface fluxes and temperature. In equation :eq:`eq-0101` , the calculation is based on effective porosity (:math:`\theta_{sat,i} - \theta_{ice,i} \geq 0.01`) only. Although less defensible from a physical viewpoint, the approach stabilizes the water table calculation for these grid cells and eliminates unrealistic oscillations in surface fluxes and temperature.
 
 In this case, the drainage :math:`q_{drai}` is extracted from the soil liquid water in layers within the water table. The partitioning of drainage from these layers is proportional to the layer thickness-weighted hydraulic conductivity as
 
@@ -4973,7 +4973,7 @@ and snow pack properties are unchanged. The :math:`q_{snwcp,ice}` runoff is sent
 Offline Mode
 ============
 
-In offline mode (uncoupled to an atmospheric model), the atmospheric forcing required by CLM (:numref:`table-atm-input`) is supplied by observed datasets. The standard forcing provided with the model is a 57-year (1948-2004) dataset that is described in :ref:`Qian et al. (2006) <ref-qianetal2006>` though alternative observed forcing datasets could also be used. The forcing data is ingested into a data atmosphere model in three "streams"; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar radiation (:math:`S_{atm}`) (W m\ :sup:`-2`), and four other fields [atmospheric pressure :math:`P_{atm}` (Pa), atmospheric specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`), atmospheric temperature :math:`T_{atm}` (K), and atmospheric wind :math:`W_{atm}` (m s\ :sup:`-1`)]. These are separate streams because they are handled differently according to the type of field and the temporal resolution at which they are provided. In the :ref:`Qian et al. (2006) <ref-qianetal2006>` dataset, the precipitation stream is provided at six hour intervals and the data atmosphere model prescribes the same precipitation rate for each model time step within the six hour period. The four fields that are grouped together in another stream (pressure, humidity, temperature, and wind) are provided at three hour intervals and the data atmosphere model linearly interpolates these fields to the time step of the model.
+In offline mode (uncoupled to an atmospheric model), the atmospheric forcing required by CLM (:numref:`table-atm-input`) is supplied by observed datasets. The standard forcing provided with the model is a 57-year (1948-2004) dataset that is described in :ref:`Qian et al. (2006) <qianetal2006>` though alternative observed forcing datasets could also be used. The forcing data is ingested into a data atmosphere model in three "streams"; precipitation (:math:`P`) (mm s\ :sup:`-1`), solar radiation (:math:`S_{atm}`) (W m\ :sup:`-2`), and four other fields [atmospheric pressure :math:`P_{atm}` (Pa), atmospheric specific humidity :math:`q_{atm}` (kg kg\ :sup:`-1`), atmospheric temperature :math:`T_{atm}` (K), and atmospheric wind :math:`W_{atm}` (m s\ :sup:`-1`)]. These are separate streams because they are handled differently according to the type of field and the temporal resolution at which they are provided. In the :ref:`Qian et al. (2006) <qianetal2006>` dataset, the precipitation stream is provided at six hour intervals and the data atmosphere model prescribes the same precipitation rate for each model time step within the six hour period. The four fields that are grouped together in another stream (pressure, humidity, temperature, and wind) are provided at three hour intervals and the data atmosphere model linearly interpolates these fields to the time step of the model.
 
 The total solar radiation is provided at six hour intervals. The data is fit to the model time step using a diurnal function that depends on the cosine of the solar zenith angle :math:`\mu` to provide a smoother diurnal cycle of solar radiation and to ensure that all of the solar radiation supplied by the six-hourly forcing data is actually used. The solar radiation at model time step :math:`t_{M}` is
 
@@ -5035,7 +5035,7 @@ and in the near-infrared :math:`R_{nir}` is
 
 where :math:`a_{0} = 0.17639,a_{1} = 0.00380,a_{2} = - 9.0039 \times 10^{- 6},a_{3} = 8.1351 \times 10^{- 9}` and :math:`b_{0} = 0.29548,b_{1} = 0.00504,b_{2} = - 1.4957 \times 10^{- 5},b_{3} = 1.4881 \times 10^{- 8}` are coefficients from polynomial fits to the CAM data.
 
-The additional atmospheric forcing variables required by :numref:`table-atm-input` are derived as follows. The atmospheric reference height :math:`z_{atm}^{'}` (m) is set to 30 m. The directional wind components are derived as :math:`u_{atm} = v_{atm} = \frac{W_{atm}}{\sqrt{2}}`. The potential temperature :math:`\overline{\theta_{atm}}` (K) is set to the atmospheric temperature :math:`T_{atm}`. The atmospheric longwave radiation :math:`L_{atm} \downarrow` (W m\ :sup:`-2`) is derived from the atmospheric vapor pressure :math:`e_{atm}` and temperature :math:`T_{atm}` (:ref:`Idso 1981 <ref-idso1981>`) as
+The additional atmospheric forcing variables required by :numref:`table-atm-input` are derived as follows. The atmospheric reference height :math:`z_{atm}^{'}` (m) is set to 30 m. The directional wind components are derived as :math:`u_{atm} = v_{atm} = \frac{W_{atm}}{\sqrt{2}}`. The potential temperature :math:`\overline{\theta_{atm}}` (K) is set to the atmospheric temperature :math:`T_{atm}`. The atmospheric longwave radiation :math:`L_{atm} \downarrow` (W m\ :sup:`-2`) is derived from the atmospheric vapor pressure :math:`e_{atm}` and temperature :math:`T_{atm}` (:ref:`Idso 1981 <idso1981>`) as
 
 .. math::
    :label: eq-0479
@@ -5082,7 +5082,7 @@ where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the wa
 
    q_{atm} = \frac{0.622e_{sat}^{T_{dew}}}{P_{atm} - 0.378e_{sat}^{T_{dew}}}
 
-Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from :ref:`Lowe's (1977) <ref-lowe1977>` polynomials (section 3.3). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
+Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from :ref:`Lowe's (1977) <lowe1977>` polynomials (section 3.3). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
 
 The user may provide the total direct and diffuse solar radiation, :math:`S_{atm} \downarrow^{\mu}` and :math:`S_{atm} \downarrow`. These will be time-interpolated using the procedure described above and then each term equally apportioned into the visible and near-infrared wavebands (e.g., :math:`S_{atm} \downarrow_{vis}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`, :math:`S_{atm} \downarrow_{nir}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`).
 
@@ -5094,9 +5094,9 @@ Oleson et al. (2008a, b) describe efforts to evaluate the urban model. This incl
 Nighttime longwave radiation and surface temperature
 ----------------------------------------------------
 
-Nighttime net longwave radiation and air temperature data for an urban canyon in the Grandview district of Vancouver, British Columbia (49°N, 123°W) (:ref:`Nunez and Oke, 1976 <ref-nunezandoke1976>`, :ref:`1977 <ref-nunezandoke1977>`) are used to examine the longwave radiation budget and surface temperatures simulated by the model. The canyon is oriented north-south and is located in a mixed light industrial and residential district. The canyon is 79m long, 7.54m wide, and the east and west walls are 7.31m and 5.59m in height, respectively. Walls are concrete, painted flat white with no windows. The canyon floor consists of a 3-5 cm layer of gravel and clay. Weather conditions on the night of September 9-10, 1973 were clear and calm. Air temperature and net longwave radiation measured at about 0.3m above the midpoint of the canyon floor and from the mid-height of each wall are compared with simulated canyon floor and wall surface temperature and net longwave radiation.
+Nighttime net longwave radiation and air temperature data for an urban canyon in the Grandview district of Vancouver, British Columbia (49°N, 123°W) (:ref:`Nunez and Oke, 1976 <nunezandoke1976>`, :ref:`1977 <nunezandoke1977>`) are used to examine the longwave radiation budget and surface temperatures simulated by the model. The canyon is oriented north-south and is located in a mixed light industrial and residential district. The canyon is 79m long, 7.54m wide, and the east and west walls are 7.31m and 5.59m in height, respectively. Walls are concrete, painted flat white with no windows. The canyon floor consists of a 3-5 cm layer of gravel and clay. Weather conditions on the night of September 9-10, 1973 were clear and calm. Air temperature and net longwave radiation measured at about 0.3m above the midpoint of the canyon floor and from the mid-height of each wall are compared with simulated canyon floor and wall surface temperature and net longwave radiation.
 
-The observation site has been used to validate other urban models such as SHIM (Surface Heat Island Model) (:ref:`Johnson et al. 1991 <ref-johnsonetal1991>`), the Town Energy Budget (TEB) scheme (:ref:`Masson 2000 <ref-masson2000>`), NSLUCM (Noah land surface model/Single-layer Urban Canopy Model) (:ref:`Kusaka et al. 2001 <ref-kusakaetal2001>`), and VUCM (Vegetated Urban Canopy Model) (:ref:`Lee and Park 2007 <ref-leeandpark2007>`). Published data from :ref:`Lee and Park (2007) <ref-leeandpark2007>` were used to determine input parameters for the urban model as these data appeared to produce the best simulations compared to observations (:numref:`table-grandview-parameters`). The canyon floor was modeled as a sandy clay soil with no moisture content. No anthropogenic fluxes were prescribed. Atmospheric wind speed at 10m height was set to 2 m s\ :sup:`-1` and specific humidity to 0.01 kg kg\ :sup:`-1` throughout the simulation (:ref:`Lee and Park 2007 <ref-leeandpark2007>`). Atmospheric air temperature was initialized at 19°C and set to the calculated canyon air temperature on subsequent time steps to maintain a neutral temperature profile (no thermal turbulent fluxes between the canyon and the atmosphere) (:ref:`Masson 2000 <ref-masson2000>`). Specific humidity of canyon air is set to the atmospheric specific humidity. Downward longwave radiation was initialized to 339 W m\ :sup:`-2` and decreased linearly with the atmospheric air temperature (:ref:`Masson 2000 <ref-masson2000>`). Initial wall and canyon floor temperatures were set to 18.35°C and 18.5°C, respectively per :ref:`Johnson et al. (1991) <ref-johnsonetal1991>`.
+The observation site has been used to validate other urban models such as SHIM (Surface Heat Island Model) (:ref:`Johnson et al. 1991 <johnsonetal1991>`), the Town Energy Budget (TEB) scheme (:ref:`Masson 2000 <masson2000>`), NSLUCM (Noah land surface model/Single-layer Urban Canopy Model) (:ref:`Kusaka et al. 2001 <kusakaetal2001>`), and VUCM (Vegetated Urban Canopy Model) (:ref:`Lee and Park 2007 <leeandpark2007>`). Published data from :ref:`Lee and Park (2007) <leeandpark2007>` were used to determine input parameters for the urban model as these data appeared to produce the best simulations compared to observations (:numref:`table-grandview-parameters`). The canyon floor was modeled as a sandy clay soil with no moisture content. No anthropogenic fluxes were prescribed. Atmospheric wind speed at 10m height was set to 2 m s\ :sup:`-1` and specific humidity to 0.01 kg kg\ :sup:`-1` throughout the simulation (:ref:`Lee and Park 2007 <leeandpark2007>`). Atmospheric air temperature was initialized at 19°C and set to the calculated canyon air temperature on subsequent time steps to maintain a neutral temperature profile (no thermal turbulent fluxes between the canyon and the atmosphere) (:ref:`Masson 2000 <masson2000>`). Specific humidity of canyon air is set to the atmospheric specific humidity. Downward longwave radiation was initialized to 339 W m\ :sup:`-2` and decreased linearly with the atmospheric air temperature (:ref:`Masson 2000 <masson2000>`). Initial wall and canyon floor temperatures were set to 18.35°C and 18.5°C, respectively per :ref:`Johnson et al. (1991) <johnsonetal1991>`.
 
 .. list-table:: Urban model parameters for the Grandview site
    :widths: auto
@@ -5142,7 +5142,7 @@ The observation site has been used to validate other urban models such as SHIM (
      - W m\ :sup:`-1` K\ :sup:`-1`
    * - Pervious road thermal conductivity
      - :math:`\lambda_{imprvrd,i = 1,10}`
-     - Soil texture (:ref:`Oleson et al. 2004 <ref-oleson2004>`)
+     - Soil texture (:ref:`Oleson et al. 2004 <oleson2004>`)
      - W m\ :sup:`-1` K\ :sup:`-1`
    * - Wall volumetric heat capacity
      - :math:`c_{wall,i = 1,10}`
@@ -5150,7 +5150,7 @@ The observation site has been used to validate other urban models such as SHIM (
      - MJ m\ :sup:`-3` K\ :sup:`-1`
    * - Pervious road volumetric heat capacity
      - :math:`c_{imprvrd,i = 1,10}`
-     - Soil texture (:ref:`Oleson et al. 2004 <ref-oleson2004>`)
+     - Soil texture (:ref:`Oleson et al. 2004 <oleson2004>`)
      - MJ m\ :sup:`-3` K\ :sup:`-1`
    * - Percent sand, percent clay of pervious road (soil)
      - :math:`\% sand,\% clay`
@@ -5164,422 +5164,12 @@ The observation site has been used to validate other urban models such as SHIM (
 
 ..
 
-:numref:`fig-grandview-validation` shows the simulated surface temperatures and net longwave radiation for the walls and canyon floor compared to observations. The urban model does a good job simulating the nighttime cooling of canyon surfaces (note that the simulated west and east wall surface temperatures are the same). Temperature differences from observations are less than 1°C at all times. Net longwave radiation is also well simulated, differences from observations are less than about 3 W m\ :sup:`-2` for the west wall and canyon floor. The simulated net longwave radiation for the east wall is biased high by up to 7 W m\ :sup:`-2`. These results are quite similar to those from VUCM and generally slightly better than the models of :ref:`Masson (2000) <ref-masson2000>`, :ref:`Johnson et al. (1991) <ref-johnsonetal1991>`, and :ref:`Kusaka et al. (2001) <ref-kusakaetal2001>` which generally have warmer surface temperatures as noted by :ref:`Lee and Park (2007) <ref-leeandpark2007>`. However, one important difference between :ref:`Lee and Park (2007) <ref-leeandpark2007>` and the other studies is that the thermal admittance prescribed for the canyon floor is substantially lower in VUCM. When higher thermal admittance is prescribed in the urban model, warmer surface temperatures are simulated consistent with the other studies.
+:numref:`fig-grandview-validation` shows the simulated surface temperatures and net longwave radiation for the walls and canyon floor compared to observations. The urban model does a good job simulating the nighttime cooling of canyon surfaces (note that the simulated west and east wall surface temperatures are the same). Temperature differences from observations are less than 1°C at all times. Net longwave radiation is also well simulated, differences from observations are less than about 3 W m\ :sup:`-2` for the west wall and canyon floor. The simulated net longwave radiation for the east wall is biased high by up to 7 W m\ :sup:`-2`. These results are quite similar to those from VUCM and generally slightly better than the models of :ref:`Masson (2000) <masson2000>`, :ref:`Johnson et al. (1991) <johnsonetal1991>`, and :ref:`Kusaka et al. (2001) <kusakaetal2001>` which generally have warmer surface temperatures as noted by :ref:`Lee and Park (2007) <leeandpark2007>`. However, one important difference between :ref:`Lee and Park (2007) <leeandpark2007>` and the other studies is that the thermal admittance prescribed for the canyon floor is substantially lower in VUCM. When higher thermal admittance is prescribed in the urban model, warmer surface temperatures are simulated consistent with the other studies.
 
    .. figure:: image19.png
       :width: 5.29167in
       :height: 6.83333in
       :name: fig-grandview-validation
 
-      Simulated surface temperatures (solid lines) and net longwave radiation (dashed lines) compared to observations (circles) for a) west (east-facing) wall, b) east wall, and c) canyon floor for the night of September 9-10, 1973 in an urban canyon in the Grandview district of Vancouver, British Columbia. Observed data were digitized from Figure 5 in :ref:`Johnson et al. (1991) <ref-johnsonetal1991>`.
+      Simulated surface temperatures (solid lines) and net longwave radiation (dashed lines) compared to observations (circles) for a) west (east-facing) wall, b) east wall, and c) canyon floor for the night of September 9-10, 1973 in an urban canyon in the Grandview district of Vancouver, British Columbia. Observed data were digitized from Figure 5 in :ref:`Johnson et al. (1991) <johnsonetal1991>`.
 
-References
-==========
-
-.. _ref-anderson1976:
-
-Anderson, E.A. 1976. A point energy and mass balance model of a snow cover. NOAA Technical Report NWS 19, Office of Hydrology, National Weather Service, Silver Spring, MD.
-
-.. _ref-arnfield2003:
-
-Arnfield, A.J. 2003. Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat island. Int. J. Climatol. 23:1-26.
-
-.. _ref-arya2001:
-
-Arya, S.P. 2001. Introduction to Meteorology. Academic Press, San Diego, CA.
-
-.. _ref-atkinson2003:
-
-Atkinson, B.W. 2003. Numerical modeling of urban heat-island intensity. Bound.-Layer Meteor. 109:285-310.
-
-.. _ref-auchetal2004:
-
-Auch, R., Taylor, J., and Acevedo, W. 2004. Urban growth in American cities: Glimpses of U.S. urbanization. Circular 1252, U.S. Geological Survey, U.S. Department of the Interior, 52 pp.
-
-.. _ref-avissar1996:
-
-Avissar, R. 1996. Potential effects of vegetation on the urban thermal environment. Atmos. Environ. 30:437-448.
-
-.. _ref-best2005:
-
-Best, M.J. 2005. Representing urban areas within operational numerical weather prediction models. Bound.-Layer Meteor. 114:91-109.
-
-.. _ref-best2006:
-
-Best, M.J. 2006. Progress towards better weather forecasts for city dwellers: from short range to climate change. Theor. Appl. Climatol. 84:47-55. DOI:10.1007/s00704-005-0143-2.
-
-.. _ref-betts2001:
-
-Betts, R.A. 2001. Biogeophysical impacts of land use on present-day climate: near-surface temperature change and radiative forcing. Atmos. Sci. Lett. 2:39-51. DOI:10.1006/asle.2001.0023.
-
-.. _ref-bevenandkirkby1979:
-
-Beven, K.J., and Kirkby, M.J. 1979. A physically based variable contributing area model of basin hydrology. Hydrol. Sci. Bull. 24: 43-69.
-
-.. _ref-bonan1996:
-
-Bonan, G.B. 1996. A land surface model (LSM version 1.0) for ecological, hydrological, and atmospheric studies: technical description and user's guide. NCAR Technical Note NCAR/TN-417+STR, National Center for Atmospheric Research, Boulder, CO, 150 pp.
-
-.. _ref-bonan2002:
-
-Bonan, G.B. 2002. Ecological climatology: concepts and applications. Cambridge University Press, 678 pp.
-
-.. _ref-bounouaetal2002:
-
-Bounoua, L., DeFries, R., Collatz, G.J., Sellers, P., and Khan, H. 2002. Effects of land cover conversion on surface climate. Clim. Change 52:29-64.
-
-.. _ref-brovkinetal2004:
-
-Brovkin, V., Sitch, S., von Bloh, W., Claussen, M., Bauer, E., and Cramer, W. 2004. Role of land cover changes for atmospheric CO\ :sub:`2` increase and climate change during the last 150 years. Global Change Biol. 10:1253-1266. DOI:10.1111/j.1365-2486.2004.00812.x.
-
-.. _ref-brown2000:
-
-Brown, M. 2000. Urban parameterizations for mesoscale meteorological models. pp. 193-255. In: Z. Boybeyi (editor) Mesoscale Atmospheric Dispersion. WIT Press, Southampton, Boston.
-
-.. _ref-changnon1992:
-
-Changnon, S.A. 1992. Inadvertent weather modification in urban areas: Lessons for global climate change. Bull. Amer. Meteor. Soc. 73:619-627.
-
-.. _ref-chyleketal1987:
-
-Chylek, P., Srivastava, V., Cahenzli, L., Pinnick, R.G., Dod, R.L., Novakov, T., Cook, T.L., and Hinds, B.D. 1987. Aerosol and graphitic carbon content of snow. J. Geophys. Res. 92:9801-9809.
-
-.. _ref-ciesin2004:
-
-CIESIN (Center for International Earth Science Information Network), Columbia University; International Food Policy Research Institute (IPFRI), the World Bank; and Centro Internacional de Agricultura Tropical (CIAT), 2004. Global Rural-Urban Mapping Project (GRUMP): Urban Extents. Palisades, NY: CIESIN, Columbia University. Available at http://beta.sedac.ciesin.columbia.edu/gpw.
-
-.. _ref-clappandhornberger1978:
-
-Clapp, R.B., and Hornberger, G.M. 1978. Empirical equations for some soil hydraulic properties. Water Resour. Res. 14:601-604.
-
-.. _ref-clauserandhuenges1995:
-
-Clauser, C., and Huenges, E. 1995. Thermal conductivity of rocks and minerals. pp. 105-126. In: T. J. Ahrens (editor) Rock Physics and Phase Relations: A Handbook of Physical Constants. Washington, D.C.
-
-.. _ref-comrie2000:
-
-Comrie, A.C. 2000. Mapping a wind-modified urban heat island in Tucson, Arizona (with comments on integrating research and undergraduate learning). Bull. Amer. Meteor. Soc. 81:2417-2431.
-
-.. _ref-copelandetal1996:
-
-Copeland, J.H., Pielke, R.A., and Kittel, T.G.F. 1996. Potential climatic impacts of vegetation change: a regional modeling study. J. Geophys. Res. 101:7409-7418.
-
-.. _ref-cosbyetal1984:
-
-Cosby, B.J., Hornberger, G.M., Clapp, R.B., and Ginn, T.R. 1984. A statistical exploration of the relationships of soil moisture characteristics to the physical properties of soils. Water Resour. Res. 20:682-690.
-
-.. _ref-cramer2001:
-
-Cramer, W., et al. 2001. Global response of terrestrial ecosystem structure and function to CO\ :sub:`2` and climate change: results from six dynamic global vegetation models. Global Change Biol. 7:357-373.
-
-.. _ref-daiandzeng1997:
-
-Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Part I: formulation and validation in off-line experiments. Adv. Atmos. Sci. 14:433-460.
-
-.. _ref-dandouetal2005:
-
-Dandou, A., Tombrou, M., Akylas, E., Soulakellis, N., and Bossioli, E. 2005. Development and evaluation of an urban parameterization scheme in the Penn State/NCAR Mesoscale Model (MM5). J. Geophys. Res. 110:D10102. DOI: 10.1029/2004JD005192.
-
-.. _ref-dobsonetal2000:
-
-Dobson, J.E., Bright, E.A., Coleman, P.R., Durfee, R.C., and Worley, B.A. 2000. LandScan: A global population database for estimating populations at risk. Photo­grammetric Engineering and Remote Sensing 66(7):849-857.
-
-.. _ref-vries1963:
-
-de Vries, D.A. 1963. Thermal Properties of Soils. In: W.R. van Wijk (editor) Physics of the Plant Environment. North-Holland, Amsterdam.
-
-.. _ref-eastmanetal2001:
-
-Eastman, J.L., Coughenour, M.B., and Pielke Sr., R.A. 2001. The regional effects of CO\ :sub:`2` and landscape change using a coupled plant and meteorological model. Global Change Biol. 7:797-815.
-
-.. _ref-elvidgeetal2004:
-
-Elvidge, C.D., Sutton, P.C., Wagner, T.W., Ryzner, R., Vogelmann, J.E., Goetz, S.J., Smith, A.J., Jantz, C., Seto, K.C., Imhoff, M.L., Wang, Y.Q., Milesi, C. and Nemani, R. 2004. Urbanization. pp. 315-328. In: G. Gutman, A. C. Janetos, C.O. Justice, E.F. Moran, J.F. Mustard, R.R. Rindfuss, D. Skole, B.L. Turner II, and M.A Cochrane (editors), Land Change Science: Observing, Monitoring and Understanding Trajectories of Change on the Earth's Surface. Kluwer Academic Publishers, The Netherlands.
-
-.. _ref-entekhabiandeagleson1989:
-
-Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization for atmospheric general circulation models including subgrid scale spatial variability. J. Climate 2:816-831.
-
-.. _ref-farouki1981:
-
-Farouki, O.T. 1981. The thermal properties of soils in cold regions. Cold Regions Sci. and Tech. 5:67-75.
-
-.. _ref-feddemaetal2005:
-
-Feddema, J.J., Oleson, K.W., Bonan, G., Mearns, L.O., Buja, L.E., Meehl, G.A., and Washington, W.M. 2005: The importance of land cover change in simulating future climates. Science 310:1674-1678.
-
-.. _ref-flatauetal1992:
-
-Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation vapor pressure. J. Appl. Meteor. 31:1507-1513.
-
-.. _ref-foley2005:
-
-Foley, J.A., et al. 2005. Global consequences of land use. Science 309:570-574.
-
-.. _ref-fu2003:
-
-Fu, C. 2003. Potential impacts of human-induced land cover change in East Asia monsoon. Glob. Planet. Change 37:219-229. DOI:10.1016/S0921-8181(02)00207-2.
-
-.. _ref-grimmondetal1991:
-
-Grimmond, C.S.B., Cleugh, H.A., and Oke, T.R. 1991. An objective urban heat storage model and its comparison with other schemes. Atmos. Environ. 25B:311-326.
-
-.. _ref-grimmondandoke1999:
-
-Grimmond, C.S.B., and Oke, T.R. 1999. Aerodynamic properties of urban areas derived from analysis of surface form. J. Appl. Meteor. 38:1262-1292.
-
-.. _ref-grimmondandoke2002:
-
-Grimmond, C.S.B., and Oke, T.R. 2002. Turbulent heat fluxes in urban areas: observations and a local-scale urban meteorological parameterization scheme (LUMPS). J. Appl. Meteor. 41:792-810.
-
-.. _ref-harmanetal2004:
-
-Harman, I.N., Best, M.J., and Belcher, S.E. 2004. Radiative exchange in an urban street canyon. Bound.-Layer Meteor. 110:301-316.
-
-.. _ref-houghtonetal2001:
-
-Houghton, J.T., Ding, Y., Griggs, D.J., Noguer, M., van der Linden, P.J., Dai, X., Maskell, K., and Johnson, C.A. (editors) 2001. Climate Change 2001: The Scientific Basis. Cambridge University Press, 881 pp.
-
-.. _ref-ichinoseetal1999:
-
-Ichinose, T., Shimodozono, K., Hanaki, K. 1999. Impact of anthropogenic heat on urban climate in Tokyo. Atmos. Environ. 33:3897-3909.
-
-.. _ref-idso1981:
-
-Idso, S.B. 1981. A set of equations for full spectrum and 8- to 14-:math:`\mu`\ m and 10.5- to 12.5-:math:`\mu`\ m thermal radiation from cloudless skies. Water Resour. Res. 17:295-304.
-
-.. _ref-jacksonetal2010:
-
-Jackson, T.L., Feddema, J.J., Oleson, K.W., Bonan, G.B., and Bauer, J.T. 2010. Parameterization of urban characteristics for global climate modeling. A. Assoc. Am. Geog., in press.
-
-.. _ref-jinetal2005:
-
-Jin, M., Dickinson, R.E., and Zhang, D.-L. 2005. The footprint of urban areas on global climate as characterized by MODIS. J. Climate 18:1551-1565.
-
-.. _ref-johnsonetal1991:
-
-Johnson, G.T., Oke, T.R., Lyons, T.J., Steyn, D.G., Watson, I.D., and Voogt, J.A. 1991. Simulation of surface urban heat islands under 'ideal' conditions at night. Part 1: Theory and tests against field data. Bound.-Layer Meteor. 56:275-294.
-
-.. _ref-jordan1991:
-
-Jordan, R. 1991. A One-dimensional Temperature Model for a Snow Cover: Technical Documentation for SNTHERM.89. U.S. Army Cold Regions Research and Engineering Laboratory, Special Report 91-16.
-
-.. _ref-kalnayandcai2003:
-
-Kalnay, E., and Cai, M. 2003. Impact of urbanization and land-use change on climate. Nature 423:528-531.
-
-.. _ref-kusakaetal2001:
-
-Kusaka, H., Kondo, H., Kikegawa, Y., and Kimura, F. 2001. A simple single-layer urban canopy model for atmospheric models: comparison with multi-layer and slab models. Bound.-Layer Meteor. 101:329-358.
-
-.. _ref-kusakaandkimura2004:
-
-Kusaka, H., and Kimura, F. 2004. Thermal effects of urban canyon structure on the nocturnal heat island: numerical experiment using a mesoscale model coupled with an urban canopy model. J. Appl. Meteor. 43:1899-1910.
-
-.. _ref-landsberg1981:
-
-Landsberg, H.E. 1981. The Urban Climate. New York, Academic Press, 275 pp.
-
-.. _ref-lawrenceandslater2008:
-
-Lawrence, D.M., and Slater, A.G. 2008. Incorporating organic soil into a global climate model. Clim. Dyn. 30. DOI:10.1007/s00382-007-0278-1.
-
-.. _ref-leeandpark2007:
-
-Lee, S.-H., and Park, S.-U. 2007. A vegetated urban canopy model for meteorological and environmental modeling. Bound.-Layer Meteor. DOI:10:1007/s10546-007-9221-6.
-
-.. _ref-lemonsuandmasson2002:
-
-Lemonsu, A., and Masson, V. 2002. Simulation of a summer urban breeze over Paris. Bound.-Layer Meteor. 104:463-490.
-
-.. _ref-lemonsuetal2004:
-
-Lemonsu, A., Grimmond, C.S.B., and Masson, V. 2004. Modeling the surface energy balance of the core of an old Mediterranean city: Marseille. J. Appl. Meteor. 43:312-327.
-
-.. _ref-lowe1977:
-
-Lowe, P.R. 1977. An approximating polynomial for the computation of saturation vapor pressure. J. Appl. Meteor. 16:100-103.
-
-.. _ref-macdonaldetal1998:
-
-Macdonald, R.W., Griffiths, R.F., and Hall, D.J. 1998. An improved method for the estimation of surface roughness of obstacle arrays. Atmos. Environ. 32:1857-1864.
-
-.. _ref-marshall1989:
-
-Marshall, S.E. 1989. A physical parameterization of snow albedo for use in climate models. NCAR Cooperative Thesis NCAR/CT-123, National Center for Atmospheric Research, Boulder, CO.
-
-.. _ref-martillietal2002:
-
-Martilli, A., Clappier, A., Rotach, M.W. 2002. An urban surface exchange parameterization for mesoscale models. Bound.-Layer Meteor. 104:261-304.
-
-.. _ref-masson2000:
-
-Masson, V. 2000. A physically-based scheme for the urban energy budget in atmospheric models. Bound.-Layer Meteor. 94:357-397.
-
-.. _ref-massonetal2002:
-
-Masson, V., Grimmond, C.S.B., and Oke, T.R. 2002. Evaluation of the Town Energy Balance (TEB) scheme with direct measurements from dry districts in two cities. J. Appl. Meteor. 41:1011-1026.
-
-.. _ref-masson2006:
-
-Masson, V. 2006. Urban surface modeling and the meso-scale impact of cities. Theor. Appl. Climatol. 84:35-45.
-
-.. _ref-mathewsetal2004:
-
-Mathews, H.D., Weaver, A.J., Meissner, K.J., Gillett, N.P., and Eby, M. 2004. Natural and anthropogenic climate change: incorporating historical land cover change, vegetation dynamics and the global carbon cycle. Clim. Dyn. 22:461-479. DOI:10.1007/s00382-004-0392-2.
-
-.. _ref-myhreandmyhre2003:
-
-Myhre, G., and Myhre, A. 2003. Uncertainties in radiative forcing due to surface albedo changes caused by land-use changes. J. Climate 16:1511-1524.
-
-.. _ref-narismaandpitman2003:
-
-Narisma, G.T., and Pitman, A.J. 2003. The impact of 2000 years of land cover change on the Australian near-surface climate. J. Hydrometeor. 4:424-436.
-
-.. _ref-niuetal2005:
-
-Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., and Gulden, L.E. 2005. A simple TOPMODEL-based runoff parameterization (SIMTOP) for use in global climate models. J. Geophys. Res. 110:D21106. DOI: 10.1029/2005JD006111.
-
-.. _ref-niuandyang2006:
-
-Niu, G.-Y., and Yang, Z.-L. 2006. Effects of frozen soil on snowmelt runoff and soil water storage at a continental scale. J. Hydrometeor. 7:937-952.
-
-.. _ref-niuetal2007:
-
-Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., Gulden, L.E., and Su, H. 2007. Development of a simple groundwater model for use in climate models and evaluation with Gravity Recovery and Climate Experiment data. J. Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
-
-.. _ref-nunezandoke1976:
-
-Nunez, M., and Oke, T.R. 1976. Long-wave radiative flux divergence and nocturnal cooling of the urban atmosphere. II: Within and urban canyon. Bound.-Layer Meteor. 10:121-135.
-
-.. _ref-nunezandoke1977:
-
-Nunez, M., and Oke, T.R. 1977. The energy balance of an urban canyon. J. Appl. Meterorol. 16:11-19.
-
-.. _ref-oke1981:
-
-Oke, T.R. 1981. Canyon geometry and the nocturnal urban heat island: comparison of scale model and field observations. J. Climatol. 1:237-254.
-
-.. _ref-oke1982:
-
-Oke, T.R. 1982. The energetic basis of the urban heat island. Quart. J. Royal Meteor. Soc. 108:1-24.
-
-.. _ref-oke1987:
-
-Oke, T.R. 1987. Boundary Layer Climates (2\ :sup:`nd` edition). London, Routledge, 435 pp.
-
-.. _ref-okeandcleugh1987:
-
-Oke, T.R., and Cleugh, H.A. 1987. Urban heat storage derived as energy balance residuals. Bound.-Layer Meteor. 39:233-245.
-
-.. _ref-okeetal1991:
-
-Oke, T.R., Johnson, G.T., Steyn, D.G., and Watson, I.D. 1991. Simulation of surface urban heat islands under "ideal" conditions at night, part 2: diagnosis of causation. Bound.-Layer Meteor. 56:339-358.
-
-.. _ref-oleson2004:
-
-Oleson, K.W., et al. 2004. Technical description of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-461+STR, National Center for Atmospheric Research, Boulder, CO, 173 pp.
-
-.. _ref-olesonetal2008a:
-
-Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Grimmond, C.S.B. 2008a. An urban parameterization for a global climate model. 1. Formulation and evaluation for two cities. J. Appl. Meteor. Clim. 47:1038-1060.
-
-.. _ref-olesonetal2008b:
-
-Oleson, K.W., Bonan, G.B., Feddema, J., and Vertenstein, M. 2008b. An urban parameterization for a global climate model. 2. Sensitivity to input parameters and the simulated urban heat island in offline simulations. J. Appl. Meteor. Clim. 47:1061-1076.
-
-.. _ref-olesonetal2010a:
-
-Oleson, K.W., Bonan, G.B., and Feddema, J. 2010a. The effects of white roofs on urban temperature in a global climate model. Geophys. Res. Lett. 37:L03701. DOI:10.1029/2009GL042194.
-
-.. _ref-oleson2010b:
-
-Oleson, K.W., et al. 2010b. Technical description of version 4.0 of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-478+STR, National Center for Atmospheric Research, Boulder, CO, 257 pp.
-
-.. _ref-otteetal2004:
-
-Otte, T.L., Lacser, A., Dupont, S., and Ching, J.K.S. 2004. Implementation of an urban canopy parameterization in a mesoscale meteorological model. J. Appl. Meteor. 43:1648-1665.
-
-.. _ref-panofskyanddutton1984:
-
-Panofsky, H.A., and Dutton, J.A. 1984. Atmospheric Turbulence: Models and Methods for Engineering Applications. John Wiley and Sons, New York.
-
-.. _ref-pielkeetal2002:
-
-Pielke Sr., R.A., Marland, G., Betts, R.A., Chase, T.N., Eastman, J.L., Niles, J.O., Niyogi, D.D.S., and Running, S.W. 2002. The influence of land-use change and landscape dynamics on the climate system: relevance to climate-change policy beyond the radiative effect of greenhouse gases. Phil. Trans. R. Soc. Lond. A, 360:1705-1719.
-
-.. _ref-piringeretal2002:
-
-Piringer, M., Grimmond, C.S.B., Joffre, S.M., Mestayer, P., Middleton, D.R., Rotach, A. Baklanov, M.W., De Ridder, K., Ferreira, J., Guilloteau, E., Karppinen, A., Martilli, A., Masson, V., and Tombrou, M. 2002. Investigating the surface energy balance in urban areas - recent advances and future needs. Water, Air, Soil Pollution: Focus, 2:1-16.
-
-.. _ref-pressetal1992:
-
-Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
-
-.. _ref-qianetal2006:
-
-Qian, T., Dai, A., Trenberth, K.E., and Oleson, K.W. 2006. Simulation of global land surface conditions from 1948 to 2004: Part I: Forcing data and evaluations. J. Hydrometeor. 7:953-975.
-
-.. _ref-rowleyetal1930:
-
-Rowley, F.B., Algren, A.B., and Blackshaw, J.L. 1930. Surface conductances as affected by air velocity, temperature, and character of surface. ASHRAE Trans. 36:429-446.
-
-.. _ref-sailor1995:
-
-Sailor, D.J. 1995. Simulated urban climate response to modifications in surface albedo and vegetative cover. J. App. Meteor. 34:1694-1704.
-
-.. _ref-sailorandlu2004:
-
-Sailor, D.J., and Lu, L. 2004. A top-down methodology for developing diurnal and seasonal anthropogenic heating profiles for urban areas. Atmos. Environ. 38:2737-2748.
-
-.. _ref-sakakibara1996:
-
-Sakakibara, Y. 1996. A numerical study of the effect of urban geometry upon the surface energy budget. Atmos. Environ. 30:487-496.
-
-.. _ref-sellersetal1997:
-
-Sellers, P.J., Dickinson, R.E., Randall, D.A., Betts, A.K., Hall, F.G., Berry, J.A., Collatz, G.J., Denning, A.S., Mooney, H.A., Nobre, C.A., Sato, N., Field, C.B., and Henderson-Sellers, A. 1997. Modeling the exchanges of energy, water, and carbon between continents and the atmosphere. Science 275:502-509.
-
-.. _ref-shepherd2005:
-
-Shepherd, J.M. 2005. A review of current investigations of urban-induced rainfall and recommendations for the future. Earth Interact. 9:1-27.
-
-.. _ref-sparrowandcess1978:
-
-Sparrow, E.M., and Cess, R.D. 1978. Radiation Heat Transfer. Hemisphere Publishing Corporation, 366 pp.
-
-.. _ref-stohlgrenetal1998:
-
-Stohlgren, T.J., Chase, T.N., Pielke Sr., R.A., Kittel, T.G.F., and Baron, J.S. 1998. Evidence that local land use practices influence regional climate, vegetation, and stream flow patterns in adjacent natural areas. Global Change Biol. 4:495-504.
-
-.. _ref-stull1988:
-
-Stull, R.B. 1988. An Introduction to Boundary Layer Meteorology. Kluwer Academic Publishers, Dordrecht.
-
-.. _ref-taha1999:
-
-Taha, H. 1999. Modifying a mesoscale meteorological model to better incorporate urban heat storage: a bulk-parameterization approach. J. Appl. Meteor. 38:466-473.
-
-.. _ref-upmanisetal1998:
-
-Upmanis, H., Eliasson, I., and Lindqvist, S. 1998. The influence of green areas on nocturnal temperatures in a high latitude city (Göteborg, Sweden). Int. J. Climatol. 18:681-700.
-
-.. _ref-wangetal2003:
-
-Wang, H., Pitman, A.J., Zhao, M., and Leemans, R. 2003. The impact of land-cover modification on the June meteorology of China since 1700, simulated using a regional climate model. Int. J. Climatol. 23:511-527.
-
-.. _ref-yang1998:
-
-Yang, Z.-L. 1998. Technical note of a 10-layer soil moisture and temperature model. Unpublished manuscript.
-
-.. _ref-zengandzhao1998:
-
-Zeng, X., Zhao, M., and Dickinson R.E. 1998. Intercomparison of bulk aerodynamic algorithms for the computation of sea surface fluxes using the TOGA COARE and TAO data. J. Climate 11:2628-2644.
-
-.. _ref-zenganddecker2009:
-
-Zeng, X., and Decker, M. 2009. Improving the numerical solution of soil moisture-based Richards equation for land models with a deep or shallow water table. J. Hydrometeor. 10:308-319.
-
-.. _ref-zhouetal2004:
-
-Zhou, L., Dickinson, R.E., Tian, Y., Fang, J., Li, Q., Kaufmann, R.K., Tucker, C.J., and Myneni, R.B. 2004. Evidence for a significant urbanization effect on climate in China. Proc. Natl. Acad. Sci. U.S.A. 101:9540-9544.
