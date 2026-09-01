@@ -1,5 +1,15 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.054     erik 08/31/2026 Update submodules to the latest needed for cesm3_0_alpha10a
+       ctsm5.4.053   oleson 08/18/2026 Resolve problems with running PLUMBER2 sites
+       ctsm5.4.052   slevis 08/17/2026 Merge b4b-dev to master
+       ctsm5.4.051     erik 08/17/2026 Update compsets to use DGLC adjust Fates compsets/tests, remove clm4_5/VIC/BGCDV/NWP%BGC compsets/tests
+       ctsm5.4.050 samrabin 08/07/2026 Rework FATES SP testmods
+       ctsm5.4.049   r-ward 08/03/2026 Fix typo 'expontential' to 'exponential' in fates c starvation model
+       ctsm5.4.048     erik 07/31/2026 Move b4b-dev to master
+       ctsm5.4.047 samrabin 07/10/2026 Merge b4b-dev to master
+       ctsm5.4.046 glemieux 06/22/2026 Remove variables to exclude for fates_sp user mod
+       ctsm5.4.045     erik 06/15/2026 Update mizuRoute and CISM submodules
        ctsm5.4.044     erik 06/08/2026 Merge b4b-dev to master
        ctsm5.4.043   slevis 06/03/2026 Overflow respiration bug fixes
        ctsm5.4.042   slevis 05/22/2026 Get hillslope_fsat_equals_zero .true. for use_hillslope

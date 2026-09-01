@@ -24,9 +24,6 @@ Does this tag change answers significantly for any of the following physics conf
 
 [ ] ctsm5_0-nwp
 
-[ ] clm4_5
-
-
 Bugs fixed
 ----------
 [Remove any lines that don't apply. Remove entire section if nothing applies.]
@@ -79,7 +76,9 @@ here is guidance on different available levels of system testing:
     c) python only (for use where the only changes are in the python directory:
                     run the python testing listed below)
     d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+    e) extended (regular tests plus ctsm_sci or other development testlists)
+    f) fates (regular tests plus fates testlist)
+    g) release (ctsm_release testlist (includes any test in the testlist), mosart, mizu and rtm test lists
                 and normally all of the ancillary tests (build-namelist, python, etc.)
 		            would be run as well)
 
@@ -123,6 +122,10 @@ infrastructure should be run when appropriate, as described below.
 
   ctsm_sci
      derecho ----
+
+  ctsm_release
+     derecho ----
+     izumi ------
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
