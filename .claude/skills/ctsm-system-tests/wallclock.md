@@ -30,18 +30,26 @@ exactly what you want.
 
 ## Anchors
 
-- **`Ld5` gets `00:20:00`, and that holds everywhere** — single point, `f10_f10_mg37`,
-  `f19_g17`, `f09_g17` and `ne30pg3_t232` all use it today. Short tests are dominated by
-  startup, not by gridcells.
+- **`Ld5` is `00:20:00` at nearly every grid** — single point, `f10_f10_mg37`, `f19_g17`,
+  `f09_g17` and `ne30pg3_t232` all use it today, because a short test is dominated by
+  startup rather than by gridcells. **It is not uniform, though, and the exceptions are not
+  the large grids:** a dozen-odd entries run `00:30:00` to `01:00:00`, most of them `ERP_D`
+  or `ERS_D` at `f10_f10_mg37`, which is the *cheapest* global grid. Match the test type
+  before taking the `00:20:00`.
 - **Long durations are where resolution starts to bite, and a single-point figure must not
   be carried across.** At `f10_f10_mg37`, roughly-one-year runs (`Ld396`) spread from
   `00:40:00` to `02:00:00` with the test type, and two- to three-year runs (`Ld765`,
-  `Ld1096`, `Ly3`) cluster at `01:30:00`–`01:40:00`. At `f19_g17`, thirty-odd times the
-  gridcells, the one existing `Ly2` carries `02:00:00`. Single-point multi-year runs range
-  from `0:50:00` for about two years up to `04:00:00` for twenty.
+  `Ld1096`, `Ly3`) mostly sit at `01:30:00`–`01:40:00`, with one `ERS_Ld765` at `00:60:00`
+  below that and the `Ly2` feature tests at `02:00:00` above it. At `f19_g17`, thirty-odd
+  times the gridcells, the one existing `Ly2` carries `02:00:00`.
 
   The spread within one grid and duration is the point: test type matters nearly as much as
   size, so match both before rounding up.
+- **Single-point figures do not interpolate by duration at all.** The list holds a
+  single-point `Ly5` at `00:20:00` and another at `01:00:00`, while a single-point run of
+  about two years carries `0:50:00` and one of twenty carries `04:00:00`. What the compset
+  does dominates, so at a single point find an entry with the same test type and compset
+  and take its value; do not scale one duration to another.
 - **Exact-restart runs the model about 1.5 times over**, so scale the matched value
   accordingly — a single-point `ERS_Ld731` gets `01:00:00`.
 
