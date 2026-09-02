@@ -23,4 +23,4 @@ tell which task produced what.
 and do not batch or interleave, even to save a dispatch. Where an ordering is load-bearing
 rather than merely conventional, say so *in the plan* and say what breaks if it is violated —
 a plan that only implies its ordering will get reordered by someone optimizing for
-parallelism. Related: [[scope-plan-sections-to-own-task]], [[unit-tests-are-test-first]].
+parallelism. Related: [[scope-plan-sections-to-own-task]].
