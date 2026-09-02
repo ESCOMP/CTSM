@@ -1,38 +1,76 @@
 <?xml version="1.0"?>
 <!--
      CTSM test list. Test suites included:
+
+     Standard Testlists:
         aux_clm: Main workhorse test list to be run on main machines before most tags are made
         clm_pymods: System tests for the python code that also run CTSM cases (subset of aux_clm)
-        clm_short: The short CLM test for basic testing of a few configurations (subset of aux_clm)
         fates: The FATES testlist, run when FATES is updated
-        fates-landuse: FATES testlist running with transient landuse (subset of fates)
+
+     Release or pre-release Testlists:
         ctsm_sci: Tests for all science supported compset/resolution configurations, plus all supported resolutions
+        ctsm_release: Runs the testlists: ctsm_sci, aux_clm, decomp_init, and uhr_decomp_init
+
+     CESM Testlists: (These are run when CESM alpha and beta tags are done) (these should all be in the aux_clm testlist)
         prelpha: Run before CESM alpha tags (subset of aux_clm tests)
         prebeta: Run before CESM beta tags (more extensive, but should have tests outside of prealpha) (subset of aux_clm tests)
         aux_cime_baselines: CESM cime baselines (subset of aux_clm tests) (these tests are run nightly with latest submodules on main machine)
-        hillslope: Experimental test list used for the hillslope option of the model
+
+     Development Testlists: (These are run during development of specific things) (all subsets of other testlists)
+        clm_short: The short CLM test for basic testing of a few configurations (subset of aux_clm)
+        fates-landuse: FATES testlist running with transient landuse (subset of fates)
+        hillslope: Experimental test list used for the hillslope option of the model (subset of ctsm_sci)
         rxcropmaturity: Short tests to be run during development related to prescribed crop maturity (subset of crop_calendars)
-        crop_calendars: Short tests to be run during development related to prescribed crop calendars
+        crop_calendars: Short tests to be run during development related to prescribed crop calendars (subset of ctsm_sci)
         matrixcn: Tests exercising the matrix-CN capability (subset of aux_clm)
         aux_clm_mpi_serial: aux_clm tests using mpi-serial. (subset of aux_clm)
         subset_data: Tests exercising the subset_data tool and running CTSM with its output (subset of aux_clm)
+        interim_restart: Tests having to do with interim restart capability. (subset of ctsm_sci)
+        ssp: Tests for the CMIP6 SSP scenarios (subset of ctsm_sci)
+        fire: Tests related to the fire model (subset of ctsm_sci)
+
+      Performance Testlists:
         decomp_init: Initialization tests specifically for examining the PE layout decomposition initialization
         uhr_decomp_init: Initialization tests at Ultra High Resolution - specifically for examining the PE layout decomposition initialization
-        interim_restart: Tests having to do with interim restart capability.
-        ssp: Tests for the CMIP6 SSP scenarios
-        fire: Tests related to the fire model
       CISM model test list: (in component/cism)
         aux_glc: CISM test list (runs some CLM I compsets)
       ROF model test lists: (in each component model)
         mosart: MOSART test list, run when MOSARt is updated
         rtm: RTM test list, run when RTM is updated
         mizu: mizuRoute test list, run when mizuRoute is updated
+
+    When do you run each testlist?
+
+    When merging to b4b-dev:
+        Normally run aux_clm on standard-machines .... or....
+        Run clm_pymod on main-machine (if only python changes made)
+        No testing, when changes are just to documentation
+
+    When making a regular tag:
+        Run aux_clm on standard machines
+        Run fates on standard-machines (if FATES was updated)
+
+    Additionally when making a regular tag, with submodule updates
+        Run ctsm_sci on main-machine
+
+    Additionally when making a release tag:
+        Run ctsm_release on standard-machines
+        Run rtm, mostart, and mizu on standard-machine
+
+    When undergoing development of specific features:
+        Run one of the development or performance testlists on main-machine targeting what you are working on
+
+    NOTE:
+       main-machine: Right now means Derecho
+       standard-machines: Right now means Derecho/Izumi
+
 -->
 <testlist version="2.0">
   <test name="ERI_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -42,6 +80,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -52,6 +91,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -63,6 +103,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -75,6 +116,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -86,6 +128,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -95,6 +138,7 @@
   <test name="SMS_Ld3_PS" grid="f09_g17" compset="I1850Clm60BgcNoAnthroRtm" testmods="clm/decStart1851_noinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -104,6 +148,7 @@
   <test name="SMS_Ld3_PS" grid="f09_t232" compset="I1850Clm60BgcCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -113,6 +158,7 @@
   <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -123,6 +169,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -133,6 +181,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -143,6 +193,8 @@
     <machines>
 
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -153,6 +205,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -163,6 +217,7 @@
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -172,6 +227,7 @@
     <test name="ERP_D_Ld9" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -181,6 +237,7 @@
   <test name="ERP_D_Ld9" grid="f10_f10_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -191,6 +248,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -200,6 +258,7 @@
   <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -210,6 +269,7 @@
   <test name="SMS_D_Ld10" grid="f09_f09_mt232" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -220,6 +280,7 @@
   <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -229,6 +290,7 @@
   <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -239,6 +301,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -249,6 +312,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -258,6 +322,7 @@
   <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mg37" compset="I1850Clm60SpGag">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">1:00:00</option>
@@ -267,6 +332,7 @@
   <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -276,6 +342,7 @@
   <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -285,6 +352,7 @@
   <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -294,6 +362,7 @@
   <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -303,6 +372,7 @@
   <test name="SMS_Ld5" grid="hcru_hcru_mt13" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -312,6 +382,7 @@
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -322,6 +393,7 @@
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -331,6 +403,7 @@
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -341,6 +414,7 @@
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -350,6 +424,7 @@
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -360,6 +435,7 @@
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -369,6 +445,7 @@
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -379,6 +456,7 @@
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -388,6 +466,7 @@
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -398,6 +477,7 @@
   <test name="SMS_Ln9" grid="mpasa120_mpasa120" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -407,6 +487,7 @@
   <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningModeLDust--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -417,6 +498,7 @@
   <test name="SMS_Ln9" grid="mpasa60_mpasa60" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningModeLDust--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -426,6 +508,7 @@
   <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -436,6 +519,7 @@
   <test name="SMS_Ln9" grid="mpasa15_mpasa15" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -445,6 +529,7 @@
   <test name="SMS_Ln9" grid="mpasa30_mpasa30" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -454,6 +539,7 @@
   <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -464,6 +550,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -473,6 +560,7 @@
   <test name="SMS_D_Ld1_PS" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -483,6 +571,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -493,6 +582,7 @@
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -502,27 +592,10 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Science support for I1850Clm50Sp at f19</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
-      <option name="comment">Science support for I1850Clm50Sp at f09</option>
-    </options>
-  </test>
-  <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm50Sp" testmods="clm/default--clm/nofireemis">
-    <machines>
-      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
-    </machines>
-    <options>
-      <option name="wallclock">00:20:00</option>
       <option name="comment">Science support for I1850Clm50Sp at f19</option>
     </options>
   </test>
@@ -530,6 +603,7 @@
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -539,6 +613,7 @@
   <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -548,6 +623,7 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -557,6 +633,7 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -566,6 +643,7 @@
   <test name="SMS_Ld1" grid="f09_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -576,6 +654,7 @@
   <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -585,6 +664,7 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -595,6 +675,7 @@
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -605,6 +686,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -615,6 +697,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prebeta"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -624,6 +707,7 @@
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/reduceOutput--clm/nofireemis">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -632,6 +716,7 @@
   <test name="ERI_D_Ld9_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/SNICARFRC">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -640,6 +725,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart--clm/nvmovement">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -649,6 +735,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/nvmovement--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -658,6 +745,7 @@
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm60Sp" testmods="clm/ExcessIceStreams">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -667,6 +755,7 @@
   <test name="SMS_Lm12" grid="f09_f09_mg17" compset="I1850Clm60Sp" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -676,6 +765,7 @@
   <test name="SMS_Lm12" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -685,6 +775,7 @@
   <test name="SMS_Ln9_P256x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -694,6 +785,7 @@
   <test name="SMS_D_Ln9_P128x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -703,6 +795,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/cn_conly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -712,6 +805,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/snowveg_norad">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -721,6 +815,7 @@
   <test name="ERI_Ld9" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/drydepnomegan">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -731,6 +826,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -740,6 +837,7 @@
   <test name="ERI_Ld9" grid="f45_g37" compset="I2000Clm50BgcCru" testmods="clm/nofire">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -750,6 +848,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -759,6 +858,7 @@
   <test name="ERI_Ld9" grid="f09_g17" compset="I2000Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -768,6 +868,7 @@
   <test name="ERI_Ld9" grid="f09_t232" compset="I2000Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -778,6 +879,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -787,6 +889,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -796,6 +899,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -806,6 +910,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -816,6 +921,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -825,6 +931,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -835,6 +942,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -844,6 +953,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -854,6 +964,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -864,6 +976,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -873,6 +987,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_changeFlags">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -882,6 +997,7 @@
   <test name="SMS" grid="f09_g17" compset="I1850Clm50BgcCropG" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -892,6 +1008,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -901,6 +1018,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -911,6 +1029,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm60Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -920,6 +1039,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="I1850Clm60BgcCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -929,6 +1049,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="I1850Clm60Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -938,6 +1059,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="I1850Clm60BgcCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -947,6 +1069,7 @@
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -955,6 +1078,7 @@
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -965,6 +1089,7 @@
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -974,6 +1099,7 @@
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -984,6 +1110,7 @@
   <test name="SMS" grid="ne3pg3_ne3pg3_mg37" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -993,6 +1120,7 @@
   <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1002,6 +1130,7 @@
   <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1011,6 +1140,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1021,6 +1151,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1030,6 +1161,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1040,6 +1172,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1049,6 +1182,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1059,6 +1193,7 @@
   <test name="SMS" grid="ne16pg3_ne16pg3_mg17" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1068,6 +1203,7 @@
   <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1078,6 +1214,7 @@
   <test name="SMS" grid="ne30_g17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1087,6 +1224,7 @@
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1097,6 +1235,7 @@
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1106,6 +1245,7 @@
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1116,6 +1256,7 @@
   <test name="SMS" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1125,6 +1266,7 @@
    <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1135,6 +1277,7 @@
    <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1144,6 +1287,7 @@
   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1154,6 +1298,7 @@
   <test name="SMS" grid="ne30pg3_ne30pg3_mg17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1163,6 +1308,7 @@
   <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1173,6 +1319,7 @@
   <test name="SMS_Ln9" grid="ne120pg3_t13" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -1182,6 +1329,7 @@
   <test name="SMS_Ln9" grid="ne120pg3_t13" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1192,6 +1340,7 @@
   <test name="SMS_Ln9_P256x2" grid="C96_C96_mt232" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1201,6 +1350,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1210,6 +1360,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1220,6 +1371,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1229,6 +1381,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1238,6 +1391,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1247,6 +1401,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1256,6 +1411,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/allActive">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1266,6 +1422,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1275,6 +1432,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/anoxia">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1285,6 +1443,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1294,6 +1453,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/ciso_flexCN_FUN">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1304,6 +1464,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1316,6 +1477,8 @@
       <machine name="derecho" compiler="intel" category="matrixcn"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1325,6 +1488,7 @@
   <test name="ERS_Ld396" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/monthly_matrixcn_fast_spinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1334,6 +1498,7 @@
   <test name="SMS_Lm1" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/clm60_monthly_matrixcn_soilCN30">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1343,6 +1508,7 @@
   <test name="SMS_Lm1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/leafcn_t_evolving">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1353,6 +1519,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1363,6 +1530,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -1374,6 +1542,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1384,6 +1553,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1393,6 +1563,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/fire_emis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1402,6 +1573,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm60Sp" testmods="clm/decStart--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1412,6 +1584,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1421,6 +1595,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1430,6 +1605,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1439,6 +1615,7 @@
   <test name="ERP_D_Ld5" grid="ne30pg3_t232" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1448,6 +1625,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1457,6 +1635,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1467,6 +1646,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1476,6 +1656,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1486,6 +1667,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1496,6 +1678,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1506,6 +1689,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1516,6 +1700,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1525,6 +1710,7 @@
   <test name="SMS_Ld3_PS" grid="f09_g17" compset="IHistClm50BgcCrop" testmods="clm/f09_dec1990Start_GU_LULCC">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1535,6 +1721,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1544,6 +1731,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/reduceOutput">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1553,6 +1741,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/o3lombardozzi2015">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1566,6 +1755,8 @@
       <machine name="derecho" compiler="gnu" category="clm_short"/>
       <!-- Add to the decomp_init testlist so a standard test is run there -->
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1577,6 +1768,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1586,6 +1778,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/coldStart">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1595,6 +1788,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1605,6 +1799,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1615,6 +1810,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1625,6 +1821,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1635,6 +1832,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1644,6 +1842,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1654,6 +1853,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1663,6 +1863,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1673,6 +1874,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1682,6 +1884,7 @@
   <test name="ERP_D_P64x2_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/luna">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1692,6 +1895,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1701,6 +1906,7 @@
   <test name="ERP_D_P64x2_Ld30" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -1712,6 +1918,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1721,6 +1928,7 @@
   <test name="ERP_D_P64x2_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCropRtm" testmods="clm/irrig_spunup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1731,6 +1939,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1741,6 +1950,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1750,6 +1960,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -1759,6 +1970,7 @@
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/drydepnomegan">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1768,6 +1980,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1776,6 +1990,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/ciso">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1784,6 +1999,7 @@
   <test name="SMS_Ld3" grid="f09_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1793,6 +2009,7 @@
   <test name="SMS_Ld3" grid="f19_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1802,6 +2019,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/flexCN_FUN">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1812,6 +2030,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1821,6 +2040,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/noFUN_flexCN">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1831,6 +2051,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1840,6 +2061,7 @@
   <test name="ERP_D_Ld5_P48x1" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/luna">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1849,6 +2071,7 @@
   <test name="ERP_Ly3_P64x2" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -1859,6 +2082,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -1868,6 +2092,7 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1877,6 +2102,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1888,6 +2114,8 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1900,6 +2128,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1911,6 +2140,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1922,6 +2152,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -1933,6 +2164,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1943,6 +2175,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1953,6 +2186,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1963,6 +2197,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1973,6 +2208,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -1982,6 +2218,7 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm-crop--clm-bgcCropSimplePhysics">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -1992,6 +2229,7 @@
   <test name="ERP_P64x2_Ld1096" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_o3falk_reduceOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2001,6 +2239,7 @@
   <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_o3falk_reduceOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2010,6 +2249,7 @@
   <test name="ERP_P64x2_Ld1096" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2019,6 +2259,7 @@
   <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2027,27 +2268,28 @@
   </test>
   <test name="ERP_P64x2_Ld366" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:30:00</option>
-          <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
-        </options>
-      </machine>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
+    <options>
+       <option name="wallclock">00:30:00</option>
+       <option name="comment">Want an ERP test covering some non-default irrigation options. Long enough so that we're likely to exercise the various groundwater irrigation code.</option>
+    </options>
   </test>
   <test name="ERP_P64x2_Ld364" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:30:00</option>
-          <option name="comment">Repeat the ERP_64x2_Ld366 test above for a shorter period, this can be removed when #4160 is resolved</option>
-        </options>
-      </machine>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Repeat the ERP_64x2_Ld366 test above for a shorter period, this can be removed when #4160 is resolved</option>
+    </options>
   </test>
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2057,6 +2299,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2066,6 +2309,7 @@
   <test name="ERP_P64x2_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50SpG" testmods="clm/glcMEC_decrease--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2076,6 +2320,7 @@
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -2085,6 +2330,7 @@
   <test name="SMS_Ln9" grid="C96_C96_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -2094,6 +2340,7 @@
   <test name="ERS_D_Ld10" grid="f10_f10_mg37" compset="IHistClm50Sp" testmods="clm/collapse_pfts_78_to_16_decStart_f10">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2103,6 +2350,7 @@
   <test name="SOILSTRUCTUD_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2112,6 +2360,7 @@
   <test name="ERS_D_Ld12" grid="f10_f10_mg37" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_spunup_inc_dec_bgc">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2121,6 +2370,7 @@
   <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/extra_outputs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2132,6 +2382,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2144,6 +2395,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="gnu" category="clm_short"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2152,6 +2405,7 @@
   <test name="ERS_D_Ld3" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/deepsoil_bedrock">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2161,6 +2415,7 @@
   <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2171,6 +2426,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2181,6 +2437,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -2191,6 +2448,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2202,6 +2460,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2212,6 +2471,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2222,6 +2482,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2232,6 +2493,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">04:00:00</option>
@@ -2244,6 +2506,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">04:00:00</option>
@@ -2254,6 +2517,7 @@
   <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I1850Clm60BgcCropCmip6" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2264,6 +2528,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2273,6 +2538,7 @@
   <test name="ERS_Ly3_P64x2" grid="f10_f10_mg37" compset="IHistClm50BgcCropG" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2282,6 +2548,7 @@
   <test name="ERS_Ly5_P128x1" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2292,6 +2559,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2301,6 +2569,7 @@
   <test name="ERS_Ly3" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -2311,6 +2580,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2320,6 +2591,7 @@
   <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm60Sp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2330,6 +2602,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2342,6 +2615,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -2354,6 +2628,8 @@
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -2364,6 +2640,7 @@
   <test name="LII_D_Ld3_PS" grid="f19_g17" compset="I2000Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2374,6 +2651,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2383,6 +2661,7 @@
   <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2393,6 +2672,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2402,6 +2682,7 @@
   <test name="LVG_Ld5_D" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/no_vector_output">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2412,6 +2693,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:30:00</option>
@@ -2423,6 +2705,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:30:00</option>
@@ -2433,6 +2716,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2442,6 +2726,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -2451,6 +2736,7 @@
   <test name="PEM_Ld1" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/till">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2460,6 +2746,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2469,6 +2756,7 @@
   <test name="PET_P64x2_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2480,6 +2768,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2492,6 +2781,9 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="nvhpc" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2501,6 +2793,7 @@
     <machines>
       <machine name="derecho" compiler="nvhpc" category="aux_clm"/>
       <machine name="derecho" compiler="nvhpc" category="fates"/>
+      <machine name="derecho" compiler="nvhpc" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2511,6 +2804,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2521,6 +2815,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2530,6 +2825,7 @@
   <test name="SMS_D_Ld1_PS" grid="f19_f19_mg17" compset="I2010Clm50Sp" testmods="clm/clm50cam6LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2539,6 +2835,7 @@
   <test name="SMS_Ln9" grid="f19_f19_mg17" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2549,6 +2846,7 @@
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2559,6 +2857,7 @@
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2569,6 +2868,7 @@
   <test name="SMS_Ln9" grid="ne0POLARCAPne30x4_ne0POLARCAPne30x4_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2579,6 +2879,7 @@
   <test name="SMS_Ln9" grid="ne0NATLne30x8_ne0NATLne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2589,6 +2890,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2600,6 +2902,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2611,6 +2914,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2621,6 +2925,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICne30x4_ne0ARCTICne30x4_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2630,6 +2935,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2641,6 +2947,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2652,6 +2959,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2662,6 +2970,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_1979Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2671,6 +2980,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2680,6 +2990,7 @@
   <test name="SMS_Ln9" grid="ne0ARCTICGRISne30x8_ne0ARCTICGRISne30x8_mt12" compset="I1850Clm60BgcCropCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2689,6 +3000,7 @@
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam7LndTuningMode_2013Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2700,6 +3012,7 @@
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm50Sp" testmods="clm/clm50cam6LndTuningMode_2013Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2710,6 +3023,7 @@
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode_2013Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2720,6 +3034,7 @@
   <test name="SMS_Ln9" grid="ne0CONUSne30x8_ne0CONUSne30x8_mt12" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode_2013Start--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2730,6 +3045,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm50Sp" testmods="clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2739,6 +3055,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2750,6 +3067,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2760,6 +3078,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2769,6 +3088,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2779,6 +3099,7 @@
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2788,6 +3109,7 @@
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I1850Clm50Sp" testmods="clm/clm50cam6LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2798,6 +3120,7 @@
   <test name="SMS_Ln9" grid="ne30pg2_ne30pg2_mg17" compset="I2000Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2807,6 +3130,7 @@
   <test name="SMS_Ln9" grid="mpasa480_mpasa480" compset="I1850Clm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -2818,6 +3142,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2832,6 +3157,10 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="nvhpc" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2840,6 +3169,7 @@
   <test name="ERS_D_Ld5_Mmpi-serial" grid="1x1_vancouverCAN" compset="I1PtClm50SpRsGs" testmods="clm/CLM1PTStartDate">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2857,6 +3187,9 @@
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2865,6 +3198,7 @@
   <test name="SMS_D_Ld1_P48x1" grid="f10_f10_mg37" compset="I2000Clm50BgcCru" testmods="clm/datm_bias_correct_cruv7">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2875,6 +3209,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2885,6 +3220,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="clm_short"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2895,6 +3231,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2904,6 +3242,7 @@
   <test name="SMS_C2_D_Lh12" grid="f10_f10_mg37" compset="I2000Clm50Sp" testmods="clm/pauseResume">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2913,6 +3252,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2924,6 +3264,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2939,6 +3280,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2954,6 +3297,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="matrixcn"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -2967,6 +3312,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -2980,11 +3327,64 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
       <option name="tput_tolerance">0.5</option>
       <option name="comment">Add at least one test of a NEON site with PRISM precipitation</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly2_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ARSLu--clm/ADspinup">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in AD mode that has one year of atm forcing (loop over twice). Note that the site usermods_dirs (AR-SLu) has been linked to ARSLu for the purpose of this test.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="IHist1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ARSLu">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in transient mode that has one year of atm forcing. Note that the site usermods_dirs (AR-SLu) has been linked to ARSLu for the purpose of this test.</option>
+    </options>
+  </test>
+
+  <test name="SMS_Ly1_D_Mmpi-serial" grid="CLM_USRDAT" compset="I1PtClm60BgcRsGs" testmods="clm/default--clm/PLUMBER2/ESLgS--clm/ADspinup">
+    <machines>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="prealpha"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:40:00</option>
+      <option name="tput_tolerance">0.5</option>
+      <option name="comment">Test of PLUMBER2 site in AD mode that had previously failed due to negative humidity passed to HumanIndexMod.  HumanIndexMod is now off for PLUMBER2 sites. Note that the site usermods_dirs (ES-LgS) has been linked to ESLgS for the purpose of this test.</option>
     </options>
   </test>
 
@@ -2994,6 +3394,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -3009,6 +3410,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3024,6 +3427,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3034,6 +3439,7 @@
   <test name="ERS_D_Ld5" grid="f10_f10_mg37" compset="IHistClm50BgcQian" testmods="clm/ciso_bombspike1963DecStart">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3044,6 +3450,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3053,6 +3460,7 @@
   <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/smallville_dynlakes_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:50:00</option>
@@ -3062,6 +3470,7 @@
   <test name="ERS_Ld765" grid="1x1_smallvilleIA" compset="IHistClm50BgcCropQianRsGs" testmods="clm/smallville_dynurban_monthly">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:50:00</option>
@@ -3072,6 +3481,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:50:00</option>
@@ -3082,6 +3492,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prebeta"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3093,6 +3504,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3103,6 +3515,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3111,6 +3524,7 @@
   <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/till--clm/remove_residues">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3120,6 +3534,7 @@
   <test name="SMS_Ld2_D_PS" grid="f09_g17" compset="I1850Clm60BgcCropCmip6" testmods="clm/basic_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3129,6 +3544,7 @@
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_mg37" compset="IHistClm50Bgc" testmods="clm/monthly">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3137,6 +3553,7 @@
   <test name="SMS_Ld5_D_P48x1" grid="f10_f10_mg37" compset="IHistClm60Bgc" testmods="clm/decStart">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3145,6 +3562,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="ISSP585Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3154,6 +3572,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="ISSP585Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3164,6 +3583,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3173,6 +3593,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="ISSP245Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3182,6 +3603,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3191,6 +3613,7 @@
   <test name="SMS_Ld5" grid="f09_g17" compset="ISSP370Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3200,6 +3623,7 @@
   <test name="SMS_Ld5" grid="f09_t232" compset="ISSP370Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3210,6 +3634,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3220,6 +3645,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3229,6 +3655,8 @@
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm50BgcCrop" testmods="clm/default--clm/noAnomalyForcing">
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3239,6 +3667,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3248,6 +3677,8 @@
   <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP370Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3257,6 +3688,8 @@
   <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP585Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ssp"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3267,18 +3700,19 @@
 
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">0:20:00</option>
-          <option name="comment">The main point of this test is to exercise the case where nlevgrnd is less than nlevurb. See the README file in its testmod directory for details.</option>
-        </options>
-      </machine>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
+    <options>
+      <option name="wallclock">0:20:00</option>
+      <option name="comment">The main point of this test is to exercise the case where nlevgrnd is less than nlevurb. See the README file in its testmod directory for details.</option>
+    </options>
   </test>
   <test name="ERP_D_Ld5" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/nlevgrnd_small--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:20:00</option>
@@ -3288,6 +3722,7 @@
   <test name="SMS_Ly2_PS" grid="f19_g17" compset="I2000Clm60BgcCrop" testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -3298,6 +3733,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:30:00</option>
@@ -3308,6 +3744,7 @@
   <test name="SMS_Ly3_Mmpi-serial" grid="1x1_numaIA" compset="I2000Clm60BgcCropQianRsGs" testmods="clm/monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -3321,6 +3758,7 @@
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -3330,6 +3768,7 @@
   <test name="SSPMATRIXCN_Ly17_PS" grid="ne30pg3_ne30pg3_mt232" compset="I1850Clm60BgcCropCrujra" testmods="clm-mosartNull--clm-ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">04:00:00</option>
@@ -3339,6 +3778,7 @@
   <test name="ERP_D_Ld10" grid="f10_f10_mg37" compset="I1850Clm60BgcCrop" testmods="clm/ADspinup">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3349,6 +3789,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3357,6 +3798,7 @@
   <test name="SSP_D_Ld4" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3365,6 +3807,7 @@
   <test name="SSP_Ld10" grid="f10_f10_mg37" compset="I1850Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3373,6 +3816,7 @@
   <test name="SSP_Ld4" grid="f09_g17" compset="I1850Clm60BgcCrop" testmods="clm/ciso">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3384,6 +3828,9 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3396,6 +3843,9 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3405,6 +3855,7 @@
   <test name="ERS_D_Ld20" grid="5x5_amazon" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdSeedDisp">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3415,6 +3866,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3424,6 +3877,7 @@
   <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdTreeDamage">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3433,6 +3887,7 @@
   <test name="ERS_D_Ld20" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdElecTransJB">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3444,6 +3899,8 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -3454,6 +3911,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3463,6 +3921,7 @@
   <test name="ERS_D_Ld3_PS" grid="f09_g17" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3472,6 +3931,7 @@
   <test name="ERS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3483,6 +3943,8 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3493,6 +3955,8 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -3501,6 +3965,7 @@
   <test name="ERS_Ld397" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:50:00</option>
@@ -3510,6 +3975,7 @@
   <test name="ERS_Ld397" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3522,6 +3988,8 @@
       <machine name="izumi" compiler="nag" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3532,6 +4000,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3541,6 +4010,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3551,6 +4022,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -3561,6 +4034,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3570,6 +4045,7 @@
   <test name="SMS_D_Ld180" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdTRS">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3579,6 +4055,7 @@
   <test name="ERS_Ld90" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdTRSNoSeedDynamics">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3589,6 +4066,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="prebeta"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3601,6 +4079,7 @@
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3610,6 +4089,7 @@
   <test name="SMS_D_Lm6_P256x1" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3621,6 +4101,9 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3629,6 +4112,7 @@
   <test name="SMS_Ld5_PS" grid="f19_g17" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3638,6 +4122,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3647,6 +4132,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdFixedBiogeo">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3656,6 +4142,7 @@
   <test name="SMS_Ld5" grid="f10_f10_mg37" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3665,6 +4152,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50Fates" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3675,6 +4163,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3683,29 +4172,28 @@
   </test>
   <test name="SMS_D_Ld5" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate">
     <machines>
-      <machine name="izumi" compiler="nag" category="aux_clm">
-        <options>
-          <option name="wallclock">00:20:00</option>
-          <option name="comment">Debug test covering some non-default irrigation options.</option>
-        </options>
-      </machine>
+      <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Debug test covering some non-default irrigation options.</option>
+    </options>
   </test>
   <test name="SMS_D_Ld10" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/tracer_consistency">
     <machines>
-
-      <machine name="derecho" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:30:00</option>
-          <option name="comment">Include a tracer consistency check in debug mode.</option>
-        </options>
-      </machine>
-
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
+    <options>
+      <option name="wallclock">00:30:00</option>
+      <option name="comment">Include a tracer consistency check in debug mode.</option>
+    </options>
   </test>
   <test name="LWISO_Ld10" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/coldStart">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3715,6 +4203,7 @@
   <test name="ERP_P64x2_D_Ld5" grid="f10_f10_mg37" compset="I2000Ctsm50NwpSpGswpGs" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3727,6 +4216,8 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3736,6 +4227,7 @@
   <test name="SMS_Ld1_PS" grid="nldas2_rnldas2_mnldas2" compset="I2000Ctsm50NwpSpNldasRsGs" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -3745,6 +4237,7 @@
   <test name="ERP_D_Ld3" grid="f19_g17" compset="I2000Clm50FatesRsGs" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3754,6 +4247,7 @@
   <test name="ERP_D_P128x2_Ld3" grid="f19_g17" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3763,6 +4257,7 @@
   <test name="ERP_Ld3" grid="f09_g17" compset="I2000Clm50Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3772,15 +4267,17 @@
   <test name="ERP_Ld90" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCStarvationExp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">01:20:00</option>
       <option name="comment">ERP FATES test covering FATES exponential carbon starvation (non-default)</option>
     </options>
   </test>
   <test name="ERP_D_Ld90" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdCStarvationExp">
     <machines>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3791,15 +4288,18 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
-      <option name="wallclock">00:40:00</option>
+      <option name="wallclock">02:00:00</option>
       <option name="comment">Exact restart debug test covering Fates CNP nutrients mode (P still prescribed in clm).</option>
     </options>
   </test>
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdPRT2_suplnAll">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3809,6 +4309,7 @@
   <test name="ERS_D_Ld30" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdPRT2_synthN">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3819,6 +4320,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3829,6 +4332,8 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3838,6 +4343,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3847,6 +4353,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3856,6 +4363,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="fates-landuse"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -3866,6 +4374,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3875,6 +4385,7 @@
   <test name="ERS_D_Ld5" grid="f19_g17" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3885,6 +4396,8 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3895,6 +4408,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -3907,6 +4421,8 @@
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3917,6 +4433,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3926,6 +4444,7 @@
   <test name="ERI_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/Fates">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3935,6 +4454,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoFire">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3944,6 +4464,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesColdManagedFire">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3953,6 +4474,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdST3">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3962,6 +4484,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdPPhys">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -3971,6 +4494,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdFixedBiogeo">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3979,6 +4503,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoComp">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3987,6 +4512,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoCompFixedBioGeo">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -3995,6 +4521,7 @@
   <test name="ERS_D_Ld10" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdNoCompInitDbh">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4005,6 +4532,9 @@
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4015,6 +4545,7 @@
        <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdDryDepSatPhen">
        <machines>
        <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
        </machines>
        <options>
        <option name="wallclock">00:20:00</option>
@@ -4024,6 +4555,7 @@
        <test name="SMS_D" grid="1x1_brazil" compset="I2000Clm60FatesSpCrujraRsGs" testmods="clm/FatesColdMeganSatPhen">
        <machines>
        <machine name="derecho" compiler="gnu" category="aux_clm"/>
+       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
        </machines>
        <options>
        <option name="wallclock">00:20:00</option>
@@ -4034,6 +4566,7 @@
   <test name="SMS_D_Ld3" grid="f09_g17" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdSatPhen_prescribed">
     <machines>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4043,6 +4576,7 @@
   <test name="SMS_Lm1" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdDailyHist">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4052,6 +4586,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm60FatesSpCrujra" testmods="clm/FatesColdDailyHist">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4063,6 +4598,7 @@
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4072,6 +4608,7 @@
   <test name="ERS_Ld60" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdLogging">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4081,6 +4618,7 @@
   <test name="ERS_Ld30" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/FatesColdSizeAgeMort">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4090,6 +4628,7 @@
   <test name="SMS_Lm6" grid="f45_f45_mg37" compset="I2000Clm50FatesRsGs" testmods="clm/Fates">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4100,6 +4639,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
       <machine name="derecho" compiler="gnu" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4109,6 +4650,7 @@
   <test name="ERS_Ld366" grid="1x1_brazil" compset="I2000Clm50FatesRsGs" testmods="clm/FatesFireLightningPopDens">
     <machines>
       <machine name="derecho" compiler="intel" category="fates"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -4119,6 +4661,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4128,6 +4671,7 @@
   <test name="SMS_Lm1" grid="f19_g17" compset="I1850Clm60BgcCropCmip6waccm" testmods="clm/basic">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:60:00</option>
@@ -4138,6 +4682,7 @@
   <test name="SMS_Lm1_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/output_crop_highfreq">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4151,6 +4696,7 @@
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4164,6 +4710,8 @@
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
       <machine name="derecho" compiler="gnu" category="aux_cime_baselines"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -4173,6 +4721,7 @@
   <test name="SMS_Ld12_Mmpi-serial" grid="1x1_urbanc_alpha" compset="I1PtClm60SpRsGs" testmods="clm/output_sp_highfreq">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:10:00</option>
@@ -4182,6 +4731,7 @@
   <test name="PFS_Ld10_PS" grid="f19_g17" compset="I2000Clm50BgcCrop">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4194,6 +4744,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4205,19 +4756,15 @@
 
   <test name="MKSURFDATAESMF_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop">
     <machines>
-      <machine name="derecho" compiler="intel" category="aux_clm">
-        <options>
-          <option name="wallclock">00:40:00</option>
-          <option name="comment">Smoke test that first runs the mksurfdata_esmf tool and then ensures that the CTSM does not fail using the just-generated fsurdat file. Global BgcCrop case.</option>
-        </options>
-      </machine>
-      <machine name="derecho" compiler="intel" category="clm_pymods">
-        <options>
-          <option name="wallclock">00:40:00</option>
-          <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
-        </options>
-      </machine>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
+    <options>
+       <option name="wallclock">00:40:00</option>
+       <option name="comment">Smoke test that first runs the mksurfdata_esmf tool and then ensures that the CTSM does not fail using the just-generated fsurdat file. Global BgcCrop case.</option>
+       <option name="comment">This test invokes python code, so it should be run whenever changing python code (in addition to being run as part of aux_clm).</option>
+    </options>
   </test>
 
   <test name="FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1" grid="5x5_amazon" compset="I2000Clm50SpRsGs">
@@ -4225,6 +4772,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="clm_pymods"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4239,6 +4787,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
       <machine name="derecho" compiler="intel" category="subset_data"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4253,6 +4802,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
       <machine name="derecho" compiler="intel" category="subset_data"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4266,6 +4816,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="derecho" compiler="intel" category="clm_pymods"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4277,6 +4828,7 @@
   <test name="SMS_D_Ln1" grid="f10_f10_mg37" compset="I2000Clm50BgcCropQianRsGs" testmods="clm-run_self_tests">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:20:00</option>
@@ -4292,6 +4844,9 @@
       <machine name="derecho" compiler="intel" category="aux_cime_baselines"/>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4302,6 +4857,7 @@
   <test name="ERS_D_Ld10" grid="5x5_amazon_r05" compset="I2000Clm60SpMizGs" testmods="mizuroute-default">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4312,6 +4868,7 @@
   <test name="ERI_Ld30" grid="nldas2_nldas2_rUSGS_mnldas2" compset="I2000Clm60SpMizNldasGs" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:40:00</option>
@@ -4321,6 +4878,7 @@
   <test name="PET_Ld10_P256x8" grid="f19_f19_mg17" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4330,6 +4888,7 @@
   <test name="ERS_Ld10" grid="f09_f09_mg17" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4339,6 +4898,7 @@
   <test name="ERS_Ld5" grid="hcru_hcru_mt13" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4348,6 +4908,7 @@
   <test name="PET_P256x8_Ld10" grid="f19_f19_rHDMA_mg17" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4357,6 +4918,7 @@
   <test name="ERS_Ld10" grid="f09_f09_rHDMAlk_mg17" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4366,6 +4928,7 @@
   <test name="ERS_Ld5" grid="hcru_hcru_rMERIT_mt13" compset="I2000Clm60SpMiz" testmods="mizuroute-default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4378,6 +4941,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4389,6 +4954,9 @@
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="gnu" category="decomp_init"/>
       <machine name="izumi" compiler="nag" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4398,6 +4966,7 @@
   <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50SpRsGs" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4407,6 +4976,7 @@
   <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4416,6 +4986,7 @@
   <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4425,6 +4996,7 @@
   <test name="SMS_Ln1_PL" grid="ne120pg3_ne120pg3_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4434,6 +5006,7 @@
   <test name="SMS_Ln1_PL" grid="mpasa15_mpasa15" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:05:00</option>
@@ -4444,6 +5017,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:15:00</option>
@@ -4453,6 +5027,7 @@
   <test name="SMS_Ln1_PL" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:15:00</option>
@@ -4462,6 +5037,7 @@
   <test name="SMS_Ln1_PLhm" grid="mpasa3p75_mpasa3p75_mt13" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="uhr_decomp_init"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:15:00</option>
@@ -4472,6 +5048,7 @@
   <test name="LGRAIN2_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -4481,6 +5058,7 @@
   <test name="LREPRSTRUCT_Ly1_P128x1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/ciso--clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -4491,6 +5069,7 @@
   <test name="REUSEINITFILES_D_Ld1" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">0:20:00</option>
@@ -4503,6 +5082,8 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
       <machine name="izumi" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="izumi" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4514,6 +5095,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="crop_calendars"/>
     </machines>
     <options>
       <option name="wallclock">12:00:00</option>
@@ -4525,6 +5108,8 @@
     <machines>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">6:00:00</option>
@@ -4537,6 +5122,7 @@
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:20:00</option>
@@ -4548,6 +5134,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="hillslope"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4557,6 +5144,8 @@
   <test name="SMS_D_Ld3" grid="f10_f10_mg37" compset="I1850Clm60Bgc" testmods="clm/HillslopeFromFile">
     <machines>
       <machine name="derecho" compiler="intel" category="hillslope"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4568,6 +5157,7 @@
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4578,6 +5168,8 @@
   <test name="SMS_D_Ld5" grid="5x5_amazon" compset="I2000Clm60BgcCropCrujraRsGs" testmods="clm/HillslopeC">
     <machines>
       <machine name="derecho" compiler="gnu" category="hillslope"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4589,6 +5181,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="hillslope"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4599,6 +5192,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="fire"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4609,6 +5203,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
       <machine name="izumi" compiler="nag" category="fire"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4618,6 +5213,8 @@
   <test name="SMS_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsNoAdapt">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
@@ -4627,6 +5224,8 @@
   <test name="SMS_D_Ld733" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/cropMonthOutput--clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">02:00:00</option>
@@ -4637,6 +5236,7 @@
     <machines>
       <machine name="izumi" compiler="nag" category="crop_calendars"/>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
@@ -4647,6 +5247,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4657,6 +5258,7 @@
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>
@@ -4667,6 +5269,8 @@
   <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4676,6 +5280,8 @@
   <test name="SMS_Ld65" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/GddGen--clm/StreamGdd20Seasons">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4685,6 +5291,8 @@
   <test name="SMS_Lm37" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/cropMonthOutput--clm/oldCropCals">
     <machines>
       <machine name="derecho" compiler="intel" category="crop_calendars"/>
+      <machine name="derecho" compiler="intel" category="ctsm_release"/>
+      <machine name="derecho" compiler="intel" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">01:30:00</option>
@@ -4694,6 +5302,8 @@
   <test name="SMS_Ld32" grid="f10_f10_mg37" compset="IHistClm50BgcCrop" testmods="clm/crop--clm/oldCropCals">
     <machines>
       <machine name="derecho" compiler="gnu" category="crop_calendars"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4704,6 +5314,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="clm_pymods"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4713,6 +5324,8 @@
   <test name="SMS_Ld5" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4724,6 +5337,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4735,6 +5349,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="ctsm_sci"/>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4746,6 +5361,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4757,6 +5373,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="interim_restart"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
@@ -4768,6 +5385,7 @@
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prebeta"/>
+      <machine name="derecho" compiler="gnu" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:30:00</option>

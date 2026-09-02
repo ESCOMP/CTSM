@@ -1,5 +1,7 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.054     erik 08/31/2026 Update submodules to the latest needed for cesm3_0_alpha10a
+       ctsm5.4.053   oleson 08/18/2026 Resolve problems with running PLUMBER2 sites
        ctsm5.4.052   slevis 08/17/2026 Merge b4b-dev to master
        ctsm5.4.051     erik 08/17/2026 Update compsets to use DGLC adjust Fates compsets/tests, remove clm4_5/VIC/BGCDV/NWP%BGC compsets/tests
        ctsm5.4.050 samrabin 08/07/2026 Rework FATES SP testmods
