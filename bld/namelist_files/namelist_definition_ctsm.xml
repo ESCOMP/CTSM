@@ -2922,6 +2922,12 @@ residence times) leave the coupled system further out of balance for longer.
 Must be greater than 0. This can be set to less than 1 year, but should be much longer
 than the model time step: if the residence time approaches the length of a time step, the
 pools will overshoot and the fluxes will oscillate.
+
+(Prior to the introduction of this namelist option, the balancing fluxes were spread
+evenly throughout the following year. There is no way to exactly recover the old CLM5
+behavior, but it can be approximated by setting this option to something between 0.5 and
+1.0, depending on the behaviors you want to recover - peak fluxes, effective residence
+time, etc.)
 </entry>
 
 <entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"
