@@ -467,9 +467,8 @@ Expected: all PASS. The two pre-existing no-batch launcher tests already call `w
 ```bash
 cd python && python -m pytest ctsm -q -k "not test_sys"
 ```
-Expected: 319 passed, 0 failed (87 `test_sys_*` deselected). **On this branch,
-call pytest directly rather than `./run_ctsm_py_tests --unit`** -- see the
-implementer note at the bottom for why.
+Expected: the run_sys_tests / joblauncher / machine tests all pass. See the
+implementer note at the bottom for which driver to use.
 
 - [x] **Step 6: Format and commit**
 
@@ -812,6 +811,6 @@ testroot layout, the host-dangling symlink, and the one surprise: injecting
 
 - **Do not create or survey python environments.** Use `ctsm_pylib` and nothing else. If it is missing or broken, stop and ask rather than investigating alternatives.
 - **Tasks 1–3 are testable without a container or a compute node.** Only Task 4 Step 5 needs Casper.
-- **Run the python tests with pytest: from `python/`, `python -m pytest ctsm -q -k "not test_sys"`** (319 passed, 0 failed; drop the `-k` to include system tests). Do NOT use `./run_ctsm_py_tests --unit` *on this branch*. Upstream, that driver was overhauled to call `pytest.main()` and is the right tool -- but `cirrus-runner-workflows` is ~2001 commits behind `origin/comment-on-docs-test-fail` and still has the old `unittest.defaultTestLoader.discover` version (`python/ctsm/run_ctsm_py_tests.py` at commit `f23122441`). That one runs every file in a single process, and leaked global state produces 5 failures unrelated to anything you changed -- two in `test_unit_mesh_maker`, three in `test_unit_subset_data`. The same files pass under pytest. Do not "fix" them here.
+- **Run the python tests with `./run_ctsm_py_tests --unit`, from `python/`.** Since the rebase onto `ctsm5.4.054`, that driver calls `pytest.main()`, so it satisfies the "always pytest, never unittest" rule directly; `python -m pytest ctsm -q -k "not test_sys"` is a fine narrower alternative. Expect 5 failures that are NOT yours: three `doc-builder` `TestGetBuildCommand::test_container*` tests, which need `docker` or `podman` on PATH and get neither in a login shell; cime's `TestDistributedDirLock::test_distributed_dir_lock_timeout`; and `TestNeonSite::test_modify_user_nl_ad`. Do not "fix" them here.
 - **If a test failure genuinely predates your change**, say so explicitly with the evidence rather than fixing it silently or assuming it is unrelated.
 - **`git status` should be clean between tasks.** Each task commits its own files and nothing else.
