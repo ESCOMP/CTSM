@@ -4,8 +4,8 @@ module SatellitePhenologyMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation).
-  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN)
+  ! CLM Satelitte Phenology model (ClmSp) ecosystem dynamics (phenology, vegetation).
+  ! Allow some subroutines to be used by the CLM Biogeochemistry model (ClmBgc)
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
