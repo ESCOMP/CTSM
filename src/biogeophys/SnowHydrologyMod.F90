@@ -2632,7 +2632,7 @@ contains
              if (is_lake) then
                 dzsno(c,j) = dz(c,j+snl(c))
              else
-                dzsno(c,j) = frac_sno_albedo(c)*dz(c,j+snl(c))
+                dzsno(c,j) = frac_sno_fluxes(c)*dz(c,j+snl(c))
              end if
 
              do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
@@ -2813,7 +2813,7 @@ contains
              if (is_lake) then
                 dz(c,j) = dzsno(c,j-snl(c))
              else
-                dz(c,j) = dzsno(c,j-snl(c))/frac_sno_albedo(c)
+                dz(c,j) = dzsno(c,j-snl(c))/frac_sno_fluxes(c)
              end if
 
              do wi = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
