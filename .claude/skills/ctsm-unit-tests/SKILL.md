@@ -1,6 +1,6 @@
 ---
 name: ctsm-unit-tests
-description: Use when writing, building, running, or debugging a CTSM Fortran unit test - the pFUnit .pf files under src/*/test/ that run_tests.py builds into unit_tests.temp - or when a test build reports "Unrecognized token '@' skipped" or "Global name too long", or when a green run leaves you unsure whether your new test actually ran.
+description: Use when writing, building, running, or debugging a CTSM Fortran unit test - the pFUnit .pf files under src/*/test/ that run_tests.py builds into unit_tests.temp - or when a test build reports "Unrecognized token '@' skipped" or "Global name too long", or when a green run leaves you unsure whether your new or renamed test actually ran.
 ---
 
 # CTSM unit tests
@@ -24,6 +24,7 @@ do not say.
 | `error #5078: Unrecognized token '@' skipped`, then `#5082` on the same line | An `@assert` is split across lines with `&`, or carries a trailing comment | Put the whole `@assert` on one line; move the comment above it |
 | Build is green and reports every test passing, but your new test never ran | You added a `.pf` **file** to an existing test directory; the driver object is stale | `rm -rf unit_tests.temp`, or delete only `<Name>_driver.F90.o` |
 | `undefined reference to <module>_suite_` at link time | You *removed* a `.pf` from an existing test directory; same stale driver object | Same |
+| You renamed a `@Test` subroutine and the run still reports the old name, or reports nothing different at all | Stale build | `rm -rf unit_tests.temp`; then confirm the executable's test count is what it was *before* the rename |
 | `warning #5462: Global name too long, shortened from:` | `<module>_mp_<PROCEDURE>` exceeds 90 characters | Shorten the module name or the test name |
 | `forrtl: error (65): floating invalid`, with no assertion reported | `-fpe0` trapped arithmetic on a signalling NaN — often a fixture component nothing ever set | Treat the abort as the failure and find the unset value; it is not a crash to debug |
 | `forrtl: error (73): floating divide by zero` | `-fpe0` trapped a division a fixture left with a zero divisor | Same — the abort *is* the result, so read it as one |
@@ -39,18 +40,27 @@ compiled, linked, and then never called. The run exits 0 and prints
 Only the generated driver goes stale. pFUnit's driver does `#include _TEST_SUITES`
 (`<PFUNIT_PATH>/PFUNIT-*/include/driver.F90`), and nothing tracks the generated
 `<Name>.inc` as a dependency of `<Name>_driver.F90` — so the `.inc` is regenerated and
-does list your new suite, while the object that would call it is not rebuilt. That single
-cause explains the whole boundary, which is narrower than it looks:
+does list your new suite, while the object that would call it is not rebuilt. That cause
+explains most of the boundary, which is narrower than it looks:
 
 | Change to an existing, populated `unit_tests.temp` | Result |
 |---|---|
 | New `@Test` subroutine in an existing `.pf` | Picked up |
+| **Renaming** a `@Test` subroutine in an existing `.pf` | **Needs a full rebuild** |
 | New `.pf` file in an **existing** test directory, even added to `CMakeLists.txt` | **Silently dropped** |
 | Removing a `.pf` from an existing test directory | **Link failure** |
 | New test **directory** with its own `add_pfunit_ctest` | Picked up |
 
 A new directory is safe because it has no stale driver yet. Editing
 `CMakeLists.txt` does not rescue you.
+
+The rename row is the one the stale-driver account does not predict — a rename changes
+neither the suite list nor the suite's name, so on that mechanism it ought to behave like
+adding a subroutine. It does not; it is recorded here from experience rather than from the
+mechanism, so treat a rename as needing the wipe and do not reason from the cause above to
+the contrary. Its check is different too, because the count is *supposed* to stay put: the
+rename took if the executable still reports the same number of tests, and broke pFUnit's
+discovery if the count fell.
 
 The fix is `rm -rf unit_tests.temp` and a full rebuild. If you would rather not pay for
 that, deleting the one stale object is enough:
