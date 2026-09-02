@@ -77,9 +77,9 @@ fxDONOTUSEurl = https://github.com/ESMCI/ccs_config_cesm.git
 path = cime
 #url = https://github.com/ESMCI/cime
 url = https://github.com/ekluzek/cime
-#fxtag = cime6.5.5
+#fxtag = cime6.5.7
 #branch = add_coupling_mode_to_attributes_for_config_component
-fxtag = a286fa7b558821867efb15adaec013b14d99e939
+fxtag = c60495094d91a2be6c7a92adcc75e99db0aa5d79
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESMCI/cime
@@ -88,9 +88,9 @@ fxDONOTUSEurl = https://github.com/ESMCI/cime
 path = components/cmeps
 #url = https://github.com/ESCOMP/CMEPS.git
 url = https://github.com/ekluzek/CMEPS.git
-#fxtag = cmeps1.1.64
+#fxtag = cmeps1.1.65
 #branch = co2a_for_cplhist
-fxtag = 6789df17d7f7f1615aca383a41187ff48c4b85c9
+fxtag = c336149ae8fc8697294ef9e46d6092dda6291936
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
