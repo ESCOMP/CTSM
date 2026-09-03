@@ -791,9 +791,9 @@ Idso, S.B. 1981. A set of equations for full spectrum and 8- to 14-\ :math:`\mu`
 
 Iiyama, I. and Hasegawa, S., 2005. Gas diffusion coefficient of undisturbed peat soils. Soil Science and Plant Nutrition 51:431-435.
 
-.. _JacksonSchulze1996:
+.. _Jacksonetal1996:
 
-Jackson, E., and Schulze, E. D. 1996. A global analysis of root distributions for terrestrial biomes Oecologia 108:389–411. DOI:10.1007/BF00333714.
+Jackson, R. B., Canadell, J., Ehleringer, J. R., Mooney, H. A., Sala, O. E., and Schulze, E. D. 1996. A global analysis of root distributions for terrestrial biomes. Oecologia 108: 389–411. DOI: 10.1007/BF00333714.
 
 .. _Jacksonetal2010:
 
