@@ -16,6 +16,7 @@ module dynSubgridControlMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use abortutils         , only : endrun
   use clm_varctl         , only : fname_len
+  use clm_time_manager   , only : get_average_days_per_year
   !
   implicit none
   private
@@ -213,11 +214,8 @@ contains
        call endrun(msg='ERROR: dynbal_storage_residence_time must be greater than 0 '// &
             errMsg(sourcefile, __LINE__))
     end if
-    ! It isn't important to account for leap years in this conversion: we just want a
-    ! value that roughly equates to the desired residence time in years; it doesn't need
-    ! to be exact.)
-    dynbal_storage_turnover_rate = &
-         1._r8 / (dynbal_storage_residence_time * (365._r8 * SHR_CONST_CDAY))
+    dynbal_storage_turnover_rate = 1._r8 / &
+         (dynbal_storage_residence_time * (get_average_days_per_year() * SHR_CONST_CDAY))
 
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
