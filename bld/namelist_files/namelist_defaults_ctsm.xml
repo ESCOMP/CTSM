@@ -2751,15 +2751,23 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
 
-<!-- Note regarding the CLM5 default for dynbal_storage_residence_time: There is no way to
-     exactly recover the old CLM5 behavior, which used an annual dribbler to evenly spread
-     the fluxes throughout the following year. But this CLM5 behavior can be approximated
-     by setting dynbal_storage_residence_time to something between about 0.5 and 1.0,
-     depending on the behaviors you want to recover - peak fluxes, effective residence
-     time, etc. The choice of 0.75 here is a compromise that keeps fluxes not much larger
-     than in CLM5 immediately following landcover change, while still releasing a large
-     fraction of the conservation correction within the first year after landcover change.
-     -->
+<!-- Notes regarding the default values for dynbal_storage_residence_time:
+
+     The choice of 20 years is pretty arbitrary. It feels like this is on the longer side
+     of what's reasonable, and this choice of a relatively long residence time was made to
+     prioritize reducing annual fluxes, especially in the oscillatory case (where a given
+     grid cell flips back and forth between two states, as commonly happens at the margin
+     of the ice sheet).
+
+     Regarding the CLM5 default: There is no way to exactly recover the old CLM5 behavior,
+     which used an annual dribbler to evenly spread the fluxes throughout the following
+     year. But this CLM5 behavior can be approximated by setting
+     dynbal_storage_residence_time to something between about 0.5 and 1.0, depending on
+     the behaviors you want to recover - peak fluxes, effective residence time, etc. The
+     choice of 0.75 here is a compromise that keeps fluxes not much larger than in CLM5
+     immediately following landcover change, while still releasing a large fraction of the
+     conservation correction within the first year after landcover change.
+-->
 <dynbal_storage_residence_time >20.d00</dynbal_storage_residence_time>
 <dynbal_storage_residence_time phys="clm5_0">0.75d00</dynbal_storage_residence_time>
 
