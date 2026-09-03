@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3407;
+my $ntests = 3413;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -634,6 +634,36 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+     "building humidity mode below range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=-1",
+                                     phys=>"clm6_0",
+                                   },
+     "building humidity mode above range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=3",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 1 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=1,building_temp_method=0",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=0,urban_hac='ON',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with AC off"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='OFF',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 without explicit AC"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='ON',urban_explicit_ac=.false.",
+                                     phys=>"clm6_0",
+                                   },
      "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
                                      namelst=>"",
                                      CLM_CMIP_ERA=>"cmip7",

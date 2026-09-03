@@ -30,9 +30,9 @@ module test_dyn_cons_biogeophys
      type(unittest_water_type_factory_type) :: water_type_factory
      type(soilstate_type) :: soilstate_inst
      type(temperature_type) :: temperature_inst
-     type(urbanparams_type) :: urbanparams_inst
      type(lakestate_type) :: lakestate_inst
      type(water_type) :: water_inst
+     type(urbanparams_type) :: urbanparams_inst
    contains
      procedure :: setUp
      procedure :: tearDown
@@ -194,6 +194,10 @@ contains
     allocate(this%urbanparams_inst%nlev_improad(bounds%begl:bounds%endl))
     ! Arbitrary value, not important here
     this%urbanparams_inst%nlev_improad(bounds%begl:bounds%endl) = 3
+
+    ! Reguired so that the IsBuildingHumidityEnabled and IsACDehumidificationEnabled
+    ! namelist functions can be used
+    call this%urbanparams_inst%InitForTesting(bounds)
 
     ! Initialize water_inst
     ! (snl and dz are totally arbitrary here: these are unimportant for this test)

@@ -23,6 +23,8 @@ module UrbanParamsType
   public  :: CheckUrban        ! Check validity of urban points
   public  :: IsSimpleBuildTemp ! If using the simple building temperature method
   public  :: IsProgBuildTemp   ! If using the prognostic building temperature method
+  public  :: IsBuildingHumidityEnabled    ! If indoor building humidity is prognosed
+  public  :: IsACDehumidificationEnabled  ! If air-conditioning dehumidification is enabled
   !
   ! !PRIVATE TYPE
   type urbinp_type
@@ -93,6 +95,7 @@ module UrbanParamsType
    contains
 
      procedure, public :: Init
+     procedure, public :: InitForTesting
 
   end type urbanparams_type
   !
@@ -101,6 +104,10 @@ module UrbanParamsType
   character(len= *), parameter, public :: urban_hac_on =  'ON'
   character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'
   character(len= 16), public           :: urban_hac = urban_hac_off
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_OFF = 0
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_ON = 1
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_DEHUMIDIFY = 2
+  integer, public                      :: building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
   logical, public                      :: urban_explicit_ac = .true.  ! whether to use explicit, time-varying AC adoption rate
   logical, public                      :: urban_traffic = .false.     ! urban traffic fluxes
 
@@ -362,6 +369,34 @@ contains
     ! mode='finalize') because the arrays are needed for dynamic urban landunits.
 
   end subroutine Init
+
+  !-----------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Version of Init routine just for unit tests
+    !
+    ! This version sets building_humidity_mode and then calls Init
+    !
+    ! !ARGUMENTS:
+    class(urbanparams_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitForTesting'
+    !-----------------------------------------------------------------------
+
+    ! Default setting (prognostic indoor humidity and dehumidification off)
+    building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
+
+    ! We set this to .true. to enable the IsBuildingHumidityEnabled and 
+    ! IsACDehumidificationEnabled functions to be used for unit testing
+    ReadNamelist = .true.
+
+    call Init(this, bounds = bounds)
+
+  end subroutine InitForTesting
 
   !-----------------------------------------------------------------------
   subroutine UrbanInput(begg, endg, mode)
@@ -851,7 +886,7 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 
-    namelist / clmu_inparm / urban_hac, urban_explicit_ac, urban_traffic, building_temp_method
+    namelist / clmu_inparm / urban_hac, building_humidity_mode, urban_explicit_ac, urban_traffic, building_temp_method
     !EOP
     !-----------------------------------------------------------------------
 
@@ -879,6 +914,7 @@ contains
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(urban_hac,             mpicom)
+    call shr_mpi_bcast(building_humidity_mode, mpicom)
     call shr_mpi_bcast(urban_explicit_ac,     mpicom)
     call shr_mpi_bcast(urban_traffic,         mpicom)
     call shr_mpi_bcast(building_temp_method,  mpicom)
@@ -888,9 +924,28 @@ contains
        write(iulog,*)'Urban traffic fluxes are not implemented currently'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+    if (building_humidity_mode < BUILDING_HUMIDITY_MODE_OFF .or. &
+         building_humidity_mode > BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
+       call endrun(msg='building_humidity_mode must be 0, 1, or 2'//errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON .and. &
+         building_temp_method /= BUILDING_TEMP_METHOD_PROG) then
+       call endrun(msg='building_humidity_mode=1 or 2 requires the prognostic building temperature method'// &
+            errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
+       if (trim(urban_hac) /= urban_hac_on .and. trim(urban_hac) /= urban_wasteheat_on) then
+          call endrun(msg='building_humidity_mode=2 requires urban_hac to be ON or ON_WASTEHEAT'// &
+               errmsg(sourcefile, __LINE__))
+       end if
+       if (.not. urban_explicit_ac) then
+          call endrun(msg='building_humidity_mode=2 requires urban_explicit_ac=.true.'//errmsg(sourcefile, __LINE__))
+       end if
+    end if
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
+       write(iulog,*) '   urban building humidity mode                   = ', building_humidity_mode
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
@@ -954,6 +1009,62 @@ contains
     IsProgBuildTemp = building_temp_method == BUILDING_TEMP_METHOD_PROG
 
   end function IsProgBuildTemp
+
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsBuildingHumidityEnabled
+  !
+  ! !INTERFACE:
+  !
+  logical function IsBuildingHumidityEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If indoor building humidity is being simulated
+    !
+    ! !USES:
+    implicit none
+    !EOP
+    !-----------------------------------------------------------------------
+
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsBuildingHumidityEnabled = building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON
+
+  end function IsBuildingHumidityEnabled
+
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsACDehumidificationEnabled
+  !
+  ! !INTERFACE:
+  !
+  logical function IsACDehumidificationEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If air-conditioning dehumidification is enabled
+    !
+    ! !USES:
+    implicit none
+    !EOP
+    !-----------------------------------------------------------------------
+
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsACDehumidificationEnabled = building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY
+
+  end function IsACDehumidificationEnabled
 
   !-----------------------------------------------------------------------
 

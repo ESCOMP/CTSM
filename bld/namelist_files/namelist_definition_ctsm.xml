@@ -1247,6 +1247,18 @@ Turn urban air conditioning/heating ON or OFF and add wasteheat:
 <entry id="urban_explicit_ac" type="logical" category="clm_physics"
        group="clmu_inparm" valid_values="" >
 If TRUE, use explicit, time-varying AC adoption rate for air-conditioning flux and interior building temperature calculations.
+See Li et al. (2024), doi:10.1029/2023MS004107
+</entry>
+
+<entry id="building_humidity_mode" type="integer" category="clm_physics"
+       group="clmu_inparm" valid_values="0,1,2" >
+Select treatment of indoor building humidity:
+    0 = Existing CLMU formulation without indoor humidity or air-conditioning dehumidification
+    1 = Indoor humidity and latent heat exchange without air-conditioning dehumidification
+    2 = Indoor humidity and latent heat exchange with air-conditioning dehumidification and condensate production
+Modes 1 and 2 require building_temp_method=1 (prognostic calculation of interior building temp (clm5_0)).
+Mode 2 also requires urban_hac to be ON or ON_WASTEHEAT and urban_explicit_ac=.true.
+See Li et al. (2026), doi:10.1038/s44284-026-00474-4
 </entry>
 
 <entry id="urban_traffic" type="logical" category="clm_physics"

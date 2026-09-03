@@ -36,6 +36,7 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope_routing
+  use UrbanParamsType    , only : IsACDehumidificationEnabled
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -499,6 +500,7 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
+     real(r8) :: qflx_condensate_from_ac_grc(bounds%begg:bounds%endg)   ! grid cell-level condensate water flux from air-conditioning [mm H2O /s]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -558,7 +560,8 @@ contains
 
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
-          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col  & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_condensate_from_ac_col => waterflux_inst%qflx_condensate_from_ac_col & ! Input: [real(r8) (:)]  column level condensate water flux from air-conditioning (mm H2O /s)
           )
 
        ! Get step size and time step
@@ -604,6 +607,10 @@ contains
                   - qflx_snwcp_discarded_liq_col(c) &
                   - qflx_snwcp_discarded_ice_col(c)) * dtime
 
+             if (IsACDehumidificationEnabled()) then
+                errh2o_col(c) = errh2o_col(c) - qflx_condensate_from_ac_col(c) * dtime
+             end if
+
           else
 
              errh2o_col(c) = 0.0_r8
@@ -638,6 +645,9 @@ contains
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
+              if (IsACDehumidificationEnabled()) then
+                 write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
+              end if
 
               write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_col(indexc)*dtime
 
@@ -675,6 +685,12 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       if (IsACDehumidificationEnabled()) then
+          call c2g( bounds,  &
+            qflx_condensate_from_ac_col(bounds%begc:bounds%endc),  &
+            qflx_condensate_from_ac_grc(bounds%begg:bounds%endg),  &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       end if
 
        do g = bounds%begg, bounds%endg
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
@@ -691,6 +707,10 @@ contains
                - qflx_ice_runoff_grc(g)  &
                - qflx_snwcp_discarded_liq_grc(g)  &
                - qflx_snwcp_discarded_ice_grc(g)) * dtime
+
+          if (IsACDehumidificationEnabled()) then
+             errh2o_grc(g) = errh2o_grc(g) - qflx_condensate_from_ac_grc(g) * dtime
+          end if
        end do
 
        ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
@@ -738,6 +758,9 @@ contains
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
+             if (IsACDehumidificationEnabled()) then
+                write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
+             end if
 
              write(iulog,*)'CTSM is stopping'
              call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))
