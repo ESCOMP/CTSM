@@ -10,7 +10,7 @@ module CNBalanceCheckMod
   use shr_log_mod                     , only : errMsg => shr_log_errMsg
   use decompMod                       , only : bounds_type, subgrid_level_gridcell, subgrid_level_column
   use abortutils                      , only : endrun
-  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_fates_bgc
+  use clm_varctl                      , only : iulog, use_nitrif_denitrif, use_fates_bgc, use_soil_nox
   use clm_time_manager                , only : get_step_size_real
   use CNVegNitrogenFluxType           , only : cnveg_nitrogenflux_type
   use CNVegNitrogenStateType          , only : cnveg_nitrogenstate_type
@@ -547,6 +547,14 @@ contains
          smin_no3_leached    => soilbiogeochem_nitrogenflux_inst%smin_no3_leached_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) soil mineral NO3 pool loss to leaching 
          smin_no3_runoff     => soilbiogeochem_nitrogenflux_inst%smin_no3_runoff_col     , & ! Input:  [real(r8) (:) ]  (gN/m2/s) soil mineral NO3 pool loss to runoff   
          f_n2o_nit           => soilbiogeochem_nitrogenflux_inst%f_n2o_nit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from nitrification 
+
+         f_n2o_denit         => soilbiogeochem_nitrogenflux_inst%f_n2o_denit_col         , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2o from denitrification
+         f_n2_denit         => soilbiogeochem_nitrogenflux_inst%f_n2_denit_col           , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of N2 from denitrification
+         f_nox_denit         => soilbiogeochem_nitrogenflux_inst%f_nox_denit_col         , & ! Input:[real(r8) (:) ]  (gN/m2/s) flux of NOx from denitrification
+         f_nox_nit         => soilbiogeochem_nitrogenflux_inst%f_nox_nit_col           , & ! Input:[real(r8) (:) ]  (gN/m2/s) flux of NOx from nitrification
+         f_nox_denit_atmos    => soilbiogeochem_nitrogenflux_inst%f_nox_denit_atmos_col  , & ! Input:[real(r8) (:) ]  (gN/m2/s) flux of NOx from denitrification
+         f_nox_nit_atmos      => soilbiogeochem_nitrogenflux_inst%f_nox_nit_atmos_col    , & ! Input:  [real(r8) (:) ]  (gN/m2/s) flux of NOx from nitrification
+
          som_n_leached       => soilbiogeochem_nitrogenflux_inst%som_n_leached_col       , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total SOM N loss from vertical transport
 
          col_fire_nloss      => cnveg_nitrogenflux_inst%fire_nloss_col                   , & ! Input:  [real(r8) (:) ]  (gN/m2/s) total column-level fire N loss 
@@ -599,9 +607,15 @@ contains
          col_ninputs_partial(c) = col_ninputs(c)
          
          ! calculate total column-level outputs
-
-         col_noutputs(c) = denit(c)
-
+         if (use_soil_nox) then
+            !denit=f_n2o_denit + f_n2_denit + f_nox_denit
+            col_noutputs(c) = f_n2_denit(c)+f_n2o_denit(c)
+            ! only f_nox_denit_atmos leaves the system, NOx denit trapped in the canopy stays in the system.
+            col_noutputs(c) = col_noutputs(c)+f_nox_denit_atmos(c) 
+         else
+            col_noutputs(c) = denit(c)
+         endif
+         
          if( .not.col%is_fates(c) ) then
             
             col_noutputs(c) = col_noutputs(c) + col_fire_nloss(c) + gru_conv_nflux(c)
@@ -626,8 +640,10 @@ contains
             col_noutputs(c) = col_noutputs(c) + sminn_leached(c)
          else
             col_noutputs(c) = col_noutputs(c) + f_n2o_nit(c)
-
             col_noutputs(c) = col_noutputs(c) + smin_no3_leached(c) + smin_no3_runoff(c)
+            if (use_soil_nox) then
+               col_noutputs(c) = col_noutputs(c) + f_nox_nit_atmos(c)
+            endif
          end if
 
          col_noutputs(c) = col_noutputs(c) - som_n_leached(c)
@@ -652,7 +668,11 @@ contains
          if (abs(col_errnb(c)) > this%nwarning) then
             write(iulog,*) 'nbalance warning at c =', c, col_errnb(c), col_endnb(c)
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
-            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            write(iulog,*)'outputs,lch,roff,dnit = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,denit(c)*dt
+            if (use_soil_nox) then
+               write(iulog,*)'outputs,fnoxnit,fnoxdenit,fn2 = ',f_nox_nit(c)*dt, f_nox_denit(c)*dt,f_n2_denit(c)*dt
+               write(iulog,*)'outputs,fn2onit,fn2odenit= ',f_n2o_nit(c)*dt, f_n2o_denit(c)*dt
+            end if
          end if
 
       end do ! end of columns loop
@@ -673,9 +693,9 @@ contains
             write(iulog,*)'inputs,ffix,nfix,ndep = ',ffix_to_sminn(c)*dt,nfix_to_sminn(c)*dt,ndep_to_sminn(c)*dt
          end if
          if(col%is_fates(c))then
-            write(iulog,*)'outputs,lch,roff,dnit,plnt = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt,sminn_to_plant(c)*dt
+            write(iulog,*)'outputs,lch,roff,dnit,plnt = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,denit(c)*dt,sminn_to_plant(c)*dt
          else
-            write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,f_n2o_nit(c)*dt
+            write(iulog,*)'outputs,lch,roff,dnit    = ',smin_no3_leached(c)*dt, smin_no3_runoff(c)*dt,denit(c)*dt
          end if
          call endrun(subgrid_index=c, subgrid_level=subgrid_level_column, msg=errMsg(sourcefile, __LINE__))
       end if
