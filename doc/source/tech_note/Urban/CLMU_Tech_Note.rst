@@ -1307,7 +1307,7 @@ Similar to albedo, the emissivity of each urban surface is a weighted combinatio
 
    \varepsilon_{u} = \varepsilon_{u}\left( 1 - f_{u,sno} \right) + \varepsilon_{sno}f_{u,sno}
 
-where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (:ref:`Oleson et al. 2004 <oleson2004>`), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation :eq:`eq-0485`).
+where :math:`\varepsilon_{u}` is the emissivity of :math:`u =` roof, pervious and impervious road (:numref:`table-input-data`), :math:`\varepsilon_{sno} = 0.97` is the emissivity of snow (:ref:`Oleson et al. 2004 <Olesonetal2004>`), and :math:`f_{u,sno}` is the fraction of the urban surface covered with snow (equation :eq:`eq-0485`).
 
 As with solar radiation, the longwave interactions within the urban canyon are determined numerically by allowing for multiple reflections until a convergence criteria is met (the absorbed longwave radiation for a given reflection is less than :math:`1 \times 10^{- 3}`). The following equation :eq:`eq-0485` assume that absorptivity equals emissivity.
 
@@ -1920,7 +1920,7 @@ where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the at
 Monin-Obukhov Similarity Theory
 -------------------------------
 
-The surface vertical kinematic fluxes of momentum :math:`\overline{u^{'}w^{'}}` and :math:`\overline{v^{'}w^{'}}` (m\ :sup:`2` s\ :sup:`-2`), sensible heat :math:`\overline{\theta^{'}w^{'}}` (K m s\ :sup:`-1`), and latent heat :math:`\overline{q^{'}w^{'}}` (kg kg\ :sup:`-1` m s\ :sup:`-1`), where :math:`u^{'}`, :math:`v^{'}`, :math:`w^{'}`, :math:`\theta^{'}`, and :math:`q^{'}` are zonal horizontal wind, meridional horizontal wind, vertical velocity, potential temperature, and specific humidity turbulent fluctuations about the mean, are defined from Monin-Obukhov similarity applied to the surface layer. This theory states that when scaled appropriately, the dimensionless mean horizontal wind speed, mean potential temperature, and mean specific humidity profile gradients depend on unique functions of :math:`\zeta = \frac{z - d}{L}` (:ref:`Zeng et al. 1998 <zengandzhao1998>`) as
+The surface vertical kinematic fluxes of momentum :math:`\overline{u^{'}w^{'}}` and :math:`\overline{v^{'}w^{'}}` (m\ :sup:`2` s\ :sup:`-2`), sensible heat :math:`\overline{\theta^{'}w^{'}}` (K m s\ :sup:`-1`), and latent heat :math:`\overline{q^{'}w^{'}}` (kg kg\ :sup:`-1` m s\ :sup:`-1`), where :math:`u^{'}`, :math:`v^{'}`, :math:`w^{'}`, :math:`\theta^{'}`, and :math:`q^{'}` are zonal horizontal wind, meridional horizontal wind, vertical velocity, potential temperature, and specific humidity turbulent fluctuations about the mean, are defined from Monin-Obukhov similarity applied to the surface layer. This theory states that when scaled appropriately, the dimensionless mean horizontal wind speed, mean potential temperature, and mean specific humidity profile gradients depend on unique functions of :math:`\zeta = \frac{z - d}{L}` (:ref:`Zeng et al. 1998 <Zengetal1998>`) as
 
 .. math::
    :label: eq-0190
@@ -1972,7 +1972,7 @@ where :math:`g` is the acceleration of gravity (m s\ :sup:`-2`) (:numref:`table-
 
 where :math:`\overline{\theta_{atm}}` is the atmospheric potential temperature.
 
-Following :ref:`Panofsky and Dutton (1984) <panofskyanddutton1984>`, the differential equations for :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)` can be integrated formally without commitment to their exact forms. Integration between two arbitrary heights in the surface layer :math:`z_{2}` and :math:`z_{1}` (:math:`z_{2} > z_{1}`) with horizontal winds :math:`|u|_{1}` and :math:`|u|_{2}`, potential temperatures :math:`\theta_{1}` and :math:`\theta_{2}`, and specific humidities :math:`q_{1}` and :math:`q_{2}` results in
+Following :ref:`Panofsky and Dutton (1984) <PanofskyDutton1984>`, the differential equations for :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)` can be integrated formally without commitment to their exact forms. Integration between two arbitrary heights in the surface layer :math:`z_{2}` and :math:`z_{1}` (:math:`z_{2} > z_{1}`) with horizontal winds :math:`|u|_{1}` and :math:`|u|_{2}`, potential temperatures :math:`\theta_{1}` and :math:`\theta_{2}`, and specific humidities :math:`q_{1}` and :math:`q_{2}` results in
 
 .. math::
    :label: eq-0198
@@ -2065,7 +2065,7 @@ where :math:`w_{*}` is the convective velocity scale
 
 :math:`z_{i} = 1000` is the convective boundary layer height (m), and :math:`\beta = 1`.
 
-The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <zengandzhao1998>`)
+The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
 
 .. math::
    :label: eq-0042
@@ -2080,7 +2080,7 @@ The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <zengandzhao199
    \varphi_{m}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
-The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <zengandzhao1998>`)
+The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
 
 .. math::
    :label: eq-0044
@@ -2095,7 +2095,7 @@ The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998
    \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
-To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (:ref:`Zeng et al. 1998 <zengandzhao1998>`). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
+To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (:ref:`Zeng et al. 1998 <Zengetal1998>`). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
 
 Very unstable :math:`(\zeta < - 1.574)`
 
@@ -2497,7 +2497,7 @@ In the absence of snow,
 
    f_{wet} = \left( \frac{w_{liq,snl + 1} + w_{ice,snl + 1}}{w_{pond,\max}}()^{\frac{2}{3}} \right)
 
-where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <oleson2004>`).
+where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <Olesonetal2004>`).
 
 In equations :eq:`eq-0528` and :eq:`eq-0530`, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
 
@@ -3398,14 +3398,14 @@ Phase change may take place in any snow/soil layers of the pervious road and in 
    T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
 
 
-where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from :ref:`Niu and Yang (2006) <niuandyang2006>` is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
+where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from :ref:`Niu and Yang (2006) <NiuYang2006>` is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
 
 .. math::
    :label: eq-0315
 
    w_{liq,{max,}i} = \Delta z_{i}\theta_{sat,i}\left\lbrack \frac{10^{3}L_{f}\left( T_{f} - T_{i} \right)}{gT_{i}\psi_{sat,i}} \right\rbrack^{\frac{- 1}{B_{i}}} T_{i} < T_{f}
 
-where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` exponent (section 5.3.1). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
+where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent (section 5.3.1). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
 
 For the special case when snow is present (snow mass :math:`W_{sno} > 0`) but there are no explicit snow layers (:math:`snl = 0`) (i.e., there is not enough snow present to meet the minimum snow depth requirement of 0.01 m), snow melt will take place for soil layer :math:`i = 1` if the soil layer temperature is greater than the freezing temperature (:math:`T_{1}^{n + 1} > T_{f}`).
 
@@ -3561,7 +3561,7 @@ where :math:`G` is the ground heat flux (section 3.2.4) and the last term is the
 Thermal Properties
 ------------------
 
-The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in section 1.2.2 and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
+The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in section 1.2.2 and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
 
 Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is from :ref:`Farouki (1981) <farouki1981>`
 
@@ -3579,7 +3579,7 @@ Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is f
 
 
 
-where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lambda_{dry,i}` is the dry thermal conductivity, :math:`K_{e,i}` is the Kersten number, :math:`S_{r,i}` is the wetness of the soil with respect to saturation, and :math:`\lambda_{bedrock} = 3` W m\ :sup:`-1` K\ :sup:`-1` is the thermal conductivity assumed for the deep ground layers (typical of saturated granitic rock; :ref:`Clauser and Huenges, 1995 <clauserandhuenges1995>`). The saturated thermal conductivity :math:`\lambda_{sat,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal conductivities of the soil solid, liquid water, and ice constituents
+where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lambda_{dry,i}` is the dry thermal conductivity, :math:`K_{e,i}` is the Kersten number, :math:`S_{r,i}` is the wetness of the soil with respect to saturation, and :math:`\lambda_{bedrock} = 3` W m\ :sup:`-1` K\ :sup:`-1` is the thermal conductivity assumed for the deep ground layers (typical of saturated granitic rock; :ref:`Clauser and Huenges, 1995 <ClauserHuenges1995>`). The saturated thermal conductivity :math:`\lambda_{sat,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal conductivities of the soil solid, liquid water, and ice constituents
 
 
 
@@ -3642,7 +3642,7 @@ where :math:`\lambda_{air}` and :math:`\lambda_{ice}` are the thermal conductivi
 
    \rho_{sno,i} = \frac{w_{ice,i} + w_{liq,i}}{\Delta z_{i}}
 
-The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from de :ref:`Vries (1963) <vries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
+The volumetric heat capacity :math:`c_{i}` (J m\ :sup:`-3` K\ :sup:`-1`) for soil is from de :ref:`de Vries (1963) <deVries1963>` and depends on the heat capacities of the soil solid, liquid water, and ice constituents
 
 .. math::
    :label: eq-0335
@@ -3734,7 +3734,7 @@ Solid precipitation reaching the surface, :math:`q_{grnd,ice}\Delta t`, is added
 Snow
 ----
 
-The parameterizations for snow are based primarily on :ref:`Anderson (1976) <anderson1976>`, :ref:`Jordan (1991) <jordan1991>`, and :ref:`Dai and Zeng (1997) <daiandzeng1997>`. Snow can have up to five layers. These layers are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0` where layer :math:`i = 0` is the snow layer next to the top soil layer and layer :math:`i = - 4` is the top layer of a five-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl + 1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`fig-snow-pack-example` for an example of the snow layer structure for a three layer snow pack.
+The parameterizations for snow are based primarily on :ref:`Anderson (1976) <anderson1976>`, :ref:`Jordan (1991) <jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. Snow can have up to five layers. These layers are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0` where layer :math:`i = 0` is the snow layer next to the top soil layer and layer :math:`i = - 4` is the top layer of a five-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl + 1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`fig-snow-pack-example` for an example of the snow layer structure for a three layer snow pack.
 
 .. figure:: image17.jpeg
    :width: 6in
@@ -4186,14 +4186,14 @@ where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from ra
    w_{liq,1} = w_{liq,1} + \left( q_{liq,0} - q_{seva} \right)\Delta t \geq 0 q_{over} = 0
 
 
-For the pervious road, the simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <bevenandkirkby1979>`) runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <niuetal2005>` is implemented. A key concept underlying this approach is that of fractional saturated/impermeable area :math:`f_{sat}`, which is determined by the topographic characteristics and soil moisture state of a grid cell. The surface runoff consists of overland flow due to saturation excess (Dunne runoff) and infiltration excess (Hortonian runoff) mechanisms
+For the pervious road, the simple TOPMODEL-based (:ref:`Beven and Kirkby 1979 <BevenKirkby1979>`) runoff model (SIMTOP) described by :ref:`Niu et al. (2005) <niuetal2005>` is implemented. A key concept underlying this approach is that of fractional saturated/impermeable area :math:`f_{sat}`, which is determined by the topographic characteristics and soil moisture state of a grid cell. The surface runoff consists of overland flow due to saturation excess (Dunne runoff) and infiltration excess (Hortonian runoff) mechanisms
 
 .. math::
    :label: eq-0374
 
    q_{over} = f_{sat}q_{liq,0} + \left( 1 - f_{sat} \right)\max\left( 0,q_{liq,0} - q_{infl,\max}() \right)
 
-where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any melt water from snow (kg m\ :sup:`-2` s\ :sup:`-1`) and :math:`q_{infl,\max}` is a maximum soil infiltration capacity (kg m\ :sup:`-2` s\ :sup:`-1`). In :ref:`Niu et al. (2005) <niuetal2005>`, :math:`f_{sat}` was a function of soil moisture whose potential or maximum value,\ :math:`f_{\max}`, was solely determined by topographic characteristics. :ref:`Niu and Yang (2006) <niuandyang2006>` modified the expression for :math:`f_{sat}` to include a dependence on impermeable area fraction in frozen soil, :math:`f_{frz,1}`, of the top :math:`i = 1` soil layer as
+where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any melt water from snow (kg m\ :sup:`-2` s\ :sup:`-1`) and :math:`q_{infl,\max}` is a maximum soil infiltration capacity (kg m\ :sup:`-2` s\ :sup:`-1`). In :ref:`Niu et al. (2005) <niuetal2005>`, :math:`f_{sat}` was a function of soil moisture whose potential or maximum value,\ :math:`f_{\max}`, was solely determined by topographic characteristics. :ref:`Niu and Yang (2006) <NiuYang2006>` modified the expression for :math:`f_{sat}` to include a dependence on impermeable area fraction in frozen soil, :math:`f_{frz,1}`, of the top :math:`i = 1` soil layer as
 
 .. math::
    :label: eq-0375
@@ -4202,7 +4202,7 @@ where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any mel
 
 where :math:`f_{\max}` is the maximum saturated fraction, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth (m) (section 5.4). The maximum saturated fraction, :math:`f_{\max}`, is defined as the discrete cumulative distribution function (CDF) of the topographic index when the grid cell mean water table depth is zero. Thus, :math:`f_{\max}` is the percent of pixels in a grid cell whose topographic index is larger than or equal to the grid cell mean topographic index. It should be calculated explicitly from the CDF at each grid cell at the resolution that the model is run. However, because this is a computationally intensive task for global applications, :math:`f_{\max}` is calculated once from the CDF at a spatial resolution of 0.5° by 0.5° following :ref:`Niu et al. (2005) <niuetal2005>` and then area-averaged to the desired resolution. The 0.5° resolution is compatible with the resolution of other CLM input surface datasets (e.g., plant functional types, leaf area index). The decay factor :math:`f_{over}` for global simulations was determined through sensitivity analysis and comparison with observed runoff to be 0.5 m\ :sup:`-1`.
 
-The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soil ice content (:ref:`Niu and Yang 2006 <niuandyang2006>`)
+The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soil ice content (:ref:`Niu and Yang 2006 <NiuYang2006>`)
 
 .. math::
    :label: eq-0376
@@ -4211,7 +4211,7 @@ The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soi
 
 where :math:`\alpha = 3` is an adjustable scale-dependent parameter, and :math:`w_{ice,i}` and :math:`w_{liq,i}` are the ice and liquid water contents of soil layer :math:`i` (kg m\ :sup:`-2`).
 
-The maximum infiltration capacity :math:`q_{infl,\max}` in equation :eq:`eq-0374` is determined from soil texture and soil moisture (:ref:`Entekhabi and Eagleson 1989 <entekhabiandeagleson1989>`) as
+The maximum infiltration capacity :math:`q_{infl,\max}` in equation :eq:`eq-0374` is determined from soil texture and soil moisture (:ref:`Entekhabi and Eagleson 1989 <EntekhabiEagleson1989>`) as
 
 .. math::
    :label: eq-0377
@@ -4245,7 +4245,7 @@ where :math:`\Delta z_{1}` is the thickness of the top soil layer (mm) and
 
    \left( \frac{d\psi}{ds} \right)_{s = 1} = - B_{1}\psi_{sat,1}
 
-The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (section 5.3.1).
+The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (section 5.3.1).
 
 Infiltration into the surface soil layer of the pervious road is defined as the residual of the surface water balance
 
@@ -4352,7 +4352,7 @@ where the soil moisture source/sink term :math:`Q` is now included.
 Hydraulic Properties
 ~~~~~~~~~~~~~~~~~~~~
 
-The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, section 1.2.2) based on the work of :ref:`Clapp and Hornberger (1978) <clappandhornberger1978>` and :ref:`Cosby et al. (1984) <cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <lawrenceandslater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
+The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, section 1.2.2) based on the work of :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` and :ref:`Cosby et al. (1984) <cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
 
 The hydraulic conductivity is defined at the depth of the interface of two adjacent layers :math:`z_{h,i}` (:numref:`fig-soil-water-flux-scheme`) and is a function of the saturated hydraulic conductivity :math:`k_{sat}\left\lbrack z_{h,i} \right\rbrack`, the total (ice plus liquid) volumetric soil moisture of the two layers :math:`\theta_{i}` and :math:`\theta_{i + 1}` and the impermeable fraction :math:`f_{frz,i}`
 
@@ -5142,7 +5142,7 @@ The observation site has been used to validate other urban models such as SHIM (
      - W m\ :sup:`-1` K\ :sup:`-1`
    * - Pervious road thermal conductivity
      - :math:`\lambda_{imprvrd,i = 1,10}`
-     - Soil texture (:ref:`Oleson et al. 2004 <oleson2004>`)
+     - Soil texture (:ref:`Oleson et al. 2004 <Olesonetal2004>`)
      - W m\ :sup:`-1` K\ :sup:`-1`
    * - Wall volumetric heat capacity
      - :math:`c_{wall,i = 1,10}`
@@ -5150,7 +5150,7 @@ The observation site has been used to validate other urban models such as SHIM (
      - MJ m\ :sup:`-3` K\ :sup:`-1`
    * - Pervious road volumetric heat capacity
      - :math:`c_{imprvrd,i = 1,10}`
-     - Soil texture (:ref:`Oleson et al. 2004 <oleson2004>`)
+     - Soil texture (:ref:`Oleson et al. 2004 <Olesonetal2004>`)
      - MJ m\ :sup:`-3` K\ :sup:`-1`
    * - Percent sand, percent clay of pervious road (soil)
      - :math:`\% sand,\% clay`
