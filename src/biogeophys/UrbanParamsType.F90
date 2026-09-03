@@ -388,7 +388,7 @@ contains
     !-----------------------------------------------------------------------
 
     ! Default setting (prognostic indoor humidity and dehumidification off)
-    building_humidity_mode = 0
+    building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
 
     ! We set this to .true. to enable the IsBuildingHumidityEnabled and 
     ! IsACDehumidificationEnabled functions to be used for unit testing
