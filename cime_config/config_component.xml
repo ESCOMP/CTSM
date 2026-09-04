@@ -78,37 +78,37 @@
     <values match="last">
       <!-- Options for atm forcing are: CRUJRA2024, CRUJRA2024b, CRUv7, GSWP3, cam6.0 (also used for DATM%CPLHIST), cam5.0, cam4.0, QIAN, WISOQIA, 1PT, NLDAS2, and ERA5) -->
       <!-- All the clm5_0 physics options -->
-      <value compset="DATM%CRUJRA2024[b]*_CLM50">clm5_0_CRUJRA2024</value>
-      <value compset="DATM%CRUv7_CLM50"  >clm5_0_CRUv7</value>
+      <value compset="DATM%CRUJRA2024[b]*[^_]*_CLM50">clm5_0_CRUJRA2024</value>
+      <value compset="DATM%CRUv7[^_]*_CLM50"  >clm5_0_CRUv7</value>
       <value compset="SATM_CLM50"        >clm5_0_GSWP3v1</value>
-      <value compset="DATM%GSWP3v1_CLM50">clm5_0_GSWP3v1</value>
+      <value compset="DATM%GSWP3v1[^_]*_CLM50">clm5_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM50"    >clm5_0_cam6.0</value>
       <value compset="CAM40[^_]*_CLM50"  >clm5_0_cam4.0</value>
       <value compset="CAM50[^_]*_CLM50"  >clm5_0_cam5.0</value>
       <value compset="CAM60[^_]*_CLM50"  >clm5_0_cam6.0</value>
       <value compset="CAM70[^_]*_CLM50"  >clm5_0_cam7.0</value>
-      <value compset="DATM%CPLHIST_CLM50">clm5_0_cam6.0</value>
-      <value compset="DATM%QIA_CLM50"    >clm5_0_QIAN</value>
-      <value compset="DATM%WISOQIA_CLM50">clm5_0_QIAN</value>
-      <value compset="DATM%1PT_CLM50"    >clm5_0_1PT</value>
-      <value compset="DATM%NLDAS2_CLM50" >clm5_0_NLDAS2</value>
-      <value compset="DATM%ERA5_CLM50"   >clm5_0_ERA5</value>
+      <value compset="DATM%CPLHIST[^_]*_CLM50">clm5_0_cam6.0</value>
+      <value compset="DATM%QIA[^_]*_CLM50"    >clm5_0_QIAN</value>
+      <value compset="DATM%WISOQIA[^_]*_CLM50">clm5_0_QIAN</value>
+      <value compset="DATM%1PT[^_]*_CLM50"    >clm5_0_1PT</value>
+      <value compset="DATM%NLDAS2[^_]*_CLM50" >clm5_0_NLDAS2</value>
+      <value compset="DATM%ERA5[^_]*_CLM50"   >clm5_0_ERA5</value>
       <!-- All the clm6_0 physics options -->
-      <value compset="DATM%CRUJRA2024[b]*_CLM60">clm6_0_CRUJRA2024</value>
-      <value compset="DATM%CRUv7_CLM60"  >clm6_0_CRUv7</value>
+      <value compset="DATM%CRUJRA2024[b]*[^_]*_CLM60">clm6_0_CRUJRA2024</value>
+      <value compset="DATM%CRUv7[^_]*_CLM60"  >clm6_0_CRUv7</value>
       <value compset="SATM_CLM60"        >clm6_0_GSWP3v1</value>
-      <value compset="DATM%GSWP3v1_CLM60">clm6_0_GSWP3v1</value>
+      <value compset="DATM%GSWP3v1[^_]*_CLM60">clm6_0_GSWP3v1</value>
       <value compset="CAM[^_]+_CLM60"    >clm6_0_cam6.0</value>
       <value compset="CAM40[^_]*_CLM60"  >clm6_0_cam4.0</value>
       <value compset="CAM50[^_]*_CLM60"  >clm6_0_cam5.0</value>
       <value compset="CAM60[^_]*_CLM60"  >clm6_0_cam6.0</value>
       <value compset="CAM70[^_]*_CLM60"  >clm6_0_cam7.0</value>
-      <value compset="DATM%CPLHIST_CLM60">clm6_0_cam7.0</value>
-      <value compset="DATM%QIA_CLM60"    >clm6_0_QIAN</value>
-      <value compset="DATM%WISOQIA_CLM60">clm6_0_QIAN</value>
-      <value compset="DATM%1PT_CLM60"    >clm6_0_1PT</value>
-      <value compset="DATM%NLDAS2_CLM60" >clm6_0_NLDAS2</value>
-      <value compset="DATM%ERA5_CLM60"   >clm6_0_ERA5</value>
+      <value compset="DATM%CPLHIST[^_]*_CLM60">clm6_0_cam7.0</value>
+      <value compset="DATM%QIA[^_]*_CLM60"    >clm6_0_QIAN</value>
+      <value compset="DATM%WISOQIA[^_]*_CLM60">clm6_0_QIAN</value>
+      <value compset="DATM%1PT[^_]*_CLM60"    >clm6_0_1PT</value>
+      <value compset="DATM%NLDAS2[^_]*_CLM60" >clm6_0_NLDAS2</value>
+      <value compset="DATM%ERA5[^_]*_CLM60"   >clm6_0_ERA5</value>
       <!-- Invalid ocean DATM forcing options -->
       <value compset="DATM%NYF"          >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
       <value compset="DATM%MOSARTTEST"   >INVALID_DATM_FORCING_FOR_RUNNING_CTSM</value>
