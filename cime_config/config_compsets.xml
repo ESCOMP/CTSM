@@ -200,11 +200,11 @@
   <!-- currently needed for CESM remove when no longer needed -->
   <compset>
     <alias>I1850Clm60BgcCrop</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
     <science_support grid="f09_t232"/>
     <science_support grid="f09_f09_mt232"/>
     <science_support grid="ne30pg3_t232"/>
@@ -218,16 +218,16 @@
 
   <compset>
     <alias>I1850Clm60BgcCropCrujraRsGs</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-CROP_SICE_SOCN_SROF_SGLC_SWAV</lname>
   </compset>
 
   <compset>
     <alias>I1850Clm60Bgc</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCrujra</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
 
@@ -239,11 +239,11 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujraCmip6</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-CROP-CMIP6DECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing the CMIP6WACCMDECK compset option -->
@@ -254,11 +254,11 @@
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCmip6waccm</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujraCmip6waccm</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-CROP-CMIP6WACCMDECK_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
   </compset>
 
   <!-- Primarily for testing - when we want builds and runs to be as
@@ -336,11 +336,11 @@
 
   <compset>
      <alias>I1850Clm60BgcNoAnthroRtm</alias>
-     <lname>1850_DATM%GSWP3v1_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
+     <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
    </compset>
   <compset>
      <alias>I1850Clm60BgcCrujraNoAnthroRtm</alias>
-     <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
+     <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
      <science_support grid="f09_t232"/>
      <science_support grid="f09_f09_mt232"/>
    </compset>
@@ -606,11 +606,11 @@
 
   <compset>
     <alias>I1850Clm60BgcCropG</alias>
-    <lname>1850_DATM%GSWP3v1_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+    <lname>1850_DATM%GSWP3v1%CESM3_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
   </compset>
   <compset>
     <alias>I1850Clm60BgcCropCrujraG</alias>
-    <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
+    <lname>1850_DATM%CRUJRA2024b%CESM3_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
     <science_support grid="f09_t232"/>
     <science_support grid="f09_f09_mt232"/>
     <science_support grid="ne30pg3_t232"/>
