@@ -2898,25 +2898,6 @@ continue run; it is an error for this to be set in a branch
 run. Furthermore, this setting has no effect in a cold start run.
 </entry>
 
-<entry id="dynbal_storage_residence_time" type="real" category="physics"
-       group="dynamic_subgrid" valid_values="">
-Residence time (in years) of the dynbal storage pools.
-
-Dynamic landunit adjustments change a grid cell's total water and energy content with no
-associated physical flux. The resulting spurious gain or loss is put in a storage pool for
-each of heat (DYNBAL_HEAT_STORAGE), liquid water (DYNBAL_LIQ_STORAGE) and ice
-(DYNBAL_ICE_STORAGE); each pool is then released gradually to a corresponding conservation
-flux (EFLX_DYNBAL, QFLX_LIQ_DYNBAL and QFLX_ICE_DYNBAL). This setting controls how
-gradually: each pool is drained with a turnover rate of 1 / dynbal_storage_residence_time,
-so a larger value spreads the correction over a longer period, giving smaller
-instantaneous fluxes but also leaving the coupled system further out of balance for
-longer.
-
-Must be greater than 0. This can be set to less than 1 year, but should be much longer
-than the model time step: if the residence time approaches the length of a time step, the
-pools will overshoot and the fluxes will oscillate.
-</entry>
-
 <entry id="for_testing_allow_non_annual_changes" type="logical" category="physics"
        group="dynamic_subgrid" valid_values="" >
 If TRUE, allow area changes at times other than the year boundary. This should
@@ -2943,6 +2924,29 @@ files generated as a result of hist_dov2xy = .false. (e.g. pfts1d_wtcol).
 Transient simulations (run_has_transient_landcover = .true.) have the same
 outcome as vars_1dwt_w_time = .true..
 Use this flag if you wish to change FALSE to TRUE when run_has_transient_landcover = .false..
+</entry>
+
+<!-- ========================================================================================  -->
+<!-- Namelist options related to conservation of water and energy with dynamic land cover      -->
+<!-- ========================================================================================  -->
+
+<entry id="dynbal_storage_residence_time" type="real" category="physics"
+       group="dyn_cons_biogeophys_inparm" valid_values="">
+Residence time (in years) of the dynbal storage pools.
+
+Dynamic landunit adjustments change a grid cell's total water and energy content with no
+associated physical flux. The resulting spurious gain or loss is put in a storage pool for
+each of heat (DYNBAL_HEAT_STORAGE), liquid water (DYNBAL_LIQ_STORAGE) and ice
+(DYNBAL_ICE_STORAGE); each pool is then released gradually to a corresponding conservation
+flux (EFLX_DYNBAL, QFLX_LIQ_DYNBAL and QFLX_ICE_DYNBAL). This setting controls how
+gradually: each pool is drained with a turnover rate of 1 / dynbal_storage_residence_time,
+so a larger value spreads the correction over a longer period, giving smaller
+instantaneous fluxes but also leaving the coupled system further out of balance for
+longer.
+
+Must be greater than 0. This can be set to less than 1 year, but should be much longer
+than the model time step: if the residence time approaches the length of a time step, the
+pools will overshoot and the fluxes will oscillate.
 </entry>
 
 <!-- ========================================================================================  -->

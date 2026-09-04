@@ -16,7 +16,6 @@ module dynSubgridControlMod
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use abortutils         , only : endrun
   use clm_varctl         , only : fname_len
-  use clm_time_manager   , only : get_average_days_per_year
   !
   implicit none
   private
@@ -33,7 +32,6 @@ module dynSubgridControlMod
   public :: get_do_harvest          ! return the value of the do_harvest control flag
   public :: get_do_grossunrep       ! return the value of the do_grossunrep control flag
   public :: get_reset_dynbal_baselines ! return the value of the reset_dynbal_baselines control flag
-  public :: get_dynbal_storage_turnover_rate ! return the turnover rate of the dynbal storage pools [1/s]
   public :: get_for_testing_allow_non_annual_changes ! return true if user has requested to allow area changes at times other than the year boundary, for testing purposes
   public :: get_for_testing_zero_dynbal_fluxes ! return true if user has requested to set the dynbal water and energy fluxes to zero, for testing purposes
   !
@@ -54,11 +52,6 @@ module dynSubgridControlMod
      logical :: vars_1dwt_w_time = .false. ! whether to add the time dimension to 1dwt variables, e.g. pfts1d_wtcol
 
      logical :: reset_dynbal_baselines = .false. ! whether to reset baseline values of total column water and energy in the first step of the run
-
-     ! Turnover rate of the dynbal storage pools [1/s]. This is derived from the
-     ! dynbal_storage_residence_time namelist variable, which gives the residence time in
-     ! years.
-     real(r8) :: dynbal_storage_turnover_rate = 0._r8
 
      ! The following is only meant for testing: Whether area changes are allowed at times
      ! other than the year boundary. This should only arise in some test configurations
@@ -118,7 +111,6 @@ contains
     ! Read dyn_subgrid_control namelist variables
     !
     ! !USES:
-    use shr_const_mod  , only : SHR_CONST_CDAY
     use fileutils      , only : getavu, relavu
     use clm_nlUtilsMod , only : find_nlgroup_name
     use clm_varctl     , only : iulog
@@ -139,14 +131,12 @@ contains
     logical :: do_grossunrep
     logical :: vars_1dwt_w_time
     logical :: reset_dynbal_baselines
-    real(r8) :: dynbal_storage_residence_time
     logical :: for_testing_allow_non_annual_changes
     logical :: for_testing_zero_dynbal_fluxes
     ! other local variables:
     integer :: nu_nml    ! unit for namelist file
     integer :: nml_error ! namelist i/o error flag
-    real(r8) :: dynbal_storage_turnover_rate ! turnover rate derived from dynbal_storage_residence_time [1/s]
-    
+
     character(len=*), parameter :: subname = 'read_namelist'
     !-----------------------------------------------------------------------
     
@@ -160,7 +150,6 @@ contains
          do_grossunrep, &
          vars_1dwt_w_time, &
          reset_dynbal_baselines, &
-         dynbal_storage_residence_time, &
          for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes
 
@@ -174,7 +163,6 @@ contains
     do_grossunrep      = .false.
     vars_1dwt_w_time = .false.
     reset_dynbal_baselines = .false.
-    dynbal_storage_residence_time = 0._r8
     for_testing_allow_non_annual_changes = .false.
     for_testing_zero_dynbal_fluxes = .false.
 
@@ -203,19 +191,8 @@ contains
     call shr_mpi_bcast (do_grossunrep, mpicom)
     call shr_mpi_bcast (vars_1dwt_w_time, mpicom)
     call shr_mpi_bcast (reset_dynbal_baselines, mpicom)
-    call shr_mpi_bcast (dynbal_storage_residence_time, mpicom)
     call shr_mpi_bcast (for_testing_allow_non_annual_changes, mpicom)
     call shr_mpi_bcast (for_testing_zero_dynbal_fluxes, mpicom)
-
-    ! Convert the residence time to a turnover rate.
-    if (dynbal_storage_residence_time <= 0._r8) then
-       write(iulog,*) 'ERROR: dynbal_storage_residence_time must be greater than 0'
-       write(iulog,*) 'Value given: ', dynbal_storage_residence_time
-       call endrun(msg='ERROR: dynbal_storage_residence_time must be greater than 0 '// &
-            errMsg(sourcefile, __LINE__))
-    end if
-    dynbal_storage_turnover_rate = 1._r8 / &
-         (dynbal_storage_residence_time * (get_average_days_per_year() * SHR_CONST_CDAY))
 
     dyn_subgrid_control_inst = dyn_subgrid_control_type( &
          flanduse_timeseries = flanduse_timeseries, &
@@ -227,7 +204,6 @@ contains
          do_grossunrep = do_grossunrep, &
          vars_1dwt_w_time = vars_1dwt_w_time, &
          reset_dynbal_baselines = reset_dynbal_baselines, &
-         dynbal_storage_turnover_rate = dynbal_storage_turnover_rate, &
          for_testing_allow_non_annual_changes = for_testing_allow_non_annual_changes, &
          for_testing_zero_dynbal_fluxes = for_testing_zero_dynbal_fluxes)
 
@@ -488,20 +464,6 @@ contains
     get_reset_dynbal_baselines = dyn_subgrid_control_inst%reset_dynbal_baselines
 
   end function get_reset_dynbal_baselines
-
-  !-----------------------------------------------------------------------
-  real(r8) function get_dynbal_storage_turnover_rate()
-    ! !DESCRIPTION:
-    ! Return the turnover rate of the dynbal storage pools [1/s]
-    !
-    ! This is derived from the dynbal_storage_residence_time namelist variable.
-    !-----------------------------------------------------------------------
-
-    SHR_ASSERT_FL(dyn_subgrid_control_inst%initialized, sourcefile, __LINE__)
-
-    get_dynbal_storage_turnover_rate = dyn_subgrid_control_inst%dynbal_storage_turnover_rate
-
-  end function get_dynbal_storage_turnover_rate
 
   !-----------------------------------------------------------------------
   logical function get_for_testing_allow_non_annual_changes()

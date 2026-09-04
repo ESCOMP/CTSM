@@ -39,14 +39,14 @@ module dynConsBiogeophysMod
   use clm_varcon              , only : tfrz, cpliq, hfus, ispval
   use landunit_varcon         , only : istsoil, istice
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
-  use dynSubgridControlMod    , only : get_dynbal_storage_turnover_rate
   use filterColMod            , only : filter_col_type, col_filter_from_ltypes
-  use clm_time_manager        , only : get_step_size_real
+  use clm_time_manager        , only : get_step_size_real, get_average_days_per_year
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
   !
+  public :: dynConsBiogeophys_readnl    ! read namelist variables
   public :: dyn_hwcontent_set_baselines ! set start-of-run baseline values for heat and water content in some columns
   public :: dyn_hwcontent_init          ! compute grid-level heat and water content, before land cover change
   public :: dyn_hwcontent_final         ! compute grid-level heat and water content and dynbal fluxes after land cover change
@@ -62,11 +62,98 @@ module dynConsBiogeophysMod
   !
   ! !PRIVATE DATA MEMBERS:
 
+  ! Turnover rate of the dynbal storage pools [1/s]. This is derived from the
+  ! dynbal_storage_residence_time namelist variable, which gives the residence time in
+  ! years.
+  real(r8), private :: dynbal_storage_turnover_rate
+
+  ! Whether the namelist has been read (and thus whether dynbal_storage_turnover_rate has
+  ! been set)
+  logical, private :: namelist_read = .false.
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine dynConsBiogeophys_readnl(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the dyn_cons_biogeophys_inparm namelist.
+    !
+    ! Note that this must be called AFTER the time manager has been initialized, because
+    ! converting dynbal_storage_residence_time to a turnover rate depends on the model
+    ! calendar.
+    !
+    ! !USES:
+    use shr_const_mod  , only : SHR_CONST_CDAY
+    use abortutils     , only : endrun
+    use fileutils      , only : getavu, relavu
+    use clm_nlUtilsMod , only : find_nlgroup_name
+    use clm_varctl     , only : iulog
+    use spmdMod        , only : masterproc, mpicom
+    use shr_mpi_mod    , only : shr_mpi_bcast
+    !
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename
+    !
+    ! !LOCAL VARIABLES:
+    ! temporary variable corresponding to the namelist variable:
+    real(r8) :: dynbal_storage_residence_time ! residence time of the dynbal storage pools [years]
+    ! other local variables:
+    integer :: nu_nml    ! unit for namelist file
+    integer :: nml_error ! namelist i/o error flag
+
+    character(len=*), parameter :: subname = 'dynConsBiogeophys_readnl'
+    !-----------------------------------------------------------------------
+
+    namelist /dyn_cons_biogeophys_inparm/ &
+         dynbal_storage_residence_time
+
+    dynbal_storage_residence_time = 0._r8
+
+    if (masterproc) then
+       nu_nml = getavu()
+       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
+       call find_nlgroup_name(nu_nml, 'dyn_cons_biogeophys_inparm', status=nml_error)
+       if (nml_error == 0) then
+          read(nu_nml, nml=dyn_cons_biogeophys_inparm, iostat=nml_error)
+          if (nml_error /= 0) then
+             call endrun(msg='ERROR reading dyn_cons_biogeophys_inparm namelist'//errMsg(sourcefile, __LINE__))
+          end if
+       else
+          call endrun(msg='ERROR finding dyn_cons_biogeophys_inparm namelist'//errMsg(sourcefile, __LINE__))
+       end if
+       close(nu_nml)
+       call relavu( nu_nml )
+    endif
+
+    call shr_mpi_bcast (dynbal_storage_residence_time, mpicom)
+
+    ! Convert the residence time to a turnover rate. Note that we check for a valid
+    ! residence time before doing this conversion, since the conversion divides by the
+    ! residence time.
+    if (dynbal_storage_residence_time <= 0._r8) then
+       write(iulog,*) 'ERROR: dynbal_storage_residence_time must be greater than 0'
+       write(iulog,*) 'Value given: ', dynbal_storage_residence_time
+       call endrun(msg='ERROR: dynbal_storage_residence_time must be greater than 0 '// &
+            errMsg(sourcefile, __LINE__))
+    end if
+    dynbal_storage_turnover_rate = 1._r8 / &
+         (dynbal_storage_residence_time * (get_average_days_per_year() * SHR_CONST_CDAY))
+
+    namelist_read = .true.
+
+    if (masterproc) then
+       write(iulog,*) ' '
+       write(iulog,*) 'dyn_cons_biogeophys_inparm settings:'
+       write(iulog,nml=dyn_cons_biogeophys_inparm)
+       write(iulog,*) ' '
+    end if
+
+  end subroutine dynConsBiogeophys_readnl
 
   !-----------------------------------------------------------------------
   subroutine dyn_hwcontent_set_baselines(bounds, num_icec, filter_icec, &
@@ -527,11 +614,12 @@ contains
     integer  :: i
     integer  :: g     ! grid cell index
     real(r8) :: dtime ! model time step [s]
-    real(r8) :: turnover_rate ! turnover rate of the dynbal storage pools [1/s]
     real(r8) :: this_delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk or one tracer
     real(r8) :: delta_liq_bulk(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk water
     real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
     !---------------------------------------------------------------------------
+
+    SHR_ASSERT_FL(namelist_read, sourcefile, __LINE__)
 
     associate( &
          begg => bounds%begg, &
@@ -588,10 +676,9 @@ contains
     ! the proper sign convention for this pool), then release a portion of the pool as
     ! this time step's flux.
     dtime = get_step_size_real()
-    turnover_rate = get_dynbal_storage_turnover_rate()
     do g = begg, endg
        dynbal_heat_storage(g) = dynbal_heat_storage(g) - delta_heat(g)
-       eflx_dynbal(g) = dynbal_heat_storage(g) * turnover_rate
+       eflx_dynbal(g) = dynbal_heat_storage(g) * dynbal_storage_turnover_rate
        dynbal_heat_storage(g) = dynbal_heat_storage(g) - (eflx_dynbal(g) * dtime)
     end do
 
@@ -627,7 +714,6 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: g
     real(r8) :: dtime ! model time step [s]
-    real(r8) :: turnover_rate ! turnover rate of the dynbal storage pools [1/s]
     real(r8) :: delta_ice(bounds%begg:bounds%endg)  ! change in gridcell h2o ice content
 
     character(len=*), parameter :: subname = 'dyn_water_content_final'
@@ -667,14 +753,13 @@ contains
     ! use the proper sign convention for these pools), then release a portion of each pool
     ! as this time step's flux.
     dtime = get_step_size_real()
-    turnover_rate = get_dynbal_storage_turnover_rate()
     do g = begg, endg
        dynbal_liq_storage(g) = dynbal_liq_storage(g) - delta_liq(g)
-       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * turnover_rate
+       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * dynbal_storage_turnover_rate
        dynbal_liq_storage(g) = dynbal_liq_storage(g) - (qflx_liq_dynbal(g) * dtime)
 
        dynbal_ice_storage(g) = dynbal_ice_storage(g) - delta_ice(g)
-       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * turnover_rate
+       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * dynbal_storage_turnover_rate
        dynbal_ice_storage(g) = dynbal_ice_storage(g) - (qflx_ice_dynbal(g) * dtime)
     end do
 
