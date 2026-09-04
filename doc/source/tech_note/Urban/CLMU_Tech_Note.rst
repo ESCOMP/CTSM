@@ -9,7 +9,7 @@ Introduction
 
 This technical note describes the physical parameterizations and numerical implementation of a Community Land Model Urban (CLMU) parameterization as coupled to version 4 of the Community Land Model (CLM4). CLM4 serves as the land surface model component of the Community Atmosphere Model (CAM) and the Community Climate System Model (CCSM). This note documents the global implementation of the urban model. Other model versions may exist for specific applications.
 
-Chapters 1-5 constitute the description of the urban parameterization when coupled to CAM or CCSM, while Chapter 6 describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). Chapter 7 describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008a, 2008b). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010a) <olesonetal2010a>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010b <oleson2010b>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
+Chapters 1-5 constitute the description of the urban parameterization when coupled to CAM or CCSM, while Chapter 6 describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). Chapter 7 describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008a, 2008b). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010a) <olesonetal2010a>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010b <olesonetal2010b>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
 
 Model Overview
 --------------
@@ -1839,7 +1839,7 @@ The total net longwave radiation for the urban canopy (road, walls, and roof) is
 Solar Zenith Angle
 ------------------
 
-The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010b) <oleson2010b>` (see section 3.3) and does not differ for urban surfaces.
+The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010b) <olesonetal2010b>` (see section 3.3) and does not differ for urban surfaces.
 
 .. _section-2:
 
