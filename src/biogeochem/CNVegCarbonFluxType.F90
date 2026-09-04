@@ -3538,12 +3538,12 @@ contains
         this%litfire_col(begc:endc) = spval
         call hist_addfld1d (fname='LITFIRE', units='gC/m^2/s', &
              avgflag='A', long_name='litter fire losses', &
-             ptr_col=this%litfire_col, default='inactive')
+             ptr_col=this%litfire_col)
 
         this%somfire_col(begc:endc) = spval
         call hist_addfld1d (fname='SOMFIRE', units='gC/m^2/s', &
              avgflag='A', long_name='soil organic matter fire losses', &
-             ptr_col=this%somfire_col, default='inactive')
+             ptr_col=this%somfire_col)
 
         this%totfire_col(begc:endc) = spval
         call hist_addfld1d (fname='TOTFIRE', units='gC/m^2/s', &
