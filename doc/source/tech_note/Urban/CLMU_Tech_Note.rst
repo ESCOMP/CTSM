@@ -3139,7 +3139,10 @@ The heat flux :math:`h` at :math:`n + 1` may be approximated as follows
 
 The resulting equations are
 
-.. figure:: image13.png
+.. math::
+   :label: eq-0547
+
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = h^{n} + \frac{\partial h}{\partial T_{i}}\left( T_{i}^{n + 1} - T_{i} \right) - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}}
 
 .. math::
    :label: eq-0286
@@ -3213,7 +3216,7 @@ The top layer for roofs and walls is thin enough such that the layer-averaged te
 
    \Delta z_{i*} = 0.5\left\lbrack z_{i} - z_{h,i - 1} + c_{a}\left( z_{i + 1} - z_{h,i - 1} \right) \right\rbrack
 
-where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. :ref:`Yang 1998 <yang1998>`, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations (4.20)-:eq:`eq-0289`.
+where :math:`c_{a}` is a tunable parameter, varying from 0 to 1, and is taken as 0.34 by comparing the numerical solution with the analytic solution (Z.-L. :ref:`Yang 1998 <yang1998>`, unpublished manuscript). For pervious and impervious road, :math:`\Delta z_{i*}` is used in place of :math:`\Delta z_{i}` for :math:`i = snl + 1` in equations :eq:`eq-0547`-:eq:`eq-0289`.
 
 For the pervious and impervious road, the boundary condition at the bottom is zero heat flux, :math:`F_{i} = 0`, resulting in, for :math:`i = N_{levgrnd}`,
 
@@ -3265,7 +3268,10 @@ where :math:`H` is the building height and :math:`L_{roof}` is the length of the
 
 This boundary condition yields, for :math:`i = N_{levgrnd}`,
 
-.. figure:: image14.png
+.. math::
+   :label: eq-0548
+
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{h,i} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{h,i} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
 
 .. math::
    :label: eq-0303
@@ -3301,7 +3307,10 @@ where
 
 For the interior snow/soil layers of all surfaces, :math:`snl + 1 < i < N_{nlevgrnd}`,
 
-.. figure:: image15.png
+.. math::
+   :label: eq-0549
+
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
 
 .. math::
    :label: eq-0308
