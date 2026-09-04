@@ -87,7 +87,7 @@ path = components/cmeps
 url = https://github.com/ekluzek/CMEPS.git
 #fxtag = cmeps1.1.65
 #branch = co2a_for_cplhist
-fxtag = c336149ae8fc8697294ef9e46d6092dda6291936
+fxtag = 2b7c96f473c41a22a3f605eef575b18f6de483b6
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
@@ -96,9 +96,9 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 path = components/cdeps
 #url = https://github.com/ESCOMP/CDEPS.git
 url = https://github.com/ekluzek/CDEPS.git
-#fxtag = cdeps1.0.105
+#fxtag = cdeps1.0.106
 #branch = 1850_aero_ndep_ozone
-fxtag = 4a6f49ceb275512dac3adaa5176e957c1c4cad42
+fxtag = 2a02e039dd0a39c7dd21efc492e92b1212936f6c
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
