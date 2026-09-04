@@ -1,4 +1,73 @@
 ===============================================================
+Tag name: ctsm5.4.052
+Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Date: Mon Aug 17 05:09:21 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merges to master:
+#4153 Make ClmSp/Bgc/BgcCrop acronyms consistent in the docs
+#4166 Move tools/contrib to tools/unsupported and update the README
+#4102 Reduce the memory usage that is important for ne1024 simulation
+#4063 Decomposition tech note updated for CLM6
+#4139 Change "dynamic" to "transient" veg/pfts when referring to landuse data
+#4141 Add the README content from tools/modify_input_files to the docs
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+#4153 resolves #4132
+#4166 contributes to #4117
+#4102
+Resolves #4103
+Contributes #2352
+Contributes #235
+#4063 resolves #3868
+#4139 resolves #4133
+#4141 resolves #3992
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+ tools/contrib is renamed tools/unsupported
+
+Changes to documentation:
+ Several of the PRs listed in this merge have updated the documentation
+
+Contributors:
+ #4102 from sjsprecious
+ #4063 from katierocci
+ The other PRs from slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ tools/contrib is renamed tools/unsupported
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4177 and the PRs linked within (and listed above)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.051
 Originator(s): erik (Erik Kluzek)
 Date: Mon Aug 17 09:51:34 AM MDT 2026
