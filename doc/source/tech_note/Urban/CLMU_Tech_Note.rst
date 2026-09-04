@@ -4,15 +4,21 @@
 Urban Model (converted from docx)
 *********************************
 
+.. _sec-introduction:
+
 Introduction
 ============
 
 This technical note describes the physical parameterizations and numerical implementation of a Community Land Model Urban (CLMU) parameterization as coupled to version 4 of the Community Land Model (CLM4). CLM4 serves as the land surface model component of the Community Atmosphere Model (CAM) and the Community Climate System Model (CCSM). This note documents the global implementation of the urban model. Other model versions may exist for specific applications.
 
-Chapters 1-5 constitute the description of the urban parameterization when coupled to CAM or CCSM, while Chapter 6 describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). Chapter 7 describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008b, 2008c). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010c) <olesonetal2010c>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010a <olesonetal2010a>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
+:numref:`sec-introduction`–:numref:`sec-hydrology` constitute the description of the urban parameterization when coupled to CAM or CCSM, while :numref:`sec-offline-mode` describes processes that pertain specifically to the operation of the urban parameterization in offline mode (uncoupled to an atmospheric model). :numref:`sec-evaluation` describes efforts to evaluate the urban model. The model formulation and some quantitative and qualitative evaluation are also documented in Oleson et al. (2008b, 2008c). A heat island mitigation study using the model is presented in :ref:`Oleson et al. (2010c) <olesonetal2010c>`. Note that CLMU and CLM4 have some parameterizations in common (e.g., snow and sub-surface hydrology). This technical note contains material duplicated from the CLM4 technical note (:ref:`Oleson et al. 2010a <olesonetal2010a>`) where appropriate. This is done so that users interested in just the urban model do not have to refer to the CLM4 technical note.
+
+.. _sec-model-overview:
 
 Model Overview
 --------------
+
+.. _sec-motivation:
 
 Motivation
 ~~~~~~~~~~
@@ -28,6 +34,8 @@ Numerical modeling of the urban energy budget was first attempted nearly 40 year
 These relatively simple approaches (i.e., categories 1 and 2 above) may arguably be justified based on the fact that detail in complex models may be lost when averaged to a coarse grid (:ref:`Taha 1999 <taha1999>`). However, they may not have sufficient functionality to be suitable for inclusion in global climate models and may require the global derivation of parameters that are difficult to interpret physically [e.g., the surface type-dependent empirical coefficients for storage heat flux in the Objective Hysteresis Model (:ref:`Grimmond et al. 1991 <grimmondetal1991>`)]. Furthermore, such approaches may not fully describe the fundamental processes that determine urban effects on climate (:ref:`Piringer et al. 2002 <piringeretal2002>`). For example, cities are known to have unique characteristics that cause them to be warmer than surrounding rural areas, an effect known as the urban heat island (:ref:`Oke 1987 <oke1987>`). In the absence of anthropogenic heat flux, the urban heat island is thought to be greatest on clear, calm nights when local conditions generally dominate over synoptic. Candidate causes for this phenomenon include decreased surface longwave radiation loss and increased absorption of solar radiation because of canyon geometry, anthropogenic emissions of heat, reduction of evapotranspiration due to the replacement of vegetation with impervious surfaces, increased downwelling longwave radiation from the atmosphere due to pollution and warmer atmospheric temperatures, increased storage of sensible heat within urban materials, and reduced transfer of heat due to sheltering from buildings (:ref:`Oke 1982 <oke1982>`, :ref:`Oke 1987 <oke1987>`, :ref:`Oke et al. 1991 <okeetal1991>`). Single-layer or multi-layer urban canopy models are likely needed to investigate the relative contribution of these factors to the heat island effect (:ref:`Piringer et al. 2002 <piringeretal2002>`). For example, specification of an urban albedo may provide no insight into the effects of the individual albedo of roofs, walls, and roads and the interaction of shortwave radiation between these surfaces that yields urban albedos that are typically lower than those of most rural sites. Similarly, assessments of the effectiveness of techniques proposed to ameliorate heat islands, such as "green roofs" or tree planting, require more detailed models.
 
 On the other hand, the level of complexity in a model is limited by the availability of data that the model requires, the computational burden imposed, and difficulty in understanding the complex behavior of the model. Here, following recent developments in detailed urban parameterizations designed for mesoscale models (:ref:`Masson 2000 <masson2000>`, :ref:`Martilli et al. 2002 <martillietal2002>`, :ref:`Grimmond and Oke 2002 <grimmondandoke2002>`, :ref:`Kusaka and Kimura 2004 <kusakaandkimura2004>`, :ref:`Otte et al. 2004 <otteetal2004>`, :ref:`Dandou et al. 2005 <dandouetal2005>`), we describe a model that is simple enough to be compatible with structural, computational, and data constraints of a land surface model coupled to a global climate model, yet complex enough to enable exploration of physically-based processes known to be important in determining urban climatology. Several of the parameterizations are based on the Town Energy Balance (TEB) Model (:ref:`Masson 2000 <masson2000>`, :ref:`Masson et al. 2002 <massonetal2002>`, :ref:`Lemonsu et al. 2004 <lemonsuetal2004>`).
+
+.. _sec-urban-ecosystems-and-climate:
 
 Urban Ecosystems and Climate
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,6 +56,8 @@ Urban regions have increased downward longwave radiation from the overlying atmo
 
 As mentioned briefly in the previous section, many of the characteristics of the urban ecosystem discussed above contribute to one of the most striking effects of the urban environment on climate, the heat island effect. The present model is designed to represent the urban energy balance and provide insight into issues such as the urban heat island, its causes and potential mitigation strategies, as well as the effects of climate change on urban areas. When coupled to an atmospheric model, interactions between the urban surface and the atmosphere can be investigated.
 
+.. _sec-atmospheric-coupling-and-model-structure:
+
 Atmospheric Coupling and Model Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -57,9 +67,9 @@ Land surface heterogeneity in the Community Land Model (CLM) is represented as a
 
 The representation of the urban landunit is based on the canyon concept of :ref:`Oke (1987) <oke1987>`. In this approach, the considerable complexity of the urban surface is reduced to a single urban canyon consisting of a canyon floor of width :math:`W` bordered by two facing buildings of height :math:`H` (:numref:`fig-urban-canyon`). Although the canyon floor is intended to represent various surfaces such as roads, parking lots, sidewalks, and residential lawns, etc., for convenience we henceforth refer to the canyon floor as a road. The urban canyon consists of roof, sunlit and shaded wall, and pervious and impervious road, each of which are treated as columns within the landunit (:numref:`fig-clm-subgrid-hierarchy`). The impervious road is intended to represent surfaces that are impervious to water infiltration (e.g., roads, parking lots, sidewalks) while the pervious road is intended to represent surfaces such as residential lawns and parks which may have active hydrology.
 
-The approach used here to represent pervious surfaces is different than many urban schemes designed for use within mesoscale and global models. Most urban schemes use a separate land surface model scheme to represent the effects of pervious surfaces on urban climate. For example, the urban surface in the mesoscale model Meso-NH is modeled using the TEB and ISBA (Interactions between Soil, Biosphere, and Atmosphere) schemes for urban and pervious (e.g., vegetated) surfaces, respectively (:ref:`Lemonsu and Masson 2002 <lemonsuandmasson2002>`). Fluxes from each scheme are combined according to their relative areas. A comparable approach could be implemented using the CLM scheme for vegetated surfaces; however, this presents several disadvantages for our application. First, the pervious surface would need to be assigned to an additional landunit and specially identified to distinguish it from the other vegetated landunit within the gridcell. Second, the pervious and urban landunits would then need to be aggregated according to their relative areas in a post-processing sense to estimate the composite urban effects. Third, in the Meso-NH approach, the pervious surface only interacts indirectly with the canyon air through its influence on the atmospheric model. Here, including the pervious surface within the urban canyon solves these difficulties. Thus, the pervious surface is an integral part of the urban system and interacts directly with UCL air properties such as temperature and specific humidity. Yet, implementation of a sophisticated scheme for the pervious surface, such as the vegetation scheme in CLM, within the urban canyon is problematic because of computational and data requirements. Here, we choose a simplified bulk parameterization scheme to represent latent heat flux from pervious urban surfaces (Chapter 3).
+The approach used here to represent pervious surfaces is different than many urban schemes designed for use within mesoscale and global models. Most urban schemes use a separate land surface model scheme to represent the effects of pervious surfaces on urban climate. For example, the urban surface in the mesoscale model Meso-NH is modeled using the TEB and ISBA (Interactions between Soil, Biosphere, and Atmosphere) schemes for urban and pervious (e.g., vegetated) surfaces, respectively (:ref:`Lemonsu and Masson 2002 <lemonsuandmasson2002>`). Fluxes from each scheme are combined according to their relative areas. A comparable approach could be implemented using the CLM scheme for vegetated surfaces; however, this presents several disadvantages for our application. First, the pervious surface would need to be assigned to an additional landunit and specially identified to distinguish it from the other vegetated landunit within the gridcell. Second, the pervious and urban landunits would then need to be aggregated according to their relative areas in a post-processing sense to estimate the composite urban effects. Third, in the Meso-NH approach, the pervious surface only interacts indirectly with the canyon air through its influence on the atmospheric model. Here, including the pervious surface within the urban canyon solves these difficulties. Thus, the pervious surface is an integral part of the urban system and interacts directly with UCL air properties such as temperature and specific humidity. Yet, implementation of a sophisticated scheme for the pervious surface, such as the vegetation scheme in CLM, within the urban canyon is problematic because of computational and data requirements. Here, we choose a simplified bulk parameterization scheme to represent latent heat flux from pervious urban surfaces (:numref:`sec-heat-and-momentum-fluxes`).
 
-Note that the urban columns interact radiatively with one another through multiple exchanges of longwave and shortwave radiation (chapter 2). The heat and moisture fluxes from each surface interact with each other through a bulk air mass that represents air in the UCL for which specific humidity and temperature are predicted (chapter 3). We model the UCL plus the air above the roof (:numref:`fig-atm-urban-coupling`). This allows for mixing of above-roof air with canyon air.
+Note that the urban columns interact radiatively with one another through multiple exchanges of longwave and shortwave radiation (:numref:`sec-albedos-and-radiative-fluxes`). The heat and moisture fluxes from each surface interact with each other through a bulk air mass that represents air in the UCL for which specific humidity and temperature are predicted (:numref:`sec-heat-and-momentum-fluxes`). We model the UCL plus the air above the roof (:numref:`fig-atm-urban-coupling`). This allows for mixing of above-roof air with canyon air.
 
 .. figure:: image1.jpeg
    :width: 5.85417in
@@ -143,7 +153,7 @@ Note that the urban columns interact radiatively with one another through multip
 
 ..
 
-   :sup:`1`\ The atmospheric reference height received from the atmospheric model :math:`z_{atm}^{'}` is assumed to be the height above the surface defined as the roughness length :math:`z_{0}` plus displacement height :math:`z_{d}`. Thus, the reference height used for flux computations (chapter 3) is :math:`z_{atm} = z_{atm}^{'} + z_{0} + z_{d}`. The reference heights for temperature, wind, and specific humidity (:math:`z_{atm,h}`, :math:`z_{atm,m}`, :math:`z_{atm,w}`) are required. These are set equal to\ :math:`z_{atm}`.
+   :sup:`1`\ The atmospheric reference height received from the atmospheric model :math:`z_{atm}^{'}` is assumed to be the height above the surface defined as the roughness length :math:`z_{0}` plus displacement height :math:`z_{d}`. Thus, the reference height used for flux computations (:numref:`sec-heat-and-momentum-fluxes`) is :math:`z_{atm} = z_{atm}^{'} + z_{0} + z_{d}`. The reference heights for temperature, wind, and specific humidity (:math:`z_{atm,h}`, :math:`z_{atm,m}`, :math:`z_{atm,w}`) are required. These are set equal to\ :math:`z_{atm}`.
 
    :sup:`2`\ The CAM provides convective and large-scale liquid and solid precipitation, which are added to yield total liquid precipitation :math:`q_{rain}` and solid precipitation :math:`q_{sno}`.
 
@@ -220,25 +230,31 @@ Density of air (:math:`\rho_{atm}`) (kg m\ :sup:`-3`) is also required but is ca
 
 :sup:`2`\ These are set to zero for urban areas.
 
+.. _sec-biogeophysical-processes:
+
 Biogeophysical Processes
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 Biogeophysical processes are simulated for each of the five urban columns and each column maintains its own prognostic variables (e.g., surface temperature). The processes simulated include:
 
--  Absorption and reflection of solar radiation (chapter 2)
+-  Absorption and reflection of solar radiation (:numref:`sec-albedos-and-radiative-fluxes`)
 
--  Absorption, reflection, and emission of longwave radiation (chapter 2)
+-  Absorption, reflection, and emission of longwave radiation (:numref:`sec-albedos-and-radiative-fluxes`)
 
--  Momentum, sensible heat, and latent heat fluxes (chapter 3)
+-  Momentum, sensible heat, and latent heat fluxes (:numref:`sec-heat-and-momentum-fluxes`)
 
--  Anthropogenic heat fluxes to the canyon air due to waste heat from building heating/air conditioning (chapter 3). An example of parameterizing traffic heat fluxes is given in :ref:`Oleson et al. (2008c) <olesonetal2008c>`, however, traffic heat fluxes are not currently included in the global implementation of the model.
+-  Anthropogenic heat fluxes to the canyon air due to waste heat from building heating/air conditioning (:numref:`sec-heat-and-momentum-fluxes`). An example of parameterizing traffic heat fluxes is given in :ref:`Oleson et al. (2008c) <olesonetal2008c>`, however, traffic heat fluxes are not currently included in the global implementation of the model.
 
--  Heat transfer in roofs, building walls, and the road including phase change (chapter 4)
+-  Heat transfer in roofs, building walls, and the road including phase change (:numref:`sec-roof-wall-road-and-snow-temperatures`)
 
--  Hydrology [roofs - storage of liquid and solid precipitation (ponding and dew), surface runoff; walls – hydrologically inactive; impervious road – storage of liquid and solid precipitation (ponding and dew), surface runoff; pervious road - infiltration, surface runoff, sub-surface drainage, redistribution of water within the column] (chapter 5).
+-  Hydrology [roofs - storage of liquid and solid precipitation (ponding and dew), surface runoff; walls – hydrologically inactive; impervious road – storage of liquid and solid precipitation (ponding and dew), surface runoff; pervious road - infiltration, surface runoff, sub-surface drainage, redistribution of water within the column] (:numref:`sec-hydrology`).
+
+.. _sec-model-requirements:
 
 Model Requirements
 ------------------
+
+.. _sec-initialization:
 
 Initialization
 ~~~~~~~~~~~~~~
@@ -246,6 +262,8 @@ Initialization
 Initialization of the urban model (i.e., providing the model with initial temperature and moisture states) depends on the type of run (startup or restart) (see the CLM4 User's Guide). An initial run starts the model from either initial conditions that are set internally in the Fortran code (referred to as arbitrary initial conditions) or from an initial conditions dataset that enables the model to start from a spun up state (i.e., where the urban landunit is in equilibrium with the simulated climate). In restart runs, the model is continued from a previous simulation and initialized from a restart file that ensures that the output is bit-for-bit the same as if the previous simulation had not stopped. The fields that are required from the restart or initial conditions files can be obtained by examining the code. Arbitrary initial conditions are specified as follows.
 
 All urban columns consist of fifteen layers to be consistent with CLM4. Generally, temperature calculations are done over all layers, :math:`N_{levgrnd} = 15`, while hydrology calculations for the pervious road are done over the top ten layers, :math:`N_{levsoi} = 10`, the bottom five layers being specified as bedrock. Pervious and impervious road are initialized with temperatures (surface :math:`T_{g}`, and layers :math:`T_{i}`, for layers :math:`i = 1,\ldots,N_{levgrnd}`) of 274 K. Roof, sunwall, and shadewall are initialized to 292K. This relatively high temperature is to avoid initialization shock from large space heating/air conditioning and waste heat fluxes. All surfaces are initialized with no snow (:math:`W_{sno} = 0`). Roof and impervious road are initialized with no ponded water, while the pervious road soil layers :math:`i = 1,\ldots,N_{levsoi}` are initialized with volumetric soil water content :math:`\theta_{i} = 0.3` mm\ :sup:`3` mm\ :sup:`-3` and layers :math:`i = N_{levsoi} + 1,\ldots,N_{levgrnd}` are initialized :math:`\theta_{i} = 0.0` mm\ :sup:`3` mm\ :sup:`-3`. The soil liquid water and ice contents are initialized as :math:`w_{liq,i} = \Delta z_{i}\rho_{liq}\theta_{i}` and :math:`w_{ice,i} = 0`, where :math:`\rho_{liq}` is the density liquid water (kg m\ :sup:`-3`) (:numref:`table-physical-constants`). The pervious road is initialized with water stored in the unconfined aquifer and unsaturated soil :math:`W_{a} = W_{t} = 4800` mm and water table depth :math:`z_{\nabla} = 4.8` m.
+
+.. _sec-surface-data:
 
 Surface Data
 ~~~~~~~~~~~~
@@ -390,11 +408,13 @@ For each of 33 distinct regions across the globe, thermal (e.g., heat capacity a
 
 :sup:`1`\ This fraction is relative to the canyon floor.
 
-:sup:`2`\ Required for layers :math:`i = 1,N_{imprvrd}`, derived from grid cell soil texture for other layers (section 4.3).
+:sup:`2`\ Required for layers :math:`i = 1,N_{imprvrd}`, derived from grid cell soil texture for other layers (:numref:`sec-thermal-properties`).
 
-:sup:`3`\ Derived from grid cell soil texture (:math:`\% sand,\% clay`) (section 4.3).
+:sup:`3`\ Derived from grid cell soil texture (:math:`\% sand,\% clay`) (:numref:`sec-thermal-properties`).
 
 :sup:`4`\ Obtained from grid cell soil texture (:math:`\% sand,\% clay`).
+
+.. _sec-physical-constants:
 
 Physical Constants
 ~~~~~~~~~~~~~~~~~~
@@ -511,10 +531,14 @@ Physical constants, shared by all of the components in the CCSM, are presented i
 
 :sup:`1`\ Not shared by other components of the coupled modeling system.
 
+.. _sec-albedos-and-radiative-fluxes:
+
 Albedos and Radiative Fluxes
 ============================
 
 The effects of geometry on the radiation balance of urban surfaces are a key driver of urban-rural energy balance differences (:ref:`Oke et al. 1991 <okeetal1991>`). Shadowing of urban surfaces affects the incident radiation and thus temperature. Similar to vegetated surfaces, multiple reflections of radiation between urban surfaces must be accounted for (:ref:`Harman et al. 2004 <harmanetal2004>`). The net solar radiation and net longwave radiation, the net of which is the net radiation, are needed for each urban surface to drive turbulent and ground heat fluxes. The atmospheric model also requires radiative fluxes and albedo from the urban landunit, which are appropriately averaged with other landunits within the gridcell. The urban canyon unit is used to represent these radiative processes. Several simplifying assumptions are made. The effects of absorption, emission, and scattering of radiation by the canyon air are neglected and surfaces are assumed to be isotropic.
+
+.. _sec-albedo:
 
 Albedo
 ------
@@ -538,7 +562,9 @@ where :math:`f_{u,sno}` is the fraction of the urban surface covered with snow w
 
    f_{u,sno} = \frac{z_{u,sno}}{0.05} \leq 1
 
-The direct and diffuse "ground" albedos, :math:`\alpha_{g,\Lambda}^{\mu}` and :math:`\alpha_{g,\Lambda}`, where :math:`\Lambda` denotes either the visible (VIS) or near-infrared (NIR) waveband, are provided by the surface dataset (:numref:`table-input-data`), and :math:`z_{u,sno}` is the depth of snow (m) (section 5.1). An estimate of snow albedo is made based on the parameterization of :ref:`Marshall (1989) <marshall1989>` in which albedo depends on solar zenith angle, grain size, and soot content (e.g., as adopted by the Land Surface Model (LSM) (:ref:`Bonan 1996 <bonan1996>`)). Here, however, several simplifying assumptions are made due to uncertainties in how to apply such a parameterization to urban surfaces. A snow grain radius of 100 :math:`\mu m` (new powder snow, aged a few days) and a soot mass fraction of 1.5\ :math:`\times 10^{- 5}` (arrived at by noting that the LSM global soot mass fraction is 5\ :math:`\times 10^{- 6}` and :ref:`Chylek et al. (1987) <chyleketal1987>` observed that soot concentrations in urban snowpacks averaged three times the concentration in rural snowpacks) are assumed. Direct and diffuse albedos are assumed to be equal. This yields :math:`\alpha_{sno,VIS}^{\mu} = \alpha_{sno,VIS} = 0.66` and :math:`\alpha_{sno,NIR}^{\mu} = \alpha_{sno,NIR} = 0.56` which fall about in the middle of the range given by :ref:`Oke (1987) <oke1987>`.
+The direct and diffuse "ground" albedos, :math:`\alpha_{g,\Lambda}^{\mu}` and :math:`\alpha_{g,\Lambda}`, where :math:`\Lambda` denotes either the visible (VIS) or near-infrared (NIR) waveband, are provided by the surface dataset (:numref:`table-input-data`), and :math:`z_{u,sno}` is the depth of snow (m) (:numref:`sec-snow`). An estimate of snow albedo is made based on the parameterization of :ref:`Marshall (1989) <marshall1989>` in which albedo depends on solar zenith angle, grain size, and soot content (e.g., as adopted by the Land Surface Model (LSM) (:ref:`Bonan 1996 <bonan1996>`)). Here, however, several simplifying assumptions are made due to uncertainties in how to apply such a parameterization to urban surfaces. A snow grain radius of 100 :math:`\mu m` (new powder snow, aged a few days) and a soot mass fraction of 1.5\ :math:`\times 10^{- 5}` (arrived at by noting that the LSM global soot mass fraction is 5\ :math:`\times 10^{- 6}` and :ref:`Chylek et al. (1987) <chyleketal1987>` observed that soot concentrations in urban snowpacks averaged three times the concentration in rural snowpacks) are assumed. Direct and diffuse albedos are assumed to be equal. This yields :math:`\alpha_{sno,VIS}^{\mu} = \alpha_{sno,VIS} = 0.66` and :math:`\alpha_{sno,NIR}^{\mu} = \alpha_{sno,NIR} = 0.56` which fall about in the middle of the range given by :ref:`Oke (1987) <oke1987>`.
+
+.. _sec-incident-direct-solar-radiation:
 
 Incident direct solar radiation
 -------------------------------
@@ -676,6 +702,8 @@ The direct incident solar radiation conserves energy as
 
 Note that the factor :math:`\frac{H}{W}` for the sunlit wall and shaded wall converts the flux from watts per meter squared of wall area to watts per meter squared of ground area.
 
+.. _sec-view-factors:
+
 View factors
 ------------
 
@@ -763,6 +791,8 @@ The view factors are presented graphically in :numref:`fig-view-factors-hw-ratio
 
    View factors as a function of canyon height to width ratio. :math:`\Psi_{road - sky}` is the fraction of radiation reaching the sky from the road, :math:`\Psi_{road - wall}` is the fraction of radiation reaching the wall from the road, :math:`\Psi_{wall - sky}` is the fraction of radiation reaching the sky from the wall, :math:`\Psi_{wall - road}` is the fraction of radiation reaching the road from the wall, and :math:`\Psi_{wall - wall}` is the fraction of radiation reaching the wall from the opposite wall.
 
+.. _sec-incident-diffuse-solar-radiation:
+
 Incident diffuse solar radiation
 --------------------------------
 
@@ -799,8 +829,10 @@ The diffuse incident solar radiation conserves energy as
    \left\lbrack S_{imprvrd} \downarrow_{\Lambda}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right) \right\rbrack
 
 
-2.5 Absorbed and reflected solar radiation
-------------------------------------------
+.. _sec-absorbed-and-reflected-solar-radiatio:
+
+Absorbed and reflected solar radiation
+--------------------------------------
 
 The direct and diffuse net (absorbed) and reflected solar radiation for the roof is
 
@@ -865,7 +897,7 @@ The initial direct beam absorption (:math:`i = 0`) (step 1) by each urban surfac
 
    {\overrightarrow{S}}_{road,\Lambda,i = 0}^{\mu} = {\overrightarrow{S}}_{imprvrd,\Lambda,i = 0}^{\mu}\left( 1 - f_{prvrd} \right) + {\overrightarrow{S}}_{prvrd,\Lambda,i = 0}^{\mu}f_{prvrd}
 
-where, for example, :math:`S_{imprvrd} \downarrow_{\Lambda}^{\mu}` is the incident direct solar radiation for the impervious road (equation :eq:`eq-0113` ) and :math:`\alpha_{imprvrd,\Lambda}^{\mu}` is the direct albedo for the impervious road after adjustment for snow (section 2.1). Similarly, the initial reflections from each urban surface are
+where, for example, :math:`S_{imprvrd} \downarrow_{\Lambda}^{\mu}` is the incident direct solar radiation for the impervious road (equation :eq:`eq-0113` ) and :math:`\alpha_{imprvrd,\Lambda}^{\mu}` is the direct albedo for the impervious road after adjustment for snow (:numref:`sec-albedo`). Similarly, the initial reflections from each urban surface are
 
 .. math::
    :label: eq-0494
@@ -1245,8 +1277,10 @@ The canyon albedo (excluding the roof albedo) shown in :numref:`fig-canyon-albed
 
    Direct beam and diffuse albedo of the urban canyon (walls and road) as a function of height to width ratio from 0.1 to 3.0 in increments of 0.1 and solar zenith angles from 0° to 85° in increments of 5°. The atmospheric solar radiation is :math:`S_{atm} \downarrow_{\Lambda}^{\mu} = 400` and :math:`S_{atm} \downarrow_{\Lambda} = 200` W m\ :sup:`-2`.
 
-2.6 Incident longwave radiation
--------------------------------
+.. _sec-incident-longwave-radiation:
+
+Incident longwave radiation
+---------------------------
 
 Similar to incident diffuse solar radiation, the longwave radiation incident on walls and roads depends on view factors. The longwave radiation incident on roof, walls and road is
 
@@ -1281,6 +1315,8 @@ where :math:`L_{atm} \downarrow` is the longwave radiation from the atmosphere. 
    \left\lbrack L_{imprvrd} \downarrow \left( 1 - f_{prvrd} \right) + L_{prvrd} \downarrow f_{prvrd} + \frac{H}{W}\left( L_{sunwall} \downarrow + L_{shdwall} \downarrow \right) \right\rbrack
 
 
+.. _sec-absorbed-reflected-and-emitted-longwave:
+
 Absorbed, reflected, and emitted longwave radiation
 ---------------------------------------------------
 
@@ -1298,7 +1334,7 @@ where
 
    L_{roof} \uparrow = \varepsilon_{roof}\sigma\left( T_{roof} \right)^{4} + \left( 1 - \varepsilon_{roof} \right)L_{atm} \downarrow
 
-is the emitted plus reflected longwave radiation from the roof, :math:`\varepsilon_{roof}` is the emissivity of the roof, :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`table-physical-constants`), and :math:`T_{roof}` is the temperature of the roof (section 4).
+is the emitted plus reflected longwave radiation from the roof, :math:`\varepsilon_{roof}` is the emissivity of the roof, :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`table-physical-constants`), and :math:`T_{roof}` is the temperature of the roof (:numref:`sec-roof-wall-road-and-snow-temperatures`).
 
 Similar to albedo, the emissivity of each urban surface is a weighted combination of snow-free surface and snow emissivity. Only roof and road surfaces are affected by snow as
 
@@ -1836,17 +1872,21 @@ The total net longwave radiation for the urban canopy (road, walls, and roof) is
 
    Net longwave radiation (positive to the atmosphere) for urban surfaces for two different emissivity configurations. The atmospheric longwave radiation is :math:`L_{atm} \downarrow = 340` W m\ :sup:`-2` and the temperature of each surface is 292.16 K. Note that the wall fluxes (shaded and sunlit) are per unit wall area. The net longwave radiation for the canyon is the sum of road and wall fluxes after converting the walls fluxes to per unit ground area using the height to width ratio.
 
+.. _sec-solar-zenith-angle:
+
 Solar Zenith Angle
 ------------------
 
-The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010a) <olesonetal2010a>` (see section 3.3) and does not differ for urban surfaces.
+The formulation for solar zenith angle is thoroughly documented in :ref:`Oleson et al. (2010a) <olesonetal2010a>` (see :numref:`sec-saturation-specific-humidity`) and does not differ for urban surfaces.
 
 .. _section-2:
+
+.. _sec-heat-and-momentum-fluxes:
 
 Heat and Momentum Fluxes
 ========================
 
-The net radiation for the urban canopy (:math:`\overrightarrow{S} - \overrightarrow{L}`, where :math:`\overrightarrow{S}` is the net solar radiation absorbed by the urban canopy (section 2.5) and :math:`\overrightarrow{L}` is the net longwave radiation (section 2.7)) must be balanced by the sum of the turbulent and ground (storage) heat fluxes as
+The net radiation for the urban canopy (:math:`\overrightarrow{S} - \overrightarrow{L}`, where :math:`\overrightarrow{S}` is the net solar radiation absorbed by the urban canopy (:numref:`sec-absorbed-and-reflected-solar-radiatio`) and :math:`\overrightarrow{L}` is the net longwave radiation (:numref:`sec-absorbed-reflected-and-emitted-longwave`)) must be balanced by the sum of the turbulent and ground (storage) heat fluxes as
 
 .. math::
    :label: eq-0180
@@ -1916,6 +1956,8 @@ where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the at
    :label: eq-0189
 
    e_{atm} = \frac{q_{atm}P_{atm}}{0.622 + 0.378q_{atm}}
+
+.. _sec-monin-obukhov-similarity-theory:
 
 Monin-Obukhov Similarity Theory
 -------------------------------
@@ -2261,10 +2303,14 @@ The momentum, sensible heat, and water vapor fluxes between the surface and the 
 
 where :math:`r_{am}`, :math:`r_{ah}`, and :math:`r_{aw}` are the aerodynamic resistances for momentum, sensible heat and latent heat, respectively (s m\ :sup:`-1`).
 
+.. _sec-sensible-and-latent-heat-and-momentum-fl:
+
 Sensible and Latent Heat and Momentum Fluxes
 --------------------------------------------
 
 The solution for the heat and momentum fluxes is presented in roughly the order in which the equations are solved in the Fortran code.
+
+.. _sec-roughness-length-and-displacement-height:
 
 Roughness Length and Displacement Height
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2304,6 +2350,8 @@ where :math:`B = 1` is a correction to the drag coefficient to account for varia
 where :math:`\frac{B_{S}}{B_{L}}` is the building shortside to longside ratio (here set equal to :math:`\lambda_{P}`).
 
 Several checks are made to ensure that the derived aerodynamic parameters are consistent with the canyon structure and atmospheric forcing. First, the canyon height :math:`H` minus the canopy displacement height :math:`d_{canopy}` must be greater than the canopy roughness length :math:`z_{0m,canopy}`. Second, the atmospheric wind forcing height :math:`z_{atm,m}` (:numref:`table-atm-input`) minus the canopy displacement height :math:`d_{canopy}` must be greater than the canopy roughness length\ :math:`z_{0m,canopy}`. Note that :math:`z_{0m,canopy} = z_{0h,canopy} = z_{0w,canopy}` and :math:`z_{atm} = z_{atm}^{'} + z_{0,canopy} + z_{d,canopy}` (:numref:`table-atm-input`) where :math:`z_{atm}^{'}` is the reference height from the atmospheric model.
+
+.. _sec-wind-speed-in-the-urban-canyon:
 
 Wind Speed in the Urban Canyon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2347,7 +2395,9 @@ The magnitude of the reference level atmospheric wind is
 
    V_{r} = \sqrt{u_{atm}^{2} + v_{atm}^{2}} \geq 1
 
-where zonal and meridional winds :math:`u_{atm}` and :math:`v_{atm}` (m s\ :sup:`-1`) are at height :math:`z_{atm,m}`. The turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`) is assumed to be equal to the friction velocity (:ref:`Masson 2000 <masson2000>`), which is determined from the solution for turbulent fluxes (section 3.2.3).
+where zonal and meridional winds :math:`u_{atm}` and :math:`v_{atm}` (m s\ :sup:`-1`) are at height :math:`z_{atm,m}`. The turbulent (vertical) wind :math:`W_{can}` (m s\ :sup:`-1`) is assumed to be equal to the friction velocity (:ref:`Masson 2000 <masson2000>`), which is determined from the solution for turbulent fluxes (:numref:`sec-iterative-solution-for-urban-canopy-air`).
+
+.. _sec-iterative-solution-for-urban-canopy-air:
 
 Iterative Solution for Urban Canopy Air Temperature and Humidity
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2428,7 +2478,7 @@ The UCL air temperature and specific humidity are determined by solving the foll
 
 where :math:`H` is sensible heat flux (W m\ :sup:`-2`) and :math:`T_{g}` is the surface temperature of each urban surface. The term :math:`W_{roof}` is the relative contribution of roof fluxes to the total urban landunit flux (:numref:`table-input-data`). The term :math:`1 - W_{roof}` is then the relative contribution of the canyon to the total urban landunit flux. The term :math:`f_{prvrd}` is the fraction of road that is pervious (:numref:`table-input-data`) and the term :math:`1 - f_{prvrd}` is the fraction of the road that is impervious. Note that the factor :math:`\frac{H}{W}` for the sunwall and shadewall converts the flux from watts per meter squared of surface area to watts per meter squared of ground area.
 
-In :ref:`Oleson et al. (2008b) <olesonetal2008b>`, an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations :eq:`eq-0523`-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (section 4.1).
+In :ref:`Oleson et al. (2008b) <olesonetal2008b>`, an additional heat flux :math:`H_{wasteheat}`, the sensible heat flux from waste heat generated by space heating and air conditioning, was included in Equations :eq:`eq-0523`-:eq:`eq-0240` *.* However, if this flux is large enough, the numerical solution may become unstable because of the canopy air has no heat capacity and the heat capacities of the roofs and walls are relatively small. Instead, this heat flux is added to the net heat flux for the canyon floor (:numref:`sec-numerical-solution`).
 
 equation :eq:`eq-0240` can be solved for the UCL air temperature as
 
@@ -2497,18 +2547,18 @@ In the absence of snow,
 
    f_{wet} = \left( \frac{w_{liq,snl + 1} + w_{ice,snl + 1}}{w_{pond,\max}}()^{\frac{2}{3}} \right)
 
-where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (Chapter 5). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <Olesonetal2004>`).
+where :math:`w_{liq,snl + 1}` and :math:`w_{ice,snl + 1}` are the mass of ice and liquid water (kg m\ :sup:`-2`) stored on top of the urban surface and :math:`w_{pond,\max}` is the maximum amount of water that the surface can hold (:numref:`sec-hydrology`). This latter formulation is analogous to the treatment of the wetted fraction of the vegetated canopy in CLM (:ref:`Oleson et al. 2004 <Olesonetal2004>`).
 
-In equations :eq:`eq-0528` and :eq:`eq-0530`, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (section 3.3).
+In equations :eq:`eq-0528` and :eq:`eq-0530`, the specific humidity of the roof and the impervious road surfaces, :math:`q_{g,roof}` and :math:`q_{g,imprvrd}`, is set to the saturated specific humidity evaluated at their respective surface temperatures, :math:`q_{sat}^{T_{g,roof}}` and :math:`q_{sat}^{T_{g,imprvrd}}` (:numref:`sec-saturation-specific-humidity`).
 
-As noted in section 1.1.3, a simplified bulk parameterization approach is used to represent evaporation from the pervious surface. The pervious road specific humidity, :math:`q_{g,prvrd}`, is evaluated as a function of the wetness of the soil column. This allows all of the soil moisture to potentially be available for evaporation. The specific humidity is
+As noted in :numref:`sec-atmospheric-coupling-and-model-structure`, a simplified bulk parameterization approach is used to represent evaporation from the pervious surface. The pervious road specific humidity, :math:`q_{g,prvrd}`, is evaluated as a function of the wetness of the soil column. This allows all of the soil moisture to potentially be available for evaporation. The specific humidity is
 
 .. math::
    :label: eq-0533
 
    q_{g,prvrd} = \alpha q_{sat}^{T_{g}}
 
-where :math:`q_{sat}^{T_{g}}` is the saturated specific humidity at the surface temperature :math:`T_{g}` (section 4.1). The factor :math:`\alpha` is a weighted combination of values for the soil column and snow
+where :math:`q_{sat}^{T_{g}}` is the saturated specific humidity at the surface temperature :math:`T_{g}` (:numref:`sec-numerical-solution`). The factor :math:`\alpha` is a weighted combination of values for the soil column and snow
 
 .. math::
    :label: eq-0243
@@ -2555,7 +2605,7 @@ The term :math:`\theta_{dry}` is the volumetric water content at which evapotran
 
    \theta_{opt,i} = \theta_{sat,i}\left( \frac{- 158490}{\psi_{sat,i}} \right)^{- \frac{1}{B_{i}}}
 
-where :math:`\theta_{sat,i}` is the water content at saturation (i.e., porosity), :math:`\psi_{sat,i}` is the saturated soil matric potential (mm), and :math:`B_{i}` is the Clapp-Hornberger exponent (section 5.3.1). The soil volumetric liquid water content :math:`\theta_{liq,i}` is
+where :math:`\theta_{sat,i}` is the water content at saturation (i.e., porosity), :math:`\psi_{sat,i}` is the saturated soil matric potential (mm), and :math:`B_{i}` is the Clapp-Hornberger exponent (:numref:`sec-hydraulic-properties`). The soil volumetric liquid water content :math:`\theta_{liq,i}` is
 
 .. math::
    :label: eq-0248
@@ -2582,6 +2632,8 @@ where :math:`c_{a}^{w}` is the latent heat conductance from the UCL air to the a
 
 The stability is then updated using the new UCL air temperature and specific humidity as follows. The potential temperature, specific humidity, and virtual potential temperature scales, :math:`\theta_{*}`, :math:`q_{*}`, and :math:`\theta_{v*}`, are reevaluated using equations :eq:`eq-0213`-:eq:`eq-0220` and :eq:`eq-0197`. The wind speed including the convective velocity is reevaluated using equations :eq:`eq-0204` and :eq:`eq-0041`-:eq:`eq-0522`. The Monin-Obukhov length is updated from equation :eq:`eq-0224`. This sequence of calculations is repeated for a total of three times beginning with the calculation of the friction velocity :math:`u_{*}` (equations :eq:`eq-0208`-:eq:`eq-0211`).
 
+.. _sec-final-fluxes-and-adjustments:
+
 Final Fluxes and Adjustments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2597,7 +2649,7 @@ The sensible and latent heat fluxes and momentum flux from urban surfaces are th
 
 
 
-This ensures that dew can form on snow or soil surfaces and that snow can sublimate. Otherwise, the evaporation is assigned to an evapotranspiration term in which the water for evaporation is removed from all soil layers which have sufficient liquid water (section 5.3).
+This ensures that dew can form on snow or soil surfaces and that snow can sublimate. Otherwise, the evaporation is assigned to an evapotranspiration term in which the water for evaporation is removed from all soil layers which have sufficient liquid water (:numref:`sec-soil-water-for-the-pervious-road`).
 
 The partial derivatives of the urban surface fluxes with respect to surface temperatures, which are needed for the soil temperature calculation and to update the urban surface fluxes, are
 
@@ -2658,9 +2710,9 @@ The 2-m air temperature diagnostic is set equal to the UCL air temperature :math
 
    RH_{ac} = \min\left( 100,\frac{q_{ac}}{q_{sat}^{T_{ac}}} \times 100 \right)
 
-where :math:`q_{sat}^{T_{ac}}` is the saturated specific humidity at UCL air temperature :math:`T_{ac}` (section 3.3).
+where :math:`q_{sat}^{T_{ac}}` is the saturated specific humidity at UCL air temperature :math:`T_{ac}` (:numref:`sec-saturation-specific-humidity`).
 
-The sensible heat and water vapor fluxes are based on the urban surface temperature from the previous time step, :math:`T_{g}^{n}`, and are used as the surface forcing for the solution of the soil temperature equations (section 4). This solution yields a new surface temperature :math:`T_{g}^{n + 1}`. The sensible heat and water vapor fluxes are updated to :math:`H_{g}^{'}` and :math:`E_{g}^{'}`\ for the new temperature as
+The sensible heat and water vapor fluxes are based on the urban surface temperature from the previous time step, :math:`T_{g}^{n}`, and are used as the surface forcing for the solution of the soil temperature equations (:numref:`sec-roof-wall-road-and-snow-temperatures`). This solution yields a new surface temperature :math:`T_{g}^{n + 1}`. The sensible heat and water vapor fluxes are updated to :math:`H_{g}^{'}` and :math:`E_{g}^{'}`\ for the new temperature as
 
 .. math::
    :label: eq-0538
@@ -2715,7 +2767,7 @@ The water vapor flux :math:`E_{g}^{''}` is partitioned into evaporation of liqui
 
    q_{frost} = \left| E_{g}^{''} \right| E_{g}^{''} < 0\text{ and }T_{g} < T_{f}
 
-The loss or gain in snow mass due to :math:`q_{seva}`, :math:`q_{subl}`, :math:`q_{sdew}`, and :math:`q_{frost}` on a snow surface are accounted for during the snow hydrology calculations (section 5.1). The loss of surface water from non-snow surfaces due to :math:`q_{seva}` is accounted for in the calculation of infiltration (section 5.2), while losses or gains due to :math:`q_{subl}`, :math:`q_{sdew}`, and :math:`q_{frost}` from non-snow surfaces are accounted for following sub-surface drainage calculations (section 5.4).
+The loss or gain in snow mass due to :math:`q_{seva}`, :math:`q_{subl}`, :math:`q_{sdew}`, and :math:`q_{frost}` on a snow surface are accounted for during the snow hydrology calculations (:numref:`sec-snow`). The loss of surface water from non-snow surfaces due to :math:`q_{seva}` is accounted for in the calculation of infiltration (:numref:`sec-surface-runoff-and-infiltration`), while losses or gains due to :math:`q_{subl}`, :math:`q_{sdew}`, and :math:`q_{frost}` from non-snow surfaces are accounted for following sub-surface drainage calculations (:numref:`sec-groundwater-soil-water-interactions-for`).
 
 The ground or storage heat flux :math:`G` for each urban surface is calculated as
 
@@ -2724,7 +2776,7 @@ The ground or storage heat flux :math:`G` for each urban surface is calculated a
 
    G = {\overrightarrow{S}}_{g} - {\overrightarrow{L}}_{g} - H_{g} - \lambda E_{g} + H_{wasteheat,g} + H_{aircond,g}
 
-where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (section 2.5), :math:`H_{g}` and :math:`\lambda E_{g}` are the sensible and latent heat fluxes after the adjustments described above, and :math:`H_{wasteheat,g}` and :math:`H_{aircond,g}` are the waste heat and heat removed by air conditioning (section 4.1). The net longwave radiation :math:`{\overrightarrow{L}}_{g}` is updated for the change in surface temperature as
+where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (:numref:`sec-absorbed-and-reflected-solar-radiatio`), :math:`H_{g}` and :math:`\lambda E_{g}` are the sensible and latent heat fluxes after the adjustments described above, and :math:`H_{wasteheat,g}` and :math:`H_{aircond,g}` are the waste heat and heat removed by air conditioning (:numref:`sec-numerical-solution`). The net longwave radiation :math:`{\overrightarrow{L}}_{g}` is updated for the change in surface temperature as
 
 .. math::
    :label: eq-0265
@@ -2746,6 +2798,8 @@ When converting water vapor flux to an energy flux, the term :math:`\lambda` is 
 
 
 where :math:`\lambda_{sub}` and :math:`\lambda_{vap}` are the latent heat of sublimation and vaporization, respectively (J kg\ :sup:`-1`) (:numref:`table-physical-constants`).
+
+.. _sec-saturation-specific-humidity:
 
 Saturation Specific Humidity
 ----------------------------
@@ -2850,6 +2904,8 @@ where the coefficients for ice are valid for :math:`- 75^{\circ}C \leq T < 0^{\c
      - 4.98070196\ :math:`\times 10^{- 17}`
 
 
+.. _sec-roof-wall-road-and-snow-temperatures:
+
 Roof, Wall, Road, and Snow Temperatures
 =======================================
 
@@ -2881,7 +2937,9 @@ where :math:`c` is the volumetric snow/soil heat capacity (J m\ :sup:`-3` K\ :su
 
    c\frac{\partial T}{\partial t} = \frac{\partial}{\partial z}\left\lbrack \lambda\frac{\partial T}{\partial z} \right\rbrack
 
-The nature of the solution of this equations :eq:`eq-0271` and :eq:`eq-0272` depends on the type of urban surface. The solution for pervious and impervious roads follows the solution for CLM soils where the equation is solved numerically for a fifteen-layer column with up to five overlying layers of snow with the boundary conditions of :math:`h` as the heat flux into the surface layer from the overlying atmosphere and zero heat flux at the bottom of the soil column. In the case of pervious roads, the temperature profile is calculated first without phase change and then readjusted for phase change (section 4.2). For impervious roads, however, the moisture content of all layers is zero. Phase change then only takes place in the ponded surface water. The roof consists of a fifteen-layer column with potential ponded surface water including up to a five layer snow pack, however, the bottom boundary condition is a non-zero flux governed by prescribed controls on the internal building temperature. The walls are modeled similarly to roofs except for the absence of ponded water or snow.
+The nature of the solution of this equations :eq:`eq-0271` and :eq:`eq-0272` depends on the type of urban surface. The solution for pervious and impervious roads follows the solution for CLM soils where the equation is solved numerically for a fifteen-layer column with up to five overlying layers of snow with the boundary conditions of :math:`h` as the heat flux into the surface layer from the overlying atmosphere and zero heat flux at the bottom of the soil column. In the case of pervious roads, the temperature profile is calculated first without phase change and then readjusted for phase change (:numref:`sec-phase-change`). For impervious roads, however, the moisture content of all layers is zero. Phase change then only takes place in the ponded surface water. The roof consists of a fifteen-layer column with potential ponded surface water including up to a five layer snow pack, however, the bottom boundary condition is a non-zero flux governed by prescribed controls on the internal building temperature. The walls are modeled similarly to roofs except for the absence of ponded water or snow.
+
+.. _sec-numerical-solution:
 
 Numerical Solution
 ------------------
@@ -3178,7 +3236,7 @@ The heat flux into each urban surface :math:`h` is
 
    h = {\overrightarrow{S}}_{g} - {\overrightarrow{L}}_{g} - H_{g} - \lambda E_{g} + H_{wasteheat,g} + H_{aircond,g}
 
-where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (section 2.5), :math:`{\overrightarrow{L}}_{g}` is the net longwave radiation (section 2.7), and :math:`H_{g}` and :math:`\lambda E_{g}` are the sensible and latent heat fluxes (section 3.2). The terms :math:`H_{wasteheat,g}` and :math:`H_{aircond,g}` are the waste heat from space heating/air conditioning and heat removed by air conditioning applied only to the pervious and impervious road
+where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (:numref:`sec-absorbed-and-reflected-solar-radiatio`), :math:`{\overrightarrow{L}}_{g}` is the net longwave radiation (:numref:`sec-absorbed-reflected-and-emitted-longwave`), and :math:`H_{g}` and :math:`\lambda E_{g}` are the sensible and latent heat fluxes (:numref:`sec-sensible-and-latent-heat-and-momentum-fl`). The terms :math:`H_{wasteheat,g}` and :math:`H_{aircond,g}` are the waste heat from space heating/air conditioning and heat removed by air conditioning applied only to the pervious and impervious road
 
 .. math::
    :label: eq-0068
@@ -3193,7 +3251,7 @@ where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (section 
    H_{aircond,sunwall} = H_{aircond,shdwall} = H_{aircond,roof} = 0
    \end{cases}
 
-where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations :eq:`eq-0073` and :eq:`eq-0314`. Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (section 3.2.4). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
+where :math:`H_{wasteheat}` and :math:`H_{aircond}` are the total waste heat and heat removed by air conditioning from equations :eq:`eq-0073` and :eq:`eq-0314`. Note that for the pervious road, the latent heat is always the total latent heat regardless of its partitioning into ground evaporation or transpiration (:numref:`sec-final-fluxes-and-adjustments`). The partial derivative of the heat flux :math:`h` with respect to surface temperature is
 
 .. math::
    :label: eq-0292
@@ -3207,7 +3265,7 @@ where the partial derivative of the net longwave radiation is
 
    \frac{\partial{\overrightarrow{L}}_{g}}{\partial T_{g}} = 4\varepsilon_{g}\sigma\left( T_{g}^{n} \right)^{3}
 
-and the partial derivatives of the sensible and latent heat fluxes are given by equations :eq:`eq-0251`-:eq:`eq-0255`. :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`table-physical-constants`) and :math:`\varepsilon_{g}` is the surface emissivity (section 2.7).
+and the partial derivatives of the sensible and latent heat fluxes are given by equations :eq:`eq-0251`-:eq:`eq-0255`. :math:`\sigma` is the Stefan-Boltzmann constant (W m\ :sup:`-2` K\ :sup:`-4`) (:numref:`table-physical-constants`) and :math:`\varepsilon_{g}` is the surface emissivity (:numref:`sec-absorbed-reflected-and-emitted-longwave`).
 
 The top layer for roofs and walls is thin enough such that the layer-averaged temperature calculated above is considered to be equivalent to the surface temperature :math:`T_{g}^{n + 1}`. For pervious and impervious road, the top layer temperature has somewhat reduced diurnal amplitude compared with surface temperature. An accurate surface temperature is provided that compensates for this effect and numerical error by tuning the heat capacity of the top layer (through adjustment of the layer thickness) to give an exact match to the analytic solution for diurnal heating. The layer thickness for :math:`i = snl + 1` is given by
 
@@ -3390,6 +3448,8 @@ where :math:`f_{heat} = \frac{1}{0.75}` and :math:`f_{cool} = \frac{1}{0.25}` ar
 
    H_{aircond} = F_{cool}
 
+.. _sec-phase-change:
+
 Phase Change
 ------------
 
@@ -3414,7 +3474,7 @@ where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridi
 
    w_{liq,{max,}i} = \Delta z_{i}\theta_{sat,i}\left\lbrack \frac{10^{3}L_{f}\left( T_{f} - T_{i} \right)}{gT_{i}\psi_{sat,i}} \right\rbrack^{\frac{- 1}{B_{i}}} T_{i} < T_{f}
 
-where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent (section 5.3.1). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
+where :math:`w_{liq,{max,}i}` is the maximum liquid water in layer :math:`i` (kg m\ :sup:`-2`) when the soil temperature :math:`T_{i}` is below the freezing temperature :math:`T_{f}`, :math:`L_{f}` is the latent heat of fusion (J kg\ :sup:`-1`) (:numref:`table-physical-constants`), :math:`g` is the gravitational acceleration (m s\ :sup:`-2`) (:numref:`table-physical-constants`), and :math:`\psi_{sat,i}` and :math:`B_{i}` are the soil texture-dependent saturated matric potential (mm) and :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent (:numref:`sec-hydraulic-properties`). Equation :eq:`eq-0315` applies to pervious road only, for roof and impervious road :math:`w_{liq,{max,}i} = 0`.
 
 For the special case when snow is present (snow mass :math:`W_{sno} > 0`) but there are no explicit snow layers (:math:`snl = 0`) (i.e., there is not enough snow present to meet the minimum snow depth requirement of 0.01 m), snow melt will take place for soil layer :math:`i = 1` if the soil layer temperature is greater than the freezing temperature (:math:`T_{1}^{n + 1} > T_{f}`).
 
@@ -3565,12 +3625,14 @@ The solution for temperatures conserves energy as
 
    G - E_{p} - \sum_{i = snl + 1}^{i = N_{levgrnd}}\frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) + \left\lbrack \alpha F_{i = N_{levgrnd}}^{n} + (1 - \alpha)F_{i = N_{levgrnd}}^{n + 1} \right\rbrack = 0
 
-where :math:`G` is the ground heat flux (section 3.2.4) and the last term is the non-zero flux bottom boundary condition (roofs and walls only).
+where :math:`G` is the ground heat flux (:numref:`sec-final-fluxes-and-adjustments`) and the last term is the non-zero flux bottom boundary condition (roofs and walls only).
+
+.. _sec-thermal-properties:
 
 Thermal Properties
 ------------------
 
-The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in section 1.2.2 and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
+The thermal conductivities and heat capacities for roofs, walls, and :math:`i = 1,\ldots,N_{imprvrd}` layers of the impervious road are specified by the surface dataset as described in :numref:`sec-surface-data` and :numref:`table-input-data` The :math:`i = N_{imprvrd} + 1,\ldots,N_{levgrnd}` layers of impervious road and the pervious road layers consist of soil or bedrock whose thermal properties are described below. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations below are shown in their reduced form. Note that the moisture content of the impervious road soil layers is maintained at zero.
 
 Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is from :ref:`Farouki (1981) <farouki1981>`
 
@@ -3609,7 +3671,7 @@ where the thermal conductivity of soil solids :math:`\lambda_{s,i}` varies with 
 
    \lambda_{s,i} = \frac{8.80\ (\% sand)_{i} + \text{2.92 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}}
 
-and :math:`\theta_{sat,i}` is the volumetric water content at saturation (porosity) (section 5.3.1). The thermal conductivity of dry natural soil :math:`\lambda_{dry,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the bulk density :math:`\rho_{d,i} = 2700\left( 1 - \theta_{sat,i} \right)` (kg m\ :sup:`-3`) as
+and :math:`\theta_{sat,i}` is the volumetric water content at saturation (porosity) (:numref:`sec-hydraulic-properties`). The thermal conductivity of dry natural soil :math:`\lambda_{dry,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the bulk density :math:`\rho_{d,i} = 2700\left( 1 - \theta_{sat,i} \right)` (kg m\ :sup:`-3`) as
 
 .. math::
    :label: eq-0331
@@ -3686,6 +3748,8 @@ For the special case when snow is present (:math:`W_{sno} > 0`) but there are no
 
 where :math:`c_{1}^{*}` is calculated from equation :eq:`eq-0335`.
 
+.. _sec-hydrology:
+
 Hydrology
 =========
 
@@ -3703,7 +3767,7 @@ The hydrology for the pervious road generally follows that of CLM4 for bare soil
 
 
 
-where :math:`q_{rain}` is liquid part of precipitation, :math:`q_{sno}` is solid part of precipitation, :math:`E_{prvrd}` is the total evaporation (chapter 3), :math:`q_{over}` is surface runoff (section 5.2), :math:`q_{drai}` is sub-surface drainage (section 5.4), :math:`q_{rgwl}` and :math:`q_{snwcp,ice}` are liquid and solid runoff due to snow capping (section 5.5) (all in kg m\ :sup:`-2` s\ :sup:`-1`), :math:`N_{levsoi}` is the number of soil layers, and :math:`\Delta t` is the time step (s). In general, snow capping will not be invoked for urban areas, but is described here for completeness.
+where :math:`q_{rain}` is liquid part of precipitation, :math:`q_{sno}` is solid part of precipitation, :math:`E_{prvrd}` is the total evaporation (:numref:`sec-heat-and-momentum-fluxes`), :math:`q_{over}` is surface runoff (:numref:`sec-surface-runoff-and-infiltration`), :math:`q_{drai}` is sub-surface drainage (:numref:`sec-groundwater-soil-water-interactions-for`), :math:`q_{rgwl}` and :math:`q_{snwcp,ice}` are liquid and solid runoff due to snow capping (:numref:`sec-runoff-from-snow-capping`) (all in kg m\ :sup:`-2` s\ :sup:`-1`), :math:`N_{levsoi}` is the number of soil layers, and :math:`\Delta t` is the time step (s). In general, snow capping will not be invoked for urban areas, but is described here for completeness.
 
 .. figure:: image16.jpeg
    :width: 5.60417in
@@ -3738,7 +3802,9 @@ The rate of liquid and solid precipitation reaching the urban surface (kg m\ :su
 
    q_{grnd,ice} = q_{sno}
 
-Solid precipitation reaching the surface, :math:`q_{grnd,ice}\Delta t`, is added immediately to the snow pack (section 5.1). The liquid part, :math:`q_{grnd,liq}\Delta t` is added after surface fluxes, temperatures, soil water, and runoff have been determined.
+Solid precipitation reaching the surface, :math:`q_{grnd,ice}\Delta t`, is added immediately to the snow pack (:numref:`sec-snow`). The liquid part, :math:`q_{grnd,liq}\Delta t` is added after surface fluxes, temperatures, soil water, and runoff have been determined.
+
+.. _sec-snow:
 
 Snow
 ----
@@ -3752,9 +3818,11 @@ The parameterizations for snow are based primarily on :ref:`Anderson (1976) <and
 
    Example of three layer snow pack (:math:`snl = - 3`). Shown are three snow layers, :math:`i = - 2`, :math:`i = - 1`, and :math:`i = 0`. The layer node depth is :math:`z`, the layer interface is :math:`z_{h}`, and the layer thickness is :math:`\Delta z`.
 
-The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}` (kg m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}` (m), and temperature :math:`T_{i}` (chapter 4). The water vapor phase is neglected. Snow can also exist in the model without being represented by explicit snow layers. This occurs when the snowpack is less than a specified minimum snow depth (:math:`z_{sno} < 0.01` m). In this case, the state variable is the mass of snow :math:`W_{sno}` (kg m\ :sup:`-2`).
+The state variables for snow are the mass of water :math:`w_{liq,i}` (kg m\ :sup:`-2`), mass of ice :math:`w_{ice,i}` (kg m\ :sup:`-2`), layer thickness :math:`\Delta z_{i}` (m), and temperature :math:`T_{i}` (:numref:`sec-roof-wall-road-and-snow-temperatures`). The water vapor phase is neglected. Snow can also exist in the model without being represented by explicit snow layers. This occurs when the snowpack is less than a specified minimum snow depth (:math:`z_{sno} < 0.01` m). In this case, the state variable is the mass of snow :math:`W_{sno}` (kg m\ :sup:`-2`).
 
-The next two sections (5.1.1 and 5.1.2) describe the ice and water content of the snow pack assuming that at least one snow layer exists. See section 5.1.3 for a description of how a snow layer is initialized. Snow compaction is described in section 5.1.4 and snow layer combination and subdivision in section 5.1.5.
+The next two sections (5.1.1 and 5.1.2) describe the ice and water content of the snow pack assuming that at least one snow layer exists. See :numref:`sec-initialization-of-snow-layer` for a description of how a snow layer is initialized. Snow compaction is described in :numref:`sec-snow-compaction` and snow layer combination and subdivision in :numref:`sec-snow-layer-combination-and-subdivision`.
+
+.. _sec-ice-content:
 
 Ice Content
 ~~~~~~~~~~~
@@ -3773,14 +3841,14 @@ The conservation equation for mass of ice in snow layers is
 
 
 
-where :math:`q_{ice,i - 1}` is the rate of ice accumulation from precipitation or frost or the rate of ice loss from sublimation (kg m\ :sup:`-2` s\ :sup:`-1`) in the top layer and :math:`\frac{\left( \Delta w_{ice,i} \right)_{p}}{\Delta t}` is the change in ice due to phase change (melting rate) (section 4.2). The term :math:`q_{ice,i - 1}` is calculated in two steps as
+where :math:`q_{ice,i - 1}` is the rate of ice accumulation from precipitation or frost or the rate of ice loss from sublimation (kg m\ :sup:`-2` s\ :sup:`-1`) in the top layer and :math:`\frac{\left( \Delta w_{ice,i} \right)_{p}}{\Delta t}` is the change in ice due to phase change (melting rate) (:numref:`sec-phase-change`). The term :math:`q_{ice,i - 1}` is calculated in two steps as
 
 .. math::
    :label: eq-0342
 
    q_{ice,i - 1} = q_{grnd,ice} + \left( q_{frost} - q_{subl} \right)
 
-where :math:`q_{grnd,ice}` is the rate of solid precipitation reaching the surface and :math:`q_{frost}` and :math:`q_{subl}` are gains due to frost and losses due to sublimation, respectively (section 3.2.4). In the first step, a new snow depth :math:`z_{sno}` (m) is calculated from
+where :math:`q_{grnd,ice}` is the rate of solid precipitation reaching the surface and :math:`q_{frost}` and :math:`q_{subl}` are gains due to frost and losses due to sublimation, respectively (:numref:`sec-final-fluxes-and-adjustments`). In the first step, a new snow depth :math:`z_{sno}` (m) is calculated from
 
 .. math::
    :label: eq-0343
@@ -3828,14 +3896,16 @@ The ice content of the top layer and the layer thickness are updated as
 
    \Delta z_{snl + 1}^{n + 1} = \Delta z_{snl + 1}^{n} + \Delta z_{sno}
 
-In the second step, after surface fluxes and temperatures have been determined (chapters 3 and 4), :math:`w_{ice,snl + 1}` is updated for frost or sublimation as
+In the second step, after surface fluxes and temperatures have been determined (:numref:`sec-heat-and-momentum-fluxes` and :numref:`sec-roof-wall-road-and-snow-temperatures`), :math:`w_{ice,snl + 1}` is updated for frost or sublimation as
 
 .. math::
    :label: eq-0348
 
    w_{ice,snl + 1}^{n + 1} = w_{ice,snl + 1}^{n} + \left( q_{frost} - q_{subl} \right)\Delta t
 
-If :math:`w_{ice,snl + 1}^{n + 1} < 0` upon solution of equation :eq:`eq-0348`, the ice content is reset to zero and the liquid water content :math:`w_{liq,snl + 1}` is reduced by the amount required to bring :math:`w_{ice,snl + 1}^{n + 1}` up to zero. The snow water equivalent :math:`W_{sno}` is capped to not exceed 1000 kg m\ :sup:`-2`. If the addition of :math:`q_{frost}` were to result in :math:`W_{sno} > 1000` kg m\ :sup:`-2`, the frost term :math:`q_{frost}` is instead added to the ice runoff term :math:`q_{snwcp,ice}` (section 5.5).
+If :math:`w_{ice,snl + 1}^{n + 1} < 0` upon solution of equation :eq:`eq-0348`, the ice content is reset to zero and the liquid water content :math:`w_{liq,snl + 1}` is reduced by the amount required to bring :math:`w_{ice,snl + 1}^{n + 1}` up to zero. The snow water equivalent :math:`W_{sno}` is capped to not exceed 1000 kg m\ :sup:`-2`. If the addition of :math:`q_{frost}` were to result in :math:`W_{sno} > 1000` kg m\ :sup:`-2`, the frost term :math:`q_{frost}` is instead added to the ice runoff term :math:`q_{snwcp,ice}` (:numref:`sec-runoff-from-snow-capping`).
+
+.. _sec-water-content:
 
 Water Content
 ~~~~~~~~~~~~~
@@ -3847,14 +3917,14 @@ The conservation equation :eq:`eq-0348` for mass of water in snow layers is
 
    \frac{\partial w_{liq,i}}{\partial t} = \left( q_{liq,i - 1} - q_{liq,i} \right) + \frac{\left( \Delta w_{liq,i} \right)_{p}}{\Delta t}
 
-where :math:`q_{liq,i - 1}` is the flow of liquid water into layer :math:`i` from the layer above, :math:`q_{liq,i}` is the flow of water out of layer :math:`i` to the layer below, :math:`\frac{\left( \Delta w_{liq,i} \right)_{p}}{\Delta t}` is the change in liquid water due to phase change (melting rate) (section 4.2). For the top snow layer only,
+where :math:`q_{liq,i - 1}` is the flow of liquid water into layer :math:`i` from the layer above, :math:`q_{liq,i}` is the flow of water out of layer :math:`i` to the layer below, :math:`\frac{\left( \Delta w_{liq,i} \right)_{p}}{\Delta t}` is the change in liquid water due to phase change (melting rate) (:numref:`sec-phase-change`). For the top snow layer only,
 
 .. math::
    :label: eq-0350
 
    q_{liq,i - 1} = q_{grnd,liq} + \left( q_{sdew} - q_{seva} \right)
 
-where :math:`q_{grnd,liq}` is the rate of liquid precipitation reaching the snow, :math:`q_{seva}` is the evaporation of liquid water and :math:`q_{sdew}` is the liquid dew (section 3.2.4). After surface fluxes and temperatures have been determined (chapters 3 and 4), :math:`w_{liq,snl + 1}` is updated for the liquid precipitation reaching the ground and dew or evaporation as
+where :math:`q_{grnd,liq}` is the rate of liquid precipitation reaching the snow, :math:`q_{seva}` is the evaporation of liquid water and :math:`q_{sdew}` is the liquid dew (:numref:`sec-final-fluxes-and-adjustments`). After surface fluxes and temperatures have been determined (:numref:`sec-heat-and-momentum-fluxes` and :numref:`sec-roof-wall-road-and-snow-temperatures`), :math:`w_{liq,snl + 1}` is updated for the liquid precipitation reaching the ground and dew or evaporation as
 
 .. math::
    :label: eq-0351
@@ -3896,6 +3966,8 @@ The volumetric liquid water content :math:`\theta_{liq,i}` is updated as
 
 equation :eq:`eq-0352` are solved sequentially from top (:math:`i = snl + 1`) to bottom (:math:`i = 0`) snow layer in each time step. The total flow of liquid water reaching the urban surface is then :math:`q_{liq,0}`.
 
+.. _sec-initialization-of-snow-layer:
+
 Initialization of snow layer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -3918,10 +3990,12 @@ If there are no existing snow layers (:math:`snl + 1 = 1`) but :math:`z_{sno} \g
    w_{liq,0} = 0
 
 
+.. _sec-snow-compaction:
+
 Snow Compaction
 ~~~~~~~~~~~~~~~
 
-Snow compaction is initiated after the hydrology calculations [surface runoff (section 5.2), infiltration (section 5.2), soil water (section 5.3), groundwater-soilwater interactions (section 5.4)] are complete. Compaction of snow includes three types of processes: destructive metamorphism of new snow (crystal breakdown due to wind or thermodynamic stress); snow load or overburden (pressure); and melting (changes in snow structure due to melt-freeze cycles plus changes in crystals due to liquid water). The total fractional compaction rate for each snow layer :math:`C_{R,i}` (s\ :sup:`-1`) is the sum of the three compaction processes
+Snow compaction is initiated after the hydrology calculations [surface runoff (:numref:`sec-surface-runoff-and-infiltration`), infiltration (:numref:`sec-surface-runoff-and-infiltration`), soil water (:numref:`sec-soil-water-for-the-pervious-road`), groundwater-soilwater interactions (:numref:`sec-groundwater-soil-water-interactions-for`)] are complete. Compaction of snow includes three types of processes: destructive metamorphism of new snow (crystal breakdown due to wind or thermodynamic stress); snow load or overburden (pressure); and melting (changes in snow structure due to melt-freeze cycles plus changes in crystals due to liquid water). The total fractional compaction rate for each snow layer :math:`C_{R,i}` (s\ :sup:`-1`) is the sum of the three compaction processes
 
 .. math::
    :label: eq-0356
@@ -3996,7 +4070,7 @@ where the fraction of ice :math:`f_{ice,i}` is
 
    f_{ice,i} = \frac{w_{ice,i}}{w_{ice,i} + w_{liq,i}}
 
-and melting is identified during the phase change calculations (section 4.2).
+and melting is identified during the phase change calculations (:numref:`sec-phase-change`).
 
 The snow layer thickness after compaction is then
 
@@ -4005,10 +4079,14 @@ The snow layer thickness after compaction is then
 
    \Delta z_{i}^{n + 1} = \Delta z_{i}^{n}\left( 1 + C_{R,i}\Delta t \right)
 
+.. _sec-snow-layer-combination-and-subdivision:
+
 Snow Layer Combination and Subdivision
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the determination of snow temperature including phase change (chapter 4), snow hydrology (sections 5.2.1, 5.2.2, and 5.2.3), and the compaction calculations (5.2.4), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <jordan1991>`.
+After the determination of snow temperature including phase change (:numref:`sec-roof-wall-road-and-snow-temperatures`), snow hydrology (:numref:`sec-ice-content`, :numref:`sec-water-content`, and :numref:`sec-initialization-of-snow-layer`), and the compaction calculations (:numref:`sec-snow-compaction`), the number of snow layers is adjusted by either combining or subdividing layers. The combination and subdivision of snow layers is based on :ref:`Jordan (1991) <jordan1991>`.
+
+.. _sec-combination:
 
 Combination
 ^^^^^^^^^^^
@@ -4144,6 +4222,8 @@ where :math:`\Delta z_{i}` is the layer thickness.
 
 The maximum snow layer thickness, :math:`\Delta z_{\max}`, depends on the number of layers, :math:`N_{l}` and :math:`N_{u}`.
 
+.. _sec-subdivision:
+
 Subdivision
 ^^^^^^^^^^^
 
@@ -4169,6 +4249,8 @@ then adjusted as,
 
 where here the subscripts 1, 2, and 3 denote three layers numbered from top to bottom. After layer subdivision, the node depths and layer interfaces are recalculated from equations :eq:`eq-0372` and :eq:`eq-0373`.
 
+.. _sec-surface-runoff-and-infiltration:
+
 Surface Runoff and Infiltration
 -------------------------------
 
@@ -4183,7 +4265,7 @@ For the roof and impervious road, water on these surfaces in excess of a maximum
    q_{over} = q_{liq,0} snl < 0
 
 
-where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from rain (section 5.1) and/or snowmelt (section 5.1.2) and :math:`q_{seva}` is the evaporation of liquid water from the top layer (section 3.4). The liquid water content of the top layer is adjusted to
+where :math:`q_{liq,0}` is the rate of liquid water reaching the surface from rain (:numref:`sec-snow`) and/or snowmelt (:numref:`sec-water-content`) and :math:`q_{seva}` is the evaporation of liquid water from the top layer (:numref:`sec-final-fluxes-and-adjustments`). The liquid water content of the top layer is adjusted to
 
 
 
@@ -4209,7 +4291,7 @@ where :math:`q_{liq,0}` is liquid precipitation reaching the ground plus any mel
 
    f_{sat} = \left( 1 - f_{frz,1} \right){f{\exp\left( - 0.5f_{over}z_{\nabla} \right)}_{frz,1}}_{\max}
 
-where :math:`f_{\max}` is the maximum saturated fraction, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth (m) (section 5.4). The maximum saturated fraction, :math:`f_{\max}`, is defined as the discrete cumulative distribution function (CDF) of the topographic index when the grid cell mean water table depth is zero. Thus, :math:`f_{\max}` is the percent of pixels in a grid cell whose topographic index is larger than or equal to the grid cell mean topographic index. It should be calculated explicitly from the CDF at each grid cell at the resolution that the model is run. However, because this is a computationally intensive task for global applications, :math:`f_{\max}` is calculated once from the CDF at a spatial resolution of 0.5° by 0.5° following :ref:`Niu et al. (2005) <niuetal2005>` and then area-averaged to the desired resolution. The 0.5° resolution is compatible with the resolution of other CLM input surface datasets (e.g., plant functional types, leaf area index). The decay factor :math:`f_{over}` for global simulations was determined through sensitivity analysis and comparison with observed runoff to be 0.5 m\ :sup:`-1`.
+where :math:`f_{\max}` is the maximum saturated fraction, :math:`f_{over}` is a decay factor (m\ :sup:`-1`), and :math:`z_{\nabla}` is the water table depth (m) (:numref:`sec-groundwater-soil-water-interactions-for`). The maximum saturated fraction, :math:`f_{\max}`, is defined as the discrete cumulative distribution function (CDF) of the topographic index when the grid cell mean water table depth is zero. Thus, :math:`f_{\max}` is the percent of pixels in a grid cell whose topographic index is larger than or equal to the grid cell mean topographic index. It should be calculated explicitly from the CDF at each grid cell at the resolution that the model is run. However, because this is a computationally intensive task for global applications, :math:`f_{\max}` is calculated once from the CDF at a spatial resolution of 0.5° by 0.5° following :ref:`Niu et al. (2005) <niuetal2005>` and then area-averaged to the desired resolution. The 0.5° resolution is compatible with the resolution of other CLM input surface datasets (e.g., plant functional types, leaf area index). The decay factor :math:`f_{over}` for global simulations was determined through sensitivity analysis and comparison with observed runoff to be 0.5 m\ :sup:`-1`.
 
 The impermeable fraction :math:`f_{frz,i}` is parameterized as a function of soil ice content (:ref:`Niu and Yang 2006 <NiuYang2006>`)
 
@@ -4254,7 +4336,7 @@ where :math:`\Delta z_{1}` is the thickness of the top soil layer (mm) and
 
    \left( \frac{d\psi}{ds} \right)_{s = 1} = - B_{1}\psi_{sat,1}
 
-The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (section 5.3.1).
+The saturated hydraulic conductivity :math:`k_{sat,1}` (kg m\ :sup:`-2` s\ :sup:`-1`), volumetric water content at saturation (i.e., porosity) :math:`\theta_{sat,1}`, :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` exponent :math:`B_{1}`, and saturated soil matric potential :math:`\psi_{sat,1}` (mm) are determined from soil texture (:numref:`sec-hydraulic-properties`).
 
 Infiltration into the surface soil layer of the pervious road is defined as the residual of the surface water balance
 
@@ -4279,10 +4361,12 @@ The infiltration for urban surfaces other than pervious road is
 
    q_{infl} = 0
 
+.. _sec-soil-water-for-the-pervious-road:
+
 Soil Water for the Pervious Road
 --------------------------------
 
-Soil water for the pervious road is predicted from a multi-layer model, in which the vertical soil moisture transport is governed by infiltration, surface and sub-surface runoff, gradient diffusion, gravity, evapotranspiration through root extraction, and interactions with groundwater (:numref:`fig-hydrologic-processes-pervious-road`). Vegetation is not represented explicitly, however, the total evaporation calculated in section 3.2.4, if not assigned to surface evaporation, is removed from each soil layer through an evapotranspiration loss (:math:`s` in the equation below). The following derivation generally follows that of Z.-L. Yang (1998, unpublished manuscript) with modifications by :ref:`Zeng and Decker (2009) <zenganddecker2009>`.
+Soil water for the pervious road is predicted from a multi-layer model, in which the vertical soil moisture transport is governed by infiltration, surface and sub-surface runoff, gradient diffusion, gravity, evapotranspiration through root extraction, and interactions with groundwater (:numref:`fig-hydrologic-processes-pervious-road`). Vegetation is not represented explicitly, however, the total evaporation calculated in :numref:`sec-final-fluxes-and-adjustments`, if not assigned to surface evaporation, is removed from each soil layer through an evapotranspiration loss (:math:`s` in the equation below). The following derivation generally follows that of Z.-L. Yang (1998, unpublished manuscript) with modifications by :ref:`Zeng and Decker (2009) <zenganddecker2009>`.
 
 For one-dimensional vertical water flow in soils, the conservation of mass is stated as
 
@@ -4358,10 +4442,12 @@ where :math:`\psi_{E}`\ is the equilibrium soil matric potential (mm). Substitut
 
 where the soil moisture source/sink term :math:`Q` is now included.
 
+.. _sec-hydraulic-properties:
+
 Hydraulic Properties
 ~~~~~~~~~~~~~~~~~~~~
 
-The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, section 1.2.2) based on the work of :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` and :ref:`Cosby et al. (1984) <cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
+The hydraulic conductivity :math:`k_{i}` (mm s\ :sup:`-1`) and the soil matric potential :math:`\psi_{i}` (mm) for layer :math:`i` vary with volumetric soil water :math:`\theta_{i}` and soil texture (:math:`\% sand_{i}` and :math:`\% clay_{i}`, :numref:`sec-surface-data`) based on the work of :ref:`Clapp and Hornberger (1978) <ClappHornberger1978>` and :ref:`Cosby et al. (1984) <cosbyetal1984>`. In CLM4, organic matter modifies soil properties according to :ref:`Lawrence and Slater (2008) <LawrenceSlater2008>`. Urban soils are assumed to have no organic matter so the equations :eq:`eq-0390` and :eq:`eq-0389` below are shown in their reduced form.
 
 The hydraulic conductivity is defined at the depth of the interface of two adjacent layers :math:`z_{h,i}` (:numref:`fig-soil-water-flux-scheme`) and is a function of the saturated hydraulic conductivity :math:`k_{sat}\left\lbrack z_{h,i} \right\rbrack`, the total (ice plus liquid) volumetric soil moisture of the two layers :math:`\theta_{i}` and :math:`\theta_{i + 1}` and the impermeable fraction :math:`f_{frz,i}`
 
@@ -4414,6 +4500,8 @@ where the saturated soil matric potential (mm) is
 
 .. _numerical-solution-1:
 
+.. _sec-numerical-solution-2:
+
 Numerical Solution
 ~~~~~~~~~~~~~~~~~~
 
@@ -4440,7 +4528,7 @@ where :math:`q_{i}` is the flux of water across interface :math:`z_{h,i}`, :math
 
 where :math:`\Delta\theta_{liq,i} = \theta_{liq,i}^{n + 1} - \theta_{liq,i}^{n}` is the change in volumetric soil liquid water of layer :math:`i` in time :math:`\Delta t`\ and :math:`\Delta z_{i}` is the thickness of layer :math:`i` (mm).
 
-The water removed by evapotranspiration in each layer :math:`e_{i}` is a function of the total evapotranspiration :math:`E_{prvrd}^{et}` (section 3.2.4) and the effective root fraction :math:`r_{e,i}`
+The water removed by evapotranspiration in each layer :math:`e_{i}` is a function of the total evapotranspiration :math:`E_{prvrd}^{et}` (:numref:`sec-final-fluxes-and-adjustments`) and the effective root fraction :math:`r_{e,i}`
 
 .. math::
    :label: eq-0401
@@ -4461,7 +4549,7 @@ The effective root fraction :math:`r_{e,i}` is
 
 
 
-where :math:`r_{i}` is the fraction of roots in layer :math:`i` (equation :eq:`eq-0245`), :math:`w_{i}` is a soil wetness factor for layer :math:`i` (equation (3.87)), and :math:`\alpha_{soi}` is a wetness factor for the total soil column (equation :eq:`eq-0244` (section 3.2.3)).
+where :math:`r_{i}` is the fraction of roots in layer :math:`i` (equation :eq:`eq-0245`), :math:`w_{i}` is a soil wetness factor for layer :math:`i` (equation (3.87)), and :math:`\alpha_{soi}` is a wetness factor for the total soil column (equation :eq:`eq-0244` (:numref:`sec-iterative-solution-for-urban-canopy-air`)).
 
 .. figure:: image18.jpeg
    :width: 6in
@@ -4585,6 +4673,8 @@ The derivatives of the hydraulic conductivity at the layer interface are derived
    \left\lbrack \frac{0.5\left( \theta_{i} + \theta_{i + 1} \right)}{0.5\left( \theta_{sat,i} + \theta_{sat,i + 1} \right)} \right\rbrack^{2B_{i} + 2}\left( \frac{0.5}{\theta_{sat,i}} \right)
 
 
+.. _sec-equilibrium-soil-matric-potential-and-vo:
+
 Equilibrium soil matric potential and volumetric moisture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4651,10 +4741,12 @@ The equilibrium soil matric potential is then
 
    \psi_{E,i} = \psi_{sat,i}\left( \frac{\overline{\theta_{E,i}}}{\theta_{sat,i}} \right)^{- B_{i}} \geq - 1 \times 10^{8} \frac{\overline{\theta_{E,i}}}{\theta_{sat,i}} \geq 0.01
 
+.. _sec-equation-set-for-layer:
+
 Equation set for layer :math:`\mathbf{i = 1}`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the top soil layer (:math:`i = 1`), the boundary condition is the infiltration rate (section 5.2), :math:`q_{i - 1}^{n + 1} = - q_{infl}^{n + 1}`, and the water balance equation is
+For the top soil layer (:math:`i = 1`), the boundary condition is the infiltration rate (:numref:`sec-surface-runoff-and-infiltration`), :math:`q_{i - 1}^{n + 1} = - q_{infl}^{n + 1}`, and the water balance equation is
 
 .. math::
    :label: eq-0427
@@ -4683,6 +4775,8 @@ After grouping like terms, the coefficients of the tridiagonal set of equations 
 
    r_{i} = q_{infl}^{n + 1} - q_{i}^{n} + e_{i}
 
+.. _sec-equation-set-for-layers:
+
 Equation set for layers :math:`\mathbf{i = 2,}\mathbf{\ldots}\mathbf{,}\mathbf{N}_{\mathbf{levsoi}}\mathbf{-}\mathbf{1}`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -4707,6 +4801,8 @@ The coefficients of the tridiagonal set of equations for :math:`i = 2,\ldots,N_{
    :label: eq-0435
 
    r_{i} = q_{i - 1}^{n} - q_{i}^{n} + e_{i}
+
+.. _sec-equation-set-for-layers-2:
 
 Equation set for layers :math:`\mathbf{i =}\mathbf{N}_{\mathbf{levsoi}}\mathbf{,}\mathbf{\ldots}\mathbf{N}_{\mathbf{levsoi}}\mathbf{+ 1}`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -4839,6 +4935,8 @@ The volumetric water content is
 
    \theta_{i} = \frac{w_{liq,i}}{\Delta z_{i}\rho_{liq}} + \frac{w_{ice,i}}{\Delta z_{i}\rho_{ice}}
 
+.. _sec-groundwater-soil-water-interactions-for:
+
 Groundwater-Soil Water Interactions for the Pervious Road
 ---------------------------------------------------------
 
@@ -4893,7 +4991,7 @@ and :math:`W_{t}^{n + 1}` is reset as :math:`W_{t}^{n + 1} = W_{a}^{n + 1}`. The
 
    q_{recharge} = \frac{\Delta\theta_{liq,N_{levsoi} + 1}\Delta z_{N_{levsoi} + 1}}{\Delta t}
 
-where :math:`\Delta\theta_{liq,N_{levsoi} + 1} = \theta_{liq,N_{levsoi} + 1}^{n + 1} - \theta_{liq,N_{levsoi} + 1}^{n}` is the change in liquid water content for layer :math:`i = N_{levsoi} + 1` calculated from the solution of the soil water equation (5.140) (section 5.3), and :math:`\Delta z_{N_{levsoi} + 1}` (mm) is
+where :math:`\Delta\theta_{liq,N_{levsoi} + 1} = \theta_{liq,N_{levsoi} + 1}^{n + 1} - \theta_{liq,N_{levsoi} + 1}^{n}` is the change in liquid water content for layer :math:`i = N_{levsoi} + 1` calculated from the solution of the soil water equation (5.140) (:numref:`sec-soil-water-for-the-pervious-road`), and :math:`\Delta z_{N_{levsoi} + 1}` (mm) is
 
 .. math::
    :label: eq-0463
@@ -4943,7 +5041,7 @@ where :math:`\Delta t` is the time step (s).
 
 After the above calculations, two numerical adjustments are implemented to keep the liquid water content of each soil layer (:math:`w_{liq,i}`) within physical constraints of :math:`w_{liq}^{min_{liq,i}\left( \theta_{sat,i} - \theta_{ice,i} \right)_{i}}` where :math:`w_{liq}^{\min}` (mm). First, beginning with the bottom soil layer :math:`i = N_{levsoi}`, any excess liquid water in each soil layer (:math:`w_{liq,i}^{excess} = w_{liq,i} - \left( \theta_{sat,i} - \theta_{ice,i} \right)\Delta z_{i} \geq 0`) is successively added to the layer above. Any excess liquid water that remains after saturating the entire soil column (plus a maximum surface ponding depth :math:`w_{liq}^{pond} = 10` kg m\ :sup:`-2` s\ :sup:`-1`), is added to drainage :math:`q_{drai}`. Second, to prevent negative :math:`w_{liq,i}`, each layer is successively brought up to :math:`w_{liq,i} = w_{liq,\min}` by taking the required amount of water from the layer below. If this results in :math:`w_{liq,N_{levsoi}} < w_{liq}^{\min}`, then the layers above are searched in succession for the required amount of water (:math:`w_{liq}^{min_{liq,N_{levsoi}}}`) and removed from those layers subject to the constraint :math:`w_{liq,i} \geq w_{liq}^{\min}`. If sufficient water is not found, then the water is removed from :math:`W_{t}` and :math:`q_{drai}`.
 
-The surface layer liquid water and ice contents for roof, pervious and impervious road are then updated for dew :math:`q_{sdew}`, frost :math:`q_{frost}`, or sublimation :math:`q_{subl}` (section 3.4) as
+The surface layer liquid water and ice contents for roof, pervious and impervious road are then updated for dew :math:`q_{sdew}`, frost :math:`q_{frost}`, or sublimation :math:`q_{subl}` (:numref:`sec-final-fluxes-and-adjustments`) as
 
 .. math::
    :label: eq-0467
@@ -4962,6 +5060,8 @@ The surface layer liquid water and ice contents for roof, pervious and imperviou
 
 Sublimation of ice is limited to the amount of ice available.
 
+.. _sec-runoff-from-snow-capping:
+
 Runoff from snow-capping
 ------------------------
 
@@ -4978,6 +5078,8 @@ As with other surfaces, urban surfaces are constrained to have a snow water equi
    q_{snwcp,liq} = q_{grnd,liq} + q_{dew}
 
 and snow pack properties are unchanged. The :math:`q_{snwcp,ice}` runoff is sent to the River Transport Model (RTM) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there. The :math:`q_{snwcp,liq}` runoff is assigned to the runoff term :math:`q_{rgwl}` (e.g. :math:`q_{rgwl} = q_{snwcp,liq}`) and included in the liquid water runoff sent to RTM.
+
+.. _sec-offline-mode:
 
 Offline Mode
 ============
@@ -4997,7 +5099,7 @@ The total solar radiation is provided at six hour intervals. The data is fit to 
 
 
 
-where :math:`\Delta t_{FD}` is the time step of the forcing data (6 hours :math:`\times` 3600 seconds hour\ :sup:`-1` = 21600 seconds), :math:`\Delta t_{M}` is the model time step (seconds), :math:`S_{atm}\left( t_{FD} \right)` is the six-hourly solar radiation from the forcing data (W m\ :sup:`-2`), and :math:`\mu\left( t_{M} \right)` is the cosine of the solar zenith angle at model time step :math:`t_{M}` (section 2.8). The term in the denominator of equation :eq:`eq-0102` is the sum of the cosine of the solar zenith angle for each model time step falling within the six hour period. For numerical purposes, :math:`\mu\left( t_{M_{i}} \right) \geq 0.001`.
+where :math:`\Delta t_{FD}` is the time step of the forcing data (6 hours :math:`\times` 3600 seconds hour\ :sup:`-1` = 21600 seconds), :math:`\Delta t_{M}` is the model time step (seconds), :math:`S_{atm}\left( t_{FD} \right)` is the six-hourly solar radiation from the forcing data (W m\ :sup:`-2`), and :math:`\mu\left( t_{M} \right)` is the cosine of the solar zenith angle at model time step :math:`t_{M}` (:numref:`sec-solar-zenith-angle`). The term in the denominator of equation :eq:`eq-0102` is the sum of the cosine of the solar zenith angle for each model time step falling within the six hour period. For numerical purposes, :math:`\mu\left( t_{M_{i}} \right) \geq 0.001`.
 
 The total incident solar radiation :math:`S_{atm}` at the model time step :math:`t_{M}` is then split into near-infrared and visible radiation and partitioned into direct and diffuse according to factors derived from one year's worth of hourly CAM output from CAM version cam3_5_55 as
 
@@ -5091,14 +5193,18 @@ where the atmospheric vapor pressure :math:`e_{atm}` (Pa) is derived from the wa
 
    q_{atm} = \frac{0.622e_{sat}^{T_{dew}}}{P_{atm} - 0.378e_{sat}^{T_{dew}}}
 
-Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from :ref:`Lowe's (1977) <lowe1977>` polynomials (section 3.3). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
+Here, :math:`e_{sat}^{T}`, the saturation vapor pressure as a function of temperature, is derived from :ref:`Lowe's (1977) <lowe1977>` polynomials (:numref:`sec-saturation-specific-humidity`). If not provided by the user, the atmospheric pressure :math:`P_{atm}` (Pa) is set equal to the standard atmospheric pressure :math:`P_{std} = 101325` Pa, and surface pressure :math:`P_{srf}` (Pa) is set equal to\ :math:`P_{atm}`.
 
 The user may provide the total direct and diffuse solar radiation, :math:`S_{atm} \downarrow^{\mu}` and :math:`S_{atm} \downarrow`. These will be time-interpolated using the procedure described above and then each term equally apportioned into the visible and near-infrared wavebands (e.g., :math:`S_{atm} \downarrow_{vis}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`, :math:`S_{atm} \downarrow_{nir}^{\mu} = 0.5S_{atm} \downarrow^{\mu}`).
+
+.. _sec-evaluation:
 
 Evaluation
 ==========
 
 Oleson et al. (2008b, c) describe efforts to evaluate the urban model. This includes a quantitative evaluation of model performance at two specific urban sites, an examination of the robustness of the model through sensitivity studies, and a qualitative evaluation of the urban climate produced by the model, with a focus on the characteristics of the simulated heat island. An additional evaluation component not appearing in these two papers is presented below.
+
+.. _sec-nighttime-longwave-radiation-and-surface:
 
 Nighttime longwave radiation and surface temperature
 ----------------------------------------------------
