@@ -539,7 +539,7 @@ contains
           forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)
 
           snow_depth      =>    waterdiagnosticbulk_inst%snow_depth_col    , & ! Input:  [real(r8) (:)   ] snow height (m)
-          frac_sno        =>    waterdiagnosticbulk_inst%frac_sno_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo        =>    waterdiagnosticbulk_inst%frac_sno_albedo_col      , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
 
           nrad            =>    surfalb_inst%nrad_patch           , & ! Input:  [integer  (:)   ] number of canopy layers, above snow for radiative transfer
           coszen          =>    surfalb_inst%coszen_col           , & ! Input:  [real(r8) (:)   ] column cosine of solar zenith angle
@@ -636,7 +636,7 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno_eff    => waterdiagnosticbulk_inst%frac_sno_eff_col       & !Input:
+          frac_sno_fluxes    => waterdiagnosticbulk_inst%frac_sno_fluxes_col       & !Input:
 
           )
 
@@ -870,11 +870,11 @@ contains
              sfc_frc_aer(p) = sabg(p) - sabg_pur(p)
 
              ! forcings averaged only over snow:
-             if (frac_sno(c) > 0._r8) then
-                sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno(c)
-                sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno(c)
-                sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno(c)
-                sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno(c)
+             if (frac_sno_albedo(c) > 0._r8) then
+                sfc_frc_bc_sno(p)  = sfc_frc_bc(p)/frac_sno_albedo(c)
+                sfc_frc_oc_sno(p)  = sfc_frc_oc(p)/frac_sno_albedo(c)
+                sfc_frc_dst_sno(p) = sfc_frc_dst(p)/frac_sno_albedo(c)
+                sfc_frc_aer_sno(p) = sfc_frc_aer(p)/frac_sno_albedo(c)
              else
                 sfc_frc_bc_sno(p)  = spval
                 sfc_frc_oc_sno(p)  = spval

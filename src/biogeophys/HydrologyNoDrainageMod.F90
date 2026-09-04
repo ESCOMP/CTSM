@@ -237,7 +237,7 @@ contains
 
          snow_depth         => b_waterdiagnostic_inst%snow_depth_col         , & ! Input:  [real(r8) (:)   ]  snow height of snow covered area (m)     
          snowdp             => b_waterdiagnostic_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
-         frac_sno_eff       => b_waterdiagnostic_inst%frac_sno_eff_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
+         frac_sno_fluxes       => b_waterdiagnostic_inst%frac_sno_fluxes_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
          frac_h2osfc        => b_waterdiagnostic_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          snw_rds            => b_waterdiagnostic_inst%snw_rds_col            , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
          snw_rds_top        => b_waterdiagnostic_inst%snw_rds_top_col        , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer(col) [microns] 
@@ -451,7 +451,7 @@ contains
 
       ! Calculate column average snow depth
       do c = bounds%begc,bounds%endc
-         snowdp(c) = snow_depth(c) * frac_sno_eff(c)
+         snowdp(c) = snow_depth(c) * frac_sno_fluxes(c)
       end do
 
       ! Calculate snow internal temperature
@@ -553,8 +553,8 @@ contains
 
          ! t_grnd is weighted average of exposed soil and snow
          if (snl(c) < 0) then
-            t_grnd(c) = frac_sno_eff(c) * t_soisno(c,snl(c)+1) &
-                 + (1.0_r8 - frac_sno_eff(c)- frac_h2osfc(c)) * t_soisno(c,1) &
+            t_grnd(c) = frac_sno_fluxes(c) * t_soisno(c,snl(c)+1) &
+                 + (1.0_r8 - frac_sno_fluxes(c)- frac_h2osfc(c)) * t_soisno(c,1) &
                  + frac_h2osfc(c) * t_h2osfc(c)
          else
             t_grnd(c) = (1.0_r8 - frac_h2osfc(c)) * t_soisno(c,1) + frac_h2osfc(c) * t_h2osfc(c)

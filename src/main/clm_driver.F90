@@ -612,7 +612,7 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! update surface water fraction (this may modify frac_sno)
+       ! update surface water fraction (this may modify frac_sno_albedo)
        call UpdateFracH2oSfc(bounds_clump, &
             filter(nc)%num_soilc, filter(nc)%soilc, &
             water_inst)
@@ -1036,7 +1036,7 @@ contains
           l = col%landunit(c)
           if (lun%urbpoi(l)) then
              ! Urban landunit use Bonan 1996 (LSM Technical Note)
-             water_inst%waterdiagnosticbulk_inst%frac_sno_col(c) = &
+             water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(c) = &
                   min( water_inst%waterdiagnosticbulk_inst%snow_depth_col(c)/0.05_r8, 1._r8)
           end if
        end do

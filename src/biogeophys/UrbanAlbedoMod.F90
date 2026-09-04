@@ -126,7 +126,7 @@ contains
          canyon_hwr         => lun%canyon_hwr                       , & ! Input:  [real(r8) (:)   ]  ratio of building height to street width          
          wtroad_perv        => lun%wtroad_perv                      , & ! Input:  [real(r8) (:)   ]  weight of pervious road wrt total road            
          
-         frac_sno           => waterdiagnosticbulk_inst%frac_sno_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo           => waterdiagnosticbulk_inst%frac_sno_albedo_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
          
          alb_roof_dir       => urbanparams_inst%alb_roof_dir        , & ! Output: [real(r8) (:,:) ]  direct roof albedo                              
          alb_roof_dif       => urbanparams_inst%alb_roof_dif        , & ! Output: [real(r8) (:,:) ]  diffuse roof albedo                             
@@ -377,20 +377,20 @@ contains
             c = filter_urbanc_coszen_gt0(fc)
             l = col%landunit(c)
             if (ctype(c) == icol_roof) then    
-               alb_roof_dir_s(l,ib) = alb_roof_dir(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsnd_roof(l,ib)*frac_sno(c)
-               alb_roof_dif_s(l,ib) = alb_roof_dif(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsni_roof(l,ib)*frac_sno(c)
+               alb_roof_dir_s(l,ib) = alb_roof_dir(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsnd_roof(l,ib)*frac_sno_albedo(c)
+               alb_roof_dif_s(l,ib) = alb_roof_dif(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsni_roof(l,ib)*frac_sno_albedo(c)
             else if (ctype(c) == icol_road_imperv) then    
-               alb_improad_dir_s(l,ib) = alb_improad_dir(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsnd_improad(l,ib)*frac_sno(c)
-               alb_improad_dif_s(l,ib) = alb_improad_dif(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsni_improad(l,ib)*frac_sno(c)
+               alb_improad_dir_s(l,ib) = alb_improad_dir(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsnd_improad(l,ib)*frac_sno_albedo(c)
+               alb_improad_dif_s(l,ib) = alb_improad_dif(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsni_improad(l,ib)*frac_sno_albedo(c)
             else if (ctype(c) == icol_road_perv) then    
-               alb_perroad_dir_s(l,ib) = alb_perroad_dir(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsnd_perroad(l,ib)*frac_sno(c)
-               alb_perroad_dif_s(l,ib) = alb_perroad_dif(l,ib)*(1._r8-frac_sno(c))  &
-                    + albsni_perroad(l,ib)*frac_sno(c)
+               alb_perroad_dir_s(l,ib) = alb_perroad_dir(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsnd_perroad(l,ib)*frac_sno_albedo(c)
+               alb_perroad_dif_s(l,ib) = alb_perroad_dif(l,ib)*(1._r8-frac_sno_albedo(c))  &
+                    + albsni_perroad(l,ib)*frac_sno_albedo(c)
             end if
          end do
       end do
