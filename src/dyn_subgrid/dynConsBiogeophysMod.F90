@@ -88,25 +88,23 @@ contains
     ! calendar.
     !
     ! !USES:
-    use shr_const_mod  , only : SHR_CONST_CDAY
-    use abortutils     , only : endrun
-    use fileutils      , only : getavu, relavu
-    use clm_nlUtilsMod , only : find_nlgroup_name
-    use clm_varctl     , only : iulog
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    !
+    use shr_const_mod, only : SHR_CONST_CDAY
+    use shr_nl_mod   , only : shr_nl_find_group_name
+    use abortutils   , only : endrun
+    use clm_varctl   , only : iulog
+    use spmdMod      , only : masterproc, mpicom
+    use shr_mpi_mod  , only : shr_mpi_bcast
+
     ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
+    character(len=*), intent(in) :: NLFilename ! Namelist filename to read
+
     ! !LOCAL VARIABLES:
     ! temporary variable corresponding to the namelist variable:
     real(r8) :: dynbal_storage_residence_time ! residence time of the dynbal storage pools [years]
     ! other local variables:
-    integer :: nu_nml    ! unit for namelist file
-    integer :: nml_error ! namelist i/o error flag
-
-    character(len=*), parameter :: subname = 'dynConsBiogeophys_readnl'
+    integer :: ierr  ! error code
+    integer :: unitn ! unit for namelist file
+    character(len=*), parameter :: nml_name = 'dyn_cons_biogeophys_inparm'    ! MUST agree with name in namelist and read
     !-----------------------------------------------------------------------
 
     namelist /dyn_cons_biogeophys_inparm/ &
@@ -114,32 +112,30 @@ contains
 
     dynbal_storage_residence_time = 0._r8
 
+    ! Read in the namelist on the main task
     if (masterproc) then
-       nu_nml = getavu()
-       open( nu_nml, file=trim(NLFilename), status='old', iostat=nml_error )
-       call find_nlgroup_name(nu_nml, 'dyn_cons_biogeophys_inparm', status=nml_error)
-       if (nml_error == 0) then
-          read(nu_nml, nml=dyn_cons_biogeophys_inparm, iostat=nml_error)
-          if (nml_error /= 0) then
-             call endrun(msg='ERROR reading dyn_cons_biogeophys_inparm namelist'//errMsg(sourcefile, __LINE__))
+       open( newunit=unitn, file=trim(NLFilename), status='old', iostat=ierr )
+       call shr_nl_find_group_name(unitn, nml_name, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=dyn_cons_biogeophys_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nml_name//" namelist", file=sourcefile, line=__LINE__)
           end if
        else
-          call endrun(msg='ERROR finding dyn_cons_biogeophys_inparm namelist'//errMsg(sourcefile, __LINE__))
+          call endrun(msg="ERROR could NOT find "//nml_name//" namelist", file=sourcefile, line=__LINE__)
        end if
-       close(nu_nml)
-       call relavu( nu_nml )
-    endif
+       close( unitn )
+    end if
 
-    call shr_mpi_bcast (dynbal_storage_residence_time, mpicom)
+    ! Broadcast namelist values to all tasks
+    call shr_mpi_bcast( dynbal_storage_residence_time, mpicom )
 
-    ! Convert the residence time to a turnover rate. Note that we check for a valid
-    ! residence time before doing this conversion, since the conversion divides by the
-    ! residence time.
+    ! Convert the residence time to a turnover rate.
     if (dynbal_storage_residence_time <= 0._r8) then
-       write(iulog,*) 'ERROR: dynbal_storage_residence_time must be greater than 0'
-       write(iulog,*) 'Value given: ', dynbal_storage_residence_time
-       call endrun(msg='ERROR: dynbal_storage_residence_time must be greater than 0 '// &
-            errMsg(sourcefile, __LINE__))
+       write(iulog,*) "ERROR: dynbal_storage_residence_time must be greater than 0"
+       write(iulog,*) "Value given: ", dynbal_storage_residence_time
+       call endrun(msg="ERROR: dynbal_storage_residence_time must be greater than 0", &
+            file=sourcefile, line=__LINE__)
     end if
     dynbal_storage_turnover_rate = 1._r8 / &
          (dynbal_storage_residence_time * (get_average_days_per_year() * SHR_CONST_CDAY))
@@ -147,10 +143,10 @@ contains
     namelist_read = .true.
 
     if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) 'dyn_cons_biogeophys_inparm settings:'
+       write(iulog,*) " "
+       write(iulog,*) "dyn_cons_biogeophys_inparm settings:"
        write(iulog,nml=dyn_cons_biogeophys_inparm)
-       write(iulog,*) ' '
+       write(iulog,*) " "
     end if
 
   end subroutine dynConsBiogeophys_readnl
