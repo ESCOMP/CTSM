@@ -1028,7 +1028,7 @@ contains
     !-----------------------------------------------------------------------
 
     if ( .not. ReadNamelist )then
-       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       write(iulog,*)'IsBuildingHumidityEnabled called before urban namelist was read in'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     IsBuildingHumidityEnabled = building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON
@@ -1056,7 +1056,7 @@ contains
     !-----------------------------------------------------------------------
 
     if ( .not. ReadNamelist )then
-       write(iulog,*)'Testing on building_humidity_mode before urban namelist was read in'
+       write(iulog,*)'IsACDehumidificationEnabled called before urban namelist was read in'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
     IsACDehumidificationEnabled = building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY

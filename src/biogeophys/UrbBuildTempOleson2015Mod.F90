@@ -34,6 +34,9 @@ module UrbBuildTempOleson2015Mod
   ! !PUBLIC MEMBER FUNCTIONS:
   public  :: BuildingTemperature ! Calculation of interior building air temperature, inner 
                                  ! surface temperatures of walls and roof, and floor temperature
+  
+  ! !PRIVATE PARAMETERS:
+  real(r8), parameter :: ac_latent_error_thresh = 1.e-5_r8 ! Error threshold for the AC latent-energy consistency check [W/m2 of urban area]
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -215,7 +218,7 @@ contains
                                  hcv_floor, hcv_floor_enhanced, hcv_sunw, hcv_shdw, &
                                  em_roof_int, em_floor_int, em_sunw_int, em_shdw_int, &
                                  dz_floor, dens_floor, cp_floor, vent_ach, &
-                                 rh_building_max, hvap, rwat, cpwvap
+                                 rh_building_max, hvap, rwat, cpwvap, secsphr, pct_to_frac
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall
     use clm_varctl      , only : iulog
     use abortutils      , only : endrun
@@ -389,55 +392,53 @@ contains
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
        g = lun%gridcell(l)
-       if (urbpoi(l)) then
-         t_roof_inner_bef(l)  = t_roof_inner(l)
-         t_sunw_inner_bef(l)  = t_sunw_inner(l)
-         t_shdw_inner_bef(l)  = t_shdw_inner(l)
-         t_floor_bef(l)       = t_floor(l)
-         t_building_bef(l)    = t_building(l)
-         if (IsBuildingHumidityEnabled()) then
-            q_building_bef(l) = q_building(l)
-         end if
-         if (t_roof_inner_bef(l) .le. t_building_bef(l)) then
-           hcv_roofi(l) = hcv_roof_enhanced
-         else
-           hcv_roofi(l) = hcv_roof
-         end if
-         if (t_floor_bef(l) .ge. t_building_bef(l)) then
-           hcv_floori(l) = hcv_floor_enhanced
-         else
-           hcv_floori(l) = hcv_floor
-         end if
-         hcv_sunwi(l) = hcv_sunw
-         hcv_shdwi(l) = hcv_shdw
-         em_roofi(l)  = em_roof_int
-         em_sunwi(l)  = em_sunw_int
-         em_shdwi(l)  = em_shdw_int
-         em_floori(l) = em_floor_int
-         ! Concrete floor thickness (m)
-         dz_floori(l) = dz_floor
-         ! Concrete floor volumetric heat capacity (J m-3 K-1)
-         cp_floori(l) = cp_floor
-         ! Intermediate calculation for concrete floor (W m-2 K-1)
-         cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
-         if (IsBuildingHumidityEnabled()) then
-            ! Specific humidity (kg/kg) and vapor pressure (Pa) at saturation at current temperature and pressure
-            call QSat(t_building_bef(l), forc_pbot(g), qsat_building, es = esat_building)
-            ! Indoor vapor pressure (Pa) from saturation vapor pressure. The saturation ratio is capped at 1 (100% saturation)
-            ! so indoor vapor pressure does not exceed saturation vapor pressure
-            p_vapor = min(1._r8, q_building_bef(l) / qsat_building) * esat_building
-            ! Density (kg m-3) and specific heat capacity (J kg-1 K-1) of moist air at current temperature and pressure
-            rho_air(l) = (forc_pbot(g) - p_vapor) / (rair * t_building_bef(l)) &
-                 + p_vapor / (rwat * t_building_bef(l))
-            cp_air(l) = cpair + cpwvap * q_building_bef(l)
-         else
-            ! Density (kg m-3) and specific heat capacity (J kg-1 K-1) of dry air at current temperature and pressure
-            rho_air(l) = forc_pbot(g) / (rair*t_building_bef(l))
-            cp_air(l) = cpair
-         end if
-         ! Building height to building width ratio
-         building_hwr(l) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/wtlunit_roof(l)
+       t_roof_inner_bef(l)  = t_roof_inner(l)
+       t_sunw_inner_bef(l)  = t_sunw_inner(l)
+       t_shdw_inner_bef(l)  = t_shdw_inner(l)
+       t_floor_bef(l)       = t_floor(l)
+       t_building_bef(l)    = t_building(l)
+       if (IsBuildingHumidityEnabled()) then
+          q_building_bef(l) = q_building(l)
        end if
+       if (t_roof_inner_bef(l) .le. t_building_bef(l)) then
+         hcv_roofi(l) = hcv_roof_enhanced
+       else
+         hcv_roofi(l) = hcv_roof
+       end if
+       if (t_floor_bef(l) .ge. t_building_bef(l)) then
+         hcv_floori(l) = hcv_floor_enhanced
+       else
+         hcv_floori(l) = hcv_floor
+       end if
+       hcv_sunwi(l) = hcv_sunw
+       hcv_shdwi(l) = hcv_shdw
+       em_roofi(l)  = em_roof_int
+       em_sunwi(l)  = em_sunw_int
+       em_shdwi(l)  = em_shdw_int
+       em_floori(l) = em_floor_int
+       ! Concrete floor thickness (m)
+       dz_floori(l) = dz_floor
+       ! Concrete floor volumetric heat capacity (J m-3 K-1)
+       cp_floori(l) = cp_floor
+       ! Intermediate calculation for concrete floor (W m-2 K-1)
+       cv_floori(l) = (dz_floori(l) * cp_floori(l)) / dtime
+       if (IsBuildingHumidityEnabled()) then
+          ! Specific humidity (kg/kg) and vapor pressure (Pa) at saturation at current temperature and pressure
+          call QSat(t_building_bef(l), forc_pbot(g), qsat_building, es = esat_building)
+          ! Indoor vapor pressure (Pa) from saturation vapor pressure. The saturation ratio is capped at 1 (100% saturation)
+          ! so indoor vapor pressure does not exceed saturation vapor pressure
+          p_vapor = min(1._r8, q_building_bef(l) / qsat_building) * esat_building
+          ! Density (kg m-3) and specific heat capacity (J kg-1 K-1) of moist air at current temperature and pressure
+          rho_air(l) = (forc_pbot(g) - p_vapor) / (rair * t_building_bef(l)) &
+               + p_vapor / (rwat * t_building_bef(l))
+          cp_air(l) = cpair + cpwvap * q_building_bef(l)
+       else
+          ! Density (kg m-3) and specific heat capacity (J kg-1 K-1) of dry air at current temperature and pressure
+          rho_air(l) = forc_pbot(g) / (rair*t_building_bef(l))
+          cp_air(l) = cpair
+       end if
+       ! Building height to building width ratio
+       building_hwr(l) = canyon_hwr(l)*(1._r8-wtlunit_roof(l))/wtlunit_roof(l)
     end do
 
     ! Get terms from soil temperature equations to compute conduction flux
@@ -477,52 +478,48 @@ contains
     ! Calculate view factors
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       if (urbpoi(l)) then
 
-         vf_rf(l) = sqrt(1._r8 + building_hwr(l)**2._r8) - building_hwr(l)
-         vf_fr(l) = vf_rf(l)
+       vf_rf(l) = sqrt(1._r8 + building_hwr(l)**2._r8) - building_hwr(l)
+       vf_fr(l) = vf_rf(l)
 
-         ! This view factor implicitly converts from per unit wall area to per unit floor area
-         vf_wf(l)  = 0.5_r8*(1._r8 - vf_rf(l))
+       ! This view factor implicitly converts from per unit wall area to per unit floor area
+       vf_wf(l)  = 0.5_r8*(1._r8 - vf_rf(l))
 
-         vf_fw(l) = vf_wf(l)
+       vf_fw(l) = vf_wf(l)
 
-         vf_rw(l)  = vf_fw(l)
+       vf_rw(l)  = vf_fw(l)
 
-         ! This view factor implicitly converts from per unit wall area to per unit roof area
-         vf_wr(l)  = vf_wf(l)
+       ! This view factor implicitly converts from per unit wall area to per unit roof area
+       vf_wr(l)  = vf_wf(l)
 
-         vf_ww(l)  = 1._r8 - vf_rw(l) - vf_fw(l)
+       vf_ww(l)  = 1._r8 - vf_rw(l) - vf_fw(l)
 
-      end if
     end do
 
     ! error check -- make sure view factor sums to one for floor, wall, and roof
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       if (urbpoi(l)) then
 
-         sum = vf_rf(l) + 2._r8*vf_wf(l)
-         if (abs(sum-1._r8) > 1.e-06_r8 ) then
-            write (iulog,*) 'urban floor view factor error',sum
-            write (iulog,*) 'clm model is stopping'
-            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         endif
-         sum = vf_rw(l) + vf_fw(l) + vf_ww(l)
-         if (abs(sum-1._r8) > 1.e-06_r8 ) then
-            write (iulog,*) 'urban wall view factor error',sum
-            write (iulog,*) 'clm model is stopping'
-            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         endif
-         sum = vf_fr(l) + vf_wr(l) + vf_wr(l)
-         if (abs(sum-1._r8) > 1.e-06_r8 ) then
-            write (iulog,*) 'urban roof view factor error',sum
-            write (iulog,*) 'clm model is stopping'
-            call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         endif
-
+       sum = vf_rf(l) + 2._r8*vf_wf(l)
+       if (abs(sum-1._r8) > 1.e-06_r8 ) then
+          write (iulog,*) 'urban floor view factor error',sum
+          write (iulog,*) 'clm model is stopping'
+          call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
        endif
+       sum = vf_rw(l) + vf_fw(l) + vf_ww(l)
+       if (abs(sum-1._r8) > 1.e-06_r8 ) then
+          write (iulog,*) 'urban wall view factor error',sum
+          write (iulog,*) 'clm model is stopping'
+          call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       endif
+       sum = vf_fr(l) + vf_wr(l) + vf_wr(l)
+       if (abs(sum-1._r8) > 1.e-06_r8 ) then
+          write (iulog,*) 'urban roof view factor error',sum
+          write (iulog,*) 'clm model is stopping'
+          call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       endif
+
     end do
 
     n = neq
@@ -532,458 +529,452 @@ contains
 
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       if (urbpoi(l)) then
 
-         ! ROOF
-         a(1,1) =   0.5_r8*hcv_roofi(l) &
-                  + 0.5_r8*tk_roof_innerl(l)/(zi_roof_innerl(l) - z_roof_innerl(l)) &
-                  + 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8 &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l)
+       ! ROOF
+       a(1,1) =   0.5_r8*hcv_roofi(l) &
+                + 0.5_r8*tk_roof_innerl(l)/(zi_roof_innerl(l) - z_roof_innerl(l)) &
+                + 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8 &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l)
 
-         a(1,2) = - 4._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)
+       a(1,2) = - 4._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)
 
-         a(1,3) = - 4._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)
+       a(1,3) = - 4._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)
 
-         a(1,4) = - 4._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l)
+       a(1,4) = - 4._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l)
 
-         a(1,5) = - 0.5_r8*hcv_roofi(l)
+       a(1,5) = - 0.5_r8*hcv_roofi(l)
 
-         result(1) =   0.5_r8*tk_roof_innerl(l)*t_roof_innerl(l)/(zi_roof_innerl(l) - z_roof_innerl(l)) &
-                     - 0.5_r8*tk_roof_innerl(l)*(t_roof_inner_bef(l)-t_roof_innerl_bef(l))/(zi_roof_innerl(l) &
-                     - z_roof_innerl(l)) &
-                     - 3._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l) &
-                     - 3._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l) &
-                     - 3._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l) &
-                     + 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8 &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                     - 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l))
+       result(1) =   0.5_r8*tk_roof_innerl(l)*t_roof_innerl(l)/(zi_roof_innerl(l) - z_roof_innerl(l)) &
+                   - 0.5_r8*tk_roof_innerl(l)*(t_roof_inner_bef(l)-t_roof_innerl_bef(l))/(zi_roof_innerl(l) &
+                   - z_roof_innerl(l)) &
+                   - 3._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l) &
+                   - 3._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l) &
+                   - 3._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l) &
+                   + 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8 &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                   - 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l))
 
-         ! SUNWALL
-         a(2,1) = - 4._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)
+       ! SUNWALL
+       a(2,1) = - 4._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)
 
-         a(2,2) =   0.5_r8*hcv_sunwi(l)*building_hwr(l) &
-                  + 0.5_r8*tk_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
-                  + 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8 &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)
+       a(2,2) =   0.5_r8*hcv_sunwi(l)*building_hwr(l) &
+                + 0.5_r8*tk_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
+                + 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8 &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)
 
-         a(2,3) = - 4._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)
+       a(2,3) = - 4._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)
 
-         a(2,4) = - 4._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l)
-         a(2,5) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
+       a(2,4) = - 4._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l)
+       a(2,5) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
 
-         result(2) =   0.5_r8*tk_sunw_innerl(l)*t_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
-                     - 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l)-t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
-                     - z_sunw_innerl(l))*building_hwr(l) &
-                     - 3._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
-                     - 3._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l) &
-                     - 3._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
-                     + 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8 &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                     - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
+       result(2) =   0.5_r8*tk_sunw_innerl(l)*t_sunw_innerl(l)/(zi_sunw_innerl(l) - z_sunw_innerl(l))*building_hwr(l) &
+                   - 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l)-t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
+                   - z_sunw_innerl(l))*building_hwr(l) &
+                   - 3._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
+                   - 3._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l) &
+                   - 3._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
+                   + 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8 &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                   - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
 
-         ! SHADEWALL
-         a(3,1) = - 4._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)
+       ! SHADEWALL
+       a(3,1) = - 4._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)
 
-         a(3,2) = - 4._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)
+       a(3,2) = - 4._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)
 
-         a(3,3) =   0.5_r8*hcv_shdwi(l)*building_hwr(l) &
-                  + 0.5_r8*tk_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
-                  + 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8 &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)
+       a(3,3) =   0.5_r8*hcv_shdwi(l)*building_hwr(l) &
+                + 0.5_r8*tk_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
+                + 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8 &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)
 
-         a(3,4) = - 4._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l)
+       a(3,4) = - 4._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l)
 
-         a(3,5) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
+       a(3,5) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
 
-         result(3) =   0.5_r8*tk_shdw_innerl(l)*t_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
-                     - 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l)-t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
-                     - z_shdw_innerl(l))*building_hwr(l) &
-                     - 3._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
-                     - 3._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l) &
-                     - 3._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
-                     + 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8 &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                     - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
+       result(3) =   0.5_r8*tk_shdw_innerl(l)*t_shdw_innerl(l)/(zi_shdw_innerl(l) - z_shdw_innerl(l))*building_hwr(l) &
+                   - 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l)-t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
+                   - z_shdw_innerl(l))*building_hwr(l) &
+                   - 3._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
+                   - 3._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l) &
+                   - 3._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
+                   + 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8 &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                   - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l)
 
-         ! FLOOR
-         a(4,1) = - 4._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                  - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l)
+       ! FLOOR
+       a(4,1) = - 4._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l)
 
-         a(4,2) = - 4._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                  - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)
+       a(4,2) = - 4._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)
 
-         a(4,3) = - 4._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                  - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l)
+       a(4,3) = - 4._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l)
 
-         a(4,4) =   (cv_floori(l) + 0.5_r8*hcv_floori(l)) &
-                  + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8 &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                  - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l)
+       a(4,4) =   (cv_floori(l) + 0.5_r8*hcv_floori(l)) &
+                + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8 &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l)
 
-         a(4,5) = - 0.5_r8*hcv_floori(l)
+       a(4,5) = - 0.5_r8*hcv_floori(l)
 
-         result(4) =   cv_floori(l)*t_floor_bef(l) &
-                     - 3._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l) &
-                     - 3._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l) &
-                     - 3._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l) &
-                     + 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8 &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                     - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                     - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                     - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                     - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                     - 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
+       result(4) =   cv_floori(l)*t_floor_bef(l) &
+                   - 3._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l) &
+                   - 3._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l) &
+                   - 3._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l) &
+                   + 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8 &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                   - 3._r8*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                   - 3._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                   - 3._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                   - 3._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                   - 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
 
-         ! Building air temperature
-         a(5,1) = - 0.5_r8*hcv_roofi(l)
-         a(5,2) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
+       ! Building air temperature
+       a(5,1) = - 0.5_r8*hcv_roofi(l)
+       a(5,2) = - 0.5_r8*hcv_sunwi(l)*building_hwr(l)
 
-         a(5,3) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
+       a(5,3) = - 0.5_r8*hcv_shdwi(l)*building_hwr(l)
 
-         a(5,4) = - 0.5_r8*hcv_floori(l)
+       a(5,4) = - 0.5_r8*hcv_floori(l)
 
-         a(5,5) =  ((ht_roof(l)*rho_air(l)*cp_air(l))/dtime) + &
-                   ((ht_roof(l)*vent_ach)/3600._r8)*rho_air(l)*cp_air(l) + &
-                   0.5_r8*hcv_roofi(l) + &
-                   0.5_r8*hcv_sunwi(l)*building_hwr(l) + &
-                   0.5_r8*hcv_shdwi(l)*building_hwr(l) + &
-                   0.5_r8*hcv_floori(l)
+       a(5,5) =  ((ht_roof(l)*rho_air(l)*cp_air(l))/dtime) + &
+                 ((ht_roof(l)*vent_ach)/secsphr)*rho_air(l)*cp_air(l) + &
+                 0.5_r8*hcv_roofi(l) + &
+                 0.5_r8*hcv_sunwi(l)*building_hwr(l) + &
+                 0.5_r8*hcv_shdwi(l)*building_hwr(l) + &
+                 0.5_r8*hcv_floori(l)
 
-         result(5) = (ht_roof(l)*rho_air(l)*cp_air(l)/dtime)*t_building_bef(l) &
-                      + ((ht_roof(l)*vent_ach)/3600._r8)*rho_air(l)*cp_air(l)*taf(l) &
-                      + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
-                      + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
-                      + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
-                      + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
+       result(5) = (ht_roof(l)*rho_air(l)*cp_air(l)/dtime)*t_building_bef(l) &
+                    + ((ht_roof(l)*vent_ach)/secsphr)*rho_air(l)*cp_air(l)*taf(l) &
+                    + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
+                    + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                    + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                    + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
 
-         ! Solve equations
-         call dgesv(n, nrhs, a, lda, ipiv, result, ldb, info)
+       ! Solve equations
+       call dgesv(n, nrhs, a, lda, ipiv, result, ldb, info)
 
-         ! If dgesv fails, abort 
-         if (info /= 0) then
-           write(iulog,*)'fl: ',fl
-           write(iulog,*)'l: ',l
-           write(iulog,*)'dgesv info: ',info
-           write (iulog,*) 'dgesv error'
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
-         ! Assign new temperatures
-         t_roof_inner(l)  = result(1)
-         t_sunw_inner(l)  = result(2)
-         t_shdw_inner(l)  = result(3)
-         t_floor(l) = result(4)
-         t_building(l)    = result(5)
+       ! If dgesv fails, abort
+       if (info /= 0) then
+         write(iulog,*)'fl: ',fl
+         write(iulog,*)'l: ',l
+         write(iulog,*)'dgesv info: ',info
+         write (iulog,*) 'dgesv error'
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
        end if
+       ! Assign new temperatures
+       t_roof_inner(l)  = result(1)
+       t_sunw_inner(l)  = result(2)
+       t_shdw_inner(l)  = result(3)
+       t_floor(l) = result(4)
+       t_building(l)    = result(5)
     end do
 
     ! Update indoor specific humidity assuming well-mixed indoor air
     if (IsBuildingHumidityEnabled()) then
        do fl = 1,num_urbanl
           l = filter_urbanl(fl)
-          if (urbpoi(l)) then
-             q_building(l) = qaf(l) * (vent_ach/3600._r8 * dtime) &
-                  + q_building_bef(l) * (1 - vent_ach/3600._r8 * dtime)
-          end if
+          q_building(l) = qaf(l) * (vent_ach/secsphr * dtime) &
+               + q_building_bef(l) * (1 - vent_ach/secsphr * dtime)
        end do
     end if
 
     ! Energy balance checks
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
-       if (urbpoi(l)) then
-         qrd_roof(l) = - em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l) &
-                       - 4._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l) &
-                       - 4._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l) &
-                       - 4._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(t_floor(l) - t_floor_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       + em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8 &
-                       + 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*(t_roof_inner(l) - t_roof_inner_bef(l)) 
+       qrd_roof(l) = - em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wr(l) &
+                     - 4._r8*em_roofi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wr(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wr(l) &
+                     - 4._r8*em_roofi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wr(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fr(l) &
+                     - 4._r8*em_roofi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fr(l)*(t_floor(l) - t_floor_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(1._r8-em_floori(l))*vf_fr(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wr(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wr(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     + em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8 &
+                     + 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*(t_roof_inner(l) - t_roof_inner_bef(l))
 
-         qrd_sunw(l) = - em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
-                       - 4._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)  &
-                       - 4._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
-                       - 4._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(t_floor(l) - t_floor_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       + em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8 &
-                       + 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*(t_sunw_inner(l) - t_sunw_inner_bef(l))
+       qrd_sunw(l) = - em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
+                     - 4._r8*em_sunwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_ww(l)  &
+                     - 4._r8*em_sunwi(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_ww(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
+                     - 4._r8*em_sunwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(t_floor(l) - t_floor_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_shdwi(l))*vf_ww(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     + em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8 &
+                     + 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*(t_sunw_inner(l) - t_sunw_inner_bef(l))
 
-         qrd_shdw(l) = - em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
-                       - 4._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l) &
-                       - 4._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
-                       - 4._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(t_floor(l) - t_floor_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_shdw_inner(l) &
-                       - t_shdw_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_sunw_inner(l) &
-                       - t_sunw_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
-                       - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_roof_inner(l) &
-                       - t_roof_inner_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
-                       - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_floor(l) &
-                       - t_floor_bef(l)) &
-                       + em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8 &
-                       + 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*(t_shdw_inner(l) - t_shdw_inner_bef(l))
+       qrd_shdw(l) = - em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rw(l) &
+                     - 4._r8*em_shdwi(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rw(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_ww(l) &
+                     - 4._r8*em_shdwi(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_ww(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**4._r8*vf_fw(l) &
+                     - 4._r8*em_shdwi(l)*em_floori(l)*sb*t_floor_bef(l)**3._r8*vf_fw(l)*(t_floor(l) - t_floor_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_shdw_inner(l) &
+                     - t_shdw_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_sunw_inner(l) &
+                     - t_sunw_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l) &
+                     - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rf(l)*(1._r8-em_floori(l))*vf_fw(l)*(t_roof_inner(l) &
+                     - t_roof_inner_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rw(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l) &
+                     - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_sunwi(l))*vf_ww(l)*(t_floor(l) &
+                     - t_floor_bef(l)) &
+                     + em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8 &
+                     + 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*(t_shdw_inner(l) - t_shdw_inner_bef(l))
 
-         qrd_floor(l) = - em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l) &
-                        - 4._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(t_roof_inner(l) &
-                        - t_roof_inner_bef(l)) &
-                        - em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l) &
-                        - 4._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(t_sunw_inner(l) &
-                        - t_sunw_inner_bef(l)) &
-                        - em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l) &
-                        - 4._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(t_shdw_inner(l) &
-                        - t_shdw_inner_bef(l)) &
-                        - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                        - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_floor(l) &
-                        - t_floor_bef(l)) &
-                        - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                        - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_floor(l) &
-                        - t_floor_bef(l)) &
-                        - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                        - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_floor(l) &
-                        - t_floor_bef(l)) &
-                        - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                        - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_sunw_inner(l) &
-                        - t_sunw_inner_bef(l)) &
-                        - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                        - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_sunw_inner(l) &
-                        - t_sunw_inner_bef(l)) &
-                        - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
-                        - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_shdw_inner(l) &
-                        - t_shdw_inner_bef(l)) &
-                        - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                        - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_shdw_inner(l) &
-                        - t_shdw_inner_bef(l)) &
-                        - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
-                        - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_roof_inner(l) &
-                        - t_roof_inner_bef(l)) &
-                        - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
-                        - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_roof_inner(l) &
-                        - t_roof_inner_bef(l)) &
-                        + em_floori(l)*sb*t_floor_bef(l)**4._r8 &
-                        + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*(t_floor(l) - t_floor_bef(l))
+       qrd_floor(l) = - em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8*vf_rf(l) &
+                      - 4._r8*em_floori(l)*em_roofi(l)*sb*t_roof_inner_bef(l)**3._r8*vf_rf(l)*(t_roof_inner(l) &
+                      - t_roof_inner_bef(l)) &
+                      - em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8*vf_wf(l) &
+                      - 4._r8*em_floori(l)*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3._r8*vf_wf(l)*(t_sunw_inner(l) &
+                      - t_sunw_inner_bef(l)) &
+                      - em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8*vf_wf(l) &
+                      - 4._r8*em_floori(l)*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3._r8*vf_wf(l)*(t_shdw_inner(l) &
+                      - t_shdw_inner_bef(l)) &
+                      - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                      - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_floor(l) &
+                      - t_floor_bef(l)) &
+                      - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                      - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_floor(l) &
+                      - t_floor_bef(l)) &
+                      - (em_floori(l)*sb*t_floor_bef(l)**4._r8)*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                      - 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*vf_fw(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_floor(l) &
+                      - t_floor_bef(l)) &
+                      - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                      - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_sunw_inner(l) &
+                      - t_sunw_inner_bef(l)) &
+                      - (em_sunwi(l)*sb*t_sunw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                      - 4._r8*em_sunwi(l)*sb*t_sunw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_sunw_inner(l) &
+                      - t_sunw_inner_bef(l)) &
+                      - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l) &
+                      - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_wr(l)*(1._r8-em_roofi(l))*vf_rf(l)*(t_shdw_inner(l) &
+                      - t_shdw_inner_bef(l)) &
+                      - (em_shdwi(l)*sb*t_shdw_inner_bef(l)**4._r8)*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                      - 4._r8*em_shdwi(l)*sb*t_shdw_inner_bef(l)**3.*vf_ww(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_shdw_inner(l) &
+                      - t_shdw_inner_bef(l)) &
+                      - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l) &
+                      - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_sunwi(l))*vf_wf(l)*(t_roof_inner(l) &
+                      - t_roof_inner_bef(l)) &
+                      - (em_roofi(l)*sb*t_roof_inner_bef(l)**4._r8)*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l) &
+                      - 4._r8*em_roofi(l)*sb*t_roof_inner_bef(l)**3.*vf_rw(l)*(1._r8-em_shdwi(l))*vf_wf(l)*(t_roof_inner(l) &
+                      - t_roof_inner_bef(l)) &
+                      + em_floori(l)*sb*t_floor_bef(l)**4._r8 &
+                      + 4._r8*em_floori(l)*sb*t_floor_bef(l)**3.*(t_floor(l) - t_floor_bef(l))
 
-         qrd_building(l) = qrd_roof(l) + qrd_sunw(l) + qrd_shdw(l) + qrd_floor(l)
+       qrd_building(l) = qrd_roof(l) + qrd_sunw(l) + qrd_shdw(l) + qrd_floor(l)
 
-         if (abs(qrd_building(l)) > .10_r8 ) then
-           write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       if (abs(qrd_building(l)) > .10_r8 ) then
+         write (iulog,*) 'urban inside building net longwave radiation balance error ',qrd_building(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         qcv_roof(l) = 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) &
-                       - t_building_bef(l))
-         qcd_roof(l) = 0.5_r8*tk_roof_innerl(l)*(t_roof_inner(l) - t_roof_innerl(l))/(zi_roof_innerl(l) - z_roof_innerl(l))  &
-                       + 0.5_r8*tk_roof_innerl(l)*(t_roof_inner_bef(l) - t_roof_innerl_bef(l))/(zi_roof_innerl(l) &
-                       - z_roof_innerl(l))
-         enrgy_bal_roof(l) = qrd_roof(l) + qcv_roof(l) + qcd_roof(l)
-         if (abs(enrgy_bal_roof(l)) > .10_r8 ) then
-           write (iulog,*) 'urban inside roof energy balance error ',enrgy_bal_roof(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       qcv_roof(l) = 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) + 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) &
+                     - t_building_bef(l))
+       qcd_roof(l) = 0.5_r8*tk_roof_innerl(l)*(t_roof_inner(l) - t_roof_innerl(l))/(zi_roof_innerl(l) - z_roof_innerl(l))  &
+                     + 0.5_r8*tk_roof_innerl(l)*(t_roof_inner_bef(l) - t_roof_innerl_bef(l))/(zi_roof_innerl(l) &
+                     - z_roof_innerl(l))
+       enrgy_bal_roof(l) = qrd_roof(l) + qcv_roof(l) + qcd_roof(l)
+       if (abs(enrgy_bal_roof(l)) > .10_r8 ) then
+         write (iulog,*) 'urban inside roof energy balance error ',enrgy_bal_roof(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         qcv_sunw(l) = 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l)) + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) &
-                       - t_building_bef(l))
-         qcd_sunw(l) = 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner(l) - t_sunw_innerl(l))/(zi_sunw_innerl(l) - z_sunw_innerl(l))  &
-                       + 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l) - t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
-                       - z_sunw_innerl(l))
-         enrgy_bal_sunw(l) = qrd_sunw(l) + qcv_sunw(l)*building_hwr(l) + qcd_sunw(l)*building_hwr(l)
-         if (abs(enrgy_bal_sunw(l)) > .10_r8 ) then
-           write (iulog,*) 'urban inside sunwall energy balance error ',enrgy_bal_sunw(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       qcv_sunw(l) = 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l)) + 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) &
+                     - t_building_bef(l))
+       qcd_sunw(l) = 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner(l) - t_sunw_innerl(l))/(zi_sunw_innerl(l) - z_sunw_innerl(l))  &
+                     + 0.5_r8*tk_sunw_innerl(l)*(t_sunw_inner_bef(l) - t_sunw_innerl_bef(l))/(zi_sunw_innerl(l) &
+                     - z_sunw_innerl(l))
+       enrgy_bal_sunw(l) = qrd_sunw(l) + qcv_sunw(l)*building_hwr(l) + qcd_sunw(l)*building_hwr(l)
+       if (abs(enrgy_bal_sunw(l)) > .10_r8 ) then
+         write (iulog,*) 'urban inside sunwall energy balance error ',enrgy_bal_sunw(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         qcv_shdw(l) = 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l)) + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) &
-                       - t_building_bef(l))
-         qcd_shdw(l) = 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner(l) - t_shdw_innerl(l))/(zi_shdw_innerl(l) - z_shdw_innerl(l))  &
-                       + 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l) - t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
-                       - z_shdw_innerl(l))
-         enrgy_bal_shdw(l) = qrd_shdw(l) + qcv_shdw(l)*building_hwr(l) + qcd_shdw(l)*building_hwr(l)
-         if (abs(enrgy_bal_shdw(l)) > .10_r8 ) then
-           write (iulog,*) 'urban inside shadewall energy balance error ',enrgy_bal_shdw(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       qcv_shdw(l) = 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l)) + 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) &
+                     - t_building_bef(l))
+       qcd_shdw(l) = 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner(l) - t_shdw_innerl(l))/(zi_shdw_innerl(l) - z_shdw_innerl(l))  &
+                     + 0.5_r8*tk_shdw_innerl(l)*(t_shdw_inner_bef(l) - t_shdw_innerl_bef(l))/(zi_shdw_innerl(l) &
+                     - z_shdw_innerl(l))
+       enrgy_bal_shdw(l) = qrd_shdw(l) + qcv_shdw(l)*building_hwr(l) + qcd_shdw(l)*building_hwr(l)
+       if (abs(enrgy_bal_shdw(l)) > .10_r8 ) then
+         write (iulog,*) 'urban inside shadewall energy balance error ',enrgy_bal_shdw(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         qcv_floor(l) = 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) &
-                        - t_building_bef(l))
-         qcd_floor(l) = cv_floori(l)*(t_floor(l) - t_floor_bef(l))
-         enrgy_bal_floor(l) = qrd_floor(l) + qcv_floor(l) + qcd_floor(l)
-         if (abs(enrgy_bal_floor(l)) > .10_r8 ) then
-           write (iulog,*) 'urban inside floor energy balance error ',enrgy_bal_floor(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       qcv_floor(l) = 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) + 0.5_r8*hcv_floori(l)*(t_floor_bef(l) &
+                      - t_building_bef(l))
+       qcd_floor(l) = cv_floori(l)*(t_floor(l) - t_floor_bef(l))
+       enrgy_bal_floor(l) = qrd_floor(l) + qcv_floor(l) + qcd_floor(l)
+       if (abs(enrgy_bal_floor(l)) > .10_r8 ) then
+         write (iulog,*) 'urban inside floor energy balance error ',enrgy_bal_floor(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         enrgy_bal_buildair(l) = (ht_roof(l)*rho_air(l)*cp_air(l)/dtime)*(t_building(l) - t_building_bef(l)) &
-                                 - ht_roof(l)*(vent_ach/3600._r8)*rho_air(l)*cp_air(l)*(taf(l) - t_building(l)) &
-                                 - 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) &
-                                 - 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
-                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l))*building_hwr(l) &
-                                 - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
-                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l))*building_hwr(l) &
-                                 - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
-                                 - 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) &
-                                 - 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
-         if (abs(enrgy_bal_buildair(l)) > .10_r8 ) then
-           write (iulog,*) 'urban building air energy balance error ',enrgy_bal_buildair(l)
-           write (iulog,*) 'clm model is stopping'
-           call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
-         end if
+       enrgy_bal_buildair(l) = (ht_roof(l)*rho_air(l)*cp_air(l)/dtime)*(t_building(l) - t_building_bef(l)) &
+                               - ht_roof(l)*(vent_ach/secsphr)*rho_air(l)*cp_air(l)*(taf(l) - t_building(l)) &
+                               - 0.5_r8*hcv_roofi(l)*(t_roof_inner(l) - t_building(l)) &
+                               - 0.5_r8*hcv_roofi(l)*(t_roof_inner_bef(l) - t_building_bef(l)) &
+                               - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner(l) - t_building(l))*building_hwr(l) &
+                               - 0.5_r8*hcv_sunwi(l)*(t_sunw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                               - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner(l) - t_building(l))*building_hwr(l) &
+                               - 0.5_r8*hcv_shdwi(l)*(t_shdw_inner_bef(l) - t_building_bef(l))*building_hwr(l) &
+                               - 0.5_r8*hcv_floori(l)*(t_floor(l) - t_building(l)) &
+                               - 0.5_r8*hcv_floori(l)*(t_floor_bef(l) - t_building_bef(l))
+       if (abs(enrgy_bal_buildair(l)) > .10_r8 ) then
+         write (iulog,*) 'urban building air energy balance error ',enrgy_bal_buildair(l)
+         write (iulog,*) 'clm model is stopping'
+         call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
+       end if
 
-         ! Sensible and latent heat flux (if indoor humidity is prognosed) from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
-         ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
-         ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
-         ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
-         ! of the urban landunit.
-         if (IsBuildingHumidityEnabled()) then
-            eflx_ventilation(l) = wtlunit_roof(l) * ( &
-                 - ht_roof(l) * (vent_ach/3600._r8) * rho_air(l) * cp_air(l) * (taf(l) - t_building(l)) &
-                 - ht_roof(l) * (vent_ach/3600._r8) * rho_air(l) * hvap * (qaf(l) - q_building(l)) )
-         else
-            eflx_ventilation(l) = wtlunit_roof(l) * ( - ht_roof(l)*(vent_ach/3600._r8) &
-                 * rho_air(l) * cpair * (taf(l) - t_building(l)) )
-         end if
+       ! Sensible and latent heat flux (if indoor humidity is prognosed) from ventilation. It is added as a flux to the canyon floor in SoilTemperatureMod.
+       ! Note that we multiply it here by wtlunit_roof which converts it from W/m2 of building area to W/m2
+       ! of urban area. eflx_urban_ac and eflx_urban_heat are treated similarly below. This flux is balanced
+       ! by an equal and opposite flux into/out of the building and so has a net effect of zero on the energy balance
+       ! of the urban landunit.
+       if (IsBuildingHumidityEnabled()) then
+          eflx_ventilation(l) = wtlunit_roof(l) * ( &
+               - ht_roof(l) * (vent_ach/secsphr) * rho_air(l) * cp_air(l) * (taf(l) - t_building(l)) &
+               - ht_roof(l) * (vent_ach/secsphr) * rho_air(l) * hvap * (qaf(l) - q_building(l)) )
+       else
+          eflx_ventilation(l) = wtlunit_roof(l) * ( &
+               - ht_roof(l) * (vent_ach/secsphr) * rho_air(l) * cpair * (taf(l) - t_building(l)) )
        end if
     end do
 
@@ -996,90 +987,84 @@ contains
     do fl = 1,num_urbanl
        l = filter_urbanl(fl)
        g = lun%gridcell(l)
-       if (urbpoi(l)) then
-          if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
-            t_building_bef_hac(l) = t_building(l)
+       if_hac_on: if (trim(urban_hac) == urban_hac_on .or. trim(urban_hac) == urban_wasteheat_on) then
+         t_building_bef_hac(l) = t_building(l)
 !           rho_dair(l) = pstd / (rair*t_building(l))
-            if (IsACDehumidificationEnabled()) then
-               q_building_bef_hac(l) = q_building(l)
-               ! Convert maximum indoor relative humidity to maximum specific humidity
-               ! at the current indoor temperature and pressure.
-               call QSat(t_building_bef_hac(l), forc_pbot(g), qsat_building_max)
-               q_building_max = rh_building_max / 100._r8 * qsat_building_max
-            end if
+         if (IsACDehumidificationEnabled()) then
+            q_building_bef_hac(l) = q_building(l)
+            ! Convert maximum indoor relative humidity to maximum specific humidity
+            ! at the current indoor temperature and pressure.
+            call QSat(t_building_bef_hac(l), forc_pbot(g), qsat_building_max)
+            q_building_max = rh_building_max * pct_to_frac * qsat_building_max
+         end if
 
-            if (t_building_bef_hac(l) > t_building_max(l)) then
-              if (urban_explicit_ac) then   ! use explicit ac adoption rate parameterization scheme:
+         if_temp_control: if (t_building_bef_hac(l) > t_building_max(l)) then
+           if_explicit_ac: if (urban_explicit_ac) then   ! use explicit ac adoption rate parameterization scheme:
                 
-                ! Sensible heat component of AC
-                ! Here, t_building_max is the AC saturation setpoint
-                eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_max(l) &
-                                     - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
-                t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
-                              * dtime / (ht_roof(l) * rho_air(l) * cp_air(l) * wtlunit_roof(l))
-                if (IsACDehumidificationEnabled()) then
-                  ! Apply the AC adoption rate and assign to the AC sensible heat flux in preparation for later calculations
-                   eflx_urban_ac_sen(l) = p_ac(l) * eflx_urban_ac_sat(l)
-                end if
-                
+             ! Sensible heat component of AC
+             ! Here, t_building_max is the AC saturation setpoint
+             eflx_urban_ac_sat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_max(l) &
+                                  - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
+             t_building(l) = t_building_max(l) + ( 1._r8 - p_ac(l) ) * eflx_urban_ac_sat(l) &
+                           * dtime / (ht_roof(l) * rho_air(l) * cp_air(l) * wtlunit_roof(l))
+             if_dehumidification: if (IsACDehumidificationEnabled()) then
+                ! Save sensible AC flux at actual adoption for URBAN_AC_SEN history output
+                ! and the condensate/latent-energy consistency check, before adding latent demand.
+                eflx_urban_ac_sen(l) = p_ac(l) * eflx_urban_ac_sat(l)
                 ! Latent heat component of AC
-                if (IsACDehumidificationEnabled()) then
-                   if (q_building_bef_hac(l) > q_building_max) then
-                      ! Calculate latent heat flux needed to lower indoor specific humidity to q_building_max at saturated AC adoption
-                      eflx_urban_ac_sat_lat(l) = wtlunit_roof(l) * abs( &
-                           (ht_roof(l) * rho_air(l) * hvap / dtime) * q_building_max &
-                           - (ht_roof(l) * rho_air(l) * hvap / dtime) * q_building_bef_hac(l) )
-                      ! Add to the sensible heat component calculated previously
-                      eflx_urban_ac_sat(l) = eflx_urban_ac_sat(l) + eflx_urban_ac_sat_lat(l)
-                      ! Reset q_building based on actual moisture removed at the actual AC adoption rate
-                      q_building(l) = q_building_max + (1._r8 - p_ac(l)) * eflx_urban_ac_sat_lat(l) &
-                           * dtime / (ht_roof(l) * rho_air(l) * hvap * wtlunit_roof(l))
-                   end if
+                if (q_building_bef_hac(l) > q_building_max) then
+                   ! Calculate latent heat flux needed to lower indoor specific humidity to q_building_max at saturated AC adoption
+                   eflx_urban_ac_sat_lat(l) = wtlunit_roof(l) * abs( &
+                        (ht_roof(l) * rho_air(l) * hvap / dtime) * q_building_max &
+                        - (ht_roof(l) * rho_air(l) * hvap / dtime) * q_building_bef_hac(l) )
+                   ! Add to the sensible heat component calculated previously
+                   eflx_urban_ac_sat(l) = eflx_urban_ac_sat(l) + eflx_urban_ac_sat_lat(l)
+                   ! Reset q_building based on actual moisture removed at the actual AC adoption rate
+                   q_building(l) = q_building_max + (1._r8 - p_ac(l)) * eflx_urban_ac_sat_lat(l) &
+                        * dtime / (ht_roof(l) * rho_air(l) * hvap * wtlunit_roof(l))
                 end if
-                eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
-              else
-                t_building(l) = t_building_max(l)
-                eflx_urban_ac(l) = wtlunit_roof(l) * abs( &
-                     (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building(l) &
-                     - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
-                if (IsACDehumidificationEnabled()) then
-                   eflx_urban_ac_sen(l) = eflx_urban_ac(l)
-                end if
-              end if
+             end if if_dehumidification
+             eflx_urban_ac(l) = p_ac(l) * eflx_urban_ac_sat(l)
+           else
+             t_building(l) = t_building_max(l)
+             eflx_urban_ac(l) = wtlunit_roof(l) * abs( &
+                  (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building(l) &
+                  - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
+           end if if_explicit_ac
 
-            else if (t_building_bef_hac(l) < t_building_min(l)) then
-              ! Humidification during urban heating is not implemented.
-              t_building(l) = t_building_min(l)
-              eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building(l) &
-                                   - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
-            else
-              if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
-              eflx_urban_ac(l) = 0._r8
-              eflx_urban_heat(l) = 0._r8
-            end if
+         else if (t_building_bef_hac(l) < t_building_min(l)) then
+           ! Humidification during urban heating is not implemented.
+           t_building(l) = t_building_min(l)
+           eflx_urban_heat(l) = wtlunit_roof(l) * abs( (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building(l) &
+                                - (ht_roof(l) * rho_air(l) * cp_air(l) / dtime) * t_building_bef_hac(l) )
+         else
+           eflx_urban_ac(l) = 0._r8
+           eflx_urban_heat(l) = 0._r8
+           if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
+         end if if_temp_control
 
-          else
-            if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
-            eflx_urban_ac(l) = 0._r8
-            eflx_urban_heat(l) = 0._r8
+       else
+         eflx_urban_ac(l) = 0._r8
+         eflx_urban_heat(l) = 0._r8
+         if (IsACDehumidificationEnabled()) eflx_urban_ac_sen(l) = 0._r8
+       end if if_hac_on
+
+       if (IsBuildingHumidityEnabled()) then
+          ! Calculate sensible and latent heat flux from the change in indoor air state.
+          eflx_building(l) = wtlunit_roof(l) * ( &
+               (ht_roof(l) * rho_air(l)*cp_air(l)/dtime) * (t_building(l) - t_building_bef(l)) &
+               + (ht_roof(l) * rho_air(l)*hvap/dtime) * (q_building(l) - q_building_bef(l)) )
+          if (IsACDehumidificationEnabled()) then
+             ! Convert the decrease in indoor water vapor to condensate per building footprint area.
+             qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_air(l)
+             qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
           end if
-          if (IsBuildingHumidityEnabled()) then
-             ! Calculate sensible and latent heat flux from the change in indoor air state.
-             eflx_building(l) = wtlunit_roof(l) * ( &
-                  (ht_roof(l) * rho_air(l)*cp_air(l)/dtime) * (t_building(l) - t_building_bef(l)) &
-                  + (ht_roof(l) * rho_air(l)*hvap/dtime) * (q_building(l) - q_building_bef(l)) )
-             if (IsACDehumidificationEnabled()) then
-                ! Convert the decrease in indoor water vapor to condensate per building footprint area.
-                qtot_condensate(l) = max(0._r8, (-q_building(l)+q_building_bef_hac(l))) * ht_roof(l) * rho_air(l)
-                qflx_condensate_from_ac_lu(l) = wtlunit_roof(l) * qtot_condensate(l) / dtime
-             end if
-             ! Diagnose indoor relative humidity from the updated temperature and humidity.
-             call QSat(t_building(l), forc_pbot(g), qsat_building)
-             rh_building(l) = min(100._r8, q_building(l) / qsat_building * 100._r8)
-          else
-             eflx_building(l) = wtlunit_roof(l) * (ht_roof(l) * rho_air(l)*cpair/dtime) &
-                  * (t_building(l) - t_building_bef(l))
-          end if
+          ! Diagnose indoor relative humidity from the updated temperature and humidity.
+          call QSat(t_building(l), forc_pbot(g), qsat_building)
+          rh_building(l) = min(100._r8, q_building(l) / (qsat_building * pct_to_frac))
+       else
+          eflx_building(l) = wtlunit_roof(l) * (ht_roof(l) * rho_air(l)*cpair/dtime) &
+               * (t_building(l) - t_building_bef(l))
        end if
     end do
 
@@ -1091,7 +1076,7 @@ contains
           eflx_urban_ac_lat_derived(l) = qflx_condensate_from_ac_lu(l) * hvap
           ! Error between the above and the Latent heat component of AC energy flux
           err_eflx_urban_ac_lat(l) = eflx_urban_ac_lat_derived(l) - (eflx_urban_ac(l) - eflx_urban_ac_sen(l))
-          if (abs(err_eflx_urban_ac_lat(l)) > 1.e-5_r8 ) then
+          if (abs(err_eflx_urban_ac_lat(l)) > ac_latent_error_thresh ) then
              write (iulog,*) 'dehumidification energy flux derived from condensate does not match condensate output'
              write (iulog,*) 'dehumidification energy flux derived from condensate [W/m2 urban]: ',eflx_urban_ac_lat_derived(l)
              write (iulog,*) 'total AC energy flux [W/m2 urban]: ',eflx_urban_ac(l)
@@ -1099,7 +1084,7 @@ contains
              write (iulog,*) 'latent heat component of AC energy flux (total minus sensible) [W/m2 urban]: ', &
                   eflx_urban_ac(l) - eflx_urban_ac_sen(l)
              write (iulog,*) 'error in dehumidification energy flux [W/m2 urban]: ',err_eflx_urban_ac_lat(l)
-             write (iulog,*) 'error tolerance [W/m2 urban]: ',1.e-5_r8
+             write (iulog,*) 'error tolerance [W/m2 urban]: ',ac_latent_error_thresh
              write (iulog,*) 'clm model is stopping'
              call endrun(subgrid_index=l, subgrid_level=subgrid_level_landunit)
           end if
@@ -1112,12 +1097,10 @@ contains
        do fc = 1,num_urbanc
           c = filter_urbanc(fc)
           l = clandunit(c)
-          if (urbpoi(l)) then
-             if (ctype(c) == icol_roof) then
-                qflx_condensate_from_ac(c) = qtot_condensate(l)/dtime
-             else
-                qflx_condensate_from_ac(c) = 0._r8
-             end if
+          if (ctype(c) == icol_roof) then
+             qflx_condensate_from_ac(c) = qtot_condensate(l)/dtime
+          else
+             qflx_condensate_from_ac(c) = 0._r8
           end if
        end do
     end if

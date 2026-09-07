@@ -272,6 +272,8 @@ contains
     call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_patch, name = 'qflx_liqevap_from_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
+    ! The following two vars are initialized as 0.0_r8 rather than spval 
+    ! to prevent nan from occurring during spatial aggregation
     call AllocateVar1d(var = this%qflx_condensate_from_ac_col, name = 'qflx_condensate_from_ac_col', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, ival = 0.0_r8)
@@ -605,7 +607,6 @@ contains
             avgflag='A', &
             long_name=this%info%lname('Condensed water flux from AC dehumidification'), &
             ptr_col=this%qflx_condensate_from_ac_col, set_nourb=0.0_r8, c2l_scale_type='urbanf')
-       this%qflx_condensate_from_ac_lun(begl:endl) = 0.0_r8
     end if
 
     this%qflx_snomelt_col(begc:endc) = spval
