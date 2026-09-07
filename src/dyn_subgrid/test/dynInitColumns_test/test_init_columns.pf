@@ -15,6 +15,7 @@ module test_init_columns
   use shr_kind_mod    , only : r8 => shr_kind_r8
   use TemperatureType , only : temperature_type
   use WaterType       , only : water_type
+  use UrbanParamsType, only : urbanparams_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use WaterstateType  , only : waterstate_type
   use dynColumnTemplateMod, only : TEMPLATE_NONE_FOUND
@@ -29,6 +30,7 @@ module test_init_columns
      integer :: l2        ! index of the landunit with landunit type 2
      type(temperature_type) :: temperature_inst
      type(water_type)  :: water_inst
+     type(urbanparams_type) :: urbanparams_inst
      type(unittest_water_type_factory_type) :: water_factory
    contains
      procedure :: setUp
@@ -86,6 +88,10 @@ contains
     call unittest_add_column(my_li=li, ctype=1, wtlunit=0.5_r8, add_simple_patch=.true.)
 
     call unittest_subgrid_setup_end()
+
+    ! Reguired so that the IsBuildingHumidityEnabled and IsACDehumidificationEnabled
+    ! namelist functions can be used
+    call this%urbanparams_inst%InitForTesting(bounds)
 
     call this%water_factory%setup_after_subgrid(snl = 0, dz = 1._r8)
     call this%water_factory%create_water_type(this%water_inst, &

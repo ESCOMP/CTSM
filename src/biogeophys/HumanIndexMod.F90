@@ -1387,4 +1387,3 @@ end subroutine InitHistory
 !-----------------------------------------------------------------------
 
 end module HumanIndexMod
-
