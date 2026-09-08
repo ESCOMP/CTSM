@@ -13,7 +13,6 @@ module WaterFluxType
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
@@ -98,8 +97,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
-     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
-     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
+     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
+     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
 
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
@@ -107,11 +106,6 @@ module WaterFluxType
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
-
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     type(annual_flux_dribbler_type) :: qflx_liq_dynbal_dribbler
-     type(annual_flux_dribbler_type) :: qflx_ice_dynbal_dribbler
 
    contains
      
@@ -384,16 +378,6 @@ contains
     call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
-    
-    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = this%info%fname('qflx_liq_dynbal'), &
-         units = 'mm H2O')
-
-    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = this%info%fname('qflx_ice_dynbal'), &
-         units = 'mm H2O')
 
   end subroutine InitAllocate
 
@@ -547,7 +531,8 @@ contains
          fname=this%info%fname('QFLX_LIQ_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('liq dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'liq dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_liq_dynbal_grc)     
 
     this%qflx_ice_dynbal_grc(begg:endg) = spval
@@ -555,7 +540,8 @@ contains
          fname=this%info%fname('QFLX_ICE_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('ice dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'ice dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_ice_dynbal_grc)
 
     this%qflx_runoff_col(begc:endc) = spval
@@ -958,9 +944,6 @@ contains
        ! initial run, not restart: initialize qflx_snow_drain to zero
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
-
-    call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
-    call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
 
