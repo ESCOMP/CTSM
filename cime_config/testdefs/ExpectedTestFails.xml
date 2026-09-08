@@ -83,6 +83,11 @@
   </test>
 
   <test name="ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+    <phase name="COMPARE_base_rest">
+      <status>FAIL</status>
+      <issue>#2619</issue>
+      <comment>This failure relates to the following REP failure.</comment>
+    </phase>
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
