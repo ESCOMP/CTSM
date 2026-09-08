@@ -1,4 +1,129 @@
 ===============================================================
+Tag name: ctsm5.4.055
+Originator(s): sacks (Bill Sacks)
+Date: Tue Sep  8 16:01:56 MDT 2026
+One-line Summary: Add temporal smoothing of DYNBAL conservation correction fluxes
+
+Purpose and description of changes
+----------------------------------
+
+Spread the DYNBAL water and energy fluxes over many years: Rather than releasing all of
+the DYNBAL fluxes in the year in which they're generated, instead put them in storage
+pools that are released with a 20-year residence time (controllable via a new namelist
+parameter; the default for CLM50 is set to 0.75 to maintain something closer to the old
+behavior). This reduces these fluxes, especially in the oscillatory case that is somewhat
+common with a dynamic ice sheet.
+
+The new storage pools are reset when reset_dynbal_baselines is set to .true., since this
+feels conceptually similar to the other resetting done by that flag, so it feels
+appropriate to do this resetting at the same time.
+
+This tag also changes the sign convention for the DYNBAL fluxes: the previous sign
+convention was unintuitively the opposite of the sign convention of other fluxes to
+river/atm; while I'm changing these fluxes anyway, I'm also flipping the sign convention
+to be more intuitive and hopefully less error-prone.
+
+The motivation for this change is: When subgrid areas change due to dynamic landunits /
+columns, fluxes are generated to compensate for changes in gridcell-average water and
+energy (QFLX_LIQ_DYNBAL, QFLX_ICE_DYNBAL, EFLX_DYNBAL). These fluxes can (and should) be
+reduced via careful setting of reset_dynbal_baselines, but that still doesn't reduce these
+fluxes to zero. The previous implementation seems good enough in situations where there is
+a gradual change in a given grid cell's subgrid areas over many years. Unfortunately,
+though, that is not always the situation when coupling to CISM, as has been seen in recent
+CESM3 runs: In grid cells around the ice sheet margin, large fractions of a CTSM grid cell
+can blink between mostly-vegetated/bare and mostly-glacier on a 2-year cycle, and this
+oscillatory behavior can go on for many years, possibly indefinitely. This can lead to
+large dynbal fluxes in each year, even when dribbled throughout the year (as was
+previously done). It is problematic for the ocean to get negative dynbal fluxes, but it is
+also problematic to remove these negative dynbal fluxes by spreading them globally, as is
+currently done, because then regional fluxes that should average to 0 spatially and
+temporally (e.g., into the Arctic ocean) end up being biased positive. This PR implements
+a relatively easy partial fix, which particularly addresses the oscillatory case that
+seems to be a common cause of the observed ice runoff. See
+https://github.com/ESCOMP/CTSM/issues/4188 for more details.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- Partially addresses #4188 - Consider one or more changes to reduce DYNBAL fluxes (dynamic landunit conservation correction fluxes)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: dynbal_storage_residence_time
+
+Changes to documentation:
+- Updates CLM50_Tech_Note_Transient_Landcover.rst to reflect these changes
+
+Contributors: @billsacks
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Fixed some expected test fails based on discussions with Erik Kluzek and Sam Levis
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Transient cases (Hist, SSP)
+      - Cases with an evolving ice sheet (active CISM)
+      - FATES cases
+      - Cases that start mid-year from a restart file that had non-zero values in the old dribblers
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      - larger than roundoff
+      - same vs. new climate depends on the configuration and what variables are of interest
+
+Non-BGC I compset cases have diffs only in limited variables: This PR only directly
+affects sensible heat, liquid and ice runoff fluxes, so the only changes are in these
+fluxes and related ROF variables. However, some BGC cases have more extensive diffs, I
+think due to the feedback of ROF on CH4. For a few long BGC tests with extensive diffs, I
+verified that, by changing the compset to one using SROF, the set of variables with diffs
+became small (similar to the set of variables with diffs in non-BGC cases).
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids): https://github.com/ESCOMP/CTSM/pull/4189
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.054
 Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
 Date: Mon Aug 31 05:35:20 AM MDT 2026
