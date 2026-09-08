@@ -1931,6 +1931,11 @@ sub process_namelist_inline_logic {
   # namelist group: clm_temperature_inparm #
   ##########################################
   setup_logic_coldstart_temp($opts,$nl_flags, $definition, $defaults, $nl);
+
+  ##############################################
+  # namelist group: dyn_cons_biogeophys_inparm #
+  ##############################################
+  setup_logic_dyn_cons_biogeophys($opts, $nl_flags, $definition, $defaults, $nl);
 }
 
 #-------------------------------------------------------------------------------
@@ -2826,6 +2831,21 @@ sub setup_logic_dynamic_subgrid {
    if ( &value_is_true($nl->get_value('reset_dynbal_baselines')) &&
         &remove_leading_and_trailing_quotes($nl_flags->{'clm_start_type'}) eq "branch") {
       $log->fatal_error("reset_dynbal_baselines has no effect in a branch run");
+   }
+}
+
+#-------------------------------------------------------------------------------
+
+sub setup_logic_dyn_cons_biogeophys {
+   #
+   # Options controlling conservation of water and energy with dynamic land cover
+   #
+   my ($opts, $nl_flags, $definition, $defaults, $nl) = @_;
+
+   add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'dynbal_storage_residence_time');
+   my $dynbal_storage_residence_time = $nl->get_value('dynbal_storage_residence_time');
+   if ( $dynbal_storage_residence_time <= 0.0 ) {
+      $log->fatal_error("dynbal_storage_residence_time must be greater than 0");
    }
 }
 
@@ -5413,7 +5433,8 @@ sub write_output_files {
                soil_resis_inparm  bgc_shared canopyfluxes_inparm aerosol
                clmu_inparm clm_soilstate_inparm clm_nitrogen clm_snowhydrology_inparm hillslope_hydrology_inparm hillslope_properties_inparm
                cnprecision_inparm clm_glacier_behavior crop_inparm irrigation_inparm
-               surfacealbedo_inparm water_tracers_inparm tillage_inparm);
+               surfacealbedo_inparm water_tracers_inparm tillage_inparm
+               dyn_cons_biogeophys_inparm);
 
   #@groups = qw(clm_inparm clm_canopyhydrology_inparm clm_soilhydrology_inparm
   #             finidat_consistency_checks dynpft_consistency_checks);
