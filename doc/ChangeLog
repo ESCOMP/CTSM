@@ -1,4 +1,131 @@
 ===============================================================
+Tag name: ctsm5.4.056
+Originator(s): slevis (Samuel Levis,UCAR/TSS,slevis@ucar.edu)
+Date: Wed Sep  9 04:48:03 PM MDT 2026
+One-line Summary: Merge the wetlands branch to master
+
+Purpose and description of changes
+----------------------------------
+
+ The wetlands branch has these tags...
+   branch_tags/wetlands.n01.ctsm5.4.029
+   branch_tags/wetlands.n02.ctsm5.4.029
+   branch_tags/wetlands.n03.ctsm5.4.029
+   branch_tags/wetlands.n03.ctsm5.4.044
+   branch_tags/wetlands.n04.ctsm5.4.044
+   branch_tags/wetlands.n04.ctsm5.4.054 <-- PR #4204 started with this tag, I merged ctsm5.4.055 to it, then I merged to master (explained next)
+   branch_tags/wetlands.n05.ctsm5.4.054
+ We wanted wetlands.n04.ctsm5.4.055 merged to master, and we accomplished this with PR #4204, without merging or tagging anything new in the wetlands branch.
+
+ Main updates coming in with the wetlands branch:
+ 1. Changes to snow-covered fraction and inundated fraction where the two overlap.
+ 2. Changes to the methane parameterization.
+ Best evaluation of updates (1) and (2): https://webext.cgd.ucar.edu/I20TR/ctsm5.4.024_f19_wetlandCH4_151_HIST/ctsm5.4.024_f19_wetlandCH4_151_HIST_1850_2023_vs_ctsm5.4.024_f19_150_HIST_1850_2023/website
+ 3. Changes to phenology to improve high-lat survivability by allowing plants to green up after the summer solstice.
+ Best evaluation of (3): https://github.com/NCAR/LMWG_dev/issues/174
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+Bugs fixed
+----------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ List of PRs available below
+
+Notes of particular relevance for users
+---------------------------------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+
+Changes made to namelist defaults (e.g., changed parameter values):
+
+Changes to the datasets (e.g., streams, surface or initial files):
+
+Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
+
+Changes to documentation:
+ Updating doc/source/tech_note/Vegetation_Phenology_Turnover/CLM50_Tech_Note_Vegetation_Phenology_Turnover.rst
+ Opened issue for further updates: https://github.com/ESCOMP/CTSM/issues/4205
+
+Contributors:
+ swensosc, wwieder, lifang0209
+
+Notes of particular relevance for developers:
+---------------------------------------------
+NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+ Updating src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- PEND (rerunning 3 tests)
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff, subtly new climate
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below):
+    - Best evaluation of updates (1) and (2) listed in the changes section above:
+      https://webext.cgd.ucar.edu/I20TR/ctsm5.4.024_f19_wetlandCH4_151_HIST/ctsm5.4.024_f19_wetlandCH4_151_HIST_1850_2023_vs_ctsm5.4.024_f19_150_HIST_1850_2023/website
+    - Best evaluation of update (3):
+      https://github.com/NCAR/LMWG_dev/issues/174
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3893 from swensosc/wetland_update
+ https://github.com/ESCOMP/ctsm/pull/3934 from wwieder/wetlands_fire
+ https://github.com/ESCOMP/ctsm/pull/3933 from swensosc/wetland_update
+ https://github.com/ESCOMP/ctsm/pull/4091 merge master to wetlands 
+ https://github.com/ESCOMP/ctsm/pull/4108 from swensosc/seasonal_decid_onset
+ https://github.com/ESCOMP/ctsm/pull/4191 merge master to wetlands
+ https://github.com/ESCOMP/ctsm/pull/4204 this master tag ctsm5.4.056
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.055
 Originator(s): sacks (Bill Sacks)
 Date: Tue Sep  8 16:01:56 MDT 2026
