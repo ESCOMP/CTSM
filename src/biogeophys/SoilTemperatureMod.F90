@@ -1685,7 +1685,7 @@ contains
             eflx_gnet(p) = sabg(p) + dlrad(p) &
                  + (1._r8-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) - lwrad_emit(c) &
                  - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
-            ! save sabg for balancecheck, in case frac_sno_albedo is set to zero later
+            ! save sabg for balancecheck, in case fraction of ground covered by snow is set to zero later
             sabg_chk(p) = frac_sno_fluxes(c) * sabg_snow(p) + (1._r8 - frac_sno_fluxes(c) ) * sabg_soil(p)
 
             eflx_gnet_snow = sabg_snow(p) + dlrad(p) &

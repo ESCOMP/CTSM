@@ -513,9 +513,9 @@ contains
           forc_snow         =>    wateratm2lnd_inst%forc_snow_downscaled_col    , & ! Input:  [real(r8) (:)   ]  column level snow rate [mm/s]
           forc_snow_grc     =>    wateratm2lnd_inst%forc_snow_not_downscaled_grc, & ! Input:  [real(r8) (:)   ]  grid cell-level snow rate [mm/s]
 
-          h2osno_old              =>    waterbalance_inst%h2osno_old_col          , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
-          frac_sno_fluxes            =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col        , & ! Input:  [real(r8) (:)   ]  effective snow fraction                 
-          frac_sno_albedo                =>    waterdiagnosticbulk_inst%frac_sno_albedo_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          h2osno_old              =>    waterbalance_inst%h2osno_old_col        , & ! Input:  [real(r8) (:)   ]  snow water (mm H2O) at previous time step
+          frac_sno_fluxes         =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col, & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
+          frac_sno_albedo         =>    waterdiagnosticbulk_inst%frac_sno_albedo_col, & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)
           snow_depth              =>    waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
           begwb_grc               =>    waterbalance_inst%begwb_grc             , & ! Input:  [real(r8) (:)   ]  grid cell-level water mass begining of the time step
           endwb_grc               =>    waterbalance_inst%endwb_grc             , & ! Output: [real(r8) (:)   ]  grid cell-level water mass end of the time step
@@ -908,7 +908,7 @@ contains
           forc_solai        =>    atm2lnd_inst%forc_solai_grc                   , & ! Input:  [real(r8) (:,:) ]  diffuse radiation     (vis=forc_solsd, nir=forc_solld)
           forc_lwrad              =>    atm2lnd_inst%forc_lwrad_downscaled_col  , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)
 
-          frac_sno_albedo                =>    waterdiagnosticbulk_inst%frac_sno_albedo_col            , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo         =>    waterdiagnosticbulk_inst%frac_sno_albedo_col, & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)
 
           dhsdt_canopy            =>    energyflux_inst%dhsdt_canopy_patch      , & ! Input:  [real(r8) (:)   ]  change in heat content of canopy (W/m**2) [+ to atm]
           eflx_lwrad_out          =>    energyflux_inst%eflx_lwrad_out_patch    , & ! Input:  [real(r8) (:)   ]  emitted infrared (longwave) radiation (W/m**2)

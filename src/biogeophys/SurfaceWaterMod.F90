@@ -85,7 +85,7 @@ contains
     ! - If h2osfc is too small, it is set to 0, with all of the water there being moved
     !   to the top soil layer
     !
-    ! - frac_sno_albedo is potentially updated to ensure that frac_sno_albedo + frac_h2osfc <= 1
+    ! - fraction of ground covered by snow (frac_sno_albedo and frac_sno_fluxes) is updated to ensure that it plus frac_h2osfc <= 1
     !
     ! Note that this just operates over soil points: special landunits have frac_h2osfc fixed at 0
     !
@@ -193,7 +193,7 @@ contains
     ! - If h2osfc is too small, a flux is calculated that should be applied immediately
     !   after this routine to move all remaining h2osfc to the top soil layer
     !
-    ! - frac_sno_albedo is potentially updated to ensure that frac_sno_albedo + frac_h2osfc <= 1
+    ! - fraction of ground covered by snow (frac_sno_albedo and frac_sno_fluxes) is updated to ensure that it plus frac_h2osfc <= 1
     !
     ! Note that this just operates over soil points: special landunits have frac_h2osfc fixed at 0
     !

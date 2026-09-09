@@ -612,7 +612,7 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! update surface water fraction (this may modify frac_sno_albedo)
+       ! update surface water fraction (this may modify frac_sno_albedo and frac_sno_fluxes)
        call UpdateFracH2oSfc(bounds_clump, &
             filter(nc)%num_soilc, filter(nc)%soilc, &
             water_inst)

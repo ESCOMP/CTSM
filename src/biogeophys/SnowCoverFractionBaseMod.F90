@@ -26,7 +26,7 @@ module SnowCoverFractionBaseMod
      ! ------------------------------------------------------------------------
 
      ! Calculate frac_sno_fluxes given frac_sno_albedo
-     procedure :: CalcFracSnoEff
+     procedure :: CalcFracSnoFluxes
 
      ! ------------------------------------------------------------------------
      ! Subroutines that must be implemented by classes that extend this base class
@@ -66,8 +66,8 @@ module SnowCoverFractionBaseMod
        real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
        real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
-       real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
-       real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: ) ! eff. fraction of ground covered by snow (0 to 1)
+       real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow for albedo calculations (0 to 1)
+       real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )     ! fraction of ground covered by snow for heat flux calculations (0 to 1)
      end subroutine UpdateSnowDepthAndFrac_Interface
 
      subroutine AddNewsnowToIntsnow_Interface(this, bounds, num_c, filter_c, &
@@ -85,7 +85,7 @@ module SnowCoverFractionBaseMod
 
        real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
        real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-       real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
+       real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow for albedo calculations (0 to 1)
        real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
      end subroutine AddNewsnowToIntsnow_Interface
 
@@ -107,7 +107,7 @@ module SnowCoverFractionBaseMod
 contains
 
   !-----------------------------------------------------------------------
-  subroutine CalcFracSnoEff(this, bounds, num_c, filter_c, &
+  subroutine CalcFracSnoFluxes(this, bounds, num_c, filter_c, &
        lun_itype_col, urbpoi, frac_sno_albedo, &
        frac_sno_fluxes)
     !
@@ -122,14 +122,14 @@ contains
 
     integer  , intent(in)    :: lun_itype_col( bounds%begc: ) ! landunit type for each column
     logical  , intent(in)    :: urbpoi( bounds%begc: )        ! true if the given column is urban
-    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )      ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
     logical :: allow_fractional_frac_sno_fluxes  ! if true, frac_sno_fluxes can be fractional; otherwise it needs to be 0/1
 
-    character(len=*), parameter :: subname = 'CalcFracSnoEff'
+    character(len=*), parameter :: subname = 'CalcFracSnoFluxes'
     !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(lun_itype_col, 1) == bounds%endc), sourcefile, __LINE__)
@@ -158,6 +158,6 @@ contains
        end if
     end do
 
-  end subroutine CalcFracSnoEff
+  end subroutine CalcFracSnoFluxes
 
 end module SnowCoverFractionBaseMod

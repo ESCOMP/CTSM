@@ -84,8 +84,8 @@ contains
     real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
     real(r8) , intent(inout) :: snow_depth( bounds%begc: )    ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )      ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -152,11 +152,11 @@ contains
        end if
     end do
 
-    call this%CalcFracSnoEff(bounds, num_c, filter_c, &
-         lun_itype_col = lun_itype_col(begc:endc), &
-         urbpoi        = urbpoi(begc:endc), &
-         frac_sno_albedo      = frac_sno_albedo(begc:endc), &
-         frac_sno_fluxes  = frac_sno_fluxes(begc:endc))
+    call this%CalcFracSnoFluxes(bounds, num_c, filter_c, &
+         lun_itype_col   = lun_itype_col(begc:endc), &
+         urbpoi          = urbpoi(begc:endc), &
+         frac_sno_albedo = frac_sno_albedo(begc:endc), &
+         frac_sno_fluxes = frac_sno_fluxes(begc:endc))
 
     ! ------------------------------------------------------------------------
     ! Update snow_depth

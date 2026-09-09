@@ -563,7 +563,7 @@ contains
          frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterdiagnosticbulk_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
          fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
-         frac_sno_fluxes           => waterdiagnosticbulk_inst%frac_sno_fluxes_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
+         frac_sno_fluxes        => waterdiagnosticbulk_inst%frac_sno_fluxes_col, & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)                           
          snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
          qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
          qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             

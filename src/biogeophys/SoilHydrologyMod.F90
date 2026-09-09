@@ -311,7 +311,7 @@ contains
      ! !LOCAL VARIABLES:
      integer :: fc, c
      real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno_albedo
+     real(r8) :: fsno      ! copy of frac_sno_fluxes
 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------

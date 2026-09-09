@@ -1337,7 +1337,7 @@ contains
        do fc = 1, num_snowc
           c = filter_snowc(fc)
           if (j >= snl(c)+1) then
-             ! need to scale dz by frac_sno_albedo to convert to grid cell average depth
+             ! need to scale dz by frac_sno_fluxes to convert to grid cell average depth
              vol_ice(c,j)      = min(1._r8, h2osoi_ice(c,j)/(dz(c,j)*frac_sno_fluxes(c)*denice))
              eff_porosity(c,j) = 1._r8 - vol_ice(c,j)
              vol_liq(c,j)      = min(eff_porosity(c,j),h2osoi_liq(c,j)/(dz(c,j)*frac_sno_fluxes(c)*denh2o))
@@ -1364,7 +1364,7 @@ contains
                 if (eff_porosity(c,j) < params_inst%wimp .OR. eff_porosity(c,j+1) < params_inst%wimp) then
                    qflx_snow_percolation(c,j) = 0._r8
                 else
-                   ! dz must be scaled by frac_sno_albedo to obtain gridcell average value
+                   ! dz must be scaled by frac_sno_fluxes to obtain gridcell average value
                    qflx_snow_percolation(c,j) = max(0._r8,(vol_liq(c,j) &
                         - params_inst%ssi*eff_porosity(c,j))*dz(c,j)*frac_sno_fluxes(c))
                    qflx_snow_percolation(c,j) = min(qflx_snow_percolation(c,j),(1._r8-vol_ice(c,j+1) &
@@ -2023,7 +2023,7 @@ contains
                          ! Ensure sum of snow and surface water fractions are <= 1 after update
                          !
                          ! Note that there is a similar adjustment in subroutine
-                         ! FracH2oSfc (related to frac_sno_albedo); these two should be kept in
+                         ! UpdateFracH2oSfc (related to frac_sno_albedo and frac_sno_fluxes); these two should be kept in
                          ! sync (e.g., if a 3rd fraction is ever added in one place, it
                          ! needs to be added in the other place, too).
                          if ((fsno_melt + frac_h2osfc(c)) > 1._r8) then
@@ -3056,9 +3056,6 @@ contains
           cycle
        end if
 
-       ! LvK 9-JUN-2015: in CanopyHydrologyMod , snow_depth is scaled with frac_sno_albedo
-       ! Here we do not apply scaling to snow_depth, so inconsistent? TODO
-
        ! Special case: too little snow for snowpack existence
        if (snow_depth(c) < dzmin(1)) then
           snl(c)              = 0
@@ -3143,7 +3140,7 @@ contains
     integer    :: i                                ! index of water tracer or bulk
     real(r8)   :: dtime                            ! land model time step (sec)
     real(r8)   :: h2osno_total(bounds%begc:bounds%endc)  ! total snow water (mm H2O)
-    real(r8)   :: rho_orig_bottom(bounds%begc:bounds%endc) ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno_albedo) [kg/m3]
+    real(r8)   :: rho_orig_bottom(bounds%begc:bounds%endc) ! partial density of ice in bottom snow layer, before updates (not scaled with fraction of ground covered by snow) [kg/m3]
     real(r8)   :: frac_adjust(bounds%begc:bounds%endc) ! fraction of mass remaining after capping
     type(filter_col_type) :: snow_capping_filterc ! column filter: columns undergoing snow capping
 
@@ -3309,7 +3306,7 @@ contains
     real(r8) , intent(in) :: h2osoi_liq_bottom( bounds%begc: ) ! liquid water in bottom snow layer (kg/m2)
 
     type(filter_col_type) , intent(out)   :: snow_capping_filterc                     ! column filter: columns undergoing snow capping
-    real(r8)              , intent(inout) :: rho_orig_bottom( bounds%begc: )          ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno_albedo) (kg/m3)
+    real(r8)              , intent(inout) :: rho_orig_bottom( bounds%begc: )          ! partial density of ice in bottom snow layer, before updates (not scaled with fraction of ground covered by snow) (kg/m3)
     real(r8)              , intent(inout) :: frac_adjust( bounds%begc: )              ! fraction of mass remaining after capping
     real(r8)              , intent(inout) :: qflx_snwcp_ice( bounds%begc: )           ! excess solid h2o due to snow capping (outgoing) (mm H2O /s)
     real(r8)              , intent(inout) :: qflx_snwcp_liq( bounds%begc: )           ! excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
@@ -3632,7 +3629,7 @@ contains
     type(bounds_type)     , intent(in) :: bounds
     type(filter_col_type) , intent(in) :: snow_capping_filterc ! column filter: columns undergoing snow capping
 
-    real(r8) , intent(in)    :: rho_orig_bottom( bounds%begc: )   ! partial density of ice in bottom snow layer, before updates (not scaled with frac_sno_albedo) (kg/m3)
+    real(r8) , intent(in)    :: rho_orig_bottom( bounds%begc: )   ! partial density of ice in bottom snow layer, before updates (not scaled with fraction of ground covered by snow) (kg/m3)
     real(r8) , intent(in)    :: h2osoi_ice_bottom( bounds%begc: ) ! ice lens in bottom snow layer (kg/m2)
     real(r8) , intent(in)    :: frac_adjust( bounds%begc: )       ! fraction of mass remaining after capping
     real(r8) , intent(inout) :: dz_bottom( bounds%begc: )         ! layer depth of bottom snow layer (m)

@@ -168,12 +168,12 @@ contains
          
          begwb                =>  b_waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
          endwb                =>  b_waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-         snw_rds              =>  b_waterdiagnostic_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
-         snw_rds_top          =>  b_waterdiagnostic_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
-         h2osno_top           =>  b_waterdiagnostic_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
-         sno_liq_top          =>  b_waterdiagnostic_inst%sno_liq_top_col       , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
-         frac_sno_albedo             =>  b_waterdiagnostic_inst%frac_sno_albedo_col          , & ! Output: [real(r8) (:)   ]
-         frac_sno_fluxes         =>  b_waterdiagnostic_inst%frac_sno_fluxes_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
+         snw_rds              =>  b_waterdiagnostic_inst%snw_rds_col        , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
+         snw_rds_top          =>  b_waterdiagnostic_inst%snw_rds_top_col    , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
+         h2osno_top           =>  b_waterdiagnostic_inst%h2osno_top_col     , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
+         sno_liq_top          =>  b_waterdiagnostic_inst%sno_liq_top_col    , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
+         frac_sno_albedo      =>  b_waterdiagnostic_inst%frac_sno_albedo_col, & ! Output: [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)
+         frac_sno_fluxes      =>  b_waterdiagnostic_inst%frac_sno_fluxes_col, & ! Output: [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
          frac_iceold          =>  b_waterdiagnostic_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
          snow_depth           =>  b_waterdiagnostic_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
          h2osno_no_layers     => b_waterstate_inst%h2osno_no_layers_col        , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
@@ -365,13 +365,13 @@ contains
     end do
 
     ! Since frac_sno_albedo may have been updated above, recalculate frac_sno_fluxes accordingly
-    call scf_method%CalcFracSnoEff(bounds, num_lakec, filter_lakec, &
+    call scf_method%CalcFracSnoFluxes(bounds, num_lakec, filter_lakec, &
          ! Inputs
-         lun_itype_col = col%lun_itype(begc:endc), &
-         urbpoi        = col%urbpoi(begc:endc), &
-         frac_sno_albedo      = frac_sno_albedo(begc:endc), &
+         lun_itype_col   = col%lun_itype(begc:endc), &
+         urbpoi          = col%urbpoi(begc:endc), &
+         frac_sno_albedo = frac_sno_albedo(begc:endc), &
          ! Outputs
-         frac_sno_fluxes  = frac_sno_fluxes(begc:endc))
+         frac_sno_fluxes = frac_sno_fluxes(begc:endc))
 
     ! patch averages must be done here -- BEFORE SNOW CALCULATIONS AS THEY USE IT.
     ! for output to history tape and other uses

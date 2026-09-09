@@ -202,7 +202,7 @@ contains
     end if 
     
     associate(                                                           &
-      frac_sno_albedo           => waterdiagnosticbulk_inst%frac_sno_albedo_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+      frac_sno_albedo    => waterdiagnosticbulk_inst%frac_sno_albedo_col, & ! Input:  [real(r8) (:) ] fraction of ground covered by snow for albedo calculations (0 to 1)
       snow_depth         => waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
       tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided leaf area index, no burying by snow
       tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided stem area index, no burying by snow
