@@ -835,19 +835,19 @@ contains
 
 
   ! ------------------------------------------------------------------------
-  ! Tests with fractional_areas
+  ! Tests with volume_multipliers
   ! ------------------------------------------------------------------------
 
   @Test
-  subroutine withFractionalAreas_oneShrinksOneGrows(this)
-    ! This tests the updating of a variable with fractional area terms, with one column
+  subroutine withVolumeMultipliers_oneShrinksOneGrows(this)
+    ! This tests the updating of a variable with volume multiplier terms, with one column
     ! shrinking, one growing, and two staying the same in area
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: cwtlunit_old(4) = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
     real(r8), parameter :: cwtlunit_new(4) = [0.1_r8, 0.3_r8, 0.2_r8, 0.4_r8]
-    real(r8), parameter :: fractional_area_old(4)  = [0.0_r8, 0.1_r8, 0.7_r8, 0.5_r8]
-    real(r8) :: myvar(4), myvar_orig(4), expected(4), fractional_area_new(4)
+    real(r8), parameter :: volume_multiplier_old(4)  = [0.0_r8, 0.1_r8, 0.7_r8, 0.5_r8]
+    real(r8) :: myvar(4), myvar_orig(4), expected(4), volume_multiplier_new(4)
     real(r8) :: myvar_orig_weighted(4), myvar_weighted(4)
 
     ! Setup
@@ -860,37 +860,37 @@ contains
     myvar = [2._r8, 3._r8, 7._r8, 8._r8]
     myvar_orig = myvar
     expected = myvar
-    expected(2) = (this%cwtgcell_old(2) * fractional_area_old(2) * myvar(2) + &
-         this%cwtgcell_new_minus_old(2) * fractional_area_old(3) * myvar(3)) / &
-         (this%cwtgcell_old(2)*fractional_area_old(2) + &
-         this%cwtgcell_new_minus_old(2) * fractional_area_old(3))
+    expected(2) = (this%cwtgcell_old(2) * volume_multiplier_old(2) * myvar(2) + &
+         this%cwtgcell_new_minus_old(2) * volume_multiplier_old(3) * myvar(3)) / &
+         (this%cwtgcell_old(2)*volume_multiplier_old(2) + &
+         this%cwtgcell_new_minus_old(2) * volume_multiplier_old(3))
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new)
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new)
 
     ! Verify
     @assertEqual(expected, myvar, tolerance=tol)
-    myvar_orig_weighted = myvar_orig*fractional_area_old
-    myvar_weighted = myvar*fractional_area_new
-    call this%assertConservation(myvar_orig_weighted, myvar_weighted, 'withFractionalAreas_oneShrinksOneGrows')
-  end subroutine withFractionalAreas_oneShrinksOneGrows
+    myvar_orig_weighted = myvar_orig*volume_multiplier_old
+    myvar_weighted = myvar*volume_multiplier_new
+    call this%assertConservation(myvar_orig_weighted, myvar_weighted, 'withVolumeMultipliers_oneShrinksOneGrows')
+  end subroutine withVolumeMultipliers_oneShrinksOneGrows
 
   @Test
-  subroutine withFractionalAreas_fraction0_oneShrinksOneGrows(this)
-    ! This tests the updating of a variable with fractional area terms, with one column
+  subroutine withVolumeMultipliers_multiplier0_oneShrinksOneGrows(this)
+    ! This tests the updating of a variable with volume multiplier terms, with one column
     ! shrinking, one growing, and two staying the same in area. Here the growing column
-    ! has a new fractional area of 0.
+    ! has a new volume multiplier of 0.
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: cwtlunit_old(4) = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
     real(r8), parameter :: cwtlunit_new(4) = [0.1_r8, 0.3_r8, 0.2_r8, 0.4_r8]
-    real(r8), parameter :: fractional_area_old(4)  = [0.0_r8, 0.0_r8, 0.0_r8, 0.5_r8]
-    real(r8) :: myvar(4), myvar_orig(4), expected(4), fractional_area_new(4)
+    real(r8), parameter :: volume_multiplier_old(4)  = [0.0_r8, 0.0_r8, 0.0_r8, 0.5_r8]
+    real(r8) :: myvar(4), myvar_orig(4), expected(4), volume_multiplier_new(4)
     real(r8) :: myvar_orig_weighted(4), myvar_weighted(4)
 
     ! Setup
@@ -902,35 +902,35 @@ contains
 
     myvar = [2._r8, 3._r8, 7._r8, 8._r8]
     myvar_orig = myvar
-    ! If the growing column has a new fractional area of 0, then we expect no change in
+    ! If the growing column has a new volume multiplier of 0, then we expect no change in
     ! my_var.
     expected = myvar
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new)
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new)
 
     ! Verify
     @assertEqual(expected, myvar, tolerance=tol)
-  end subroutine withFractionalAreas_fraction0_oneShrinksOneGrows
+  end subroutine withVolumeMultipliers_multiplier0_oneShrinksOneGrows
 
   @Test
-  subroutine withFractionalAreas_twoShrinkTwoGrow(this)
-    ! This tests the updating of a variable with fractional area terms, with one column
+  subroutine withVolumeMultipliers_twoShrinkTwoGrow(this)
+    ! This tests the updating of a variable with volume multiplier terms, with one column
     ! shrinking to 0 area, one shrinking to non-zero area, one growing from 0 area, and
     ! one growing from non-zero area
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: cwtlunit_old(4) = [0.1_r8, 0.2_r8,  0._r8,   0.7_r8]
     real(r8), parameter :: cwtlunit_new(4) = [0._r8 , 0.15_r8, 0.08_r8, 0.77_r8]
-    real(r8), parameter :: fractional_area_old(4)  = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
+    real(r8), parameter :: volume_multiplier_old(4)  = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
     real(r8), parameter :: new_minus_old(4) = cwtlunit_new - cwtlunit_old
     real(r8) :: mass_gain_per_unit_area
-    real(r8) :: myvar(4), myvar_orig(4), expected(4), fractional_area_new(4)
+    real(r8) :: myvar(4), myvar_orig(4), expected(4), volume_multiplier_new(4)
     real(r8) :: myvar_orig_weighted(4), myvar_weighted(4)
 
     ! Setup
@@ -943,40 +943,40 @@ contains
     myvar = [2._r8, 3._r8, 4._r8, 5._r8]
     myvar_orig = myvar
     
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new)
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new)
 
     ! Verify
     expected(1:2) = myvar_orig(1:2)
     mass_gain_per_unit_area = ( &
-         new_minus_old(1) * fractional_area_old(1) * myvar_orig(1) + &
-         new_minus_old(2) * fractional_area_old(2) * myvar_orig(2)) / &
+         new_minus_old(1) * volume_multiplier_old(1) * myvar_orig(1) + &
+         new_minus_old(2) * volume_multiplier_old(2) * myvar_orig(2)) / &
          (new_minus_old(1) + new_minus_old(2))
-    expected(3) = mass_gain_per_unit_area / fractional_area_new(3)
-    expected(4) = (cwtlunit_old(4) * fractional_area_old(4) * myvar_orig(4) + &
+    expected(3) = mass_gain_per_unit_area / volume_multiplier_new(3)
+    expected(4) = (cwtlunit_old(4) * volume_multiplier_old(4) * myvar_orig(4) + &
          new_minus_old(4) * mass_gain_per_unit_area) / &
-         (cwtlunit_new(4) * fractional_area_new(4))
+         (cwtlunit_new(4) * volume_multiplier_new(4))
     @assertEqual(expected, myvar, tolerance=tol)
 
-    myvar_orig_weighted = myvar_orig*fractional_area_old
-    myvar_weighted = myvar*fractional_area_new
-    call this%assertConservation(myvar_orig_weighted, myvar_weighted, 'withFractionalAreas_twoShrinkTwoGrow')
-  end subroutine withFractionalAreas_twoShrinkTwoGrow
+    myvar_orig_weighted = myvar_orig*volume_multiplier_old
+    myvar_weighted = myvar*volume_multiplier_new
+    call this%assertConservation(myvar_orig_weighted, myvar_weighted, 'withVolumeMultipliers_twoShrinkTwoGrow')
+  end subroutine withVolumeMultipliers_twoShrinkTwoGrow
 
   @Test
-  subroutine nonConservedMass_withFractionalAreas_specialShrinks(this)
-    ! This tests the computation of non_conserved_mass with fractional area terms, when
+  subroutine nonConservedMass_withVolumeMultipliers_specialShrinks(this)
+    ! This tests the computation of non_conserved_mass with volume multiplier terms, when
     ! a special column shrinks
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: input_from_special = 11._r8
-    real(r8), parameter :: fractional_area_old(3) = [0.1_r8, 0.2_r8, 0.3_r8]
-    real(r8) :: fractional_area_new(3)
+    real(r8), parameter :: volume_multiplier_old(3) = [0.1_r8, 0.2_r8, 0.3_r8]
+    real(r8) :: volume_multiplier_new(3)
     real(r8) :: myvar(3), myvar_orig(3)
     real(r8) :: expected_non_conserved_mass
     real(r8) :: non_conserved_mass_grc(1) = 0._r8
@@ -988,40 +988,40 @@ contains
 
     myvar = [2._r8, 3._r8, 4._r8]
     myvar_orig = myvar
-    expected_non_conserved_mass = this%cwtgcell_new_minus_old(3) * fractional_area_old(3) &
+    expected_non_conserved_mass = this%cwtgcell_new_minus_old(3) * volume_multiplier_old(3) &
          * input_from_special
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, clump_index=1, var=myvar, &
          special_value=input_from_special, non_conserved_mass_grc=non_conserved_mass_grc, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new)
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new)
 
     ! Verify
     @assertEqual(expected_non_conserved_mass, non_conserved_mass_grc(1), tolerance=tol)
 
     ! Note that the specially-treated column is excluded from the conservation check: the
     ! value in that column is ignored for conservation.
-    myvar_orig_weighted = myvar_orig * fractional_area_old
-    myvar_weighted = myvar * fractional_area_new
+    myvar_orig_weighted = myvar_orig * volume_multiplier_old
+    myvar_weighted = myvar * volume_multiplier_new
     call this%assertConservation(myvar_orig_weighted, myvar_weighted, &
-         'nonConservedMass_withFractionalAreas_specialShrinks', &
+         'nonConservedMass_withVolumeMultipliers_specialShrinks', &
          begc = 1, endc = 2, non_conserved_mass = non_conserved_mass_grc(1))
 
-  end subroutine nonConservedMass_withFractionalAreas_specialShrinks
+  end subroutine nonConservedMass_withVolumeMultipliers_specialShrinks
 
   @Test
-  subroutine nonConservedMass_withFractionalAreas_specialGrows(this)
-    ! This tests the computation of non_conserved_mass with fractional area terms, when
+  subroutine nonConservedMass_withVolumeMultipliers_specialGrows(this)
+    ! This tests the computation of non_conserved_mass with volume multiplier terms, when
     ! a special column grows
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: input_from_special = 11._r8  ! irrelevant
-    real(r8), parameter :: fractional_area_old(3) = [0.1_r8, 0.2_r8, 0.3_r8]
-    real(r8) :: fractional_area_new(3)
+    real(r8), parameter :: volume_multiplier_old(3) = [0.1_r8, 0.2_r8, 0.3_r8]
+    real(r8) :: volume_multiplier_new(3)
     real(r8) :: myvar(3), myvar_orig(3)
     real(r8) :: expected_non_conserved_mass
     real(r8) :: non_conserved_mass_grc(1) = 0._r8
@@ -1034,30 +1034,30 @@ contains
     myvar = [2._r8, 3._r8, 4._r8]
     myvar_orig = myvar
     expected_non_conserved_mass = -1._r8 * &
-         (myvar(1) * this%cwtgcell_new_minus_old(1) * fractional_area_old(1) + &
-         myvar(2) * this%cwtgcell_new_minus_old(2) * fractional_area_old(2))
+         (myvar(1) * this%cwtgcell_new_minus_old(1) * volume_multiplier_old(1) + &
+         myvar(2) * this%cwtgcell_new_minus_old(2) * volume_multiplier_old(2))
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_fill_special_using_fixed_value(bounds, clump_index=1, var=myvar, &
          special_value=input_from_special, non_conserved_mass_grc=non_conserved_mass_grc, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new)
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new)
 
     ! Verify
     @assertEqual(expected_non_conserved_mass, non_conserved_mass_grc(1), tolerance=tol)
 
     ! Note that the specially-treated column is excluded from the conservation check: the
     ! value in that column is ignored for conservation.
-    myvar_orig_weighted = myvar_orig * fractional_area_old
-    myvar_weighted = myvar * fractional_area_new
+    myvar_orig_weighted = myvar_orig * volume_multiplier_old
+    myvar_weighted = myvar * volume_multiplier_new
     call this%assertConservation(myvar_orig_weighted, myvar_weighted, &
-         'nonConservedMass_withFractionalAreas_specialGrows', &
+         'nonConservedMass_withVolumeMultipliers_specialGrows', &
          begc = 1, endc = 2, non_conserved_mass = non_conserved_mass_grc(1))
 
-  end subroutine nonConservedMass_withFractionalAreas_specialGrows
+  end subroutine nonConservedMass_withVolumeMultipliers_specialGrows
 
   ! ------------------------------------------------------------------------
   ! Tests of the optional adjustment output
@@ -1133,13 +1133,13 @@ contains
   end subroutine adjustment_withSpecialGrowing_isUnchanged
 
   @Test
-  subroutine adjustment_withFractionalAreas(this)
+  subroutine adjustment_withVolumeMultipliers(this)
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
     real(r8), parameter :: cwtlunit_old(4) = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
     real(r8), parameter :: cwtlunit_new(4) = [0.1_r8, 0.3_r8, 0.2_r8, 0.4_r8]
-    real(r8), parameter :: fractional_area_old(4)  = [0.0_r8, 0.1_r8, 0.7_r8, 0.5_r8]
-    real(r8) :: myvar(4), myvar_orig(4), fractional_area_new(4)
+    real(r8), parameter :: volume_multiplier_old(4)  = [0.0_r8, 0.1_r8, 0.7_r8, 0.5_r8]
+    real(r8) :: myvar(4), myvar_orig(4), volume_multiplier_new(4)
     real(r8) :: myvar_orig_weighted(4), myvar_weighted(4)
     real(r8) :: adjustment(4)
 
@@ -1154,33 +1154,33 @@ contains
     myvar_orig = myvar
     adjustment(:) = 0._r8
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new, &
          adjustment = adjustment)
 
     ! Verify
-    myvar_orig_weighted = myvar_orig*fractional_area_old
-    myvar_weighted = myvar*fractional_area_new
+    myvar_orig_weighted = myvar_orig*volume_multiplier_old
+    myvar_weighted = myvar*volume_multiplier_new
     @assertEqual(myvar_orig_weighted, myvar_weighted - adjustment)
-  end subroutine adjustment_withFractionalAreas
+  end subroutine adjustment_withVolumeMultipliers
 
   @Test
-  subroutine adjustment_withFractionalAreas_newFrac0(this)
-    ! If the new fractional area is 0, then the adjustment should be equal to
-    ! -(myvar_orig * fractional_area_old)
+  subroutine adjustment_withVolumeMultipliers_newMultiplier0(this)
+    ! If the new volume multiplier is 0, then the adjustment should be equal to
+    ! -(myvar_orig * volume_multiplier_old)
     class(TestColumnStateUpdater), intent(inout) :: this
     type(column_state_updater_type) :: cs_updater
-    ! col #2 grows from 0, taking over some of col #3; col #2's new fractional area
-    ! should be 0 because col #3 had a fractional area of 0
+    ! col #2 grows from 0, taking over some of col #3; col #2's new volume multiplier
+    ! should be 0 because col #3 had a volume multiplier of 0
     real(r8), parameter :: cwtlunit_old(4) = [0.1_r8, 0.0_r8, 0.5_r8, 0.4_r8]
     real(r8), parameter :: cwtlunit_new(4) = [0.1_r8, 0.2_r8, 0.3_r8, 0.4_r8]
-    real(r8), parameter :: fractional_area_old(4)  = [0.0_r8, 0.1_r8, 0.0_r8, 0.5_r8]
-    real(r8) :: myvar(4), myvar_orig(4), fractional_area_new(4)
+    real(r8), parameter :: volume_multiplier_old(4)  = [0.0_r8, 0.1_r8, 0.0_r8, 0.5_r8]
+    real(r8) :: myvar(4), myvar_orig(4), volume_multiplier_new(4)
     real(r8) :: myvar_orig_weighted(4), myvar_weighted(4)
     real(r8) :: adjustment(4)
     real(r8) :: expected_adjustment
@@ -1196,18 +1196,18 @@ contains
     myvar_orig = myvar
     adjustment(:) = 0._r8
 
-    fractional_area_new(:) = fractional_area_old(:)
-    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=fractional_area_new)
+    volume_multiplier_new(:) = volume_multiplier_old(:)
+    call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=volume_multiplier_new)
 
     ! Exercise
     call cs_updater%update_column_state_no_special_handling(bounds, clump_index=1, var=myvar, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new, &
          adjustment = adjustment)
 
     ! Verify
-    expected_adjustment = -1._r8 * (myvar_orig(2) * fractional_area_old(2))
+    expected_adjustment = -1._r8 * (myvar_orig(2) * volume_multiplier_old(2))
     @assertEqual(expected_adjustment, adjustment(2))
-  end subroutine adjustment_withFractionalAreas_newFrac0
+  end subroutine adjustment_withVolumeMultipliers_newMultiplier0
 
 end module test_column_state_updater

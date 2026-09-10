@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.056 multiple 09/10/2026 Merge the wetlands branch to master
        ctsm5.4.055    sacks 09/08/2026 Add temporal smoothing of DYNBAL conservation correction fluxes
        ctsm5.4.054     erik 08/31/2026 Update submodules to the latest needed for cesm3_0_alpha10a
        ctsm5.4.053   oleson 08/18/2026 Resolve problems with running PLUMBER2 sites
