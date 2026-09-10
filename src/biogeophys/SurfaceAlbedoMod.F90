@@ -401,7 +401,7 @@ contains
           elai          =>    canopystate_inst%elai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided leaf area index with burying by snow
           esai          =>    canopystate_inst%esai_patch         , & ! Input:  [real(r8)  (:)   ]  one-sided stem area index with burying by snow
 
-          frac_sno      =>    waterdiagnosticbulk_inst%frac_sno_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo      =>    waterdiagnosticbulk_inst%frac_sno_albedo_col        , & ! Input:  [real(r8)  (:)   ]  fraction of ground covered by snow (0 to 1)
           fcansno       =>    waterdiagnosticbulk_inst%fcansno_patch       , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is snow-covered (0 to 1) 
           h2osoi_liq    =>    waterstatebulk_inst%h2osoi_liq_col      , & ! Input:  [real(r8)  (:,:) ]  liquid water content (col,lyr) [kg/m2]
           h2osoi_ice    =>    waterstatebulk_inst%h2osoi_ice_col      , & ! Input:  [real(r8)  (:,:) ]  ice lens content (col,lyr) [kg/m2]    
@@ -812,28 +812,28 @@ contains
              if (coszen_col(c) > 0._r8) then
              ! ground albedo was originally computed in SoilAlbedo, but is now computed here
              ! because the order of SoilAlbedo and SNICAR_RT was switched for SNICAR.
-             albgrd(c,ib) = albsod(c,ib)*(1._r8-frac_sno(c)) + albsnd(c,ib)*frac_sno(c)
-             albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno(c)) + albsni(c,ib)*frac_sno(c)
+             albgrd(c,ib) = albsod(c,ib)*(1._r8-frac_sno_albedo(c)) + albsnd(c,ib)*frac_sno_albedo(c)
+             albgri(c,ib) = albsoi(c,ib)*(1._r8-frac_sno_albedo(c)) + albsni(c,ib)*frac_sno_albedo(c)
 
              ! albedos for radiative forcing calculations:
              if (use_snicar_frc) then
                 ! BC forcing albedo
-                albgrd_bc(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_bc(c,ib)*frac_sno(c)
-                albgri_bc(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_bc(c,ib)*frac_sno(c)
+                albgrd_bc(c,ib) = albsod(c,ib)*(1.-frac_sno_albedo(c)) + albsnd_bc(c,ib)*frac_sno_albedo(c)
+                albgri_bc(c,ib) = albsoi(c,ib)*(1.-frac_sno_albedo(c)) + albsni_bc(c,ib)*frac_sno_albedo(c)
 
                 if (do_sno_oc) then
                    ! OC forcing albedo
-                   albgrd_oc(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_oc(c,ib)*frac_sno(c)
-                   albgri_oc(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_oc(c,ib)*frac_sno(c)
+                   albgrd_oc(c,ib) = albsod(c,ib)*(1.-frac_sno_albedo(c)) + albsnd_oc(c,ib)*frac_sno_albedo(c)
+                   albgri_oc(c,ib) = albsoi(c,ib)*(1.-frac_sno_albedo(c)) + albsni_oc(c,ib)*frac_sno_albedo(c)
                 endif
 
                 ! dust forcing albedo
-                albgrd_dst(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_dst(c,ib)*frac_sno(c)
-                albgri_dst(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_dst(c,ib)*frac_sno(c)
+                albgrd_dst(c,ib) = albsod(c,ib)*(1.-frac_sno_albedo(c)) + albsnd_dst(c,ib)*frac_sno_albedo(c)
+                albgri_dst(c,ib) = albsoi(c,ib)*(1.-frac_sno_albedo(c)) + albsni_dst(c,ib)*frac_sno_albedo(c)
 
                 ! pure snow albedo for all-aerosol radiative forcing
-                albgrd_pur(c,ib) = albsod(c,ib)*(1.-frac_sno(c)) + albsnd_pur(c,ib)*frac_sno(c)
-                albgri_pur(c,ib) = albsoi(c,ib)*(1.-frac_sno(c)) + albsni_pur(c,ib)*frac_sno(c)
+                albgrd_pur(c,ib) = albsod(c,ib)*(1.-frac_sno_albedo(c)) + albsnd_pur(c,ib)*frac_sno_albedo(c)
+                albgri_pur(c,ib) = albsoi(c,ib)*(1.-frac_sno_albedo(c)) + albsni_pur(c,ib)*frac_sno_albedo(c)
              end if
 
              ! also in this loop (but optionally in a different loop for vectorized code)
@@ -842,15 +842,15 @@ contains
              do i = -nlevsno+1,1,1
               if (.not. use_subgrid_fluxes .or. lun%itype(col%landunit(c)) == istdlak) then 
                  if (ib == 1) then
-                   flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
-                        ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
-                   flx_absiv(c,i) = flx_absi_snw(c,i,ib)*frac_sno(c) + &
-                        ((1.-frac_sno(c))*(1-albsoi(c,ib))*(flx_absi_snw(c,i,ib)/(1.-albsni(c,ib))))
+                   flx_absdv(c,i) = flx_absd_snw(c,i,ib)*frac_sno_albedo(c) + &
+                        ((1.-frac_sno_albedo(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
+                   flx_absiv(c,i) = flx_absi_snw(c,i,ib)*frac_sno_albedo(c) + &
+                        ((1.-frac_sno_albedo(c))*(1-albsoi(c,ib))*(flx_absi_snw(c,i,ib)/(1.-albsni(c,ib))))
                 elseif (ib == 2) then
-                   flx_absdn(c,i) = flx_absd_snw(c,i,ib)*frac_sno(c) + &
-                        ((1.-frac_sno(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
-                   flx_absin(c,i) = flx_absi_snw(c,i,ib)*frac_sno(c) + &
-                        ((1.-frac_sno(c))*(1-albsoi(c,ib))*(flx_absi_snw(c,i,ib)/(1.-albsni(c,ib))))
+                   flx_absdn(c,i) = flx_absd_snw(c,i,ib)*frac_sno_albedo(c) + &
+                        ((1.-frac_sno_albedo(c))*(1-albsod(c,ib))*(flx_absd_snw(c,i,ib)/(1.-albsnd(c,ib))))
+                   flx_absin(c,i) = flx_absi_snw(c,i,ib)*frac_sno_albedo(c) + &
+                        ((1.-frac_sno_albedo(c))*(1-albsoi(c,ib))*(flx_absi_snw(c,i,ib)/(1.-albsni(c,ib))))
                 endif
              else
                 if (ib == 1) then

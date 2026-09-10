@@ -90,7 +90,7 @@ contains
 
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer (:)    ]  fraction of veg not covered by snow (0/1 now) [-]
 
-         frac_sno_eff            => waterdiagnosticbulk_inst%frac_sno_eff_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes            => waterdiagnosticbulk_inst%frac_sno_fluxes_col        , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
          frac_h2osfc             => waterdiagnosticbulk_inst%frac_h2osfc_col         , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          h2osoi_ice              => waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ]  ice lens (kg/m2) (new)                
          h2osoi_liq              => waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2) (new)            
@@ -173,8 +173,8 @@ contains
          ! flux corrections
 
          if (col%snl(c) < 0) then
-            t_grnd0(c) = frac_sno_eff(c) * tssbef(c,col%snl(c)+1) &
-                 + (1 - frac_sno_eff(c) - frac_h2osfc(c)) * tssbef(c,1) &
+            t_grnd0(c) = frac_sno_fluxes(c) * tssbef(c,col%snl(c)+1) &
+                 + (1 - frac_sno_fluxes(c) - frac_h2osfc(c)) * tssbef(c,1) &
                  + frac_h2osfc(c) * t_h2osfc_bef(c)
          else
             t_grnd0(c) = (1 - frac_h2osfc(c)) * tssbef(c,1) + frac_h2osfc(c) * t_h2osfc_bef(c)
@@ -278,21 +278,21 @@ contains
          p = filter_nolakep(fp)
          c = patch%column(p)
          j = col%snl(c)+1
-         ! snow layers; assumes for j < 1 that frac_sno_eff > 0
+         ! snow layers; assumes for j < 1 that frac_sno_fluxes > 0
          if (j < 1) then
             ! Defining the limitation uniformly for all patches is more 
             ! strict than absolutely necessary.  This definition assumes 
             ! each patch is spatially distinct and may remove all the snow
             ! on its patch, but may not remove snow from adjacent patches. 
-            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno_eff(c)*dtime)
+            evaporation_limit = (h2osoi_ice(c,j)+h2osoi_liq(c,j))/(frac_sno_fluxes(c)*dtime)
             if (qflx_ev_snow(p) > evaporation_limit) then
                evaporation_demand = qflx_ev_snow(p)
                qflx_ev_snow(p)    = evaporation_limit
-               qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_eff(c)*(evaporation_demand - evaporation_limit)
-               qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
-               qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/(frac_sno_eff(c)*dtime), 0._r8)
+               qflx_evap_soi(p)   = qflx_evap_soi(p) - frac_sno_fluxes(c)*(evaporation_demand - evaporation_limit)
+               qflx_liqevap_from_top_layer(p)   = max(h2osoi_liq(c,j)/(frac_sno_fluxes(c)*dtime), 0._r8)
+               qflx_solidevap_from_top_layer(p) = max(h2osoi_ice(c,j)/(frac_sno_fluxes(c)*dtime), 0._r8)
                ! conserve total energy flux
-               eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_eff(c)*(evaporation_demand - evaporation_limit)*htvp(c)
+               eflx_sh_grnd(p) = eflx_sh_grnd(p) + frac_sno_fluxes(c)*(evaporation_demand - evaporation_limit)*htvp(c)
             endif
          endif
          
@@ -341,11 +341,11 @@ contains
          ! Ground heat flux
          
          if (.not. lun%urbpoi(l)) then
-            lw_grnd=(frac_sno_eff(c)*tssbef(c,col%snl(c)+1)**4 &
-                 +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
+            lw_grnd=(frac_sno_fluxes(c)*tssbef(c,col%snl(c)+1)**4 &
+                 +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
 
-            eflx_soil_grnd(p) = ((1._r8- frac_sno_eff(c))*sabg_soil(p) + frac_sno_eff(c)*sabg_snow(p)) + dlrad(p) &
+            eflx_soil_grnd(p) = ((1._r8- frac_sno_fluxes(c))*sabg_soil(p) + frac_sno_fluxes(c)*sabg_snow(p)) + dlrad(p) &
                  + (1-frac_veg_nosno(p))*emg(c)*forc_lwrad(c) &
                  - emg(c)*sb*lw_grnd - emg(c)*sb*t_grnd0(c)**3*(4._r8*tinc(c)) &
                  - (eflx_sh_grnd(p)+qflx_evap_soi(p)*htvp(c))
@@ -421,7 +421,7 @@ contains
                  .and. col%itype(c) /= icol_roof) then
                ! area weight heat absorbed by snow layers
                if (j >= col%snl(c)+1 .and. j < 1) errsoi_patch(p) = errsoi_patch(p) &
-                    - frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+                    - frac_sno_fluxes(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
                if (j >= 1) errsoi_patch(p) = errsoi_patch(p) &
                     - (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
             end if
@@ -438,7 +438,7 @@ contains
                  .or. col%itype(c) == icol_roof) then
             ! area weight heat absorbed by snow layers
                if (j >= col%snl(c)+1 .and. j < 1) errsoi_patch(p) = errsoi_patch(p) &
-                   - frac_sno_eff(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
+                   - frac_sno_fluxes(c)*(t_soisno(c,j)-tssbef(c,j))/fact(c,j)
                if (j >= 1) errsoi_patch(p) = errsoi_patch(p) &
                    - (t_soisno(c,j)-tssbef(c,j))/fact(c,j)
             end if
@@ -462,8 +462,8 @@ contains
          j = col%snl(c)+1
 
          if (.not. lun%urbpoi(l)) then
-            lw_grnd=(frac_sno_eff(c)*tssbef(c,col%snl(c)+1)**4 &
-                 +(1._r8-frac_sno_eff(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
+            lw_grnd=(frac_sno_fluxes(c)*tssbef(c,col%snl(c)+1)**4 &
+                 +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*tssbef(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc_bef(c)**4)
 
             eflx_lwrad_out(p) = ulrad(p) &

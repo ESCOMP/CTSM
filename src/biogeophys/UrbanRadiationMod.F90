@@ -122,7 +122,7 @@ contains
          forc_solar         =>    atm2lnd_inst%forc_solar_not_downscaled_grc          , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
          forc_lwrad         =>    atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
 
-         frac_sno           =>    waterdiagnosticbulk_inst%frac_sno_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo           =>    waterdiagnosticbulk_inst%frac_sno_albedo_col               , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
 
          t_ref2m            =>    temperature_inst%t_ref2m_patch             , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (K)            
          t_grnd             =>    temperature_inst%t_grnd_col                , & ! Input:  [real(r8) (:)   ]  ground temperature (K)                            
@@ -197,13 +197,13 @@ contains
          do c = coli(l),colf(l)
             if (ctype(c) == icol_roof       )  then
                t_roof(l)      = t_grnd(c)
-               em_roof_s(l) = em_roof(l)*(1._r8-frac_sno(c)) + snoem*frac_sno(c)
+               em_roof_s(l) = em_roof(l)*(1._r8-frac_sno_albedo(c)) + snoem*frac_sno_albedo(c)
             else if (ctype(c) == icol_road_imperv) then 
                t_improad(l)   = t_grnd(c)
-               em_improad_s(l) = em_improad(l)*(1._r8-frac_sno(c)) + snoem*frac_sno(c)
+               em_improad_s(l) = em_improad(l)*(1._r8-frac_sno_albedo(c)) + snoem*frac_sno_albedo(c)
             else if (ctype(c) == icol_road_perv  ) then
                t_perroad(l)   = t_grnd(c)
-               em_perroad_s(l) = em_perroad(l)*(1._r8-frac_sno(c)) + snoem*frac_sno(c)
+               em_perroad_s(l) = em_perroad(l)*(1._r8-frac_sno_albedo(c)) + snoem*frac_sno_albedo(c)
             else if (ctype(c) == icol_sunwall    ) then
                t_sunwall(l)   = t_grnd(c)
             else if (ctype(c) == icol_shadewall  ) then

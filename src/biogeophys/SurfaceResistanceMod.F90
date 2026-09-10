@@ -277,7 +277,7 @@ contains
           
           h2osoi_ice  =>    waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
           h2osoi_liq  =>    waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
-          frac_sno    =>    waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:)] fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo    =>    waterdiagnosticbulk_inst%frac_sno_albedo_col   , & ! Input:  [real(r8) (:)] fraction of ground covered by snow (0 to 1)
           frac_h2osfc =>    waterdiagnosticbulk_inst%frac_h2osfc_col  & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
           )
 
@@ -294,9 +294,9 @@ contains
                    fac_fc  = min(1._r8, wx/watfc(c,1))  !eqn5.66 but divided by theta at field capacity
                    fac_fc  = max( fac_fc, 0.01_r8 )
                    ! modify soil beta by snow cover. soilbeta for snow surface is one
-                   soilbeta(c) = (1._r8-frac_sno(c)-frac_h2osfc(c)) &
+                   soilbeta(c) = (1._r8-frac_sno_albedo(c)-frac_h2osfc(c)) &
                         *0.25_r8*(1._r8 - cos(SHR_CONST_PI*fac_fc))**2._r8 &
-                        + frac_sno(c)+ frac_h2osfc(c)
+                        + frac_sno_albedo(c)+ frac_h2osfc(c)
                 else   !when water content of ths top layer is more than that at F.C.
                    soilbeta(c) = 1._r8
                 end if
