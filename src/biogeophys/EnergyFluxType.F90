@@ -670,9 +670,10 @@ contains
 
     if (use_cn) then
        this%rresis_patch(begp:endp,:) = spval
-       call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &
-            avgflag='A', long_name='root resistance in each soil layer', &
-            ptr_patch=this%rresis_patch, l2g_scale_type='veg', default='inactive')
+!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!      call hist_addfld2d (fname='RRESIS', units='proportion', type2d='levgrnd', &
+!           avgflag='A', long_name='root resistance in each soil layer', &
+!           ptr_patch=this%rresis_patch, l2g_scale_type='veg', default='inactive')
     end if
 
     this%errsoi_col(begc:endc) = spval

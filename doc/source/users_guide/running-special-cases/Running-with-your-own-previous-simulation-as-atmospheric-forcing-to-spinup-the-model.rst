@@ -45,7 +45,7 @@ Example: Simulation Forced with Data from the Previous Simulation
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case frcwmyB1850 -res f09_g17_gl4 -compset I1850Clm50BgcSpinup
+   > ./create_newcase -case frcwmyB1850 -res f09_f09_mt232 -compset I1850Clm60BgcCropSpinup
    > cd frcWmyB1850
    # The following sets the casename to point to for atm forcing (you could also use an editor)
    > ./xmlchange DATM_CPLHIST_CASE="myB1850"
@@ -53,15 +53,15 @@ Example: Simulation Forced with Data from the Previous Simulation
    #  (you could also use an editor)
    > ./xmlchange DATM_YR_ALIGN="1",DATM_YR_START=1,DATM_YR_END=20
    # Set the strm_datdir in the namelist_defaults_datm.xml
-   # file to the archival path of the case above in the form of: /glade/home/achive/$USER/$DATM_CPLHIST_CASE/cpl/hist
-   # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm50BgcSpinup COMPSET CASES MADE AFTER THIS!
+   # file to the archival path of the case above in the form of: /glade/home/archive/$USER/$DATM_CPLHIST_CASE/cpl/hist
+   # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm60BgcCropSpinup COMPSET CASES MADE AFTER THIS!
    > $EDITOR ../../models/atm/datm/bld/namelist_files/namelist_defaults_datm.xml
    > ./case.setup
    # Now build and run as normal
    > ./case.build
    > ./case.submit
 
-.. note:: We did this by editing the "namelist_defaults_datm.xml" which will change the settings for ALL future ``I1850Clm50BgcSpinup`` cases you run. You could also do this by editing the path in the resulting streams text files in the CaseDocs directory, and then create a "user\_" streams file with the correct path. This would change the streams file JUST for this case. The steps do it this way are:
+.. note:: We did this by editing the "namelist_defaults_datm.xml" which will change the settings for ALL future ``I1850Clm60BgcCropSpinup`` cases you run. You could also do this by editing the path in the resulting streams text files in the CaseDocs directory, and then create a "user\_" streams file with the correct path. This would change the streams file JUST for this case. The steps do it this way are:
 
 ::
 

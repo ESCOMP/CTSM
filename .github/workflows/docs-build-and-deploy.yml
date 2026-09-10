@@ -13,6 +13,8 @@ on:
       # Include all include::ed files outside doc/ directory!
       - 'src/README.unit_testing.md'
       - 'tools/README.md'
+      - 'tools/mksurfdata_esmf/README.md'
+      - 'tools/unsupported/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   # Allows you to run this workflow manually from the Actions tab

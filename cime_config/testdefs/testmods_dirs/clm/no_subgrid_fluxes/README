@@ -1,8 +1,0 @@
-The purpose of this testmod is to exercise the newer snow cover fraction
-method along with having use_subgrid_fluxes = .false.
-
-Note that we also need h2osfcflag = 0 in this testmod, because
-h2osfcflag = 1 is incompatible with use_subgrid_fluxes = .false. Also,
-this needs to be used in a clm45 configuration for compatibility with
-other options (or else would need to set some other flags:
-lower_boundary_condition and possibly others)

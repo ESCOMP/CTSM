@@ -1,6 +1,21 @@
 # Important Notes on Experimental Features of CTSM
 ---
 
+## Compsets that are NOT tested
+
+- "Nwp" (Numerical Weather Prediction) compsets with BGC or BGC-Crop
+- "Nwp" compsets with active GLC (CISM)
+- "Nwp" compsets with clm6_0 physics
+- LILAC with active GLC
+- LILAC with clm6_0 physics
+- FATES with active GLC
+- mizuRoute with active GLC or BGC or BGC-Crop
+- compsets with clm4_5 physics
+
+## Compsets that are being deprecated
+
+- Compsets using CRUNCEPv7 forcing
+
 ## Namelist items not regularly tested or used (some aren't even implemented)
 
 See '../bld/namelist_files/namelist_definition_ctsm.xml' -- for definitions of all namelist variables
@@ -11,7 +26,6 @@ The following are tested but not on by default (for any physics):
 
     - all_active
     - allow_invalid_gdd20_season_inputs
-    - h2osfcflag (deprecated)
     - use_nvmovement
     - use_soil_moisture_streams
 
@@ -32,7 +46,6 @@ The following are NOT currently tested nor turned on by default:
     - override_bgc_restart_mismatch_dump
     - perchroot
     - perchroot_alt
-    - pertlim (deprecated)
     - reduce_dayl_factor (not implemented, it's commented out in the code)
     - replenishlakec
     - rooting_profile_method_soilcarbon (DELETE)
@@ -46,12 +59,52 @@ The following are NOT currently tested nor turned on by default:
     - snicar_solarspec /= mid_latitude_winter
     - snicar_use_aerosol /= FALSE
     - urban_traffic (not implemented)
-    - use_cndv (deprecated)
     - use_extralakelayers
     - usefrootc
     - usephfact
-    - use_vichydro (deprecated)
     - vcmax_opt = 4
+
+### The following are clm4_5 physics options that may be retained because they allow simpler options
+  - use_bedrock = .false.
+  - use_flexiblecn = .false.
+  - use_fun = .false.
+  - use_hydrstress = .false.
+  - use_luna = .false.
+  - repartition_rain_snow = .false.
+  - melt_non_icesheet_ice_runoff = .false.
+  - lower_boundary_condition = 4 (useful for testing with water aquifer)
+  - light_inhibit = .false.
+  - constrain_stress_deciduous_onset = .false.
+  - finundation_method = 'ZWT_inversion' (useful for water isotope testing)
+  - wind_dependent_snow_density = .false.
+  - modifyphoto_and_lmr_forcrop = .false.
+  - baset_mapping = constant
+
+### The following are being deprecated and will be removed
+### (They also are NOT tested)
+    - pertlim
+    - use_cndv
+    - use_vichydro
+    - h2osfcflag
+    - snow_cover_fraction_method = 'NiuYang2007'
+    - use_subgrid_fluxes = .false.
+
+### The following are clm4_5 physics options that are deprecated and will be removed
+### (They also are NOT tested)
+  - soil_layerstruct_predefined = '10SL_3.5m'
+  - use_nguardrail = .false.
+  - use_clm5_fpi = .false.
+  - soilwater_movement_method = 0
+  - rooting_profile_method_water = 0
+  - soil_resis_method = 0
+  - use_undercanopy_stability = .true.
+  - building_temp_method = 0
+  - organic_frac_squared = .true.
+  - lotmp_snowdensity_method = 'TruncatedAnderson1976'
+  - snow_overburden_compaction_method = 'Anderson1976'
+  - leafresp_method = 1
+  - stomatalcond_method = 'Ball-Berry1987'
+  - fire_method = 'li2014qianfrc'
 
 ### FATES experimental namelist items
 

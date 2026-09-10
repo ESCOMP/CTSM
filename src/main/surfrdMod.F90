@@ -408,6 +408,9 @@ contains
        actual_numnatpft = 0
     end if
 
+    ! Close surface dataset - no longer needed after reading dimensions
+    call ncd_pio_closefile(ncid)
+
 !jt    if(check_numpft.ne.actual_numpft)then
     if(actual_numcft+actual_numnatpft.ne.actual_maxsoil_patches)then
        write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
@@ -458,6 +461,9 @@ contains
 
     ! Read nlevurb
     call ncd_inqdlen(ncid, dimid, actual_nlevurb, 'nlevurb')
+
+    ! Close surface dataset - no longer needed after reading nlevurb
+    call ncd_pio_closefile(ncid)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read nlevurb from the surface data'
@@ -882,7 +888,6 @@ contains
     use clm_varpar      , only : surfpft_lb, surfpft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
-    use surfrdUtilsMod  , only : convert_cft_to_pft
 
     !
     ! !ARGUMENTS:
@@ -987,7 +992,6 @@ contains
     ! Check sum of vegetation adds to 1
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
 
-    ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
     if ( .not. use_fates ) then
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)

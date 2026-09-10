@@ -1,7 +1,7 @@
 module mkharvestMod
 
   !-----------------------------------------------------------------------
-  ! Make harvest and grazing data to add to the dynamic PFT file.
+  ! Make harvest and grazing data to add to the transient PFT (landuse) file.
   !-----------------------------------------------------------------------
 
   use ESMF
@@ -63,7 +63,7 @@ contains
 
   subroutine mkharvest(file_mesh_i, file_data_i, mesh_o, pioid_o, ntime, rc)
     !
-    ! Make harvest data for the dynamic PFT dataset.
+    ! Make harvest data for the transient PFT (landuse) dataset.
     ! This dataset consists of the normalized harvest or grazing fraction (0-1) of
     ! the model.
     !

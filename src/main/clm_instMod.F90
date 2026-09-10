@@ -459,6 +459,9 @@ contains
     ! Even for a FATES simulation, we call this to initialize product pools
     call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
+    ! Close parameter file - this was its last use (no subsequent reads through params_ncid)
+    call ncd_pio_closefile(params_ncid)
+
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)
     end if
@@ -504,8 +507,6 @@ contains
     end if
 
     call print_accum_fields()
-
-    call ncd_pio_closefile(params_ncid)
 
     call t_stopf('init_accflds')
 

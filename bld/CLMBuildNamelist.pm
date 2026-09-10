@@ -2564,7 +2564,7 @@ sub setup_logic_surface_dataset {
   $flanduse_timeseries = $nl_flags->{'flanduse_timeseries'};
 
   if ($flanduse_timeseries ne "null" && &value_is_true($nl_flags->{'use_cndv'}) ) {
-     $log->fatal_error( "dynamic PFT's (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
+     $log->fatal_error( "Transient PFTs (setting flanduse_timeseries) are incompatible with dynamic vegetation (use_cndv=.true)." );
   }
   # Turn test option off for NEON until after XML is interpreted
   my $test_files = $opts->{'test'};

@@ -108,7 +108,7 @@ contains
     !
     use clm_varctl   , only : iulog
     use decompMod    , only : subgrid_level_gridcell, subgrid_level_landunit, subgrid_level_column, subgrid_level_patch
-    use decompMod    , only : get_global_index
+    use decompMod    , only : get_global_index, procinfo
     use GridcellType , only : grc
     use LandunitType , only : lun
     use ColumnType   , only : col
@@ -124,6 +124,7 @@ contains
     integer :: igrc=unset, ilun=unset, icol=unset, ipft=unset   ! Local index for grid-cell, landunit, column, and patch
     integer :: ggrc=unset, glun=unset, gcol=unset, gpft=unset   ! Global index for grid-cell, landunit, column, and patch
     logical :: bad_point = .false. ! Flag to indicate if the point is bad (i.e., global index is -1)
+    integer :: i, j  ! 2D global gridcell indices
     !-----------------------------------------------------------------------
 
     if (subgrid_level == subgrid_level_gridcell) then
@@ -201,17 +202,12 @@ contains
 
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  gridcell index = ', igrc
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
 
     else if (subgrid_level == subgrid_level_landunit) then
 
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': local  landunit index = ', ilun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(subgrid_index)
 
     else if (subgrid_level == subgrid_level_column) then
 
@@ -219,10 +215,6 @@ contains
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', gcol
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
 
     else if (subgrid_level == subgrid_level_patch) then
 
@@ -231,17 +223,44 @@ contains
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global column   index = ', gcol
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global landunit index = ', glun
        write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': global gridcell index = ', ggrc
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
-       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': pft      type         = ', patch%itype(ipft)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
-       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
-
     else
        write(iulog,*) 'subgrid_level not supported: ', subgrid_level
        write(iulog,*) errMsg(sourcefile, __LINE__)
        write(iulog,*) 'Continuing the endrun without writing point context information'
        return
+    end if
+    if ( subgrid_level >= subgrid_level_landunit )then
+       if ( ilun > 0 )then
+          write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': landunit type         = ', lun%itype(ilun)
+       else
+          write(iulog,'(a)') 'WARNING: Trouble getting the landunit index'
+       end if
+       if ( subgrid_level >= subgrid_level_column )then
+         if ( icol > 0 )then
+            write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': column   type         = ', col%itype(icol)
+         else
+            write(iulog,'(a)') 'WARNING: Trouble getting the column index'
+         end if
+         if ( subgrid_level >= subgrid_level_patch )then
+           if ( ipft > 0 )then
+              write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': patch    type         = ', patch%itype(ipft)
+           else
+              write(iulog,'(a)') 'WARNING: Trouble getting the patch index'
+           end if
+         end if
+       end if
+    end if
+    if ( igrc > 0 ) then
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell longitude    = ', grc%londeg(igrc)
+       write(iulog,'(a, i0, a, f12.7)') 'iam = ', iam, ': gridcell latitude     = ', grc%latdeg(igrc)
+    else
+       write(iulog,'(a)') 'WARNING: Trouble getting the gridcell index'
+    end if
+    call procinfo%calc_globalxy_indices( igrc, i, j )
+    if ( (i /= -1) .and. (j /= -1) ) then
+       write(iulog,'(a, i0, a, i0)') 'iam = ', iam, ': 2D gridcell indices = (', i, ', ', j, ')'
+    else
+       write(iulog,'(a)') 'WARNING: Trouble getting the 2D gridcell indices'
     end if
 
   end subroutine write_point_context

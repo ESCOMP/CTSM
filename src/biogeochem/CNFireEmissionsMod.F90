@@ -344,10 +344,9 @@ contains
     use pftconMod       , only : ndllf_dcd_brl_tree, nbrdlf_evr_tmp_tree
     use pftconMod       , only : nbrdlf_dcd_tmp_tree, nbrdlf_dcd_brl_tree
     use pftconMod       , only : nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree
-    use pftconMod       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod       , only : nc3_arctic_grass, nc3_nonarctic_grass
-    use pftconMod       , only : nc3crop, nc3irrig
-    use pftconMod       , only : is_prognostic_crop
+    use pftconMod       , only : nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub, nbrdlf_dcd_tmp_shrub
+    use pftconMod       , only : nc3_arctic_grass, nc4_grass
+    use pftconMod       , only : is_crop
     implicit none
     integer, intent(in) :: veg_type
 
@@ -369,15 +368,17 @@ contains
     ! shrubs
     else if ( veg_type >= nbrdlf_evr_shrub    .and. veg_type <= nbrdlf_dcd_brl_shrub ) then
        ztop = 2.e3_r8 ! m
-    ! grasses
-    else if ( veg_type >= nc3_arctic_grass    .and. veg_type <= nc3_nonarctic_grass  ) then
+    else if ( veg_type == nbrdlf_dcd_tmp_shrub ) then
+       ! See ESCOMP/CTSM Issue #4119: vert_dist_top veg check mishandles (?) some PFT types
+       ! (https://github.com/ESCOMP/CTSM/issues/4119)
        ztop = 1.e3_r8 ! m
-    ! generic unmanaged crops
-    else if ( veg_type == nc3crop             .or.  veg_type <= nc3irrig             ) then
+    ! grasses
+    else if ( veg_type >= nc3_arctic_grass .and. veg_type <= nc4_grass ) then
+       ztop = 1.e3_r8 ! m
+    ! crops
+    else if (is_crop(veg_type)) then
        ztop = 1.e3_r8 ! m
     ! Prognostic crops
-    else if (is_prognostic_crop(veg_type)) then
-       ztop = 1.e3_r8 ! m
     else
        call endrun('ERROR:: undefined veg_type' )
     end if

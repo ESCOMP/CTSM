@@ -44,7 +44,7 @@ module ch4varcon
   integer, public, parameter :: finundation_mtd_ZWT_inversion = 1 ! Use inversion of ZWT to Prigent satellite inundation obs. data
   integer, public, parameter :: finundation_mtd_TWS_inversion = 2 ! Use inversion of TWS to Prigent satellite inundation obs. data
 
-  logical, public :: usefrootc = .false.    ! Use CLMCN fine root C rather than ann NPP & LAI based parameterization to
+  logical, public :: usefrootc = .false.    ! Use ClmBgc fine root C rather than ann NPP & LAI based parameterization to
                                     ! calculate tiller C for aerenchyma area calculation.
                                     ! The NPP & LAI param. was based on Wania for Arctic sedges and may not be
                                     ! appropriate for woody Patches, although nongrassporosratio above partly adjusts

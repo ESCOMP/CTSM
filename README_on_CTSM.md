@@ -123,7 +123,7 @@ Important files in main directories (under $CTSMROOT):
 - `tools/crop_calendars`: Tools to process and process and create crop calendar datasets for CTSM
 - `tools/modify_input_files`: Script to modify existing CTSM input datasets in standard ways
 - `tools/site_and_regional`: Scripts to create input datasets for single site and regional cases, primarily by modifying existing global datasets
-- `tools/contrib`: Miscellansous useful scripts for pre and post processing as well as case management of CTSM. These scripts are contributed by users and may not be as well tested or supported as other tools
+- `tools/unsupported`: Miscellansous useful unsupported scripts for pre and post processing as well as case management of CTSM; these scripts are contributed by users and may or may not work
 - `.vscode`: Suggested settings for using MS Visual Studio code with CTSM
 
 

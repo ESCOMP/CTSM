@@ -2008,7 +2008,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78
 lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c251023.nc</fsurdat>
 -->
 
-<!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+<!-- Transient PFT surface datasets (relative to {csmdata}) -->
 
 <!-- When NEON landuse datasets are available uncomment the following for something like this...
      Also change the setting for clm_demand in the namelist_defaults_overall.xml file

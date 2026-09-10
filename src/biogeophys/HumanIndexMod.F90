@@ -335,22 +335,37 @@ subroutine InitHistory(this, bounds)
             avgflag='A', long_name='Rural 2 m NWS Heat Index', &
             ptr_patch=this%nws_hi_ref2m_r_patch, set_spec=spval)
 
+    this%appar_temp_ref2m_patch(begp:endp) = spval
+    call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
+            avgflag='A', long_name='2 m apparent temperature', &
+            ptr_patch=this%appar_temp_ref2m_patch)
+
+    this%appar_temp_ref2m_u_patch(begp:endp) = spval
+    call hist_addfld1d (fname='APPAR_TEMP_U', units='C',  &
+            avgflag='A', long_name='Urban 2 m apparent temperature', &
+            ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval)
+
+    this%appar_temp_ref2m_r_patch(begp:endp) = spval
+    call hist_addfld1d (fname='APPAR_TEMP_R', units='C',  &
+            avgflag='A', long_name='Rural 2 m apparent temperature', &
+            ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval)
+
+    this%discomf_index_ref2mS_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DISCOIS', units='C',  &
+            avgflag='A', long_name='2 m Stull Discomfort Index', &
+            ptr_patch=this%discomf_index_ref2mS_patch)
+
+    this%discomf_index_ref2mS_u_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DISCOIS_U', units='C',  &
+            avgflag='A', long_name='Urban 2 m Stull Discomfort Index', &
+            ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval)
+
+    this%discomf_index_ref2mS_r_patch(begp:endp) = spval
+    call hist_addfld1d (fname='DISCOIS_R', units='C',  &
+            avgflag='A', long_name='Rural 2 m Stull Discomfort Index', &
+            ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval)
+
     if ( all_human_stress_indices )then
-
-       this%appar_temp_ref2m_patch(begp:endp) = spval
-       call hist_addfld1d (fname='APPAR_TEMP', units='C',  &
-               avgflag='A', long_name='2 m apparent temperature', &
-               ptr_patch=this%appar_temp_ref2m_patch)
-
-       this%appar_temp_ref2m_u_patch(begp:endp) = spval
-       call hist_addfld1d (fname='APPAR_TEMP_U', units='C',  &
-               avgflag='A', long_name='Urban 2 m apparent temperature', &
-               ptr_patch=this%appar_temp_ref2m_u_patch, set_nourb=spval)
-
-       this%appar_temp_ref2m_r_patch(begp:endp) = spval
-       call hist_addfld1d (fname='APPAR_TEMP_R', units='C',  &
-               avgflag='A', long_name='Rural 2 m apparent temperature', &
-               ptr_patch=this%appar_temp_ref2m_r_patch, set_spec=spval)
 
        this%wb_ref2m_patch(begp:endp) = spval
        call hist_addfld1d (fname='WBA', units='C',  &
@@ -471,21 +486,6 @@ subroutine InitHistory(this, bounds)
        call hist_addfld1d (fname='SWMP80_R', units='C',  &
                   avgflag='A', long_name='Rural 2 m Swamp Cooler Temp 80% Eff', &
                   ptr_patch=this%swmp80_ref2m_r_patch, set_spec=spval)
-
-       this%discomf_index_ref2mS_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DISCOIS', units='C',  &
-               avgflag='A', long_name='2 m Stull Discomfort Index', &
-               ptr_patch=this%discomf_index_ref2mS_patch)
-
-       this%discomf_index_ref2mS_u_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DISCOIS_U', units='C',  &
-               avgflag='A', long_name='Urban 2 m Stull Discomfort Index', &
-               ptr_patch=this%discomf_index_ref2mS_u_patch, set_nourb=spval)
-
-       this%discomf_index_ref2mS_r_patch(begp:endp) = spval
-       call hist_addfld1d (fname='DISCOIS_R', units='C',  &
-               avgflag='A', long_name='Rural 2 m Stull Discomfort Index', &
-               ptr_patch=this%discomf_index_ref2mS_r_patch, set_spec=spval)
 
     end if
 

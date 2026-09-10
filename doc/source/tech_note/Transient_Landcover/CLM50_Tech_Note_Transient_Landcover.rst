@@ -27,7 +27,7 @@ If the total land unit area of glaciers and crops has decreased, then the natura
 
 These rules have two important implications:
 
-1. We always match CISM's glacier areas exactly, even if that means a disagreement with prescribed crop areas. This is needed for conservation when CISM is evolving in two-way-coupled mode.
+1. We always match DGLC/CISM's glacier areas exactly, even if that means a disagreement with prescribed crop areas. This is needed for conservation as the ice sheet is evolving in a two-way-coupled mode.
 
 2. For land units other than crop, glacier and natural vegetation, their areas can decrease (due to encroaching crops or glaciers), but can never increase. So, for example, if a grid cell starts as 5% lake, crops expand to fill the entire grid cell, then later crop area decreases, the lake area will not return: instead, the abandoned cropland will become entirely natural vegetation.
 
