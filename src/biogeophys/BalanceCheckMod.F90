@@ -823,7 +823,7 @@ contains
                  write(iulog,*)'errh2osno          = ',errh2osno(indexc)
                  write(iulog,*)'snl                = ',col%snl(indexc)
                  write(iulog,*)'snow_depth         = ',snow_depth(indexc)
-                 write(iulog,*)'frac_sno_fluxes       = ',frac_sno_fluxes(indexc)
+                 write(iulog,*)'frac_sno_fluxes    = ',frac_sno_fluxes(indexc)
                  write(iulog,*)'h2osno             = ',h2osno_total(indexc)
                  write(iulog,*)'h2osno_old         = ',h2osno_old(indexc)
                  write(iulog,*)'snow_sources       = ',snow_sources(indexc)*dtime
