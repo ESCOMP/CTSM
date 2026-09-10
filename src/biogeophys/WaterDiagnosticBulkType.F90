@@ -398,14 +398,14 @@ contains
          fname=this%info%fname('FSNO'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('fraction of ground covered by snow'), &
+         long_name=this%info%lname('fraction of ground covered by snow for albedo calculations (0 to 1)'), &
          ptr_col=this%frac_sno_albedo_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('FSNO_ICE'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('fraction of ground covered by snow (ice landunits only)'), &
+         long_name=this%info%lname('fraction of ground covered by snow (ice landunits only) for albedo calculations (0 to 1)'), &
          ptr_col=this%frac_sno_albedo_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
@@ -414,7 +414,7 @@ contains
          fname=this%info%fname('FSNO_EFF'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('effective fraction of ground covered by snow'), &
+         long_name=this%info%lname('fraction of ground covered by snow for heat flux calculations (0 to 1)'), &
          ptr_col=this%frac_sno_fluxes_col, c2l_scale_type='urbanf')!, default='inactive')
 
     if (use_cn) then
@@ -859,7 +859,7 @@ contains
          varname=this%info%fname('frac_sno_fluxes:frac_sno_eff'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for heat flux calculations'),&
          units='unitless', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_fluxes_col)
     if (flag == 'read' .and. .not. readvar) then
@@ -870,7 +870,7 @@ contains
          varname=this%info%fname('frac_sno_albedo:frac_sno'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for albedo calculations'),&
          units='unitless',&
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_albedo_col)
     call this%RestartBackcompatIssue783( &

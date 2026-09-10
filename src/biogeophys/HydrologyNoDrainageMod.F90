@@ -237,7 +237,7 @@ contains
 
          snow_depth         => b_waterdiagnostic_inst%snow_depth_col         , & ! Input:  [real(r8) (:)   ]  snow height of snow covered area (m)     
          snowdp             => b_waterdiagnostic_inst%snowdp_col             , & ! Input:  [real(r8) (:)   ]  area-averaged snow height (m)       
-         frac_sno_fluxes       => b_waterdiagnostic_inst%frac_sno_fluxes_col       , & ! Input:  [real(r8) (:)   ]  eff.  snow cover fraction (col) [frc]    
+         frac_sno_fluxes    => b_waterdiagnostic_inst%frac_sno_fluxes_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)    
          frac_h2osfc        => b_waterdiagnostic_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
          snw_rds            => b_waterdiagnostic_inst%snw_rds_col            , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
          snw_rds_top        => b_waterdiagnostic_inst%snw_rds_top_col        , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer(col) [microns] 
