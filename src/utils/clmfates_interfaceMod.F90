@@ -1244,7 +1244,7 @@ module CLMFatesInterfaceMod
 
          ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
-               waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil)
+               waterdiagnosticbulk_inst%h2osoi_liqvol_col(c,1:nlevsoil)
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
@@ -1261,7 +1261,7 @@ module CLMFatesInterfaceMod
 
          do j = 1,nlevsoil
             if(this%fates(nc)%bc_out(s)%active_suction_sl(j)) then
-               s_node = max(waterstatebulk_inst%h2osoi_vol_col(c,j)/soilstate_inst%eff_porosity_col(c,j) ,0.01_r8)
+               s_node = max(waterdiagnosticbulk_inst%h2osoi_liqvol_col(c,j)/soilstate_inst%eff_porosity_col(c,j) ,0.01_r8)
                call soil_water_retention_curve%soil_suction(c,j,s_node, soilstate_inst, smp_node)
                this%fates(nc)%bc_in(s)%smp_sl(j)           = smp_node
             end if
