@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.056
 Originator(s): slevis (Samuel Levis,UCAR/TSS,slevis@ucar.edu)
-Date: Wed Sep  9 04:48:03 PM MDT 2026
+Date: Thu Sep 10 05:52:02 PM MDT 2026
 One-line Summary: Merge the wetlands branch to master
 
 Purpose and description of changes
@@ -26,8 +26,6 @@ Purpose and description of changes
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
-[Remove entire section if none of the boxes are checked.]
-
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
 
@@ -41,25 +39,13 @@ Does this tag change answers significantly for any of the following physics conf
 
 Bugs fixed
 ----------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
- List of PRs available below
+ Resolves #3906
+ Resolves #3985
+ Resolves #3843
 
 Notes of particular relevance for users
 ---------------------------------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for users (e.g., need to interpolate initial conditions):
-
-Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
-
-Changes to the datasets (e.g., streams, surface or initial files):
-
-Changes to the parameter file (output of tools/param_utils/compare_paramfiles):
-
 Changes to documentation:
  Updating doc/source/tech_note/Vegetation_Phenology_Turnover/CLM50_Tech_Note_Vegetation_Phenology_Turnover.rst
  Opened issue for further updates: https://github.com/ESCOMP/CTSM/issues/4205
@@ -69,11 +55,6 @@ Contributors:
 
 Notes of particular relevance for developers:
 ---------------------------------------------
-NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
  Updating src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
 
@@ -85,26 +66,30 @@ Testing summary:
 
     derecho - OK (2 expected fails)
 
-  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+  regular tests compared ctsm5.4.056 against ctsm5.4.055 (diffs only from the wetlands branch mods):
 
-    derecho ----- PEND (rerunning 3 tests)
+    derecho ----- OK
     izumi ------- OK
 
-  any other testing (give details below):
-
-  ctsm_sci
+  ctsm_sci compared ctsm5.4.056 to ctsm5.4.054 baseline (diffs only from the wetlands branch mods):
      derecho ---- OK
 
+  regular tests repeated to compare wetlands.n04.ctsm5.4.055 against wetlands.n04.ctsm5.4.054 (diffs only from the billsacks:dynbal_temporal_smoothing branch mods):
+
+    derecho ----- PEND (so far as expected, not waiting to finish because see next test result)
+    izumi ------- OK
+
+  ./compare_test_results --hist-only -c intel -r /glade/derecho/scratch/slevis/tests_0908-180953de -t 0908-180953de -b wetlands.n04.ctsm5.4.054
+  I ran for all three compilers (intel, gnu, nvhpc) and then repeated against the vanilla ctsm5.4.055 baseline. As expected, comparing to the last master tag (equivalent to wetlands vs. master) has many more tests with baseline diffs than comparing to the previous wetlands tag (equivalent to ctsm5.4.055 vs. ctsm5.4.054).
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: Yes
 
   Summarize any changes to answers, i.e.,
     - what code configurations: All
     - what platforms/compilers: All
-    - nature of change: larger than roundoff, subtly new climate
+    - nature of change: larger than roundoff, subtly new climate, mainly due to change in albedo
 
    If this tag changes climate list the run(s) done to evaluate the new
    climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below):
