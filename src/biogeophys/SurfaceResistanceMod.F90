@@ -275,10 +275,10 @@ contains
           watsat      =>    soilstate_inst%watsat_col      , & ! Input:  [real(r8) (:,:)] volumetric soil water at saturation (porosity)
           watfc       =>    soilstate_inst%watfc_col       , & ! Input:  [real(r8) (:,:)] volumetric soil water at field capacity
           
-          h2osoi_ice  =>    waterstatebulk_inst%h2osoi_ice_col , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
-          h2osoi_liq  =>    waterstatebulk_inst%h2osoi_liq_col , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
-          frac_sno_albedo    =>    waterdiagnosticbulk_inst%frac_sno_albedo_col   , & ! Input:  [real(r8) (:)] fraction of ground covered by snow (0 to 1)
-          frac_h2osfc =>    waterdiagnosticbulk_inst%frac_h2osfc_col  & ! Input:  [real(r8) (:)]  fraction of ground covered by surface water (0 to 1)
+          h2osoi_ice  =>    waterstatebulk_inst%h2osoi_ice_col            , & ! Input:  [real(r8) (:,:)] ice lens (kg/m2)                       
+          h2osoi_liq  =>    waterstatebulk_inst%h2osoi_liq_col            , & ! Input:  [real(r8) (:,:)] liquid water (kg/m2)                   
+          frac_sno_albedo => waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)] fraction of ground covered by snow for albedo calculations (0 to 1)
+          frac_h2osfc     => waterdiagnosticbulk_inst%frac_h2osfc_col       & ! Input:  [real(r8) (:)] fraction of ground covered by surface water (0 to 1)
           )
 
        do fc = 1,num_nolakec

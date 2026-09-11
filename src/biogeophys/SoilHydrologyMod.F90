@@ -330,7 +330,7 @@ contains
           qflx_ev_h2osfc          =>    waterfluxbulk_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
           qflx_sat_excess_surf    =>    waterfluxbulk_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
-          frac_sno_fluxes            =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_fluxes         =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
           frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )
 

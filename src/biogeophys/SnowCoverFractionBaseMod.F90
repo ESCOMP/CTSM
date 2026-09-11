@@ -65,9 +65,9 @@ module SnowCoverFractionBaseMod
        real(r8) , intent(in)    :: newsnow( bounds%begc: )       ! total new snow in the time step (mm H2O)
        real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
-       real(r8) , intent(inout) :: snow_depth( bounds%begc: )   ! snow height (m)
-       real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow for albedo calculations (0 to 1)
-       real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )     ! fraction of ground covered by snow for heat flux calculations (0 to 1)
+       real(r8) , intent(inout) :: snow_depth( bounds%begc: )      ! snow height (m)
+       real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow for albedo calculations (0 to 1)
+       real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow for heat flux calculations (0 to 1)
      end subroutine UpdateSnowDepthAndFrac_Interface
 
      subroutine AddNewsnowToIntsnow_Interface(this, bounds, num_c, filter_c, &
@@ -83,10 +83,10 @@ module SnowCoverFractionBaseMod
        integer, intent(in) :: num_c       ! number of columns in filter_c
        integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-       real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-       real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-       real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow for albedo calculations (0 to 1)
-       real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+       real(r8) , intent(in)    :: newsnow( bounds%begc: )         ! total new snow in the time step (mm H2O)
+       real(r8) , intent(in)    :: h2osno_total( bounds%begc: )    ! total snow water (mm H2O)
+       real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow for albedo calculations (0 to 1)
+       real(r8) , intent(inout) :: int_snow( bounds%begc: )        ! integrated snowfall (mm H2O)
      end subroutine AddNewsnowToIntsnow_Interface
 
      pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno_albedo)
@@ -120,10 +120,10 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    integer  , intent(in)    :: lun_itype_col( bounds%begc: ) ! landunit type for each column
-    logical  , intent(in)    :: urbpoi( bounds%begc: )        ! true if the given column is urban
-    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow for albedo calculations (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )      ! fraction of ground covered by snow for heat flux calculations (0 to 1)
+    integer  , intent(in)    :: lun_itype_col( bounds%begc: )   ! landunit type for each column
+    logical  , intent(in)    :: urbpoi( bounds%begc: )          ! true if the given column is urban
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c

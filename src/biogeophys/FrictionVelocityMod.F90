@@ -586,8 +586,8 @@ contains
          z0m              =>    canopystate_inst%z0m_patch            , & ! Input: [real(r8) (:)   ] momentum roughness length (m)
          displa           =>    canopystate_inst%displa_patch         , & ! Input: [real(r8) (:)   ] displacement height (m)
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
-         frac_sno_albedo  =>    waterdiagnosticbulk_inst%frac_sno_albedo_col, & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for albedo calculations (0 to 1)
-         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
+         frac_sno_albedo  =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for albedo calculations (0 to 1)
+         snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col   , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
          z_d_town         =>    lun%z_d_town                          , & ! Input:  [real(r8) (:)   ] displacement height of urban landunit (m)

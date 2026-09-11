@@ -68,8 +68,8 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: dqgdT_col              (:)   ! col d(qg)/dT
 
      ! Fractions
-     real(r8), pointer :: frac_sno_albedo_col           (:)   ! col fraction of ground covered by snow (0 to 1)
-     real(r8), pointer :: frac_sno_fluxes_col       (:)   ! col fraction of ground covered by snow (0 to 1) (note: this can be 1 even if there is no snow, but should be ignored in the no-snow case)
+     real(r8), pointer :: frac_sno_albedo_col    (:)   ! col fraction of ground covered by snow (0 to 1)
+     real(r8), pointer :: frac_sno_fluxes_col    (:)   ! col fraction of ground covered by snow (0 to 1) (note: this can be 1 even if there is no snow, but should be ignored in the no-snow case)
      real(r8), pointer :: frac_iceold_col        (:,:) ! col fraction of ice relative to the tot water (new) (-nlevsno+1:nlevgrnd) 
      real(r8), pointer :: frac_h2osfc_col        (:)   ! col fractional area with surface water greater than zero
      real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
@@ -222,8 +222,8 @@ contains
     allocate(this%rh_af_patch            (begp:endp))                     ; this%rh_af_patch            (:)   = nan
     allocate(this%rh10_af_patch          (begp:endp))                     ; this%rh10_af_patch          (:)   = spval
 
-    allocate(this%frac_sno_albedo_col           (begc:endc))                     ; this%frac_sno_albedo_col           (:)   = nan
-    allocate(this%frac_sno_fluxes_col       (begc:endc))                     ; this%frac_sno_fluxes_col       (:)   = nan
+    allocate(this%frac_sno_albedo_col    (begc:endc))                     ; this%frac_sno_albedo_col    (:)   = nan
+    allocate(this%frac_sno_fluxes_col    (begc:endc))                     ; this%frac_sno_fluxes_col    (:)   = nan
     allocate(this%frac_iceold_col        (begc:endc,-nlevsno+1:nlevgrnd)) ; this%frac_iceold_col        (:,:) = nan
     allocate(this%frac_h2osfc_col        (begc:endc))                     ; this%frac_h2osfc_col        (:)   = nan 
     allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
@@ -859,7 +859,7 @@ contains
          varname=this%info%fname('frac_sno_fluxes:frac_sno_eff'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for heat flux calculations'),&
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for heat flux calculations'), &
          units='unitless', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_fluxes_col)
     if (flag == 'read' .and. .not. readvar) then
@@ -870,8 +870,8 @@ contains
          varname=this%info%fname('frac_sno_albedo:frac_sno'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for albedo calculations'),&
-         units='unitless',&
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for albedo calculations'), &
+         units='unitless', &
          interpinic_flag='interp', readvar=readvar, data=this%frac_sno_albedo_col)
     call this%RestartBackcompatIssue783( &
          bounds = bounds, &

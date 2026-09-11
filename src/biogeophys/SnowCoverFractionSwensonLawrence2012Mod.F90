@@ -83,9 +83,9 @@ contains
     real(r8) , intent(in)    :: newsnow( bounds%begc: )       ! total new snow in the time step (mm H2O)
     real(r8) , intent(in)    :: bifall( bounds%begc: )        ! bulk density of newly fallen dry snow (kg/m3)
 
-    real(r8) , intent(inout) :: snow_depth( bounds%begc: )    ! snow height (m)
-    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )      ! fraction of ground covered by snow for albedo calculations (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )      ! fraction of ground covered by snow for heat flux calculations (0 to 1)
+    real(r8) , intent(inout) :: snow_depth( bounds%begc: )       ! snow height (m)
+    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )  ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
@@ -203,10 +203,10 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )          ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )     ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )         ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
     integer  :: fc, c
