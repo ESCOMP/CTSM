@@ -152,6 +152,7 @@ Caveats:
 2) We supply only CMIP6 nitrogen deposition (ndep) from CLM, but 1850 or CPLHIST cases with CLM60 physics default to use the cesm3 spinup version from DATM (use DATM_PRESNDEP and CLM_NDEP_FROM_CPL to change it).
 3) For aerosols DATM uses the CMIP era specified in the COMPSET (use DATM_PRESAERO to change it).
 4) For CO2 DATM uses the CMIP era specified in the COMPSET (use DATM_CO2_TSERIES to change it).
+    </desc>
   </entry>
 
   <entry id="LND_SETS_DUST_EMIS_DRV_FLDS">
