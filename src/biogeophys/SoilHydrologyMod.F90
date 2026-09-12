@@ -310,9 +310,9 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
-     real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno_fluxes
-
+     real(r8) :: qflx_evap            ! evaporation for this column
+     real(r8) :: frac_sno_fluxes_copy ! copy of frac_sno_fluxes (fraction of ground covered by snow for heat flux calculations)
+ 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
 
@@ -344,11 +344,11 @@ contains
         ! ------------------------------------------------------------------------
 
         if (snl(c) >= 0) then
-           fsno=0._r8
+           frac_sno_fluxes_copy=0._r8
            ! if no snow layers, sublimation is removed from h2osoi_ice in drainage
            qflx_evap=qflx_liqevap_from_top_layer(c)
         else
-           fsno=frac_sno_fluxes(c)
+           frac_sno_fluxes_copy=frac_sno_fluxes(c)
            qflx_evap=qflx_ev_soil(c)
         endif
 
@@ -356,7 +356,7 @@ contains
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
         ! remove evaporation (snow treated in SnowHydrology)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap
+        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - frac_sno_fluxes_copy - frac_h2osfc(c))*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do

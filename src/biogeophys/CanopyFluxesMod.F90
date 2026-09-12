@@ -392,7 +392,7 @@ contains
     real(r8) :: snow_depth_c                         ! critical snow depth to cover plant litter (m)
     real(r8) :: rdl                                  ! dry litter layer resistance for water vapor  (s/m)
     real(r8) :: elai_dl                              ! exposed (dry) plant litter area index
-    real(r8) :: fsno_dl                              ! effective snow cover over plant litter
+    real(r8) :: frac_sno_fluxes_dl                   ! fraction of ground covered by snow for heat flux calculations over plant litter (0 to 1)
     real(r8) :: dayl_factor(bounds%begp:bounds%endp) ! scalar (0-1) for daylength effect on Vcmax
     ! If no unfrozen layers, put all in the top layer.
     real(r8) :: rootsum(bounds%begp:bounds%endp)
@@ -1257,8 +1257,8 @@ bioms:   do f = 1, fn
 
             !Litter layer resistance. Added by K.Sakaguchi
             snow_depth_c = params_inst%z_dl ! critical depth for 100% litter burial by snow (=litter thickness)
-            fsno_dl = snow_depth(c)/snow_depth_c    ! effective snow cover for (dry)plant litter
-            elai_dl = params_inst%lai_dl * (1._r8 - min(fsno_dl,1._r8)) ! exposed (dry)litter area index
+            frac_sno_fluxes_dl = snow_depth(c)/snow_depth_c ! effective snow cover for (dry)plant litter
+            elai_dl = params_inst%lai_dl * (1._r8 - min(frac_sno_fluxes_dl,1._r8)) ! exposed (dry)litter area index
             rdl = ( 1._r8 - exp(-elai_dl) ) / ( 0.004_r8*uaf(p)) ! dry litter layer resistance
 
             ! add litter resistance and Lee and Pielke 1992 beta
