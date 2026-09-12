@@ -199,7 +199,7 @@ contains
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
 
          
-         frac_sno_fluxes         => waterdiagnosticbulk_inst%frac_sno_fluxes_col     , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes         => waterdiagnosticbulk_inst%frac_sno_fluxes_col     , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
          snow_depth              => waterdiagnosticbulk_inst%snow_depth_col          , & ! Input:  [real(r8) (:)   ]  snow height (m)                         
          h2osfc                  => waterstatebulk_inst%h2osfc_col                   , & ! Input:  [real(r8) (:)   ]  surface water (mm)                      
          excess_ice              => waterstatebulk_inst%excess_ice_col               , & ! Input:  [real(r8) (:,:) ]  excess ice (kg/m2) (new) (1:nlevgrnd)
@@ -675,7 +675,7 @@ contains
          
          t_soisno     =>    temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ]  soil temperature [K]             
          
-         frac_sno_fluxes  => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ]  fractional snow covered area            
+         frac_sno_fluxes  => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
          h2osfc       =>    waterstatebulk_inst%h2osfc_col	 , & ! Input:  [real(r8) (:)   ]  surface (mm H2O)                        
          h2osno_no_layers => waterstatebulk_inst%h2osno_no_layers_col , & ! Input:  [real(r8) (:)   ]  snow not resolved into layers (mm H2O)
          h2osoi_liq   =>    waterstatebulk_inst%h2osoi_liq_col   , & ! Input:  [real(r8) (:,:) ]  liquid water (kg/m2)                  
@@ -950,7 +950,7 @@ contains
          snl                       =>    col%snl                               , & ! Input:  [integer  (:)   ] number of snow layers                    
          dz                        =>    col%dz                                , & ! Input:  [real(r8) (:,:) ] layer thickness (m)                    
          
-         frac_sno_fluxes           =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col   , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes           =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col   , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          frac_h2osfc               =>    waterdiagnosticbulk_inst%frac_h2osfc_col       , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          h2osno_no_layers          =>    waterstatebulk_inst%h2osno_no_layers_col  , & ! Output: [real(r8) (:)   ] snow that is not resolved into layers (mm H2O)
          h2osoi_ice                =>    waterstatebulk_inst%h2osoi_ice_col        , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2) (new)                 
@@ -1199,7 +1199,7 @@ contains
          sucsat           =>    soilstate_inst%sucsat_col           , & ! Input:  [real(r8) (:,:) ] minimum soil suction (mm)              
          watsat           =>    soilstate_inst%watsat_col           , & ! Input:  [real(r8) (:,:) ] volumetric soil water at saturation (porosity)
          
-         frac_sno_fluxes  =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes  =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col     , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          snow_depth       =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)                         
          exice_subs_col   =>    waterdiagnosticbulk_inst%exice_subs_col      , & ! Output: [real(r8) (:,:) ]  per layer subsidence due to excess ice melt (mm/s)
@@ -1614,7 +1614,7 @@ contains
          
          frac_veg_nosno          => canopystate_inst%frac_veg_nosno_patch   , & ! Input:  [integer  (:)   ]  fraction of vegetation not covered by snow (0 OR 1) [-]
          
-         frac_sno_fluxes         => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ]  eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes         => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
          
          qflx_ev_snow            => waterfluxbulk_inst%qflx_ev_snow_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from snow (mm H2O/s) [+ to atm]
          qflx_ev_soil            => waterfluxbulk_inst%qflx_ev_soil_patch       , & ! Input:  [real(r8) (:)   ]  evaporation flux from soil (mm H2O/s) [+ to atm]
@@ -1984,7 +1984,7 @@ contains
          t_soisno     => temperature_inst%t_soisno_col             , & ! Input: [real(r8) (:,:) ] soil temperature [K]
          t_h2osfc     => temperature_inst%t_h2osfc_col             , & ! Input: [real(r8) (:)   ] surface water temperature
          frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col  , & ! Input: [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
-         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input: [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input: [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          begc         => bounds%begc                               , & ! Input: [integer        ] beginning column index
          endc         => bounds%endc                                 & ! Input: [integer        ] ending column index
          )
@@ -2242,7 +2242,7 @@ contains
     real(r8), intent(in)  :: fn_h2osfc (bounds%begc: )                          ! heat diffusion through standing-water/soil interface [W/m2]
     real(r8), intent(in)  :: c_h2osfc( bounds%begc: )                           ! heat capacity of surface water [col]
     real(r8), intent(in)  :: frac_h2osfc(bounds%begc: )                         ! fractional area with surface water greater than zero
-    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )                     ! fraction of ground covered by snow (0 to 1)
+    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )                     ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8), intent(in)  :: t_soisno(bounds%begc:, -nlevsno+1:)                ! soil temperature [K] 
     real(r8), intent(out) :: rt(bounds%begc: ,1: )                              ! rhs vector entries
     !-----------------------------------------------------------------------
@@ -2418,7 +2418,7 @@ contains
     associate(                                                       &
          z            => col%z                                     , & ! Input: [real(r8) (:,:) ]  layer thickness [m]
          frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col  , & ! Input: [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
-         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input: [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input: [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
          begc         => bounds%begc                               , & ! Input: [integer        ]  beginning column index
          endc         => bounds%endc                                 & ! Input: [integer        ]  ending column index
          )
@@ -2609,7 +2609,7 @@ contains
     real(r8), intent(in)  :: dhsdT(bounds%begc: )                         ! temperature derivative of "hs" [col]
     real(r8), intent(in)  :: tk(bounds%begc: ,-nlevsno+1: )               ! thermal conductivity [W/(m K)]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )           ! used in computing tridiagonal matrix [col, lev]
-    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )               ! fraction of ground covered by snow (0 to 1)
+    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )               ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8), intent(out) :: bmatrix_snow(bounds%begc: , 1:, -nlevsno: )  ! matrix enteries
     real(r8), intent(out) :: bmatrix_snow_soil(bounds%begc: , 1:,-1: )    ! matrix enteries
     !
@@ -2709,7 +2709,7 @@ end subroutine SetMatrix_Snow
     real(r8), intent(in)  :: dz_h2osfc(bounds%begc: )                  ! Thickness of standing water [m]
     real(r8), intent(in)  :: fact( bounds%begc: , -nlevsno+1: )        ! used in computing tridiagonal matrix [col, lev]
     real(r8), intent(in)  :: frac_h2osfc(bounds%begc: )                ! fractional area with surface water greater than zero
-    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )            ! fraction of ground covered by snow (0 to 1)
+    real(r8), intent(in)  :: frac_sno_fluxes(bounds%begc: )            ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8), intent(out) :: bmatrix_soil(bounds%begc: , 1:, 1: )      ! matrix enteries corresponding to internal soil layers
     real(r8), intent(out) :: bmatrix_soil_snow(bounds%begc: , 1: ,1: ) ! matrix enteries corresponding to soil-snow interaction
     !

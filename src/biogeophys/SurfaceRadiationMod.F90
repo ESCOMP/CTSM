@@ -539,7 +539,7 @@ contains
           forc_solai      =>    atm2lnd_inst%forc_solai_grc       , & ! Input:  [real(r8) (:,:) ] diffuse radiation (W/m**2)
 
           snow_depth      =>    waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:)   ] snow height (m)
-          frac_sno_albedo =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+          frac_sno_albedo =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for albedo calculations (0 to 1)
 
           nrad            =>    surfalb_inst%nrad_patch           , & ! Input:  [integer  (:)   ] number of canopy layers, above snow for radiative transfer
           coszen          =>    surfalb_inst%coszen_col           , & ! Input:  [real(r8) (:)   ] column cosine of solar zenith angle
@@ -636,7 +636,7 @@ contains
           fsds_sno_nd     =>    surfrad_inst%fsds_sno_nd_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, direct radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_vi     =>    surfrad_inst%fsds_sno_vi_patch    , & ! Output: [real(r8) (:)   ] incident visible, diffuse radiation on snow (for history files) (patch) [W/m2]
           fsds_sno_ni     =>    surfrad_inst%fsds_sno_ni_patch    , & ! Output: [real(r8) (:)   ] incident near-IR, diffuse radiation on snow (for history files) (patch) [W/m2]
-          frac_sno_fluxes =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col       & !Input:
+          frac_sno_fluxes =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col       & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
 
           )
 

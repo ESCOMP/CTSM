@@ -90,7 +90,7 @@ contains
 
 
          frac_h2osfc      =>    waterdiagnosticbulk_inst%frac_h2osfc_col    , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
-         frac_sno_fluxes  =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] eff. fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes  =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          h2osoi_ice       =>    waterstatebulk_inst%h2osoi_ice_col          , & ! Input:  [real(r8) (:,:) ] ice lens (kg/m2)
          h2osoi_liq       =>    waterstatebulk_inst%h2osoi_liq_col          , & ! Input:  [real(r8) (:,:) ] liquid water (kg/m2)
          qg_snow          =>    waterdiagnosticbulk_inst%qg_snow_col        , & ! Output: [real(r8) (:)   ] specific humidity at snow surface [kg/kg]

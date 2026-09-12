@@ -126,7 +126,7 @@ contains
          canyon_hwr         => lun%canyon_hwr                       , & ! Input:  [real(r8) (:)   ]  ratio of building height to street width          
          wtroad_perv        => lun%wtroad_perv                      , & ! Input:  [real(r8) (:)   ]  weight of pervious road wrt total road            
          
-         frac_sno_albedo    => waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo    => waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)       
          
          alb_roof_dir       => urbanparams_inst%alb_roof_dir        , & ! Output: [real(r8) (:,:) ]  direct roof albedo                              
          alb_roof_dif       => urbanparams_inst%alb_roof_dif        , & ! Output: [real(r8) (:,:) ]  diffuse roof albedo                             

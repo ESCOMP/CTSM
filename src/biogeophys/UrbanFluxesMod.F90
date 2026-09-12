@@ -279,7 +279,7 @@ contains
          swmp80_ref2m        => humanindex_inst%swmp80_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
          swmp80_ref2m_u      => humanindex_inst%swmp80_ref2m_u_patch        , & ! Output: [real(r8) (:)   ]  Urban 2 m Swamp Cooler temperature 80% effi (C)
 
-         frac_sno_albedo     =>   waterdiagnosticbulk_inst%frac_sno_albedo_col       , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo     =>   waterdiagnosticbulk_inst%frac_sno_albedo_col       , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)       
          snow_depth          =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
          dqgdT               =>   waterdiagnosticbulk_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
          qg                  =>   waterdiagnosticbulk_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       

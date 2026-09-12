@@ -205,7 +205,7 @@ contains
 
     real(r8) , intent(in)    :: newsnow( bounds%begc: )          ! total new snow in the time step (mm H2O)
     real(r8) , intent(in)    :: h2osno_total( bounds%begc: )     ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow for albedo calculations (0 to 1)
     real(r8) , intent(inout) :: int_snow( bounds%begc: )         ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:

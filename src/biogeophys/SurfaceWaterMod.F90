@@ -206,8 +206,8 @@ contains
     real(r8) , intent(in)    :: micro_sigma( bounds%begc: )                   ! microtopography pdf sigma (m)
     real(r8) , intent(in)    :: h2osno_total( bounds%begc: )                  ! total snow water (mm H2O)
     real(r8) , intent(in)    :: h2osfc( bounds%begc: )                        ! surface water (mm)
-    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )               ! fraction of ground covered by snow (0 to 1)
-    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )               ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )               ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_fluxes( bounds%begc: )               ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8) , intent(inout) :: frac_h2osfc( bounds%begc: )                   ! col fractional area with surface water greater than zero
     real(r8) , intent(inout) :: frac_h2osfc_nosnow( bounds%begc: )            ! col fractional area with surface water greater than zero (if no snow present)
     real(r8) , intent(inout) :: qflx_too_small_h2osfc_to_soil( bounds%begc: ) ! h2osfc transferred to soil if h2osfc is below some threshold (mm H2O /s)

@@ -122,7 +122,7 @@ contains
          forc_solar         =>    atm2lnd_inst%forc_solar_not_downscaled_grc          , & ! Input:  [real(r8) (:)   ]  incident solar radiation (W/m**2)                 
          forc_lwrad         =>    atm2lnd_inst%forc_lwrad_not_downscaled_grc , & ! Input:  [real(r8) (:)   ]  downward infrared (longwave) radiation (W/m**2)   
 
-         frac_sno_albedo    =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo    =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)       
 
          t_ref2m            =>    temperature_inst%t_ref2m_patch             , & ! Input:  [real(r8) (:)   ]  2 m height surface air temperature (K)            
          t_grnd             =>    temperature_inst%t_grnd_col                , & ! Input:  [real(r8) (:)   ]  ground temperature (K)                            

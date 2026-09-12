@@ -447,8 +447,8 @@ contains
     real(r8)                  , intent(inout) :: dz( bounds%begc: , -nlevsno+1: ) ! layer depth (m)
     real(r8)                  , intent(inout) :: int_snow( bounds%begc: )        ! integrated snowfall (mm H2O)
     real(r8)                  , intent(inout) :: swe_old( bounds%begc:, -nlevsno+1: ) ! snow water before update (mm H2O)
-    real(r8)                  , intent(inout) :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
-    real(r8)                  , intent(inout) :: frac_sno_fluxes( bounds%begc: ) ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8)                  , intent(inout) :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8)                  , intent(inout) :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8)                  , intent(inout) :: snow_depth( bounds%begc: )      ! snow height (m)
     real(r8)                  , intent(inout) :: snomelt_accum( bounds%begc: )   ! accumulated col snow melt for z0m calculation (m H2O)
     !
@@ -868,7 +868,7 @@ contains
 
     integer               , intent(in)  :: snl( bounds%begc: )            ! negative number of snow layers
     integer               , intent(in)  :: lun_itype_col( bounds%begc: )  ! landunit type for each column
-    real(r8)              , intent(in)  :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow (0 to 1)
+    real(r8)              , intent(in)  :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8)              , intent(in)  :: snow_depth( bounds%begc: )     ! snow height (m)
     real(r8)              , intent(in)  :: qflx_snow_grnd( bounds%begc: ) ! snow on ground after interception (mm H2O/s)
     type(filter_col_type) , intent(out) :: snowpack_initialized_filterc   ! column filter: columns where an explicit snow pack is initialized
@@ -1182,7 +1182,7 @@ contains
     character(len=*) , intent(in) :: name                           ! Name of bulk or this tracer (for output in case there's an error)
     real(r8)         , intent(in) :: dtime                          ! land model time step (sec)
     integer          , intent(in) :: snl( bounds%begc: )            ! negative number of snow layers
-    real(r8)         , intent(in) :: frac_sno_fluxes( bounds%begc: ) ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8)         , intent(in) :: frac_sno_fluxes( bounds%begc: ) ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8)         , intent(in) :: qflx_liqdew_to_top_layer( bounds%begc: ) ! rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s)
     real(r8)         , intent(in) :: qflx_solidevap_from_top_layer( bounds%begc: ) ! rate of ice evaporated from top soil or snow layer (sublimation) (mm H2O /s)
     real(r8)         , intent(in) :: qflx_liq_grnd( bounds%begc: )  ! liquid on ground after interception (mm H2O/s)
@@ -1308,7 +1308,7 @@ contains
     real(r8) , intent(in)    :: dtime                                    ! land model time step (sec)
     integer  , intent(in)    :: snl( bounds%begc: )                      ! negative number of snow layers
     real(r8) , intent(in)    :: dz( bounds%begc: , -nlevsno+1: )         ! layer depth (m)
-    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )          ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )          ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8) , intent(in)    :: h2osoi_ice( bounds%begc: , -nlevsno+1: ) ! ice lens (kg/m2)
     real(r8) , intent(in)    :: h2osoi_liq( bounds%begc: , -nlevsno+1: ) ! liquid water (kg/m2)
 
@@ -1766,14 +1766,14 @@ contains
     integer, intent(in) :: filter_nosnowc(:)
 
     real(r8) , intent(in)    :: dtime                            ! land model time step (sec)
-    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )  ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )  ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8) , intent(in)    :: qflx_soliddew_to_top_layer( bounds%begc: ) ! rate of solid water deposited on top soil or snow layer (frost) (mm H2O /s)
     real(r8) , intent(in)    :: qflx_liqdew_to_top_layer( bounds%begc: ) ! rate of liquid water deposited on top soil or snow layer (dew) (mm H2O /s)
     real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )    ! liquid on ground after interception (mm H2O/s)
     real(r8) , intent(in)    :: h2osno_no_layers( bounds%begc: ) ! snow that is not resolved into layers (kg/m2)
 
     real(r8) , intent(inout) :: int_snow( bounds%begc: )         ! integrated snowfall (mm H2O)
-    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(inout) :: frac_sno_albedo( bounds%begc: )  ! fraction of ground covered by snow for albedo calculations (0 to 1)
     real(r8) , intent(inout) :: snow_depth( bounds%begc: )       ! snow height (m)
     !
     ! !LOCAL VARIABLES:
@@ -1828,7 +1828,7 @@ contains
     integer, intent(in) :: num_nosnowc
     integer, intent(in) :: filter_nosnowc(:)
 
-    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )              ! eff. fraction of ground covered by snow (0 to 1)
+    real(r8) , intent(in)    :: frac_sno_fluxes( bounds%begc: )              ! fraction of ground covered by snow for heat flux calculations (0 to 1)
     real(r8) , intent(in)    :: qflx_snow_percolation_bottom( bounds%begc: ) ! liquid percolation out of the bottom of the snow pack (mm H2O /s)
     real(r8) , intent(in)    :: qflx_liq_grnd( bounds%begc: )                ! liquid on ground after interception (mm H2O/s)
     real(r8) , intent(in)    :: qflx_snomelt( bounds%begc: )                 ! snow melt (mm H2O /s)
@@ -1926,7 +1926,7 @@ contains
          t_soisno     => temperature_inst%t_soisno_col    , & ! Input:  [real(r8) (:,:) ] soil temperature (Kelvin)
          imelt        => temperature_inst%imelt_col       , & ! Input:  [integer (:,:)  ] flag for melting (=1), freezing (=2), Not=0
 
-         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] snow covered fraction
+         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          frac_h2osfc  => waterdiagnosticbulk_inst%frac_h2osfc_col        , & ! Input:  [real(r8) (:)   ] fraction of ground covered by surface water (0 to 1)
          swe_old      => waterdiagnosticbulk_inst%swe_old_col            , & ! Input:  [real(r8) (:,:) ] initial swe values
          int_snow     => waterstatebulk_inst%int_snow_col     , & ! Input:  [real(r8) (:)   ] integrated snowfall [mm]
@@ -2138,8 +2138,8 @@ contains
          mss_dst3         => aerosol_inst%mss_dst3_col           , & ! Output: [real(r8) (:,:) ] dust species 3 mass in snow (col,lyr) [kg]
          mss_dst4         => aerosol_inst%mss_dst4_col           , & ! Output: [real(r8) (:,:) ] dust species 4 mass in snow (col,lyr) [kg]
 
-         frac_sno_albedo  => b_waterdiagnostic_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
-         frac_sno_fluxes  => b_waterdiagnostic_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_albedo  => b_waterdiagnostic_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for albedo calculations (0 to 1)
+         frac_sno_fluxes  => b_waterdiagnostic_inst%frac_sno_fluxes_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          snow_depth       => b_waterdiagnostic_inst%snow_depth_col      , & ! Output: [real(r8) (:)   ] snow height (m)
          int_snow         => b_waterstate_inst%int_snow_col             , & ! Output: [real(r8) (:)   ] integrated snowfall [mm]
          snw_rds          => b_waterdiagnostic_inst%snw_rds_col         , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
@@ -2573,7 +2573,7 @@ contains
     associate( &
          t_soisno   => temperature_inst%t_soisno_col    , & ! Output: [real(r8) (:,:) ] soil temperature (Kelvin)
 
-         frac_sno_fluxes => b_waterdiagnostic_inst%frac_sno_fluxes_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_fluxes => b_waterdiagnostic_inst%frac_sno_fluxes_col , & ! Output: [real(r8) (:)   ] fraction of ground covered by snow for heat flux calculations (0 to 1)
          snw_rds    => b_waterdiagnostic_inst%snw_rds_col              , & ! Output: [real(r8) (:,:) ] effective snow grain radius (col,lyr) [microns, m^-6]
 
          mss_bcphi  => aerosol_inst%mss_bcphi_col       , & ! Output: [real(r8) (:,:) ] hydrophilic BC mass in snow (col,lyr) [kg]
