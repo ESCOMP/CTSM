@@ -91,9 +91,6 @@ bad_compsets "Cru " "DATM%CRU"
 bad_compsets Nldas "DATM%NLDAS2"
 bad_compsets Qian '_DATM%QIA_'
 bad_compsets 'Spinup' 'DATM%CPLHIST'
-# --- DATM chemical constituent specifiers ---
-bad_compsets 'Clm60' '%CMIP7%CESM3_CLM60'
-bad_compsets 'Clm50' '%CMIP6_CLM50'
 
 # --- ROF models ---
 bad_compsets Miz _MIZUROUTE_
