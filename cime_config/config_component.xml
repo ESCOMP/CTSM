@@ -141,7 +141,7 @@
     <valid_values>cmip6,cmip7</valid_values>
     <default_value>cmip7</default_value>
     <values>
-      <value compset="DATM[^_]*CMIP6" >cmip6</value>
+      <value compset="^SSP" >cmip6</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
