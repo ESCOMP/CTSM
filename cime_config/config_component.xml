@@ -141,17 +141,19 @@
     <valid_values>cmip6,cmip7</valid_values>
     <default_value>cmip7</default_value>
     <values>
+      <!-- CMIP6 future scenarios (Shared Scenario Pathways SSP) have to be cmip6 -->
       <value compset="^SSP" >cmip6</value>
     </values>
     <group>run_component_ctsm</group>
     <file>env_run.xml</file>
-    <desc>Whether to use CMIP6 or CMIP7 fsurdat/landuse files.
-    As of ctsm5.4 we do not have CMIP7 PFT raw datasets for future scenarios, so only CMIP6 will work. For other compsets default to the CMIP era specified for DATM in the compset. User may modify to a non-default value in env_run.xml.
+    <desc>Whether to use CMIP6 or CMIP7 fsurdat/landuse files (and population density and potentially nitrogen deposition).
+    As of ctsm5.4 we do not have CMIP7 PFT raw datasets for future scenarios, so only CMIP6 will work. DATM defaults to CMIP6 except for NDEP where the CESM3 spinup is used for CLM60 and CMIP6 for CLM50.
+    User may modify DATM to a non-default value in env_run.xml as shown below.
 Caveats:
 1) We supply only CMIP7 population density (only needed for non-SP cases) for CLM6.0 physics because the fire model is calibrated to the CMIP7 version; conversely, for clm5_0 physics we supply only CMIP6 population density.
 2) We supply only CMIP6 nitrogen deposition (ndep) from CLM, but 1850 or CPLHIST cases with CLM60 physics default to use the cesm3 spinup version from DATM (use DATM_PRESNDEP and CLM_NDEP_FROM_CPL to change it).
-3) For aerosols DATM uses the CMIP era specified in the COMPSET (use DATM_PRESAERO to change it).
-4) For CO2 DATM uses the CMIP era specified in the COMPSET (use DATM_CO2_TSERIES to change it).
+3) For aerosols DATM uses CMIP6 (use DATM_PRESAERO to change it).
+4) For CO2 DATM uses CMIP6 (use DATM_CO2_TSERIES to change it).
     </desc>
   </entry>
 
