@@ -34,21 +34,21 @@ def path_to_ctsm_root():
     return _CTSM_ROOT
 
 
-def path_to_cime(standalone_only=False):
+def path_to_cime(ctsm_only=False):
     """Returns the path to cime, if it can be found
 
     Raises a RuntimeError if it cannot be found
 
     We first check in the location where cime should be in a standalone
-    checkout. If standalone_only is True, then we ONLY look for cime in
-    that location. If standalone_only is False, then we fall back to
+    checkout. If ctsm_only is True, then we ONLY look for cime in
+    that location. If ctsm_only is False, then we fall back to
     checking where cime should be in a full CESM checkout.
     """
     cime_standalone_path = os.path.join(path_to_ctsm_root(), "cime")
     if os.path.isdir(cime_standalone_path):
         return cime_standalone_path
 
-    if standalone_only:
+    if ctsm_only:
         raise RuntimeError("Cannot find cime within standalone CTSM checkout")
 
     cesm_path = _path_to_cesm_root()
@@ -79,27 +79,27 @@ def prepend_to_python_path(path):
         sys.path.insert(1, path)
 
 
-def add_cime_lib_to_path(standalone_only=False):
+def add_cime_lib_to_path(ctsm_only=False):
     """Adds the CIME python library to the python path, to allow importing
     modules from that library
 
     Returns the path to the top-level cime directory
 
-    For documentation on standalone_only: See documentation in
+    For documentation on ctsm_only: See documentation in
     path_to_cime
     """
-    cime_path = path_to_cime(standalone_only=standalone_only)
+    cime_path = path_to_cime(ctsm_only=ctsm_only)
     prepend_to_python_path(cime_path)
     cime_lib_path = os.path.join(cime_path, "CIME", "Tools")
     prepend_to_python_path(cime_lib_path)
     return cime_path
 
 
-def add_ctsm_systests_to_path(standalone_only=False):
+def add_ctsm_systests_to_path(ctsm_only=False):
     """Adds the CTSM python SystemTests to the python path, to allow importing
     modules from that library
     """
-    cime_path = path_to_cime(standalone_only=standalone_only)
+    cime_path = path_to_cime(ctsm_only=ctsm_only)
     ctsm_systest_dir = os.path.join(cime_path, os.pardir, "cime_config")
     prepend_to_python_path(ctsm_systest_dir)
     sys.path.insert(1, ctsm_systest_dir)
