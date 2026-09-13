@@ -404,10 +404,12 @@ def get_parser():
         add_logging_args(subparser)
 
     # -- print help for both subparsers
-    parser.epilog = textwrap.dedent(f"""\
+    parser.epilog = textwrap.dedent(
+        f"""\
          {pt_parser.format_help()}
          {rg_parser.format_help()}
-         """)
+         """
+    )
     return parser
 
 
@@ -416,27 +418,33 @@ def check_surf_year(args):
     Check command-line arguments w/r/t --surf-year
     """
     if args.surf_year != 2000 and not args.create_surfdata:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n --surf-year option is set to something besides the default of 2000
                 \n without the --create-surface option"
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if args.surf_year != 1850 and args.create_landuse:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n --surf-year option is NOT set to 1850 and the --create-landuse option
                 \n is selected which requires it to be 1850 (see
                 https://github.com/ESCOMP/CTSM/issues/2018)
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if args.surf_year not in [1850, 2000]:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n --surf-year option can only be set to 1850 or 2000
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
 
@@ -445,90 +453,110 @@ def check_args(args):
     # --------------------------------- #
     # print help and exit when no option is chosen
     if args.run_type not in ("point", "region"):
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n Must supply a positional argument: 'point' or 'region'.
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     args = process_args(args)
 
     if not any([args.create_surfdata, args.create_landuse, args.create_datm, args.create_domain]):
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n Must supply one of:
                 \n --create-surface \n --create-landuse \n --create-datm \n --create-domain \n \n
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if not os.path.exists(args.config_file):
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n Entered default config file does not exist"
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if args.out_surface and not args.create_surfdata:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n out-surface option is given without the --create-surface option"
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if args.create_landuse and not args.create_surfdata:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n --create-landuse option requires the --create-surface option:
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     # Checks related to --surf-year
     check_surf_year(args)
 
     if args.out_surface and os.path.exists(args.out_surface) and not args.overwrite:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                 \n ------------------------------------
                 \n out-surface filename exists and the overwrite option was not also selected"
-                """)
+                """
+        )
         raise argparse.ArgumentError(None, err_msg)
 
     if args.run_type == "region" and args.create_user_mods:
         if not args.create_mesh:
-            err_msg = textwrap.dedent("""\
+            err_msg = textwrap.dedent(
+                """\
                       \n ------------------------------------
                       \nERROR: For regional cases, you can not create user_mods
                       \nwithout creating the mesh file.
 
                       \nPlease rerun the script adding --create-mesh to subset the mesh file."
-                      """)
+                      """
+            )
             raise argparse.ArgumentError(None, err_msg)
 
     if args.run_type == "region" and args.create_mesh:
         if not args.create_domain:
-            err_msg = textwrap.dedent("""\
+            err_msg = textwrap.dedent(
+                """\
                       \n ------------------------------------
                       \nERROR: For regional cases, you can not create mesh files
                       \nwithout creating the domain file.
 
                       \nPlease rerun the script adding --create-domain to subset the domain file."
-                      """)
+                      """
+            )
             raise argparse.ArgumentError(None, err_msg)
 
     if args.run_type == "region" and args.create_datm:
-        err_msg = textwrap.dedent("""\
+        err_msg = textwrap.dedent(
+            """\
                     \n ------------------------------------
                     \nERROR: For regional cases, you can not subset datm data
                     \n (see https://github.com/ESCOMP/CTSM/issues/2110)
                     \n but you can just use the global data instead
-                    """)
+                    """
+        )
         raise NotImplementedError(None, err_msg)
 
     if hasattr(args, "lon1"):
         if (args.lon1 is None) != (args.lon2 is None):
-            err_msg = textwrap.dedent("""\
+            err_msg = textwrap.dedent(
+                """\
                         \n ------------------------------------
                         \nERROR: If providing --lon1, you must also provide --lon2
-                        """)
+                        """
+            )
             raise argparse.ArgumentError(None, err_msg)
         if args.lon1 is not None:
             check_lon1_lt_lon2(args.lon1, args.lon2, args.lon_type)
