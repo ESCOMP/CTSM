@@ -13,7 +13,7 @@ import subprocess
 from datetime import datetime
 import netCDF4
 
-from ctsm.path_utils import path_to_ctsm_root, path_to_cime
+from ctsm.path_utils import path_to_ctsm_root, path_to_ccs_config
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
 from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
@@ -720,7 +720,7 @@ def determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files)
     """
     determine output mesh
     """
-    xml_path = os.path.join(path_to_cime(), "../ccs_config/component_grids_nuopc.xml")
+    xml_path = os.path.join(path_to_ccs_config(), "component_grids_nuopc.xml")
     tree2 = ET.parse(xml_path)
     root = tree2.getroot()
     model_mesh = ""

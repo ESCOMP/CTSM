@@ -66,7 +66,7 @@ from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plat_type, plon_type
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
 from ctsm.longitude import Longitude, detect_lon_type
@@ -378,8 +378,7 @@ def get_parser():
             dest="out_surface",
             type=str,
         )
-        cesmroot = path_to_ctsm_root()
-        defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        defaults_file = os.path.join(path_to_ctsm_root(), DEFAULTS_CONFIG)
         subparser.add_argument(
             "--cfg-file",
             help="Default configure file to use for default filenames.",
@@ -877,7 +876,7 @@ def main():
 
     # --------------------------------- #
     # parse defaults file
-    cesmroot = path_to_ctsm_root()
+    cesmroot = path_to_top_root()
     defaults = configparser.ConfigParser()
     defaults.read(args.config_file)
 

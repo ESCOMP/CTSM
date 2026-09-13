@@ -55,8 +55,8 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(cime_path)
         return (ctsm_path, cime_path)
 
-    def test_pathToCime_standaloneOnlyWithCime(self):
-        """Test path_to_cime with standalone_only, where cime is in the location
+    def test_pathToCime_ctsmOnlyWithCime(self):
+        """Test path_to_cime with ctsm_only, where cime is in the location
         it should be with a standalone checkout
         """
         ctsm_path = os.path.join(self._testdir, "ctsm")
@@ -64,21 +64,21 @@ class TestPathUtils(unittest.TestCase):
         os.makedirs(actual_path_to_cime)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
-            path_to_cime = path_utils.path_to_cime(standalone_only=True)
+            path_to_cime = path_utils.path_to_cime(ctsm_only=True)
 
         self.assertEqual(path_to_cime, actual_path_to_cime)
 
-    def test_pathToCime_standaloneOnlyWithoutCime(self):
-        """Test path_to_cime with standalone_only, where cime is missing"""
+    def test_pathToCime_ctsmOnlyWithoutCime(self):
+        """Test path_to_cime with ctsm_only, where cime is missing"""
         ctsm_path = os.path.join(self._testdir, "ctsm")
         os.makedirs(ctsm_path)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             with self.assertRaisesRegex(RuntimeError, "Cannot find cime"):
-                _ = path_utils.path_to_cime(standalone_only=True)
+                _ = path_utils.path_to_cime(ctsm_only=True)
 
-    def test_pathToCime_standaloneOnlyWithCimeInCesm(self):
-        """Test path_to_cime with standalone_only, where cime is missing from
+    def test_pathToCime_ctsmOnlyWithCimeInCesm(self):
+        """Test path_to_cime with ctsm_only, where cime is missing from
         the standalone structure, but cime is present in the CESM
         directory structure: should raise an exception rather than
         finding that cime
@@ -87,7 +87,7 @@ class TestPathUtils(unittest.TestCase):
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             with self.assertRaisesRegex(RuntimeError, "Cannot find cime"):
-                _ = path_utils.path_to_cime(standalone_only=True)
+                _ = path_utils.path_to_cime(ctsm_only=True)
 
     def test_pathToCime_cimeInCesm(self):
         """Test path_to_cime, where cime is not in the standalone directory but
@@ -138,6 +138,92 @@ class TestPathUtils(unittest.TestCase):
             path_to_cime = path_utils.path_to_cime()
 
         self.assertEqual(path_to_cime, actual_path_to_cime)
+
+    def test_pathToCcsConfig_standaloneWithCcsConfig(self):
+        """Test path_to_ccs_config returns standalone ccs_config path when present."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        actual_ccs_config = os.path.join(ctsm_path, "ccs_config")
+        os.makedirs(actual_ccs_config)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            ccs_config = path_utils.path_to_ccs_config()
+
+        self.assertEqual(ccs_config, actual_ccs_config)
+
+    def test_pathToCcsConfig_ccsConfigInCesm(self):
+        """Test path_to_ccs_config locates top-level ccs_config in CESM checkout layout."""
+        ctsm_path = self._ctsm_path_in_cesm()
+        cesm_path = self._testdir
+        actual_ccs_config = os.path.join(cesm_path, "ccs_config")
+        os.makedirs(ctsm_path)
+        os.makedirs(actual_ccs_config)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            ccs_config = path_utils.path_to_ccs_config()
+
+        self.assertEqual(ccs_config, actual_ccs_config)
+
+    def test_pathToTopRoot_cesmAndStandalone(self):
+        """Test path_to_top_root resolves CESM root when inside CESM and CTSM root otherwise."""
+        ctsm_path = self._ctsm_path_in_cesm()
+        cesm_path = self._testdir
+        os.makedirs(ctsm_path)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            self.assertEqual(path_utils.path_to_top_root(), cesm_path)
+
+    def test_pathUnderTopSubmodule_standalone(self):
+        """Test path_under_top_submodule resolves submodules in standalone CTSM checkout."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        submod_dir = os.path.join(ctsm_path, "share")
+        os.makedirs(submod_dir)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            submod_path = path_utils.path_under_top_submodule("share")
+
+        self.assertEqual(submod_path, submod_dir)
+
+    def test_pathUnderTopSubmodule_cesm(self):
+        """Test path_under_top_submodule resolves top-level submodules in CESM checkout."""
+        ctsm_path = self._ctsm_path_in_cesm()
+        cesm_path = self._testdir
+        actual_submod = os.path.join(cesm_path, "share")
+        os.makedirs(ctsm_path)
+        os.makedirs(actual_submod)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            submod_path = path_utils.path_under_top_submodule("share")
+
+        self.assertEqual(submod_path, actual_submod)
+
+    def test_pathUnderTopSubmodule_missing(self):
+        """Test path_under_top_submodule raises RuntimeError when submodule is missing."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        os.makedirs(ctsm_path)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            with self.assertRaisesRegex(RuntimeError, "Cannot find share"):
+                _ = path_utils.path_under_top_submodule("share")
+
+    def test_pathUnderCtsm_found(self):
+        """Test path_under_ctsm returns path when submodule exists inside CTSM root."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        submod_dir = os.path.join(ctsm_path, "cime")
+        os.makedirs(submod_dir)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            self.assertEqual(path_utils.path_under_ctsm("cime"), submod_dir)
+
+    def test_pathUnderCtsm_missing(self):
+        """Test path_under_ctsm raises RuntimeError when submodule is missing inside CTSM root."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        os.makedirs(ctsm_path)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            with self.assertRaisesRegex(
+                RuntimeError, "Cannot find cime within standalone CTSM checkout"
+            ):
+                _ = path_utils.path_under_ctsm("cime")
 
 
 if __name__ == "__main__":
