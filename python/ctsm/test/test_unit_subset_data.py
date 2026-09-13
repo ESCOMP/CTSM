@@ -7,6 +7,7 @@ You can run this by:
 """
 
 import unittest
+from unittest import mock
 import tempfile
 import shutil
 import configparser
@@ -23,7 +24,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 
 # pylint: disable=invalid-name,too-many-public-methods,protected-access
 
@@ -868,6 +869,21 @@ class TestSubsetData(unittest.TestCase):
             ]
         )
         self.assertTrue(np.array_equal(result["fake"].values, expected_fake_values))
+
+    def test_setupFiles_cesmCheckoutLayout(self):
+        """Test setup_files resolves cesmroot to CESM root and defaults_file
+        under CTSM root in CESM checkout layout."""
+        ctsm_path = os.path.join(self._tempdir, "components", "clm")
+        cesm_path = self._tempdir
+        os.makedirs(ctsm_path)
+        os.makedirs(os.path.join(cesm_path, "cime"))
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            cesmroot = path_to_top_root()
+            files = setup_files(self.args, self.defaults, cesmroot, testing=True)
+
+        self.assertEqual(cesmroot, cesm_path)
+        self.assertIn("fsurf_in", files)
 
 
 if __name__ == "__main__":

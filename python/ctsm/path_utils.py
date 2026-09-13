@@ -34,6 +34,49 @@ def path_to_ctsm_root():
     return _CTSM_ROOT
 
 
+def path_to_top_root():
+    """Returns the top-level repository root directory (CESM or CTSM)."""
+    return _path_to_cesm_root() or path_to_ctsm_root()
+
+
+def path_under_ctsm(submodule_name):
+    """Returns the path to a submodule directory located inside the CTSM root directory.
+
+    Raises a RuntimeError if it cannot be found within the standalone CTSM checkout.
+    """
+    submod_path = os.path.join(path_to_ctsm_root(), submodule_name)
+    if os.path.isdir(submod_path):
+        return submod_path
+
+    raise RuntimeError(f"Cannot find {submodule_name} within standalone CTSM checkout")
+
+
+def path_under_top_submodule(submodule_name):
+    """Returns the path to a top-level submodule directory (e.g. 'cime', 'ccs_config').
+
+    Checks <CTSM_ROOT>/<submodule> first (via path_under_ctsm), then falls back to checking
+    <CESM_ROOT>/<submodule> if inside a CESM checkout.
+    Raises a RuntimeError if it cannot be found.
+    """
+    try:
+        return path_under_ctsm(submodule_name)
+    except RuntimeError as exc:
+        cesm_path = _path_to_cesm_root()
+        if cesm_path is not None:
+            cesm_submod = os.path.join(cesm_path, submodule_name)
+            if os.path.isdir(cesm_submod):
+                return cesm_submod
+
+            raise RuntimeError(
+                f"Cannot find {submodule_name} within standalone CTSM checkout, "
+                f"or within CESM checkout rooted at {cesm_path}"
+            ) from exc
+        raise RuntimeError(
+            f"Cannot find {submodule_name} within standalone CTSM checkout, "
+            "and we don't seem to be within a CESM checkout."
+        ) from exc
+
+
 def path_to_cime(ctsm_only=False):
     """Returns the path to cime, if it can be found
 
@@ -44,28 +87,24 @@ def path_to_cime(ctsm_only=False):
     that location. If ctsm_only is False, then we fall back to
     checking where cime should be in a full CESM checkout.
     """
-    cime_standalone_path = os.path.join(path_to_ctsm_root(), "cime")
-    if os.path.isdir(cime_standalone_path):
-        return cime_standalone_path
-
     if ctsm_only:
-        raise RuntimeError("Cannot find cime within standalone CTSM checkout")
+        return path_under_ctsm("cime")
+    return path_under_top_submodule("cime")
 
-    cesm_path = _path_to_cesm_root()
-    if cesm_path is None:
-        raise RuntimeError(
-            "Cannot find cime within standalone CTSM checkout, "
-            "and we don't seem to be within a CESM checkout."
-        )
 
-    cime_in_cesm_path = os.path.join(cesm_path, "cime")
-    if os.path.isdir(cime_in_cesm_path):
-        return cime_in_cesm_path
+def path_to_ccs_config(ctsm_only=False):
+    """Returns the path to ccs_config, if it can be found
 
-    raise RuntimeError(
-        "Cannot find cime within standalone CTSM checkout, "
-        "or within CESM checkout rooted at {}".format(cesm_path)
-    )
+    Raises a RuntimeError if it cannot be found
+
+    We first check in the location where ccs_config should be in a standalone
+    checkout. If ctsm_only is True, then we ONLY look for ccs_config in
+    that location. If ctsm_only is False, then we fall back to
+    checking where ccs_config should be in a full CESM checkout.
+    """
+    if ctsm_only:
+        return path_under_ctsm("ccs_config")
+    return path_under_top_submodule("ccs_config")
 
 
 def prepend_to_python_path(path):
