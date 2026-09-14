@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3407;
+my $ntests = 3409;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1018,6 +1018,14 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_res_wo_name"    =>{ options=>"--res CLM_USRDAT --envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_name_wo_res"    =>{ options=>"--res 0.9x1.25 clm_usrdat_name=testname --envxml_dir .",
+                                     namelst=>"",
                                      phys=>"clm6_0",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",
