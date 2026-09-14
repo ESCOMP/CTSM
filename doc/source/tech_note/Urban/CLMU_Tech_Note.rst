@@ -696,9 +696,10 @@ The direct incident solar radiation conserves energy as
 .. math::
    :label: eq-0003
 
-   S_{atm} \downarrow_{\Lambda}^{\mu} = f_{roof}S_{roof} \downarrow_{\Lambda}^{\mu} + \left( 1 - f_{roof} \right)
-   \left\lbrack S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}^{\mu}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right) \right\rbrack
-
+   \begin{split}
+   S_{atm} \downarrow_{\Lambda}^{\mu} &= f_{roof}S_{roof} \downarrow_{\Lambda}^{\mu} + \left( 1 - f_{roof} \right) \\
+   &\quad \left\lbrack S_{imprvrd} \downarrow_{\Lambda}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}^{\mu}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right) \right\rbrack
+   \end{split}
 
 Note that the factor :math:`\frac{H}{W}` for the sunlit wall and shaded wall converts the flux from watts per meter squared of wall area to watts per meter squared of ground area.
 
@@ -825,9 +826,10 @@ The diffuse incident solar radiation conserves energy as
 .. math::
    :label: eq-0004
 
-   S_{atm} \downarrow_{\Lambda} = f_{roof}S_{roof} \downarrow_{\Lambda} + \left( 1 - f_{roof} \right)
-   \left\lbrack S_{imprvrd} \downarrow_{\Lambda}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right) \right\rbrack
-
+   \begin{split}
+   S_{atm} \downarrow_{\Lambda} &= f_{roof}S_{roof} \downarrow_{\Lambda} + \left( 1 - f_{roof} \right) \\
+   &\quad \left\lbrack S_{imprvrd} \downarrow_{\Lambda}\left( 1 - f_{prvrd} \right) + S_{prvrd} \downarrow_{\Lambda}f_{prvrd} + \frac{H}{W}\left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right) \right\rbrack
+   \end{split}
 
 .. _sec-absorbed-and-reflected-solar-radiatio:
 
@@ -1180,10 +1182,10 @@ where :math:`{\overrightarrow{S}}_{sunwall,\Lambda,i}^{\mu}` (equation :eq:`eq-0
 .. math::
    :label: eq-0012
 
-   {\overrightarrow{S}}_{road,\Lambda,i}^{\mu} = \left( 1 - \alpha_{imprvrd,\Lambda}^{\mu} \right)\left( S_{sunwall - road} \uparrow_{\Lambda,i - 1}^{\mu} + S_{shdwall - road} \uparrow_{\Lambda,i - 1}^{\mu} \right)\frac{H}{W}\left( 1 - f_{prvrd} \right)
-   + \left( 1 - \alpha_{prvrd,\Lambda}^{\mu} \right)\left( S_{sunwall - road} \uparrow_{\Lambda,i - 1}^{\mu} + S_{shdwall - road} \uparrow_{\Lambda,i - 1}^{\mu} \right)\frac{H}{W}f_{prvrd}
-
-
+   \begin{split}
+   {\overrightarrow{S}}_{road,\Lambda,i}^{\mu} &= \left( 1 - \alpha_{imprvrd,\Lambda}^{\mu} \right)\left( S_{sunwall - road} \uparrow_{\Lambda,i - 1}^{\mu} + S_{shdwall - road} \uparrow_{\Lambda,i - 1}^{\mu} \right)\frac{H}{W}\left( 1 - f_{prvrd} \right) \\
+   &\quad + \left( 1 - \alpha_{prvrd,\Lambda}^{\mu} \right)\left( S_{sunwall - road} \uparrow_{\Lambda,i - 1}^{\mu} + S_{shdwall - road} \uparrow_{\Lambda,i - 1}^{\mu} \right)\frac{H}{W}f_{prvrd}
+   \end{split}
 
 is the direct beam solar radiation absorbed by the road on the :math:`i^{th}` reflection.
 
@@ -1194,20 +1196,18 @@ The total direct beam and diffuse solar radiation reflected by the urban canyon 
 .. math::
    :label: eq-0013
 
-   S_{uc} \uparrow_{\Lambda}^{\mu} = S_{imprvrd} \uparrow_{\Lambda,i = n + 1}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \uparrow_{\Lambda,i = n + 1}^{\mu}f_{prvrd}
-   + \left( S_{sunwall} \uparrow_{\Lambda,i = n + 1}^{\mu} + S_{shdwall} \uparrow_{\Lambda,i = n + 1}^{\mu} \right)\frac{H}{W}
-
-
-
-
+   \begin{split}
+   S_{uc} \uparrow_{\Lambda}^{\mu} &= S_{imprvrd} \uparrow_{\Lambda,i = n + 1}^{\mu}\left( 1 - f_{prvrd} \right) + S_{prvrd} \uparrow_{\Lambda,i = n + 1}^{\mu}f_{prvrd} \\
+   &\quad + \left( S_{sunwall} \uparrow_{\Lambda,i = n + 1}^{\mu} + S_{shdwall} \uparrow_{\Lambda,i = n + 1}^{\mu} \right)\frac{H}{W}
+   \end{split}
 
 .. math::
    :label: eq-0014
 
-   S_{uc} \uparrow_{\Lambda} = S_{imprvrd} \uparrow_{\Lambda,i = n + 1}\left( 1 - f_{prvrd} \right) + S_{prvrd} \uparrow_{\Lambda,i = n + 1}f_{prvrd}
-   + \left( S_{sunwall} \uparrow_{\Lambda,i = n + 1} + S_{shdwall} \uparrow_{\Lambda,i = n + 1} \right)\frac{H}{W}
-
-
+   \begin{split}
+   S_{uc} \uparrow_{\Lambda} &= S_{imprvrd} \uparrow_{\Lambda,i = n + 1}\left( 1 - f_{prvrd} \right) + S_{prvrd} \uparrow_{\Lambda,i = n + 1}f_{prvrd} \\
+   &\quad + \left( S_{sunwall} \uparrow_{\Lambda,i = n + 1} + S_{shdwall} \uparrow_{\Lambda,i = n + 1} \right)\frac{H}{W}
+   \end{split}
 
 while the total absorbed is
 
@@ -1236,9 +1236,10 @@ Solar radiation in the urban canyon is conserved as
 .. math::
    :label: eq-0017
 
-   S_{road} \downarrow_{\Lambda}^{\mu} + \left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right)\frac{H}{W} + S_{road} \downarrow_{\Lambda} + \left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right)\frac{H}{W}
-   - \left( {\overrightarrow{S}}_{uc,\Lambda}^{\mu} + {\overrightarrow{S}}_{uc,\Lambda} + S_{uc} \uparrow_{\Lambda}^{\mu} + S_{uc} \uparrow_{\Lambda} \right) = 0
-
+   \begin{split}
+   &S_{road} \downarrow_{\Lambda}^{\mu} + \left( S_{sunwall} \downarrow_{\Lambda}^{\mu} + S_{shdwall} \downarrow_{\Lambda}^{\mu} \right)\frac{H}{W} + S_{road} \downarrow_{\Lambda} + \left( S_{sunwall} \downarrow_{\Lambda} + S_{shdwall} \downarrow_{\Lambda} \right)\frac{H}{W} \\
+   &\quad - \left( {\overrightarrow{S}}_{uc,\Lambda}^{\mu} + {\overrightarrow{S}}_{uc,\Lambda} + S_{uc} \uparrow_{\Lambda}^{\mu} + S_{uc} \uparrow_{\Lambda} \right) = 0
+   \end{split}
 
 The direct beam and diffuse urban canyon albedos are
 
@@ -1311,9 +1312,10 @@ where :math:`L_{atm} \downarrow` is the longwave radiation from the atmosphere. 
 .. math::
    :label: eq-0018
 
-   L_{atm} \downarrow = f_{roof}L_{roof} \downarrow + \left( 1 - f_{roof} \right)
-   \left\lbrack L_{imprvrd} \downarrow \left( 1 - f_{prvrd} \right) + L_{prvrd} \downarrow f_{prvrd} + \frac{H}{W}\left( L_{sunwall} \downarrow + L_{shdwall} \downarrow \right) \right\rbrack
-
+   \begin{split}
+   L_{atm} \downarrow &= f_{roof}L_{roof} \downarrow + \left( 1 - f_{roof} \right) \\
+   &\quad \left\lbrack L_{imprvrd} \downarrow \left( 1 - f_{prvrd} \right) + L_{prvrd} \downarrow f_{prvrd} + \frac{H}{W}\left( L_{sunwall} \downarrow + L_{shdwall} \downarrow \right) \right\rbrack
+   \end{split}
 
 .. _sec-absorbed-reflected-and-emitted-longwave:
 
@@ -1776,9 +1778,10 @@ Note that the emitted longwave term in equations :eq:`eq-0019`-:eq:`eq-0038` onl
 .. math::
    :label: eq-0039
 
-   L_{road - sunwall}\overset{e}{\uparrow} = L_{road - shdwall}\overset{e}{\uparrow} = L_{sunwall - road}\overset{e}{\uparrow} = L_{shdwall - road}\overset{e}{\uparrow}
-   = L_{shdwall - sunwall}\overset{e}{\uparrow} = L_{sunwall - shdwall}\overset{e}{\uparrow} = 0
-
+   \begin{split}
+   L_{road - sunwall}\overset{e}{\uparrow} = L_{road - shdwall}\overset{e}{\uparrow} &= L_{sunwall - road}\overset{e}{\uparrow} = L_{shdwall - road}\overset{e}{\uparrow} \\
+   &= L_{shdwall - sunwall}\overset{e}{\uparrow} = L_{sunwall - shdwall}\overset{e}{\uparrow} = 0
+   \end{split}
 
 The reflected longwave radiation to the sky is added to the total upward longwave radiation for each urban surface as
 
@@ -2112,14 +2115,11 @@ The momentum flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`
 .. math::
    :label: eq-0042
 
-   \begin{cases}
-   \varphi_{m}(\zeta) = 0.7k^{\frac{2}{3}}( - \zeta)^{\frac{1}{3}} \text{for }\zeta < - 1.574\ (\text{very unstable})
-
-   \varphi_{m}(\zeta) = (1 - 16\zeta)^{- \frac{1}{4}} & \text{for -1.574} \leq \zeta < 0\ (\text{unstable}) \\
-
-   \varphi_{m}(\zeta) = 1 + 5\zeta \text{for }0 \leq \zeta \leq 1\ (\text{stable})
-
-   \varphi_{m}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
+   \varphi_{m}(\zeta) = \begin{cases}
+   0.7k^{\frac{2}{3}}( - \zeta)^{\frac{1}{3}} & \text{for }\zeta < - 1.574\ (\text{very unstable}) \\
+   (1 - 16\zeta)^{- \frac{1}{4}} & \text{for -1.574} \leq \zeta < 0\ (\text{unstable}) \\
+   1 + 5\zeta & \text{for }0 \leq \zeta \leq 1\ (\text{stable}) \\
+   5 + \zeta & \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
 The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998 <Zengetal1998>`)
@@ -2127,14 +2127,11 @@ The sensible and latent heat flux gradient relations are (:ref:`Zeng et al. 1998
 .. math::
    :label: eq-0044
 
-   \begin{cases}
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 0.9k^{\frac{4}{3}}( - \zeta)^{\frac{- 1}{3}} \text{for }\zeta < - 0.465\ (\text{very unstable})
-
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = (1 - 16\zeta)^{- \frac{1}{2}} & \text{for -0.465} \leq \zeta < 0\ (\text{unstable}) \\
-
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 1 + 5\zeta \text{for }0 \leq \zeta \leq 1\ (\text{stable})
-
-   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = 5 + \zeta \text{for }\zeta\text{>1 }(\text{very stable})
+   \varphi_{h}(\zeta) = \varphi_{w}(\zeta) = \begin{cases}
+   0.9k^{\frac{4}{3}}( - \zeta)^{\frac{- 1}{3}} & \text{for }\zeta < - 0.465\ (\text{very unstable}) \\
+   (1 - 16\zeta)^{- \frac{1}{2}} & \text{for -0.465} \leq \zeta < 0\ (\text{unstable}) \\
+   1 + 5\zeta & \text{for }0 \leq \zeta \leq 1\ (\text{stable}) \\
+   5 + \zeta & \text{for }\zeta\text{>1 }(\text{very stable})
    \end{cases}
 
 To ensure continuous functions of :math:`\varphi_{m}(\zeta)`, :math:`\varphi_{h}(\zeta)`, and :math:`\varphi_{w}(\zeta)`, the simplest approach (i.e., without considering any transition regimes) is to match the relations for very unstable and unstable conditions at :math:`\zeta_{m} = - 1.574` for :math:`\varphi_{m}(\zeta)` and :math:`\zeta_{h} = \zeta_{w} = - 0.465` for :math:`\varphi_{h}(\zeta) = \varphi_{w}(\zeta)` (:ref:`Zeng et al. 1998 <Zengetal1998>`). The flux gradient relations can be integrated to yield wind profiles for the following conditions:
@@ -2264,10 +2261,10 @@ Using :math:`\varphi_{h} = \varphi_{m}^{2} = (1 - 16\zeta)^{- \frac{1}{2}}` for 
 .. math::
    :label: eq-0046
 
-   \zeta = \frac{R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)}{1 - 5\min\left( R_{iB},0.19 \right)} 0.01 \leq \zeta \leq 2 \text{for }R_{iB} \geq 0\ (\text{neutral or stable})
-
-   \zeta = R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)  - 100 \leq \zeta \leq - 0.01 \text{for }R_{iB} < 0\ (\text{unstable})
-
+   \zeta = \begin{cases}
+   \dfrac{R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right)}{1 - 5\min\left( R_{iB},0.19 \right)}, \ 0.01 \leq \zeta \leq 2 & \text{for }R_{iB} \geq 0\ (\text{neutral or stable}) \\
+   R_{iB}\ln\left( \frac{z_{atm,m} - d}{z_{0m}} \right), \ - 100 \leq \zeta \leq - 0.01 & \text{for }R_{iB} < 0\ (\text{unstable})
+   \end{cases}
 
 Upon iteration, the following is used to determine :math:`\zeta` and thus :math:`L`
 
@@ -2425,17 +2422,20 @@ The iterative solution begins with the friction velocity :math:`u_{*}`, potentia
 .. math::
    :label: eq-0049
 
-   r_{ah} = \frac{\theta_{atm} - \theta_{s}}{\theta_{*}u_{*}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack
-   \left\lbrack \ln\left( \frac{z_{atm,h} - d_{canopy}}{z_{0h,\mspace{6mu} canopy}} \right) - \psi_{h}\left( \frac{z_{atm,h} - d_{canopy}}{L} \right) + \psi_{h}\left( \frac{z_{0h,canopy}}{L} \right) \right\rbrack
-
-
+   \begin{split}
+   r_{ah} = \frac{\theta_{atm} - \theta_{s}}{\theta_{*}u_{*}} &= \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) \right. \\
+   &\quad \left. + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack \\
+   &\quad \left\lbrack \ln\left( \frac{z_{atm,h} - d_{canopy}}{z_{0h,\mspace{6mu} canopy}} \right) - \psi_{h}\left( \frac{z_{atm,h} - d_{canopy}}{L} \right) + \psi_{h}\left( \frac{z_{0h,canopy}}{L} \right) \right\rbrack
+   \end{split}
 
 .. math::
    :label: eq-0050
 
-   r_{aw} = \frac{q_{atm} - q_{s}}{q_{*}u_{*}} = \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack
-   \left\lbrack \ln\left( \frac{z_{atm,w} - d_{canopy}}{z_{0w,canopy}} \right) - \psi_{w}\left( \frac{z_{atm,w} - d_{canopy}}{L} \right) + \psi_{w}\left( \frac{z_{0w,canopy}}{L} \right) \right\rbrack
-
+   \begin{split}
+   r_{aw} = \frac{q_{atm} - q_{s}}{q_{*}u_{*}} &= \frac{1}{k^{2}V_{a}}\left\lbrack \ln\left( \frac{z_{atm,m} - d_{canopy}}{z_{0m,canopy}} \right) - \psi_{m}\left( \frac{z_{atm,m} - d_{canopy}}{L} \right) \right. \\
+   &\quad \left. + \psi_{m}\left( \frac{z_{0m,canopy}}{L} \right) \right\rbrack \\
+   &\quad \left\lbrack \ln\left( \frac{z_{atm,w} - d_{canopy}}{z_{0w,canopy}} \right) - \psi_{w}\left( \frac{z_{atm,w} - d_{canopy}}{L} \right) + \psi_{w}\left( \frac{z_{0w,canopy}}{L} \right) \right\rbrack
+   \end{split}
 
 The resistances to sensible heat and latent heat transfer between canyon surfaces (roof, sunlit and shaded wall, pervious and impervious road) and the UCL depend only on canyon wind speed following :ref:`Masson (2000) <masson2000>`. Thus, the surface resistances, :math:`r_{s,roof}`, :math:`r_{s,sunwall}`, :math:`r_{s,shdwall}`, :math:`r_{s,prvrd}`, :math:`r_{s,imprvrd}`, (s m\ :sup:`-1`) are identical and are determined from (:ref:`Rowley et al. 1930 <rowleyetal1930>`)
 
@@ -2474,7 +2474,10 @@ The UCL air temperature and specific humidity are determined by solving the foll
 .. math::
    :label: eq-0240
 
-   H = - \rho_{atm}C_{p}\frac{\theta_{atm} - T_{ac}}{r_{ah}} = W_{roof}H_{roof} + \left( 1 - W_{roof} \right) \times \left\lbrack f_{prvrd}H_{prvrd} + \left( 1 - f_{prvrd} \right)H_{imprvrd} + \frac{H}{W}H_{sunwall} + \frac{H}{W}H_{shdwall} \right\rbrack
+   \begin{split}
+   H = - \rho_{atm}C_{p}\frac{\theta_{atm} - T_{ac}}{r_{ah}} &= W_{roof}H_{roof} + \left( 1 - W_{roof} \right) \times \\
+   &\quad \left\lbrack f_{prvrd}H_{prvrd} + \left( 1 - f_{prvrd} \right)H_{imprvrd} + \frac{H}{W}H_{sunwall} + \frac{H}{W}H_{shdwall} \right\rbrack
+   \end{split}
 
 where :math:`H` is sensible heat flux (W m\ :sup:`-2`) and :math:`T_{g}` is the surface temperature of each urban surface. The term :math:`W_{roof}` is the relative contribution of roof fluxes to the total urban landunit flux (:numref:`table-input-data`). The term :math:`1 - W_{roof}` is then the relative contribution of the canyon to the total urban landunit flux. The term :math:`f_{prvrd}` is the fraction of road that is pervious (:numref:`table-input-data`) and the term :math:`1 - f_{prvrd}` is the fraction of the road that is impervious. Note that the factor :math:`\frac{H}{W}` for the sunwall and shadewall converts the flux from watts per meter squared of surface area to watts per meter squared of ground area.
 
@@ -3200,7 +3203,10 @@ The resulting equations are
 .. math::
    :label: eq-0547
 
-   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = h^{n} + \frac{\partial h}{\partial T_{i}}\left( T_{i}^{n + 1} - T_{i} \right) - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}}
+   \begin{split}
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) &= h^{n} + \frac{\partial h}{\partial T_{i}}\left( T_{i}^{n + 1} - T_{i} \right) \\
+   &\quad - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}}
+   \end{split}
 
 .. math::
    :label: eq-0286
@@ -3242,12 +3248,9 @@ where :math:`{\overrightarrow{S}}_{g}` is the absorbed solar radiation (:numref:
    :label: eq-0068
 
    \begin{cases}
-   H_{wasteheat,prvrd} = H_{wasteheat,imprvrd} = \frac{H_{wasteheat}}{1 - W_{roof}}
-
+   H_{wasteheat,prvrd} = H_{wasteheat,imprvrd} = \dfrac{H_{wasteheat}}{1 - W_{roof}} \\
    H_{wasteheat,sunwall} = H_{wasteheat,shdwall} = H_{wasteheat,roof} = 0 \\
-
-   H_{aircond,prvrd} = H_{aircond,imprvrd} = \frac{H_{aircond}}{1 - W_{roof}}
-
+   H_{aircond,prvrd} = H_{aircond,imprvrd} = \dfrac{H_{aircond}}{1 - W_{roof}} \\
    H_{aircond,sunwall} = H_{aircond,shdwall} = H_{aircond,roof} = 0
    \end{cases}
 
@@ -3329,7 +3332,10 @@ This boundary condition yields, for :math:`i = N_{levgrnd}`,
 .. math::
    :label: eq-0548
 
-   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{h,i} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{h,i} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
+   \begin{split}
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) &= - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{h,i} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} \\
+   &\quad - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{h,i} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
+   \end{split}
 
 .. math::
    :label: eq-0303
@@ -3368,7 +3374,10 @@ For the interior snow/soil layers of all surfaces, :math:`snl + 1 < i < N_{nlevg
 .. math::
    :label: eq-0549
 
-   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) = - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
+   \begin{split}
+   \frac{c_{i}\Delta z_{i}}{\Delta t}\left( T_{i}^{n + 1} - T_{i}^{n} \right) &= - \alpha\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n} - T_{i + 1}^{n} \right)}{z_{i + 1} - z_{i}} + \alpha\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n} - T_{i}^{n} \right)}{z_{i} - z_{i - 1}} \\
+   &\quad - (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i} \right\rbrack\left( T_{i}^{n + 1} - T_{i + 1}^{n + 1} \right)}{z_{i + 1} - z_{i}} + (1 - \alpha)\frac{\lambda\left\lbrack z_{h,i - 1} \right\rbrack\left( T_{i - 1}^{n + 1} - T_{i}^{n + 1} \right)}{z_{i} - z_{i - 1}}
+   \end{split}
 
 .. math::
    :label: eq-0308
@@ -3433,13 +3442,13 @@ The total waste heat from space heating/air conditioning is
 .. math::
    :label: eq-0073
 
-   H_{wasteheat} = W_{roof}\left( f_{heat}F_{heat,roof} + f_{cool}F_{cool,roof} \right) +
-
-    \left( 1 - W_{roof} \right)\frac{H}{W}\left( \begin{aligned}
-    & f_{heat}F_{heat,sunwall} + f_{cool}F_{cool,sunwall} + \\
-    & f_{heat}F_{heat,shdwall} + f_{cool}F_{cool,shdwall}
+   \begin{split}
+   H_{wasteheat} &= W_{roof}\left( f_{heat}F_{heat,roof} + f_{cool}F_{cool,roof} \right) \\
+   &\quad + \left( 1 - W_{roof} \right)\frac{H}{W}\left( \begin{aligned}
+   & f_{heat}F_{heat,sunwall} + f_{cool}F_{cool,sunwall} + \\
+   & f_{heat}F_{heat,shdwall} + f_{cool}F_{cool,shdwall}
    \end{aligned} \right) \leq H_{wasteheat,\max}
-
+   \end{split}
 
 where :math:`f_{heat} = \frac{1}{0.75}` and :math:`f_{cool} = \frac{1}{0.25}` are factors describing the efficiency of space heating/air conditioning systems and :math:`H_{wasteheat,\max}` W m\ :sup:`-2` is a maximum limit on waste heat at any given time step. The heat removed by air conditioning is
 
@@ -3460,12 +3469,11 @@ Phase change may take place in any snow/soil layers of the pervious road and in 
 .. math::
    :label: eq-0075
 
-   T_{i}^{n + 1} > T_{f}\text{ and }w_{ice,i} > 0 i = snl + 1,\ldots,N_{levgrnd} \text{melting}
-   
-   T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > 0 i = snl + 1,\ldots,0 \text{freezing}
-
-   T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i} i = 1,\ldots,N_{levgrnd} \text{freezing}
-
+   \begin{cases}
+   T_{i}^{n + 1} > T_{f}\text{ and }w_{ice,i} > 0, & i = snl + 1,\ldots,N_{levgrnd}\ \text{melting} \\
+   T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > 0, & i = snl + 1,\ldots,0\ \text{freezing} \\
+   T_{i}^{n + 1} < T_{f}\text{ and }w_{liq,i} > w_{liq,{max,} i}, & i = 1,\ldots,N_{levgrnd}\ \text{freezing}
+   \end{cases}
 
 where :math:`T_{i}^{n + 1}` is the layer temperature after solution of the tridiagonal equation set, :math:`w_{ice,i}` and :math:`w_{liq,i}` are the mass of ice and liquid water (kg m\ :sup:`-2`) in each layer, respectively, and :math:`T_{f}` is the freezing temperature of water (K) (:numref:`table-physical-constants`). For the freezing process in the layers of the pervious road, the concept of supercooled soil water from :ref:`Niu and Yang (2006) <NiuYang2006>` is adopted. The supercooled soil water is the liquid water that coexists with ice over a wide range of temperatures below freezing and is implemented through a freezing point depression equation
 
@@ -3641,14 +3649,13 @@ Soil thermal conductivity :math:`\lambda_{i}` (W m\ :sup:`-1` K\ :sup:`-1`) is f
 .. math::
    :label: eq-0081
 
-   \lambda_{i} = \left\{ \begin{aligned}
-   & K_{e,i}\lambda_{sat,i} + \left( 1 - K_{e,i} \right)\lambda_{dry,i} S_{r,i} > 1 \times 10^{- 7} \\
-   & \lambda_{dry,i} S_{r,i} \leq 1 \times 10^{- 7}
-   \end{aligned} \right\} i = 1,\ldots,N_{levsoi}
-
-   \lambda_{i} = \lambda_{bedrock} i = N_{levsoi} + 1,\ldots N_{levgrnd}
-
-
+   \begin{split}
+   \lambda_{i} &= \begin{cases}
+   K_{e,i}\lambda_{sat,i} + \left( 1 - K_{e,i} \right)\lambda_{dry,i} & S_{r,i} > 1 \times 10^{- 7} \\
+   \lambda_{dry,i} & S_{r,i} \leq 1 \times 10^{- 7}
+   \end{cases}, \quad i = 1,\ldots,N_{levsoi} \\
+   \lambda_{i} &= \lambda_{bedrock}, \quad i = N_{levsoi} + 1,\ldots N_{levgrnd}
+   \end{split}
 
 where :math:`\lambda_{sat,i}` is the saturated thermal conductivity, :math:`\lambda_{dry,i}` is the dry thermal conductivity, :math:`K_{e,i}` is the Kersten number, :math:`S_{r,i}` is the wetness of the soil with respect to saturation, and :math:`\lambda_{bedrock} = 3` W m\ :sup:`-1` K\ :sup:`-1` is the thermal conductivity assumed for the deep ground layers (typical of saturated granitic rock; :ref:`Clauser and Huenges, 1995 <ClauserHuenges1995>`). The saturated thermal conductivity :math:`\lambda_{sat,i}` (W m\ :sup:`-1` K\ :sup:`-1`) depends on the thermal conductivities of the soil solid, liquid water, and ice constituents
 
@@ -3726,11 +3733,10 @@ where the heat capacity of soil solids :math:`c_{s,i}` (J m\ :sup:`-3` K\ :sup:`
 .. math::
    :label: eq-0084
 
-   c_{s,i} = \left( \frac{2.128\ (\% sand)_{i} + \text{2.385 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}} \right) \times 10^{6} i = 1,\ldots,N_{levsoi}
-
-   c_{s,i} = c_{s,bedrock} i = N_{levsoi} + 1,\ldots,N_{levgrnd}
-
-
+   \begin{split}
+   c_{s,i} &= \left( \frac{2.128\ (\% sand)_{i} + \text{2.385 }(\% clay)_{i}}{(\% sand)_{i} + (\% clay)_{i}} \right) \times 10^{6}, \quad i = 1,\ldots,N_{levsoi} \\
+   c_{s,i} &= c_{s,bedrock}, \quad i = N_{levsoi} + 1,\ldots,N_{levgrnd}
+   \end{split}
 
 and :math:`C_{liq}` and :math:`C_{ice}` are the specific heat capacities (J kg\ :sup:`-1` K\ :sup:`-1`) of liquid water and ice, respectively (:numref:`table-physical-constants`) and :math:`c_{s,bedrock} = 2 \times 10^{6}` J m\ :sup:`-3` K\ :sup:`-1` is the heat capacity of bedrock. For snow
 
@@ -4024,14 +4030,15 @@ where :math:`c_{3} = 2.777 \times 10^{- 6}` (s\ :sup:`-1`) is the fractional com
 .. math::
    :label: eq-0091
 
-   c_{1} = 1 \frac{w_{ice,i}}{\Delta z_{i}} \leq 100\text{ kg }\text{m}^{\text{-3}}
-   
-   c_{1} = \exp\left\lbrack - 0.046\left( \frac{w_{ice,i}}{\Delta z_{i}} - 100 \right) \right\rbrack & \frac{w_{ice,i}}{\Delta z_{i}} > 100\text{ kg }\text{m}^{\text{-3}} \\
-
-   c_{2} = 2 & \frac{w_{liq,i}}{\Delta z_{i}} > 0.01
+   c_{1} = \begin{cases}
+   1 & \frac{w_{ice,i}}{\Delta z_{i}} \leq 100\text{ kg }\text{m}^{\text{-3}} \\
+   \exp\left\lbrack - 0.046\left( \frac{w_{ice,i}}{\Delta z_{i}} - 100 \right) \right\rbrack & \frac{w_{ice,i}}{\Delta z_{i}} > 100\text{ kg }\text{m}^{\text{-3}}
    \end{cases}
 
-   c_{2} = 1 \frac{w_{liq,i}}{\Delta z_{i}} \leq 0.01
+   c_{2} = \begin{cases}
+   2 & \frac{w_{liq,i}}{\Delta z_{i}} > 0.01 \\
+   1 & \frac{w_{liq,i}}{\Delta z_{i}} \leq 0.01
+   \end{cases}
 
 where :math:`\frac{w_{ice,i}}{\Delta z_{i}}` and :math:`\frac{w_{liq,i}}{\Delta z_{i}}` are the bulk densities of liquid water and ice (kg m\ :sup:`-3`).
 
@@ -4659,19 +4666,18 @@ The derivatives of the hydraulic conductivity at the layer interface are derived
 .. math::
    :label: eq-0099
 
-   \frac{\partial k\left\lbrack z_{h,i - 1} \right\rbrack}{\partial\theta_{liq,i - 1}} = \frac{\partial k\left\lbrack z_{h,i - 1} \right\rbrack}{\partial\theta_{liq,i}} = \left( 1 - \frac{f_{frz,i - 1} + f_{frz,i}}{2} \right)\left( 2B_{i - 1} + 3 \right)k_{sat}\left\lbrack z_{h,i - 1} \right\rbrack \times
-   \left\lbrack \frac{0.5\left( \theta_{i - 1} + \theta_{i} \right)}{0.5\left( \theta_{sat,i - 1} + \theta_{sat,i} \right)} \right\rbrack^{2B_{i - 1} + 2}\left( \frac{0.5}{\theta_{sat,i - 1}} \right)
-
-
-
-
+   \begin{split}
+   \frac{\partial k\left\lbrack z_{h,i - 1} \right\rbrack}{\partial\theta_{liq,i - 1}} = \frac{\partial k\left\lbrack z_{h,i - 1} \right\rbrack}{\partial\theta_{liq,i}} &= \left( 1 - \frac{f_{frz,i - 1} + f_{frz,i}}{2} \right)\left( 2B_{i - 1} + 3 \right)k_{sat}\left\lbrack z_{h,i - 1} \right\rbrack \times \\
+   &\quad \left\lbrack \frac{0.5\left( \theta_{i - 1} + \theta_{i} \right)}{0.5\left( \theta_{sat,i - 1} + \theta_{sat,i} \right)} \right\rbrack^{2B_{i - 1} + 2}\left( \frac{0.5}{\theta_{sat,i - 1}} \right)
+   \end{split}
 
 .. math::
    :label: eq-0100
 
-   \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i}} = \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i + 1}} = \left( 1 - \frac{f_{frz,i} + f_{frz,i + 1}}{2} \right)\left( 2B_{i} + 3 \right)k_{sat}\left\lbrack z_{h,i} \right\rbrack \times
-   \left\lbrack \frac{0.5\left( \theta_{i} + \theta_{i + 1} \right)}{0.5\left( \theta_{sat,i} + \theta_{sat,i + 1} \right)} \right\rbrack^{2B_{i} + 2}\left( \frac{0.5}{\theta_{sat,i}} \right)
-
+   \begin{split}
+   \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i}} = \frac{\partial k\left\lbrack z_{h,i} \right\rbrack}{\partial\theta_{liq,i + 1}} &= \left( 1 - \frac{f_{frz,i} + f_{frz,i + 1}}{2} \right)\left( 2B_{i} + 3 \right)k_{sat}\left\lbrack z_{h,i} \right\rbrack \times \\
+   &\quad \left\lbrack \frac{0.5\left( \theta_{i} + \theta_{i + 1} \right)}{0.5\left( \theta_{sat,i} + \theta_{sat,i + 1} \right)} \right\rbrack^{2B_{i} + 2}\left( \frac{0.5}{\theta_{sat,i}} \right)
+   \end{split}
 
 .. _sec-equilibrium-soil-matric-potential-and-vo:
 
@@ -5021,12 +5027,11 @@ For the case when the water table is within the soil column, there is no water e
 .. math::
    :label: eq-0101
 
-   z_{\nabla} = \left\{ \begin{aligned}
-   & z_{h,jwt + 1} - \left\lbrack \frac{W_{t} - 10^{3} \times 25S_{y} - \sum_{i = jwt + 2}^{N_{levsoi}}{\Delta z_{i}\left( \theta_{sat,i} - \theta_{ice,i} \right)}}{10^{3}\left( \theta_{sat,jwt + 1} - \theta_{ice,jwt + 1} \right)} \right\rbrack jwt = 1,\ldots N_{levsoi} - 2 \\
-   & z_{h,jwt + 1} - \left\lbrack \frac{W_{t} - 10^{3} \times 25S_{y}}{10^{3}\left( \theta_{sat,jwt + 1} - \theta_{ice,jwt + 1} \right)} \right\rbrack jwt = N_{levsoi} - 1
-   \end{aligned} \right\}
-
-
+   z_{\nabla} = \begin{cases}
+   z_{h,jwt + 1} - \left\lbrack \dfrac{W_{t} - 10^{3} \times 25S_{y} - \sum_{i = jwt + 2}^{N_{levsoi}}{\Delta z_{i}\left( \theta_{sat,i} - \theta_{ice,i} \right)}}{10^{3}\left( \theta_{sat,jwt + 1} - \theta_{ice,jwt + 1} \right)} \right\rbrack, & \\
+   \quad jwt = 1,\ldots N_{levsoi} - 2 \\[1ex]
+   z_{h,jwt + 1} - \left\lbrack \dfrac{W_{t} - 10^{3} \times 25S_{y}}{10^{3}\left( \theta_{sat,jwt + 1} - \theta_{ice,jwt + 1} \right)} \right\rbrack & jwt = N_{levsoi} - 1
+   \end{cases}
 
 where :math:`jwt` is the index of the layer directly above the water table, and limits are placed on the water table depth as :math:`0.05 \leq z_{\nabla} \leq 80`. In the work of :ref:`Niu et al. (2007) <niuetal2007>`, the water table depth in this case was calculated with the specific yield determined by the volume of air pores (the pore space not filled with water) within the soil to convert :math:`W_{t}` to a water table depth. However, this was found to result in unstable water table calculations for a significant proportion of grid cells in global simulations. More specifically, when repeatedly forcing the model with a single year of atmospheric data, the temporal evolution of water table depth was significantly different from year to year for some grid cells, with occasional rapid (within a few days) movement of the water table to the soil surface in some cases. This occurred in grid cells with soil water contents near saturation because of the small amount of available pore space. This had deleterious implications for stability of surface fluxes and temperature. In equation :eq:`eq-0101` , the calculation is based on effective porosity (:math:`\theta_{sat,i} - \theta_{ice,i} \geq 0.01`) only. Although less defensible from a physical viewpoint, the approach stabilizes the water table calculation for these grid cells and eliminates unrealistic oscillations in surface fluxes and temperature.
 
