@@ -1039,7 +1039,7 @@ contains
              call endrun(msg=errMsg(sourcefile, __LINE__))
           end if  ! year /= rest_year
        end if  ! flanduse_timeseries_rest /= ' '
-    end if  ! fpftdyn /= ' '
+    end if  ! flanduse_timeseries /= ' '
 
   end subroutine restFile_check_year
 

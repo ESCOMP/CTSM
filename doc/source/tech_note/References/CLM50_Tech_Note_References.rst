@@ -221,10 +221,6 @@ Bytnerowicz, T. A., Akana, P. R., Griffin, K. L., & Menge, D. N. L. 2022: Temper
 
 Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
 
-.. _Castilloetal2012:
-
-Castillo, G., Kendra, C., Levis, S., and Thornton, P. 2012. Evaluation of the new CNDV option of the Community Land Model: effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702–3714.
-
 .. _Caoetal1996:
 
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and methane emissions from natural wetlands: Application of a process-based model. J. Geophys. Res. 101(D9):14,399-14,414.
@@ -545,10 +541,6 @@ Gomes, E.P.C., Mantovani, W., and Kageyama, P.Y. 2003. Mortality and recruitment
 
 Gosz, J.R., Likens, G.E., and Bormann, F.H. 1973. Nutrient release from decomposing leaf and branch litter in the Hubbard Brook Forest, New Hampshire. Ecological Monographs 43:173-191.
 
-.. _GotangcoCastilloetal2012:
-
-Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV option of the Community Land Model: Effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702-3714. DOI:10.1175/JCLID-11-00372.1.
-
 .. _Grahametal1999:
 
 Graham, S.T., Famiglietti, J.S., and Maidment, D.R. 1999. Five-minute, 1/2°, and 1° data sets of continental watersheds and river networks for use in regional and global hydrologic and climate system modeling studies. Water Resour. Res. 35:583-587.
@@ -729,6 +721,10 @@ Keller, M., Palace, M., Asner, G.P., Pereira, R., Jr. and Silva, J.N.M., 2004. C
 
 Kellner, E., Baird, A.J., Oosterwoud, M., Harrison, K. and Waddington, J.M., 2006. Effect of temperature and atmospheric pressure on methane (CH4) ebullition from near-surface peats. Geophys. Res. Lett. 33. DOI:10.1029/2006GL027509.
 
+.. _Khatiwala2024:
+
+Khatiwala, S., 2024. Efficient spin-up of Earth System Models using sequence acceleration. Science Advances 10, eadn2839.
+
 .. _Kimballetal1997:
 
 Kimball, J.S., Thornton, P.E., White, M.A. and Running, S.W. 1997. Simulating forest productivity and surface-atmosphere exchange in the BOREAS study region. Tree Physiology 17:589-599.
@@ -796,6 +792,10 @@ Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T., Lenters, J.D.,
 .. _KucharikBrye2003:
 
 Kucharik, C.J., and Brye, K.R. 2003. Integrated BIosphere Simulator (IBIS) yield and nitrate loss predictions for Wisconsin maize receiving varied amounts of nitrogen fertilizer. Journal of Environmental Quality 32: 247–268.
+
+.. _KykerSnowmanetal2020:
+
+Kyker-Snowman, E., Wieder, W.R., Frey, S.D., Grandy, A.S., 2020. Stoichiometrically coupled carbon and nitrogen cycling in the MIcrobial-MIneral Carbon Stabilization model version 1.0 (MIMICS-CN v1. 0). Geoscientific Model Development 13, 4413-4434.
 
 .. _Laddetal2992:
 
@@ -1402,10 +1402,6 @@ Saggar, S., Tate, K.R., Feltham, C.W., Childs, C.W. and Parshotam, A., 1994. Car
 
 Sakaguchi, K., and Zeng, X. 2009. Effects of soil wetness, plant litter, and under-canopy atmospheric stability on ground evaporation in the Community Land Model (CLM3.5). J. Geophys. Res. 114:D01107. DOI:10.1029/2008JD010834.
 
-.. _sato2007:
-
-Sato, H., A. Itoh, and T. Kohyama, 2007. SEIB-DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach. Ecological Modelling 200.3, pp. 2793307.
-
 .. _Schaafetal2002:
 
 Schaaf, C.B., Gao, F., Strahler, A.H., Lucht, W., Li, X., Tsang, T., Strugnell, N.C., Zhang, X., Jin, Y., and Muller, J.-P. 2002. First operational BRDF, albedo nadir reflectance products from MODIS. Remote Sens. Environ. 83:135-148.
@@ -1795,9 +1791,17 @@ White, M.A., Thornton, P.E., and Running, S.W. 1997. A continental phenology mod
 
 White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000. Parameterization and sensitivity analysis of the Biome-BGC terrestrial ecosystem model: net primary production controls. Earth Interactions 4:1-85.
 
+.. _Wiederetal2014:
+
+Wieder, W., Grandy, A., Kallenbach, C., Bonan, G., 2014. Integrating microbial physiology and physio-chemical principles in soils with the MIcrobial-MIneral Carbon Stabilization (MIMICS) model. Biogeosciences 11, 3899-3917.
+
 .. _Wiederetal2015:
 
 Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects of model structural uncertainty on carbon cycle projections: biological nitrogen fixation as a case study. Environmental Research Letters, 10(4), 044016.
+
+.. _Wiederetal2015b:
+
+Wieder, W., Grandy, A., Kallenbach, C., Taylor, P., Bonan, G., 2015. Representing life in the Earth system with soil microbial functional traits in the MIMICS model. Geoscientific Model Development 8, 1789-1808.
 
 .. _Wiederetal2019:
 

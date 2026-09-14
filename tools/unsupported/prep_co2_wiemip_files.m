@@ -7,7 +7,7 @@
 % - The script, extends CO2 and time vars in the file from 2024 (TRENDY2025) to 2300 (wiemip)
 % - and brings in wiemip co2 to the file
 % - After running the matlab script, I used nco to append to each file's history, for example:
-%   ncatted -h -a history,global,o,c,"06/25/2025 21:30: converted by TRENDY2024_Data_Prep.ipynb; 06/04/2026: slevis used matlab script tools/contrib/prep_co2_wiemip_files.m to extend the co2 and time variables from 2024 to 2300 and to append the co2 from WIEMIP_hl_co2_ann_2024_2300.txt" WIEMIP_hl_co2_ann_2024_2300_copied_to_fco2_datm_global_simyr_1700-2024_TRENDY_c250625.nc
+%   ncatted -h -a history,global,o,c,"06/25/2025 21:30: converted by TRENDY2024_Data_Prep.ipynb; 06/04/2026: slevis used matlab script tools/unsupported/prep_co2_wiemip_files.m to extend the co2 and time variables from 2024 to 2300 and to append the co2 from WIEMIP_hl_co2_ann_2024_2300.txt" WIEMIP_hl_co2_ann_2024_2300_copied_to_fco2_datm_global_simyr_1700-2024_TRENDY_c250625.nc
 %
 % More information appears in issues
 % github.com/ESCOMP/CTSM/issues/4072
