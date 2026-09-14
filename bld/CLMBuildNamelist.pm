@@ -719,7 +719,12 @@ sub setup_cmdl_resolution {
   }
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
     if ( ! defined($opts->{'clm_usr_name'}) ) {
-        $log->fatal_error("Resolution is CLM_USRDAT, but --clm_usr_name option is NOT set, and it is required for CLM_USRDAT resolutions");
+        $log->fatal_error("Resolution is CLM_USRDAT, but CLM_USR_NAME is NOT set, and it is required for CLM_USRDAT resolutions");
+    }
+  }
+  if ( defined($opts->{'clm_usr_name'}) ) {
+   if ( $nl_flags->{'res'} ne "CLM_USRDAT" ) {
+        $log->fatal_error("CLM_USRDAT_NAME is set, but the resolution is NOT CLM_USRDAT as it is required to be");
     }
   }
   #
