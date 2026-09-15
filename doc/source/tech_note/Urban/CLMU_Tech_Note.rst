@@ -1,8 +1,8 @@
-.. _rst_Urban Model (converted from docx):
+.. _rst_Urban Model (CLMU):
 
-*********************************
-Urban Model (converted from docx)
-*********************************
+******************
+Urban Model (CLMU)
+******************
 
 .. _sec-introduction:
 
