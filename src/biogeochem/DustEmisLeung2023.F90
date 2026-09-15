@@ -423,10 +423,10 @@ contains
          tlai                => canopystate_inst%tlai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided leaf area index, no burying by snow
          tsai                => canopystate_inst%tsai_patch          , & ! Input:  [real(r8) (:)   ]  one-sided stem area index, no burying by snow
 
-         frac_sno_albedo     => waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)
-         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col           , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat)
-         h2osoi_liq          => waterstatebulk_inst%h2osoi_liq_col           , & ! Input:  [real(r8) (:,:) ]  liquid soil water (kg/m2)
-         h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col           , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)
+         frac_sno_albedo     => waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input: [real(r8) (:) ]  fraction of ground covered by snow for albedo calculations (0 to 1)
+         h2osoi_vol          => waterstatebulk_inst%h2osoi_vol_col   , & ! Input:  [real(r8) (:,:) ]  volumetric soil water (0<=h2osoi_vol<=watsat)
+         h2osoi_liq          => waterstatebulk_inst%h2osoi_liq_col   , & ! Input:  [real(r8) (:,:) ]  liquid soil water (kg/m2)
+         h2osoi_ice          => waterstatebulk_inst%h2osoi_ice_col   , & ! Input:  [real(r8) (:,:) ]  frozen soil water (kg/m2)
 
          fv                  => frictionvel_inst%fv_patch            , & ! Input:  [real(r8) (:)   ]  friction velocity (m/s) (for dust model)
          obu                 => frictionvel_inst%obu_patch           , & ! Input:  [real(r8) (:)   ] Obukhov length scale from the friction Velocity module          obu                 => frictionvel_inst%obu_patch             & ! Input:  [real(r8) (:)   ] Obukhov length scale from the friction Velocity module 

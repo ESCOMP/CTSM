@@ -114,7 +114,7 @@ contains
          fpcgrid            =>  dgvs_inst%fpcgrid_patch                 , & ! Input:  [real(r8) (:) ] fractional area of patch (pft area/nat veg area)    
 
          frac_sno_albedo    =>  waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow for albedo calculations (0 to 1)
-         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col      , & ! Input:  [real(r8) (:) ] snow height (m)                                   
+         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
 
          forc_hgt_u_patch   =>  frictionvel_inst%forc_hgt_u_patch       , & ! Input:  [real(r8) (:) ] observational height of wind at patch-level [m]     
 
