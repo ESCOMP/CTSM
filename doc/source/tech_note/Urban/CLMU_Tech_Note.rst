@@ -72,22 +72,22 @@ The approach used here to represent pervious surfaces is different than many urb
 Note that the urban columns interact radiatively with one another through multiple exchanges of longwave and shortwave radiation (:numref:`sec-albedos-and-radiative-fluxes`). The heat and moisture fluxes from each surface interact with each other through a bulk air mass that represents air in the UCL for which specific humidity and temperature are predicted (:numref:`sec-heat-and-momentum-fluxes`). We model the UCL plus the air above the roof (:numref:`fig-atm-urban-coupling`). This allows for mixing of above-roof air with canyon air.
 
 .. figure:: image1.jpeg
-   :width: 5.85417in
-   :height: 4.67708in
+   :width: 7.3in
+   :height: 5.5in
    :name: fig-atm-urban-coupling
 
    Schematic of urban and atmospheric coupling. The urban model is forced by the atmospheric wind (:math:`u_{atm}`), temperature (:math:`T_{atm}`), specific humidity (:math:`q_{atm}`), precipitation (:math:`P_{atm}`), solar (:math:`S_{atm} \downarrow`) and longwave (:math:`L_{atm} \downarrow`) radiation at reference height :math:`z_{atm}^{'}`. Fluxes from the urban landunit to the atmosphere are turbulent sensible (:math:`H`) and latent heat (:math:`\lambda E`), momentum (:math:`\tau`), albedo (:math:`I \uparrow`), emitted longwave (:math:`L \uparrow`), and absorbed shortwave (:math:`\overrightarrow{S}`) radiation. Air temperature (:math:`T_{ac}`), specific humidity (:math:`q_{ac}`), and wind speed (:math:`u_{c}`) within the urban canopy layer are diagnosed by the urban model. :math:`H` is the average building height.
 
 .. figure:: image2.jpeg
-   :width: 5.98958in
+   :width: 5.98914in
    :height: 4.48958in
    :name: fig-clm-subgrid-hierarchy
 
    CLM subgrid hierarchy emphasizing the structure of urban landunits.
 
 .. figure:: image3.jpeg
-   :width: 5.86458in
-   :height: 3.9375in
+   :width: 6.5in
+   :height: 4.886in
    :name: fig-urban-canyon
 
    The urban canyon.
@@ -572,7 +572,7 @@ Incident direct solar radiation
 Unlike the horizontal roof surface, the direct beam solar radiation received by the walls and the road must be adjusted for orientation and shadowing. The analytical solution given below follows :ref:`Masson (2000) <masson2000>`. First, let :math:`\theta` be the angle between the sun direction and the along-canyon axis and consider the case where the along-canyon axis is perpendicular to the sun direction (:math:`\theta = \frac{\pi}{2}`). In this case, as shown in :numref:`fig-solar-elevation-view`, if the solar zenith angle :math:`\mu` is greater than the critical solar zenith angle :math:`\mu_{0}` (:math:`\mu_{0} = \tan^{- 1}\left( \frac{W}{H} \right)`), the road is in full shade, and the sunlit wall is in partial sun. Conversely, if :math:`\mu` is less than :math:`{\overrightarrow{L}}_{uc} - \left( L_{uc} \uparrow - L_{atm} \downarrow \right) = 0`, the road is in partial sun and the sunlit wall is in full sun. Note that, radiatively, the pervious and impervious road are treated the same, although their albedos are specified separately and may differ (:numref:`table-input-data`).
 
 .. figure:: image4.jpeg
-   :width: 5.40625in
+   :width: 5.08274in
    :height: 6.78125in
    :name: fig-solar-elevation-view
 
@@ -613,8 +613,8 @@ Equations :eq:`eq-0105` and :eq:`eq-0106` for the walls and equation :eq:`eq-000
    S_{sunwall} \downarrow_{\Lambda}^{\mu}(\theta) = \sin\theta\tan\mu S_{atm} \downarrow_{\Lambda}^{\mu} \mu \leq \mu_{0}
 
 .. figure:: image5.jpeg
-   :width: 6in
-   :height: 3.98958in
+   :width: 3.748in
+   :height: 5.0in
    :name: fig-solar-plan-view
 
    Plan view of direct beam solar radiation incident on urban canyon surfaces. :math:`S_{atm} \downarrow_{\Lambda}^{\mu}` is the direct beam incident solar radiation incident on a horizontal surface from the atmosphere. :math:`\theta` is the angle between the along-canyon axis and the sun direction.
@@ -779,15 +779,15 @@ and the other view factors can be deduced from conservation of energy as
 The view factors are presented graphically in :numref:`fig-view-factors-hw-ratio` Note that the view factors for radiation from the walls to the other surfaces sum to one (:math:`\Psi_{wall - wall} + \Psi_{wall - road} + \Psi_{wall - sky} = 1`). Similarly, the view factors for radiation from the road to the other surfaces also sum to one (:math:`\Psi_{road - wall} + \Psi_{road - wall} + \Psi_{road - sky} = 1`). As :ref:`Harman et al. (2004) <harmanetal2004>` notes, at low height to width ratios, the road-sky view factor is close to one, the wall-wall view factor is close to zero, and the wall sky view factor is close to one half. However, at these low height to width ratios, the wall area is small compared to the road or sky area, indicating that most of the radiative exchange occurs between the road and sky, as it would for a flat surface. At height to width ratios greater than one, most of the radiative interactions take place between the two walls and the wall and the road. These view factors are consistent with those given by both :ref:`Masson (2000) <masson2000>` and :ref:`Harman et al. (2004) <harmanetal2004>`.
 
 .. figure:: image6.jpeg
-   :width: 6in
+   :width: 3.59171in
    :height: 4.79167in
    :name: fig-view-factor-schematic
 
    Schematic representation of angle (view) factor between infinitesimal element :math:`dA_{1}` (e.g., a point on the wall) and finite surface :math:`A_{2}` (e.g., the sky) (after :ref:`Sparrow and Cess (1978) <sparrowandcess1978>`).
 
 .. figure:: image7.png
-   :width: 5.98958in
-   :height: 5.625in
+   :width: 5.0356in
+   :height: 6.5in
    :name: fig-view-factors-hw-ratio
 
    View factors as a function of canyon height to width ratio. :math:`\Psi_{road - sky}` is the fraction of radiation reaching the sky from the road, :math:`\Psi_{road - wall}` is the fraction of radiation reaching the wall from the road, :math:`\Psi_{wall - sky}` is the fraction of radiation reaching the sky from the wall, :math:`\Psi_{wall - road}` is the fraction of radiation reaching the road from the wall, and :math:`\Psi_{wall - wall}` is the fraction of radiation reaching the wall from the opposite wall.
@@ -1263,8 +1263,8 @@ The total absorbed solar radiation for the urban canopy (road, walls, and roof) 
 :numref:`fig-absorbed-solar-radiation` shows the solar radiation absorbed by urban surfaces for a range of height to width ratios and two solar zenith angles. The absorbed solar radiation for the roof is independent of height to width ratio and solar zenith angle. At both solar zenith angles, the absorbed solar radiation for the road decreases rapidly with increasing height to width ratio as the buildings shade more of the road. The shaded wall absorbs less solar radiation than the sunlit wall because it receives only diffuse radiation from the sun and reflected radiation from the walls and road. The sunlit wall absorbs more solar radiation at larger solar zenith angles for height to width ratios less than about three because the incidence angle of the radiation is closer to zero (:numref:`fig-solar-elevation-view`). The sum of the absorbed solar radiation for road, sunlit wall, and shaded wall, after converting the wall fluxes to per unit ground area, is the canyon absorbed solar radiation. The absorbed solar radiation for the canyon increases slowly with increasing height to width ratio.
 
 .. figure:: image8.png
-   :width: 4.21875in
-   :height: 6.40625in
+   :width: 5.03415in
+   :height: 6.5in
    :name: fig-absorbed-solar-radiation
 
    Solar radiation absorbed by urban surfaces for solar zenith angles of 30° (top) and 60° (bottom). The atmospheric solar radiation is :math:`S_{atm} \downarrow_{\Lambda}^{\mu} = 400` and :math:`S_{atm} \downarrow_{\Lambda} = 200` W m\ :sup:`-2`. Note that the sunlit and shaded wall fluxes are per unit wall area. The solar radiation absorbed by the canyon is the sum of road and wall fluxes after converting the walls fluxes to per unit ground area using the height to width ratio.
@@ -1272,8 +1272,8 @@ The total absorbed solar radiation for the urban canopy (road, walls, and roof) 
 The canyon albedo (excluding the roof albedo) shown in :numref:`fig-canyon-albedo` has the same functional relationships with solar zenith angle and height to width ratio as TEB (:ref:`Masson 2000 <masson2000>`). In general, the direct and diffuse canyon albedo decreases with height to width ratio as more solar radiation is trapped and absorbed within the canyon. The trapping of solar radiation is less effective at larger solar zenith angles. At these large solar zenith angles and small height to width ratio, the albedo increases because the higher albedo walls dominate the radiative exchange.
 
 .. figure:: image9.png
-   :width: 5.98958in
-   :height: 4.14583in
+   :width: 4.61566in
+   :height: 6.0in
    :name: fig-canyon-albedo
 
    Direct beam and diffuse albedo of the urban canyon (walls and road) as a function of height to width ratio from 0.1 to 3.0 in increments of 0.1 and solar zenith angles from 0° to 85° in increments of 5°. The atmospheric solar radiation is :math:`S_{atm} \downarrow_{\Lambda}^{\mu} = 400` and :math:`S_{atm} \downarrow_{\Lambda} = 200` W m\ :sup:`-2`.
@@ -1869,8 +1869,8 @@ The total net longwave radiation for the urban canopy (road, walls, and roof) is
 :numref:`fig-net-longwave-radiation` shows the net longwave radiation for urban surfaces for two different emissivity configurations. A positive net longwave means that the outgoing longwave exceeds the incoming longwave from the atmosphere. The net longwave radiation for the roof is independent of height to width ratio and increases with higher emissivity. The net longwave radiation for the road and walls decreases rapidly with increasing height to width ratio as more longwave radiation is trapped within the canyon. The walls have lower net longwave radiation than the road because their sky view factors are smaller. The two walls behave identically with respect to net longwave radiation as long as temperatures are the same. The sum of the net longwave radiation for road, sunlit wall, and shaded wall, after converting the wall fluxes to per unit ground area, is the canyon net longwave radiation. The net longwave radiation for the canyon increases slowly with increasing height to width ratio because of the larger surface area of the walls.
 
 .. figure:: image10.png
-   :width: 4.42708in
-   :height: 6.08333in
+   :width: 5.02273in
+   :height: 6.5in
    :name: fig-net-longwave-radiation
 
    Net longwave radiation (positive to the atmosphere) for urban surfaces for two different emissivity configurations. The atmospheric longwave radiation is :math:`L_{atm} \downarrow = 340` W m\ :sup:`-2` and the temperature of each surface is 292.16 K. Note that the wall fluxes (shaded and sunlit) are per unit wall area. The net longwave radiation for the canyon is the sum of road and wall fluxes after converting the walls fluxes to per unit ground area using the height to width ratio.
@@ -1899,8 +1899,8 @@ The net radiation for the urban canopy (:math:`\overrightarrow{S} - \overrightar
 where :math:`H` is the sensible heat flux (W m\ :sup:`-2`), :math:`E` is the water vapor flux (kg m\ :sup:`-2` s\ :sup:`-1`), :math:`G` is the ground heat flux, and :math:`\lambda` is the latent heat of vaporization (or sublimation). The urban surfaces have unique radiative, thermal and hydrologic properties and environments. Thus, their sensible and latent heat fluxes are likely to be very different from each other. For example, the pervious road may have significant latent heat flux compared to the walls, which are assumed to be hydrologically inactive. Thus, the fluxes from individual urban surfaces must be modeled separately. However, CLM directly interacts with the atmospheric model at only the lowest atmospheric layer, which is well above the roof level of the urban model at the horizontal scales to be modeled. As a consequence, fluxes from individual urban surfaces must be combined to obtain the total sensible and latent heat flux to be provided to the atmospheric model. Allowing the urban surface fluxes to interact with each other through a bulk urban air mass is an acceptable approach analogous to the simulation of vegetated canopy fluxes (:numref:`fig-sensible-latent-heat-schematic`). This also allows for the solution of UCL air temperature and humidity, which are of interest in many applications. The approach shown in :numref:`fig-sensible-latent-heat-schematic` is slightly different from that of :ref:`Masson (2000) <masson2000>` in that here, fluxes from the roof interact directly with the UCL air whereas in :ref:`Masson (2000) <masson2000>` the roof and urban canyon are modeled as two independent sources of heat and moisture fluxes to the atmosphere. Here, we assume that the actual roofs are at various heights in the UCL and hence interact directly with the well-mixed UCL air.
 
 .. figure:: image11.jpeg
-   :width: 5.78125in
-   :height: 5.76042in
+   :width: 5.62in
+   :height: 7.5in
    :name: fig-sensible-latent-heat-schematic
 
    Schematic diagram of sensible and latent heat fluxes for the urban canopy.
@@ -3148,8 +3148,8 @@ For a non-zero flux bottom boundary condition, :math:`\lambda\left\lbrack z_{h,i
 where :math:`T_{m}` is the temperature at the interface of layers :math:`i` and :math:`i + 1`. Solving equation :eq:`eq-0279` for :math:`T_{m}` and substituting :math:`T_{m}` back into the left side of equation :eq:`eq-0279` yields equations :eq:`eq-0278` and :eq:`eq-0067`.
 
 .. figure:: image12.jpeg
-   :width: 6in
-   :height: 4.47917in
+   :width: 4.48in
+   :height: 6.0in
    :name: fig-numerical-scheme-layer-temps
 
    Schematic diagram of numerical scheme used to solve for layer temperatures. Shown are three layers, :math:`i - 1`, :math:`i`, and :math:`i + 1`. The thermal conductivity :math:`\lambda`, specific heat capacity :math:`c`, and temperature :math:`T` are defined at the layer node depth :math:`z`. :math:`T_{m}` is the interface temperature. The thermal conductivity :math:`\lambda\left\lbrack z_{h} \right\rbrack` is defined at the interface of two layers :math:`z_{h}`. The layer thickness is :math:`\Delta z`. The heat fluxes :math:`F_{i - 1}` and :math:`F_{i}` are defined as positive upwards.
@@ -3776,8 +3776,8 @@ The hydrology for the pervious road generally follows that of CLM4 for bare soil
 where :math:`q_{rain}` is liquid part of precipitation, :math:`q_{sno}` is solid part of precipitation, :math:`E_{prvrd}` is the total evaporation (:numref:`sec-heat-and-momentum-fluxes`), :math:`q_{over}` is surface runoff (:numref:`sec-surface-runoff-and-infiltration`), :math:`q_{drai}` is sub-surface drainage (:numref:`sec-groundwater-soil-water-interactions-for`), :math:`q_{rgwl}` and :math:`q_{snwcp,ice}` are liquid and solid runoff due to snow capping (:numref:`sec-runoff-from-snow-capping`) (all in kg m\ :sup:`-2` s\ :sup:`-1`), :math:`N_{levsoi}` is the number of soil layers, and :math:`\Delta t` is the time step (s). In general, snow capping will not be invoked for urban areas, but is described here for completeness.
 
 .. figure:: image16.jpeg
-   :width: 5.60417in
-   :height: 4.82292in
+   :width: 5.625in
+   :height: 7.5in
    :name: fig-hydrologic-processes-pervious-road
 
    Hydrologic processes simulated for the pervious road. Evaporation is supplied by all soil layers. An unconfined aquifer is added to the bottom of the soil column. The depth to the water table is :math:`z_{\nabla}` (m). Changes in aquifer water content :math:`W_{a}` (mm) are controlled by the balance between drainage from the aquifer water :math:`q_{drai}` and the aquifer recharge rate :math:`q_{recharge}` (kg m\ :sup:`-2` s\ :sup:`-1`) (defined as positive from soil to aquifer).
@@ -3818,8 +3818,8 @@ Snow
 The parameterizations for snow are based primarily on :ref:`Anderson (1976) <anderson1976>`, :ref:`Jordan (1991) <jordan1991>`, and :ref:`Dai and Zeng (1997) <DaiZeng1997>`. Snow can have up to five layers. These layers are indexed in the Fortran code as :math:`i = - 4, - 3, - 2, - 1,0` where layer :math:`i = 0` is the snow layer next to the top soil layer and layer :math:`i = - 4` is the top layer of a five-layer snow pack. Since the number of snow layers varies according to the snow depth, we use the notation :math:`snl + 1` to describe the top layer of snow for the variable layer snow pack, where :math:`snl` is the negative of the number of snow layers. Refer to :numref:`fig-snow-pack-example` for an example of the snow layer structure for a three layer snow pack.
 
 .. figure:: image17.jpeg
-   :width: 6in
-   :height: 4.80208in
+   :width: 4.5in
+   :height: 6.0in
    :name: fig-snow-pack-example
 
    Example of three layer snow pack (:math:`snl = - 3`). Shown are three snow layers, :math:`i = - 2`, :math:`i = - 1`, and :math:`i = 0`. The layer node depth is :math:`z`, the layer interface is :math:`z_{h}`, and the layer thickness is :math:`\Delta z`.
@@ -4559,8 +4559,8 @@ The effective root fraction :math:`r_{e,i}` is
 where :math:`r_{i}` is the fraction of roots in layer :math:`i` (equation :eq:`eq-0245`), :math:`w_{i}` is a soil wetness factor for layer :math:`i` (equation (3.87)), and :math:`\alpha_{soi}` is a wetness factor for the total soil column (equation :eq:`eq-0244` (:numref:`sec-iterative-solution-for-urban-canopy-air`)).
 
 .. figure:: image18.jpeg
-   :width: 6in
-   :height: 5.17708in
+   :width: 4.5in
+   :height: 6.0in
    :name: fig-soil-water-flux-scheme
 
    Schematic diagram of numerical scheme used to solve for soil water fluxes. Shown are three soil layers, :math:`i - 1`, :math:`i`, and :math:`i + 1`. The soil matric potential :math:`\psi` and volumetric soil water :math:`\theta_{liq}` are defined at the layer node depth :math:`z`. The hydraulic conductivity :math:`k\left\lbrack z_{h} \right\rbrack` is defined at the interface of two layers :math:`z_{h}`. The layer thickness is :math:`\Delta z`. The soil water fluxes :math:`q_{i - 1}` and :math:`q_{i}` are defined as positive upwards. The soil moisture sink term :math:`e` (ET loss) is defined as positive for flow out of the layer.
@@ -5287,8 +5287,8 @@ The observation site has been used to validate other urban models such as SHIM (
 :numref:`fig-grandview-validation` shows the simulated surface temperatures and net longwave radiation for the walls and canyon floor compared to observations. The urban model does a good job simulating the nighttime cooling of canyon surfaces (note that the simulated west and east wall surface temperatures are the same). Temperature differences from observations are less than 1°C at all times. Net longwave radiation is also well simulated, differences from observations are less than about 3 W m\ :sup:`-2` for the west wall and canyon floor. The simulated net longwave radiation for the east wall is biased high by up to 7 W m\ :sup:`-2`. These results are quite similar to those from VUCM and generally slightly better than the models of :ref:`Masson (2000) <masson2000>`, :ref:`Johnson et al. (1991) <johnsonetal1991>`, and :ref:`Kusaka et al. (2001) <kusakaetal2001>` which generally have warmer surface temperatures as noted by :ref:`Lee and Park (2007) <leeandpark2007>`. However, one important difference between :ref:`Lee and Park (2007) <leeandpark2007>` and the other studies is that the thermal admittance prescribed for the canyon floor is substantially lower in VUCM. When higher thermal admittance is prescribed in the urban model, warmer surface temperatures are simulated consistent with the other studies.
 
    .. figure:: image19.png
-      :width: 5.29167in
-      :height: 6.83333in
+      :width: 5.78in
+      :height: 7.5in
       :name: fig-grandview-validation
 
       Simulated surface temperatures (solid lines) and net longwave radiation (dashed lines) compared to observations (circles) for a) west (east-facing) wall, b) east wall, and c) canyon floor for the night of September 9-10, 1973 in an urban canyon in the Grandview district of Vancouver, British Columbia. Observed data were digitized from Figure 5 in :ref:`Johnson et al. (1991) <johnsonetal1991>`.
