@@ -271,7 +271,7 @@ contains
        ! Adjust fh2o, fsno when sum is greater than zero
        !
        ! Note that there is a similar adjustment in subroutine SnowCompaction (related
-       ! to frac_sno_fluxes_melt); these two should be kept in sync (e.g., if a 3rd fraction is
+       ! to frac_sno_fluxes); these two should be kept in sync (e.g., if a 3rd fraction is
        ! ever added in one place, it needs to be added in the other place, too).
        if (frac_sno_albedo(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno_total(c) > 0) then
 
