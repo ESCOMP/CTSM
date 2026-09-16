@@ -147,10 +147,10 @@ contains
     integer, intent(in) :: num_c       ! number of columns in filter_c
     integer, intent(in) :: filter_c(:) ! column filter to operate over
 
-    real(r8) , intent(in)    :: newsnow( bounds%begc: )             ! total new snow in the time step (mm H2O)
-    real(r8) , intent(in)    :: h2osno_total( bounds%begc: )        ! total snow water (mm H2O)
-    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: )     ! fraction of ground covered by snow for albedo calculations (0 to 1)
-    real(r8) , intent(inout) :: int_snow( bounds%begc: )            ! integrated snowfall (mm H2O)
+    real(r8) , intent(in)    :: newsnow( bounds%begc: )      ! total new snow in the time step (mm H2O)
+    real(r8) , intent(in)    :: h2osno_total( bounds%begc: ) ! total snow water (mm H2O)
+    real(r8) , intent(in)    :: frac_sno_albedo( bounds%begc: ) ! fraction of ground covered by snow for albedo calculations (0 to 1)
+    real(r8) , intent(inout) :: int_snow( bounds%begc: )     ! integrated snowfall (mm H2O)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
@@ -171,7 +171,7 @@ contains
   end subroutine AddNewsnowToIntsnow
 
   !-----------------------------------------------------------------------
-  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno_albedo)
+  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno)
     !
     ! !DESCRIPTION:
     ! Single-point function giving frac_snow during times when the snow pack is melting
@@ -182,7 +182,7 @@ contains
     ! the NiuYang07 method.
     !
     ! !ARGUMENTS:
-    real(r8) :: frac_sno_albedo  ! function result
+    real(r8) :: frac_sno  ! function result
     class(snow_cover_fraction_niu_yang_2007_type), intent(in) :: this
     integer , intent(in) :: c            ! column we're operating on
     real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
@@ -193,7 +193,7 @@ contains
     character(len=*), parameter :: subname = 'FracSnowDuringMelt'
     !-----------------------------------------------------------------------
 
-    frac_sno_albedo = nan
+    frac_sno = nan
 
   end function FracSnowDuringMelt
 

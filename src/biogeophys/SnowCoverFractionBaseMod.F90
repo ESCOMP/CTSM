@@ -89,12 +89,12 @@ module SnowCoverFractionBaseMod
        real(r8) , intent(inout) :: int_snow( bounds%begc: )        ! integrated snowfall (mm H2O)
      end subroutine AddNewsnowToIntsnow_Interface
 
-     pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno_albedo)
+     pure function FracSnowDuringMelt_Interface(this, c, h2osno_total, int_snow) result(frac_sno)
        ! Single-point function: return fractional snow cover during melt
        use shr_kind_mod   , only : r8 => shr_kind_r8
        import :: snow_cover_fraction_base_type
 
-       real(r8) :: frac_sno_albedo  ! function result
+       real(r8) :: frac_sno  ! function result
        class(snow_cover_fraction_base_type), intent(in) :: this
        integer , intent(in) :: c            ! column we're operating on
        real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)

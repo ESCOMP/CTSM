@@ -241,13 +241,13 @@ contains
   end subroutine AddNewsnowToIntsnow
 
   !-----------------------------------------------------------------------
-  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno_albedo)
+  pure function FracSnowDuringMelt(this, c, h2osno_total, int_snow) result(frac_sno)
     !
     ! !DESCRIPTION:
     ! Single-point function giving frac_snow during times when the snow pack is melting
     !
     ! !ARGUMENTS:
-    real(r8) :: frac_sno_albedo  ! function result
+    real(r8) :: frac_sno  ! function result
     class(snow_cover_fraction_swenson_lawrence_2012_type), intent(in) :: this
     integer , intent(in) :: c            ! column we're operating on
     real(r8), intent(in) :: h2osno_total ! total snow water (mm H2O)
@@ -263,7 +263,7 @@ contains
     int_snow_limited = min(int_snow, this%int_snow_max)
     smr = min(1._r8, h2osno_total/int_snow_limited)
 
-    frac_sno_albedo = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
+    frac_sno = 1. - (acos(min(1._r8,(2.*smr - 1._r8)))/rpi)**(this%n_melt(c))
 
   end function FracSnowDuringMelt
 
