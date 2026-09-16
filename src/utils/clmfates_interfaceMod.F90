@@ -1624,7 +1624,9 @@ module CLMFatesInterfaceMod
           c = this%f2hmap(nc)%fcolumn(s)
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
           this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
-          this%fates(nc)%bc_in(s)%z0mg = z0mg(c)
+          if (.not. is_initing_from_restart) then
+             this%fates(nc)%bc_in(s)%z0mg = z0mg(c)
+          end if
        end do
 
        ! Only update the fates internal snow burial if this is not a restart
