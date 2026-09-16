@@ -19,7 +19,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    > cd myB1850
    > ./case.setup
    # Set the followng auxiliary history settings to true in your user_nl_cpl file
-   cat << EOF > user_nl_cpl
+   > cat << EOF > user_nl_cpl
    histaux_atm2med_file1_enabled = .true.
    histaux_atm2med_file2_enabled = .true.
    histaux_atm2med_file3_enabled = .true.
@@ -28,7 +28,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    histaux_atm2med_file5_history_n = 1
    histaux_atm2med_file5_history_option = 'ndays'
    histaux_atm2med_file5_ntperfile = 1
-EOF
+   EOF
    # Now build
    > ./case.build
    # The following sets the archival disk space (you could also use an editor)
