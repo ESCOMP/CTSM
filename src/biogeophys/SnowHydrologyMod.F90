@@ -1913,7 +1913,7 @@ contains
     real(r8) :: wx     ! water mass (ice+liquid) [kg/m2]
     real(r8) :: bi     ! partial density of ice [kg/m3]
     real(r8) :: wsum   ! snowpack total water mass (ice+liquid) [kg/m2]
-    real(r8) :: frac_sno_fluxes_melt ! fraction of ground covered by snow for heat flux calculations during snow melt (0 to 1)
+    real(r8) :: fsno_melt ! fraction of ground covered by snow during snow melt (0 to 1)
     real(r8) :: ddz4   ! Rate of compaction of snowpack due to wind drift.
     !-----------------------------------------------------------------------
 
@@ -2015,7 +2015,7 @@ contains
                       ! 2nd term is delta fsno over fsno, allowing for negative values for ddz3
                       if((swe_old(c,j) - wx) > 0._r8) then
                          wsum = sum(h2osoi_liq(c,snl(c)+1:0)+h2osoi_ice(c,snl(c)+1:0))
-                         frac_sno_fluxes_melt = scf_method%FracSnowDuringMelt( &
+                         fsno_melt = scf_method%FracSnowDuringMelt( &
                               c            = c, &
                               h2osno_total = wsum, &
                               int_snow     = int_snow(c))
@@ -2026,11 +2026,11 @@ contains
                          ! UpdateFracH2oSfc (related to frac_sno_albedo and frac_sno_fluxes); these two should be kept in
                          ! sync (e.g., if a 3rd fraction is ever added in one place, it
                          ! needs to be added in the other place, too).
-                         if ((frac_sno_fluxes_melt + frac_h2osfc(c)) > 1._r8) then
-                            frac_sno_fluxes_melt = 1._r8 - frac_h2osfc(c)
+                         if ((fsno_melt + frac_h2osfc(c)) > 1._r8) then
+                            fsno_melt = 1._r8 - frac_h2osfc(c)
                          end if
 
-                         ddz3 = ddz3 - max(0._r8,(frac_sno_fluxes_melt - frac_sno_fluxes(c))/frac_sno_fluxes(c))
+                         ddz3 = ddz3 - max(0._r8,(fsno_melt - frac_sno_fluxes(c))/frac_sno_fluxes(c))
                       endif
                       ddz3 = -1._r8/dtime * ddz3
                    else
