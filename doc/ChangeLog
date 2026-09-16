@@ -1,4 +1,124 @@
 ===============================================================
+Tag name: ctsm5.4.057
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Wed Sep 16 10:35:17 AM MDT 2026
+One-line Summary: CDEPS/CMEPS updates for CPLHIST mode and 1850 ndep from DATM
+
+Purpose and description of changes
+----------------------------------
+
+Update CDEPS with changes for CPLHIST mode. Turn on CLM_NDEP_FROM_CPL for CPLHIST mode. change cplhist test mod to use a different case. This should have everything needed to start CPLHIST spinups out of the box.
+
+Also for 1850 with CLM60 use ndep from DATM
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+ Fixes Update cdeps with updated preliminary CPLHIST data #3759
+ Fixes Create new auxiliary history file for cplhist test with ndep data  #1844
+ Fixess in Make offline 1850 compsets closer to when coupled to CAM by using CO2 from datasets rather than hardcoded values #3801
+ Fixes default CMIP7 CO2 files doesn't appear to be working? #4072
+ Resolves Create new auxiliary history file for cplhist test with ndep data  #1844
+ Resolves Change in ndep scaling in cdeps1.0.106 changes answers for a few tests #4209
+ Resolves Create new auxiliary history file for cplhist test with ndep data  #1844
+ Partial for Turn on use of ndep from CAM/datm and turn off (and remove) ndep capability inside of CTSM #1900
+ Partial for Document, test, and add testing for running CPLHIST cases in NUOPC starting from a B case #3410
+ Partial for CDEPS update to new CMIP7 preliminary spinup: aerosols, ndep, ozone, CO2 #3984
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  There's a new DATM_MODE CPLHIST-CESM3 to use the CPLHIST spinup data from a CESM3 simulation
+  Currently it points to a preliminary version, but we'll update it to the final data in a later step.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  ndep for CPLHIST now comes from DATM
+  ndep for 1850 with CLM60 now comes from DATM.
+
+Changes to the datasets (e.g., streams, surface or initial files):
+ The DATM 1850 ndep dataset for this was updated (the previous dataset wasn't working).
+
+Changes to documentation:
+ Documentation around DATM and CPLHIST mode was updated
+
+Contributors:
+  @slevis-lmwg @billsacks @mvertens
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+
+Changes to tests or testing:
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - ?
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  aux_cdeps
+     derecho ---- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 1850Clm60Bgc compsets and Spinup compsets
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+     Spinup compsets (CPLHIST-CESM3 mode) use preliminary CPLHIST data
+
+Other details
+-------------
+[Remove any lines that don't apply. Remove entire section if nothing applies.]
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.056
 Originator(s): slevis (Samuel Levis,UCAR/TSS,slevis@ucar.edu)
 Date: Thu Sep 10 05:52:02 PM MDT 2026
