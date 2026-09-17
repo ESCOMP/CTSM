@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.057
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Wed Sep 16 10:35:17 AM MDT 2026
+Date: Wed Sep 16 11:32:03 PM MDT 2026
 One-line Summary: CDEPS/CMEPS updates for CPLHIST mode and 1850 ndep from DATM
 
 Purpose and description of changes
@@ -33,11 +33,12 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 
  Fixes Update cdeps with updated preliminary CPLHIST data #3759
  Fixes Create new auxiliary history file for cplhist test with ndep data  #1844
- Fixess in Make offline 1850 compsets closer to when coupled to CAM by using CO2 from datasets rather than hardcoded values #3801
+ Fixes in Make offline 1850 compsets closer to when coupled to CAM by using CO2 from datasets rather than hardcoded values #3801
  Fixes default CMIP7 CO2 files doesn't appear to be working? #4072
+ Fixes Validate that tower site CLM_USRDAT settings are correct #4212
  Resolves Create new auxiliary history file for cplhist test with ndep data  #1844
  Resolves Change in ndep scaling in cdeps1.0.106 changes answers for a few tests #4209
- Resolves Create new auxiliary history file for cplhist test with ndep data  #1844
+ Resolves default CMIP7 CO2 files doesn't appear to be working? #4072
  Partial for Turn on use of ndep from CAM/datm and turn off (and remove) ndep capability inside of CTSM #1900
  Partial for Document, test, and add testing for running CPLHIST cases in NUOPC starting from a B case #3410
  Partial for CDEPS update to new CMIP7 preliminary spinup: aerosols, ndep, ozone, CO2 #3984
@@ -46,6 +47,7 @@ Notes of particular relevance for users
 ---------------------------------------
 
 Caveats for users (e.g., need to interpolate initial conditions):
+  CLM_CMIP_ERA operates separately from DATM CMIP7 settings
 
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
   There's a new DATM_MODE CPLHIST-CESM3 to use the CPLHIST spinup data from a CESM3 simulation
@@ -70,6 +72,8 @@ Notes of particular relevance for developers:
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
+  The cplhist testmod was able to be removed, as DATM now points to the latest CPLHIST data
+  Add tests that CLM_USRDAT settings are correct in build-namelist tester
 
 Testing summary: regular
 ----------------
@@ -81,7 +85,7 @@ Testing summary: regular
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho - ?
+    derecho -  OK (there were problems before this tag)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
@@ -107,15 +111,17 @@ Changes answers relative to baseline:
     - nature of change: new climate
 
      Spinup compsets (CPLHIST-CESM3 mode) use preliminary CPLHIST data
+     1850Clm60Bgc compsets use NDEP from preliminary DATM 1850 spinup file
 
 Other details
 -------------
-[Remove any lines that don't apply. Remove entire section if nothing applies.]
-
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cdeps to cdeps1.0.109
+   cmeps to cmeps1.1.69
 
 Pull Requests that document the changes (include PR ids):
 (https://github.com/ESCOMP/ctsm/pull)
+ https://github.com/ESCOMP/CTSM/pull/4180 -- CDEPS/CMEPS updates for cplhist and 1850 ndep from DATM
 
 ===============================================================
 ===============================================================
