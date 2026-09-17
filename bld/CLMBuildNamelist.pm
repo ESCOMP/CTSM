@@ -719,7 +719,12 @@ sub setup_cmdl_resolution {
   }
   if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
     if ( ! defined($opts->{'clm_usr_name'}) ) {
-        $log->fatal_error("Resolution is CLM_USRDAT, but --clm_usr_name option is NOT set, and it is required for CLM_USRDAT resolutions");
+        $log->fatal_error("Resolution is CLM_USRDAT, but CLM_USR_NAME is NOT set, and it is required for CLM_USRDAT resolutions");
+    }
+  }
+  if ( defined($opts->{'clm_usr_name'}) ) {
+   if ( $nl_flags->{'res'} ne "CLM_USRDAT" ) {
+        $log->fatal_error("CLM_USRDAT_NAME is set, but the resolution is NOT CLM_USRDAT as it is required to be");
     }
   }
   #
@@ -731,11 +736,29 @@ sub setup_cmdl_resolution {
     if ( begins_with($opts->{'clm_usr_name'}, "NEON") ) {
        $nl_flags->{'neon'} = ".true.";
        $nl_flags->{'neonsite'} = $envxml_ref->{'NEONSITE'};
+       if ( $nl_flags->{'neonsite'} eq "" ) {
+          $log->fatal_error("NEONSITE is not defined in the env*.xml files, but it is required for NEON sites");
+       }
        $log->verbose_message( "This is a NEON site with NEONSITE = " . $nl_flags->{'neonsite'} );
     }
   }
   if ( ! &value_is_true( $nl_flags->{'neon'} ) ) {
     $log->verbose_message( "This is NOT a NEON site" );
+  }
+  #
+  # For PLUMBER2 sites
+  #
+  $nl_flags->{'plumber2site'} = "";
+  if ( $nl_flags->{'res'} eq "CLM_USRDAT" ) {
+    if ( begins_with($opts->{'clm_usr_name'}, "PLUMBER2") ) {
+       $nl_flags->{'plumber2site'} = $envxml_ref->{'PLUMBER2SITE'};
+       if ( $nl_flags->{'plumber2site'} eq "" ) {
+          $log->fatal_error("PLUMBER2ITE is not defined in the env*.xml files, but it is required for PLUMBER2 sites");
+       }
+       $log->verbose_message( "This is a PLUMBER2 site with PLUMBER2SITE = " . $nl_flags->{'plumber2site'} );
+    } else {
+       $log->verbose_message( "This is NOT a PLUMBER2 site" );
+    }
   }
 
   #
