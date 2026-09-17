@@ -78,6 +78,7 @@ module WaterType
   use Wateratm2lndBulkType     , only : wateratm2lndbulk_type
   use WaterTracerContainerType , only : water_tracer_container_type
   use WaterTracerUtils         , only : CompareBulkToTracer, SetTracerToBulkTimesRatio
+  use UrbanParamsType          , only : IsBuildingHumidityEnabled
 
   implicit none
   private
@@ -394,7 +395,8 @@ contains
 
        call this%bulk_and_tracers(i)%waterdiagnostic_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
-            this%bulk_and_tracers(i)%vars)
+            this%bulk_and_tracers(i)%vars, &
+            IsBuildingHumidityEnabled())
 
        call this%bulk_and_tracers(i)%waterbalance_inst%Init(bounds, &
             this%bulk_and_tracers(i)%info, &
@@ -733,7 +735,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine Restart(this, bounds, ncid, flag, writing_finidat_interp_dest_file, &
-       watsat_col, t_soisno_col, altmax_lastyear_indx)
+       watsat_col, t_soisno_col, altmax_lastyear_indx, is_prog_buildhumidity)
     !
     ! !DESCRIPTION:
     ! Read/write information to/from restart file for all water variables
@@ -747,6 +749,7 @@ contains
     real(r8)         , intent(in)    :: watsat_col (bounds%begc:, 1:)  ! volumetric soil water at saturation (porosity)
     real(r8)         , intent(in)    :: t_soisno_col(bounds%begc:, -nlevsno+1:) ! col soil temperature (Kelvin)
     integer          , intent(in)    :: altmax_lastyear_indx(bounds%begc:) !col active layer index last year
+    logical          , intent(in)    :: is_prog_buildhumidity    ! Prognostic building humidity is being used
     !
     ! !LOCAL VARIABLES:
     integer :: i
@@ -776,7 +779,8 @@ contains
             t_soisno_col=t_soisno_col(bounds%begc:, -nlevsno+1:), &
             altmax_lastyear_indx=altmax_lastyear_indx(bounds%begc:))
 
-       call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag)
+       call this%bulk_and_tracers(i)%waterdiagnostic_inst%Restart(bounds, ncid, flag=flag, &
+            is_prog_buildhumidity=is_prog_buildhumidity)
 
     end do
 

@@ -1,4 +1,88 @@
 ===============================================================
+Tag name: ctsm5.4.059
+Originator(s): cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
+Date: Thu Sep 17 04:13:20 PM MDT 2026
+One-line Summary: Indoor humidity and A/C dehumidification
+
+Purpose and description of changes
+----------------------------------
+
+ This PR adds indoor humidity and air-conditioning dehumidification to the CLMU BEM (Building Energy Model). It prognoses indoor specific humidity, calculates sensible cooling and latent dehumidification loads, and diagnoses condensate production and routes the condensate into urban runoff. The behavior is controlled by an integer CLM namelist variable, building_humidity_mode:
+
+ 0: use the existing CLMU formulation without indoor humidity or AC dehumidification;
+ 1: enable indoor humidity and latent heat exchange, but no AC dehumidification (requires prognostic building temperature, building_temp_method=1); and
+ 2: enable indoor humidity, latent heat exchange, dehumidification load, and condensate production (requires prognostic building temperature, urban_hac to be ON or ON_WASTEHEAT and urban_explicit_ac=.true.).
+
+ The default is set to 0 to ensure bit-for-bit reproducibility with the original scheme.
+
+ Indoor humidity and air-conditioning dehumidification are described by Li et al. (2026), doi:10.1038/s44284-026-00474-4.
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #4162
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ building_humidity_mode is added as a namelist variable
+
+Changes to documentation:
+ #4195 will address the need for new docs
+
+Substantial timing or memory changes:
+ slevis will check the PFS test etc. the next time he runs aux_clm (before the merge)
+
+Contributors:
+ Lei Zhao (@Face2sea)
+ Zhiwen Luo
+ Keith Oleson (@olyson)
+ Yifan Cheng (@yifanc17)
+ Xiaoxiong Xie
+ Alvin C. G. Varquez
+ Mitsuna Sekiya
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ 6 new tests in build-namelist_test.pl
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho -
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho -----
+    izumi -------
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No (read the caveat)
+
+ Caveat:
+ - Results remain bit-for-bit under building_humidity_mode=0 (default).
+ - Comparing building_humidity_mode=1 with 0, two new variables are added (QBUILD, RHBUILD), and VENTILATION and EFLXBUILD changes because they now include latent heat exchanges between indoors and outdoors, and URBAN_AC and URBAN_HEAT changes slightly because of the changes in ventilation and higher heat capacity of moist air.
+ - Comparing building_humidity_mode=2 with 1, three more new variables (URBAN_AC_SEN, QCOND_FROM_AC, QCOND_FROM_AC_LUN) are added, and URBAN_AC increases because it now includes sensible (for cooling) and latent (for dehumidification) heat components of urban AC demand. URBAN_HEAT, VENTILATION, EFLXBUILD, WASTEHEAT changes slightly as an indirect results of the changes in AC.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4164
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.058
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+(placeholder)
+===============================================================
+===============================================================
 Tag name: ctsm5.4.057
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
 Date: Thu Sep 17 01:26:07 AM MDT 2026

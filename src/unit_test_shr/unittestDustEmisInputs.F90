@@ -9,6 +9,7 @@ module unittestDustEmisInputs
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestFilterBuilderMod, only : filter_from_range
   use atm2lndType, only : atm2lnd_type, atm2lnd_params_type
+  use UrbanParamsType, only : urbanparams_type
   use SoilStateType, only : soilstate_type
   use CanopyStateType, only : canopystate_type
   use TemperatureType, only : temperature_type
@@ -32,6 +33,7 @@ module unittestDustEmisInputs
      type(unittest_water_type_factory_type), private :: water_factory
      type(water_type) :: water_inst
      type(frictionvel_type) :: frictionvel_inst
+     type(urbanparams_type) :: urbanparams_inst
    contains
      procedure, public :: setUp
      procedure, public :: tearDown
@@ -86,6 +88,11 @@ contains
     )
 
     call this%atm2lnd_inst%InitForTesting(bounds, atm2lnd_params)
+
+    ! Reguired so that the IsBuildingHumidityEnabled and IsACDehumidificationEnabled
+    ! namelist functions can be used
+    call this%urbanparams_inst%InitForTesting(bounds)
+
     ! Water and soil state -- after the subgrid setup
     call this%water_factory%setup_after_subgrid(snl = snl)
     call this%setupSoilState( )   ! This needs to happen before the water_type object creation
