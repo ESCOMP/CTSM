@@ -6,4 +6,4 @@ use_lch4 = .false.
 fates_spitfire_mode = 0
 use_fates_fixed_biogeog = .true.
 use_fates_nocomp = .true.
-hist_ndens = 1
+hist_ndens = 2
