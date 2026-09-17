@@ -60,7 +60,6 @@ SYNOPSIS
      Create the namelist for CLM
 REQUIRED OPTIONS
      -cimeroot "directory"    Path to cime directory
-     -landroot "directory"    Path to the land models parent directory, ie <>/ctsm
      -config "filepath"       Read the given CLM configuration cache file.
                               Default: "config_cache.xml".
      -configuration "cfg"     The overall configuration being used [ clm | nwp ]
@@ -260,7 +259,6 @@ sub process_commandline {
   $nl_flags->{'cmdline'} = "@ARGV\n";
 
   my %opts = ( cimeroot              => undef,
-	       landroot              => undef,
                config                => "config_cache.xml",
                configuration         => undef,
                csmdata               => undef,
@@ -302,7 +300,6 @@ sub process_commandline {
 
   GetOptions(
              "cimeroot=s"                => \$opts{'cimeroot'},
-             "landroot=s"                => \$opts{'landroot'},
              "driver=s"                  => \$opts{'driver'},
              "clm_demand=s"              => \$opts{'clm_demand'},
              "co2_ppmv=f"                => \$opts{'co2_ppmv'},
@@ -5583,9 +5580,9 @@ sub add_default {
     # The default values for input pathnames are relative.  If the namelist
     # variable is defined to be an absolute pathname, then prepend
     # the CESM inputdata root directory.
-    if ($is_input_pathname eq 'landroot') {
+    if ($is_input_pathname eq 'lndroot') {
 	#my $landroot = $opts->{'landroot'};
-	$val = set_abs_filepath($val,$opts->{'landroot'});
+	$val = set_abs_filepath($val,$opts->{'lndroot'});
     } else {
 	if (not defined $settings{'no_abspath'}) {
 	    if (defined $settings{'set_abspath'}) {
@@ -5669,7 +5666,7 @@ sub check_input_files {
                 # Need to strip the quotes
                 $pathname =~ s/['"]//g;
                 next if ($pathname =~ /UNSET$/);
-                if ($input_pathname_type eq 'abs') {
+                if ($input_pathname_type eq 'abs' or $input_pathname_type eq 'lndroot' ) {
                     if ($inputdata_rootdir) {
                         if ( $pathname !~ /^\s*$/ ) {   # If pathname isn't blank or null
                            print OUTFILE "$var = $pathname\n";
@@ -6111,7 +6108,12 @@ sub main {
   $log     = namelist_files::LogMessages->new( $ProgName, \%opts );   # global
   version($cfgdir) if $opts{'version'};
   my $cfg = read_configure_definition($cfgdir, \%opts);
-
+  # Read in the env_*.xml files 
+  # moved to here from below check_cesm_inputdata() to assign some values that are not from cmdl
+  my %env_xml    = read_envxml_case_files( \%opts );
+  # we assign it here, so we don't have to pass it around through command line
+  # this variable is in %opts, so that we don't change lots of add_default calls.
+  $opts{'lndroot'} = $env_xml{'COMP_ROOT_DIR_LND'};
   my $physv      = config_files::clm_phys_vers->new( $cfg->get('phys') );
   my $definition = read_namelist_definition($cfgdir, \%opts, \%nl_flags);
   my $defaults   = read_namelist_defaults($cfgdir, \%opts, \%nl_flags, $cfg);
@@ -6127,8 +6129,6 @@ sub main {
 
   check_cesm_inputdata(\%opts, \%nl_flags);
 
-  # Read in the env_*.xml files
-  my %env_xml    = read_envxml_case_files( \%opts );
 
   # Process the user inputs
   process_namelist_user_input(\%opts, \%nl_flags, $definition, $defaults, $nl, $cfg, \%env_xml, $physv );
