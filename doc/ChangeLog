@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.057
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Wed Sep 16 11:32:03 PM MDT 2026
+Date: Thu Sep 17 01:26:07 AM MDT 2026
 One-line Summary: CDEPS/CMEPS updates for CPLHIST mode and 1850 ndep from DATM
 
 Purpose and description of changes
@@ -69,8 +69,6 @@ Contributors:
 Notes of particular relevance for developers:
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
   The cplhist testmod was able to be removed, as DATM now points to the latest CPLHIST data
   Add tests that CLM_USRDAT settings are correct in build-namelist tester
@@ -85,7 +83,7 @@ Testing summary: regular
 
   python testing (if python code has changed; see instructions in python/README.md; document testing done):
 
-    derecho -  OK (there were problems before this tag)
+    derecho -  OK (#4215 and #4216 are fails that started in ctsm5.4.053)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
