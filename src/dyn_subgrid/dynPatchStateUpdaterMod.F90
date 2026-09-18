@@ -486,8 +486,7 @@ contains
           frictionvel_inst%u10_clm_patch(p) = spval
           frictionvel_inst%ram1_patch(p) = spval
 
-          soilstate_inst%root_conductance_patch(p, :) = spval
-          soilstate_inst%soil_conductance_patch(p, :) = spval
+          call soilstate_inst%SetValues(bounds, spval, p=p)
        end if
     end do
 

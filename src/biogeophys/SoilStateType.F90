@@ -215,13 +215,12 @@ contains
          avgflag='A', long_name='soil matric potential (natural vegetated and crop landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
-    this%root_conductance_patch(begp:endp,:) = spval
+    call this%SetValues(bounds, spval)
 !   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !   call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
 !        avgflag='A', long_name='root conductance each soil layer', &
 !        ptr_patch=this%root_conductance_patch, default='inactive')
     
-    this%soil_conductance_patch(begp:endp,:) = spval
 !   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !   call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
 !        avgflag='A', long_name='soil conductance in each soil layer', &
@@ -401,24 +400,29 @@ contains
   end subroutine Restart
 
   !------------------------------------------------------------------------
-  subroutine SetValues(this, bounds, setval)
+  subroutine SetValues(this, bounds, setval, p)
     !
     ! !DESCRIPTION:
-    ! Initialize diagnostic arrays to setval
+    ! Initialize diagnostic arrays to setval across bounds or for a specific patch p
     !
     ! !ARGUMENTS:
     class(soilstate_type), intent(inout) :: this
     type(bounds_type), intent(in)        :: bounds
     real(r8), intent(in)                 :: setval
+    integer, intent(in), optional        :: p
     !
     ! !LOCAL VARIABLES:
     integer :: begp, endp
     !-----------------------------------------------------------------------
 
-    begp = bounds%begp; endp = bounds%endp
-
-    this%root_conductance_patch(begp:endp,:) = setval
-    this%soil_conductance_patch(begp:endp,:) = setval
+    if (present(p)) then
+       this%root_conductance_patch(p,:) = setval
+       this%soil_conductance_patch(p,:) = setval
+    else
+       begp = bounds%begp; endp = bounds%endp
+       this%root_conductance_patch(begp:endp,:) = setval
+       this%soil_conductance_patch(begp:endp,:) = setval
+    end if
 
   end subroutine SetValues
 
