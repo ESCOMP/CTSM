@@ -1,13 +1,22 @@
 ===============================================================
 Tag name: ctsm5.4.058
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Fri Sep 18 12:10:29 AM MDT 2026
+Date: Fri Sep 18 02:58:26 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
 ----------------------------------
 
 Merge b4b-dev to master
+
+Brings in complete CLM-U tech note. Some refactoring simlplications to compsets and FATES paramgen tests. Improves error messaging in code for history and adds a warning for hillslope. Put comments in testlist into one line (so you see all the comments when using query_testlist). Simplify compsets
+
+- Merge multiple test-comments into single comments in testlist
+- Import CLM-U tech note from Word into the CTSM Tech Note.
+- No longer need to allow for C/E at end of time period (changes to CAM and CESM required for this are already in CESM tags)
+- Improve history restart error messages
+- Simplify FATES paramgen in tests (ncgen no longer needed), get it to work in both CESM and CTSM checkouts
+- Adds warning when use_init_interp is used with hillslope
 
 Bugs fixed
 ----------
@@ -24,13 +33,12 @@ List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
 Notes of particular relevance for users
 ---------------------------------------
 
-Caveats for users (e.g., need to interpolate initial conditions):
-
 Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
-
-Changes made to namelist defaults (e.g., changed parameter values):
+   preview_namelist now catches when the user asks for initial condition interpolate with Hillslop
+   It now dies with a warning
 
 Changes to documentation:
+   CLM-U Tech note moved into the main CTSM Tech Note as a chapter
 
 Contributors:
   @slevis-lmwg, @billsacks, @mvdebolskiy, @neu-emu, @olyson
@@ -39,8 +47,12 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   This serves as a reminding to only have one comment in testlists.
 
 Changes to tests or testing:
+   Adding a test for the new warning in build-namelist.
+   Testlist changes so that all content for "comment" is included in one tag rather than multiple ones.
+   Paramgen FATES testing simplified with no need for ncgen and now can work in CESM checkouts too
 
 Testing summary:  regular
 ----------------
@@ -57,7 +69,7 @@ Testing summary:  regular
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
+    derecho ----- OK
     izumi ------- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
