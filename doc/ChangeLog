@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.059
 Originator(s): cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
-Date: Sun Sep 20 10:46:06 AM MDT 2026
+Date: Mon Sep 21 10:55:44 AM MDT 2026
 One-line Summary: Indoor humidity and A/C dehumidification
 
 Purpose and description of changes
@@ -30,9 +30,6 @@ Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
 Changes to documentation:
  #4195 will address the need for new docs
 
-Substantial timing or memory changes:
- slevis will check the PFS test etc. the next time he runs aux_clm (before the merge)
-
 Contributors:
  Lei Zhao (@Face2sea)
  Zhiwen Luo
@@ -53,17 +50,15 @@ Testing summary:
 
   build-namelist tests (if CLMBuildNamelist.pm has changed):
 
-    derecho -
+    derecho - OK (2 expected fails)
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
-    izumi -------
-
+    derecho ----- OK
+    izumi ------- OK
 
 Answer changes
 --------------
-
 Changes answers relative to baseline: No (read the caveat)
 
  Caveat:
