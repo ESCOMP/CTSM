@@ -32,6 +32,7 @@ module SurfaceWaterMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: UpdateFracH2oSfc     ! Determine fraction of land surfaces which are submerged
   public :: UpdateH2osfc         ! Calculate fluxes out of h2osfc and update the h2osfc state
+  public :: pc_hillslope         ! Calculate pc parameter for hillslope columns
   public :: readParams
 
   ! !PRIVATE MEMBER FUNCTIONS:
@@ -70,6 +71,21 @@ contains
     call readNcdioScalar(ncid, 'mu', subname, params_inst%mu)
 
   end subroutine readParams
+
+  !-----------------------------------------------------------------------
+  real(r8) function pc_hillslope( hill_slope )
+  !------------------------------------------------------------------------------
+  !
+  ! Calculate the pc parameter using hillslope geoparameter as input
+  !
+  !------------------------------------------------------------------------------
+      real(r8), intent(in) :: hill_slope ! Hillslope column slope
+      real(r8), parameter :: pc_a = 0.6_r8
+      real(r8), parameter :: pc_b = -20._r8
+
+      pc_hillslope = pc_a*exp(pc_b*hill_slope)
+      
+    end function pc_hillslope
 
   !-----------------------------------------------------------------------
   subroutine UpdateFracH2oSfc(bounds, num_soilc, filter_soilc, &
@@ -217,7 +233,8 @@ contains
     real(r8):: d,fd,dfdd      ! temporary variable for frac_h2o iteration
     real(r8):: sigma          ! microtopography pdf sigma in mm
     real(r8):: min_h2osfc
-    !-----------------------------------------------------------------------
+    real(r8):: f_overlap
+   !-----------------------------------------------------------------------
 
     SHR_ASSERT_FL((ubound(micro_sigma, 1) == bounds%endc), sourcefile, __LINE__)
     SHR_ASSERT_FL((ubound(h2osno_total, 1) == bounds%endc), sourcefile, __LINE__)
@@ -276,7 +293,11 @@ contains
        if (frac_sno(c) > (1._r8 - frac_h2osfc(c)) .and. h2osno_total(c) > 0) then
 
           if (frac_h2osfc(c) > 0.01_r8) then             
-             frac_h2osfc(c) = max(1.0_r8 - frac_sno(c),0.01_r8)
+             f_overlap = frac_sno(c) + frac_h2osfc(c) - 1._r8
+             ! split overlap between snow and surface water rather than reducing only surface water
+             if (f_overlap > 0._r8) then
+                frac_h2osfc(c) = frac_h2osfc(c) - 0.5_r8*f_overlap
+             endif 
              frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
           else
              frac_sno(c) = 1.0_r8 - frac_h2osfc(c)
@@ -344,17 +365,20 @@ contains
   !-----------------------------------------------------------------------
   subroutine UpdateH2osfc(bounds, num_hydrologyc, filter_hydrologyc, &
        infiltration_excess_runoff_inst, &
-       energyflux_inst, soilhydrology_inst, &
+       energyflux_inst, soilhydrology_inst, soilstate_inst, &
        waterfluxbulk_inst, waterstatebulk_inst, waterdiagnosticbulk_inst)
     !
     ! !DESCRIPTION:
     ! Calculate fluxes out of h2osfc and update the h2osfc state
+    !
+    use SoilStateType        , only : soilstate_type
     !
     ! !ARGUMENTS:
     type(bounds_type)        , intent(in)    :: bounds               
     integer                  , intent(in)    :: num_hydrologyc       ! number of column soil points in column filter
     integer                  , intent(in)    :: filter_hydrologyc(:) ! column filter for soil points
     type(infiltration_excess_runoff_type), intent(in) :: infiltration_excess_runoff_inst
+    type(soilstate_type)     , intent(in)    :: soilstate_inst
     type(energyflux_type)    , intent(in)    :: energyflux_inst
     type(soilhydrology_type) , intent(in)    :: soilhydrology_inst
     type(waterfluxbulk_type)     , intent(inout) :: waterfluxbulk_inst
@@ -378,6 +402,7 @@ contains
          qflx_h2osfc_surf =>    waterfluxbulk_inst%qflx_h2osfc_surf_col , & ! Output: [real(r8) (:)   ]  surface water runoff (mm H2O /s)                       
          qflx_h2osfc_drain => waterfluxbulk_inst%qflx_h2osfc_drain_col  , & ! Output: [real(r8) (:)   ]  bottom drainage from h2osfc (mm H2O /s)
          
+         icefrac          =>    soilhydrology_inst%icefrac_col      , & ! Input:  [real(r8) (:,:) ]  fraction of ice                                 
          h2osfc_thresh    =>    soilhydrology_inst%h2osfc_thresh_col, & ! Input:  [real(r8) (:)   ]  level at which h2osfc "percolates"                
          h2osfcflag       =>    soilhydrology_inst%h2osfcflag         & ! Input:  integer
          )
@@ -412,6 +437,8 @@ contains
          h2osfc = h2osfc_partial(bounds%begc:bounds%endc), &
          frac_h2osfc = frac_h2osfc(bounds%begc:bounds%endc), &
          qinmax = qinmax(bounds%begc:bounds%endc), &
+         icefrac = icefrac(bounds%begc:bounds%endc,1), &
+         soilstate_inst = soilstate_inst, &
          qflx_h2osfc_drain = qflx_h2osfc_drain(bounds%begc:bounds%endc))
 
     ! Update h2osfc based on fluxes
@@ -456,6 +483,7 @@ contains
     real(r8) :: dtime         ! land model time step (sec)
     real(r8) :: frac_infclust ! fraction of submerged area that is connected
     real(r8) :: k_wet         ! linear reservoir coefficient for h2osfc
+    real(r8) :: pc            ! column-level pc parameter
     real(r8),parameter :: min_hill_slope = 1e-3_r8! minimum value of hillslope for outflow
 
     character(len=*), parameter :: subname = 'QflxH2osfcSurf'
@@ -473,10 +501,17 @@ contains
        c = filter_hydrologyc(fc)
 
        if (h2osfcflag==1) then
-          if (frac_h2osfc_nosnow(c) <= params_inst%pc) then
+
+          if(col%is_hillslope_column(c)) then
+             pc = max(pc_hillslope(col%hill_slope(c)), 0.01_r8)
+          else
+             pc = params_inst%pc
+          endif
+          
+          if (frac_h2osfc_nosnow(c) <= pc) then
              frac_infclust=0.0_r8
           else
-             frac_infclust=(frac_h2osfc_nosnow(c)-params_inst%pc)**params_inst%mu
+             frac_infclust=(frac_h2osfc_nosnow(c)-pc)**params_inst%mu
           endif
        endif
 
@@ -485,8 +520,7 @@ contains
           ! spatially variable k_wet
           k_wet=1.0e-4_r8 * sin((rpi/180._r8) * topo_slope(c))
           if (col%is_hillslope_column(c)) then
-             ! require a minimum value to ensure non-zero outflow
-             k_wet = 1e-4_r8 * max(col%hill_slope(c),min_hill_slope)
+             k_wet = max(col%hill_slope(c),0._r8)/dtime
           endif
           qflx_h2osfc_surf(c) = k_wet * frac_infclust * (h2osfc(c) - h2osfc_thresh(c))
 
@@ -506,14 +540,19 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine QflxH2osfcDrain(bounds, num_hydrologyc, filter_hydrologyc, &
-       h2osfcflag, h2osfc, frac_h2osfc, qinmax, &
-       qflx_h2osfc_drain)
+       h2osfcflag, h2osfc, frac_h2osfc, qinmax, icefrac, &
+       soilstate_inst, qflx_h2osfc_drain)
     !
     ! !DESCRIPTION:
     ! Compute qflx_h2osfc_drain
     !
     ! Note that, if h2osfc is negative, then qflx_h2osfc_drain will be negative - acting
     ! to exactly restore h2osfc to 0.
+    !
+    ! !USES:
+    use ColumnType      , only: col
+    use SoilHydrologyMod, only: params_inst
+    use SoilStateType   , only: soilstate_type
     !
     ! !ARGUMENTS:
     type(bounds_type) , intent(in)    :: bounds
@@ -523,11 +562,19 @@ contains
     real(r8)          , intent(in)    :: h2osfc( bounds%begc: )             ! surface water (mm)
     real(r8)          , intent(in)    :: frac_h2osfc( bounds%begc: )        ! fraction of ground covered by surface water (0 to 1)
     real(r8)          , intent(in)    :: qinmax( bounds%begc: )             ! maximum infiltration rate (mm H2O /s)
+    real(r8)          , intent(in)    :: icefrac( bounds%begc: )            ! soil ice fraction in top soil layer ()
+    type(soilstate_type), intent(in)  :: soilstate_inst
     real(r8)          , intent(inout) :: qflx_h2osfc_drain( bounds%begc: )  ! bottom drainage from h2osfc (mm H2O /s)
     !
     ! !LOCAL VARIABLES:
     integer :: fc, c
     real(r8) :: dtime         ! land model time step (sec)
+    real(r8) :: ice_imped     ! ice impedance ()
+    real(r8) :: den           ! temporary variable
+    real(r8) :: hk1           ! surface hydraulic conductivity (mm/s)
+    real(r8) :: smp1          ! minimum soil suction (mm) 
+    
+    real(r8),parameter :: m_to_mm = 1.e3_r8  !convert meters to mm
 
     character(len=*), parameter :: subname = 'QflxH2osfcDrain'
     !-----------------------------------------------------------------------
@@ -537,21 +584,43 @@ contains
     SHR_ASSERT_ALL_FL((ubound(qinmax) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(qflx_h2osfc_drain) == (/bounds%endc/)), sourcefile, __LINE__)
 
-    dtime = get_step_size_real()
+    associate(&
+         z                 =>    col%z                              , & ! Input:  [real(r8) (:,:) ] layer depth (m)
+         sucsat            =>    soilstate_inst%sucsat_col          , & ! Input:  [real(r8) (:,:) ]  minimum soil suction (mm)
+         smp               =>    soilstate_inst%smp_l_col           , & ! Input:  [real(r8) (:,:) ]  soil matrix potential [mm]                      
+         hk                =>    soilstate_inst%hk_l_col              & ! Input:  [real(r8) (:,:) ]  hydraulic conductivity (mm/s)                   
+         )  ! end associate statement
 
-    do fc = 1, num_hydrologyc
-       c = filter_hydrologyc(fc)
+      dtime = get_step_size_real()
 
-       if (h2osfc(c) < 0.0) then
-          qflx_h2osfc_drain(c) = h2osfc(c)/dtime
-       else
-          qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),h2osfc(c)/dtime)
-          if(h2osfcflag==0) then
-             ! ensure no h2osfc
-             qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime)
-          end if
-       end if
-    end do
+      do fc = 1, num_hydrologyc
+         c = filter_hydrologyc(fc)
+
+         if (h2osfc(c) < 0.0) then
+            qflx_h2osfc_drain(c) = h2osfc(c)/dtime
+         else
+
+            ! calculate surface soil layer hydraulic properties
+            ice_imped = 10._r8**(-params_inst%e_ice*icefrac(c))
+            den = z(c,1)* m_to_mm
+            hk1 = frac_h2osfc(c)*ice_imped*hk(c,1)
+            smp1 = -sucsat(c,1)
+
+            ! compute the flux into the top soil layer
+            qflx_h2osfc_drain(c) = -hk1*(smp(c,1) - smp1)/den + hk1
+
+            ! bound drainage values
+            qflx_h2osfc_drain(c)=min(frac_h2osfc(c)*qinmax(c),qflx_h2osfc_drain(c))
+            qflx_h2osfc_drain(c)=min(h2osfc(c)/dtime,qflx_h2osfc_drain(c))
+
+            if(h2osfcflag==0) then
+               ! ensure no h2osfc
+               qflx_h2osfc_drain(c)= max(0._r8,h2osfc(c)/dtime)
+            end if
+         end if
+      end do
+
+    end associate
 
   end subroutine QflxH2osfcDrain
 
