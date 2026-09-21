@@ -202,13 +202,15 @@ contains
     ! Return true if
     !
     ! !USES:
+    use ch4varcon        , only : finundation_mtd_h2osfc
     !
     ! !ARGUMENTS:
     implicit none
     class(ch4finundatedstream_type) :: this
     !
     ! !LOCAL VARIABLES:
-    if ( trim(control%stream_fldFileName_ch4finundated) == '' )then
+    if ( trim(control%stream_fldFileName_ch4finundated) == '' &
+         .or. finundation_mtd == finundation_mtd_h2osfc )then
        UseStreams = .false.
     else
        UseStreams = .true.
