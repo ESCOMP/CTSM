@@ -50,20 +50,40 @@ module dynColumnStateUpdaterMod
   !        update_column_state_fill_using_fixed_values. This method is appropriate when
   !        all special landunits contribute the same fixed value.
   !
-  ! All update methods accept optional fractional areas. If provided, these give the
-  ! fraction of the column over which the state variable applies. For example, this can be
-  ! used if each column is split into an inundated and uninundated fraction; if the state
-  ! variable gives mass per unit area of the inundated portion of the column, then
-  ! fractional_area should specify the inundated fraction of each column. (If no
-  ! fractional areas are provided, then the state variable is assumed to apply to the
-  ! entire column, which is the typical case.) If fractional areas are provided, both
-  ! 'old' (before area updates) and 'new' (after area updates) versions must be provided.
-  ! The determination of the new fractional areas should be done via a call to
-  ! update_column_state_no_special_handling: the code for working with fractional areas
-  ! has no capability to do any special handling, and there could be inconsistencies if
-  ! the new fractional areas were determined using a method that has some special
-  ! handling. Thus, fractional_area must be valid for all columns, even if the state
-  ! variable itself is filled using one of the special-handling methods here.
+  ! All update methods accept optional volume multipliers. If provided, these specify any
+  ! extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that vary in
+  ! space or time for the given state variable (in addition to col%wtgcell, which is
+  ! already accounted for). This is needed to convert variables that have units of per-m3
+  ! or per-m2 to the actual masses that are needed for conservation. (The elements of
+  ! volume or area that are constant in space and time - such as col%dz - do not need to
+  ! be included here, although it doesn't hurt to include them.) Here are some examples of
+  ! the use of these volume multipliers:
+  !
+  !    - An additional area multiplier. e.g., if each column is split into an inundated
+  !      and uninundated fraction: For a state variable that gives mass per unit volume of
+  !      the inundated portion of the column (and which uses level thicknesses that are
+  !      constant in space and time), volume_multiplier should specify the inundated
+  !      fraction of each column.
+  !
+  !    - A level thickness: If the given state variable applies to a vertical level that
+  !      has a variable thickness, volume_multiplier should specify the thickness of this
+  !      level for each column.
+  !
+  !    - If there is more than one multiplier that applies to the given variable, these
+  !      should be combined multiplicatively. e.g., for a state variable that uses
+  !      variable level thicknesses and applies just over the inundated portion of the
+  !      column, volume_multiplier should be the product of the inundated fraction of each
+  !      column and the thickness of this level for each column.
+  !
+  ! If volume multipliers are provided, both 'old' (before area updates) and 'new' (after
+  ! area updates) versions must be provided. Elements of the volume multipliers don't
+  ! necessarily need to be updated with column area changes, but if they are updated, this
+  ! update should be done via a call to update_column_state_no_special_handling: the code
+  ! for working with volume multipliers has no capability to do any special handling, and
+  ! there could be inconsistencies if the new volume multipliers were determined using a
+  ! method that has some special handling. Thus, volume_multiplier must be valid for all
+  ! columns, even if the state variable itself is filled using one of the special-handling
+  ! methods here.
   !
   ! For methods other than update_column_state_no_special_handling, an additional inout
   ! argument (non_conserved_mass_grc) accumulates the non-conserved mass due to shrinking
@@ -77,9 +97,9 @@ module dynColumnStateUpdaterMod
   ! All methods accept an optional output argument (adjustment) which gives the apparent
   ! state adjustment in each column - that is, the per-column-area value after area
   ! changes minus the per-column-area value before area changes. This adjustment will be 0
-  ! for shrinking columns, and can be either positive or negative for growing
-  ! columns. If there are fractional areas, then this adjustment is defined as (val_new *
-  ! fractional_area_new - val_old * fractional_area_old).
+  ! for shrinking columns, and can be either positive or negative for growing columns. If
+  ! there are volume multipliers, then this adjustment is defined as (val_new *
+  ! volume_multiplier_new - val_old * volume_multiplier_old).
   !
   ! NOTE(wjs, 2017-02-24) The implementation involves a few levels of calls to get to the
   ! real work routine (update_column_state). This design made sense (in terms of removing
@@ -142,9 +162,9 @@ module dynColumnStateUpdaterMod
      ! Private routines
 
      ! intermediate routine between the public routines and the real work routine
-     ! (update_column_state); this routine determines the fractional_areas to use in
+     ! (update_column_state); this routine determines the volume_multipliers to use in
      ! update_column_state
-     procedure, private :: update_column_state_with_optional_fractions
+     procedure, private :: update_column_state_with_optional_multipliers
 
      ! do the work of updating a column state
      procedure, private :: update_column_state
@@ -270,7 +290,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine update_column_state_no_special_handling(this, bounds, clump_index, &
-       var, fractional_area_old, fractional_area_new, adjustment)
+       var, volume_multiplier_old, volume_multiplier_new, adjustment)
     !
     ! !DESCRIPTION:
     ! Adjust the values of a column-level state variable due to changes in subgrid
@@ -290,14 +310,15 @@ contains
 
     real(r8), intent(inout) :: var( bounds%begc: ) ! column-level variable
 
-    ! Fraction of each column over which the state variable applies. See module-level
-    ! documentation for details. You must provide both old & new fractional areas, or
-    ! neither: it is invalid to provide just one. Fractional areas should be valid for all
-    ! columns, and fractional_area_new should have been computed based on a call to
-    ! update_column_state_no_special_handling: code that works with these fractional areas
-    ! is not able to do any special handling.
-    real(r8), optional, intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable. See module-level documentation
+    ! for details. You must provide both old & new volume multipliers, or neither: it is
+    ! invalid to provide just one. Volume multipliers should be valid for all columns, and
+    ! any elements of volume_multiplier_new that change due to area changes should have
+    ! been computed based on a call to update_column_state_no_special_handling: code that
+    ! works with these volume multipliers is not able to do any special handling.
+    real(r8), optional, intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), optional, intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
     real(r8), optional, intent(out) :: adjustment( bounds%begc: )
@@ -330,17 +351,17 @@ contains
        non_conserved_mass(bounds%begg:bounds%endg) = 0._r8
 
        ! explicit bounds not needed on any of these arguments - and specifying explicit
-       ! bounds defeats some later bounds checking (for fractional_area_old and
-       ! fractional_area_new)
-       call this%update_column_state_with_optional_fractions(&
+       ! bounds defeats some later bounds checking (for volume_multiplier_old and
+       ! volume_multiplier_new)
+       call this%update_column_state_with_optional_multipliers(&
             bounds = bounds, &
             vals_input = vals_input, &
             vals_input_valid = vals_input_valid, &
             has_prognostic_state = has_prognostic_state, &
             var = var, &
             non_conserved_mass = non_conserved_mass, &
-            fractional_area_old = fractional_area_old, &
-            fractional_area_new = fractional_area_new, &
+            volume_multiplier_old = volume_multiplier_old, &
+            volume_multiplier_new = volume_multiplier_new, &
             adjustment = adjustment)
 
        ! Since there is no special handling in this routine, the non_conserved_mass variable
@@ -355,7 +376,7 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine update_column_state_fill_special_using_natveg(this, bounds, clump_index, &
-       var, non_conserved_mass_grc, fractional_area_old, fractional_area_new, adjustment)
+       var, non_conserved_mass_grc, volume_multiplier_old, volume_multiplier_new, adjustment)
     !
     ! !DESCRIPTION:
     ! Adjust the values of a column-level state variable due to changes in subgrid
@@ -392,14 +413,15 @@ contains
     ! out appropriately.
     real(r8)          , intent(inout) :: non_conserved_mass_grc( bounds%begg: )
 
-    ! Fraction of each column over which the state variable applies. See module-level
-    ! documentation for details. You must provide both old & new fractional areas, or
-    ! neither: it is invalid to provide just one. Fractional areas should be valid for all
-    ! columns, and fractional_area_new should have been computed based on a call to
-    ! update_column_state_no_special_handling: code that works with these fractional areas
-    ! is not able to do any special handling.
-    real(r8), optional, intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable. See module-level documentation
+    ! for details. You must provide both old & new volume multipliers, or neither: it is
+    ! invalid to provide just one. Volume multipliers should be valid for all columns, and
+    ! any elements of volume_multiplier_new that change due to area changes should have
+    ! been computed based on a call to update_column_state_no_special_handling: code that
+    ! works with these volume multipliers is not able to do any special handling.
+    real(r8), optional, intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), optional, intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
     real(r8), optional, intent(out) :: adjustment( bounds%begc: )
@@ -447,17 +469,17 @@ contains
        end do
 
        ! explicit bounds not needed on any of these arguments - and specifying explicit
-       ! bounds defeats some later bounds checking (for fractional_area_old and
-       ! fractional_area_new)
-       call this%update_column_state_with_optional_fractions(&
+       ! bounds defeats some later bounds checking (for volume_multiplier_old and
+       ! volume_multiplier_new)
+       call this%update_column_state_with_optional_multipliers(&
             bounds = bounds, &
             vals_input = vals_input, &
             vals_input_valid = vals_input_valid, &
             has_prognostic_state = has_prognostic_state, &
             var = var, &
             non_conserved_mass = non_conserved_mass_grc, &
-            fractional_area_old = fractional_area_old, &
-            fractional_area_new = fractional_area_new, &
+            volume_multiplier_old = volume_multiplier_old, &
+            volume_multiplier_new = volume_multiplier_new, &
             adjustment = adjustment)
 
     end if
@@ -468,7 +490,7 @@ contains
   subroutine update_column_state_fill_using_fixed_values(this, bounds, clump_index, &
        var, &
        landunit_values, non_conserved_mass_grc, &
-       fractional_area_old, fractional_area_new, &
+       volume_multiplier_old, volume_multiplier_new, &
        adjustment)
     !
     ! !DESCRIPTION:
@@ -521,14 +543,15 @@ contains
     ! appropriately.
     real(r8)          , intent(inout) :: non_conserved_mass_grc( bounds%begg: )
 
-    ! Fraction of each column over which the state variable applies. See module-level
-    ! documentation for details. You must provide both old & new fractional areas, or
-    ! neither: it is invalid to provide just one. Fractional areas should be valid for all
-    ! columns, and fractional_area_new should have been computed based on a call to
-    ! update_column_state_no_special_handling: code that works with these fractional areas
-    ! is not able to do any special handling.
-    real(r8), optional, intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable. See module-level documentation
+    ! for details. You must provide both old & new volume multipliers, or neither: it is
+    ! invalid to provide just one. Volume multipliers should be valid for all columns, and
+    ! any elements of volume_multiplier_new that change due to area changes should have
+    ! been computed based on a call to update_column_state_no_special_handling: code that
+    ! works with these volume multipliers is not able to do any special handling.
+    real(r8), optional, intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), optional, intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
     real(r8), optional, intent(out) :: adjustment( bounds%begc: )
@@ -576,17 +599,17 @@ contains
        end do
 
        ! explicit bounds not needed on any of these arguments - and specifying explicit
-       ! bounds defeats some later bounds checking (for fractional_area_old and
-       ! fractional_area_new)
-       call this%update_column_state_with_optional_fractions( &
+       ! bounds defeats some later bounds checking (for volume_multiplier_old and
+       ! volume_multiplier_new)
+       call this%update_column_state_with_optional_multipliers( &
             bounds = bounds, &
             vals_input = vals_input, &
             vals_input_valid = vals_input_valid, &
             has_prognostic_state = has_prognostic_state, &
             var = var, &
             non_conserved_mass = non_conserved_mass_grc, &
-            fractional_area_old = fractional_area_old, &
-            fractional_area_new = fractional_area_new, &
+            volume_multiplier_old = volume_multiplier_old, &
+            volume_multiplier_new = volume_multiplier_new, &
             adjustment = adjustment)
 
     end if
@@ -597,7 +620,7 @@ contains
   subroutine update_column_state_fill_special_using_fixed_value(this, bounds, clump_index, &
        var, &
        special_value, non_conserved_mass_grc, &
-       fractional_area_old, fractional_area_new, &
+       volume_multiplier_old, volume_multiplier_new, &
        adjustment)
     !
     ! !DESCRIPTION:
@@ -632,14 +655,15 @@ contains
     ! out appropriately.
     real(r8)          , intent(inout) :: non_conserved_mass_grc( bounds%begg: )
 
-    ! Fraction of each column over which the state variable applies. See module-level
-    ! documentation for details. You must provide both old & new fractional areas, or
-    ! neither: it is invalid to provide just one. Fractional areas should be valid for all
-    ! columns, and fractional_area_new should have been computed based on a call to
-    ! update_column_state_no_special_handling: code that works with these fractional areas
-    ! is not able to do any special handling.
-    real(r8), optional, intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable. See module-level documentation
+    ! for details. You must provide both old & new volume multipliers, or neither: it is
+    ! invalid to provide just one. Volume multipliers should be valid for all columns, and
+    ! any elements of volume_multiplier_new that change due to area changes should have
+    ! been computed based on a call to update_column_state_no_special_handling: code that
+    ! works with these volume multipliers is not able to do any special handling.
+    real(r8), optional, intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), optional, intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
     real(r8), optional, intent(out) :: adjustment( bounds%begc: )
@@ -665,8 +689,8 @@ contains
          var = var, &
          landunit_values = landunit_values, &
          non_conserved_mass_grc = non_conserved_mass_grc, &
-         fractional_area_old = fractional_area_old, &
-         fractional_area_new = fractional_area_new, &
+         volume_multiplier_old = volume_multiplier_old, &
+         volume_multiplier_new = volume_multiplier_new, &
          adjustment = adjustment)
 
   end subroutine update_column_state_fill_special_using_fixed_value
@@ -678,15 +702,15 @@ contains
   ! ========================================================================
 
   !-----------------------------------------------------------------------
-  subroutine update_column_state_with_optional_fractions(this, bounds, &
+  subroutine update_column_state_with_optional_multipliers(this, bounds, &
        vals_input, vals_input_valid, has_prognostic_state, &
        var, non_conserved_mass, &
-       fractional_area_old, fractional_area_new, &
+       volume_multiplier_old, volume_multiplier_new, &
        adjustment)
     !
     ! !DESCRIPTION:
     ! Intermediate routine between the public routines and the real work routine
-    ! (update_column_state). This routine determines the fractional areas to use in the
+    ! (update_column_state). This routine determines the volume multipliers to use in the
     ! call to update_column_state, and then does the call to update_column_state.
     !
     ! !USES:
@@ -717,45 +741,46 @@ contains
     ! the grid cell, negative denotes mass gained by the grid cell.
     real(r8), intent(inout) :: non_conserved_mass( bounds%begg: )
 
-    ! Fraction of each column over which the state variable applies. See module-level
-    ! documentation for details. You must provide both old & new fractional areas, or
-    ! neither: it is invalid to provide just one. Fractional areas should be valid for all
-    ! columns, and fractional_area_new should have been computed based on a call to
-    ! update_column_state_no_special_handling: code that works with these fractional areas
-    ! is not able to do any special handling.
-    real(r8), optional, intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), optional, intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable. See module-level documentation
+    ! for details. You must provide both old & new volume multipliers, or neither: it is
+    ! invalid to provide just one. Volume multipliers should be valid for all columns, and
+    ! any elements of volume_multiplier_new that change due to area changes should have
+    ! been computed based on a call to update_column_state_no_special_handling: code that
+    ! works with these volume multipliers is not able to do any special handling.
+    real(r8), optional, intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), optional, intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! Apparent state adjustment in each column
     real(r8), optional, intent(inout) :: adjustment( bounds%begc: )
     !
     ! !LOCAL VARIABLES:
-    real(r8) :: my_fractional_area_old(bounds%begc:bounds%endc)
-    real(r8) :: my_fractional_area_new(bounds%begc:bounds%endc)
+    real(r8) :: my_volume_multiplier_old(bounds%begc:bounds%endc)
+    real(r8) :: my_volume_multiplier_new(bounds%begc:bounds%endc)
 
-    character(len=*), parameter :: subname = 'update_column_state_with_optional_fractions'
+    character(len=*), parameter :: subname = 'update_column_state_with_optional_multipliers'
     !-----------------------------------------------------------------------
 
-    if (present(fractional_area_old) .and. .not. present(fractional_area_new)) then
-       call endrun(subname//' ERROR: If fractional_area_old is provided, then fractional_area_new must be provided, too')
+    if (present(volume_multiplier_old) .and. .not. present(volume_multiplier_new)) then
+       call endrun(subname//' ERROR: If volume_multiplier_old is provided, then volume_multiplier_new must be provided, too')
     end if
 
-    if (present(fractional_area_new) .and. .not. present(fractional_area_old)) then
-       call endrun(subname//' ERROR: If fractional_area_new is provided, then fractional_area_old must be provided, too')
+    if (present(volume_multiplier_new) .and. .not. present(volume_multiplier_old)) then
+       call endrun(subname//' ERROR: If volume_multiplier_new is provided, then volume_multiplier_old must be provided, too')
     end if
 
-    if (present(fractional_area_old)) then
-       SHR_ASSERT_ALL_FL((ubound(fractional_area_old) == (/bounds%endc/)), sourcefile, __LINE__)
-       my_fractional_area_old(bounds%begc:bounds%endc) = fractional_area_old(bounds%begc:bounds%endc)
+    if (present(volume_multiplier_old)) then
+       SHR_ASSERT_ALL_FL((ubound(volume_multiplier_old) == (/bounds%endc/)), sourcefile, __LINE__)
+       my_volume_multiplier_old(bounds%begc:bounds%endc) = volume_multiplier_old(bounds%begc:bounds%endc)
     else
-       my_fractional_area_old(bounds%begc:bounds%endc) = 1._r8
+       my_volume_multiplier_old(bounds%begc:bounds%endc) = 1._r8
     end if
 
-    if (present(fractional_area_new)) then
-       SHR_ASSERT_ALL_FL((ubound(fractional_area_new) == (/bounds%endc/)), sourcefile, __LINE__)
-       my_fractional_area_new(bounds%begc:bounds%endc) = fractional_area_new(bounds%begc:bounds%endc)
+    if (present(volume_multiplier_new)) then
+       SHR_ASSERT_ALL_FL((ubound(volume_multiplier_new) == (/bounds%endc/)), sourcefile, __LINE__)
+       my_volume_multiplier_new(bounds%begc:bounds%endc) = volume_multiplier_new(bounds%begc:bounds%endc)
     else
-       my_fractional_area_new(bounds%begc:bounds%endc) = 1._r8
+       my_volume_multiplier_new(bounds%begc:bounds%endc) = 1._r8
     end if
 
     call this%update_column_state(&
@@ -763,19 +788,19 @@ contains
          vals_input = vals_input(bounds%begc:bounds%endc), &
          vals_input_valid = vals_input_valid(bounds%begc:bounds%endc), &
          has_prognostic_state = has_prognostic_state(bounds%begc:bounds%endc), &
-         fractional_area_old = my_fractional_area_old(bounds%begc:bounds%endc), &
-         fractional_area_new = my_fractional_area_new(bounds%begc:bounds%endc), &
+         volume_multiplier_old = my_volume_multiplier_old(bounds%begc:bounds%endc), &
+         volume_multiplier_new = my_volume_multiplier_new(bounds%begc:bounds%endc), &
          var = var(bounds%begc:bounds%endc), &
          non_conserved_mass = non_conserved_mass(bounds%begg:bounds%endg), &
          adjustment = adjustment)
 
-  end subroutine update_column_state_with_optional_fractions
+  end subroutine update_column_state_with_optional_multipliers
 
 
   !-----------------------------------------------------------------------
   subroutine update_column_state(this, bounds, &
        vals_input, vals_input_valid, has_prognostic_state, &
-       fractional_area_old, fractional_area_new, &
+       volume_multiplier_old, volume_multiplier_new, &
        var, non_conserved_mass, adjustment)
     !
     ! !DESCRIPTION:
@@ -800,10 +825,11 @@ contains
     ! determines whether it can accept mass of this variable)
     logical, intent(in) :: has_prognostic_state( bounds%begc: )
 
-    ! Fraction of each column over which the state variable applies, for both the old and
-    ! new subgrid weights
-    real(r8), intent(in) :: fractional_area_old( bounds%begc: )
-    real(r8), intent(in) :: fractional_area_new( bounds%begc: )
+    ! Any extra pieces of volume (for 3-d quantities) or area (for 2-d quantities) that
+    ! vary in space or time for the given state variable, for both the old and new subgrid
+    ! weights
+    real(r8), intent(in) :: volume_multiplier_old( bounds%begc: )
+    real(r8), intent(in) :: volume_multiplier_new( bounds%begc: )
 
     ! column-level variable of interest, updated in-place
     real(r8), intent(inout) :: var( bounds%begc: )
@@ -859,8 +885,8 @@ contains
     SHR_ASSERT_ALL_FL((ubound(var) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(vals_input) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(has_prognostic_state) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(fractional_area_old) == (/bounds%endc/)), sourcefile, __LINE__)
-    SHR_ASSERT_ALL_FL((ubound(fractional_area_new) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(volume_multiplier_old) == (/bounds%endc/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(volume_multiplier_new) == (/bounds%endc/)), sourcefile, __LINE__)
     SHR_ASSERT_ALL_FL((ubound(non_conserved_mass) == (/bounds%endg/)), sourcefile, __LINE__)
     if (present(adjustment)) then
        SHR_ASSERT_ALL_FL((ubound(adjustment) == (/bounds%endc/)), sourcefile, __LINE__)
@@ -895,7 +921,7 @@ contains
           end if
           area_lost = -1._r8 * this%area_gained_col(c)
           total_area_lost_grc(g) = total_area_lost_grc(g) + area_lost
-          area_weighted_loss = area_lost * vals_input(c) * fractional_area_old(c)
+          area_weighted_loss = area_lost * vals_input(c) * volume_multiplier_old(c)
           total_loss_grc(g) = total_loss_grc(g) + area_weighted_loss
 
           if (.not. has_prognostic_state(c)) then
@@ -926,19 +952,19 @@ contains
           if (has_prognostic_state(c)) then
              val_old = var(c)
 
-             ! Need to make sure fractional_area_new /= 0 to avoid divide-by-zero. Note
-             ! that fractional_area_new == 0 can only happen if both
-             ! fractional_area_old(c) == 0 and the fractional_areas of the shrinking
+             ! Need to make sure volume_multiplier_new /= 0 to avoid divide-by-zero. Note
+             ! that volume_multiplier_new == 0 can only happen if both
+             ! volume_multiplier_old(c) == 0 and the volume_multipliers of the shrinking
              ! columns were all 0 - in which case the value of var is irrelevant for
              ! conservation purposes.
-             if (fractional_area_new(c) /= 0._r8) then
-                var(c) = (this%cwtgcell_old(c) * var(c) * fractional_area_old(c) + mass_gained) / &
-                     (this%cwtgcell_new(c) * fractional_area_new(c))
+             if (volume_multiplier_new(c) /= 0._r8) then
+                var(c) = (this%cwtgcell_old(c) * var(c) * volume_multiplier_old(c) + mass_gained) / &
+                     (this%cwtgcell_new(c) * volume_multiplier_new(c))
              end if
 
              if (present(adjustment)) then
-                adjustment(c) = var(c) * fractional_area_new(c) - &
-                     val_old * fractional_area_old(c)
+                adjustment(c) = var(c) * volume_multiplier_new(c) - &
+                     val_old * volume_multiplier_old(c)
              end if
           else
              non_conserved_mass(g) = non_conserved_mass(g) + mass_gained
