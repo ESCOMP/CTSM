@@ -496,7 +496,7 @@ contains
              allhistfldlist(nf)%field%type2d,  &
              allhistfldlist(nf)%field%long_name,  &
              allhistfldlist(nf)%field%units,  &
-             allhistfldlist(nf)%actflag(1,:)
+             allhistfldlist(nf)%actflag(1,max_split_files:1:-1)
        end do
 
        ! Table footer, same as header
