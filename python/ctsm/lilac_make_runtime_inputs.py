@@ -303,7 +303,7 @@ def buildnml(cime_path, rundir):
     ]
     # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument; it's possible that
     # we should be using it in some circumstances (I haven't looked into how it's used).
-    command.extend(["-res", "lilac", "-clm_usr_name", "lilac"])
+    command.extend(["-res", "CLM_USRDAT", "-clm_usr_name", "LILAC"])
     command.extend(bldnml_opts.split())
 
     subprocess.check_call(command, universal_newlines=True)
