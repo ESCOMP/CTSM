@@ -14,8 +14,8 @@ interpolate:
    file. Note that there may be other options (like carbon isotopes)
    that also need to be turned on. While doing this, generate
    baselines. e.g., run
-   `SMS_Ld1.f09_t232.I1850Clm50Sp.derecho_intel.clm-default` or
-   `SMS_Ld1.f09_t232.I1850Clm50BgcCrop.derecho_intel.clm-ciso`, with
+   `SMS_Ld1.f09_t233.I1850Clm50Sp.derecho_intel.clm-default` or
+   `SMS_Ld1.f09_t233.I1850Clm50BgcCrop.derecho_intel.clm-ciso`, with
    baseline generation.
    
    - Confirm that the test points to the desired, original finidat file,
