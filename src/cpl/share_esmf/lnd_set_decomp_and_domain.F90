@@ -21,6 +21,8 @@ module lnd_set_decomp_and_domain
   use clm_varctl   , only : iulog, inst_suffix, FL => fname_len
   use abortutils   , only : endrun
   use perf_mod     , only : t_startf, t_stopf
+  use shr_mpishmem_mod, only : shr_mpishmem_alloc_i4_1d, shr_mpishmem_free, shr_mpishmem_fence
+  use shr_mpishmem_mod, only : shr_mpishmem_is_leader, shr_mpishmem_leader_allreduce_sum_i4
 
   implicit none
   private ! except
@@ -69,7 +71,7 @@ contains
     ! local variables
     type(ESMF_Mesh)        :: mesh_maskinput
     type(ESMF_Mesh)        :: mesh_lndinput
-    type(ESMF_DistGrid)    :: distgrid_ctsm
+    type(ESMF_DistGrid)    :: distgrid_ctsm   ! This appears to be local but is used later in lnd_import_export
     type(ESMF_Field)       :: field_lnd
     type(ESMF_Field)       :: field_ctsm
     type(ESMF_RouteHandle) :: rhandle_lnd2ctsm
@@ -83,8 +85,9 @@ contains
     integer  , pointer     :: gindex_ocn(:)   ! global index space for just ocean points
     integer  , pointer     :: gindex_ctsm(:)  ! global index space for land and ocean points
     integer  , pointer     :: lndmask_glob(:)
+    integer                :: lndmask_win = -1 ! node-shared window handle for lndmask_glob (cmeps paths)
     real(r8) , pointer     :: lndfrac_glob(:)
-    real(r8) , pointer     :: lndfrac_loc_input(:)
+    real(r8) , pointer     :: lndfrac_loc_input(:) => null()
     real(r8) , pointer     :: dataptr1d(:)
     !-------------------------------------------------------------------------------
 
@@ -131,7 +134,7 @@ contains
           ! obain land mask and land fraction by mapping ocean mesh conservatively to land mesh
           ! Note that lndmask_glob and lndfrac_loc_input are allocated in lnd_set_lndmask_from_maskmesh
           call lnd_set_lndmask_from_maskmesh(mesh_lndinput, mesh_maskinput, vm, gsize, lndmask_glob, &
-               lndfrac_loc_input, rc)
+               lndmask_win, lndfrac_loc_input, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
 #ifdef DEBUG
           ! This will get added to the ESMF PET files if DEBUG=TRUE and CREATE_ESMF_PET_FILES=TRUE
@@ -139,7 +142,7 @@ contains
 #endif
        else
           ! obtain land mask from land mesh file - assume that land frac is identical to land mask
-          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, rc)
+          call lnd_set_lndmask_from_lndmesh(mesh_lndinput, vm, gsize, lndmask_glob, lndmask_win, rc)
           if (ChkErr(rc,__LINE__,u_FILE_u)) return
        end if
     else if (trim(driver) == 'lilac') then
@@ -149,6 +152,7 @@ contains
     end if
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: ESMF mesh')
     call t_startf ('lnd_set_decomp_and_domain_from_readmesh: final')
+    call t_startf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
 
     ! Determine lnd decomposition that will be used by ctsm from lndmask_glob
     call t_startf ('decompInit_lnd')
@@ -163,7 +167,7 @@ contains
     ! Get JUST gridcell processor bounds
     ! Remaining bounds (landunits, columns, patches) will be set after calling decompInit_glcp
     ! so get_proc_bounds is called twice and the gridcell information is just filled in twice
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
     begg = bounds%begg
     endg = bounds%endg
 
@@ -184,8 +188,14 @@ contains
        ldomain%mask(g) = lndmask_glob(gindex_lnd(n))
     end do
 
-    ! Deallocate global pointer memory
-    deallocate(lndmask_glob)
+    ! Deallocate global pointer memory.  The cmeps paths allocate lndmask_glob as
+    ! a per-node shared-memory window (shr_mpishmem_alloc_i4_1d), so it must be freed
+    ! with shr_mpishmem_free, not deallocate; the lilac path uses a plain allocate.
+    if (trim(driver) == 'cmeps') then
+       call shr_mpishmem_free(lndmask_glob, lndmask_win)
+    else
+       deallocate(lndmask_glob)
+    end if
 
     ! Generate a ctsm global index that includes both land and ocean points
     nocn = size(gindex_ocn)
@@ -197,8 +207,10 @@ contains
           gindex_ctsm(n) = gindex_ocn(n-nlnd)
        end if
     end do
+    call t_stopf ('lnd_set_decomp_and_domain_from_readmesh: decomp_init')
 
     ! Generate a new mesh on the gindex decomposition
+    ! NOTE: The distgrid_ctsm will be used later in lnd_import_export, even though it appears to just be local
     distGrid_ctsm = ESMF_DistGridCreate(arbSeqIndexList=gindex_ctsm, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     mesh_ctsm = ESMF_MeshCreate(mesh_lndinput, elementDistGrid=distgrid_ctsm, rc=rc)
@@ -238,6 +250,9 @@ contains
              n = 1 + (g - begg)
              ldomain%frac(g) = dataptr1d(n)
           end do
+          ! Destroy the memory for the above ESMF objects that can be released
+          call from_readmesh_destroy_esmf_objects(rc)
+          if (chkerr(rc,__LINE__,u_FILE_u)) return
        else
           ! ASSUME that land fraction is identical to land mask in this case
           do g = begg, endg
@@ -256,11 +271,56 @@ contains
     end if
 
     ! Deallocate local pointer memory
-    deallocate(gindex_lnd)
-    deallocate(gindex_ocn)
-    deallocate(gindex_ctsm)
+    call from_readmesh_dealloc( )
 
     call t_stopf('lnd_set_decomp_and_domain_from_readmesh: final')
+
+
+    !===============================================================================
+    ! Internal subroutines for this subroutine
+    contains
+    !===============================================================================
+
+
+    subroutine from_readmesh_destroy_esmf_objects(rc)
+       use ESMF, only : ESMF_FieldRedistRelease, ESMF_DistGridDestroy, ESMF_FieldDestroy, ESMF_MeshDestroy
+       integer, intent(out) :: rc ! ESMF return code to indicate deallocate was successful
+
+       logical :: no_esmf_garbage = .true. ! If .true. release all ESMF data (which can be problematic if referenced again)
+
+       rc = ESMF_SUCCESS
+
+       ! Destroy or release all of the ESMF objects
+       call ESMF_FieldRedistRelease( rhandle_lnd2ctsm, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       !--------------------------------------------------------------------------
+       ! NOTE: We can't destroy the distgrid -- because it will be used later
+       ! As such we don't do the following...  EBK 08/01/2025
+       !call ESMF_DistGridDestroy( distgrid_ctsm, rc=rc)
+       !if (chkerr(rc,__LINE__,u_FILE_u)) return
+       !--------------------------------------------------------------------------
+       call ESMF_FieldDestroy( field_lnd, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call ESMF_FieldDestroy( field_ctsm, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_maskinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+       call  ESMF_MeshDestroy( mesh_lndinput, noGarbage=no_esmf_garbage, rc=rc)
+       if (chkerr(rc,__LINE__,u_FILE_u)) return
+
+    end subroutine from_readmesh_destroy_esmf_objects
+
+    !-------------------------------------------------------------------------------
+    subroutine from_readmesh_dealloc( )
+
+       if ( associated(lndfrac_loc_input) ) deallocate(lndfrac_loc_input)
+       if ( associated(gindex_lnd) ) deallocate(gindex_lnd)
+       if ( associated(gindex_ocn) ) deallocate(gindex_ocn)
+       if ( associated(gindex_ctsm) ) deallocate(gindex_ctsm)
+
+    end subroutine from_readmesh_dealloc
+
+    !-------------------------------------------------------------------------------
 
   end subroutine lnd_set_decomp_and_domain_from_readmesh
 
@@ -331,7 +391,7 @@ contains
     call t_stopf ('decompInit_lnd')
 
     ! Initialize processor bounds
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.) ! only_gridcell since decomp not fully initialized
 
     ! Initialize domain data structure
     call domain_init(domain=ldomain, isgrid2d=.false., ni=1, nj=1, nbeg=1, nend=1)
@@ -423,7 +483,7 @@ contains
   end subroutine lnd_get_global_dims
 
   !===============================================================================
-  subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndfrac_loc, rc)
+  subroutine lnd_set_lndmask_from_maskmesh(mesh_lnd, mesh_mask, vm, gsize, lndmask_glob, lndmask_win, lndfrac_loc, rc)
 
     ! If the landfrac/landmask file does not exists then determine the
     ! land fraction and land mask on the land grid by mapping the mask
@@ -437,7 +497,8 @@ contains
     type(ESMF_Mesh)     , intent(in)  :: mesh_mask
     type(ESMF_VM)       , intent(in)  :: vm
     integer             , intent(in)  :: gsize
-    integer             , pointer     :: lndmask_glob(:)
+    integer             , pointer     :: lndmask_glob(:) ! node-shared global land mask
+    integer             , intent(out) :: lndmask_win     ! its shared-memory window handle
     real(r8)            , pointer     :: lndfrac_loc(:)
     integer             , intent(out) :: rc
 
@@ -449,7 +510,6 @@ contains
     type(ESMF_DistGrid)    :: distgrid_mask
     integer  , pointer     :: gindex_input(:) ! global index space for land and ocean points
     integer  , pointer     :: lndmask_loc(:)
-    integer  , pointer     :: itemp_glob(:)
     real(r8) , pointer     :: maskmask_loc(:) ! on ocean mesh
     real(r8) , pointer     :: maskfrac_loc(:) ! on land mesh
     real(r8) , pointer     :: dataptr1d(:)
@@ -469,13 +529,19 @@ contains
     character(len=CL)      :: flandfrac_status
     !-------------------------------------------------------------------------------
 
+    call t_startf('lnd_set_lndmask_from_maskmesh')
     rc = ESMF_SUCCESS
 
     flandfrac = './init_generated_files/ctsm_landfrac'//trim(inst_suffix)//'.nc'
     klen = len_trim(flandfrac) - 3 ! remove the .nc
     flandfrac_status = flandfrac(1:klen)//'.status'
 
-    allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
+    ! Allocate the global land mask once per shared-memory node (not once per rank).
+    ! Leader zeroes it; the compute branch below fills disjoint local points on each
+    ! rank and sums across nodes (shr_mpishmem_leader_allreduce_sum_i4).
+    call shr_mpishmem_alloc_i4_1d(mpicom, lndmask_glob, lndmask_win, gsize)
+    if (shr_mpishmem_is_leader(mpicom)) lndmask_glob(:) = 0
+    call shr_mpishmem_fence(lndmask_win)
 
     ! Determine if lndfrac/lndmask file exists
     inquire(file=trim(flandfrac), exist=lexist)
@@ -558,28 +624,26 @@ contains
        do n = 1,lsize_lnd
           lndmask_glob(gindex_input(n)) = lndmask_loc(n)
        end do
-       allocate(itemp_glob(gsize))
-       call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
-            reduceflag=ESMF_REDUCE_SUM, rc=rc)
-       lndmask_glob(:) = int(itemp_glob(:))
-       deallocate(itemp_glob)
+       call shr_mpishmem_leader_allreduce_sum_i4(mpicom, lndmask_glob, lndmask_win, gsize)
 
        ! deallocate memory
        deallocate(maskmask_loc)
        deallocate(lndmask_loc)
 
     end if
+    call t_stopf('lnd_set_lndmask_from_maskmesh')
 
   end subroutine lnd_set_lndmask_from_maskmesh
 
   !===============================================================================
-  subroutine lnd_set_lndmask_from_lndmesh(mesh_lnd, vm, gsize, lndmask_glob, rc)
+  subroutine lnd_set_lndmask_from_lndmesh(mesh_lnd, vm, gsize, lndmask_glob, lndmask_win, rc)
 
     ! input/out variables
     type(ESMF_Mesh)     , intent(in)  :: mesh_lnd
     type(ESMF_VM)       , intent(in)  :: vm
     integer             , intent(in)  :: gsize
-    integer             , pointer     :: lndmask_glob(:)
+    integer             , pointer     :: lndmask_glob(:) ! node-shared global land mask
+    integer             , intent(out) :: lndmask_win     ! its shared-memory window handle
     integer             , intent(out) :: rc
 
     ! local variables:
@@ -587,7 +651,6 @@ contains
     integer             :: lsize
     integer , pointer   :: gindex(:)
     integer , pointer   :: lndmask_loc(:)
-    integer , pointer   :: itemp_glob(:)
     type(ESMF_DistGrid) :: distgrid
     type(ESMF_Array)    :: elemMaskArray
     !-------------------------------------------------------------------------------
@@ -611,19 +674,20 @@ contains
     ! Determine global landmask_glob - needed to determine the ctsm decomposition
     ! land frac, lats, lons and areas will be done below
     allocate(gindex(lsize))
-    allocate(itemp_glob(gsize))
     call ESMF_DistGridGet(distgrid, 0, seqIndexList=gindex, rc=rc)
     if (chkerr(rc,__LINE__,u_FILE_u)) return
 
-    allocate(lndmask_glob(gsize)); lndmask_glob(:) = 0
+    ! Allocate the global land mask once per shared-memory node (not once per rank)
+    ! and build it by summing each rank's disjoint local contributions across nodes
+    ! (the leader-only reduce replaces the all-rank ESMF_VMAllReduce; bit-for-bit).
+    call shr_mpishmem_alloc_i4_1d(mpicom, lndmask_glob, lndmask_win, gsize)
+    if (shr_mpishmem_is_leader(mpicom)) lndmask_glob(:) = 0
+    call shr_mpishmem_fence(lndmask_win)
 
     do n = 1,lsize
        lndmask_glob(gindex(n)) = lndmask_loc(n)
     end do
-    call ESMF_VMAllReduce(vm, sendData=lndmask_glob, recvData=itemp_glob, count=gsize, &
-         reduceflag=ESMF_REDUCE_SUM, rc=rc)
-    lndmask_glob(:) = int(itemp_glob(:))
-    deallocate(itemp_glob)
+    call shr_mpishmem_leader_allreduce_sum_i4(mpicom, lndmask_glob, lndmask_win, gsize)
     deallocate(gindex)
     deallocate(lndmask_loc)
 

@@ -98,8 +98,9 @@ contains
     use clm_time_manager     , only: get_step_size_real, get_curr_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state
-    use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
+    use pftconMod            , only: nc4_grass, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
+    use pftconMod            , only: is_crop
     use dynSubgridControlMod , only : run_has_transient_landcover
     use CropType             , only: crop_type
     !
@@ -361,7 +362,7 @@ contains
         p = filter_exposedvegp(fp)
         c = patch%column(p)
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
            btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
                 (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
                 -rswf_min(patch%itype(p)))))*patch%wtcol(p)
@@ -375,7 +376,7 @@ contains
         g = col%gridcell(c)
 
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
 
            ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
            ! and deciduous tropical trees (used to determine if a column is

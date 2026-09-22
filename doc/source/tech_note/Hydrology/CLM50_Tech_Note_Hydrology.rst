@@ -3,7 +3,7 @@
 Hydrology
 ============
 
-The model parameterizes interception, throughfall, canopy drip, snow accumulation and melt, water transfer between snow layers, infiltration, evaporation, surface runoff, sub-surface drainage, redistribution within the soil column, and groundwater discharge and recharge to simulate changes in canopy water :math:`\Delta W_{can,\,liq}`, canopy snow water :math:`\Delta W_{can,\,sno}` surface water :math:`\Delta W_{sfc}`, snow water :math:`\Delta W_{sno}`, soil water :math:`\Delta w_{liq,\, i}`, and soil ice :math:`\Delta w_{ice,\, i}`, and water in the unconfined aquifer :math:`\Delta W_{a}` (all in kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Figure Hydrologic processes`).
+The model parameterizes interception, throughfall, canopy drip, snow accumulation and melt, water transfer between snow layers, infiltration, evaporation, surface runoff, sub-surface drainage, redistribution within the soil column, and groundwater discharge and recharge to simulate changes in canopy liquid water :math:`\Delta W_{can,\,liq}`, canopy snow water :math:`\Delta W_{can,\,sno}`, surface water :math:`\Delta W_{sfc}`, snow water :math:`\Delta W_{sno}`, soil water :math:`\Delta w_{liq,\, i}`, and soil ice :math:`\Delta w_{ice,\, i}`, and water in the unconfined aquifer :math:`\Delta W_{a}` (all in kg m\ :sup:`-2` or mm of H\ :sub:`2`\ O) (:numref:`Figure Hydrologic processes`).
 
 The total water balance of the system is
 
@@ -12,7 +12,7 @@ The total water balance of the system is
 
    \begin{array}{l} {\Delta W_{can,\,liq} +\Delta W_{can,\,sno} +\Delta W_{sfc} +\Delta W_{sno} +} \\ {\sum _{i=1}^{N_{levsoi} }\left(\Delta w_{liq,\, i} +\Delta w_{ice,\, i} \right)+\Delta W_{a} =\left(\begin{array}{l} {q_{rain} +q_{sno} -E_{v} -E_{g} -q_{over} } \\ {-q_{h2osfc} -q_{drai} -q_{rgwl} -q_{snwcp,\, ice} } \end{array}\right) \Delta t} \end{array}
 
-where :math:`q_{rain}` is the liquid part of precipitation, :math:`q_{sno}` is the solid part of precipitation, :math:`E_{v}` is ET from vegetation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`E_{g}` is ground evaporation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`q_{over}` is surface runoff (section :numref:`Surface Runoff`), :math:`q_{h2osfc}` is runoff from surface water storage (section :numref:`Surface Runoff`), :math:`q_{drai}` is sub-surface drainage (section :numref:`Lateral Sub-surface Runoff`), :math:`q_{rgwl}` and :math:`q_{snwcp,ice}` are liquid and solid runoff from glaciers and lakes, and runoff from other surface types due to snow capping (section :numref:`Runoff from glaciers and snow-capped surfaces`) (all in kg m\ :sup:`-2` s\ :sup:`-1`), :math:`N_{levsoi}` is the number of soil layers (note that hydrology calculations are only done over soil layers 1 to :math:`N_{levsoi}`; ground levels :math:`N_{levsoi} +1` \ to :math:`N_{levgrnd}` are currently hydrologically inactive; :ref:`(Lawrence et al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
+where :math:`q_{rain}` is the liquid part of precipitation, :math:`q_{sno}` is the solid part of precipitation, :math:`E_{v}` is ET from vegetation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`E_{g}` is ground evaporation (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`), :math:`q_{over}` is surface runoff (section :numref:`Surface Runoff`), :math:`q_{h2osfc}` is runoff from surface water storage (section :numref:`Surface Runoff`), :math:`q_{drai}` is sub-surface drainage (section :numref:`Lateral Sub-surface Runoff`), :math:`q_{rgwl}` and :math:`q_{snwcp,ice}` are liquid and solid runoff from glaciers and lakes, and runoff from other surface types due to snow capping (section :numref:`Runoff from glaciers and snow-capped surfaces`) (all in kg m\ :sup:`-2` s\ :sup:`-1`), :math:`N_{levsoi}` is the number of soil layers (note that hydrology calculations are only done over soil layers 1 to :math:`N_{levsoi}`; ground levels :math:`N_{levsoi} +1` \ to :math:`N_{levgrnd}` are currently hydrologically inactive :ref:`(Lawrence et al. 2008) <Lawrenceetal2008>` and :math:`\Delta t` is the time step (s).
 
 .. _Figure Hydrologic processes:
 
@@ -49,7 +49,7 @@ where :math:`f_{pi,\,liq}` and :math:`f_{pi,\,ice}` are the fractions of interce
 
    f_{pi,\,ice} =\alpha_{sno} \ \left\{1-\exp \left[-0.5\left(L+S\right)\right]\right\} \ ,
 
-and :math:`L` and :math:`S` are the exposed leaf and stem area index, respectively (section :numref:`Phenology and vegetation burial by snow`), and the :math:`\alpha`\'s scale the fractional area of a leaf that collects water (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Default values of :math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1. Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into liquid and solid phases, reaching the ground (soil or snow surface) as
+:math:`L` and :math:`S` are the exposed leaf and stem area index, respectively (section :numref:`Phenology and vegetation burial by snow`), and the :math:`\alpha`\ coefficients scale the fractional area of a leaf that collects water (:ref:`Lawrence et al. 2007 <Lawrenceetal2007>`). Default values of :math:`\alpha_{liq}` and :math:`\alpha_{sno}` are set to 1. Throughfall (kg m\ :sup:`-2` s\ :sup:`-1`) is also divided into liquid and solid phases, reaching the ground (soil or snow surface) as
 
 .. math::
    :label: 7.4
@@ -106,31 +106,31 @@ Canopy snow unloading from wind speed :math:`u` and above-freezing temperatures 
 .. math::
    :label: 7.12
 
-   q_{unl,\, wind} =\frac{u W_{can,sno}}{1.56\times 10^5 \text{ m}}
+   q_{unl,\, wind} =\frac{f_{unl,wind,sno} u W_{can,sno}}{1.56\times 10^5 \text{ m}}
 
 .. math::
    :label: 7.13
 
-   q_{unl,\, temp} =\frac{W_{can,sno}(T-270 \textrm{ K})}{1.87\times 10^5 \text{ K s}} > 0
+   q_{unl,\, temp} =\frac{W_{can,sno}(T-270.15 \textrm{ K})}{1.87\times 10^5 \text{ K s}} > 0
 
 .. math::
    :label: 7.14
 
    q_{unl,\, tot} =\min \left( q_{unl,\, wind} +q_{unl,\, temp} ,W_{can,\, sno} \right)
 
-The canopy liquid water and snow water equivalent are updated as
+where :math:`f_{unl,wind,sno}` is a fraction of snow unloaded from canopy due to wind. The canopy liquid water and snow water equivalent are updated as
 
 .. math::
    :label: 7.15
 
-    W_{can,\, liq}^{n+1} =W_{can,liq}^{n} + q_{intr,\, liq} - q_{drip,\, liq} \Delta t - E_{v}^{liq} \Delta t \ge 0
+    W_{can,\, liq}^{n+1} =W_{can,liq}^{n} + q_{intr,\, liq} \Delta t - q_{drip,\, liq} \Delta t - E_{v}^{liq} \Delta t \ge 0
 
 and
 
 .. math::
    :label: 7.16
 
-   W_{can,\, sno}^{n+1} =W_{can,sno}^{n} + q_{intr,\, ice} - \left(q_{drip,\, ice}+q_{unl,\, tot} \right)\Delta t
+   W_{can,\, sno}^{n+1} =W_{can,sno}^{n} + q_{intr,\, ice} \Delta t - \left(q_{drip,\, ice}+q_{unl,\, tot} \right)\Delta t
                          - E_{v}^{ice} \Delta t \ge 0
 
 ..   W_{can}^{n+1} =W_{can}^{n} +q_{intr} \Delta t-\left(q_{drip,\, liq} +q_{drip,\, ice} \right)\Delta t-E_{v}^{w} \Delta t\ge 0.
@@ -170,22 +170,27 @@ The total rate of liquid and solid precipitation reaching the ground is then
 .. math::
    :label: 7.20
 
-   q_{grnd,ice} =q_{thru,\, ice} +q_{drip,\, ice} +q_{unl,\, tot} .
+   q_{grnd,ice} =q_{thru,\, ice} +q_{drip,\, ice} +q_{unl,\, tot}
 
 Solid precipitation reaching the soil or snow surface, :math:`q_{grnd,\, ice} \Delta t`, is added immediately to the snow pack (Chapter :numref:`rst_Snow Hydrology`). The liquid part, :math:`q_{grnd,\, liq} \Delta t` is added after surface fluxes (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) and snow/soil temperatures (Chapter :numref:`rst_Soil and Snow Temperatures`) have been determined.
 
-The wetted fraction of the canopy (stems plus leaves), which is required for surface flux (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) calculations, is (:ref:`Dickinson et al.1993 <Dickinsonetal1993>`)
+The wetted fraction of the canopy (stems plus leaves), which is required for surface flux (Chapter :numref:`rst_Momentum, Sensible Heat, and Latent Heat Fluxes`) calculations, is (:ref:`Dickinson et al. 1993 <Dickinsonetal1993>`)
 
 .. math::
    :label: 7.21
 
    f_{wet} =
    \left\{\begin{array}{lr}
-   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le 1 & \qquad L+S > 0 \\
+   \left[\frac{W_{can} }{p_{liq}\left(L+S\right)} \right]^{{2\mathord{\left/ {\vphantom {2 3}} \right.} 3} } \le f_{wet}^{max } & \qquad L+S > 0 \\
    0 &\qquad L+S = 0
    \end{array}\right\}
 
-while the fraction of the canopy that is dry and transpiring is
+.. math::
+   :label: W_can_calc
+
+   W_{can} = W_{can,\, liq} + W_{can,\, sno}
+
+where :math:`f_{wet}^{max }` is the maximum wetted fraction of the canopy, an adjustable parameter. Default value is :math:`f_{wet}^{max }` = 0.05. The fraction of the canopy that is dry and transpiring is
 
 .. math::
    :label: 7.22
@@ -240,7 +245,7 @@ where :math:`f_{\max }` is the potential or maximum value of :math:`f_{sat}`, :m
 Surface Water Storage
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A surface water store has been added to the model to represent wetlands and small, sub-grid scale water bodies. As a result, the wetland land unit has been removed as of CLM4.5. The state variables for surface water are the mass of water :math:`W_{sfc}` (kg m\ :sup:`-2`) and temperature :math:`T_{h2osfc}` (Chapter :numref:`rst_Soil and Snow Temperatures`). Surface water storage and outflow are functions of fine spatial scale elevation variations called microtopography. The microtopography is assumed to be distributed normally around the grid cell mean elevation. Given the standard deviation of the microtopographic distribution, :math:`\sigma _{micro}` (m), the fractional area of the grid cell that is inundated can be calculated. Surface water storage, :math:`Wsfc`, is related to the height (relative to the grid cell mean elevation) of the surface water, :math:`d`, by
+A surface water store has been added to the model to represent wetlands and small, sub-grid scale water bodies. As a result, the wetland land unit has been removed as of CLM4.5. The state variables for surface water are the mass of water :math:`W_{sfc}` (kg m\ :sup:`-2`) and temperature :math:`T_{h2osfc}` (Chapter :numref:`rst_Soil and Snow Temperatures`). Surface water storage and outflow are functions of fine spatial scale elevation variations called microtopography. The microtopography is assumed to be distributed normally around the grid cell mean elevation. Given the standard deviation of the microtopographic distribution, :math:`\sigma _{micro}` (m), the fractional area of the grid cell that is inundated can be calculated. Surface water storage, :math:`W_{sfc}`, is related to the height (relative to the grid cell mean elevation) of the surface water, :math:`d`, by
 
 .. math::
    :label: 7.66
@@ -275,9 +280,9 @@ where :math:`f_{c}` is a threshold below which no single connected inundated are
 .. math::
    :label: 7.70
 
-   q_{out,h2osfc}=k_{h2osfc} \ f_{connected} \ (Wsfc-Wc)\frac{1}{\Delta t}
+   q_{out,h2osfc}=k_{h2osfc} \ f_{connected} \ (W_{sfc}-W_c)\frac{1}{\Delta t}
 
-where :math:`q_{out,h2osfc}` is the surface water runoff, :math:`k_{h2osfc}` is a constant, :math:`Wc` is the amount of surface water present when :math:`f_{h2osfc} =f_{c}`, and :math:`\Delta t` is the model time step. The linear storage coefficent :math:`k_{h2osfc} = \sin \left(\beta \right)` is a function of grid cell mean topographic slope where :math:`\beta` is the slope in radians.
+where :math:`q_{out,h2osfc}` is the surface water runoff, :math:`k_{h2osfc}` is a constant, :math:`W_c` is the amount of surface water present when :math:`f_{h2osfc} =f_{c}`, and :math:`\Delta t` is the model time step. The linear storage coefficient :math:`k_{h2osfc} = \sin \left(\beta \right)` is a function of grid cell mean topographic slope where :math:`\beta` is the slope in radians.
 
 .. _Infiltration:
 
@@ -508,22 +513,22 @@ The bulk soil layer saturated hydraulic conductivity is then computed as
 The soil organic matter properties implicitly account for the standard observed profile of organic matter properties as
 
 .. math::
-   :label: 1.101
+   :label: porosity_org
 
    \theta_{sat,om} = max(0.93 - 0.1\times z_{i} / zsapric, 0.83).
 
 .. math::
-   :label: 1.102
+   :label: hydr_cond_exponent_org
 
    B_{om} = min(2.7 + 9.3\times z_{i} / zsapric, 12.0).
 
 .. math::
-   :label: 1.103
+   :label: sat_matric_potential_org
 
    \psi_{sat,om} = min(10.3 - 0.2\times z_{i} / zsapric, 10.1).
 
 .. math::
-   :label: 1.104
+   :label: sat_hydraulic_conductivity_organic
 
    k_{sat,om} = max(0.28 - 0.2799\times z_{i} / zsapric, k_{sat,\, \min } \left[z_{h,\, i} \right]).
 
@@ -921,7 +926,7 @@ Sublimation of ice is limited to the amount of ice available.
 Runoff from glaciers and snow-capped surfaces
 -------------------------------------------------
 
-All surfaces are constrained to have a snow water equivalent :math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped columns, any addition of mass at the top (precipitation, dew/riping) is balanced by an equally large mass flux at the bottom of the snow column. This so-called capping flux is separated into solid :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}` runoff terms. The partitioning of these phases is based on the phase ratio in the bottom snow layer at the time of the capping, such that phase ratio in this layer is unaltered.
+All surfaces are constrained to have a snow water equivalent :math:`W_{sno} \le W_{cap} = 10,000` kg m\ :sup:`-2`. For snow-capped columns, any addition of mass at the top (precipitation, dew/ripening) is balanced by an equally large mass flux at the bottom of the snow column. This so-called capping flux is separated into solid :math:`q_{snwcp,ice}` \ and liquid :math:`q_{snwcp,liq}` runoff terms. The partitioning of these phases is based on the phase ratio in the bottom snow layer at the time of the capping, such that phase ratio in this layer is unaltered.
 
 The :math:`q_{snwcp,ice}` runoff is sent to MOSART (Chapter :numref:`rst_MOSART`) where it is routed to the ocean as an ice stream and, if applicable, the ice is melted there.
 

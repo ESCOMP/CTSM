@@ -36,6 +36,7 @@ module BalanceCheckMod
   use column_varcon      , only : icol_roof, icol_sunwall, icol_shadewall
   use column_varcon      , only : icol_road_perv, icol_road_imperv
   use clm_varctl         , only : use_hillslope_routing
+  use UrbanParamsType    , only : IsACDehumidificationEnabled
   !
   ! !PUBLIC TYPES:
   implicit none
@@ -161,7 +162,6 @@ contains
             water_inst%bulk_and_tracers(i)%waterstate_inst, &
             water_inst%bulk_and_tracers(i)%waterdiagnostic_inst, &
             water_inst%bulk_and_tracers(i)%waterbalance_inst, &
-            water_inst%bulk_and_tracers(i)%waterflux_inst, &
             use_aquifer_layer = use_aquifer_layer, flag = flag)
     end do
 
@@ -212,7 +212,7 @@ contains
   subroutine WaterGridcellBalanceSingle(bounds, &
        num_nolakec, filter_nolakec, num_lakec, filter_lakec, &
        lakestate_inst, waterstate_inst, waterdiagnostic_inst, &
-       waterbalance_inst, waterflux_inst, use_aquifer_layer, flag)
+       waterbalance_inst, use_aquifer_layer, flag)
     !
     ! !DESCRIPTION:
     ! Grid cell-level water balance for bulk or a single tracer
@@ -232,7 +232,6 @@ contains
     class(waterstate_type)     , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type), intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)   , intent(inout) :: waterbalance_inst
-    class(waterflux_type)      , intent(inout) :: waterflux_inst
     logical                    , intent(in)    :: use_aquifer_layer  ! whether an aquifer layer is used in this run
     character(len=5)           , intent(in)    :: flag  ! specifies begwb or endwb
     !
@@ -241,8 +240,6 @@ contains
     integer :: begc, endc, begl, endl, begg, endg  ! bounds
     real(r8) :: wb_col(bounds%begc:bounds%endc)  ! temporary column-level water mass
     real(r8) :: wb_grc(bounds%begg:bounds%endg)  ! temporary grid cell-level water mass
-    real(r8) :: qflx_liq_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc liq dynamic land cover change conversion runoff flux
-    real(r8) :: qflx_ice_dynbal_left_to_dribble(bounds%begg:bounds%endg)  ! grc ice dynamic land cover change conversion runoff flux
     real(r8) :: wa_reset_nonconservation_gain_grc(bounds%begg:bounds%endg)  ! grc mass gained from resetting water in the unconfined aquifer, wa_col (negative indicates mass lost) (mm)
 
     character(len=*), parameter :: subname = 'WaterGridcellBalanceSingle'
@@ -283,38 +280,14 @@ contains
        enddo
     endif
     
-    ! Call the beginning or ending version of the subroutine according
-    ! to flag value
-    if (flag == 'begwb') then
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, &
-         qflx_liq_dynbal_left_to_dribble(begg:endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_beg( &
-         bounds, &
-         qflx_ice_dynbal_left_to_dribble(begg:endg))
-    else if (flag == 'endwb') then
-       call waterflux_inst%qflx_liq_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_liq_dynbal_left_to_dribble(begg:endg))
-       call waterflux_inst%qflx_ice_dynbal_dribbler%get_amount_left_to_dribble_end( &
-         bounds, &
-         qflx_ice_dynbal_left_to_dribble(begg:endg))
-    else
-       write(iulog,*) 'Unknown flag passed into this subroutine.'
-       write(iulog,*) 'Expecting either begwb or endwb.'
-       call endrun(msg=errmsg(sourcefile, __LINE__))
-    end if
-
-    ! These dynbal dribblers store the delta state, (end - beg). Thus, the
-    ! amount dribbled out is the negative of the amount stored in the
-    ! dribblers. Therefore, conservation requires us to subtract the amount
-    ! remaining to dribble.
-    ! This sign convention is opposite to the convention chosen for the
-    ! respective dribble terms used in the carbon balance. At some point
-    ! it may be worth making the two conventions consistent.
+    ! Add the dynbal storage pools. These pools hold the amount of water that must be
+    ! added to the gridcell's total water content in order for that total to be conserved
+    ! across dynamic landunit adjustments; this water is released gradually to the dynbal
+    ! fluxes.
     do g = begg, endg
-       wb_grc(g) = wb_grc(g) - qflx_liq_dynbal_left_to_dribble(g)  &
-                             - qflx_ice_dynbal_left_to_dribble(g)
+       wb_grc(g) = wb_grc(g) &
+            + waterstate_inst%dynbal_liq_storage_grc(g) &
+            + waterstate_inst%dynbal_ice_storage_grc(g)
     end do
 
     ! Map wb_grc to beginning/ending water balance according to flag
@@ -343,6 +316,10 @@ contains
        do g = begg, endg
           endwb_grc(g) = wb_grc(g) - wa_reset_nonconservation_gain_grc(g)
        end do
+    else
+       write(iulog,*) 'Unknown flag passed into this subroutine.'
+       write(iulog,*) 'Expecting either begwb or endwb.'
+       call endrun(msg=errmsg(sourcefile, __LINE__))
     end if
 
     end associate
@@ -499,6 +476,7 @@ contains
      real(r8) :: qflx_glcice_dyn_water_flux_grc(bounds%begg:bounds%endg)  ! grid cell-level water flux needed for balance check due to glc_dyn_runoff_routing [mm H2O/s] (positive means addition of water to the system)
      real(r8) :: qflx_snwcp_discarded_liq_grc(bounds%begg:bounds%endg)  ! grid cell-level excess liquid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
      real(r8) :: qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg)  ! grid cell-level excess solid h2o due to snow capping, which we simply discard in order to reset the snow pack [mm H2O /s]
+     real(r8) :: qflx_condensate_from_ac_grc(bounds%begg:bounds%endg)   ! grid cell-level condensate water flux from air-conditioning [mm H2O /s]
 
      real(r8) :: errh2o_max_val                         ! Maximum value of error in water conservation error  over all columns [mm H2O]
      real(r8) :: errh2osno_max_val                      ! Maximum value of error in h2osno conservation error over all columns [kg m-2]
@@ -558,7 +536,8 @@ contains
 
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
           qflx_sfc_irrig_grc      =>    waterlnd2atm_inst%qirrig_grc            , & ! Input:  [real(r8) (:)   ]  grid cell-level irrigation flux (mm H20 /s)
-          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col  & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_glcice_dyn_water_flux_col => waterflux_inst%qflx_glcice_dyn_water_flux_col, & ! Input: [real(r8) (:)]  column level water flux needed for balance check due to glc_dyn_runoff_routing (mm H2O/s) (positive means addition of water to the system)
+          qflx_condensate_from_ac_col => waterflux_inst%qflx_condensate_from_ac_col & ! Input: [real(r8) (:)]  column level condensate water flux from air-conditioning (mm H2O /s)
           )
 
        ! Get step size and time step
@@ -604,6 +583,10 @@ contains
                   - qflx_snwcp_discarded_liq_col(c) &
                   - qflx_snwcp_discarded_ice_col(c)) * dtime
 
+             if (IsACDehumidificationEnabled()) then
+                errh2o_col(c) = errh2o_col(c) - qflx_condensate_from_ac_col(c) * dtime
+             end if
+
           else
 
              errh2o_col(c) = 0.0_r8
@@ -638,6 +621,9 @@ contains
               write(iulog,*)'qflx_surf                 = ',qflx_surf_col(indexc)*dtime
               write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_col(indexc)*dtime
               write(iulog,*)'qflx_drain                = ',qflx_drain_col(indexc)*dtime
+              if (IsACDehumidificationEnabled()) then
+                 write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_col(indexc)*dtime
+              end if
 
               write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_col(indexc)*dtime
 
@@ -675,6 +661,12 @@ contains
          qflx_snwcp_discarded_ice_col(bounds%begc:bounds%endc),  &
          qflx_snwcp_discarded_ice_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       if (IsACDehumidificationEnabled()) then
+          call c2g( bounds,  &
+            qflx_condensate_from_ac_col(bounds%begc:bounds%endc),  &
+            qflx_condensate_from_ac_grc(bounds%begg:bounds%endg),  &
+            c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+       end if
 
        do g = bounds%begg, bounds%endg
           errh2o_grc(g) = endwb_grc(g) - begwb_grc(g)  &
@@ -691,6 +683,10 @@ contains
                - qflx_ice_runoff_grc(g)  &
                - qflx_snwcp_discarded_liq_grc(g)  &
                - qflx_snwcp_discarded_ice_grc(g)) * dtime
+
+          if (IsACDehumidificationEnabled()) then
+             errh2o_grc(g) = errh2o_grc(g) - qflx_condensate_from_ac_grc(g) * dtime
+          end if
        end do
 
        ! add landunit level flux variable, convert from (m3/s) to (kg m-2 s-1)
@@ -738,6 +734,9 @@ contains
              write(iulog,*)'qflx_drain_perched        = ',qflx_drain_perched_grc(indexg)*dtime
              write(iulog,*)'forc_flood                = ',forc_flood_grc(indexg)*dtime
              write(iulog,*)'qflx_glcice_dyn_water_flux = ',qflx_glcice_dyn_water_flux_grc(indexg)*dtime
+             if (IsACDehumidificationEnabled()) then
+                write(iulog,*)'qflx_condensate_from_ac   = ',qflx_condensate_from_ac_grc(indexg)*dtime
+             end if
 
              write(iulog,*)'CTSM is stopping'
              call endrun(subgrid_index=indexg, subgrid_level=subgrid_level_gridcell, msg=errmsg(sourcefile, __LINE__))

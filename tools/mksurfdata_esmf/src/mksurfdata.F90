@@ -876,7 +876,7 @@ program mksurfdata
      if (ChkErr(rc,__LINE__,u_FILE_u)) call shr_sys_abort('error in calling mkfile_output for LANDFRAC_PFT')
 
      ! -----------------------------------------
-     ! Read in each dynamic pft landuse dataset
+     ! Read in each transient pft landuse dataset
      ! -----------------------------------------
 
      ! Open txt file

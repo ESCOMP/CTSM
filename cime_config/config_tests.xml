@@ -186,7 +186,9 @@ This defines various CTSM-specific system tests
   </test>
 
 <!--
-SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
+SSP    smoke CLM spinup test (only goes from AD mode to post-AD mode)
+       This was the spinup procedure for the CLM50 era. It can also be used for CLM60
+       for shorter tests (since SSPMATRIX tests require a minimum of 5 years)
        do an initial spin test (setting CLM_ACCELERATED_SPINUP to on)
          write restarts at the end of the run
          short term archiving is on
@@ -205,6 +207,11 @@ SSP    smoke CLM spinup test (only valid for CLM compsets with CLM45)
     <HIST_N>$STOP_N</HIST_N>
   </test>
 
+<!--
+SSPMATRIX    smoke CLM spinup test using CN-Matrix "sasu" mode to shorten the spinup
+             Can be used in both Clm50 and Clm60 compsets
+             Needs a minimum of 5 years to run.
+-->
   <test NAME="SSPMATRIXCN">
     <DESC>smoke CLM CN-Matrix spinup test</DESC>
     <INFO_DBUG>1</INFO_DBUG>
