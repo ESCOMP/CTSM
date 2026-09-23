@@ -61,7 +61,7 @@ begin
   print ("=========================================")
 
 ; Sites (170 sites)
-  sim = systemfunc("ls -1 " + "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/")
+  sim = systemfunc("ls -1 " + "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2.c20260729/")
 
   nsim = dimsizes(sim)
   site_num           = new(nsim,"integer")
@@ -99,11 +99,11 @@ begin
 
     print((/sim(sel)/))
     ; Specify input directory
-    f_in_dir  = "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/"+sim(sel)+"/CLM1PT_data/"
+    f_in_dir  = "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2.c20260729/"+sim(sel)+"/CLM1PT_data/"
     fls = systemfunc("ls " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*-*"+".nc")
-    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c113-116"
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c123-126"
     startyear(sel) = systemfunc(command)
-    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c118-121"
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c128-131"
     endyear(sel) = systemfunc(command)
     datmfile = addfile(fls,"r")
     time = datmfile->time
@@ -185,27 +185,33 @@ begin
         if (pct_crop .gt. 0.) then
           print((/"Crop Site"/))
           pct_cft = surfdatafile->PCT_CFT(:,0,0)
+          ; The following allows for
+          ; 1) Both pct_cft(0) and pct_cft(1) > 0
+          ; 2) pct_cft(0) > 0 and pct_cft(1) = 0
+          ; 3) pct_cft(0) = 0 and pct_cft(1) > 0
+          ; Assumes pct_cft(0) + pct_cft(1) = 100.
           if (pct_cft(0) .gt. 0.) then
             pfttype(sel,0) = 15
             pftperc(sel,0) = (/pct_cft(0)/)
             pftcth(sel,0)  = monthly_height_top(15)
             pftcbh(sel,0)  = monthly_height_bot(15)
-          else
-            pfttype(sel,0) = -999
-            pftperc(sel,0) = -999.
-            pftcth(sel,0)  = -999.
-            pftcbh(sel,0)  = -999.
           end if
-          if (pct_cft(1) .gt. 0.) then
-            pfttype(sel,1) = 16
-            pftperc(sel,1) = (/pct_cft(1)/)
-            pftcth(sel,1)  = monthly_height_top(16)
-            pftcbh(sel,1)  = monthly_height_bot(16)
-          else
+          if (pct_cft(1) .gt. 0. .and. pct_cft(0) .le. 0.) then
+            pfttype(sel,0) = 16
+            pftperc(sel,0) = (/pct_cft(1)/)
+            pftcth(sel,0)  = monthly_height_top(16)
+            pftcbh(sel,0)  = monthly_height_bot(16)
             pfttype(sel,1) = -999
             pftperc(sel,1) = -999.
             pftcth(sel,1)  = -999.
             pftcbh(sel,1)  = -999.
+          else
+            if (pct_cft(1) .gt. 0. .and. pct_cft(0) .gt. 0.) then
+              pfttype(sel,1) = 16
+              pftperc(sel,1) = (/pct_cft(1)/)
+              pftcth(sel,1)  = monthly_height_top(16)
+              pftcbh(sel,1)  = monthly_height_bot(16)
+            end if
           end if
         else
           print((/"PCT_NATVEG, PCT_WETLAND, PCT_CROP are all zero"/))
