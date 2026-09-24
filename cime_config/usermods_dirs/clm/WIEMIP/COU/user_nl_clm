@@ -1,0 +1,100 @@
+fsurdat = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_WIEMIP_c260408.nc'
+flanduse_timeseries = ''
+
+irrigate = .false.
+
+stream_fldfilename_ndep = '/glade/derecho/scratch/wwieder/temp_work/WIEMIP/ndep/fndep_clm_hist_from_input4MIPs_surfaceFluxes_C4MIP_MPI-B-1pctNdep-1-0_gn_1850-2000.nc'
+stream_meshfile_ndep = '/glade/derecho/scratch/swensosc/WIEMIP/stable_1deg/ESMFmesh_WIEMIP_1deg_c260409.nc'
+stream_year_first_ndep = 1850
+model_year_align_ndep = 1850
+stream_year_last_ndep = 1850
+
+stream_year_last_popdens = 1850
+! likely not needed since do_transient_urban=.false. w/ above
+model_year_align_urbantv = 1850
+stream_year_first_urbantv = 1850
+stream_year_last_urbantv = 1850
+
+use_c13 = .false.
+use_c14 = .false.
+
+!--------------------
+! Flat case
+!--------------------
+
+!paramfile = '/glade/work/wwieder/modified_inputs/ctsm60_params.genericCropFix.ch4cal_d.c260410.nc'
+
+!--------------------
+! Hillslope changes
+!--------------------
+! suggested fire chagnes from Fang
+! paramfile = '/glade/u/home/fangli/ctsm60_params.genericCropFix.ch4cal_e.fire.c260424.nc'
+paramfile = '/glade/campaign/cesm/cesmdata/inputdata/lnd/clm2/paramdata/ctsm60-HH_params.c260518.nc'
+
+! 16 column hillslope and vegetation data
+!hillslope_file = '/glade/derecho/scratch/swensosc/WIEMIP/hillslope_geo_params_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+
+! 9 column hillslope file
+hillslope_file = '/glade/work/swensosc/HillslopeHydrology/InputData/Global/hillslope_geo_params_3_col_3_aspect_trapezoid_worldcover_0.9x1.25_Global_FAB.nc'
+
+use_hillslope = .true.
+use_hillslope_routing = .true.
+finundation_method = 'h2osfc'
+hillslope_fsat_equals_zero = .true.
+n_dom_pfts = 2
+hist_wrtch4diag = .true.
+
+finidat = '/glade/derecho/scratch/wwieder/archive/wetlands.n03.ctsm5.4.029_f09noCrop_HH_165_pSASU_b/rest/0181-01-01-00000/wetlands.n03.ctsm5.4.029_f09noCrop_HH_165_pSASU_b.clm2.r.0181-01-01-00000.nc'
+
+!---------------------
+! History output
+!---------------------
+
+hist_nhtfrq = 0,0,0
+hist_mfilt = 1,1,1
+hist_dov2xy = .true., .false., .false.
+hist_type1d_pertape = 'GRID','COLS','PFTS'
+
+hist_fincl1 = 'STREAM_WATER_DEPTH','STREAM_WATER_VOLUME','FROST_TABLE',
+   'CWDC_HR','CWD_C_TO_LIT_CEL_C','CWD_C_TO_LIT_LIG_C',
+   'DEADCROOTC_STORAGE','DEADCROOTC_XFER',
+   'FROOTC_STORAGE','FROOTC_TO_LITTER','FROOTC_XFER',
+   'LEAFC_STORAGE','LEAFC_TO_LITTER','LEAFC_XFER',
+   'LIT_CEL_C_TO_SOM_ACT_C','LIT_CEL_N_TO_SOM_ACT_N',
+   'LIT_LIG_C_TO_SOM_SLO_C','LIT_LIG_N_TO_SOM_SLO_N',
+   'LIT_MET_C_TO_SOM_ACT_C','LIT_MET_N_TO_SOM_ACT_N',
+   'LIT_MET_HR','LIT_CEL_HR','LIT_LIG_HR',
+   'LIVECROOTC_STORAGE','LIVECROOTC_XFER',
+   'SOM_ACT_HR_S2','SOM_ACT_HR_S3','SOM_SLO_HR_S1',
+   'SOM_SLO_HR_S3','SOM_PAS_HR','FCO2','FROST_TABLE',
+   'TAF','LITFIRE',
+   'M_DEADROOTC_STORAGE_TO_FIRE','M_DEADROOTC_TO_FIRE',
+   'M_DEADROOTC_XFER_TO_FIRE','M_DEADSTEMC_STORAGE_TO_FIRE',
+   'M_DEADSTEMC_TO_FIRE','M_DEADSTEMC_XFER_TO_FIRE',
+   'M_FROOTC_STORAGE_TO_FIRE','M_FROOTC_TO_FIRE',
+   'M_FROOTC_XFER_TO_FIRE','M_LEAFC_STORAGE_TO_FIRE',
+   'M_LEAFC_TO_FIRE','M_LEAFC_XFER_TO_FIRE',
+   'M_LIVEROOTC_STORAGE_TO_FIRE','M_LIVEROOTC_TO_FIRE',
+   'M_LIVEROOTC_XFER_TO_FIRE','M_LIVESTEMC_STORAGE_TO_FIRE',
+   'M_LIVESTEMC_TO_FIRE','M_LIVESTEMC_XFER_TO_FIRE',
+   'M_GRESP_STORAGE_TO_FIRE','M_GRESP_XFER_TO_FIRE'
+
+hist_fincl2 = 'H2OSFC','H2OSNO','ZWT','ZWT_PERCH','FROST_TABLE',
+   'TWS','SOILLIQ','SOILICE','FSNO','FH2OSFC','ALT','QLATFLOWOUT',
+   'QDRAI','QOVER','QVEGT','QVEGE','QSOIL','TSOI','FINUNDATED',
+   'CH4_SURF_DIFF_SAT','CH4_SURF_DIFF_UNSAT','CH4_EBUL_TOTAL_SAT',
+   'CH4_EBUL_TOTAL_UNSAT','CH4_SURF_EBUL_SAT','CH4_SURF_EBUL_UNSAT',
+   'CH4_SURF_AERE_SAT','CH4_SURF_AERE_UNSAT','TOTCOLCH4','CONC_CH4_SAT',
+   'CONC_CH4_UNSAT','CH4_PROD_COL','CH4_OXID_COL',
+   'CH4_OXID_DEPTH_SAT','CH4_OXID_DEPTH_UNSAT',
+   'CH4_PROD_DEPTH_SAT','CH4_PROD_DEPTH_UNSAT',
+   'SNOWDP', 'SNOW_DEPTH','ALTMAX','BTRANMN'
+
+hist_fincl3 = 'FCTR','FGEV','FROOTC_ALLOC','FSH',
+   'FSRND','FSRNI','FSRVD','FSRVI','FSDSND',
+   'FSDSNI','FSDSVD','FSDSVI',
+   'GPP','HTOP','LEAFC_ALLOC','NPP','BTRANMN',
+   'MEG_acetone','MEG_isoprene','MEG_methanol',
+   'NFIX','FFIX_TO_SMINN','PFT_FIRE_CLOSS',
+   'Rnet','TOTVEGC','TOTVEGN','WOODC_ALLOC','TLAI'
+
