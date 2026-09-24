@@ -546,7 +546,7 @@ contains
     real(r8):: k_s2                         ! decomposition rate constant SOM 2 (1/sec)
     real(r8):: k_s3                         ! decomposition rate constant SOM 3 (1/sec)
     real(r8):: k_frag                       ! fragmentation rate constant CWD (1/sec)
-    real(r8):: Q10                          ! temperature dependence
+    real(r8):: Q10hr                        ! temperature dependence
     real(r8):: froz_q10                     ! separate q10 for frozen soil respiration rates.  default to same as above zero rates
     real(r8):: decomp_depth_efolding        ! (meters) e-folding depth for reduction in decomposition [
     integer :: c, fc, j, k, l
@@ -606,8 +606,8 @@ contains
       days_per_year = get_average_days_per_year()
       dt = real( get_step_size(), r8 )
 
-      ! set "Q10" parameter
-      Q10 = CNParamsShareInst%Q10
+      ! set "Q10hr" parameter
+      Q10hr = CNParamsShareInst%Q10hr
 
       ! set "froz_q10" parameter
       froz_q10  = CNParamsShareInst%froz_q10 
@@ -721,10 +721,10 @@ contains
                   if (j==1) t_scalar(c,:) = 0._r8
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
                      t_scalar(c,1)=t_scalar(c,1) + &
-                          (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
+                          (Q10hr**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
                   else
                      t_scalar(c,1)=t_scalar(c,1) + &
-                          (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
+                          (Q10hr**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
                   endif
                end do
             end do
@@ -801,9 +801,9 @@ contains
                do fc = 1,num_bgc_soilc
                   c = filter_bgc_soilc(fc)
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
-                     t_scalar(c,j)= (Q10**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
+                     t_scalar(c,j)= (Q10hr**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))
                   else
-                     t_scalar(c,j)= (Q10**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
+                     t_scalar(c,j)= (Q10hr**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))
                   endif
                end do
             end do
