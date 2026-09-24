@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.060
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Tue Sep 22 04:26:21 PM MDT 2026
+Date: Thu Sep 24 10:47:52 AM MDT 2026
 One-line Summary: Update CDEPS/CMEPS to versions with reproducable sums to fix some failing tests
 
 Purpose and description of changes
