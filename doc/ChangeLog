@@ -1,19 +1,19 @@
 ===============================================================
 Tag name: ctsm5.4.060
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Thu Sep 24 10:47:52 AM MDT 2026
-One-line Summary: Update CDEPS/CMEPS to versions with reproducable sums to fix some failing tests
+Date: Thu Sep 24 01:15:52 PM MDT 2026
+One-line Summary: Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
 
 Purpose and description of changes
 ----------------------------------
 
-Bring in use of reproducable sums in CDEPS and CMEPS so that our longer threaded tests with DGLC will now PASS. These are turned on with the CMEPS BFBFLAG which was previusly not used for anything.
+Bring in use of reproducible sums in CDEPS and CMEPS so that our longer threaded tests with DGLC will now PASS. These are turned on with the CMEPS BFBFLAG which was previously not used for anything.
 
 Bugs fixed
 ----------
 
 List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
-  - Resolves Threaded exact restart tests that change task/thread count fail with DGLC or CISM fail when run to a year or more #4160
+  - Resolves Threaded exact restart tests that change task/thread count fail with DGLC or CISM when run to a year or more #4160
 
 Notes of particular relevance for users
 ---------------------------------------
@@ -27,9 +27,10 @@ Contributors:
 Notes of particular relevance for developers:
 ---------------------------------------------
 
-Caveats for developers (e.g., code that is duplicated that requires double maintenance):
-
 Changes to tests or testing:
+  - Remove 364-day tests that were there because the longer ones weren't passing previously
+  - Lower wallclock for two ctsm_sci tests that didn't need to be so long
+  - Remove tests that now pass from expected fails
 
 Testing summary:  regular + ctsm_sci
 ----------------
@@ -43,7 +44,7 @@ Testing summary:  regular + ctsm_sci
   any other testing (give details below):
 
   ctsm_sci
-     derecho ----
+     derecho ---- OK
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 
@@ -54,28 +55,26 @@ Answer changes
 Changes answers relative to baseline: Potentially roundoff different
 
   Summarize any changes to answers, i.e.,
-    - what code configurations: compset with either DGLC or CISM AND BfBFLAG==TRUE
+    - what code configurations: compset with either DGLC or CISM AND BFBFLAG==TRUE
     - what platforms/compilers: all
     - nature of change: roundoff
 
    If bitwise differences were observed, how did you show they were no worse
    than roundoff?
 
-      @billsacks did the evaulation for this in the CMEPS/CDEPS tags
-      Also since most tests were identical even with the change it gives assurance that the change
-      often doesn't change answers, or only when run long enough
-      The previous exact restart tests that change PE layouts that failed now PASS
+      - @billsacks did the evaluation for this in the CMEPS/CDEPS tags
+      - Since most tests were identical even with the change, this gives assurance that the change often doesn't change answers, or only does so when run long enough
+      - The exact restart tests that change PE layouts, which previously failed, now PASS
 
 Other details
 -------------
 
 List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cdeps and cmeps
-   cdeps to cmeps1.1.71 (NOTE: this skips past cmeps1.1.70 which was b4b with changes for threading)
-   cmeps to cdeps1.0.110
+   - cmeps to cmeps1.1.71 (NOTE: this skips past cmeps1.1.70, which was b4b with changes for threading)
+   - cdeps to cdeps1.0.110
 
 Pull Requests that document the changes (include PR ids):
-   Reproduable sums in CDEPS and CMEPS so that longer threaded tests will PASS #4224
-
+   Reproducible sums in CDEPS and CMEPS so that longer threaded tests will PASS #4224
 
 ===============================================================
 ===============================================================
