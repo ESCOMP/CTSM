@@ -43,7 +43,7 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld5.f09_t232.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
+  <test name="SMS_Ld5.f09_t233.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#4165</issue>

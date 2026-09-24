@@ -110,7 +110,7 @@
       <option name="comment">No anthropogenic compset. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS_D_Ld3_PS" grid="f09_t232" compset="I1850Clm60SpCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial--clm/nofireemis">
+  <test name="SMS_D_Ld3_PS" grid="f09_t233" compset="I1850Clm60SpCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -119,7 +119,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat no anthropogenic compset with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_D_Ld3_PS" grid="f09_g17" compset="I1850Clm60BgcNoAnthroRtm" testmods="clm/decStart1851_noinitial--clm/matrixcnOn">
@@ -144,17 +144,17 @@
       <option name="comment">No anthropogenic compset for Bgc and ctsm_sci test list</option>
     </options>
   </test>
-  <test name="SMS_Ld3_PS" grid="f09_t232" compset="I1850Clm60BgcCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial">
+  <test name="SMS_Ld3_PS" grid="f09_t233" compset="I1850Clm60BgcCrujraNoAnthroRtm" testmods="clm/decStart1851_noinitial">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat no anthropogenic compset with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat no anthropogenic compset with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="SMS_D_Ld5_PS" grid="f09_f09_mt232" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
+  <test name="SMS_D_Ld5_PS" grid="f09_f09_mt233" compset="I1850Clm60BgcCrop" testmods="clm/f09_ObscureStreamOpts">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="ctsm_release"/>
@@ -212,7 +212,7 @@
       <option name="comment">Simple test use soil eroditability in CTSM for CAM5 tuning. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t233" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -232,7 +232,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="f10_f10_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
+  <test name="ERP_D_Ld9" grid="f10_f10_mt233" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -242,7 +242,7 @@
       <option name="comment">CESM3 development Exact restart test with Nearest Neighbor streams mapalgo and change in the processor count at f10</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam6LndTuningMode">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t233" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -253,7 +253,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="ne30pg3_t232" compset="IHistClm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
+  <test name="ERP_D_Ld9" grid="ne30pg3_t233" compset="IHistClm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningModeLDust">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -264,7 +264,7 @@
     </options>
   </test>
 
-  <test name="SMS_D_Ld10" grid="f09_f09_mt232" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
+  <test name="SMS_D_Ld10" grid="f09_f09_mt233" compset="IHistClm60BgcCrop" testmods="clm/f09_FillMissingW_Urban">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -275,7 +275,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
+  <test name="SMS_Ly3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -285,7 +285,7 @@
       <option name="comment">Testing a few years with CMIP6 carbon isotopes</option>
     </options>
   </test>
-  <test name="SMS_Ly3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
+  <test name="SMS_Ly3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -295,7 +295,7 @@
       <option name="comment">Testing a few years with CMIP7 carbon isotopes</option>
     </options>
   </test>
-  <test name="ERS_D_Ld9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="ERS_D_Ld9" grid="ne30pg3_t233" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -306,7 +306,7 @@
       <option name="comment">CESM3 development simple exact restart test at the standard coupled resolution</option>
     </options>
   </test>
-  <test name="SMS_Lm1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS_Lm1" grid="ne30pg3_t233" compset="I1850Clm60BgcCropCrujraG" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -327,7 +327,7 @@
       <option name="comment">Mid-year exact restart test. Also covers multiple ice sheets in a multi-year I compset test.</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30pg3_t232" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS" grid="ne30pg3_t233" compset="I2000Clm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -377,7 +377,7 @@
       <option name="comment">Repeat CTSM science test with Crujra while Gswp is still the default</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ln9" grid="C96_C96_mt233" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -387,7 +387,7 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset. No needn't run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mt232" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ln9" grid="C96_C96_mt233" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -558,7 +558,7 @@
       <option name="comment">Include a test of this scientifically-supported compset at a scientifically-supported resolution</option>
     </options>
   </test>
-  <test name="SEQ_D_Ld10_PS" grid="f09_f09_mt232" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
+  <test name="SEQ_D_Ld10_PS" grid="f09_f09_mt233" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prebeta"/>
@@ -601,14 +601,14 @@
       <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld1" grid="f09_t233" compset="I1850Clm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat this science support test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/default--clm/nofireemis">
@@ -641,14 +641,14 @@
       <option name="comment">Science support for 1850 with clm6_0 for Sp mode at f09 with CAM7. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS_Ld1" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ld1" grid="f09_t233" compset="I1850Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat this science support test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld1" grid="f19_g17" compset="I1850Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
@@ -751,14 +751,14 @@
       <option name="comment">Include an excess ice test starting up from an finidat startup file with excessice output with extra output</option>
     </options>
   </test>
-  <test name="SMS_Lm12" grid="f09_t232" compset="I1850Clm60SpCrujra" testmods="clm/ExcessIceStartup_output_sp_exice">
+  <test name="SMS_Lm12" grid="f09_t233" compset="I1850Clm60SpCrujra" testmods="clm/ExcessIceStartup_output_sp_exice">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">01:00:00</option>
-      <option name="comment">Repeat excess ice test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat excess ice test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ln9_P256x3" grid="f19_g17" compset="IHistClm50Sp" testmods="clm/waccmx_offline2005Start">
@@ -854,14 +854,14 @@
       <option name="comment">Include an ERI test at production resolution in the ctsm_sci test list</option>
     </options>
   </test>
-  <test name="ERI_Ld9" grid="f09_t232" compset="I2000Clm60BgcCropCrujra" testmods="clm/default">
+  <test name="ERI_Ld9" grid="f09_t233" compset="I2000Clm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:40:00</option>
-      <option name="comment">Repeat this ERI test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat this ERI test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="ERI_C2_Ld9" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/default">
@@ -1045,14 +1045,14 @@
       <option name="comment">Science support for 1850 Clm6_0 physics for Bgc at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="I1850Clm60BgcCrujra" testmods="clm/default">
+  <test name="SMS_Ld5" grid="f09_t233" compset="I1850Clm60BgcCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat this science support test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
@@ -1104,7 +1104,7 @@
       <option name="comment">Repeat this low res SE grid test with Crujra while Gswp is still the default</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg2_ne3pg2_mt233" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1114,7 +1114,7 @@
       <option name="comment">Low res SE grid test with Crujra while Gswp is still the default, also nofireemis for Sp</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg2_ne3pg2_mt232" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg2_ne3pg2_mt233" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1315,7 +1315,7 @@
     </options>
   </test>
   <!-- Historical clm5_0 physics BgcCrop science support -->
-  <test name="SMS_Ln9_P256x2" grid="C96_C96_mt232" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
+  <test name="SMS_Ln9_P256x2" grid="C96_C96_mt233" compset="IHistClm50BgcCrop" testmods="clm/clm50cam6LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1356,14 +1356,14 @@
       <option name="comment">Science support for Historical clm6_0 physics with BgcCrop at f09</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
+  <test name="SMS_Ld5" grid="f09_t233" compset="IHistClm60BgcCropCrujra" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the default have not changed</option>
+      <option name="comment">Repeat this science support test with t233 and Crujra while the default have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60BgcCrop" testmods="clm/default">
@@ -1590,7 +1590,7 @@
       <option name="comment">Test Hist compset with Sp for CLM6.0</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="ne30pg3_t232" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
+  <test name="ERP_D_Ld5" grid="ne30pg3_t233" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2293,7 +2293,7 @@
       <option name="comment">Test transient PFTs (via HIST) in conjunction with changing glacier area. This test also covers the reset_dynbal_baselines option. CISM is not answer preserving across processor changes, but short test length should be OK. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mt232" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_C96_mt233" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2303,7 +2303,7 @@
       <option name="comment">We have one C96 test in aux_clm; this is another that uses a different compset with latest CLM version. No need to run this additional C96 test with every tag, but include it in the less frequent ctsm_sci testing.</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="C96_C96_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/clm60cam7LndTuningMode">
+  <test name="SMS_Ln9" grid="C96_C96_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm/clm60cam7LndTuningMode">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2353,7 +2353,7 @@
       <option name="comment">Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt232" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
+  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -2634,7 +2634,7 @@
       <option name="comment">Repeat LII_D... test with matrixcnOn</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t233" compset="I1850Clm60BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2644,7 +2644,7 @@
       <option name="comment">Exercise the init_interp_method='use_finidat_areas' option. See documentation at the top of the python script implementing this test for more details and rationale. This test requires a compatible finidat file (i.e., a file that can be used without interpolation). If no such file is available out-of-the-box, then the test will need to use a testmod that points to a compatible file.</option>
     </options>
   </test>
-  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t232" compset="I1850Clm60BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
+  <test name="LII2FINIDATAREAS_D_P256x2_Ld1" grid="f09_t233" compset="I1850Clm60BgcCrop" testmods="clm/default--clm/matrixcnOn_ignore_warnings">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -2776,7 +2776,7 @@
       <option name="comment">Simple test to make sure the basic FatesSp compset works"</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm60BgcCropSpinup" testmods="clm/crop">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t233" compset="I1850Clm60BgcCropSpinup" testmods="clm/crop">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -2786,7 +2786,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1" grid="ne30pg3_t232" compset="I1850Clm50BgcSpinup" testmods="clm/default--clm/matrixcnOn">
+  <test name="SMS_D_Ld1" grid="ne30pg3_t233" compset="I1850Clm50BgcSpinup" testmods="clm/default--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -3030,14 +3030,14 @@
       <option name="comment">Science support for historical clm6_0 physics with Sp mode at f09. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
+  <test name="SMS_Ld5" grid="f09_t233" compset="IHistClm60SpCrujra" testmods="clm/default--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Repeat this science support test with t232 and Crujra while the defaults have not changed</option>
+      <option name="comment">Repeat this science support test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f19_g17" compset="IHistClm60Sp" testmods="clm/default--clm/nofireemis">
@@ -3090,7 +3090,7 @@
       <option name="comment">Run mpasa480 to make sure will work for CAM"</option>
     </options>
   </test>
-  <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt232" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS_Ln9" grid="ne3pg3_ne3pg3_mt233" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -3099,7 +3099,7 @@
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Run coarse resolution ne3pg3_ne3pg3_mt232 to make sure will work for CAM. Also --nofireemis because this is a Sp compset</option>
+      <option name="comment">Run coarse resolution ne3pg3_ne3pg3_mt233 to make sure will work for CAM. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
   <test name="SMS_D" grid="f10_f10_mg37" compset="I2000Clm60BgcCrop" testmods="clm/crop">
@@ -3521,14 +3521,14 @@
       <option name="comment">Transient production future scenario SSP5-8.5 case with isotopes with a december 2050 start</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="ISSP585Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
+  <test name="SMS_Ld5" grid="f09_t233" compset="ISSP585Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
+      <option name="comment">Transient production test with clm6, t233, and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f10_f10_mg37" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
@@ -3552,14 +3552,14 @@
       <option name="comment">Transient production future scenario SSP2-4.5 case with isotopes with a december 2050 start</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
+  <test name="SMS_Ld5" grid="f09_t233" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
+      <option name="comment">Transient production test with clm6, t233, and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_Ld5" grid="f09_g17" compset="ISSP370Clm50BgcCrop" testmods="clm/ciso_dec2050Start">
@@ -3572,14 +3572,14 @@
       <option name="comment">Transient production future scenario SSP3-7.0 case with isotopes with a december 2050 start</option>
     </options>
   </test>
-  <test name="SMS_Ld5" grid="f09_t232" compset="ISSP370Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
+  <test name="SMS_Ld5" grid="f09_t233" compset="ISSP370Clm60BgcCropCrujra" testmods="clm/ciso_dec2050Start">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
     </machines>
     <options>
       <option name="wallclock">00:20:00</option>
-      <option name="comment">Transient production test with clm6, t232, and Crujra while the defaults have not changed</option>
+      <option name="comment">Transient production test with clm6, t233, and Crujra while the defaults have not changed</option>
     </options>
   </test>
   <test name="SMS_D_Ld5" grid="f09_g17" compset="ISSP245Clm60BgcCropCrujra" testmods="clm/default">
@@ -3716,7 +3716,7 @@
       <option name="comment">Add cesm tests for this since SSPMATRIX tests are sensitive to submodule changes</option>
     </options>
   </test>
-  <test name="SSPMATRIXCN_Ly17_PS" grid="ne30pg3_ne30pg3_mt232" compset="I1850Clm60BgcCropCrujra" testmods="clm-mosartNull--clm-ciso_monthly">
+  <test name="SSPMATRIXCN_Ly17_PS" grid="ne30pg3_ne30pg3_mt233" compset="I1850Clm60BgcCropCrujra" testmods="clm-mosartNull--clm-ciso_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -4894,7 +4894,7 @@
       <option name="comment">mpi-serial self tests with DEBUG</option>
     </options>
   </test>
-  <test name="SMS_D_Ln1" grid="f10_f10_mt232" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
+  <test name="SMS_D_Ln1" grid="f10_f10_mt233" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="gnu" category="decomp_init"/>
@@ -4908,7 +4908,7 @@
       <option name="comment">Self tests with DEBUG on for f10</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50SpRsGs" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
+  <test name="SMS_Ln1_P86x1" grid="ne30pg3_ne30pg3_mt233" compset="I2000Clm50SpRsGs" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -4918,7 +4918,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Large" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
+  <test name="SMS_Ln1_P43x1" grid="ne30pg3_ne30pg3_mt233" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -4928,7 +4928,7 @@
       <option name="comment">Initialization test for ne30pg3 with "Medium" layout</option>
     </options>
   </test>
-  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt232" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
+  <test name="SMS_Ln1_P22x1" grid="ne30pg3_ne30pg3_mt233" compset="I2000Clm50Sp" testmods="clm-for_testing_fastsetup_bypassrun--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -5036,7 +5036,7 @@
     </options>
   </test>
 
-  <test name="RXCROPMATURITY_Lm61" grid="f09_t232" compset="IHistClm60BgcCropCrujra"  testmods="clm/cropMonthOutput">
+  <test name="RXCROPMATURITY_Lm61" grid="f09_t233" compset="IHistClm60BgcCropCrujra"  testmods="clm/cropMonthOutput">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="rxcropmaturity"/>
