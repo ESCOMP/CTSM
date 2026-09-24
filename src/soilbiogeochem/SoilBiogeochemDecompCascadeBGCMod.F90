@@ -863,7 +863,7 @@ contains
 
       if ( normalize_q10_to_century_tfunc ) then
          ! scale all decomposition rates by a constant to compensate for offset between original CENTURY temp func and Q10
-         normalization_factor = (catanf(normalization_tref)/catanf_30) / (q10**((normalization_tref-25._r8)/10._r8))
+         normalization_factor = (catanf(normalization_tref)/catanf_30) / (Q10hr**((normalization_tref-25._r8)/10._r8))
          do j = 1, nlevdecomp
             do fc = 1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
