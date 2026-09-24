@@ -9,7 +9,7 @@ cd "$(git rev-parse --show-toplevel)"
 # Check that query_config can run without error
 cime/scripts/query_config --compsets 1>/dev/null
 
-# Save previous IFS line-splitting behavior to restore at the end (keep this at the beining)
+# Save previous IFS line-splitting behavior to restore at the end (keep this at the beginning)
 OLD_IFS=$IFS
 IFS=$'\n'
 

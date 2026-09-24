@@ -123,7 +123,7 @@ contains
     real(r8) :: heatrem                                         ! used in case above [J/m^2]
     real(r8) :: heatsum(bounds%begc:bounds%endc)                ! used in case above [J/m^2]
     real(r8) :: qflx_dew_minus_sub_snow                         ! qflx_soliddew_to_top_layer - qflx_solidevap_from_top_layer [mm/s]
-    real(r8), parameter :: frac_sno_small = 1.e-6_r8            ! small value of frac_sno used when initiating a snow pack due to frost
+    real(r8), parameter :: frac_sno_albedo_small = 1.e-6_r8     ! small value of frac_sno_albedo used when initiating a snow pack due to frost
     real(r8), parameter :: snow_bd = 250._r8                    ! assumed snow bulk density (for lakes w/out resolved snow layers) [kg/m^3]
     ! Should only be used for frost below.
     !-----------------------------------------------------------------------
@@ -164,24 +164,24 @@ contains
          t_soisno             =>  temperature_inst%t_soisno_col         , & ! Output: [real(r8) (:,:) ]  snow temperature (Kelvin)             
          dTdz_top             =>  temperature_inst%dTdz_top_col         , & ! Output: [real(r8) (:)   ]  temperature gradient in top layer K m-1] !TOD 
          snot_top             =>  temperature_inst%snot_top_col         , & ! Output: [real(r8) (:)   ]  snow temperature in top layer [K]  !TODO
-         t_sno_mul_mss        =>  temperature_inst%t_sno_mul_mss_col     , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
+         t_sno_mul_mss        =>  temperature_inst%t_sno_mul_mss_col    , & ! Output: [real(r8) (:)   ]  col snow temperature multiplied by layer mass, layer sum (K * kg/m2) 
          
-         begwb                =>  b_waterbalance_inst%begwb_col             , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
-         endwb                =>  b_waterbalance_inst%endwb_col             , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
-         snw_rds              =>  b_waterdiagnostic_inst%snw_rds_col           , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6] 
-         snw_rds_top          =>  b_waterdiagnostic_inst%snw_rds_top_col       , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
-         h2osno_top           =>  b_waterdiagnostic_inst%h2osno_top_col        , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
-         sno_liq_top          =>  b_waterdiagnostic_inst%sno_liq_top_col       , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
-         frac_sno             =>  b_waterdiagnostic_inst%frac_sno_col          , & ! Output: [real(r8) (:)   ]
-         frac_sno_eff         =>  b_waterdiagnostic_inst%frac_sno_eff_col      , & ! Output: [real(r8) (:)   ]  needed for snicar code                  
-         frac_iceold          =>  b_waterdiagnostic_inst%frac_iceold_col       , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
-         snow_depth           =>  b_waterdiagnostic_inst%snow_depth_col        , & ! Output: [real(r8) (:)   ]  snow height (m)                         
-         h2osno_no_layers     => b_waterstate_inst%h2osno_no_layers_col        , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
-         snowice              =>  b_waterdiagnostic_inst%snowice_col           , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
-         snowliq              =>  b_waterdiagnostic_inst%snowliq_col           , & ! Output: [real(r8) (:)   ]  average snow liquid water               
-         h2osoi_ice           =>  b_waterstate_inst%h2osoi_ice_col        , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
-         h2osoi_liq           =>  b_waterstate_inst%h2osoi_liq_col        , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
-         h2osoi_vol           =>  b_waterstate_inst%h2osoi_vol_col        , & ! Output: [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
+         begwb                =>  b_waterbalance_inst%begwb_col              , & ! Input:  [real(r8) (:)   ]  water mass begining of the time step    
+         endwb                =>  b_waterbalance_inst%endwb_col              , & ! Output: [real(r8) (:)   ]  water mass end of the time step         
+         snw_rds              =>  b_waterdiagnostic_inst%snw_rds_col         , & ! Output: [real(r8) (:,:) ]  effective snow grain radius (col,lyr) [microns, m^-6]
+         snw_rds_top          =>  b_waterdiagnostic_inst%snw_rds_top_col     , & ! Output: [real(r8) (:)   ]  effective snow grain size, top layer [microns] 
+         h2osno_top           =>  b_waterdiagnostic_inst%h2osno_top_col      , & ! Output: [real(r8) (:)   ]  mass of snow in top layer [kg]    
+         sno_liq_top          =>  b_waterdiagnostic_inst%sno_liq_top_col     , & ! Output: [real(r8) (:)   ]  liquid water fraction in top snow layer [frc] 
+         frac_sno_albedo      =>  b_waterdiagnostic_inst%frac_sno_albedo_col , & ! Output: [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)
+         frac_sno_fluxes      =>  b_waterdiagnostic_inst%frac_sno_fluxes_col , & ! Output: [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
+         frac_iceold          =>  b_waterdiagnostic_inst%frac_iceold_col     , & ! Output: [real(r8) (:,:) ]  fraction of ice relative to the tot water
+         snow_depth           =>  b_waterdiagnostic_inst%snow_depth_col      , & ! Output: [real(r8) (:)   ]  snow height (m)                         
+         h2osno_no_layers     => b_waterstate_inst%h2osno_no_layers_col      , & ! Output: [real(r8) (:)   ]  snow that is not resolved into layers (kg/m2)
+         snowice              =>  b_waterdiagnostic_inst%snowice_col         , & ! Output: [real(r8) (:)   ]  average snow ice lens                   
+         snowliq              =>  b_waterdiagnostic_inst%snowliq_col         , & ! Output: [real(r8) (:)   ]  average snow liquid water               
+         h2osoi_ice           =>  b_waterstate_inst%h2osoi_ice_col           , & ! Output: [real(r8) (:,:) ]  ice lens (kg/m2)                      
+         h2osoi_liq           =>  b_waterstate_inst%h2osoi_liq_col           , & ! Output: [real(r8) (:,:) ]  liquid water (kg/m2)                  
+         h2osoi_vol           =>  b_waterstate_inst%h2osoi_vol_col           , & ! Output: [real(r8) (:,:) ]  volumetric soil water [m3/m3]         
          
          qflx_floodc          =>  b_waterflux_inst%qflx_floodc_col        , & ! Output: [real(r8) (:)   ]  column flux of flood water from RTM     
          qflx_liq_grnd        =>  b_waterflux_inst%qflx_liq_grnd_col      , & ! Output: [real(r8) (:)   ]  liquid on ground after interception (mm H2O/s) [+]
@@ -336,17 +336,17 @@ contains
           h2osno_no_layers(c) = max(h2osno_no_layers(c), 0._r8)
           if (qflx_dew_minus_sub_snow > 0._r8) then
              ! If we're accumulating snow from dew, then ensure that we have at least a
-             ! small, non-zero frac_sno. (It complicates the code too much to call
+             ! small, non-zero frac_sno_albedo. (It complicates the code too much to call
              ! UpdateSnowDepthAndFrac for this purpose - see
              ! <https://github.com/ESCOMP/CTSM/issues/827#issuecomment-546163067>.)
-             if (frac_sno(c) <= 0._r8) then
-                frac_sno(c) = frac_sno_small
+             if (frac_sno_albedo(c) <= 0._r8) then
+                frac_sno_albedo(c) = frac_sno_albedo_small
              end if
           else if (qflx_dew_minus_sub_snow < 0._r8) then
              ! If we're losing snow from sublimation, and this has caused the snow pack
-             ! to completely vanish, then ensure that frac_sno is reset to 0.
+             ! to completely vanish, then ensure that frac_sno_albedo is reset to 0.
              if (h2osno_no_layers(c) == 0._r8) then
-                frac_sno(c) = 0._r8
+                frac_sno_albedo(c) = 0._r8
              end if
           end if
           if (h2osno_temp > 0._r8) then
@@ -364,14 +364,14 @@ contains
        end if
     end do
 
-    ! Since frac_sno may have been updated above, recalculate frac_sno_eff accordingly
-    call scf_method%CalcFracSnoEff(bounds, num_lakec, filter_lakec, &
+    ! Since frac_sno_albedo may have been updated above, recalculate frac_sno_fluxes accordingly
+    call scf_method%CalcFracSnoFluxes(bounds, num_lakec, filter_lakec, &
          ! Inputs
-         lun_itype_col = col%lun_itype(begc:endc), &
-         urbpoi        = col%urbpoi(begc:endc), &
-         frac_sno      = frac_sno(begc:endc), &
+         lun_itype_col   = col%lun_itype(begc:endc), &
+         urbpoi          = col%urbpoi(begc:endc), &
+         frac_sno_albedo = frac_sno_albedo(begc:endc), &
          ! Outputs
-         frac_sno_eff  = frac_sno_eff(begc:endc))
+         frac_sno_fluxes = frac_sno_fluxes(begc:endc))
 
     ! patch averages must be done here -- BEFORE SNOW CALCULATIONS AS THEY USE IT.
     ! for output to history tape and other uses
