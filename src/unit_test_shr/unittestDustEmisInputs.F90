@@ -257,7 +257,7 @@ contains
     do c = bounds%begc, bounds%endc
        print *, 'watsat = ', this%soilstate_inst%watsat_col(c,1)
        print *, 'h2osoi_vol = ', this%water_inst%waterstatebulk_inst%h2osoi_vol_col(c,1)
-       print *, 'frac_sno = ', this%water_inst%waterdiagnosticbulk_inst%frac_sno_col(c)
+       print *, 'frac_sno_albedo = ', this%water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(c)
        print *, 'mss_frac_clay_vld = ', this%soilstate_inst%mss_frc_cly_vld_col(c)
     end do
     do p = bounds%begp, bounds%endp
