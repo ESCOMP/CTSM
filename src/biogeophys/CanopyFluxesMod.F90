@@ -640,6 +640,9 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
+      ! Initialize diagnostic variables to spval so inactive patches don't retain stale memory
+      call InitCanopyFluxDiagnostics(bounds, rhaf)
+
       
       ! Determine step size
 
@@ -1763,6 +1766,17 @@ bioms:   do f = 1, fn
 
 
   end subroutine CanopyFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine InitCanopyFluxDiagnostics(bounds, rhaf)
+    ! Initialize rhaf diagnostic array to spval so inactive patches don't retain stale memory
+    use clm_varcon, only : spval
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(inout)       :: rhaf(bounds%begp:)
+
+    rhaf(bounds%begp:bounds%endp) = spval
+
+  end subroutine InitCanopyFluxDiagnostics
 
 end module CanopyFluxesMod
 
