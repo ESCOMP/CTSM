@@ -75,6 +75,8 @@ contains
     endif
 
     factors(:maxveg) = comp_factors_table( ndx )%eff(:maxveg)
+    ! TODO: Remove this call
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
     call handle_too_short_fire_emis_factor_file(factors, comp_factors_table(ndx)%eff)
     molecwght  = comp_factors_table( ndx )%wght
 
@@ -127,6 +129,8 @@ contains
     call ncd_inqdlen( ncid, dimid, n_pfts, name='PFT_Num')
 
     n_pfts_min = num_pfts_possible_natural + 1
+    ! TODO: Remove this check
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
     if (n_pfts < n_pfts_min) then
        write(iulog,*) 'n_pfts = ', n_pfts
        write(iulog,*) 'num_pfts_possible_natural = ', num_pfts_possible_natural
@@ -134,6 +138,8 @@ contains
        call endrun('Number of PFTs on the fire emissions file needs to have at least the number of natural PFTs from the surface dataset plus one. The extra is intended for use by all missing crops (see handle_too_short_fire_emis_factor_file()), although due to what is probably a bug (https://github.com/ESCOMP/CTSM/issues/4120), it will be used by ALL crops.')
     end if
 
+    ! TODO: Remove make this check an equality
+    !       See: https://github.com/ESCOMP/CTSM/issues/4120
     if ( n_pfts > mxpft )then
        write(iulog,*) ' n_pfts = ', n_pfts, ' mxpft = ', mxpft
        call endrun('Number of PFTs on the fire emissions file is more than the max number of PFTs from the surface dataset with crops')

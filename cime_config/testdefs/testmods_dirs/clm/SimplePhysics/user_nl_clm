@@ -1,0 +1,13 @@
+! These are options from clm4_5 physics that may still be useful to retain.
+! Mostly they are options to simplify physics by turning more advanced options off.
+! This can be useful for software testing and possibly for science testing as well.
+
+  lower_boundary_condition = 4   ! useful to test with an aquifer
+  soilwater_movement_method = 0 ! Required to set lower_boundary_condition to 4
+
+  use_bedrock = .false.
+  use_hydrstress = .false.
+  repartition_rain_snow = .false.
+  melt_non_icesheet_ice_runoff = .false.
+  light_inhibit = .false.
+  wind_dependent_snow_density = .false.

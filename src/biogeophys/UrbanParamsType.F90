@@ -425,7 +425,10 @@ contains
          if (masterproc) write(iulog,*)'PCT_URBAN is not multi-density, nlevurb set to 0'
        end if
 
-       if ( nlevurb == 0 ) return
+       if ( nlevurb == 0 ) then
+          call ncd_pio_closefile(ncid)
+          return
+       end if
 
        ! Allocate dynamic memory
        allocate(urbinp%canyon_hwr(begg:endg, numurbl), &

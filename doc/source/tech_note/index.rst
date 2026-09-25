@@ -32,6 +32,7 @@ CLM Technical Note
    MOSART/CLM50_Tech_Note_MOSART.rst
    mizuRoute/Tech_Note_mizuRoute.rst
    Urban/CLM50_Tech_Note_Urban.rst
+   Urban/CLMU_Tech_Note.rst
    CN_Pools/CLM50_Tech_Note_CN_Pools.rst
    Plant_Respiration/CLM50_Tech_Note_Plant_Respiration.rst
    FUN/CLM50_Tech_Note_FUN.rst
@@ -44,7 +45,7 @@ CLM Technical Note
    Methane/CLM50_Tech_Note_Methane.rst
    Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.rst
    Transient_Landcover/CLM50_Tech_Note_Transient_Landcover.rst
-   DGVM/CLM50_Tech_Note_DGVM.rst
+   FATES/CLM50_Tech_Note_FATES.rst
    BVOCs/CLM50_Tech_Note_BVOCs.rst
    Dust/CLM50_Tech_Note_Dust.rst
    Hillslope_Hydrology/CLM50_Tech_Note_Hillslope_Hydrology.rst
