@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3414;
+my $ntests = 3419;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -335,6 +335,7 @@ foreach my $driver ( "nuopc" ) {
                          "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=T/\" -bgc bgc -crop",
                          "-bgc bgc -crop -clm_accelerated_spinup sasu",
                          "-bgc fates -clm_accelerated_spinup on",
+                         "-bgc fates -clm_accelerated_spinup on -namelist '&a spinup_state=1/'",
                          "-res 0.9x1.25 -clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-res 0.9x1.25 -infile myuser_nl_clm",
                          "-res 0.9x1.25 -ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
@@ -1200,6 +1201,14 @@ my %failtest = (
                                      namelst=>"use_fates_sp=.true.",
                                      phys=>"clm6_0",
                                    },
+     "spinupstateWfatessp"       =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"use_fates_sp=.true.,spinup_state=1",
+                                     phys=>"clm6_0",
+                                   },
+     "fatesspinupWclmacceloff"   =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup off",
+                                     namelst=>"spinup_state=1",
+                                     phys=>"clm6_0",
+                                   },
      "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
                                      phys=>"clm5_0",
@@ -1220,6 +1229,7 @@ my %failtest = (
                                      namelst=>"use_fates_inventory_init=.true.",
                                      phys=>"clm4_5",
                                    },
+#    Commented out because we are considering removing this test altogether
 #    "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
 #                                    namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
 #                                    phys=>"clm4_5",
@@ -1232,6 +1242,7 @@ my %failtest = (
                                      namelst=>"use_fates_lupft=.true.",
                                      phys=>"clm4_5",
                                    },
+#    Commented out because we are considering removing this test altogether
 #    "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
 #                                    namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
 #                                    phys=>"clm4_5",
