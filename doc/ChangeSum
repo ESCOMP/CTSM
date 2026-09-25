@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.060     erik 09/24/2026 Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
+       ctsm5.4.060     erik 09/25/2026 Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
        ctsm5.4.059 cathyxin 09/21/2026 Indoor humidity and A/C dehumidification
        ctsm5.4.058     erik 09/18/2026 Merge b4b-dev to master
        ctsm5.4.057     erik 09/17/2026 CDEPS/CMEPS updates for CPLHIST mode and 1850 ndep from DATM

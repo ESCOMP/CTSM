@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.060
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
-Date: Thu Sep 24 01:15:52 PM MDT 2026
+Date: Fri Sep 25 12:53:38 PM MDT 2026
 One-line Summary: Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
 
 Purpose and description of changes
@@ -62,9 +62,10 @@ Changes answers relative to baseline: Potentially roundoff different
    If bitwise differences were observed, how did you show they were no worse
    than roundoff?
 
+      - The changes were just a few coupled fields and only to roundoff level
+      - The exact restart tests that change PE layouts, which previously failed, now PASS
       - @billsacks did the evaluation for this in the CMEPS/CDEPS tags
       - Since most tests were identical even with the change, this gives assurance that the change often doesn't change answers, or only does so when run long enough
-      - The exact restart tests that change PE layouts, which previously failed, now PASS
 
 Other details
 -------------
