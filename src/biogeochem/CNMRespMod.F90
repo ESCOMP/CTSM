@@ -167,7 +167,7 @@ contains
     integer :: fc      ! soil filter column index
     real(r8):: br      ! base rate (gC/gN/s)
     real(r8):: br_root ! root base rate (gC/gN/s)
-    real(r8):: q10     ! temperature dependence
+    real(r8):: Q10mr   ! temperature dependence
 
     real(r8):: tc      ! temperature correction, 2m air temp (unitless)
     real(r8):: tcsoi(bounds%begc:bounds%endc,nlevgrnd) ! temperature correction by soil layer (unitless)
