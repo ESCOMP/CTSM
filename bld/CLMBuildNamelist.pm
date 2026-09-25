@@ -1300,8 +1300,12 @@ sub setup_cmdl_spinup {
     }
   } else {
     if ( defined($nl->get_value("spinup_state")) ) {
-       $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of CN or BGC," .
+       $log->fatal_error("spinup_state is accelerated (=1 or 2) which is for a BGC mode of FATES or BGC," .
                          " but the BGC mode is Satellite Phenology, change one or the other");
+    }
+    if ( &value_is_true($nl_flags->{'use_fates_sp'}) && $nl_flags->{'clm_accelerated_spinup'} ne "off" ) {
+       $log->fatal_error("clm_accelerated_spinup is $nl_flags->{'clm_accelerated_spinup'}, but use_fates_sp is true;" .
+                         " accelerated spinup is not valid with FATES-SP mode, change one or the other");
     }
   }
   $nl_flags->{$var} = $val;
