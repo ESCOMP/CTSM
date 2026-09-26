@@ -22,7 +22,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position, import-error, unused-import, wrong-import-order
 from ctsm import add_cime_to_path
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 from ctsm.utils import abort
 
 from CIME import build
@@ -66,7 +66,7 @@ class TowerSite:
         self.end_year = int(end_year)
         self.start_month = int(start_month)
         self.end_month = int(end_month)
-        self.cesmroot = path_to_ctsm_root()
+        self.cesmroot = path_to_top_root()
         self.finidat = finidat
 
         if user_mods_dirs is None:
@@ -97,7 +97,12 @@ class TowerSite:
         """
         self.user_mods_dirs = [
             os.path.join(
-                self.cesmroot, "cime_config", "usermods_dirs", "clm", self.tower_type, self.name
+                path_to_ctsm_root(),
+                "cime_config",
+                "usermods_dirs",
+                "clm",
+                self.tower_type,
+                self.name,
             )
         ]
         self.check_user_mods_dirs()
