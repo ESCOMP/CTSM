@@ -23,7 +23,13 @@ sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
-from ctsm.subset_data import get_parser, setup_files, check_args, _set_up_regional_case
+from ctsm.subset_data import (
+    get_parser,
+    setup_files,
+    check_args,
+    _set_up_regional_case,
+    setup_user_mods,
+)
 from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 
 # pylint: disable=invalid-name,too-many-public-methods,protected-access
@@ -121,6 +127,33 @@ class TestSubsetData(unittest.TestCase):
             "/glade/campaign/cesm/cesmdata/inputdata",
             "main_dir directory not whats expected",
         )
+
+    def test_setup_user_mods_cesm_layout(self):
+        """
+        Test setup_user_mods correctly reads user_nl_clm from CTSM root and
+        user_nl_datm_streams from enclosing CESM root.
+        """
+        cesm_root = os.path.join(self._tempdir, "cesm")
+        ctsm_root = os.path.join(cesm_root, "components", "clm")
+        user_mods_dir = os.path.join(self._tempdir, "user_mods")
+
+        # Mock CTSM cime_config/user_nl_clm
+        ctsm_nml_dir = os.path.join(ctsm_root, "cime_config")
+        os.makedirs(ctsm_nml_dir)
+        with open(os.path.join(ctsm_nml_dir, "user_nl_clm"), "w", encoding="utf-8") as f:
+            f.write("! mock clm namelist\n")
+
+        # Mock CESM components/cdeps/.../user_nl_datm_streams
+        datm_nml_dir = os.path.join(cesm_root, "components", "cdeps", "datm", "cime_config")
+        os.makedirs(datm_nml_dir)
+        with open(os.path.join(datm_nml_dir, "user_nl_datm_streams"), "w", encoding="utf-8") as f:
+            f.write("! mock datm namelist\n")
+
+        with mock.patch("ctsm.subset_data.path_to_ctsm_root", return_value=ctsm_root):
+            setup_user_mods(user_mods_dir, cesm_root)
+
+        self.assertTrue(os.path.isfile(os.path.join(user_mods_dir, "user_nl_clm")))
+        self.assertTrue(os.path.isfile(os.path.join(user_mods_dir, "user_nl_datm_streams")))
 
     def test_inputdata_setup_files_inputdata_dne(self):
         """
