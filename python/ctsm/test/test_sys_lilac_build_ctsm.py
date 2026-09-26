@@ -15,7 +15,9 @@ from ctsm.path_utils import add_cime_lib_to_path
 from ctsm import unit_testing
 from ctsm.lilac_build_ctsm import build_ctsm
 
-_CIME_PATH = add_cime_lib_to_path(ctsm_only=True)
+# Use ctsm_only=False so CIME can be resolved when running system tests either in
+# standalone CTSM or inside a nested CESM checkout
+_CIME_PATH = add_cime_lib_to_path(ctsm_only=False)
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names

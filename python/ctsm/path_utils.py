@@ -145,14 +145,12 @@ def add_cime_lib_to_path(ctsm_only=False):
     return cime_path
 
 
-def add_ctsm_systests_to_path(ctsm_only=False):
+def add_ctsm_systests_to_path():
     """Adds the CTSM python SystemTests to the python path, to allow importing
     modules from that library
     """
-    cime_path = path_to_cime(ctsm_only=ctsm_only)
-    ctsm_systest_dir = os.path.join(cime_path, os.pardir, "cime_config")
+    ctsm_systest_dir = os.path.join(path_to_ctsm_root(), "cime_config")
     prepend_to_python_path(ctsm_systest_dir)
-    sys.path.insert(1, ctsm_systest_dir)
 
 
 # ========================================================================
