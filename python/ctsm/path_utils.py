@@ -39,13 +39,24 @@ def path_to_top_root():
     return _path_to_cesm_root() or path_to_ctsm_root()
 
 
+def _is_populated_dir(path):
+    """Returns True if path is a directory and contains at least one entry."""
+    if not os.path.isdir(path):
+        return False
+    try:
+        with os.scandir(path) as entries:
+            return any(entries)
+    except OSError:
+        return False
+
+
 def path_under_ctsm(submodule_name):
     """Returns the path to a submodule directory located inside the CTSM root directory.
 
     Raises a RuntimeError if it cannot be found within the standalone CTSM checkout.
     """
     submod_path = os.path.join(path_to_ctsm_root(), submodule_name)
-    if os.path.isdir(submod_path):
+    if _is_populated_dir(submod_path):
         return submod_path
 
     raise RuntimeError(f"Cannot find {submodule_name} within standalone CTSM checkout")
@@ -64,7 +75,7 @@ def path_under_top_submodule(submodule_name):
         cesm_path = _path_to_cesm_root()
         if cesm_path is not None:
             cesm_submod = os.path.join(cesm_path, submodule_name)
-            if os.path.isdir(cesm_submod):
+            if _is_populated_dir(cesm_submod):
                 return cesm_submod
 
             raise RuntimeError(

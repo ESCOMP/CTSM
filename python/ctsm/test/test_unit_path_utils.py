@@ -13,7 +13,7 @@ from ctsm import path_utils
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
 # to make readable unit test names
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,too-many-public-methods
 
 
 class TestPathUtils(unittest.TestCase):
@@ -26,6 +26,15 @@ class TestPathUtils(unittest.TestCase):
     def tearDown(self):
         os.chdir(self._previous_dir)
         shutil.rmtree(self._testdir, ignore_errors=True)
+
+    @staticmethod
+    def _create_populated_dir(path):
+        """Creates directory and places a dummy file inside to simulate a populated submodule."""
+        os.makedirs(path, exist_ok=True)
+        dummy_file = os.path.join(path, ".placeholder")
+        with open(dummy_file, "w", encoding="utf-8") as f:
+            f.write("mock content\n")
+        return path
 
     def _ctsm_path_in_cesm(self):
         """Returns the path to a ctsm directory nested inside a typical cesm
@@ -52,7 +61,7 @@ class TestPathUtils(unittest.TestCase):
         ctsm_path = self._ctsm_path_in_cesm()
         cime_path = self._cime_path_in_cesm()
         os.makedirs(ctsm_path)
-        os.makedirs(cime_path)
+        self._create_populated_dir(cime_path)
         return (ctsm_path, cime_path)
 
     def test_pathToCime_ctsmOnlyWithCime(self):
@@ -61,12 +70,24 @@ class TestPathUtils(unittest.TestCase):
         """
         ctsm_path = os.path.join(self._testdir, "ctsm")
         actual_path_to_cime = os.path.join(ctsm_path, "cime")
-        os.makedirs(actual_path_to_cime)
+        self._create_populated_dir(actual_path_to_cime)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             path_to_cime = path_utils.path_to_cime(ctsm_only=True)
 
         self.assertEqual(path_to_cime, actual_path_to_cime)
+
+    def test_pathToCime_ctsmOnlyWithEmptyCime(self):
+        """Test path_to_cime with ctsm_only, where cime directory is empty
+        (uninitialized git submodule placeholder): should raise RuntimeError.
+        """
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        empty_cime = os.path.join(ctsm_path, "cime")
+        os.makedirs(empty_cime)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            with self.assertRaisesRegex(RuntimeError, "Cannot find cime"):
+                _ = path_utils.path_to_cime(ctsm_only=True)
 
     def test_pathToCime_ctsmOnlyWithoutCime(self):
         """Test path_to_cime with ctsm_only, where cime is missing"""
@@ -132,18 +153,48 @@ class TestPathUtils(unittest.TestCase):
         """
         ctsm_path, _ = self._make_cesm_dirs()
         actual_path_to_cime = os.path.join(ctsm_path, "cime")
-        os.makedirs(actual_path_to_cime)
+        self._create_populated_dir(actual_path_to_cime)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             path_to_cime = path_utils.path_to_cime()
 
         self.assertEqual(path_to_cime, actual_path_to_cime)
 
+    def test_pathToCime_emptyStandaloneCimeFallsBackToCesm(self):
+        """Test path_to_cime where CTSM contains an empty cime directory
+        (uninitialized git submodule) within CESM checkout: should fall back to CESM cime.
+        """
+        ctsm_path, cesm_cime = self._make_cesm_dirs()
+        empty_standalone_cime = os.path.join(ctsm_path, "cime")
+        os.makedirs(empty_standalone_cime)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            path_to_cime = path_utils.path_to_cime()
+
+        self.assertEqual(path_to_cime, cesm_cime)
+
     def test_pathToCcsConfig_standaloneWithCcsConfig(self):
         """Test path_to_ccs_config returns standalone ccs_config path when present."""
         ctsm_path = os.path.join(self._testdir, "ctsm")
         actual_ccs_config = os.path.join(ctsm_path, "ccs_config")
-        os.makedirs(actual_ccs_config)
+        self._create_populated_dir(actual_ccs_config)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            ccs_config = path_utils.path_to_ccs_config()
+
+        self.assertEqual(ccs_config, actual_ccs_config)
+
+    def test_pathToCcsConfig_emptyStandaloneFallsBackToCesm(self):
+        """Test path_to_ccs_config where standalone has empty ccs_config (uninitialized submodule):
+        should fall back to CESM ccs_config.
+        """
+        ctsm_path = self._ctsm_path_in_cesm()
+        cesm_path = self._testdir
+        actual_ccs_config = os.path.join(cesm_path, "ccs_config")
+        empty_ctsm_ccs_config = os.path.join(ctsm_path, "ccs_config")
+        os.makedirs(ctsm_path)
+        os.makedirs(empty_ctsm_ccs_config)
+        self._create_populated_dir(actual_ccs_config)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             ccs_config = path_utils.path_to_ccs_config()
@@ -156,7 +207,7 @@ class TestPathUtils(unittest.TestCase):
         cesm_path = self._testdir
         actual_ccs_config = os.path.join(cesm_path, "ccs_config")
         os.makedirs(ctsm_path)
-        os.makedirs(actual_ccs_config)
+        self._create_populated_dir(actual_ccs_config)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             ccs_config = path_utils.path_to_ccs_config()
@@ -176,7 +227,7 @@ class TestPathUtils(unittest.TestCase):
         """Test path_under_top_submodule resolves submodules in standalone CTSM checkout."""
         ctsm_path = os.path.join(self._testdir, "ctsm")
         submod_dir = os.path.join(ctsm_path, "share")
-        os.makedirs(submod_dir)
+        self._create_populated_dir(submod_dir)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             submod_path = path_utils.path_under_top_submodule("share")
@@ -189,7 +240,7 @@ class TestPathUtils(unittest.TestCase):
         cesm_path = self._testdir
         actual_submod = os.path.join(cesm_path, "share")
         os.makedirs(ctsm_path)
-        os.makedirs(actual_submod)
+        self._create_populated_dir(actual_submod)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             submod_path = path_utils.path_under_top_submodule("share")
@@ -209,7 +260,7 @@ class TestPathUtils(unittest.TestCase):
         """Test path_under_ctsm returns path when submodule exists inside CTSM root."""
         ctsm_path = os.path.join(self._testdir, "ctsm")
         submod_dir = os.path.join(ctsm_path, "cime")
-        os.makedirs(submod_dir)
+        self._create_populated_dir(submod_dir)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             self.assertEqual(path_utils.path_under_ctsm("cime"), submod_dir)
@@ -218,6 +269,18 @@ class TestPathUtils(unittest.TestCase):
         """Test path_under_ctsm raises RuntimeError when submodule is missing inside CTSM root."""
         ctsm_path = os.path.join(self._testdir, "ctsm")
         os.makedirs(ctsm_path)
+
+        with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
+            with self.assertRaisesRegex(
+                RuntimeError, "Cannot find cime within standalone CTSM checkout"
+            ):
+                _ = path_utils.path_under_ctsm("cime")
+
+    def test_pathUnderCtsm_empty(self):
+        """Test path_under_ctsm raises RuntimeError when submodule directory is empty."""
+        ctsm_path = os.path.join(self._testdir, "ctsm")
+        submod_dir = os.path.join(ctsm_path, "cime")
+        os.makedirs(submod_dir)
 
         with mock.patch("ctsm.path_utils.path_to_ctsm_root", return_value=ctsm_path):
             with self.assertRaisesRegex(
