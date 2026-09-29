@@ -1289,10 +1289,17 @@ contains
     ! Test to turn off growing degree-day sum, if on.
     ! This test resets the growing degree day sum if it gets past
     ! the summer solstice without reaching the threshold value.
-    ! In that case, it will take until the next winter solstice
-    ! before the growing degree-day summation starts again.
+    ! After the summer solstice, a daylength criterion is used
+    ! to trigger the reset: if daylength is less than  the
+    ! parameter value, gdd is reset.  This criterion was added to
+    ! allow for situations in the high latitudes when using only
+    ! the summer solstice as a trigger caused some vegetation to never
+    ! achieve onset.
+    ! If the conditional is met, it will take until the next winter 
+    ! solstice before the growing degree-day summation starts again.
 
-    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8) then
+    if (onset_gddflag == 1._r8 .and. ws_flag == 0._r8.and. &
+         dayl<min_critical_daylength_onset) then
         onset_gddflag = 0._r8
         onset_gdd = 0._r8
     end if
@@ -1312,18 +1319,19 @@ contains
        ! shrub, C3 arctic grass)
        if (onset_gdd > crit_onset_gdd .and.  season_decid_temperate == 1) then
            do_onset = .true.
-        ! Note: The check "dayl>min_critical_daylength_onset" in the if
-        ! statement was added because for some coastal
-        ! points the other triggers could allow onset in January/February
-        ! which isn't sustainable and is a degenerate case. To prevent this
-        ! condition was added, but now the other conditions aren't triggered
-        ! until much later so it's value just needs to be high enough to prevent
-        ! the degenerate case of happening too early, and low enough that it
-        ! doesn't restrict onset. As such the value of this parameter shouldn't
-        ! matter for reasonable values between the two degenerate cases.
+           ! Note: The "dayl>min_critical_daylength_onset" criterion
+           ! was added because for some coastal points, onset was triggered 
+           ! too early (e.g January/February).  This criterion ensures that 
+           ! onset does not occur too early, and at the same time (because the
+           ! criterion is symmetric about the solstices), it does not allow
+           ! onset when the day length becomes less than
+           ! min_critical_daylength_onset after the summer solstice.
+           ! The value of min_critical_daylength_onset needs to be high
+           ! enough to prevent onset happening too early, and low enough
+           ! that it doesn't restrict onset.
         else if (season_decid_temperate == 0 .and.  onset_gddflag == 1.0_r8 .and. &
                 soila10 > SHR_CONST_TKFRZ .and. &
-                t_a5min > SHR_CONST_TKFRZ .and. ws_flag==1.0_r8 .and. &
+                t_a5min > SHR_CONST_TKFRZ .and. &
                 dayl>min_critical_daylength_onset .and. &
                 snow_5day<params_inst%snow5d_thresh_for_onset) then
            do_onset = .true.

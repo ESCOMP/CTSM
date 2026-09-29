@@ -1,4 +1,637 @@
 ===============================================================
+Tag name: ctsm5.4.058
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Fri Sep 18 02:58:26 PM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Merge b4b-dev to master
+
+Brings in complete CLM-U tech note. Some refactoring simlplications to compsets and FATES paramgen tests. Improves error messaging in code for history and adds a warning for hillslope. Put comments in testlist into one line (so you see all the comments when using query_testlist). Simplify compsets
+
+- Merge multiple test-comments into single comments in testlist
+- Import CLM-U tech note from Word into the CTSM Tech Note.
+- No longer need to allow for C/E at end of time period (changes to CAM and CESM required for this are already in CESM tags)
+- Improve history restart error messages
+- Simplify FATES paramgen in tests (ncgen no longer needed), get it to work in both CESM and CTSM checkouts
+- Adds warning when use_init_interp is used with hillslope
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+  - Resolves Merge multiple comments for a given test in testlist_clm.xml #3064
+  - Resolves Convert word (or pdf) version of CLMU technical note to rst format #4175
+  - Resolves Change how CLM_CO2_TYPE is set from the compset longname #4078
+  - Resolves Improve "number of ntapes differs from restart file" error msg #3593
+  - Resolves Remove FatesSetupParamBuild #3989
+  - Resolves Get init_interp working correctly with hillslope initial conditions files #1806
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+   preview_namelist now catches when the user asks for initial condition interpolate with Hillslop
+   It now dies with a warning
+
+Changes to documentation:
+   CLM-U Tech note moved into the main CTSM Tech Note as a chapter
+
+Contributors:
+  @slevis-lmwg, @billsacks, @mvdebolskiy, @neu-emu, @olyson
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   This serves as a reminding to only have one comment in testlists.
+
+Changes to tests or testing:
+   Adding a test for the new warning in build-namelist.
+   Testlist changes so that all content for "comment" is included in one tag rather than multiple ones.
+   Paramgen FATES testing simplified with no need for ncgen and now can work in CESM checkouts too
+
+Testing summary:  regular
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No b4b
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+
+   - Merge multiple test-comments into single comments in testlist_clm.xml #4208
+   - CLMU Technote: Make .rst file of .docx file and get in the docs #4179
+   - No longer need to allow for C/E at end of time period #4097
+   - Improve restart history-option error messages (#3593) #4113
+   - Fix fates paramgen in tests #4024
+   - Add a namelist warning when hillslope hydrology is used with initial interpolation. #2703
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.057
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Thu Sep 17 01:26:07 AM MDT 2026
+One-line Summary: CDEPS/CMEPS updates for CPLHIST mode and 1850 ndep from DATM
+
+Purpose and description of changes
+----------------------------------
+
+Update CDEPS with changes for CPLHIST mode. Turn on CLM_NDEP_FROM_CPL for CPLHIST mode. change cplhist test mod to use a different case. This should have everything needed to start CPLHIST spinups out of the box.
+
+Also for 1850 with CLM60 use ndep from DATM
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[x] clm6_0
+
+[ ] clm5_0
+
+[ ] ctsm5_0-nwp
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+
+ Fixes Update cdeps with updated preliminary CPLHIST data #3759
+ Fixes Create new auxiliary history file for cplhist test with ndep data  #1844
+ Fixes in Make offline 1850 compsets closer to when coupled to CAM by using CO2 from datasets rather than hardcoded values #3801
+ Fixes default CMIP7 CO2 files doesn't appear to be working? #4072
+ Fixes Validate that tower site CLM_USRDAT settings are correct #4212
+ Resolves Create new auxiliary history file for cplhist test with ndep data  #1844
+ Resolves Change in ndep scaling in cdeps1.0.106 changes answers for a few tests #4209
+ Resolves default CMIP7 CO2 files doesn't appear to be working? #4072
+ Partial for Turn on use of ndep from CAM/datm and turn off (and remove) ndep capability inside of CTSM #1900
+ Partial for Document, test, and add testing for running CPLHIST cases in NUOPC starting from a B case #3410
+ Partial for CDEPS update to new CMIP7 preliminary spinup: aerosols, ndep, ozone, CO2 #3984
+
+Notes of particular relevance for users
+---------------------------------------
+
+Caveats for users (e.g., need to interpolate initial conditions):
+  CLM_CMIP_ERA operates separately from DATM CMIP7 settings
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  There's a new DATM_MODE CPLHIST-CESM3 to use the CPLHIST spinup data from a CESM3 simulation
+  Currently it points to a preliminary version, but we'll update it to the final data in a later step.
+
+Changes made to namelist defaults (e.g., changed parameter values):
+  ndep for CPLHIST now comes from DATM
+  ndep for 1850 with CLM60 now comes from DATM.
+
+Changes to the datasets (e.g., streams, surface or initial files):
+ The DATM 1850 ndep dataset for this was updated (the previous dataset wasn't working).
+
+Changes to documentation:
+ Documentation around DATM and CPLHIST mode was updated
+
+Contributors:
+  @slevis-lmwg @billsacks @mvertens
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  The cplhist testmod was able to be removed, as DATM now points to the latest CPLHIST data
+  Add tests that CLM_USRDAT settings are correct in build-namelist tester
+
+Testing summary: regular
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho -  OK (#4215 and #4216 are fails that started in ctsm5.4.053)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  aux_cdeps
+     derecho ---- PASS
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: 1850Clm60Bgc compsets and Spinup compsets
+    - what platforms/compilers: All
+    - nature of change: new climate
+
+     Spinup compsets (CPLHIST-CESM3 mode) use preliminary CPLHIST data
+     1850Clm60Bgc compsets use NDEP from preliminary DATM 1850 spinup file
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cdeps to cdeps1.0.109
+   cmeps to cmeps1.1.69
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+ https://github.com/ESCOMP/CTSM/pull/4180 -- CDEPS/CMEPS updates for cplhist and 1850 ndep from DATM
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.056
+Originator(s): slevis (Samuel Levis,UCAR/TSS,slevis@ucar.edu)
+Date: Thu Sep 10 05:52:02 PM MDT 2026
+One-line Summary: Merge the wetlands branch to master
+
+Purpose and description of changes
+----------------------------------
+
+ The wetlands branch has these tags...
+   branch_tags/wetlands.n01.ctsm5.4.029
+   branch_tags/wetlands.n02.ctsm5.4.029
+   branch_tags/wetlands.n03.ctsm5.4.029
+   branch_tags/wetlands.n03.ctsm5.4.044
+   branch_tags/wetlands.n04.ctsm5.4.044
+   branch_tags/wetlands.n04.ctsm5.4.054 <-- PR #4204 started with this tag, I merged ctsm5.4.055 to it, then I merged to master (explained next)
+   branch_tags/wetlands.n05.ctsm5.4.054
+ We wanted wetlands.n04.ctsm5.4.055 merged to master, and we accomplished this with PR #4204, without merging or tagging anything new in the wetlands branch.
+
+ Main updates coming in with the wetlands branch:
+ 1. Changes to snow-covered fraction and inundated fraction where the two overlap.
+ 2. Changes to the methane parameterization.
+ Best evaluation of updates (1) and (2): https://webext.cgd.ucar.edu/I20TR/ctsm5.4.024_f19_wetlandCH4_151_HIST/ctsm5.4.024_f19_wetlandCH4_151_HIST_1850_2023_vs_ctsm5.4.024_f19_150_HIST_1850_2023/website
+ 3. Changes to phenology to improve high-lat survivability by allowing plants to green up after the summer solstice.
+ Best evaluation of (3): https://github.com/NCAR/LMWG_dev/issues/174
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #3906
+ Resolves #3985
+ Resolves #3843
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Updating doc/source/tech_note/Vegetation_Phenology_Turnover/CLM50_Tech_Note_Vegetation_Phenology_Turnover.rst
+ Opened issue for further updates: https://github.com/ESCOMP/CTSM/issues/4205
+
+Contributors:
+ swensosc, wwieder, lifang0209
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Updating src/dyn_subgrid/test/dynColumnStateUpdater_test/test_column_state_updater.pf
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests compared ctsm5.4.056 against ctsm5.4.055 (diffs only from the wetlands branch mods):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  ctsm_sci compared ctsm5.4.056 to ctsm5.4.054 baseline (diffs only from the wetlands branch mods):
+     derecho ---- OK
+
+  regular tests repeated to compare wetlands.n04.ctsm5.4.055 against wetlands.n04.ctsm5.4.054 (diffs only from the billsacks:dynbal_temporal_smoothing branch mods):
+
+    derecho ----- PEND (so far as expected, not waiting to finish because see next test result)
+    izumi ------- OK
+
+  ./compare_test_results --hist-only -c intel -r /glade/derecho/scratch/slevis/tests_0908-180953de -t 0908-180953de -b wetlands.n04.ctsm5.4.054
+  I ran for all three compilers (intel, gnu, nvhpc) and then repeated against the vanilla ctsm5.4.055 baseline. As expected, comparing to the last master tag (equivalent to wetlands vs. master) has many more tests with baseline diffs than comparing to the previous wetlands tag (equivalent to ctsm5.4.055 vs. ctsm5.4.054).
+
+Answer changes
+--------------
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: All
+    - what platforms/compilers: All
+    - nature of change: larger than roundoff, subtly new climate, mainly due to change in albedo
+
+   If this tag changes climate list the run(s) done to evaluate the new
+   climate. Preferably in https://github.com/NCAR/LMWG_dev (or give details below):
+    - Best evaluation of updates (1) and (2) listed in the changes section above:
+      https://webext.cgd.ucar.edu/I20TR/ctsm5.4.024_f19_wetlandCH4_151_HIST/ctsm5.4.024_f19_wetlandCH4_151_HIST_1850_2023_vs_ctsm5.4.024_f19_150_HIST_1850_2023/website
+    - Best evaluation of update (3):
+      https://github.com/NCAR/LMWG_dev/issues/174
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/3893 from swensosc/wetland_update
+ https://github.com/ESCOMP/ctsm/pull/3934 from wwieder/wetlands_fire
+ https://github.com/ESCOMP/ctsm/pull/3933 from swensosc/wetland_update
+ https://github.com/ESCOMP/ctsm/pull/4091 merge master to wetlands 
+ https://github.com/ESCOMP/ctsm/pull/4108 from swensosc/seasonal_decid_onset
+ https://github.com/ESCOMP/ctsm/pull/4191 merge master to wetlands
+ https://github.com/ESCOMP/ctsm/pull/4204 this master tag ctsm5.4.056
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.055
+Originator(s): sacks (Bill Sacks)
+Date: Tue Sep  8 16:01:56 MDT 2026
+One-line Summary: Add temporal smoothing of DYNBAL conservation correction fluxes
+
+Purpose and description of changes
+----------------------------------
+
+Spread the DYNBAL water and energy fluxes over many years: Rather than releasing all of
+the DYNBAL fluxes in the year in which they're generated, instead put them in storage
+pools that are released with a 20-year residence time (controllable via a new namelist
+parameter; the default for CLM50 is set to 0.75 to maintain something closer to the old
+behavior). This reduces these fluxes, especially in the oscillatory case that is somewhat
+common with a dynamic ice sheet.
+
+The new storage pools are reset when reset_dynbal_baselines is set to .true., since this
+feels conceptually similar to the other resetting done by that flag, so it feels
+appropriate to do this resetting at the same time.
+
+This tag also changes the sign convention for the DYNBAL fluxes: the previous sign
+convention was unintuitively the opposite of the sign convention of other fluxes to
+river/atm; while I'm changing these fluxes anyway, I'm also flipping the sign convention
+to be more intuitive and hopefully less error-prone.
+
+The motivation for this change is: When subgrid areas change due to dynamic landunits /
+columns, fluxes are generated to compensate for changes in gridcell-average water and
+energy (QFLX_LIQ_DYNBAL, QFLX_ICE_DYNBAL, EFLX_DYNBAL). These fluxes can (and should) be
+reduced via careful setting of reset_dynbal_baselines, but that still doesn't reduce these
+fluxes to zero. The previous implementation seems good enough in situations where there is
+a gradual change in a given grid cell's subgrid areas over many years. Unfortunately,
+though, that is not always the situation when coupling to CISM, as has been seen in recent
+CESM3 runs: In grid cells around the ice sheet margin, large fractions of a CTSM grid cell
+can blink between mostly-vegetated/bare and mostly-glacier on a 2-year cycle, and this
+oscillatory behavior can go on for many years, possibly indefinitely. This can lead to
+large dynbal fluxes in each year, even when dribbled throughout the year (as was
+previously done). It is problematic for the ocean to get negative dynbal fluxes, but it is
+also problematic to remove these negative dynbal fluxes by spreading them globally, as is
+currently done, because then regional fluxes that should average to 0 spatially and
+temporally (e.g., into the Arctic ocean) end up being biased positive. This PR implements
+a relatively easy partial fix, which particularly addresses the oscillatory case that
+seems to be a common cause of the observed ice runoff. See
+https://github.com/ESCOMP/CTSM/issues/4188 for more details.
+
+
+Significant changes to scientifically-supported configurations
+--------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
+
+Does this tag change answers significantly for any of the following physics configurations?
+(Details of any changes will be given in the "Answer changes" section below.)
+
+    [Put an [X] in the box for any configuration with significant answer changes.]
+
+[X] clm6_0
+
+[X] clm5_0
+
+[X] ctsm5_0-nwp
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+- Partially addresses #4188 - Consider one or more changes to reduce DYNBAL fluxes (dynamic landunit conservation correction fluxes)
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+- New namelist variable: dynbal_storage_residence_time
+
+Changes to documentation:
+- Updates CLM50_Tech_Note_Transient_Landcover.rst to reflect these changes
+
+Contributors: @billsacks
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+- Fixed some expected test fails based on discussions with Erik Kluzek and Sam Levis
+
+Testing summary:
+----------------
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline:
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations:
+      - Transient cases (Hist, SSP)
+      - Cases with an evolving ice sheet (active CISM)
+      - FATES cases
+      - Cases that start mid-year from a restart file that had non-zero values in the old dribblers
+    - what platforms/compilers: all
+    - nature of change (roundoff; larger than roundoff/same climate; new climate):
+      - larger than roundoff
+      - same vs. new climate depends on the configuration and what variables are of interest
+
+Non-BGC I compset cases have diffs only in limited variables: This PR only directly
+affects sensible heat, liquid and ice runoff fluxes, so the only changes are in these
+fluxes and related ROF variables. However, some BGC cases have more extensive diffs, I
+think due to the feedback of ROF on CH4. For a few long BGC tests with extensive diffs, I
+verified that, by changing the compset to one using SROF, the set of variables with diffs
+became small (similar to the set of variables with diffs in non-BGC cases).
+
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids): https://github.com/ESCOMP/CTSM/pull/4189
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.054
+Originator(s): erik (Erik Kluzek,UCAR/TSS,303-497-1326)
+Date: Mon Aug 31 05:35:20 AM MDT 2026
+One-line Summary: Update submodules to the latest needed for cesm3_0_alpha10a
+
+Purpose and description of changes
+----------------------------------
+
+Update submodules: ccs_config, cime, cdeps, cmeps, share
+Current latest submodules that will be coming in cesm3_0_beta10
+
+cesm3_0_beta09 had: cime6.4.1, share1.0.21, cdeps1.0.101, cmeps1.1.54
+
+Also fix the two multi-instance tests that were failing, by making sure DGLC couples less times than ROF.
+
+And add new ctsm_release testlist which runs every test. And make sure the list of tests that should be subsets of aux_clm or ctsm_sci are so (as well as fates, and crop_cal). And bring in a script that checks the testlist for these features and will also fix them. And bring that script into a github workflow so the testlist is checked for basic requirements.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Fixes Some multi-instance tests fail with DGLC #4161
+ Fixes Add a new ctsm_release testlist that runs all other testlists #4157
+ Fixes Have matrixcn, aux_clm_mpi_serial, prealpha, prebeta, clm_pymods, clm_short, aux_cime_baselines, subset_data testlists be subsets of the aux_clm testlist #4158
+ Fixes Make: hillslope, fire, interim-restart, ssp, crop_calendars testlists a subset of ctsm_sci #4156
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  Highlights of a few changes with the submodule updates
+
+  CIME:
+    create_test has new options: --no-batch-build, --ninja, --gmake
+
+  ccs_config:
+    New MOM grid for 2-degree tx2_0v1, used in ne16pg3_t201 alias
+
+  CMEPS:
+    move CALENDAR to env_run.xml
+    Reduce mediator memory
+    Fix single column logic
+
+  CDEPS:
+    Confirm that mesh size matches expected size
+    Fix some single column logic
+
+Contributors: @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+   The script that checks the testlists is called add_super_testslists and is in cime_config/testdef.
+   That script is in a github workflow that runs when the testlist changes.
+   If the workflow fails, you should run the script by hand, and then copy in the modified output file to testlist_clm.xml.
+   Verify the changes by hand and then check it in and push to ESCOMP. The workflow should run again and is hopefully fine, otherwise repeat the steps.
+
+   The script is largely based on Regular Expression magic, and doesn't understand XML syntax. It makes
+   some assumptions about how the testlist XML file is put together, and would break if the structure of
+   the file is changed significantly (or XML tagnames changed). CIME allows for a little more variance in the structure than is tested for here.
+
+   Assumptions made. There's a single <machines> block that contains a single line for each test. Options shouldn't be in the <machines> block, but only afterwards. It's also assumed there shouldn't be duplicate tests in the machines block, and that the machines block shouldn't be empty.
+
+   Since, the testlist format seems unlikely to change, and deeper knowledge of the XML structure doesn't seem needed, this seems likely to be OK. It could be rewritten using XML readers in CIME for the entry_id testlist, which would be able to be updated if the testlist format changes with CIME.
+
+   But, all in all the assumptions seem reasonable for now.
+
+Changes to tests or testing:
+   Ran add_super_testlists script to make sure all testlists are properly subsets of other testlists notably aux_clm or ctsm_sci
+   And that any test added is also added to ctsm_release
+   The checker for this also has a git workflow and will run when the testlist is updated
+
+Testing summary:   extended
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (give name of baseline if different from CTSM tagname, normally fates baselines are fates-<FATES TAG>-<CTSM TAG>)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: b4b
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   ccs_config to -> ccs_config_cesm1.0.88
+   cime to -> cime6.5.5
+   cmeps to -> cmeps1.1.64
+   cdeps to -> cdeps1.0.105
+   share to -> share1.1.21
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+    - #4182
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.053
+Originator(s): oleson (Keith Oleson,UCAR/TSS,303-497-1332)
+Date: Wed Aug 19 03:19:08 PM MDT 2026
+One-line Summary: Resolve problems with running PLUMBER2 sites
+
+Purpose and description of changes
+----------------------------------
+
+Fix failures in running PLUMBER2 sites.
+See https://github.com/ESCOMP/CTSM/pull/4092 for details.
+
+List of CTSM issues fixed
+Resolves #4023 PLUMBER2 wetland sites fail at creation
+Resolves #4081 Several PLUMBER2 sites fail at run time
+Resolves #4105 PLUMBER2 postad run failure
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+Documention updated by https://github.com/ESCOMP/CTSM/pull/4135
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+Added three new tests to testlist_clm.xml:
+SMS_Ly2_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu--clm-ADspinup
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.IHist1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ARSLu
+SMS_Ly1_D_Mmpi-serial.CLM_USRDAT.I1PtClm60BgcRsGs.derecho_gnu.clm-default--clm-PLUMBER2-ESLgS--clm-ADspinup
+
+Testing summary:
+----------------
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+      derecho ----- OK
+      izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+Summarize any changes to answers, i.e.,
+- what code configurations: PLUMBER2 site simulations
+- what platforms/compilers: All
+- nature of change: Same climate (larger than roundoff likely) for PLUMBER2 sites that ran previously; sites that didn't run previously, now run
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+cdeps1.0.96 -> cdeps1.0.103
+
+Pull Requests that document the changes (include PR ids):
+https://github.com/ESCOMP/CTSM/pull/4092
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.052
 Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
 Date: Mon Aug 17 05:09:21 PM MDT 2026

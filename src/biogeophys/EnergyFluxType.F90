@@ -13,7 +13,6 @@ module EnergyFluxType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   !
   implicit none
   save
@@ -53,7 +52,7 @@ module EnergyFluxType
      real(r8), pointer :: eflx_snomelt_u_col      (:)   ! col urban snow melt heat flux (W/m**2)
      real(r8), pointer :: eflx_gnet_patch         (:)   ! patch net heat flux into ground  (W/m**2)
      real(r8), pointer :: eflx_grnd_lake_patch    (:)   ! patch net heat flux into lake / snow surface, excluding light transmission (W/m**2)
-     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2)
+     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_bot_col            (:)   ! col heat flux from beneath the soil or ice column (W/m**2)
      real(r8), pointer :: eflx_fgr12_col          (:)   ! col ground heat flux between soil layers 1 and 2 (W/m**2)
      real(r8), pointer :: eflx_fgr_col            (:,:) ! col (rural) soil downward heat flux (W/m2) (1:nlevgrnd)  (pos upward; usually eflx_bot >= 0)
@@ -116,10 +115,6 @@ module EnergyFluxType
      real(r8), pointer :: errsol_col              (:)   ! solar radiation conservation error    (W/m**2)
      real(r8), pointer :: errlon_patch            (:)   ! longwave radiation conservation error (W/m**2)
      real(r8), pointer :: errlon_col              (:)   ! longwave radiation conservation error (W/m**2)
-
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     type(annual_flux_dribbler_type) :: eflx_dynbal_dribbler
 
    contains
 
@@ -272,11 +267,6 @@ contains
     allocate( this%errlon_patch            (begp:endp))             ; this%errlon_patch            (:)   = nan
     allocate( this%errlon_col              (begc:endc))             ; this%errlon_col              (:)   = nan
 
-    this%eflx_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = 'eflx_dynbal', &
-         units = 'J/m**2')
-
   end subroutine InitAllocate
     
   !------------------------------------------------------------------------
@@ -319,7 +309,7 @@ contains
 
     this%eflx_dynbal_grc(begg:endg) = spval 
     call hist_addfld1d (fname='EFLX_DYNBAL',  units='W/m^2',  &
-         avgflag='A', long_name='dynamic land cover change conversion energy flux', &
+         avgflag='A', long_name='dynamic land cover change conversion energy flux [+ to atm]', &
          ptr_lnd=this%eflx_dynbal_grc)
 
     this%eflx_snomelt_col(begc:endc) = spval
@@ -902,8 +892,6 @@ contains
          dim1name='pft', &
          long_name='instantaneous daily minimum of transpiration wetness factor', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran_min_inst_patch) 
-
-    call this%eflx_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
   !-----------------------------------------------------------------------
