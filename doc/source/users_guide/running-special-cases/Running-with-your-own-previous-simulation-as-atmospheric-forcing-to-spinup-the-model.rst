@@ -18,12 +18,17 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    > ./create_newcase -case myB1850 -res f09_g17_gl4 -compset B1850
    > cd myB1850
    > ./case.setup
-   # Set histaux_a2x3hr to .true. in your user_nl_cpl output from the atmosphere model
-   # will be saved 3 hourly
-   echo "histaux_a2x3hr=.true." >> user_nl_cpl
-   # edit the driver code in order to save the correct list of fields (see note below)
-   > cp ../../models/drv/driver/ccsm_comp_mod.F90 SourceMods/src.cpl
-   > $EDITOR SourceMods/src.cpl
+   # Set the followng auxiliary history settings to true in your user_nl_cpl file
+   > cat << EOF > user_nl_cpl
+   histaux_atm2med_file1_enabled = .true.
+   histaux_atm2med_file2_enabled = .true.
+   histaux_atm2med_file3_enabled = .true.
+   histaux_atm2med_file4_enabled = .true.
+   histaux_atm2med_file5_enabled = .true.
+   histaux_atm2med_file5_history_n = 1
+   histaux_atm2med_file5_history_option = 'ndays'
+   histaux_atm2med_file5_ntperfile = 1
+   EOF
    # Now build
    > ./case.build
    # The following sets the archival disk space (you could also use an editor)
@@ -36,7 +41,7 @@ Example: Fully Coupled Simulation to Create Data to Force Next Example Simulatio
    # Now run as normal
    > ./case.submit
 
-Now we run an I compset forced with the data from the previous simulation using the ``CPLHISTForcing`` option to DATM_MODE. See :ref:`cplhistforcing` for more information.
+Now we run an I compset forced with the data from the previous simulation using the ``CPLHIST-CESM3`` option to DATM_MODE. See :ref:`cplhistforcing` for more information.
 
 .. _eg-sim-data-from-prev-sim:
 
@@ -47,29 +52,16 @@ Example: Simulation Forced with Data from the Previous Simulation
    > cd cime/scripts
    > ./create_newcase -case frcwmyB1850 -res f09_f09_mt232 -compset I1850Clm60BgcCropSpinup
    > cd frcWmyB1850
-   # The following sets the casename to point to for atm forcing (you could also use an editor)
+   # By default this compset will use the CPLHIST-CESM3 and give you the default data from a CESM3 spinup simulation.
+
+   # HOWEVER, if you want to use your case you would do something like this:
+   # The following sets the directory and casename to point to for atm forcing (you could also use an editor)
+   > ./xmlchange DATM_CPLHIST_DIR='$CIME_OUTPUT_ROOT/archive/$DATM_CPLHIST_CASE/cpl/hist'
    > ./xmlchange DATM_CPLHIST_CASE="myB1850"
    # The following sets the align year and years to run over for atm forcing
    #  (you could also use an editor)
    > ./xmlchange DATM_YR_ALIGN="1",DATM_YR_START=1,DATM_YR_END=20
-   # Set the strm_datdir in the namelist_defaults_datm.xml
-   # file to the archival path of the case above in the form of: /glade/home/archive/$USER/$DATM_CPLHIST_CASE/cpl/hist
-   # NOTE: THIS WILL CHANGE THE PATH FOR ALL I1850Clm60BgcCropSpinup COMPSET CASES MADE AFTER THIS!
-   > $EDITOR ../../models/atm/datm/bld/namelist_files/namelist_defaults_datm.xml
    > ./case.setup
    # Now build and run as normal
    > ./case.build
    > ./case.submit
-
-.. note:: We did this by editing the "namelist_defaults_datm.xml" which will change the settings for ALL future ``I1850Clm60BgcCropSpinup`` cases you run. You could also do this by editing the path in the resulting streams text files in the CaseDocs directory, and then create a "user\_" streams file with the correct path. This would change the streams file JUST for this case. The steps do it this way are:
-
-::
-
-   > ./preview_namelists
-   > cp CaseDocs/datm.streams.txt.CPLHIST3HrWx.Precip            user_datm.streams.txt.CPLHIST3HrWx.Precip
-   > cp CaseDocs/datm.streams.txt.CPLHIST3HrWx.Solar             user_datm.streams.txt.CPLHIST3HrWx.Solar
-   > cp CaseDocs/datm.streams.txt.CPLHIST3HrWx.nonSolarNonPrecip user_datm.streams.txt.CPLHIST3HrWx.nonSolarNonPrecip
-   # Change the <fieldInfo> field <filePath> to point to the correct directory i.e.: /glade/home/achive/$USER/$DATM_CPLHIST_CASE/cpl/hist
-   > $EDITOR user_datm.streams.txt.CPLHIST3HrWx.*
-   > ./preview_namelists
-   # Then make sure the CaseDocs/datm.streams.txt.CPLHIST3HrWx.* files have the correct path

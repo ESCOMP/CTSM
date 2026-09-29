@@ -160,6 +160,7 @@ contains
     use CIsoAtmTimeseriesMod          , only : CIsoAtmReadNML
     use DaylengthMod                  , only : InitDaylength
     use dynSubgridDriverMod           , only : dynSubgrid_init
+    use dynConsBiogeophysMod          , only : dynConsBiogeophys_readnl
     use dynConsBiogeophysMod          , only : dyn_hwcontent_set_baselines
     use fileutils                     , only : getfil
     use initInterpMod                 , only : initInterp
@@ -379,6 +380,11 @@ contains
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
+
+    ! Read the dyn_cons_biogeophys_inparm namelist. This must be done after the time
+    ! manager is initialized, because converting dynbal_storage_residence_time to a
+    ! turnover rate depends on the model calendar.
+    call dynConsBiogeophys_readnl(NLFilename)
 
     ! History file variables
     if (use_cn .and. .not. use_noio ) then
