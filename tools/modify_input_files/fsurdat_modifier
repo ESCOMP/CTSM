@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-For description and instructions, please see README.
+For description and instructions, please see the CTSM User's Guide.
 """
 
 import os

@@ -408,6 +408,9 @@ contains
        actual_numnatpft = 0
     end if
 
+    ! Close surface dataset - no longer needed after reading dimensions
+    call ncd_pio_closefile(ncid)
+
 !jt    if(check_numpft.ne.actual_numpft)then
     if(actual_numcft+actual_numnatpft.ne.actual_maxsoil_patches)then
        write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
@@ -458,6 +461,9 @@ contains
 
     ! Read nlevurb
     call ncd_inqdlen(ncid, dimid, actual_nlevurb, 'nlevurb')
+
+    ! Close surface dataset - no longer needed after reading nlevurb
+    call ncd_pio_closefile(ncid)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read nlevurb from the surface data'

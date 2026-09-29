@@ -1,7 +1,55 @@
 ; NCL script
 ; create_PLUMBER2_sites_csv.ncl ; Keith Oleson, Sep 2023
-; This script generates a csv file for the NEON site_and_regional infrastructure
+; This script generates a PLUMBER2 csv file for the run_tower infrastructure.
 ; PLUMBER2_sites.csv
+; Modified Jun 2026 by Keith Oleson to add output for spinup
+; For spinup, we go into each case directory for the set of simulations that were run for this article:
+; Abramowitz, G., Ukkola, A., Hobeichi, S., Cranko Page, J., Lipson, M., De Kauwe, M. G., Green, S., Brenner, C.,
+; Frame, J., Nearing, G., Clark, M., Best, M., Anthoni, P., Arduini, G., Boussetta, S., Caldararu, S., Cho, K.,
+; Cuntz, M., Fairbairn, D., Ferguson, C. R., Kim, H., Kim, Y., Knauer, J., Lawrence, D., Luo, X., Malyshev, S.,
+; Nitta, T., Ogee, J., Oleson, K., Ottlé, C., Peylin, P., de Rosnay, P., Rumbold, H., Su, B., Vuichard, N., Walker, A. P.,
+; Wang-Faivre, X., Wang, Y., and Zeng, Y.: On the predictability of turbulent fluxes from land: PLUMBER2 MIP
+; experimental description and preliminary results, Biogeosciences, 21, 5517–5538, 
+; https://doi.org/10.5194/bg-21-5517-2024, 2024, and xmlquery the following variables so that they can be 
+; added to the csv file:
+; RUN_STARTDATE
+; CALENDAR
+; DATM_YR_START
+; DATM_YR_END
+; DATM_YR_ALIGN
+; START_TOD
+
+; The rationale for how these are set for spinup is as follows:
+; To avoid dtlimit errors during spinup as much as possible, we do not use the first year or the last year of forcing and
+; start at GMT=local midnight. So we need at least six years to loop over 4 year blocks in gregorian mode.
+; dtlimit errors occur in cases when we try to start at GMT 0 of the first year and there is no data at GMT=0 (e.g., US-Ha1),
+; or when we try to start at GMT \= 0 of the first year (to start at local time midnight) and loop back around, because model
+; may not have data at the end of that year of forcing. The forcing for the last time step of the year is then repeated for
+; the number of time steps that local time is different from GMT.  The dtlimit errors vary in size depending on the local
+; time/GMT offset.
+; If we have at least four years even when skipping first and last year of forcing, then we use available multiples 
+; of four years. The CALENDAR is set to GREGORIAN. There shouldn't be any dlimit errors for these cases when using the 
+; default setting of 1.5.
+
+; Special cases where there are less than four years of forcing are handled as follows:
+
+; If have only one year then we must obviously use that year of forcing. We start at GMT=local midnight and set 
+; dtlimit to 50. The consequence is that the forcing for the last time step of the year is repeated for the
+; number of time steps that local time is different from GMT (unavoidable in this case).
+; We use an alignyear of 1 and set the CALENDAR to NO_LEAP (because otherwise model expects leap day avery fourth year and
+; it may not be available).
+
+; If we have two years or three years, repeat first year of forcing and start at GMT=0 (for cases where
+; starting month is December), or repeat second year of forcing and start at GMT=local midnight (for cases 
+; where the starting month is January).
+; We use an alignyear of 1 and set the CALENDAR to NO_LEAP (because otherwise model expects leap day avery fourth year and it
+; may not be available. There shouldn't be any dlimit errors for these cases when using the defaut setting of 1.5.
+
+; Note that although setting dtlimit to 50 for spinup is not strictly required for all sites as noted above, it is set to 
+; 50 by CDEPS nonetheless rather than implementing special handling in CDEPS for all 170 PLUMBER2 sites.
+
+; All of the csv fields are then read in using plumber2_usermods to generate a set of shell commands found at 
+; cime_config/usermods_dirs/clm/PLUMBER2
 ;**************************************
 
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/shea_util.ncl"
@@ -12,23 +60,30 @@ begin
   print ("Start Time: "+systemfunc("date") )
   print ("=========================================")
 
-
 ; Sites (170 sites)
-  sim = systemfunc("ls -1 " + "/glade/work/oleson/PLUMBER2/datm_files/")
+  sim = systemfunc("ls -1 " + "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/")
 
   nsim = dimsizes(sim)
-  site_num       = new(nsim,"integer")
-  atm_ncpl       = new(nsim,"string")
-  startyear      = new(nsim,"string")
-  endyear        = new(nsim,"string")
-  localstartyear = new(nsim,"string")
-  startmonth     = new(nsim,"string")
-  startday       = new(nsim,"string")
-  run_startdate  = new(nsim,"string")
-  starttod       = new(nsim,"string")
-  nsteps         = new(nsim,"string")
-  latitude       = new(nsim,"double")
-  longitude      = new(nsim,"double")
+  site_num           = new(nsim,"integer")
+  atm_ncpl           = new(nsim,"string")
+  startyear          = new(nsim,"string")
+  endyear            = new(nsim,"string")
+  localstartyear     = new(nsim,"string")
+  startmonth         = new(nsim,"string")
+  startday           = new(nsim,"string")
+  run_startdate      = new(nsim,"string")
+  starttod           = new(nsim,"string")
+  nsteps             = new(nsim,"string")
+  latitude           = new(nsim,"double")
+  longitude          = new(nsim,"double")
+  run_startdate_spin = new(nsim,"string")
+  calendar_spin      = new(nsim,"string")
+  datm_yr_start_spin = new(nsim,"string")
+  datm_yr_end_spin   = new(nsim,"string")
+  datm_yr_align_spin = new(nsim,"string")
+  start_tod_spin     = new(nsim,"string")
+
+  delim = " "
 
   npfts_ch = 17  ; Number of pfts for canopy top/bottom height
 
@@ -40,139 +95,181 @@ begin
 
   do sel = 0,nsim - 1
 
-  site_num(sel) = sel+1
+    site_num(sel) = sel+1
 
-; Specify input directory
-  f_in_dir  = "/glade/work/oleson/PLUMBER2/datm_files/"+sim(sel)+"/CLM1PT_data/"
-  fls = systemfunc("ls " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*-*"+".nc")
-  command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c76-79"
-  startyear(sel) = systemfunc(command)
-  command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c81-84"
-  endyear(sel) = systemfunc(command)
-  datmfile = addfile(fls,"r")
-  time = datmfile->time
-  atm_ncpl(sel) = tostring(sprinti("%0.2i ",tointeger(86400./(time(1)-time(0)))))
-  if (isint64(time)) then
-    tmp = toint(time)
-    copy_VarCoords(time,tmp)
-    copy_VarAtts(time,tmp)
-  else
-    tmp  = time
-    copy_VarCoords(time,tmp)
-    copy_VarAtts(time,tmp)
-  end if
-  utc_date = cd_calendar(tmp(0),0)
-  localstartyear(sel) = tostring(tointeger(utc_date(0,0)))
-  startmonth(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,1))))
-  startday(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,2))))
-  starttod(sel) = tostring(tointeger(utc_date(0,3)/24 * 86400))
-  nsteps(sel) = dimsizes(tmp)
-
-  latitude(sel) = datmfile->LATIXY(0,0)
-  longitude(sel) = datmfile->LONGXY(0,0)
-
-  if (longitude(sel) .gt. 180.d) then
-    longitude(sel) = longitude(sel) - 360.d
-  end if
-
-  delete(time)
-  delete(tmp)
-  delete(utc_date)
-
-  run_startdate(sel) = tostring(sprinti("%0.4i",tointeger(localstartyear(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startmonth(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startday(sel))))
-
-  f_in_dir  = "/glade/work/oleson/PLUMBER2/input_files/"+sim(sel)+"/"
-  fls = systemfunc("ls " + f_in_dir + "surfdata_0.9x1.25_16pfts_" + sim(sel) + ".nc")
-  surfdatafile = addfile(fls,"r")
-  pct_natveg = surfdatafile->PCT_NATVEG(0,0)
-  monthly_height_top = surfdatafile->MONTHLY_HEIGHT_TOP(0,:,0,0)  ; For SP, all months have the same height
-  monthly_height_bot = surfdatafile->MONTHLY_HEIGHT_BOT(0,:,0,0)  ; For SP, all months have the same height
-  if (pct_natveg .gt. 0.) then
-    pct_nat_pft = surfdatafile->PCT_NAT_PFT(:,0,0)
-    indx = ind(pct_nat_pft(:) .gt. 0)
-    npfts = dimsizes(indx)
-    if (npfts .gt. 2) then
-      print((/"Number of pfts is > 2"/))
-      pfttype(sel,:) = -999
-      pftperc(sel,:) = -999.
-      pftcth(sel,:)  = -999.
-      pftcbh(sel,:)  = -999.
+    print((/sim(sel)/))
+    ; Specify input directory
+    f_in_dir  = "/glade/campaign/cesm/cesmdata/cseg/inputdata/atm/datm7/CLM1PT_data/PLUMBER2/"+sim(sel)+"/CLM1PT_data/"
+    fls = systemfunc("ls " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*-*"+".nc")
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c113-116"
+    startyear(sel) = systemfunc(command)
+    command = "echo " + f_in_dir + "CTSM_DATM_" + sim(sel) + "_*.nc" + " | cut -c118-121"
+    endyear(sel) = systemfunc(command)
+    datmfile = addfile(fls,"r")
+    time = datmfile->time
+    atm_ncpl(sel) = tostring(sprinti("%0.2i ",tointeger(86400./(time(1)-time(0)))))
+    if (isint64(time)) then
+      tmp = toint(time)
+      copy_VarCoords(time,tmp)
+      copy_VarAtts(time,tmp)
     else
-      pfttype(sel,:) = -999
-      pftperc(sel,:) = -999.
-      pftcth(sel,:)  = -999.
-      pftcbh(sel,:)  = -999.
-      do p = 0,npfts-1
-         pfttype(sel,p) = indx(p)
-         pftperc(sel,p) = pct_nat_pft(indx(p))
-         pftcth(sel,p)  = monthly_height_top(indx(p))
-         pftcbh(sel,p)  = monthly_height_bot(indx(p))
-      end do
+      tmp  = time
+      copy_VarCoords(time,tmp)
+      copy_VarAtts(time,tmp)
     end if
-    pctwet(sel) = 0.
-    delete(pct_nat_pft)
-    delete(indx)
-  else
-    print((/"PCT_NATVEG is zero"/))
-    pfttype(sel,:) = -999
-    pftperc(sel,:) = -999.
-    pftcth(sel,:)  = -999.
-    pftcbh(sel,:)  = -999.
-    pct_wetland = surfdatafile->PCT_WETLAND(0,0)
-    if (pct_wetland .gt. 0.) then
-      print((/"Wetland Site"/))
-      pctwet(sel) = pct_wetland
-    else
-      print((/"PCT_NATVEG and PCT_WETLAND are both zero"/))
-      pctwet(sel) = 0.
-      pct_crop = surfdatafile->PCT_CROP(0,0)
-      if (pct_crop .gt. 0.) then
-        print((/"Crop Site"/))
-        pct_cft = surfdatafile->PCT_CFT(:,0,0)
-        if (pct_cft(0) .gt. 0.) then
-          pfttype(sel,0) = 15
-          pftperc(sel,0) = (/pct_cft(0)/)
-          pftcth(sel,0)  = monthly_height_top(15)
-          pftcbh(sel,0)  = monthly_height_bot(15)
-        else
-          pfttype(sel,0) = -999
-          pftperc(sel,0) = -999.
-          pftcth(sel,0)  = -999.
-          pftcbh(sel,0)  = -999.
-        end if
-        if (pct_cft(1) .gt. 0.) then
-          pfttype(sel,1) = 16
-          pftperc(sel,1) = (/pct_cft(1)/)
-          pftcth(sel,1)  = monthly_height_top(16)
-          pftcbh(sel,1)  = monthly_height_bot(16)
-        else
-          pfttype(sel,1) = -999
-          pftperc(sel,1) = -999.
-          pftcth(sel,1)  = -999.
-          pftcbh(sel,1)  = -999.
-        end if
+    utc_date = cd_calendar(tmp(0),0)
+    localstartyear(sel) = tostring(tointeger(utc_date(0,0)))
+    startmonth(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,1))))
+    startday(sel) = tostring(sprinti("%0.2i ",tointeger(utc_date(0,2))))
+    starttod(sel) = tostring(tointeger(utc_date(0,3)/24 * 86400))
+    nsteps(sel) = dimsizes(tmp)
+
+    latitude(sel) = datmfile->LATIXY(0,0)
+    longitude(sel) = datmfile->LONGXY(0,0)
+
+    if (longitude(sel) .gt. 180.d) then
+      longitude(sel) = longitude(sel) - 360.d
+    end if
+
+    delete(time)
+    delete(tmp)
+    delete(utc_date)
+
+    run_startdate(sel) = tostring(sprinti("%0.4i",tointeger(localstartyear(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startmonth(sel))))+"-"+tostring(sprinti("%0.2i",tointeger(startday(sel))))
+
+    f_in_dir  = "/glade/campaign/cgd/tss/projects/PLUMBER2/input_files/"+sim(sel)+"/"
+    fls = systemfunc("ls " + f_in_dir + "surfdata_0.9x1.25_16pfts_" + sim(sel) + ".nc")
+    surfdatafile = addfile(fls,"r")
+    pct_natveg = surfdatafile->PCT_NATVEG(0,0)
+    monthly_height_top = surfdatafile->MONTHLY_HEIGHT_TOP(0,:,0,0)  ; For SP, all months have the same height
+    monthly_height_bot = surfdatafile->MONTHLY_HEIGHT_BOT(0,:,0,0)  ; For SP, all months have the same height
+    if (pct_natveg .gt. 0.) then
+      pct_nat_pft = surfdatafile->PCT_NAT_PFT(:,0,0)
+      indx = ind(pct_nat_pft(:) .gt. 0)
+      npfts = dimsizes(indx)
+      if (npfts .gt. 2) then
+        print((/"Number of pfts is > 2"/))
+        pfttype(sel,:) = -999
+        pftperc(sel,:) = -999.
+        pftcth(sel,:)  = -999.
+        pftcbh(sel,:)  = -999.
       else
-        print((/"PCT_NATVEG, PCT_WETLAND, PCT_CROP are all zero"/))
+        pfttype(sel,:) = -999
+        pftperc(sel,:) = -999.
+        pftcth(sel,:)  = -999.
+        pftcbh(sel,:)  = -999.
+        do p = 0,npfts-1
+          pfttype(sel,p) = indx(p)
+          pftperc(sel,p) = pct_nat_pft(indx(p))
+          pftcth(sel,p)  = monthly_height_top(indx(p))
+          pftcbh(sel,p)  = monthly_height_bot(indx(p))
+        end do
+      end if
+      pctwet(sel) = 0.
+      delete(pct_nat_pft)
+      delete(indx)
+    else
+      print((/"PCT_NATVEG is zero"/))
+      pfttype(sel,:) = -999
+      pftperc(sel,:) = -999.
+      pftcth(sel,:)  = -999.
+      pftcbh(sel,:)  = -999.
+      pct_wetland = surfdatafile->PCT_WETLAND(0,0)
+      if (pct_wetland .gt. 0.) then
+        print((/"Wetland Site"/))
+        pctwet(sel) = pct_wetland
+      else
+        print((/"PCT_NATVEG and PCT_WETLAND are both zero"/))
+        pctwet(sel) = 0.
+        pct_crop = surfdatafile->PCT_CROP(0,0)
+        if (pct_crop .gt. 0.) then
+          print((/"Crop Site"/))
+          pct_cft = surfdatafile->PCT_CFT(:,0,0)
+          if (pct_cft(0) .gt. 0.) then
+            pfttype(sel,0) = 15
+            pftperc(sel,0) = (/pct_cft(0)/)
+            pftcth(sel,0)  = monthly_height_top(15)
+            pftcbh(sel,0)  = monthly_height_bot(15)
+          else
+            pfttype(sel,0) = -999
+            pftperc(sel,0) = -999.
+            pftcth(sel,0)  = -999.
+            pftcbh(sel,0)  = -999.
+          end if
+          if (pct_cft(1) .gt. 0.) then
+            pfttype(sel,1) = 16
+            pftperc(sel,1) = (/pct_cft(1)/)
+            pftcth(sel,1)  = monthly_height_top(16)
+            pftcbh(sel,1)  = monthly_height_bot(16)
+          else
+            pfttype(sel,1) = -999
+            pftperc(sel,1) = -999.
+            pftcth(sel,1)  = -999.
+            pftcbh(sel,1)  = -999.
+          end if
+        else
+          print((/"PCT_NATVEG, PCT_WETLAND, PCT_CROP are all zero"/))
+        end if
       end if
     end if
-  end if
+
+    ; Specify case directory to get spinup variables
+    case_pref = "spinclm50conr34sp_"
+    case_suff = "_I1PtClm50SpGs"
+    f_in_dir  = "/glade/campaign/cgd/tss/projects/PLUMBER2/Case_Directories/"+case_pref+sim(sel)+case_suff+"/"
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery RUN_STARTDATE")
+    print((/strs/))
+    run_startdate_spin(sel) = str_get_field(strs, 2, delim)
+    print((/run_startdate_spin(sel)/))
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery CALENDAR")
+    print((/strs/))
+    calendar_spin(sel) = str_get_field(strs, 2, delim)
+    ; KWO This is a workaround for CTSM Issue #
+    ; Currently, we can't change the CALENDAR in env_build.xml in a case
+    ; that was cloned from a base case and uses the base case executable.
+    calendar_spin(sel) = "NO_LEAP"
+    print((/calendar_spin(sel)/))
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery DATM_CLMNCEP_YR_START")
+    print((/strs/))
+    datm_yr_start_spin(sel) = str_get_field(strs, 2, delim)
+    print((/datm_yr_start_spin(sel)/))
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery DATM_CLMNCEP_YR_END")
+    print((/strs/))
+    datm_yr_end_spin(sel) = str_get_field(strs, 2, delim)
+    print((/datm_yr_end_spin(sel)/))
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery DATM_CLMNCEP_YR_ALIGN")
+    print((/strs/))
+    datm_yr_align_spin(sel) = str_get_field(strs, 2, delim)
+    print((/datm_yr_align_spin(sel)/))
+
+    strs = systemfunc("cd " + f_in_dir +" ; python ./xmlquery START_TOD")
+    print((/strs/))
+    start_tod_spin(sel) = str_get_field(strs, 2, delim)
+    print((/start_tod_spin(sel)/))
 
   end do
 
   print((/"Done with Loop"/))
 
-  fname = "/glade/work/oleson/ctsm_PLUMBERcsv/tools/site_and_regional/PLUMBER2_sites.csv"
+  fname = systemfunc("pwd") + "/PLUMBER2_sites.csv"
+  print(fname)
   header = (/"#pftX-cth and pftX-cbh are the site=specific canopy top and bottom heights", \
              "#start_year and end_year will be used to define DATM_YR_ALIGN, DATM_YR_START and DATM_YR_END, and STOP_N in units of nyears.", \
              "#RUN_STARTDATE and START_TOD are specified because we are starting at GMT corresponding to local midnight.", \
              "#ATM_NCPL is specified so that the time step of the model matches the time interval specified by the atm forcing data.", \
-             ",Site,Lat,Lon,pft1,pft1-%,pft1-cth,pft1-cbh,pft2,pft2-%,pft2-cth,pft2-cbh,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL"/)
+             "#The *_SPIN variables are those that need to be set explicitly for spinup because they can be different for each site", \
+             ",Site,Lat,Lon,pft1,pft1-%,pft1-cth,pft1-cbh,pft2,pft2-%,pft2-cth,pft2-cbh,start_year,end_year,RUN_STARTDATE,START_TOD,ATM_NCPL,RUN_STARTDATE_SPIN,CALENDAR_SPIN,DATM_YR_START_SPIN,DATM_YR_END_SPIN,DATM_YR_ALIGN_SPIN,START_TOD_SPIN"/)
   hlist = [/header/]
-  alist = [/site_num, sim, latitude, longitude, pfttype(:,0), pftperc(:,0), pftcth(:,0), pftcbh(:,0), pfttype(:,1), pftperc(:,1), pftcth(:,1), pftcbh(:,1),startyear, endyear, run_startdate, starttod, atm_ncpl/]
+  alist = [/site_num, sim, latitude, longitude, pfttype(:,0), pftperc(:,0), pftcth(:,0), pftcbh(:,0), pfttype(:,1), pftperc(:,1), pftcth(:,1), pftcbh(:,1),startyear, endyear, run_startdate, starttod, atm_ncpl, run_startdate_spin, calendar_spin, datm_yr_start_spin, datm_yr_end_spin, datm_yr_align_spin, start_tod_spin/]
   print((/"Done defining hlist and alist"/))
   write_table(fname, "w", hlist, "%s")
   print((/"Done with header"/))
-  write_table(fname, "a", alist, "%d,%s,%9.6f,%9.6f,%d,%5.2f,%5.2f,%5.2f,%d,%5.2f,%5.2f,%5.2f,%s,%s,%s,%s,%s")
+  write_table(fname, "a", alist, "%d,%s,%9.6f,%9.6f,%d,%5.2f,%5.2f,%5.2f,%d,%5.2f,%5.2f,%5.2f,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s")
 
   print ("=========================================")
   print ("Finish Time: "+systemfunc("date") )

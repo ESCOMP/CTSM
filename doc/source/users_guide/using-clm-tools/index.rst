@@ -18,6 +18,7 @@ Using CLM tools
    using-ctsm-pylib.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
+   modifying-surface-datasets.rst
    observational-sites-datasets.rst
    cprnc.rst
    paramfile-tools.md

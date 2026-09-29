@@ -13,10 +13,10 @@ module WaterFluxType
   use decompMod      , only : subgrid_level_patch, subgrid_level_column, subgrid_level_landunit, subgrid_level_gridcell
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
   use WaterInfoBaseType, only : water_info_base_type
   use WaterTracerContainerType, only : water_tracer_container_type
   use WaterTracerUtils, only : AllocateVar1d, AllocateVar2d
+  use UrbanParamsType, only : IsACDehumidificationEnabled
   !
   implicit none
   private
@@ -50,7 +50,9 @@ module WaterFluxType
      real(r8), pointer :: qflx_evap_tot_col        (:)   ! col col_qflx_evap_soi + col_qflx_evap_veg + qflx_tran_veg
      real(r8), pointer :: qflx_liqevap_from_top_layer_patch(:) ! patch rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
      real(r8), pointer :: qflx_liqevap_from_top_layer_col(:)   ! col rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]
-
+     real(r8), pointer :: qflx_condensate_from_ac_col(:) ! col condensate due to dehumidification from air-conditioning (mm H2O/S) [+]
+     real(r8), pointer :: qflx_condensate_from_ac_lun(:) ! lun condensate due to dehumidification from air-conditioning (mm H2O/S) [+]
+  
      ! In the snow capping parametrization excess mass above h2osno_max is removed.  A breakdown of mass into liquid 
      ! and solid fluxes is done, these are represented by qflx_snwcp_liq_col and qflx_snwcp_ice_col. 
      real(r8), pointer :: qflx_snwcp_liq_col       (:)   ! col excess liquid h2o due to snow capping (outgoing) (mm H2O /s)
@@ -98,8 +100,8 @@ module WaterFluxType
      real(r8), pointer :: qflx_snow_percolation_col(:,:) ! col liquid percolation out of the bottom of snow layer j (mm H2O /s)
 
      ! Dynamic land cover change
-     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux
-     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux
+     real(r8), pointer :: qflx_liq_dynbal_grc      (:)   ! grc liq dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
+     real(r8), pointer :: qflx_ice_dynbal_grc      (:)   ! grc ice dynamic land cover change conversion runoff flux (mm H2O/s) (positive means addition to runoff)
 
      real(r8), pointer :: qflx_sfc_irrig_col        (:)   ! col surface irrigation flux (mm H2O/s) [+]             
      real(r8), pointer :: qflx_gw_uncon_irrig_col   (:)   ! col unconfined groundwater irrigation flux (mm H2O/s)
@@ -107,11 +109,6 @@ module WaterFluxType
      real(r8), pointer :: qflx_gw_con_irrig_col     (:)   ! col confined groundwater irrigation flux (mm H2O/s)
      real(r8), pointer :: qflx_irrig_drip_patch     (:)   ! patch drip irrigation
      real(r8), pointer :: qflx_irrig_sprinkler_patch(:)   ! patch sprinkler irrigation
-
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     type(annual_flux_dribbler_type) :: qflx_liq_dynbal_dribbler
-     type(annual_flux_dribbler_type) :: qflx_ice_dynbal_dribbler
 
    contains
      
@@ -269,6 +266,14 @@ contains
     call AllocateVar1d(var = this%qflx_liqevap_from_top_layer_patch, name = 'qflx_liqevap_from_top_layer_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
+    ! The following two vars are initialized as 0.0_r8 rather than spval 
+    ! to prevent nan from occurring during spatial aggregation
+    call AllocateVar1d(var = this%qflx_condensate_from_ac_col, name = 'qflx_condensate_from_ac_col', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_column, ival = 0.0_r8)
+    call AllocateVar1d(var = this%qflx_condensate_from_ac_lun, name = 'qflx_condensate_from_ac_lun', &
+         container = tracer_vars, &
+         bounds = bounds, subgrid_level = subgrid_level_landunit, ival = 0.0_r8)
 
     call AllocateVar1d(var = this%qflx_infl_col, name = 'qflx_infl_col', &
          container = tracer_vars, &
@@ -384,16 +389,6 @@ contains
     call AllocateVar1d(var = this%qflx_irrig_sprinkler_patch, name = 'qflx_irrig_sprinkler_patch', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_patch)
-    
-    this%qflx_liq_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = this%info%fname('qflx_liq_dynbal'), &
-         units = 'mm H2O')
-
-    this%qflx_ice_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = this%info%fname('qflx_ice_dynbal'), &
-         units = 'mm H2O')
 
   end subroutine InitAllocate
 
@@ -547,7 +542,8 @@ contains
          fname=this%info%fname('QFLX_LIQ_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('liq dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'liq dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_liq_dynbal_grc)     
 
     this%qflx_ice_dynbal_grc(begg:endg) = spval
@@ -555,7 +551,8 @@ contains
          fname=this%info%fname('QFLX_ICE_DYNBAL'),  &
          units='mm/s',  &
          avgflag='A', &
-         long_name=this%info%lname('ice dynamic land cover change conversion runoff flux'), &
+         long_name=this%info%lname( &
+         'ice dynamic land cover change conversion runoff flux (positive means addition to runoff)'), &
          ptr_lnd=this%qflx_ice_dynbal_grc)
 
     this%qflx_runoff_col(begc:endc) = spval
@@ -587,6 +584,16 @@ contains
          avgflag='A', &
          long_name=this%info%lname('Rural total runoff'), &
          ptr_col=this%qflx_runoff_r_col, set_spec=spval, default='inactive')
+
+    if (IsACDehumidificationEnabled()) then
+       this%qflx_condensate_from_ac_col(begc:endc) = 0.0_r8
+       call hist_addfld1d ( &
+            fname=this%info%fname('QCOND_FROM_AC'), &
+            units='mm/s',  &
+            avgflag='A', &
+            long_name=this%info%lname('Condensed water flux from AC dehumidification'), &
+            ptr_col=this%qflx_condensate_from_ac_col, set_nourb=0.0_r8, c2l_scale_type='urbanf')
+    end if
 
     this%qflx_snomelt_col(begc:endc) = spval
     call hist_addfld1d ( &
@@ -958,9 +965,6 @@ contains
        ! initial run, not restart: initialize qflx_snow_drain to zero
        this%qflx_snow_drain_col(bounds%begc:bounds%endc) = 0._r8
     endif
-
-    call this%qflx_liq_dynbal_dribbler%Restart(bounds, ncid, flag)
-    call this%qflx_ice_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
 

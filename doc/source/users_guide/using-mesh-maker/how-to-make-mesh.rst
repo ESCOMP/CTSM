@@ -44,8 +44,9 @@ You can check out the ``mesh_maker`` options like so:
      --overwrite       If meshfile exists, overwrite the meshfile.
      -v, --verbose     Increase output verbosity
 
+===========================================
 Example: Making and visualizing a mesh file
--------------------------------------------
+===========================================
 
 In this example, we will use ``mesh_maker`` to create a mesh file from a netCDF file with 2D latitudes and longitudes. On the sample input provided, those coordinates are saved on the ``LATIXY`` and ``LONGXY`` variables, respectively.
 

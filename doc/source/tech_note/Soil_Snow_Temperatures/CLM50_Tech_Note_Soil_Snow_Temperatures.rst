@@ -824,5 +824,5 @@ Soil subsidence at the timestep :math:`n+1` (:math:`z_{exice}^{n+1}`, m) is then
 
    z_{exice}^{n+1}=\Sigma_{i=1}^{N_{levgrnd}} \ z_{j}^{',\ ,n+1}-z_{j}^{',\ ,n }
 
-With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil ice is treated in :numref:`Frozen Soils and Perched Water Table`. When a soil layer thaws, excess ground ice is only allowed to melt when no normals soil ice is present in the layer. When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted. The excess liquid soil moisture from excess ice melt is distributed within the soil column according to :numref:`Lateral Sub-surface Runoff`.
+With regards to hydraulic counductivity, excess ground ice is treated the same way normal soil ice is treated in :numref:`Frozen Soils and Perched Water Table`. When a soil layer thaws, excess ground ice is only allowed to melt when no normal soil ice is present in the layer. When a soil layer refreezes, liquid soil water can only turn into normal soil ice, thus, no new of excess ice can be created but only melted. The excess liquid soil moisture from excess ice melt is distributed within the soil column according to :numref:`Lateral Sub-surface Runoff`.
 

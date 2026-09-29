@@ -5,6 +5,7 @@ module test_water_type
   use funit
   use WaterType
   use shr_kind_mod , only : r8 => shr_kind_r8
+  use UrbanParamsType, only : urbanparams_type
   use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch
   use unittestUtils, only : endrun_msg
@@ -15,6 +16,7 @@ module test_water_type
   @TestCase
   type, extends(TestCase) :: TestWaterType
      type(water_type) :: water_inst
+     type(urbanparams_type) :: urbanparams_inst
      type(unittest_water_type_factory_type) :: factory
    contains
      procedure :: setUp
@@ -49,6 +51,11 @@ contains
     class(TestWaterType), intent(inout) :: this
 
     call setup_single_veg_patch(pft_type=1)
+
+    ! Reguired so that the IsBuildingHumidityEnabled and IsACDehumidificationEnabled
+    ! namelist functions can be used
+    call this%urbanparams_inst%InitForTesting(bounds)
+
     call this%factory%setup_after_subgrid(snl = 0, dz = 1._r8)
     call this%factory%create_water_type(this%water_inst, &
          enable_consistency_checks = .true., &

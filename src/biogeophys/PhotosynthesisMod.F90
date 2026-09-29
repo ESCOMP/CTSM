@@ -1204,7 +1204,7 @@ contains
   subroutine NewPatchInit (this, p)
     !
     ! For new run-time pft, modify state and flux variables to maintain
-    ! carbon and nitrogen balance with dynamic pft-weights.
+    ! carbon and nitrogen balance with changing pft-weights.
     ! Called from dyn_cnbal_patch
     !
     ! !ARGUMENTS:

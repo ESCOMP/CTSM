@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3407;
+my $ntests = 3417;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -327,7 +327,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist' ndepmapalgo='consd' popdensmapalgo='consf'\"",
                          "-res 0.9x1.25 -use_case 1850_control",
-                         "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
+                         "-res CLM_USRDAT -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
                          "-namelist '&a use_matrixcn=F,use_soil_matrixcn=F,hist_wrt_matrixcn_diag=F,spinup_matrixcn=F/' -bgc sp",
                          "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,hist_wrt_matrixcn_diag=T,spinup_matrixcn=T/' -bgc bgc -crop -clm_accelerated_spinup on",
@@ -634,6 +634,36 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+     "building humidity mode below range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=-1",
+                                     phys=>"clm6_0",
+                                   },
+     "building humidity mode above range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=3",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 1 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=1,building_temp_method=0",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=0,urban_hac='ON',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with AC off"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='OFF',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 without explicit AC"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='ON',urban_explicit_ac=.false.",
+                                     phys=>"clm6_0",
+                                   },
      "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
                                      namelst=>"",
                                      CLM_CMIP_ERA=>"cmip7",
@@ -1018,6 +1048,22 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_res_wo_name"    =>{ options=>"--res CLM_USRDAT --envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_name_wo_res"    =>{ options=>"--res 0.9x1.25 --clm_usr_name testname --envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "NEON_wo_sitename"          =>{ options=>"--res CLM_USRDAT --envxml_dir . --clm_usr_name NEON",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "PLUMBER2_wo_sitename"      =>{ options=>"--res CLM_USRDAT --envxml_dir . --clm_usr_name PLUMBER2",
+                                     namelst=>"",
                                      phys=>"clm6_0",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",
@@ -1595,7 +1641,7 @@ print "\n=======================================================================
 print "Test ALL resolutions that have surface datasets with SP for 1850 and 2000\n";
 print "========================================================================\n";
 
-# Check for ALL resolutions with CLM50SP
+# Check for ALL resolutions with Clm50Sp
 my @resolutions = ( "360x720cru", "10x15", "4x5", "0.9x1.25", "1.9x2.5", "ne3np4", "ne3np4.pg3", "ne16np4.pg3", "ne30np4", "ne30np4.pg2", "ne30np4.pg3", "ne120np4.pg3", "ne0np4CONUS.ne30x8", "ne0np4.ARCTIC.ne30x4", "ne0np4.ARCTICGRIS.ne30x8", "C96", "mpasa480", "mpasa120" );
 my @only2000_resolutions = ( "1x1_numaIA", "1x1_brazil", "1x1_mexicocityMEX", "1x1_vancouverCAN", "1x1_urbanc_alpha", "5x5_amazon", "0.125nldas2", "mpasa60", "mpasa15", "mpasa3p75" );
 my @regional;
