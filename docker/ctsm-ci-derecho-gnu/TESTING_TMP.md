@@ -2,13 +2,17 @@
 
 **Validate `run-sys-tests-in-container.sh` on Casper.**
 
-Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run against the actual container on a compute node. Each step below is ordered by what it actually proves; do them in order and do not skip one because a later step looks like it would cover it too.
+Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run against the actual container on a compute node. Each section below is ordered by what it actually proves; do them in order and do not skip one because a later one looks like it would cover it too. Each carries the full command sequence, including its own `execcasper` and `podman load`, so sections 2-5 can be run in one session or in separate ones.
 
 ## 1. Suite resolution via `--xml-machine`
 
 **Done 2026-09-30; recorded because nothing else covers this path.**
    `run_sys_tests` itself, on the host, from `ctsm_pylib` -- no container and no allocation -- with `--xml-machine` and deliberately *no* `--suite-compiler`:
    ```
+   module load conda
+   conda activate ctsm_pylib
+   cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
    ./run_sys_tests --machine-name ctsm-ci-container --xml-machine derecho \
        -s aux_clm_mpi_serial --skip-compare --skip-generate \
        --dry-run --skip-git-status -v
@@ -17,25 +21,6 @@ Written, syntax checked, and dry-run-verified on the login node only (see "Added
    An earlier version of this step ran `query_testlists.py` instead. That was near-useless: it calls `get_tests_from_xml` directly as CIME's own script, so it exercised CIME and the testlist data rather than any of this branch's code.
    One host-vs-container difference this surfaces: on the host, `create_machine` finds an account and adds `--project`. Inside the container there is none, so `--project` is absent there.
 
-## Setup for sections 2-5
-
-Sections 2-5 run the wrapper against the real container, so they need a compute node with the image loaded. The wrapper reads `"$@"`, so it takes no arguments through `qsub -v`; run it from an **interactive** session, which is also how the other wrappers were validated. Give the session enough walltime for whichever section you are on -- section 5 is the long one.
-
-```bash
-execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=04:00:00
-```
-
-Then once per session, because podman's storage is node-local and does not survive it:
-
-```bash
-module load podman
-export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
-podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
-cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
-```
-
-The tarball restores as `localhost/ctsm-ci-derecho-gnu:dev`, the wrappers' default `IMAGE_TAG`, so nothing needs re-tagging. Every command below runs from the repo root, and `<testroot>` below means the path the wrapper prints as `testroot` in its `host-side directories:` block.
-
 ## 2. `run_sys_tests` starting up inside the container
 
 The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not** prove suite resolution -- the wrapper always injects `--suite-compiler gnu`, which makes `run_sys_tests` skip `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`, and `--dry-run` stops `create_test` from running at all. What it does prove: `run_sys_tests` imports and runs under the container's `python3`; `create_machine("ctsm-ci-container")` resolves; `git`/`bin/git-fleximod status` succeed against the bind-mounted `/ctsm`; and the testroot is named as predicted (`tests_<MMDD-HHMMSS>ct`).
@@ -43,7 +28,18 @@ The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not** prove suit
 **Run it:**
 
 ```bash
+execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=01:00:00
+
+# inside the session; podman's storage is node-local and does not survive it.
+# The tarball restores as localhost/ctsm-ci-derecho-gnu:dev, the wrappers'
+# default IMAGE_TAG, so nothing needs re-tagging.
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run -v
+echo "wrapper exit status: $?"
 ```
 
 `-v` is load-bearing: `run_sys_tests` logs the assembled `create_test` command at INFO, so without it you see only the `Testroot:` line and cannot check what would have been run.
@@ -57,6 +53,16 @@ One known-good test through the wrapper -- `-t SMS_D_Ld1_Mmpi-serial.1x1_brazil.
 **Run it:**
 
 ```bash
+execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=04:00:00
+
+# inside the session; podman's storage is node-local and does not survive it.
+# The tarball restores as localhost/ctsm-ci-derecho-gnu:dev, the wrappers'
+# default IMAGE_TAG, so nothing needs re-tagging.
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
     -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
 echo "wrapper exit status: $?"
@@ -65,10 +71,10 @@ echo "wrapper exit status: $?"
 **Check:** the status is 0, *and* it is printed only after the test has finished. If it comes back in seconds, `--wait` is not blocking and the rest of this section proves nothing. Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
 
 ```bash
-cime/CIME/Tools/cs.status <testroot>/*/TestStatus
+cime/CIME/Tools/cs.status $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/TestStatus
 ```
 
-Confirm the case PASSes. While it runs, progress is in `<testroot>/STDOUT.<MMDD-HHMMSS>ct` and the matching `STDERR.*`, not in the PBS log.
+Confirm the case PASSes. While it runs, progress is in `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` and the matching `STDERR.*`, not in the PBS log. The wrapper prints the exact path as `testroot` in its `host-side directories:` block.
 
 ## 4. A nonzero exit status when a test fails
 
@@ -77,16 +83,27 @@ A deliberately failing test, to confirm the exit status is nonzero. The test mus
 **Run it** with a name `create_test` itself will reject. The obvious candidate, `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon`, is the wrong choice here: in the `-t` branch `_check_py_env` runs before `_run_create_test` (`python/ctsm/run_sys_tests.py:273`) and aborts on any name containing `FSURDATMODIFYCTSM`, so nothing is launched.
 
 ```bash
+execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=01:00:00
+
+# inside the session; podman's storage is node-local and does not survive it.
+# The tarball restores as localhost/ctsm-ci-derecho-gnu:dev, the wrappers'
+# default IMAGE_TAG, so nothing needs re-tagging.
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
     -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET
 echo "wrapper exit status: $?"
 ```
 
-**Check:** the status is nonzero, and `<testroot>/STDERR.<MMDD-HHMMSS>ct` shows `create_test` rejecting the compset. This is the half of the `--wait` contract section 3 cannot show: that a nonzero `create_test` status survives the trip back through podman to PBS.
+**Check:** the status is nonzero, and `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDERR.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset. This is the half of the `--wait` contract section 3 cannot show: that a nonzero `create_test` status survives the trip back through podman to PBS.
 
 The `FSURDATMODIFYCTSM` run is still worth doing once, as a check of that early-abort path rather than of `--wait` (missing python modules; see the `-s` / ctsm_pylib note in README "Running run_sys_tests"):
 
 ```bash
+# in the same session as above
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
     -t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon
 echo "wrapper exit status: $?"
@@ -101,16 +118,26 @@ The full `-s aux_clm_mpi_serial`. Judge this run by the suite's failures (comman
 **Run it:**
 
 ```bash
+execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=12:00:00
+
+# inside the session; podman's storage is node-local and does not survive it.
+# The tarball restores as localhost/ctsm-ci-derecho-gnu:dev, the wrappers'
+# default IMAGE_TAG, so nothing needs re-tagging.
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
 echo "wrapper exit status: $?"
 ```
 
-Budget for hours, not minutes, and size the `execcasper` walltime accordingly -- the wrapper's own PBS header asks for `walltime=12:00:00`. `qsub`-ing the script directly does not work for this: it takes no arguments that way, so it would run with neither `-s` nor `-t`.
+The 12-hour walltime above matches the wrapper's own PBS header; this section is hours, not minutes. `qsub`-ing the script instead does not work: it takes no arguments that way, so it would run with neither `-s` nor `-t`.
 
 **Check:** ignore the exit status, for the reasons above, and judge by the failures:
 
 ```bash
-cime/CIME/Tools/cs.status --fails-only <testroot>/*/TestStatus
+cime/CIME/Tools/cs.status --fails-only $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/TestStatus
 ```
 
 Expect `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` plus the NEON / `CLM_USRDAT` and FATES entries to appear there; anything else is a finding.
