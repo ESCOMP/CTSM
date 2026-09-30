@@ -146,6 +146,49 @@ cime/CIME/Tools/cs.status --fails-only $SCRATCH/cases_devcontainer/tests_<MMDD-H
 
 Expect `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` plus the NEON / `CLM_USRDAT` and FATES entries to appear there; anything else is a finding.
 
+## 6. The replacement test, in the other two wrappers
+
+`IHistClm60BgcQianRsGs` replaced `IHistClm60Bgc` in `run-test-in-container.sh`'s `default_test` and in the `run-case-in-container.sh` example, for the DGLC reason in section 3. Neither has been run since. They share this session with sections 2-4, so do them together -- one `podman load` covers all of it, and section 2 is nearly free.
+
+**Run it** -- fastest first, so a failure stops you before the slow ones:
+
+```bash
+execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=04:00:00
+
+# inside the session; podman's storage is node-local and does not survive it.
+# The tarball restores as localhost/ctsm-ci-derecho-gnu:dev, the wrappers'
+# default IMAGE_TAG, so nothing needs re-tagging.
+module load podman
+export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
+podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
+# section 2: costs seconds, nothing is built
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
+    -s aux_clm_mpi_serial --dry-run -v --skip-compare --skip-generate
+echo "section 2 exit status: $?"
+
+# section 3: the exit-0 path, with the replacement test
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs \
+    --skip-compare --skip-generate
+echo "section 3 exit status: $?"
+
+# the same test through the create_test wrapper, via its new default_test
+docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
+echo "run-test exit status: $?"
+
+# the create_newcase example from README "Running cases and tests"
+docker/ctsm-ci-derecho-gnu/run-case-in-container.sh \
+    --case brazil_test --compset IHistClm60BgcQianRsGs --res 1x1_brazil \
+    --mpilib mpi-serial --run-unsupported
+echo "run-case exit status: $?"
+```
+
+**Check:** all four exit 0. The failure to watch for is the one section 3 describes -- `single column mode for DGLC is not currently allowed` in SHAREDLIB_BUILD -- which would mean `IHistClm60BgcQianRsGs` is not on SGLC after all and the replacement is wrong. Anything else is a fault in that wrapper rather than in the test choice.
+
+If `run-case-in-container.sh` is re-run, give it a fresh `--case` name or remove `$HOME/cases_devcontainer/brazil_test` first; `create_newcase` will not overwrite an existing case directory.
+
 ## What to watch for
 
 Highest-risk failure modes first:
