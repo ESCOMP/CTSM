@@ -23,6 +23,14 @@ Written, syntax checked, and dry-run-verified on the login node only (see "Added
 
 ## 2. `run_sys_tests` starting up inside the container
 
+**Done 2026-09-30 -- passed, exit 0.** `run_sys_tests` imported and ran under the container's `python3`, `create_machine("ctsm-ci-container")` resolved, `git` / `bin/git-fleximod status` succeeded against the bind-mounted `/ctsm`, and the testroot was named `tests_0930-220320ct` as predicted. The assembled command was:
+
+```
+/ctsm/cime/scripts/create_test --test-id 0930-220320ct_gnu --output-root /scratch/tests_0930-220320ct --xml-category aux_clm_mpi_serial --xml-machine derecho --xml-compiler gnu --baseline-root /scratch/baselines --retry 0 --machine container --compiler gnu
+```
+
+`--output-root` and `--baseline-root` are `MACHINE_DEFAULTS["ctsm-ci-container"]` resolving; `--machine container --compiler gnu` is the injected `--extra-create-test-args`; `_gnu` on the test id is `_NUM_COMPILER_CHARS = 3`. There is no `--project`, unlike the same dry run on the host in section 1 -- the container has no account, as predicted. Nothing was created under `$SCRATCH/cases_devcontainer`.
+
 The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not** prove suite resolution -- the wrapper always injects `--suite-compiler gnu`, which makes `run_sys_tests` skip `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`, and `--dry-run` stops `create_test` from running at all. What it does prove: `run_sys_tests` imports and runs under the container's `python3`; `create_machine("ctsm-ci-container")` resolves; `git`/`bin/git-fleximod status` succeed against the bind-mounted `/ctsm`; and the testroot is named as predicted (`tests_<MMDD-HHMMSS>ct`).
 
 **Run it:**
