@@ -345,11 +345,33 @@ not yet been run against the actual container on a Casper compute node; see
    ordered by what it actually proves; do them in order and do not skip one
    because a later step looks like it would cover it too.
 
-   1. `cime/CIME/scripts/query_testlists.py --xml-machine derecho
-      --xml-category aux_clm_mpi_serial --xml-compiler gnu --count` -- real
-      suite resolution against derecho's testlist, on the host, in seconds,
-      no container or allocation needed. This is the step that actually
-      calls `get_tests_from_xml`; nothing below does.
+   1. **Done 2026-09-30; recorded because nothing else covers this path.**
+      `run_sys_tests` itself, on the host, from `ctsm_pylib` -- no container
+      and no allocation -- with `--xml-machine` and deliberately *no*
+      `--suite-compiler`:
+
+      ```
+      ./run_sys_tests --machine-name ctsm-ci-container --xml-machine derecho \
+          -s aux_clm_mpi_serial --skip-compare --skip-generate \
+          --dry-run --skip-git-status -v
+      ```
+
+      This is the only way to reach `_get_compilers_for_suite`, and so
+      `get_tests_from_xml`, through `run_sys_tests`' own code: the wrapper
+      always injects `--suite-compiler gnu` (there is no way to suppress it),
+      which skips that call entirely. Result: resolves `['gnu', 'intel']` from
+      derecho's testlist and builds two `create_test` commands carrying
+      `--xml-machine derecho`, with testids `<MMDD-HHMMSS>ct_gnu` and
+      `..._int` under testroot `/scratch/tests_<MMDD-HHMMSS>ct`.
+
+      An earlier version of this step ran `query_testlists.py` instead. That
+      was near-useless: it calls `get_tests_from_xml` directly as CIME's own
+      script, so it exercised CIME and the testlist data rather than any of
+      this branch's code.
+
+      One host-vs-container difference this surfaces: on the host,
+      `create_machine` finds an account and adds `--project`. Inside the
+      container there is none, so `--project` is absent there.
    2. The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not**
       prove suite resolution -- the wrapper always injects
       `--suite-compiler gnu`, which makes `run_sys_tests` skip
