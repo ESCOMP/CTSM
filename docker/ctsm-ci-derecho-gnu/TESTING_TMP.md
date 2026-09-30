@@ -111,7 +111,7 @@ PASS ... SHORT_TERM_ARCHIVER
 
 Together those give what CI needs: the wrapper exits nonzero *if and only if* a test failed. The pair also rules out a wrapper hardwired to one status, which either run alone would have been consistent with. Incidentally, SHAREDLIB_BUILD passing is the direct check that `IHistClm60BgcQianRsGs` really is on SGLC, so the section 3 substitution is sound; the whole test took about two and a half minutes, so the four-hour walltime above is far more than this section needs on its own.
 
-## 4. A nonzero exit status when a test fails
+## 4. A nonzero exit status when a test fails ✅
 
 **What this tests:** that a test failing *inside* `create_test`, after `run_sys_tests` has launched it, produces a nonzero exit status. A failure that `run_sys_tests` catches first never reaches `--wait` and so proves nothing about the propagation path -- which rules out the obvious candidate, `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon`: in the `-t` branch `_check_py_env` runs before `_run_create_test` (`python/ctsm/run_sys_tests.py:273`) and aborts on any name containing `FSURDATMODIFYCTSM`, so nothing is launched. Use a name `create_test` itself will reject instead.
 
@@ -139,11 +139,13 @@ docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
 echo "early-abort exit status: $?"
 ```
 
-**Check:** both statuses are nonzero, and for different reasons. For the first, `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset -- its own stdout, not STDERR, which carries only CIME's python-version warning. For the second, expect `ModuleNotFoundError: modify_fsurdat can't be loaded` and no testroot contents at all; since nothing is launched, the status comes from the uncaught exception rather than from `create_test`, so it should not be 100.
+**Check:** both statuses are nonzero, and for different reasons. For the first, `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset -- its own stdout, not STDERR, which carries only CIME's python-version warning. For the second, expect `ModuleNotFoundError: modify_fsurdat can't be loaded`; since nothing is launched, the status comes from the uncaught exception rather than from `create_test`, so it should be 1 rather than 100. The testroot is still created -- `_make_testroot` and `_record_git_status` run before `_check_py_env` -- so it holds `SRCROOT_GIT_STATUS` and `cs.status.fails`; the tell that nothing launched is the absence of a case directory and of any `STDOUT.`/`STDERR.` files.
 
 If the second returns **2**, check the command: `run_sys_tests` requires one of `-c`/`--skip-compare` and one of `-g`/`--skip-generate`, and argparse exits 2 when they are missing, before `_check_py_env` is ever reached.
 
-**Result: partly done, 2026-09-30 -- first half passed.** The bogus-compset run exited **100** with `create_test` launched and failing in CREATE_NEWCASE under testroot `tests_0930-221656ct`:
+**Result: passed, 2026-09-30.** Both halves, and they fail by different mechanisms as intended.
+
+The bogus-compset run exited **100** with `create_test` launched and failing in CREATE_NEWCASE under testroot `tests_0930-221656ct`:
 
 ```
 ERROR: Invalid compset name, IHistClm60BgcNOSUCHCOMPSET, all stub components generated
@@ -152,7 +154,19 @@ FAIL SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET.container_gnu (
 
 That is a genuine post-launch failure reaching the wrapper through `--wait`, confirming section 3's nonzero half by a second route.
 
-The early-abort run returned **2**, which is not the result it was looking for: the command as written here was missing `--skip-compare --skip-generate`, so argparse rejected it before `_check_py_env` ran and the ModuleNotFoundError path was never exercised. The command above is fixed; that half still needs a run.
+The early-abort run exited **1**, on exactly the predicted path:
+
+```
+File "/ctsm/python/ctsm/run_sys_tests.py", line 273, in run_sys_tests
+    _check_py_env(testname_list)
+File "/ctsm/python/ctsm/run_sys_tests.py", line 806, in _check_py_env
+    raise ModuleNotFoundError("modify_fsurdat" + err_msg) from err
+ModuleNotFoundError: modify_fsurdat can't be loaded. Do you need to activate the ctsm_pylib conda environment?
+```
+
+Its testroot `tests_0930-221901ct` holds only `SRCROOT_GIT_STATUS` and `cs.status.fails` -- no case directory, no `STDOUT.`/`STDERR.` -- confirming `create_test` never ran. The two statuses being 100 and 1 is itself the evidence that they are distinct paths rather than one generic failure.
+
+An earlier attempt at this second run returned 2, because the command here was missing `--skip-compare --skip-generate` and argparse rejected it before `_check_py_env`.
 
 ## 5. A full suite end to end
 
