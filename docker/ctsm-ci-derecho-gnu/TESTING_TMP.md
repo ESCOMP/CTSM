@@ -135,13 +135,24 @@ docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
 echo "create_test-rejects exit status: $?"
 
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon
+    -t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon --skip-compare --skip-generate
 echo "early-abort exit status: $?"
 ```
 
-**Check:** both statuses are nonzero. For the first, `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDERR.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset. For the second, expect `ModuleNotFoundError: modify_fsurdat can't be loaded` before any testroot contents appear.
+**Check:** both statuses are nonzero, and for different reasons. For the first, `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset -- its own stdout, not STDERR, which carries only CIME's python-version warning. For the second, expect `ModuleNotFoundError: modify_fsurdat can't be loaded` and no testroot contents at all; since nothing is launched, the status comes from the uncaught exception rather than from `create_test`, so it should not be 100.
 
-**Result: not yet run.** Note that section 3's failing run already demonstrated a nonzero `create_test` status surviving the trip back through podman, so this section is confirmation rather than the only evidence for that half.
+If the second returns **2**, check the command: `run_sys_tests` requires one of `-c`/`--skip-compare` and one of `-g`/`--skip-generate`, and argparse exits 2 when they are missing, before `_check_py_env` is ever reached.
+
+**Result: partly done, 2026-09-30 -- first half passed.** The bogus-compset run exited **100** with `create_test` launched and failing in CREATE_NEWCASE under testroot `tests_0930-221656ct`:
+
+```
+ERROR: Invalid compset name, IHistClm60BgcNOSUCHCOMPSET, all stub components generated
+FAIL SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET.container_gnu (phase CREATE_NEWCASE)
+```
+
+That is a genuine post-launch failure reaching the wrapper through `--wait`, confirming section 3's nonzero half by a second route.
+
+The early-abort run returned **2**, which is not the result it was looking for: the command as written here was missing `--skip-compare --skip-generate`, so argparse rejected it before `_check_py_env` ran and the ModuleNotFoundError path was never exercised. The command above is fixed; that half still needs a run.
 
 ## 5. A full suite end to end
 
