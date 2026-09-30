@@ -588,7 +588,7 @@ module CLMFatesInterfaceMod
 
         if (trim(fates_cstarvation_model) == 'linear') then
            pass_cstarvation_model = 1
-        else if (trim(fates_cstarvation_model) == 'expontential') then
+        else if (trim(fates_cstarvation_model) == 'exponential') then
            pass_cstarvation_model = 2
         end if
         call set_fates_ctrlparms('mort_cstarvation_model',ival=pass_cstarvation_model)
@@ -1603,7 +1603,7 @@ module CLMFatesInterfaceMod
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
          snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
-         frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col, &
+         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col, &
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch)
 
 
@@ -1612,7 +1612,7 @@ module CLMFatesInterfaceMod
        do s=1,this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
-          this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
+          this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_fluxes(c)
        end do
 
        ! Only update the fates internal snow burial if this is not a restart

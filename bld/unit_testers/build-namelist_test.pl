@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3407;
+my $ntests = 3411;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -327,7 +327,7 @@ foreach my $driver ( "nuopc" ) {
                          "-res 0.9x1.25 --clm_start_type cold -namelist '&a use_excess_ice=.true. use_excess_ice_streams=.true./'",
                          "-res 0.9x1.25 --bgc bgc --namelist \"&a urbantvmapalgo='redist' ndepmapalgo='consd' popdensmapalgo='consf'\"",
                          "-res 0.9x1.25 -use_case 1850_control",
-                         "-res 1x1pt_US-UMB -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
+                         "-res CLM_USRDAT -clm_usr_name 1x1pt_US-UMB -namelist '&a fsurdat=\"/dev/null\"/'",
                          "-res 1x1_brazil",
                          "-namelist '&a use_matrixcn=F,use_soil_matrixcn=F,hist_wrt_matrixcn_diag=F,spinup_matrixcn=F/' -bgc sp",
                          "-namelist '&a use_matrixcn=T,use_soil_matrixcn=T,hist_wrt_matrixcn_diag=T,spinup_matrixcn=T/' -bgc bgc -crop -clm_accelerated_spinup on",
@@ -1018,6 +1018,22 @@ my %failtest = (
                                    },
      "fatmlndfrc set but nuopc"  =>{ options=>"-driver nuopc -envxml_dir .",
                                      namelst=>"fatmlndfrc='frac.nc'",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_res_wo_name"    =>{ options=>"--res CLM_USRDAT --envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "clm_usrdat_name_wo_res"    =>{ options=>"--res 0.9x1.25 --clm_usr_name testname --envxml_dir .",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "NEON_wo_sitename"          =>{ options=>"--res CLM_USRDAT --envxml_dir . --clm_usr_name NEON",
+                                     namelst=>"",
+                                     phys=>"clm6_0",
+                                   },
+     "PLUMBER2_wo_sitename"      =>{ options=>"--res CLM_USRDAT --envxml_dir . --clm_usr_name PLUMBER2",
+                                     namelst=>"",
                                      phys=>"clm6_0",
                                    },
      "branch but NO nrevsn"      =>{ options=>"-clm_start_type branch -envxml_dir .",

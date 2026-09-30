@@ -6,7 +6,7 @@ module test_dyn_cons_biogeophys
   use dynConsBiogeophysMod
   use shr_kind_mod , only : r8 => shr_kind_r8
   use unittestSubgridMod
-  use unittestArrayMod, only : col_array
+  use unittestArrayMod, only : col_array, grc_array
   use unittestFilterBuilderMod, only : filter_from_range, filter_empty
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use clm_varpar, only : nlevgrnd, nlevsno, maxpatch_glc
@@ -73,6 +73,9 @@ contains
     if (associated(this%temperature_inst%dynbal_baseline_heat_col)) then
        deallocate(this%temperature_inst%dynbal_baseline_heat_col)
     end if
+    if (associated(this%temperature_inst%dynbal_heat_storage_grc)) then
+       deallocate(this%temperature_inst%dynbal_heat_storage_grc)
+    end if
 
     if (associated(this%urbanparams_inst%nlev_improad)) then
        deallocate(this%urbanparams_inst%nlev_improad)
@@ -109,6 +112,7 @@ contains
     real(r8), allocatable :: expected_vals_heat_col(:)
     real(r8), allocatable :: ignored_heatliq_col(:)
     real(r8), allocatable :: ignored_cvliq_col(:)
+    real(r8), allocatable :: expected_zero_grc(:)
 
     ! ------------------------------------------------------------------------
     ! Create subgrid structure.
@@ -178,6 +182,10 @@ contains
     ! Initialize necessary variables in temperature_inst
     allocate(this%temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:nlevgrnd))
     allocate(this%temperature_inst%dynbal_baseline_heat_col(bounds%begc:bounds%endc))
+    allocate(this%temperature_inst%dynbal_heat_storage_grc(bounds%begg:bounds%endg))
+    ! Give the storage pool an arbitrary non-zero value, so that we can verify below that
+    ! reset_all_baselines resets it to 0
+    this%temperature_inst%dynbal_heat_storage_grc(bounds%begg:bounds%endg) = 1000._r8
     do c = bounds%begc, bounds%endc
        ! Use a different value of temperature for each column
        if (c == glc_col) then
@@ -202,6 +210,11 @@ contains
          water_inst = this%water_inst, &
          t_soisno_col = this%temperature_inst%t_soisno_col(bounds%begc:bounds%endc,:), &
          watsat_col = this%soilstate_inst%watsat_col(bounds%begc:bounds%endc,:))
+
+    ! Give the water storage pools arbitrary non-zero values, so that we can verify below
+    ! that reset_all_baselines resets them to 0
+    this%water_inst%waterstatebulk_inst%dynbal_liq_storage_grc(bounds%begg:bounds%endg) = 100._r8
+    this%water_inst%waterstatebulk_inst%dynbal_ice_storage_grc(bounds%begg:bounds%endg) = 200._r8
 
     ! ------------------------------------------------------------------------
     ! Call the routine we're testing
@@ -257,6 +270,14 @@ contains
          expected_vals_col = expected_vals_heat_col, &
          baselines_col = this%temperature_inst%dynbal_baseline_heat_col, &
          msg = 'heat')
+
+    ! Setting reset_all_baselines should also have reset the dynbal storage pools to 0
+    expected_zero_grc = grc_array(0._r8)
+    associate(waterstatebulk_inst => this%water_inst%waterstatebulk_inst)
+    @assertEqual(expected_zero_grc, waterstatebulk_inst%dynbal_liq_storage_grc, message='liq storage')
+    @assertEqual(expected_zero_grc, waterstatebulk_inst%dynbal_ice_storage_grc, message='ice storage')
+    end associate
+    @assertEqual(expected_zero_grc, this%temperature_inst%dynbal_heat_storage_grc, message='heat storage')
 
   contains
     subroutine assertBaselines(expected_vals_col, baselines_col, msg)

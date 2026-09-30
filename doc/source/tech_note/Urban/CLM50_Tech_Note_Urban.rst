@@ -1,7 +1,7 @@
-.. _rst_Urban Model (CLMU):
+.. _rst_Urban Model (CLMU) Overview:
 
-Urban Model (CLMU)
-======================
+Urban Model (CLMU) Overview
+===========================
 
 The urban parameterization (CLMU; :ref:`Oleson et al. (2008b) <Olesonetal2008b>`; :ref:`Oleson et al. (2008c) <Olesonetal2008c>`; :ref:`Oleson and Feddema (2020) <OlesonFeddema2020>`) allows simulation of the urban environment within a climate model, and particularly the temperature/humidity where people live. As such, the urban model allows scientific study of how climate change affects the urban heat island and possible urban planning and design strategies to mitigate warming (e.g., white roofs).
 

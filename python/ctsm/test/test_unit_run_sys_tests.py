@@ -302,8 +302,8 @@ class TestRunSysTests(unittest.TestCase):
     def test_getTestmodList_testname(self):
         """Ensure that _get_testmod_list() works correctly with full test name(s) specified"""
         testmod_list_input = [
-            "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-crop",
-            "ERS_D_Ld15.f45_f45_mg37.I2000Clm50FatesRs.izumi_nag.clm-default",
+            "ERS_D_Ld15.f45_f45_mg37.I2000Clm60FatesRsGs.izumi_nag.clm-crop",
+            "ERS_D_Ld15.f45_f45_mg37.I2000Clm60FatesRsGs.izumi_nag.clm-default",
         ]
         target = ["clm-crop", "clm-default"]
         output = _get_testmod_list(testmod_list_input)
