@@ -63,7 +63,7 @@ echo "wrapper exit status: $?"
 
 Every item on the check list held: `--output-root` and `--baseline-root` are `MACHINE_DEFAULTS["ctsm-ci-container"]` resolving, `--machine container --compiler gnu` is the injected `--extra-create-test-args`, `_gnu` on the test id is `_NUM_COMPILER_CHARS = 3`, there is no `--project`, and nothing was created under `$SCRATCH/cases_devcontainer`.
 
-## 3. `--wait` blocking, and the exit status reaching PBS
+## 3. `--wait` blocking, and the exit status reaching PBS ✅
 
 **What this tests:** three things -- that `--wait` blocks rather than returning as soon as `create_test` is launched; that a nonzero `create_test` status survives the trip back out through podman to PBS; and that a *passing* test returns 0, so that a nonzero status means something. All three were untested outside unit tests against a fake launcher.
 
@@ -95,9 +95,21 @@ cime/CIME/Tools/cs.status $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/Te
 
 Confirm the case PASSes. While it runs, progress is in `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` and the matching `STDERR.*`, not in the PBS log. The wrapper prints the exact path as `testroot` in its `host-side directories:` block.
 
-**Result: partly done, 2026-09-30 -- two of the three settled.** A run with the old `IHistClm60Bgc` test name exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That settles blocking (a status of 100 could only arrive after `create_test` finished) and nonzero propagation. The test failed in SHAREDLIB_BUILD for the DGLC reason above, unrelated to the wrapper.
+**Result: passed, 2026-09-30.** All three settled, across two runs.
 
-Still open: the exit-0 path. A nonzero status by itself cannot distinguish "propagated `create_test`'s real status" from "always fails" -- a wrapper hardwired to return nonzero would have produced exactly the evidence we have. What CI needs is nonzero *if and only if* a test failed, so the passing direction has to be shown too. That is what the command above is for.
+A run with the old `IHistClm60Bgc` test name exited **100** -- `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That settled blocking (a status of 100 could only arrive after `create_test` finished) and nonzero propagation. The test failed in SHAREDLIB_BUILD for the DGLC reason above, unrelated to the wrapper.
+
+A second run, with `IHistClm60BgcQianRsGs`, exited **0** and every phase PASSed under testroot `tests_0930-220608ct`:
+
+```
+PASS ... SHAREDLIB_BUILD time=81
+PASS ... MODEL_BUILD time=15
+PASS ... RUN time=48
+PASS ... MEMLEAK insufficient data for memleak test
+PASS ... SHORT_TERM_ARCHIVER
+```
+
+Together those give what CI needs: the wrapper exits nonzero *if and only if* a test failed. The pair also rules out a wrapper hardwired to one status, which either run alone would have been consistent with. Incidentally, SHAREDLIB_BUILD passing is the direct check that `IHistClm60BgcQianRsGs` really is on SGLC, so the section 3 substitution is sound; the whole test took about two and a half minutes, so the four-hour walltime above is far more than this section needs on its own.
 
 ## 4. A nonzero exit status when a test fails
 
@@ -213,7 +225,7 @@ If `run-case-in-container.sh` is re-run, give it a fresh `--case` name or remove
 
 **Check:** all four exit 0. The failure to watch for is the one section 3 describes -- `single column mode for DGLC is not currently allowed` in SHAREDLIB_BUILD -- which would mean `IHistClm60BgcQianRsGs` is not on SGLC after all and the replacement is wrong. Anything else is a fault in that wrapper rather than in the test choice.
 
-**Result: not yet run.**
+**Result: partly done, 2026-09-30 -- two of the four.** The first two commands in that block are sections 2 and 3, both of which passed, and section 3's PASS through SHAREDLIB_BUILD is the evidence that `IHistClm60BgcQianRsGs` is a working substitute. What remains is the other two wrappers: `run-test-in-container.sh` bare, which reaches the same test through `create_test` rather than `run_sys_tests`, and the `run-case-in-container.sh` example.
 
 ## What to watch for
 
