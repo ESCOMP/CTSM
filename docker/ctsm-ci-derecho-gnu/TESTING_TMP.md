@@ -1,0 +1,25 @@
+# Testing the cirrus-runner-workflows branch
+
+**Validate `run-sys-tests-in-container.sh` on Casper.**
+
+Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run against the actual container on a compute node. Each step below is ordered by what it actually proves; do them in order and do not skip one because a later step looks like it would cover it too.
+
+1. **Done 2026-09-30; recorded because nothing else covers this path.**
+   `run_sys_tests` itself, on the host, from `ctsm_pylib` -- no container and no allocation -- with `--xml-machine` and deliberately *no* `--suite-compiler`:
+   ```
+   ./run_sys_tests --machine-name ctsm-ci-container --xml-machine derecho \
+       -s aux_clm_mpi_serial --skip-compare --skip-generate \
+       --dry-run --skip-git-status -v
+   ```
+   This is the only way to reach `_get_compilers_for_suite`, and so `get_tests_from_xml`, through `run_sys_tests`' own code: the wrapper always injects `--suite-compiler gnu` (there is no way to suppress it), which skips that call entirely. Result: resolves `['gnu', 'intel']` from derecho's testlist and builds two `create_test` commands carrying `--xml-machine derecho`, with testids `<MMDD-HHMMSS>ct_gnu` and `..._int` under testroot `/scratch/tests_<MMDD-HHMMSS>ct`.
+   An earlier version of this step ran `query_testlists.py` instead. That was near-useless: it calls `get_tests_from_xml` directly as CIME's own script, so it exercised CIME and the testlist data rather than any of this branch's code.
+   One host-vs-container difference this surfaces: on the host, `create_machine` finds an account and adds `--project`. Inside the container there is none, so `--project` is absent there.
+2. The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not** prove suite resolution -- the wrapper always injects `--suite-compiler gnu`, which makes `run_sys_tests` skip `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`, and `--dry-run` stops `create_test` from running at all. What it does prove: `run_sys_tests` imports and runs under the container's `python3`; `create_machine("ctsm-ci-container")` resolves; `git`/`bin/git-fleximod status` succeed against the bind-mounted `/ctsm`; and the testroot is named as predicted (`tests_<MMDD-HHMMSS>ct`).
+3. One known-good test through the wrapper -- `-t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`, then `echo $?`. This is the **only** step that proves `--wait` actually blocks and that the exit status propagates through podman to PBS -- the entire reason the `--wait` work exists, and until this runs it is untested outside unit tests against a fake launcher. Confirm the testroot appears under `$SCRATCH/cases_devcontainer/` and the case PASSes.
+4. A deliberately failing test, to confirm the exit status is nonzero -- `-t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` is a convenient choice, since it is already known to fail here for a documented reason (missing python modules; see the `-s` / ctsm_pylib note in README "Running run_sys_tests"). Confirm `echo $?` is nonzero.
+5. The full `-s aux_clm_mpi_serial`. Judge this run by `cs.status.fails` inside the testroot, **not** by the wrapper's exit code: a nonzero exit is *expected* on a first full run of this suite, for reasons unrelated to this change -- `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the image lacks (same as step 4), and the suite's NEON/`CLM_USRDAT` and FATES entries need user datasets and FATES build support that this change does not touch. Do **not** use `-s clm_short` as a substitute "quick suite" -- it has exactly two derecho/gnu entries, `ERP_D_P64x2_Ld3.f10_f10_mg37.I1850Clm50BgcCrop` and `ERS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop`, neither mpi-serial, and `P64x2` wants 64 MPI tasks against a machine config with `MAX_MPITASKS_PER_NODE=4` inside an 8-cpu PBS reservation; it will fail for reasons that have nothing to do with this change.
+**What to watch for**, highest-risk failure modes first:
+- `_record_git_status` can abort `run_sys_tests` up front if git's dubious-ownership / `safe.directory` check trips on the bind-mounted repo. Mitigation: pass `--skip-git-status`.
+- The silent job log described in README "Running run_sys_tests" (Test output does not appear in the job log): with `--wait`, nothing streams to the PBS log between "Running: <create_test ...>" and the final exit code, so a long quiet job is expected, not a hang -- watch `<testroot>/STDOUT.<testid>` / `STDERR.<testid>` instead.
+- `MAX_MPITASKS_PER_NODE=4` together with `GMAKE_J=4` means CIME may build and run up to 4 tests at once inside the 8-cpu PBS reservation these wrappers request -- expect concurrency, not one test running at a time.
+- The `podman load` OOM (exit 137, prints nothing, `podman tag`/`podman run` then fail with the misleading "image not known") already documented above under "Resolved 2026-08-31: mpi-serial runs work" applies here too: load the image from a session with real memory before running any of the above.
