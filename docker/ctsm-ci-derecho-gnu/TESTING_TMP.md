@@ -56,7 +56,7 @@ echo "wrapper exit status: $?"
 
 ## 3. `--wait` blocking, and the exit status reaching PBS
 
-**Done 2026-09-30 -- failed as expected, which is the result this section was after.** The run exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That is exactly what this section exists to prove -- `--wait` blocks, and a nonzero status survives the trip out to PBS -- and until that run it was untested outside unit tests against a fake launcher. The test itself failed for a reason unrelated to the wrapper (below). Still unshown: the exit-0 path, where a passing test returns 0.
+**Done 2026-09-30 -- failed as expected, which is the result this section was after.** The run exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That settles two of the three things this section is for: `--wait` blocks (a status of 100 could only arrive after `create_test` finished), and a nonzero status survives the trip out to PBS. Until that run both were untested outside unit tests against a fake launcher. The test itself failed for a reason unrelated to the wrapper (below). What remains is the third: that a *passing* test returns 0, so that nonzero means something.
 
 The test it ran, `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`, is no longer usable. The ctsm5.4.054 rebase changed that alias in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so it fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so the compset change is what broke it.
 
@@ -80,7 +80,9 @@ docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
 echo "wrapper exit status: $?"
 ```
 
-**Check:** the status is 0, *and* it is printed only after the test has finished. If it comes back in seconds, `--wait` is not blocking and the rest of this section proves nothing. Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
+**Check:** the status is 0. That is the *converse* of what the failing run showed, and the only part still open: a nonzero status by itself cannot distinguish "propagated `create_test`'s real status" from "always fails", and a wrapper hardwired to return nonzero would have produced exactly the evidence we have. What CI needs is nonzero *if and only if* a test failed, so the passing direction has to be shown too. Blocking is not in question any more -- a status of 100 could only have come back after `create_test` finished.
+
+Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
 
 ```bash
 cime/CIME/Tools/cs.status $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/TestStatus
