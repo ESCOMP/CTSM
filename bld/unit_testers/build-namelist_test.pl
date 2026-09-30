@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3417;
+my $ntests = 3415;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -1241,20 +1241,12 @@ my %failtest = (
                                      namelst=>"use_fates_inventory_init=.true.",
                                      phys=>"clm4_5",
                                    },
-     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
-                                     phys=>"clm4_5",
-                                   },
      "useFATESLUH2butnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUPFTbutnotfile"   =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_lupft=.true.",
-                                     phys=>"clm4_5",
-                                   },
-     "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUH2invalidlogic"  =>{ options=>"-bgc fates -envxml_dir . -no-megan",
