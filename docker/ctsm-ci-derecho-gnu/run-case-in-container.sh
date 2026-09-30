@@ -24,7 +24,7 @@
 # Example:
 #   docker/ctsm-ci-derecho-gnu/run-case-in-container.sh \
 #       --case brazil_test \
-#       --compset IHistClm60Bgc --res 1x1_brazil --mpilib mpi-serial \
+#       --compset IHistClm60BgcQianRsGs --res 1x1_brazil --mpilib mpi-serial \
 #       --run-unsupported
 #
 # --case may be a bare name, which lands in /cases (i.e. the host's

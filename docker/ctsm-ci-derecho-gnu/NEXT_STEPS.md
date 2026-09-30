@@ -187,6 +187,11 @@ in the container:
 PASS SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc.container_gnu RUN
 ```
 
+(Recorded before the ctsm5.4.054 rebase. That alias now resolves to
+`DGLC%NOEVOLVE`, which cdeps refuses to run single-point, so the test above no
+longer builds; `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs` is the
+equivalent today. See README "mpi-serial".)
+
 with no regression: 55/55 unit tests and the mpich `_P1` run still pass.
 
 **The one rule that explains every failure along the way: exactly ONE MPI

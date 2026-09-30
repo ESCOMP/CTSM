@@ -166,7 +166,7 @@ docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 
 # or a case you define yourself
 docker/ctsm-ci-derecho-gnu/run-case-in-container.sh \
-    --case brazil_test --compset IHistClm60Bgc --res 1x1_brazil \
+    --case brazil_test --compset IHistClm60BgcQianRsGs --res 1x1_brazil \
     --mpilib mpi-serial --run-unsupported
 ```
 
@@ -193,7 +193,7 @@ The third of those wrappers drives `./run_sys_tests` rather than
 ```bash
 # one test by name
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
 
 # derecho's mpi-serial suite, filtered to this image's one compiler
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
@@ -371,6 +371,10 @@ written `_Mmpi-serial`, and they run here:
 ```
 PASS SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc.container_gnu RUN
 ```
+
+That result was recorded before the ctsm5.4.054 rebase and does not reproduce as
+written. The ctsm5.4.054 rebase changed `IHistClm60Bgc` in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so that test now fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so the compset change is what broke it. The equivalent test today is
+`SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs`.
 
 **The governing constraint is that exactly ONE MPI implementation may exist in
 the executable.** CTSM's mpi-serial build statically links mpi-serial, which

@@ -27,7 +27,7 @@
 # Examples:
 #   # one test by name
 #   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-#       -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
+#       -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
 #   # derecho's mpi-serial suite, filtered to this image's one compiler
 #   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
 #   # see what would run, without running it

@@ -33,7 +33,7 @@
 #   docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 #   # a specific test
 #   docker/ctsm-ci-derecho-gnu/run-test-in-container.sh \
-#       SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
+#       SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
 #   # a whole suite, filtered to the one compiler this image has
 #   docker/ctsm-ci-derecho-gnu/run-test-in-container.sh \
 #       --xml-category prealpha --xml-machine derecho
@@ -70,9 +70,14 @@ set -u
 # NTASKS=1 -- which a 1x1 grid needs, since it cannot decompose over the
 # container machine's four default tasks -- and selects PIO_TYPENAME=netcdf.
 #
-# Mirrors testlist_clm.xml's SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60Bgc,
-# minus its testmods and shortened to one day.
-default_test="${DEFAULT_TEST:-SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc}"
+# Mirrors testlist_clm.xml's
+# SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs, minus its testmods and
+# shortened to one day.
+#
+# NOT IHistClm60Bgc, which that testlist entry used before ctsm5.4.054: the
+# rebase repointed that alias at DGLC%NOEVOLVE, and cdeps' dglc buildnml
+# rejects single-point runs, so it no longer builds on a 1x1 grid.
+default_test="${DEFAULT_TEST:-SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs}"
 
 ctsm_host_setup
 

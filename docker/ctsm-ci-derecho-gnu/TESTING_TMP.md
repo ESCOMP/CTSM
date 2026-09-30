@@ -48,9 +48,11 @@ echo "wrapper exit status: $?"
 
 ## 3. `--wait` blocking, and the exit status reaching PBS
 
-One known-good test through the wrapper -- `-t SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs`, then `echo $?`.
+**Done 2026-09-30 -- failed as expected, which is the result this section was after.** The run exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That is exactly what this section exists to prove -- `--wait` blocks, and a nonzero status survives the trip out to PBS -- and until that run it was untested outside unit tests against a fake launcher. The test itself failed for a reason unrelated to the wrapper (below). Still unshown: the exit-0 path, where a passing test returns 0.
 
-**Not `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`**, which the other wrappers and the README still use as their example: the ctsm5.4.054 rebase changed that alias in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so it now fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so this is the compset change, not a cdeps change. The replacement keeps the same grid but uses an `RsGs` compset (`HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV`), which stays on SGLC, and is in derecho's `aux_clm_mpi_serial` list for gnu. It has not yet been run in the container. This is the **only** step that proves `--wait` actually blocks and that the exit status propagates through podman to PBS -- the entire reason the `--wait` work exists, and until this runs it is untested outside unit tests against a fake launcher. Confirm the testroot appears under `$SCRATCH/cases_devcontainer/` and the case PASSes.
+The test it ran, `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`, is no longer usable. The ctsm5.4.054 rebase changed that alias in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so it fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so the compset change is what broke it.
+
+To show the exit-0 path, re-run with a compset that stays on SGLC. `IHistClm60BgcQianRsGs` (`HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV`) is what derecho's `aux_clm_mpi_serial` entry for this grid uses now, and `SMS_D_Ld1` keeps the one-day debug shape of the original.
 
 **Run it:**
 
@@ -66,11 +68,9 @@ podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
 cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs --skip-compare --skip-generate
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs --skip-compare --skip-generate
 echo "wrapper exit status: $?"
 ```
-
-**Already shown once, on 2026-09-30:** a run of this section with the old test name exited **100** -- `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. So `--wait` does block and does propagate a nonzero status; what that run did not show is the passing case.
 
 **Check:** the status is 0, *and* it is printed only after the test has finished. If it comes back in seconds, `--wait` is not blocking and the rest of this section proves nothing. Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
 
