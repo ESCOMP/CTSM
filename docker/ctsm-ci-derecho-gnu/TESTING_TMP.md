@@ -38,7 +38,7 @@ export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
 podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
 cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
-docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run -v
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run -v --skip-compare --skip-generate
 echo "wrapper exit status: $?"
 ```
 
@@ -64,7 +64,7 @@ podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
 cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc --skip-compare --skip-generate
 echo "wrapper exit status: $?"
 ```
 
@@ -94,7 +94,7 @@ podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
 cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
-    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET
+    -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET --skip-compare --skip-generate
 echo "wrapper exit status: $?"
 ```
 
@@ -128,7 +128,7 @@ export TMPDIR=/var/tmp/$USER      # rootless podman needs node-local scratch
 podman load -i /glade/work/$USER/ctsm-ci-derecho-gnu_20260831.tar
 cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
-docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
+docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --skip-compare --skip-generate
 echo "wrapper exit status: $?"
 ```
 
