@@ -2,36 +2,37 @@
 
 **Validate `run-sys-tests-in-container.sh` on Casper.**
 
-Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run against the actual container on a compute node. Each section below is ordered by what it actually proves; do them in order and do not skip one because a later one looks like it would cover it too. Each carries the full command sequence, including its own `execcasper` and `podman load`, so sections 2-5 can be run in one session or in separate ones.
+Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run in full against the actual container on a compute node. Each section below is ordered by what it actually proves; do them in order and do not skip one because a later one looks like it would cover it too.
 
-## 1. Suite resolution via `--xml-machine`
+Every section has the same shape: **What this tests**, then **Run it**, then **Check**, then **Result**. Each `Run it` block is complete on its own, including its `execcasper` and `podman load`, so sections 2-6 can be run in one session or in separate ones. A section whose header carries a ✅ is finished; one without it is either unrun or only partly done, and its **Result** says which.
 
-**Done 2026-09-30; recorded because nothing else covers this path.**
-   `run_sys_tests` itself, on the host, from `ctsm_pylib` -- no container and no allocation -- with `--xml-machine` and deliberately *no* `--suite-compiler`:
-   ```
-   module load conda
-   conda activate ctsm_pylib
-   cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+## 1. Suite resolution via `--xml-machine` ✅
 
-   ./run_sys_tests --machine-name ctsm-ci-container --xml-machine derecho \
-       -s aux_clm_mpi_serial --skip-compare --skip-generate \
-       --dry-run --skip-git-status -v
-   ```
-   This is the only way to reach `_get_compilers_for_suite`, and so `get_tests_from_xml`, through `run_sys_tests`' own code: the wrapper always injects `--suite-compiler gnu` (there is no way to suppress it), which skips that call entirely. Result: resolves `['gnu', 'intel']` from derecho's testlist and builds two `create_test` commands carrying `--xml-machine derecho`, with testids `<MMDD-HHMMSS>ct_gnu` and `..._int` under testroot `/scratch/tests_<MMDD-HHMMSS>ct`.
-   An earlier version of this step ran `query_testlists.py` instead. That was near-useless: it calls `get_tests_from_xml` directly as CIME's own script, so it exercised CIME and the testlist data rather than any of this branch's code.
-   One host-vs-container difference this surfaces: on the host, `create_machine` finds an account and adds `--project`. Inside the container there is none, so `--project` is absent there.
+**What this tests:** that `--xml-machine` reaches the testlist query and resolves a suite's compilers. This is the only way to exercise `_get_compilers_for_suite`, and so `get_tests_from_xml`, through `run_sys_tests`' own code: the wrapper always injects `--suite-compiler gnu` (there is no way to suppress it), which skips that call entirely. It runs on the host, from `ctsm_pylib`, with no container and no allocation.
 
-## 2. `run_sys_tests` starting up inside the container
+An earlier version of this section ran `query_testlists.py` instead. That was near-useless: it calls `get_tests_from_xml` directly as CIME's own script, so it exercised CIME and the testlist data rather than any of this branch's code.
 
-**Done 2026-09-30 -- passed, exit 0.** `run_sys_tests` imported and ran under the container's `python3`, `create_machine("ctsm-ci-container")` resolved, `git` / `bin/git-fleximod status` succeeded against the bind-mounted `/ctsm`, and the testroot was named `tests_0930-220320ct` as predicted. The assembled command was:
+**Run it:**
 
-```
-/ctsm/cime/scripts/create_test --test-id 0930-220320ct_gnu --output-root /scratch/tests_0930-220320ct --xml-category aux_clm_mpi_serial --xml-machine derecho --xml-compiler gnu --baseline-root /scratch/baselines --retry 0 --machine container --compiler gnu
+```bash
+module load conda
+conda activate ctsm_pylib
+cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
+
+./run_sys_tests --machine-name ctsm-ci-container --xml-machine derecho \
+    -s aux_clm_mpi_serial --skip-compare --skip-generate \
+    --dry-run --skip-git-status -v
 ```
 
-`--output-root` and `--baseline-root` are `MACHINE_DEFAULTS["ctsm-ci-container"]` resolving; `--machine container --compiler gnu` is the injected `--extra-create-test-args`; `_gnu` on the test id is `_NUM_COMPILER_CHARS = 3`. There is no `--project`, unlike the same dry run on the host in section 1 -- the container has no account, as predicted. Nothing was created under `$SCRATCH/cases_devcontainer`.
+**Check:** the compilers resolve from derecho's testlist, and one `create_test` command is built per compiler, each carrying `--xml-machine derecho`, under a testroot named `tests_<MMDD-HHMMSS>ct`.
 
-The wrapper with `-s aux_clm_mpi_serial --dry-run`. This does **not** prove suite resolution -- the wrapper always injects `--suite-compiler gnu`, which makes `run_sys_tests` skip `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`, and `--dry-run` stops `create_test` from running at all. What it does prove: `run_sys_tests` imports and runs under the container's `python3`; `create_machine("ctsm-ci-container")` resolves; `git`/`bin/git-fleximod status` succeed against the bind-mounted `/ctsm`; and the testroot is named as predicted (`tests_<MMDD-HHMMSS>ct`).
+**Result: passed, 2026-09-30.** Resolved `['gnu', 'intel']` and built two `create_test` commands with testids `<MMDD-HHMMSS>ct_gnu` and `..._int` under testroot `/scratch/tests_<MMDD-HHMMSS>ct`. One host-vs-container difference this surfaced: on the host, `create_machine` finds an account and adds `--project`; inside the container there is none, so `--project` is absent there (confirmed in section 2).
+
+## 2. `run_sys_tests` starting up inside the container ✅
+
+**What this tests:** that `run_sys_tests` imports and runs under the container's `python3`; that `create_machine("ctsm-ci-container")` resolves; that `git` / `bin/git-fleximod status` succeed against the bind-mounted `/ctsm`; and that the testroot is named as predicted (`tests_<MMDD-HHMMSS>ct`).
+
+It does **not** prove suite resolution -- the wrapper always injects `--suite-compiler gnu`, which makes `run_sys_tests` skip `_get_compilers_for_suite`, the only caller of `get_tests_from_xml`, and `--dry-run` stops `create_test` from running at all. That is section 1's job.
 
 **Run it:**
 
@@ -54,13 +55,19 @@ echo "wrapper exit status: $?"
 
 **Check:** exit status 0. The wrapper's `host-side directories:` block names a testroot `tests_<MMDD-HHMMSS>ct`. The logged `Running: <.../create_test ...>` line carries `--xml-category aux_clm_mpi_serial --xml-machine derecho --xml-compiler gnu`, `--output-root /scratch/tests_<MMDD-HHMMSS>ct` and `--baseline-root /scratch/baselines` (that pair is `MACHINE_DEFAULTS["ctsm-ci-container"]` resolving), and `--machine container --compiler gnu` from the injected `--extra-create-test-args`. Unlike the same dry run on the host, there should be **no** `--project`, since the container has no account. Nothing should have been created under `$SCRATCH/cases_devcontainer`.
 
+**Result: passed, 2026-09-30, exit 0.** The assembled command was:
+
+```
+/ctsm/cime/scripts/create_test --test-id 0930-220320ct_gnu --output-root /scratch/tests_0930-220320ct --xml-category aux_clm_mpi_serial --xml-machine derecho --xml-compiler gnu --baseline-root /scratch/baselines --retry 0 --machine container --compiler gnu
+```
+
+Every item on the check list held: `--output-root` and `--baseline-root` are `MACHINE_DEFAULTS["ctsm-ci-container"]` resolving, `--machine container --compiler gnu` is the injected `--extra-create-test-args`, `_gnu` on the test id is `_NUM_COMPILER_CHARS = 3`, there is no `--project`, and nothing was created under `$SCRATCH/cases_devcontainer`.
+
 ## 3. `--wait` blocking, and the exit status reaching PBS
 
-**Done 2026-09-30 -- failed as expected, which is the result this section was after.** The run exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That settles two of the three things this section is for: `--wait` blocks (a status of 100 could only arrive after `create_test` finished), and a nonzero status survives the trip out to PBS. Until that run both were untested outside unit tests against a fake launcher. The test itself failed for a reason unrelated to the wrapper (below). What remains is the third: that a *passing* test returns 0, so that nonzero means something.
+**What this tests:** three things -- that `--wait` blocks rather than returning as soon as `create_test` is launched; that a nonzero `create_test` status survives the trip back out through podman to PBS; and that a *passing* test returns 0, so that a nonzero status means something. All three were untested outside unit tests against a fake launcher.
 
-The test it ran, `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`, is no longer usable. The ctsm5.4.054 rebase changed that alias in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so it fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so the compset change is what broke it.
-
-To show the exit-0 path, re-run with a compset that stays on SGLC. `IHistClm60BgcQianRsGs` (`HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV`) is what derecho's `aux_clm_mpi_serial` entry for this grid uses now, and `SMS_D_Ld1` keeps the one-day debug shape of the original.
+The test to use is `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs`. **Not `SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60Bgc`**, which no longer builds: the ctsm5.4.054 rebase changed that alias in `cime_config/config_compsets.xml` from `..._MOSART_SGLC_SWAV` to `..._MOSART_DGLC%NOEVOLVE_SWAV`, and `components/cdeps/dglc/cime_config/buildnml:63-65` refuses single-point runs (`single column mode for DGLC is not currently allowed`). `1x1_brazil` is single point, so it fails in SHAREDLIB_BUILD. The cdeps guard is not new -- it is in `cdeps1.0.79` too -- so the compset change is what broke it. `IHistClm60BgcQianRsGs` (`HIST_DATM%QIA_CLM60%BGC_SICE_SOCN_SROF_SGLC_SWAV`) stays on SGLC and is what derecho's `aux_clm_mpi_serial` entry for this grid uses now; `SMS_D_Ld1` keeps the one-day debug shape of the original.
 
 **Run it:**
 
@@ -80,9 +87,7 @@ docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
 echo "wrapper exit status: $?"
 ```
 
-**Check:** the status is 0. That is the *converse* of what the failing run showed, and the only part still open: a nonzero status by itself cannot distinguish "propagated `create_test`'s real status" from "always fails", and a wrapper hardwired to return nonzero would have produced exactly the evidence we have. What CI needs is nonzero *if and only if* a test failed, so the passing direction has to be shown too. Blocking is not in question any more -- a status of 100 could only have come back after `create_test` finished.
-
-Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
+**Check:** the status is 0. Then read the result from the host -- the generated `cs.status` in the testroot bakes in container paths and will not run here:
 
 ```bash
 cime/CIME/Tools/cs.status $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/TestStatus
@@ -90,11 +95,17 @@ cime/CIME/Tools/cs.status $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/Te
 
 Confirm the case PASSes. While it runs, progress is in `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDOUT.<MMDD-HHMMSS>ct` and the matching `STDERR.*`, not in the PBS log. The wrapper prints the exact path as `testroot` in its `host-side directories:` block.
 
+**Result: partly done, 2026-09-30 -- two of the three settled.** A run with the old `IHistClm60Bgc` test name exited **100**: `create_test`'s own status for a failed test, returned by `--wait`, carried back out through podman and reported by the wrapper. That settles blocking (a status of 100 could only arrive after `create_test` finished) and nonzero propagation. The test failed in SHAREDLIB_BUILD for the DGLC reason above, unrelated to the wrapper.
+
+Still open: the exit-0 path. A nonzero status by itself cannot distinguish "propagated `create_test`'s real status" from "always fails" -- a wrapper hardwired to return nonzero would have produced exactly the evidence we have. What CI needs is nonzero *if and only if* a test failed, so the passing direction has to be shown too. That is what the command above is for.
+
 ## 4. A nonzero exit status when a test fails
 
-A deliberately failing test, to confirm the exit status is nonzero. The test must fail *inside* `create_test`, after `run_sys_tests` has launched it; a failure that `run_sys_tests` catches first never reaches `--wait` and so proves nothing about the propagation path.
+**What this tests:** that a test failing *inside* `create_test`, after `run_sys_tests` has launched it, produces a nonzero exit status. A failure that `run_sys_tests` catches first never reaches `--wait` and so proves nothing about the propagation path -- which rules out the obvious candidate, `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon`: in the `-t` branch `_check_py_env` runs before `_run_create_test` (`python/ctsm/run_sys_tests.py:273`) and aborts on any name containing `FSURDATMODIFYCTSM`, so nothing is launched. Use a name `create_test` itself will reject instead.
 
-**Run it** with a name `create_test` itself will reject. The obvious candidate, `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon`, is the wrong choice here: in the `-t` branch `_check_py_env` runs before `_run_create_test` (`python/ctsm/run_sys_tests.py:273`) and aborts on any name containing `FSURDATMODIFYCTSM`, so nothing is launched.
+The `FSURDATMODIFYCTSM` run is still worth doing once, as a check of that early-abort path rather than of `--wait` (missing python modules; see the `-s` / ctsm_pylib note in README "Running run_sys_tests").
+
+**Run it:**
 
 ```bash
 execcasper -A <PROJECT> -l select=1:ncpus=8:mem=96GB -l walltime=01:00:00
@@ -109,25 +120,24 @@ cd /glade/work/samrabin/ctsm_cirrus-runner-workflows
 
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
     -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcNOSUCHCOMPSET --skip-compare --skip-generate
-echo "wrapper exit status: $?"
-```
+echo "create_test-rejects exit status: $?"
 
-**Check:** the status is nonzero, and `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDERR.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset. Note that the 2026-09-30 run described in section 3 already demonstrated this half of the `--wait` contract -- a nonzero `create_test` status surviving the trip back through podman -- so this section is now confirmation rather than the only evidence.
-
-The `FSURDATMODIFYCTSM` run is still worth doing once, as a check of that early-abort path rather than of `--wait` (missing python modules; see the `-s` / ctsm_pylib note in README "Running run_sys_tests"):
-
-```bash
-# in the same session as above
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh \
     -t FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon
-echo "wrapper exit status: $?"
+echo "early-abort exit status: $?"
 ```
 
-Expect a nonzero status and `ModuleNotFoundError: modify_fsurdat can't be loaded` before any testroot contents appear.
+**Check:** both statuses are nonzero. For the first, `$SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/STDERR.<MMDD-HHMMSS>ct` (the wrapper prints the exact path) shows `create_test` rejecting the compset. For the second, expect `ModuleNotFoundError: modify_fsurdat can't be loaded` before any testroot contents appear.
+
+**Result: not yet run.** Note that section 3's failing run already demonstrated a nonzero `create_test` status surviving the trip back through podman, so this section is confirmation rather than the only evidence for that half.
 
 ## 5. A full suite end to end
 
-The full `-s aux_clm_mpi_serial`. Judge this run by the suite's failures (command below), **not** by the wrapper's exit code: a nonzero exit is *expected* on a first full run of this suite, for reasons unrelated to this change -- `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the image lacks (same as section 4's second run), and the suite's NEON/`CLM_USRDAT` and FATES entries need user datasets and FATES build support that this change does not touch. Do **not** use `-s clm_short` as a substitute "quick suite" -- it has exactly two derecho/gnu entries, `ERP_D_P64x2_Ld3.f10_f10_mg37.I1850Clm50BgcCrop` and `ERS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop`, neither mpi-serial, and `P64x2` wants 64 MPI tasks against a machine config with `MAX_MPITASKS_PER_NODE=4` inside an 8-cpu PBS reservation; it will fail for reasons that have nothing to do with this change.
+**What this tests:** the whole suite path, `-s aux_clm_mpi_serial`, including `cs.status` generation and the multi-test testroot layout.
+
+Judge this run by the suite's failures, **not** by the wrapper's exit code: a nonzero exit is *expected* on a first full run, for reasons unrelated to this change -- `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the image lacks (same as section 4's second run), and the suite's NEON / `CLM_USRDAT` and FATES entries need user datasets and FATES build support that this change does not touch.
+
+Do **not** use `-s clm_short` as a substitute "quick suite" -- it has exactly two derecho/gnu entries, `ERP_D_P64x2_Ld3.f10_f10_mg37.I1850Clm50BgcCrop` and `ERS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop`, neither mpi-serial, and `P64x2` wants 64 MPI tasks against a machine config with `MAX_MPITASKS_PER_NODE=4` inside an 8-cpu PBS reservation; it will fail for reasons that have nothing to do with this change.
 
 **Run it:**
 
@@ -156,9 +166,13 @@ cime/CIME/Tools/cs.status --fails-only $SCRATCH/cases_devcontainer/tests_<MMDD-H
 
 Expect `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` plus the NEON / `CLM_USRDAT` and FATES entries to appear there; anything else is a finding.
 
+**Result: not yet run.**
+
 ## 6. The replacement test, in the other two wrappers
 
-`IHistClm60BgcQianRsGs` replaced `IHistClm60Bgc` in `run-test-in-container.sh`'s `default_test` and in the `run-case-in-container.sh` example, for the DGLC reason in section 3. Neither has been run since. They share this session with sections 2-4, so do them together -- one `podman load` covers all of it, and section 2 is nearly free.
+**What this tests:** that `IHistClm60BgcQianRsGs` is a working substitute everywhere `IHistClm60Bgc` was used. It replaced it in `run-test-in-container.sh`'s `default_test` and in the `run-case-in-container.sh` example, for the DGLC reason in section 3, and neither has been run since. Running `run-test-in-container.sh` bare is the path that has been broken since the rebase.
+
+These share a session with sections 2 and 3, so the block below does all four -- one `podman load` covers everything, and section 2 costs seconds.
 
 **Run it** -- fastest first, so a failure stops you before the slow ones:
 
@@ -195,9 +209,11 @@ docker/ctsm-ci-derecho-gnu/run-case-in-container.sh \
 echo "run-case exit status: $?"
 ```
 
+If `run-case-in-container.sh` is re-run, give it a fresh `--case` name or remove `$HOME/cases_devcontainer/brazil_test` first; `create_newcase` will not overwrite an existing case directory.
+
 **Check:** all four exit 0. The failure to watch for is the one section 3 describes -- `single column mode for DGLC is not currently allowed` in SHAREDLIB_BUILD -- which would mean `IHistClm60BgcQianRsGs` is not on SGLC after all and the replacement is wrong. Anything else is a fault in that wrapper rather than in the test choice.
 
-If `run-case-in-container.sh` is re-run, give it a fresh `--case` name or remove `$HOME/cases_devcontainer/brazil_test` first; `create_newcase` will not overwrite an existing case directory.
+**Result: not yet run.**
 
 ## What to watch for
 
