@@ -35,13 +35,18 @@ ARG ESMF_VERSION=8.6.0
 ARG PFUNIT_VERSION=4.8.0
 # These two build the mpi-serial flavor of the stack: the serial PIO below is
 # compiled against the mpi-serial below, and together they give the mpiuni ESMF
-# an external PIO (see "ESMF, serial flavor" below). Neither reaches a CTSM case
-# build, which compiles its own mpi-serial from libraries/mpi-serial and, with
-# no PIO_LIBDIR set here, its own PIO from libraries/parallelio.
+# an external PIO (see "ESMF, serial flavor" below). Neither ARG reaches a CTSM
+# case build *in the container*: nothing sets MPI_SERIAL_PATH here, so such a
+# build compiles its own mpi-serial from libraries/mpi-serial, and with no
+# PIO_LIBDIR set here it compiles its own PIO from libraries/parallelio. On
+# derecho the corresponding modules ARE what a case links; see "Remaining steps"
+# item 4 in NEXT_STEPS.md for the tracing.
 #
-# They track derecho all the same, like every other version ARG here except
+# They track derecho all the same, like every other version ARG here except two:
 # MPICH_VERSION (a deliberate open-source stand-in for proprietary cray-mpich,
-# never compared to derecho's version -- see the top of this file): the image
+# never compared to derecho's version -- see the top of this file) and
+# GIT_VERSION (git is not part of derecho's stack at all; see the git section
+# near the bottom of this file): the image
 # mirrors what you get from CTSM's current ccs_config plus derecho's default
 # software stack, so check-derecho-versions.py compares both "direct" against
 # the mpilib="mpi-serial" <modules> blocks of derecho's config_machines.xml
@@ -96,7 +101,9 @@ ENV TAR_OPTIONS=--no-same-owner
 # (it already retries most other transient errors by default).
 RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc/wgetrc
 
-# ---- GCC (matches derecho's gcc/12.2.0 module) ----
+# ---- GCC (matched derecho's gcc/12.2.0 module as of the 2026-08-31 build;
+# derecho is now at gcc/14.3.0 -- config_machines.xml:59 -- so this ARG is
+# stale pending a rebuild, see "Remaining steps" item 6 in NEXT_STEPS.md) ----
 # gmp/mpfr/mpc come from AlmaLinux (dnf) rather than GCC's
 # contrib/download_prerequisites, which fetches them from gcc.gnu.org --
 # unreliable from the compute node. The distro ships the versions GCC 12.2
@@ -124,10 +131,15 @@ RUN dnf -y install gmp-devel mpfr-devel libmpc-devel && dnf clean all \
 ENV PATH=/usr/local/bin:/opt/mpich/${MPICH_VERSION}/bin:/opt/gcc/${GCC_VERSION}/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
     LD_LIBRARY_PATH=/usr/local/lib:/opt/gcc/${GCC_VERSION}/lib64:/opt/mpich/${MPICH_VERSION}/lib
 
-# ---- MPICH (open equivalent of derecho's cray-mpich 8.1.27, which is
-# MPICH-3.4-ABI-derived). ch4:ofi matches cray-mpich's libfabric
-# lineage; the libfabric implementation is the one embedded in the
-# MPICH tarball. ----
+# ---- MPICH (open equivalent of derecho's cray-mpich, which is
+# MPICH-3.4-ABI-derived). MPICH_VERSION is a deliberate stand-in for the
+# proprietary cray-mpich and is never compared to derecho's version;
+# derecho-versions.ini's deviation guard records cray-mpich 8.1.27, which is
+# what derecho had as of the 2026-08-31 build, and derecho is now at
+# cray-mpich/8.1.32 (config_machines.xml:74) -- so the guard, not the ARG, is
+# what wants attention; see "Remaining steps" item 6 in NEXT_STEPS.md. ch4:ofi
+# matches cray-mpich's libfabric lineage; the libfabric implementation is the
+# one embedded in the MPICH tarball. ----
 RUN cd /tmp \
     && wget -nv "https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz" \
     && tar xzf "mpich-${MPICH_VERSION}.tar.gz" \

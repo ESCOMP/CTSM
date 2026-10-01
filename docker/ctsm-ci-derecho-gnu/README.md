@@ -307,8 +307,8 @@ wrappers' default `IMAGE_TAG`, so nothing needs re-tagging. Alternatively pull
 the published image and point `IMAGE_TAG` at it:
 
 ```bash
-podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830
-IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260830 \
+podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831
+IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831 \
     docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 ```
 
@@ -668,6 +668,18 @@ module, so the check parses the version out of the `PFUNIT_PATH` that
 also means updating the hardcoded install path in
 `cime-macros/gnu_container.cmake` — the Dockerfile asserts the two agree at
 build time, so a mismatch fails the build rather than a later test run.
+
+**`ESMF_VERSION` has the same coupling, with no such assertion.**
+`gnu_container.cmake`'s `set(ESMFMKFILE ...)` hardcodes
+`/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`, and the Dockerfile `COPY`s that
+file verbatim, so bumping `ESMF_VERSION` means editing that line in the same
+change. The Dockerfile's esmf.mk checks assert against the *templated*
+`/usr/local/esmf-${ESMF_VERSION}-mpiuni/…` path, so after a bump they still
+pass while the macro points at a prefix that no longer exists: the build
+finishes clean and the failure surfaces much later, in
+`run-unit-tests-in-container.sh` and in every `mpi-serial` case. A build-time
+assertion mirroring the pFUnit one above would make it loud instead; it is not
+implemented.
 
 ## Baked-in environment (why each matters)
 

@@ -73,10 +73,12 @@ endif()
 # empty. gnu.cmake's own "Fortran compiler version is" message prints blank in
 # the build log, which is the visible symptom.
 #
-# The container pins gfortran to 12.2.0 in the Dockerfile, so the version test
-# has a known answer and the flags can be set unconditionally. This file is
-# included last (${COMPILER}_${MACH}.cmake), after gnu.cmake, so appending to
-# FFLAGS here reaches CIME_utils.cmake's
+# The container pins gfortran to a single known version in the Dockerfile
+# (GCC_VERSION), so the version test has a known answer and the flags can be
+# set unconditionally. That stays true across a GCC bump: every gfortran the
+# image could pin is >= 10, which is the only thing the guard tests for. This
+# file is included last (${COMPILER}_${MACH}.cmake), after gnu.cmake, so
+# appending to FFLAGS here reaches CIME_utils.cmake's
 #     set(CMAKE_Fortran_FLAGS "${CPPDEFS} ${FFLAGS}")
 #
 # Not a container-only problem: any machine running CTSM's unit tests with
@@ -96,9 +98,10 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # command line", because nothing on the link line provides libmpi.
 #
 # derecho has a separate ESMF for this case, and its config_machines.xml
-# selects it on exactly this condition: mpilib="mpi-serial" loads esmf/8.6.0
-# rather than esmf/8.6.0-debug, even when DEBUG="TRUE". That install reports
-# ESMF_COMM=mpiuni and carries no -lmpi. Mirror that here.
+# selects it on exactly this condition: mpilib="mpi-serial" loads the plain
+# esmf module rather than the -debug variant it loads for MPI builds, even when
+# DEBUG="TRUE" (config_machines.xml:90 and :97, both esmf/8.9.1 today). That
+# install reports ESMF_COMM=mpiuni and carries no -lmpi. Mirror that here.
 #
 # FindESMF.cmake (share/cmake) honors an already-defined ESMFMKFILE variable
 # before consulting the environment, and this file is included from
@@ -126,8 +129,9 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # The serial netCDF matters for the same one-MPI reason: the image's default
 # netCDF is built --enable-parallel against MPICH (`ldd libnetcdf.so` shows
 # libmpi.so.12), so linking it would put a second, uninitialized MPI in the
-# executable. derecho splits exactly this way, loading serial netcdf/4.9.2 for
-# mpilib="mpi-serial". cime/CIME/Tools/Makefile turns NETCDF_PATH into
+# executable. derecho splits exactly this way, loading the serial netcdf module
+# (netcdf/4.9.3 today, config_machines.xml:87) for mpilib="mpi-serial" rather
+# than netcdf-mpi. cime/CIME/Tools/Makefile turns NETCDF_PATH into
 # INC_NETCDF/LIB_NETCDF and already drops PNETCDF_PATH for mpi-serial.
 #
 # /usr/local/serial is static, so the loader cannot silently pick the parallel

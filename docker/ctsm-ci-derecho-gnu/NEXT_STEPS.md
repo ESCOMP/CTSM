@@ -7,8 +7,10 @@ Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point
 pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
 NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
 have now been exercised on Casper. The version-check question is now settled
-(item 4), and settling it showed the image has fallen behind derecho: 7 of the
-checker's 10 ARGs are stale as of `ccs_config_cesm1.0.88`. What is left: that
+(item 4), and settling it showed the image has fallen behind derecho: as of
+`ccs_config_cesm1.0.88` the checker fails 7 of its 10 checks — six ARGs are
+stale, and the seventh failure is the `cray-mpich` deviation *guard*, whose
+`MPICH_VERSION` stand-in is deliberately never matched. What is left: that
 rebuild (item 6), re-measuring the two snapshot versions (item 7), and the
 Phase 2 drift cron (item 5)._
 
@@ -18,8 +20,10 @@ Phase 2 drift cron (item 5)._
   (FROM `almalinux:9`) builds the full gnu stack — GCC 12.2.0, MPICH 3.4.3
   ch4:ofi, HDF5 1.12.2, netCDF-C 4.9.2, netCDF-Fortran 4.6.1, PnetCDF 1.12.3,
   ESMF 8.6.0 (debug + optimized), plus **git built from source**. Tagged
-  `localhost/ctsm-ci-derecho-gnu:dev`. Versions match derecho's ncarenv/23.09 gnu
-  stack (see README table).
+  `localhost/ctsm-ci-derecho-gnu:dev`. Versions matched derecho's
+  `ncarenv/23.09` gnu stack as of the 2026-08-31 build; derecho is now on
+  `ncarenv/25.10` (`config_machines.xml:41`) and the two no longer agree — see
+  the README table and item 6.
   - `docker/ctsm-ci-derecho-gnu/smoke-test.sh` passes (versions, `$ESMFMKFILE`, perl
     `XML::LibXML`, and an MPI + netCDF Fortran hello world that links
     `-lnetcdff -lnetcdf -llapack -lblas` and runs under `mpiexec -n 2`).
@@ -362,7 +366,8 @@ not yet been run against the actual container on a Casper compute node; see
    get from CTSM's current `ccs_config` plus derecho's default software stack.
    The tracing below is why that needed a decision at all. Its mpi-serial half
    was recorded wrong the first time and is corrected here (2026-10-01); the
-   PIO half is unchanged.
+   PIO half was rewritten too, gaining the citations it had lacked, but its
+   conclusion is the same as before.
 
    The question it answers is *what versions get used when doing a serial CTSM
    test on derecho*. Traced 2026-10-01:
@@ -438,8 +443,8 @@ not yet been run against the actual container on a Casper compute node; see
    | `PIO_VERSION` | 2.6.2 | 2.6.8 ❌ | `pio2_6_8` |
 
    Both therefore want an image rebuild, now tracked as item 6 below along
-   with the five other ARGs the same check reports stale; no fourth check mode
-   was needed.
+   with the four other stale ARGs and the `cray-mpich` deviation guard that the
+   same check reports; no fourth check mode was needed.
 5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
@@ -469,20 +474,46 @@ not yet been run against the actual container on a Casper compute node; see
    manual republish and a tag bump in `cirrus-testing.yml` -- nothing
    republishes automatically.
 
+   **Bumping `ESMF_VERSION` requires editing `cime-macros/gnu_container.cmake`
+   in the same change**, and nothing will tell you if you forget. Its
+   `set(ESMFMKFILE ...)` hardcodes `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`
+   (not templated), and the `Dockerfile` `COPY`s that file verbatim. The
+   Dockerfile's own esmf.mk assertions check the *templated*
+   `/usr/local/esmf-${ESMF_VERSION}-mpiuni/...` path, so after a bump they still
+   pass while the macro points at a prefix that no longer exists: the build
+   finishes clean and the failure appears much later, in
+   `run-unit-tests-in-container.sh` and in every `mpi-serial` case. The durable
+   fix is a build-time assertion mirroring the one that already guards
+   `PFUNIT_PATH` against exactly this drift; it is **not implemented** -- noted
+   here and next to the `PFUNIT_VERSION` requirement in `README.md`.
+
    **The GCC 12.2.0 -> 14.3.0 jump is the risky part.** It is two major
    releases, and every other library in the image -- HDF5, netCDF-C/Fortran,
    PnetCDF, three ESMF trees, PIO, pFUnit, mpi-serial -- gets recompiled
-   against it, so a new diagnostic anywhere in that chain stops the build. The
+   against it, so a new diagnostic anywhere in that chain stops the build.
+   Expect the trouble on the **C** side, not the Fortran one. Per GCC 14's
+   porting notes (https://gcc.gnu.org/gcc-14/porting_to.html), several
+   long-standing warnings are errors by default in GCC 14:
+   `-Wimplicit-function-declaration`, `-Wincompatible-pointer-types`,
+   `-Wint-conversion` and `-Wreturn-mismatch`. That is what breaks old autotools
+   `configure` scripts and old C sources -- so HDF5 1.12.2, mpi-serial, and
+   anything else not bumped in the same rebuild are the candidates. The
    `-fallow-argument-mismatch` workaround in `gnu_container.cmake` (see "Worth
-   raising upstream" below) is the first thing to re-check. Budget for a debug
-   cycle, not a single clean build.
+   raising upstream" below) is *not* a concern: that file sets the flag
+   unconditionally, precisely because ccs_config's version guard cannot fire
+   there, and neither gfortran's argument-mismatch behavior (unchanged since
+   10) nor the flag itself moved in GCC 14. Budget for a debug cycle, not a
+   single clean build.
 
    Until this is done, **`.github/workflows/derecho-version-check.yml` is red
-   on this branch.** It runs the script on `push` (any branch) and on
-   `pull_request`, in both cases only when the change touches
+   on this branch.** It runs the script on `push` and on `pull_request`, in both
+   cases only when the change touches
    `docker/ctsm-ci-derecho-gnu/Dockerfile`, `derecho-versions.ini`,
    `check-derecho-versions.py`, the workflow file itself, or the `ccs_config`
-   gitlink; plus `workflow_dispatch` on demand. The ccs_config bump that caused
+   gitlink; plus `workflow_dispatch` on demand. The `push` trigger's filter is
+   `branches: ['*']`, and a single `*` does not match `/`, so pushes to a branch
+   whose name contains a slash do not fire it at all (`'**'` would). This branch
+   has no slash, so it does fire here. The ccs_config bump that caused
    the drift is one of those paths, so the failure is not hypothetical.
 7. **Re-measure the two `[snapshot]` versions against derecho's current
    `netcdf-mpi`.** `HDF5_VERSION` and `NETCDF_FORTRAN_VERSION` are among the
