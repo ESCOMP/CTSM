@@ -2,7 +2,7 @@
 
 **Validate `run-sys-tests-in-container.sh` on Casper.**
 
-Written, syntax checked, and dry-run-verified on the login node only (see "Added 2026-08-31: run_sys_tests wrapper" in `NEXT_STEPS.md`) -- it has not yet been run in full against the actual container on a compute node. Each section below is ordered by what it actually proves; do them in order and do not skip one because a later one looks like it would cover it too.
+**All sections pass as of 2026-10-01.** `run-sys-tests-in-container.sh` has been run against the real container on a compute node: suite resolution, startup, `--wait` in both directions, the two distinct failure paths, and the full `aux_clm_mpi_serial` suite. Sections are ordered by what each one proves; if re-validating after a change, do them in order and do not skip one because a later one looks like it would cover it too.
 
 Every section has the same shape: **What this tests**, then **Run it**, then **Check**, then **Result**. Each `Run it` block is complete on its own, including its `execcasper` and `podman load`, so sections 2-6 can be run in one session or in separate ones. A section whose header carries a ✅ is finished; one without it is either unrun or only partly done, and its **Result** says which.
 
@@ -214,7 +214,7 @@ That test aborted during SHAREDLIB_BUILD on `ModuleNotFoundError: No module name
 
 Two expectations recorded here beforehand were wrong, both in the pessimistic direction, and have been corrected above: the NEON / `CLM_USRDAT` and FATES entries were predicted to fail for want of user datasets and FATES build support, and all of them passed.
 
-## 6. The replacement test, in the other two wrappers
+## 6. The replacement test, in the other two wrappers ✅
 
 **What this tests:** that `IHistClm60BgcQianRsGs` is a working substitute everywhere `IHistClm60Bgc` was used. It replaced it in `run-test-in-container.sh`'s `default_test` and in the `run-case-in-container.sh` example, for the DGLC reason in section 3, and neither has been run since. Running `run-test-in-container.sh` bare is the path that has been broken since the rebase.
 
@@ -259,7 +259,13 @@ If `run-case-in-container.sh` is re-run, give it a fresh `--case` name or remove
 
 **Check:** all four exit 0. The failure to watch for is the one section 3 describes -- `single column mode for DGLC is not currently allowed` in SHAREDLIB_BUILD -- which would mean `IHistClm60BgcQianRsGs` is not on SGLC after all and the replacement is wrong. Anything else is a fault in that wrapper rather than in the test choice.
 
-**Result: partly done, 2026-09-30 -- two of the four.** The first two commands in that block are sections 2 and 3, both of which passed, and section 3's PASS through SHAREDLIB_BUILD is the evidence that `IHistClm60BgcQianRsGs` is a working substitute. What remains is the other two wrappers: `run-test-in-container.sh` bare, which reaches the same test through `create_test` rather than `run_sys_tests`, and the `run-case-in-container.sh` example.
+**Result: passed. Sections 2 and 3 on 2026-09-30, the other two wrappers on 2026-10-01.** All four exited 0.
+
+`run-test-in-container.sh` bare, which reaches the same test through `create_test` rather than `run_sys_tests`, PASSed every phase under `$HOME/cases_devcontainer/SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs.container_gnu.20261001_193311_9qrs6g` -- `SHAREDLIB_BUILD time=80`, `MODEL_BUILD time=15`, `RUN time=48`, through `SHORT_TERM_ARCHIVER`. That path had been broken since the rebase, since the old `default_test` could not build.
+
+The `run-case-in-container.sh` example built and ran `brazil_test`, whose `CaseStatus` ends `case.submit success` after `st_archive success`.
+
+Together with section 3, `IHistClm60BgcQianRsGs` is confirmed as a working substitute for `IHistClm60Bgc` in all three places it replaced it.
 
 ## What to watch for
 
