@@ -30,20 +30,31 @@ The toolchain (GCC, MPICH) lives under `/opt`; libraries install under
 `/usr/local` (where the `container` machine hard-codes `NETCDF_PATH` /
 `PNETCDF_PATH`); ESMF is located via `ESMFMKFILE`.
 
+The **derecho gnu** column below is what
+`ccs_config/machines/derecho/config_machines.xml` loads at the `ccs_config`
+this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The **this
+image** column is what the published image was actually built with (2026-08-31,
+against derecho's then-current `ncarenv/23.09` stack). **The two no longer
+agree.** Rows marked **stale** are the ones where they differ:
+`check-derecho-versions.py` fails 7 of its 10 ARG checks today, and clearing
+that needs an image rebuild — see
+[NEXT_STEPS.md](NEXT_STEPS.md) "Remaining steps" item 6. Read the table as the
+current known state, not as a claim that the image matches derecho.
+
 | Component | derecho gnu | this image | note |
 |---|---|---|---|
-| GCC | 12.2.0 | 12.2.0 | exact match, built from source under `/opt/gcc` |
-| MPI | cray-mpich 8.1.27 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary |
-| HDF5 | hdf5-mpi/1.12.2 | 1.12.2 (parallel) | confirmed on derecho: loaded by netcdf-mpi/4.9.2 under ncarenv/23.09 |
-| netCDF-C | netcdf-mpi/4.9.2 | 4.9.2 | |
-| netCDF-Fortran | bundled in netcdf/4.9.2 | 4.6.1 | confirmed on derecho: `nf-config --version` with ncarenv/23.09 + netcdf-mpi/4.9.2 |
-| PnetCDF | parallel-netcdf/1.12.3 | 1.12.3 | |
-| ESMF | esmf/8.6.0-debug, esmf/8.6.0 (the mpi-serial build is `ESMF_COMM=mpiuni`) | 8.6.0, three flavors | see "ESMF flavors" below |
+| GCC | 14.3.0 | 12.2.0 | **stale** (two major releases behind); built from source under `/opt/gcc` |
+| MPI | cray-mpich 8.1.32 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary, so this version is deliberately *not* matched. The guard on derecho's own cray-mpich version is **stale** (`derecho-versions.ini` records 8.1.27) |
+| HDF5 | 1.12.2, bundled in netcdf-mpi | 1.12.2 (parallel) | the derecho value was measured under `ncarenv/23.09` + `netcdf-mpi/4.9.2`, a bundle derecho no longer has: **needs re-measuring**, item 7 |
+| netCDF-C | netcdf-mpi/4.9.3 | 4.9.2 | **stale** |
+| netCDF-Fortran | 4.6.1, bundled in netcdf-mpi | 4.6.1 | the derecho value is `nf-config --version` under `ncarenv/23.09` + `netcdf-mpi/4.9.2`, a bundle derecho no longer has: **needs re-measuring**, item 7 |
+| PnetCDF | parallel-netcdf/1.14.1 | 1.12.3 | **stale** |
+| ESMF | esmf-mpi/8.9.1-debug, esmf-mpi/8.9.1; `esmf/8.9.1` for `mpilib="mpi-serial"` (that build is `ESMF_COMM=mpiuni`) | 8.6.0, three flavors | **stale**; see "ESMF flavors" below |
 | pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
 | BLAS/LAPACK | cray-libsci | reference `lapack`/`blas` (dnf) | libsci is proprietary |
-| PIO | parallelio/2.6.2 module | 2.6.2, mpi-serial only | CIME builds its own PIO from CTSM's pinned ParallelIO submodule for the case; the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial") |
-| serial netCDF stack | netcdf/4.9.2 (loaded for mpilib=mpi-serial) | HDF5 1.12.2 + netCDF-C 4.9.2 + netCDF-Fortran 4.6.1 under `/usr/local/serial`, static | mpi-serial builds must not link the parallel, MPICH-linked netCDF |
-| mpi-serial | mpi-serial/2.3.0 module | 2.5.4 under `/usr/local/mpi-serial` | only to compile the ESMF-external PIO against; the case build compiles its own from CTSM's submodule |
+| PIO | parallelio-serial/2.6.8 module | 2.6.2, mpi-serial only | **stale**. In the container a case build compiles its own PIO from CTSM's pinned ParallelIO submodule, and the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial"); on derecho the module supplies it through `PIO_LIBDIR` |
+| serial netCDF stack | netcdf/4.9.3 (loaded for mpilib=mpi-serial) | HDF5 1.12.2 + netCDF-C 4.9.2 + netCDF-Fortran 4.6.1 under `/usr/local/serial`, static | **stale**; mpi-serial builds must not link the parallel, MPICH-linked netCDF |
+| mpi-serial | mpi-serial/2.5.3 module | 2.5.4 under `/usr/local/mpi-serial` | **stale**. Here it exists only to compile the ESMF-external PIO against, and a container case build compiles its own from CTSM's submodule; on derecho the module *is* what a case links, via `MPI_SERIAL_PATH` |
 | conda, nco | loaded on derecho | not included | not needed to build, nor to run the single-point tests; particular testmods or post-processing may want `nco` |
 
 `git` is also built from source (it is not part of derecho's stack): CIME's
@@ -57,11 +68,12 @@ be `dnf install`ed here because that pulls in `openssh`, whose setuid
 Three ESMF 8.6.0 trees are installed:
 
 - `/usr/local/esmf-8.6.0-debug` (`ESMF_BOPT=g`, `ESMF_COMM=mpich`) — mirrors
-  the `esmf/8.6.0-debug` module derecho loads for gnu `DEBUG=TRUE` builds.
-  **This is the default** (`ESMFMKFILE` points here) because the current CI
-  test is `SMS_D...` (debug).
-- `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors
-  `esmf/8.6.0`, for non-debug tests.
+  the debug ESMF module derecho loads for gnu MPI `DEBUG=TRUE` builds
+  (`esmf-mpi/8.9.1-debug` today; it was `esmf/8.6.0-debug` when this image was
+  built). **This is the default** (`ESMFMKFILE` points here) because the
+  current CI test is `SMS_D...` (debug).
+- `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors the
+  non-debug one (`esmf-mpi/8.9.1`), for non-debug tests.
 - `/usr/local/esmf-8.6.0-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`, and
   **`ESMF_PIO=external`** against the mpi-serial PIO) — the **serial** build,
   used by the unit tests *and* by every `mpi-serial` case. Selected
@@ -75,11 +87,12 @@ CTSM's `src/CMakeLists.txt` calls `find_package(ESMF REQUIRED)` and
 such an executable fails with `libesmf.so: undefined reference to symbol
 'MPI_Bcast' ... DSO missing from command line`.
 
-derecho has exactly the same split: its `config_machines.xml` loads
-`esmf/8.6.0` rather than `esmf/8.6.0-debug` whenever `mpilib="mpi-serial"`,
-even under `DEBUG="TRUE"`, and that install reports `ESMF_COMM=mpiuni` with
-`ESMF_BOPT=O`. The debug/optimized mismatch here is deliberate, matching
-derecho.
+derecho has exactly the same split: whenever `mpilib="mpi-serial"`, its
+`config_machines.xml` loads the plain `esmf` module (`esmf/8.9.1` today,
+`esmf/8.6.0` when this image was built) rather than the `-debug` variant it
+loads for MPI builds — even under `DEBUG="TRUE"` — and that install reports
+`ESMF_COMM=mpiuni` with `ESMF_BOPT=O`. The debug/optimized mismatch here is
+deliberate, matching derecho.
 
 To use the optimized MPI flavor in a workflow step:
 
@@ -415,8 +428,10 @@ ESMF force-disables PIO for `ESMF_COMM=mpiuni`, and `ESMF_PIO=internal` cannot
 be forced back on -- ESMF's bundled PIO fails to compile without an `mpi.h`.
 The supported route is `ESMF_PIO=external` against a PIO built for mpi-serial,
 which is what the image does and what **derecho does too**. Read from
-derecho's own install (`esmf/8.6.0` under its `mpi-serial` module hierarchy,
-the one gnu mpi-serial builds load):
+derecho's own install (the `esmf` module under its `mpi-serial` module
+hierarchy, the one gnu mpi-serial builds load; read when that was `esmf/8.6.0`
+under `ncarenv/23.09`, since superseded by `esmf/8.9.1` — the arrangement is
+what matters here, not the versions):
 
 ```
 ESMF_COMM:         mpiuni

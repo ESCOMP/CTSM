@@ -39,7 +39,9 @@ ARG PFUNIT_VERSION=4.8.0
 # build, which compiles its own mpi-serial from libraries/mpi-serial and, with
 # no PIO_LIBDIR set here, its own PIO from libraries/parallelio.
 #
-# They track derecho all the same, like every other version ARG here: the image
+# They track derecho all the same, like every other version ARG here except
+# MPICH_VERSION (a deliberate open-source stand-in for proprietary cray-mpich,
+# never compared to derecho's version -- see the top of this file): the image
 # mirrors what you get from CTSM's current ccs_config plus derecho's default
 # software stack, so check-derecho-versions.py compares both "direct" against
 # the mpilib="mpi-serial" <modules> blocks of derecho's config_machines.xml

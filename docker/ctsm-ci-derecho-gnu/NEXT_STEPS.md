@@ -1,13 +1,16 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-08-31. The image builds and validates end-to-end on
+_Last updated: 2026-10-01. The image builds and validates end-to-end on
 Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point
 **runs** with both mpi-serial and mpich -- and is **published and public** at
 `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831`, which `cirrus-testing.yml`
 pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
 NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
-have now been exercised on Casper. What is left: a unit-test CI job, wiring
-runs into CI, the version-check question below, and the Phase 2 drift cron._
+have now been exercised on Casper. The version-check question is now settled
+(item 4), and settling it showed the image has fallen behind derecho: 7 of the
+checker's 10 ARGs are stale as of `ccs_config_cesm1.0.88`. What is left: that
+rebuild (item 6), re-measuring the two snapshot versions (item 7), and the
+Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -357,23 +360,52 @@ not yet been run against the actual container on a Casper compute node; see
    Deciding that the yardstick is derecho, not CTSM's `.gitmodules`, is the
    governing policy for the whole image: it should be up to date with what you
    get from CTSM's current `ccs_config` plus derecho's default software stack.
-   The tracing below is why that needed a decision at all, and remains correct.
+   The tracing below is why that needed a decision at all. Its mpi-serial half
+   was recorded wrong the first time and is corrected here (2026-10-01); the
+   PIO half is unchanged.
 
    The question it answers is *what versions get used when doing a serial CTSM
    test on derecho*. Traced 2026-10-01:
 
-   - **mpi-serial: 2.5.4, from CTSM's `libraries/mpi-serial` submodule.** CIME
-     builds mpi-serial from `$EXTERN_PATH/mpi-serial` whenever
-     `MPI_SERIAL_PATH` is unset (`cime/CIME/Tools/Makefile`, the `ifndef`
-     around the `CONFIG_ARGS` for it), and derecho's `config_machines.xml` sets
-     no `MPI_SERIAL_PATH`. Derecho *does* `module load mpi-serial/2.5.3`, but
-     only to unlock `parallelio-serial` in the Lmod hierarchy; that build is
-     never linked into `cesm.exe`.
-   - **PIO: 2.6.8, from derecho's `parallelio-serial/2.6.8` module.** That
-     module sets `PIO_LIBDIR`, and `cime/CIME/Tools/Makefile` uses an external
-     PIO when it is set, falling back to `$(INSTALL_SHAREDPATH)/lib` otherwise.
-     CTSM's `libraries/parallelio` submodule is pinned at `pio2_6_8`, so the
-     two agree today.
+   - **mpi-serial: 2.5.3, from derecho's own `mpi-serial/2.5.3` module** --
+     *not* from CTSM's `libraries/mpi-serial` submodule, as an earlier version
+     of this item claimed. `MPI_SERIAL_PATH` is a **cmake macro, not an XML
+     setting**, so looking for it in `config_machines.xml` finds nothing and
+     proves nothing. `ccs_config/machines/derecho/derecho.cmake:4` sets it
+     unconditionally:
+
+     ```cmake
+     set(MPI_SERIAL_PATH "$ENV{NCAR_ROOT_MPI_SERIAL}")
+     ```
+
+     `module load mpi-serial/2.5.3` is what populates
+     `NCAR_ROOT_MPI_SERIAL`. `cime/CIME/BuildTools/configure.py` turns the
+     cmake macros into `Macros.make`, and `cime/CIME/Tools/Makefile:911-918`
+     then does, under `ifeq ($(MPILIB),mpi-serial)` / `ifdef
+     MPI_SERIAL_PATH`:
+
+     ```make
+     MPISERIAL = $(MPI_SERIAL_PATH)/lib/libmpi-serial.a
+     MLIBS += -L$(MPI_SERIAL_PATH)/lib -lmpi-serial
+     ```
+
+     The `else` branch -- CTSM's submodule, built into
+     `$(INSTALL_SHAREDPATH)/lib/libmpi-serial.a` -- is reached only when the
+     variable is *empty*, i.e. where no mpi-serial module is loaded. That is
+     the **container's** case, not derecho's. So derecho links 2.5.3 into
+     `cesm.exe`.
+   - **PIO: 2.6.8, from derecho's `parallelio-serial/2.6.8` module.** Same
+     shape: `derecho.cmake:8-11` sets `PIO_LIBDIR`/`PIO_INCDIR` from
+     `$ENV{PIO}` when that module has been loaded, and
+     `cime/CIME/Tools/Makefile:463-472` honors an external `PIO_LIBDIR`,
+     falling back to `$(INSTALL_SHAREDPATH)/lib` only when it is unset. CTSM's
+     `libraries/parallelio` submodule is pinned at `pio2_6_8`, so the two agree
+     today.
+
+   **That makes the conclusion stronger than "policy says so."** 2.5.3 is what
+   a serial CTSM build on derecho actually links, so `MPI_SERIAL_VERSION=2.5.4`
+   is genuine drift from derecho on the merits, not merely by the yardstick
+   convention; the same holds for `PIO_VERSION=2.6.2` against 2.6.8.
 
    Two facts recorded here previously were wrong, both because the ctsm5.4.054
    rebase moved `ccs_config` from `ccs_config_cesm1.0.48` to
@@ -381,29 +413,104 @@ not yet been run against the actual container on a Casper compute node; see
    its `parallelio-serial/2.6.8` **is** in `config_machines.xml`, not absent
    from it.
 
-   **Neither ARG reaches a CTSM case build, in the container or on derecho.**
-   They exist only to give the mpiuni ESMF an external PIO: the container's
-   mpi-serial installs under its own prefix specifically so it cannot shadow
-   the case build, and its PIO installs under `${SERIAL_PREFIX}` without
-   setting `PIO_LIBDIR`, so a case build in the container compiles
-   `libraries/parallelio` for itself.
+   **Neither ARG reaches a CTSM case build _in the container_.** They exist
+   only to give the mpiuni ESMF an external PIO: the container's mpi-serial
+   installs under its own prefix specifically so it cannot shadow the case
+   build -- nothing sets `MPI_SERIAL_PATH` there, so the Makefile's `else`
+   branch above compiles `libraries/mpi-serial` -- and its PIO installs under
+   `${SERIAL_PREFIX}` without setting `PIO_LIBDIR`, so a case build in the
+   container compiles `libraries/parallelio` for itself. **On derecho both of
+   the corresponding modules _are_ linked**, per the tracing above, which is
+   why derecho rather than the container's own internals decides what counts
+   as drift here.
 
    That made CTSM's `.gitmodules` fxtags a plausible yardstick, and an earlier
-   version of this item picked them. It is superseded: what the image promises
-   is to *mirror derecho*, and a serial library the image ships under a version
-   derecho no longer has is drift whether or not a case build links it. So both
-   ARGs are compared to derecho, and the fxtags are recorded here only as
-   context:
+   version of this item picked them. It is superseded twice over: what the
+   image promises is to *mirror derecho*, and a serial library the image ships
+   under a version derecho no longer has is drift whether or not the
+   *container's* case build links it -- and, per the correction above,
+   derecho's case build does link its own. So both ARGs are compared to
+   derecho, and the fxtags are recorded here only as context:
 
    | ARG | value | derecho (serial) | CTSM fxtag |
    |---|---|---|---|
    | `MPI_SERIAL_VERSION` | 2.5.4 | 2.5.3 ❌ | `MPIserial_2.5.4` |
    | `PIO_VERSION` | 2.6.2 | 2.6.8 ❌ | `pio2_6_8` |
 
-   Both therefore want an image rebuild; no fourth check mode was needed.
+   Both therefore want an image rebuild, now tracked as item 6 below along
+   with the five other ARGs the same check reports stale; no fourth check mode
+   was needed.
 5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
+6. **Bring the image up to derecho's current stack: rebuild.** As of
+   `ccs_config_cesm1.0.88`, `check-derecho-versions.py` fails **7 of its 10**
+   checks. Item 4 covered only the last two of those, and only in its body, so
+   the other five were never a tracked item at all. What the checker reports:
+
+   | ARG | this image | derecho (gnu) |
+   |---|---|---|
+   | `GCC_VERSION` | 12.2.0 | `gcc/14.3.0` |
+   | `NETCDF_C_VERSION` | 4.9.2 | `netcdf-mpi/4.9.3` |
+   | `PNETCDF_VERSION` | 1.12.3 | `parallel-netcdf/1.14.1` |
+   | `ESMF_VERSION` | 8.6.0 | `esmf-mpi/8.9.1` (serial twin `esmf/8.9.1`) |
+   | `MPI_SERIAL_VERSION` | 2.5.4 | `mpi-serial/2.5.3` |
+   | `PIO_VERSION` | 2.6.2 | `parallelio-serial/2.6.8` |
+   | `MPICH_VERSION` guard | 3.4.3 stand-in | `cray-mpich` recorded 8.1.27, live 8.1.32 |
+
+   The `cray-mpich` row is not a version to copy -- MPICH stays an open-source
+   stand-in -- but the guard exists so the stand-in gets re-examined whenever
+   derecho moves, so decide whether 3.4.3 is still the right stand-in for
+   cray-mpich 8.1.32 before bumping `[deviation_guard]`.
+
+   Clearing the rest means a rebuild plus the full revalidation chain
+   (`smoke-test.sh`, `smoke-test-pfunit.sh`,
+   `run-unit-tests-in-container.sh`, and at least one run wrapper), then a
+   manual republish and a tag bump in `cirrus-testing.yml` -- nothing
+   republishes automatically.
+
+   **The GCC 12.2.0 -> 14.3.0 jump is the risky part.** It is two major
+   releases, and every other library in the image -- HDF5, netCDF-C/Fortran,
+   PnetCDF, three ESMF trees, PIO, pFUnit, mpi-serial -- gets recompiled
+   against it, so a new diagnostic anywhere in that chain stops the build. The
+   `-fallow-argument-mismatch` workaround in `gnu_container.cmake` (see "Worth
+   raising upstream" below) is the first thing to re-check. Budget for a debug
+   cycle, not a single clean build.
+
+   Until this is done, **`.github/workflows/derecho-version-check.yml` is red
+   on this branch.** It runs the script on `push` (any branch) and on
+   `pull_request`, in both cases only when the change touches
+   `docker/ctsm-ci-derecho-gnu/Dockerfile`, `derecho-versions.ini`,
+   `check-derecho-versions.py`, the workflow file itself, or the `ccs_config`
+   gitlink; plus `workflow_dispatch` on demand. The ccs_config bump that caused
+   the drift is one of those paths, so the failure is not hypothetical.
+7. **Re-measure the two `[snapshot]` versions against derecho's current
+   `netcdf-mpi`.** `HDF5_VERSION` and `NETCDF_FORTRAN_VERSION` are among the
+   three checks still printing ✅, and those two ✅s now assert nothing.
+   `derecho-versions.ini` records 1.12.2 and 4.6.1 as read out of
+   `netcdf-mpi/4.9.2` under `ncarenv/23.09`; the same run of the checker
+   reports derecho at `netcdf-mpi/4.9.3`, so the bundle those numbers were
+   measured from no longer exists. Under the policy in item 4 that is drift
+   being reported as green -- the one place the output actively misleads.
+
+   The values cannot be fixed from this repo; it needs a human on derecho:
+
+   ```
+   module --force purge
+   module load ncarenv/25.10 gcc/14.3.0 cray-mpich/8.1.32 netcdf-mpi/4.9.3
+   module show netcdf-mpi     # -> the bundled HDF5 version
+   nf-config --version        # -> the netCDF-Fortran version
+   ```
+
+   then update `[snapshot]`, and the Dockerfile ARGs with it, in the item 6
+   rebuild.
+
+   **The longer-term fix is to give `snapshot` mode the guard `deviation`
+   already has.** Record alongside each snapshot *which* `netcdf-mpi` version
+   it was measured against, read that module's version live from
+   `config_machines.xml`, and fail when the two differ. A stale snapshot then
+   goes red instead of green, and a ✅ means "measured against the module
+   derecho has today" rather than "equal to a number someone typed once".
 
 ## Worth raising upstream
 
