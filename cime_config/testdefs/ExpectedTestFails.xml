@@ -30,9 +30,15 @@
 
   <!-- ctsm_sci test suite failures -->
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRsGs.derecho_intel.clm-output_sp_highfreq">
-    <phase name="RUN">
+    <phase name="SETUP">
       <status>FAIL</status>
       <issue>CDEPS/#243 and/or #2122</issue>
+    </phase>
+  </test>
+  <test name="SMS_Ln9.ne30pg3_t232.I1850Clm60BgcCropCrujraG.derecho_intel.clm-clm60cam7LndTuningMode--clm-norESMTest">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>#4238</issue>
     </phase>
   </test>
 

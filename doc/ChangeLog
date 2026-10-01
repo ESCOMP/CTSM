@@ -1,4 +1,69 @@
 ===============================================================
+Tag name: ctsm5.4.061
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Wed Sep 30 11:22:16 PM MDT 2026
+One-line Summary: Update to cesm3_0_beta10 externals cime/ccs_config, including more ccs_config grid aliases with MOM grids
+
+Purpose and description of changes
+----------------------------------
+
+Update cime and ccs_config to latest version as in the cesm3_0_beta10 tag. Also includes changes so that CIME_MODEL can be set to noresm.
+
+Also include new ccs_config version that has more t233/t201 grid aliases from @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  Add a new test for NorESM, that currently fails. It may be a test to remove.
+
+Testing summary: regular + fates + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (fates-sci.1.93.1_api.46.0.0-ctsm5.4.060)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No b4b
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cime to cime6.5.20
+   ccs_config to ccs_config_cesm1.0.92
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   Update submodules as for final cesm3_0_beta10, cime and ccs_config to latest including more t233 grid aliases #4232
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.060
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
 Date: Fri Sep 25 12:53:38 PM MDT 2026

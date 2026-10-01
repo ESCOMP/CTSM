@@ -95,7 +95,7 @@ infrastructure should be run when appropriate, as described below.
 
     derecho -
 
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
 
     derecho -
 
