@@ -168,11 +168,11 @@ Its testroot `tests_0930-221901ct` holds only `SRCROOT_GIT_STATUS` and `cs.statu
 
 An earlier attempt at this second run returned 2, because the command here was missing `--skip-compare --skip-generate` and argparse rejected it before `_check_py_env`.
 
-## 5. A full suite end to end
+## 5. A full suite end to end ✅
 
 **What this tests:** the whole suite path, `-s aux_clm_mpi_serial`, including `cs.status` generation and the multi-test testroot layout.
 
-Judge this run by the suite's failures, **not** by the wrapper's exit code: a nonzero exit is *expected* on a first full run, for reasons unrelated to this change -- `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the image lacks (same as section 4's second run), and the suite's NEON / `CLM_USRDAT` and FATES entries need user datasets and FATES build support that this change does not touch.
+Judge this run by the suite's failures, **not** by the wrapper's exit code: a nonzero exit is *expected* on a first full run, for a reason unrelated to this change -- `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` needs python modules the image lacks (same as section 4's second run).
 
 Do **not** use `-s clm_short` as a substitute "quick suite" -- it has exactly two derecho/gnu entries, `ERP_D_P64x2_Ld3.f10_f10_mg37.I1850Clm50BgcCrop` and `ERS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop`, neither mpi-serial, and `P64x2` wants 64 MPI tasks against a machine config with `MAX_MPITASKS_PER_NODE=4` inside an 8-cpu PBS reservation; it will fail for reasons that have nothing to do with this change.
 
@@ -201,9 +201,18 @@ The 12-hour walltime above matches the wrapper's own PBS header; this section is
 cime/CIME/Tools/cs.status --fails-only $SCRATCH/cases_devcontainer/tests_<MMDD-HHMMSS>ct/*/TestStatus
 ```
 
-Expect `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` plus the NEON / `CLM_USRDAT` and FATES entries to appear there; anything else is a finding.
+Expect `FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon` to appear there; anything else is a finding. Note that a test aborting mid-build leaves its phase `PEND` rather than `FAIL`, so `--fails-only` can report a `PEND SHAREDLIB_BUILD` line -- that is a failure, not a suite still running.
 
-**Result: not yet run.**
+**Result: passed, 2026-10-01.** 22 tests, 21 PASS, one expected failure, wrapper exit status 100:
+
+```
+1001-175433ct_gnu: 22 tests
+    PEND FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRsGs.container_gnu SHAREDLIB_BUILD
+```
+
+That test aborted during SHAREDLIB_BUILD on `ModuleNotFoundError: No module named 'numpy'` (in its `TestStatus.log`) -- the image's python lacks the modules `modify_fsurdat` needs, exactly as documented. Because it aborted rather than completing the phase, the status stayed `PEND` instead of becoming `FAIL`.
+
+Two expectations recorded here beforehand were wrong, both in the pessimistic direction, and have been corrected above: the NEON / `CLM_USRDAT` and FATES entries were predicted to fail for want of user datasets and FATES build support, and all of them passed.
 
 ## 6. The replacement test, in the other two wrappers
 
