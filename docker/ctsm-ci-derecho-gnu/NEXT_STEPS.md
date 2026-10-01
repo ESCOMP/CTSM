@@ -343,7 +343,7 @@ not yet been run against the actual container on a Casper compute node; see
    `run_sys_tests --wait` blocks on every launched test and exits nonzero if
    any of them failed, CI has the exit code it needs to fail the job on a
    test failure -- that piece is no longer a gap.
-3. **Validate `run-sys-tests-in-container.sh` on Casper.** See TESTING_TMP.md.
+3. **Validate `run-sys-tests-in-container.sh` on Casper.** See VALIDATION_2026-09.md.
 4. **Decide whether `MPI_SERIAL_VERSION` and `PIO_VERSION` belong in
    `check-derecho-versions.py`.** Both are new `Dockerfile` ARGs that nothing
    checks, so they can drift from derecho silently -- they are the only ARGs in
