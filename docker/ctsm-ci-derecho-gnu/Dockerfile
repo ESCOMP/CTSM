@@ -33,19 +33,20 @@ ARG NETCDF_FORTRAN_VERSION=4.6.1
 ARG PNETCDF_VERSION=1.12.3
 ARG ESMF_VERSION=8.6.0
 ARG PFUNIT_VERSION=4.8.0
-# mpi-serial matches CTSM's libraries/mpi-serial submodule (MPIserial_2.5.4),
-# so the mpi-serial PIO below is compiled against exactly the mpi-serial a case
-# build links -- CIME builds mpi-serial from that submodule whenever
-# MPI_SERIAL_PATH is unset (cime/CIME/Tools/Makefile), which is the case on
-# derecho too; derecho's mpi-serial/2.5.3 module is loaded only to unlock
-# parallelio-serial in the Lmod hierarchy and is never linked.
+# These two build the mpi-serial flavor of the stack: the serial PIO below is
+# compiled against the mpi-serial below, and together they give the mpiuni ESMF
+# an external PIO (see "ESMF, serial flavor" below). Neither reaches a CTSM case
+# build, which compiles its own mpi-serial from libraries/mpi-serial and, with
+# no PIO_LIBDIR set here, its own PIO from libraries/parallelio.
 #
-# PIO_VERSION does NOT track derecho. Both of these exist only to give the
-# mpiuni ESMF an external PIO (see "ESMF, serial flavor" below); neither
-# reaches a CTSM case build, which compiles its own mpi-serial and, with no
-# PIO_LIBDIR set here, its own PIO from libraries/parallelio. The version worth
-# matching is therefore that submodule's, currently pio2_6_8 -- and 2.6.2 below
-# is stale against it. See "Remaining steps" item 4 in NEXT_STEPS.md.
+# They track derecho all the same, like every other version ARG here: the image
+# mirrors what you get from CTSM's current ccs_config plus derecho's default
+# software stack, so check-derecho-versions.py compares both "direct" against
+# the mpilib="mpi-serial" <modules> blocks of derecho's config_machines.xml
+# (mpi-serial and parallelio-serial). Both are stale there as of
+# ccs_config_cesm1.0.88 -- derecho has 2.5.3 and 2.6.8 -- and fixing that needs
+# an image rebuild and revalidation. See "Remaining steps" item 4 in
+# NEXT_STEPS.md.
 ARG MPI_SERIAL_VERSION=2.5.4
 ARG PIO_VERSION=2.6.2
 

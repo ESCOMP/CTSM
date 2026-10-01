@@ -6,7 +6,8 @@ ccs_config/machines/derecho/config_machines.xml). This check compares the
 Dockerfile's version ARGs to that config, in three modes:
 
   direct    - the ARG must equal the derecho gnu module version, read live from
-              config_machines.xml (gcc, netcdf-mpi, parallel-netcdf, esmf).
+              config_machines.xml (gcc, netcdf-mpi, parallel-netcdf, esmf-mpi,
+              mpi-serial, parallelio-serial).
   deviation - the ARG is an intentional open-source stand-in that is NOT
               compared to derecho; instead the derecho module version (read
               live) must still equal a recorded value, so a derecho change
@@ -16,6 +17,12 @@ Dockerfile's version ARGs to that config, in three modes:
               to a hand-recorded value (HDF5, netCDF-Fortran).
   pfunit    - derecho has no pFUnit module at all; the version is embedded in
               the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
+
+derecho's gnu stack comes in two flavors -- the MPI one (MPILIB=mpich, the
+machine default) and the serial one (MPILIB=mpi-serial) -- and since
+ccs_config_cesm1.0.88 the same library can appear in both under different module
+names and versions (esmf-mpi vs esmf, parallelio vs parallelio-serial). Every
+module-reading check therefore names the flavor it is asking about.
 
 Recorded values (snapshot + deviation guard) live in derecho-versions.ini.
 
@@ -43,26 +50,69 @@ PFUNIT_CMAKE = os.path.join(
 
 COMPILER = "gnu"
 
+# The two mpilib flavors of derecho's gnu stack. MPI_STACK is derecho's default
+# MPILIB (the first entry of <MPILIBS>mpich,openmpi</MPILIBS>) and is what the
+# container's MPICH stand-in replaces; SERIAL_STACK is the mpi-serial build.
+MPI_STACK = "mpich"
+SERIAL_STACK = "mpi-serial"
+
 # Dockerfile ARG -> how to check it.
-#   "direct":    ARG must equal the config gnu module version.
+#   "direct":    ARG must equal the config gnu module version, in the "stack"
+#                named by the entry.
 #   "deviation": config gnu module version must equal the recorded value (the
 #                ARG is a deliberate stand-in and is NOT compared).
 #   "snapshot":  ARG must equal the recorded value (module absent from config).
+# "strip_suffix" collapses derecho's "-debug" module variants onto the version
+# they are a debug build of; "also_equal" asserts a second module, usually the
+# other stack's twin, carries the same version as the primary one.
 CHECKS = [
-    {"arg": "GCC_VERSION", "mode": "direct", "module": "gcc"},
-    {"arg": "NETCDF_C_VERSION", "mode": "direct", "module": "netcdf-mpi"},
-    {"arg": "PNETCDF_VERSION", "mode": "direct", "module": "parallel-netcdf"},
+    # The gcc block carries no mpilib attribute, so it applies to both stacks;
+    # MPI_STACK is named here only because every module check names one.
+    {"arg": "GCC_VERSION", "mode": "direct", "module": "gcc", "stack": MPI_STACK},
     {
+        "arg": "NETCDF_C_VERSION",
+        "mode": "direct",
+        "module": "netcdf-mpi",
+        "stack": MPI_STACK,
+        "strip_suffix": "-debug",
+    },
+    {
+        "arg": "PNETCDF_VERSION",
+        "mode": "direct",
+        "module": "parallel-netcdf",
+        "stack": MPI_STACK,
+        "strip_suffix": "-debug",
+    },
+    {
+        # One ARG builds both of the container's ESMFs (the MPI one and the
+        # mpiuni one), so derecho's two must agree before either can be
+        # compared to it.
         "arg": "ESMF_VERSION",
         "mode": "direct",
-        "module": "esmf",
+        "module": "esmf-mpi",
+        "stack": MPI_STACK,
         "strip_suffix": "-debug",
+        "also_equal": {"module": "esmf", "stack": SERIAL_STACK},
     },
     {
         "arg": "MPICH_VERSION",
         "mode": "deviation",
         "module": "cray-mpich",
+        "stack": MPI_STACK,
         "snap": ("deviation_guard", "cray_mpich"),
+    },
+    {
+        "arg": "MPI_SERIAL_VERSION",
+        "mode": "direct",
+        "module": "mpi-serial",
+        "stack": SERIAL_STACK,
+    },
+    {
+        "arg": "PIO_VERSION",
+        "mode": "direct",
+        "module": "parallelio-serial",
+        "stack": SERIAL_STACK,
+        "strip_suffix": "-debug",
     },
     {"arg": "HDF5_VERSION", "mode": "snapshot", "snap": ("snapshot", "hdf5")},
     {
@@ -87,8 +137,34 @@ def parse_dockerfile_args(path):
     return args
 
 
+def attr_applies(attr_value, target):
+    """Does a <modules> attribute value select `target`?
+
+    Mirrors CIME's EnvMachSpecific._match (cime/CIME/XML/env_mach_specific.py):
+    an absent attribute matches anything, a leading "!" negates, and otherwise
+    the value is an anchored regex -- so alternations ("gnu|nvhpc") work and a
+    comma would be a literal, not a separator. No ccs_config machine file uses
+    comma-separated values, so none is special-cased here.
+    """
+    if attr_value is None:
+        return True  # unconstrained block, e.g. <modules mpilib="mpich">
+    pattern = attr_value.strip()
+    if pattern.startswith("!"):
+        return re.match(pattern[1:] + "$", target) is None
+    return re.match(pattern + "$", target) is not None
+
+
 def get_gnu_module_versions(path):
-    """Return {module_name: {version, ...}} for compiler="gnu" load commands."""
+    """Return {mpilib: {module_name: {version, ...}}} for gnu load commands.
+
+    Keyed by MPI_STACK / SERIAL_STACK, because since ccs_config_cesm1.0.88
+    derecho's library modules live in <modules> blocks keyed by mpilib (and
+    DEBUG) with no compiler attribute at all; only the gcc block is still
+    compiler="gnu". Attributes other than compiler and mpilib are not filtered:
+    DEBUG deliberately, so a module's debug and non-debug variants collapse via
+    strip_suffix, and gpu_type harmlessly, since the only extra modules it
+    admits (cuda) are ones no check reads.
+    """
     if not os.path.isfile(path):
         raise FileNotFoundError(
             f"config_machines.xml not found at {path}. In CI make sure the "
@@ -99,12 +175,15 @@ def get_gnu_module_versions(path):
     module_system = root.find("module_system")
     if module_system is None:
         raise ValueError(f"no <module_system> element in {path}")
-    versions = {}
+    stacks = {MPI_STACK: {}, SERIAL_STACK: {}}
     for modules in module_system.findall("modules"):
-        # Exact "gnu" match: excludes compiler="!gnu" (and no-compiler) blocks,
-        # so the non-gnu twins (cray-mpich/8.1.29, netcdf-mpi/4.9.3,
-        # parallel-netcdf/1.14.0) never participate.
-        if modules.get("compiler") != COMPILER:
+        # compiler="gnu" or a negation that spares gnu ("!intel") or no
+        # compiler attribute at all; this still rejects "intel", "cray",
+        # "nvhpc" and "!gnu", so the non-gnu twins never participate.
+        if not attr_applies(modules.get("compiler"), COMPILER):
+            continue
+        applies_to = [s for s in stacks if attr_applies(modules.get("mpilib"), s)]
+        if not applies_to:
             continue
         for cmd in modules.findall("command"):
             if cmd.get("name") != "load":
@@ -115,22 +194,25 @@ def get_gnu_module_versions(path):
             # Module names here are never path-like, so split name/version on
             # the last "/" (e.g. "esmf/8.6.0-debug" -> "esmf", "8.6.0-debug").
             name, version = text.rsplit("/", 1)
-            versions.setdefault(name, set()).add(version)
-    return versions
+            for stack in applies_to:
+                stacks[stack].setdefault(name, set()).add(version)
+    return stacks
 
 
-def resolve_config_version(versions, module, strip_suffix=None):
-    """Return (version, None) or (None, reason) for a gnu module.
+def resolve_config_version(stacks, module, stack, strip_suffix=None):
+    """Return (version, None) or (None, reason) for a gnu module in `stack`.
 
     An absent module or conflicting versions are reported as a check finding
     (a returned reason -> per-component ❌), not raised: they are exactly the
     kind of derecho drift this check exists to flag.
     """
+    where = (
+        f'<modules> blocks of config_machines.xml applying to compiler="gnu", '
+        f'mpilib="{stack}"'
+    )
+    versions = stacks[stack]
     if module not in versions:
-        return None, (
-            f"module '{module}' not found in any compiler=\"gnu\" <modules> "
-            "block of config_machines.xml"
-        )
+        return None, f"module '{module}' not loaded by any of the {where}"
     vers = set(versions[module])
     if strip_suffix:
         vers = {
@@ -139,8 +221,8 @@ def resolve_config_version(versions, module, strip_suffix=None):
         }
     if len(vers) != 1:
         return None, (
-            f"module '{module}' has conflicting gnu versions "
-            f"{sorted(versions[module])}; cannot pick one"
+            f"module '{module}' has conflicting versions "
+            f"{sorted(versions[module])} across the {where}; cannot pick one"
         )
     return vers.pop(), None
 
@@ -217,26 +299,49 @@ def main():
         arg_val = args[arg]
 
         if mode == "direct":
+            stack = chk["stack"]
             cfg_val, reason = resolve_config_version(
-                config, chk["module"], chk.get("strip_suffix")
+                config, chk["module"], stack, chk.get("strip_suffix")
             )
+            twin = chk.get("also_equal")
+            twin_val, twin_reason = (None, None)
+            if cfg_val is not None and twin:
+                twin_val, twin_reason = resolve_config_version(
+                    config, twin["module"], twin["stack"], chk.get("strip_suffix")
+                )
             if cfg_val is None:
                 print(f"❌ {arg}: {reason}")
                 ok = False
+            elif twin and twin_val is None:
+                print(f"❌ {arg}: {twin_reason}")
+                ok = False
+            elif twin and twin_val != cfg_val:
+                print(
+                    f"❌ {arg}: derecho {twin['module']}/{twin_val} "
+                    f"(mpilib=\"{twin['stack']}\") != {chk['module']}/{cfg_val} "
+                    f'(mpilib="{stack}"). Derecho\'s two stacks have diverged, '
+                    f"so the single {arg} that builds both of the container's "
+                    "flavors can no longer match them; the Dockerfile needs a "
+                    "second ARG."
+                )
+                ok = False
             elif arg_val == cfg_val:
                 print(
-                    f"✅ {arg}={arg_val} matches derecho {chk['module']}/{cfg_val}"
+                    f"✅ {arg}={arg_val} matches derecho {chk['module']}/{cfg_val} "
+                    f'(gnu, mpilib="{stack}")'
                 )
             else:
                 print(
                     f"❌ {arg}={arg_val} != derecho {chk['module']}/{cfg_val} "
-                    "(config_machines.xml). Update the Dockerfile ARG, or the "
-                    "module changed on derecho."
+                    f'(config_machines.xml, gnu, mpilib="{stack}"). Update the '
+                    "Dockerfile ARG, or the module changed on derecho."
                 )
                 ok = False
 
         elif mode == "deviation":
-            live, reason = resolve_config_version(config, chk["module"])
+            live, reason = resolve_config_version(
+                config, chk["module"], chk["stack"]
+            )
             recorded = snap_get(snap, *chk["snap"])
             if live is None:
                 print(f"❌ {arg} guard: {reason}")

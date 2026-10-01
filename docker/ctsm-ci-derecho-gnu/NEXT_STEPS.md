@@ -344,13 +344,23 @@ not yet been run against the actual container on a Casper compute node; see
    any of them failed, CI has the exit code it needs to fail the job on a
    test failure -- that piece is no longer a gap.
 3. ✅ **Validate `run-sys-tests-in-container.sh` on Casper.** See VALIDATION_2026-09.md.
-4. **Decide where `MPI_SERIAL_VERSION` and `PIO_VERSION` get checked.** Both
-   are `Dockerfile` ARGs that nothing checks, so they can drift silently --
-   they are the only ARGs in that position. `PIO_VERSION` has already drifted.
+4. ✅ **`MPI_SERIAL_VERSION` and `PIO_VERSION` are now checked against
+   derecho.** They were the only `Dockerfile` ARGs that nothing checked, so
+   they could drift silently. `check-derecho-versions.py` now checks both
+   `direct` against derecho's serial stack -- the `mpilib="mpi-serial"`
+   `<modules>` blocks of `config_machines.xml` -- and that immediately showed
+   **both are stale**: `MPI_SERIAL_VERSION=2.5.4` vs derecho's
+   `mpi-serial/2.5.3`, and `PIO_VERSION=2.6.2` vs derecho's
+   `parallelio-serial/2.6.8`. Clearing them needs an image rebuild and
+   revalidation, which is a separate decision; the ARGs are untouched for now.
 
-   The governing question is *what versions get used when doing a serial CTSM
-   test on derecho*, and the answer is not what an earlier version of this item
-   assumed. Traced 2026-10-01:
+   Deciding that the yardstick is derecho, not CTSM's `.gitmodules`, is the
+   governing policy for the whole image: it should be up to date with what you
+   get from CTSM's current `ccs_config` plus derecho's default software stack.
+   The tracing below is why that needed a decision at all, and remains correct.
+
+   The question it answers is *what versions get used when doing a serial CTSM
+   test on derecho*. Traced 2026-10-01:
 
    - **mpi-serial: 2.5.4, from CTSM's `libraries/mpi-serial` submodule.** CIME
      builds mpi-serial from `$EXTERN_PATH/mpi-serial` whenever
@@ -376,21 +386,21 @@ not yet been run against the actual container on a Casper compute node; see
    mpi-serial installs under its own prefix specifically so it cannot shadow
    the case build, and its PIO installs under `${SERIAL_PREFIX}` without
    setting `PIO_LIBDIR`, so a case build in the container compiles
-   `libraries/parallelio` for itself. The yardstick for both is therefore
-   **CTSM's `.gitmodules` fxtags**, not derecho:
+   `libraries/parallelio` for itself.
 
-   | ARG | value | CTSM fxtag | derecho (serial) |
+   That made CTSM's `.gitmodules` fxtags a plausible yardstick, and an earlier
+   version of this item picked them. It is superseded: what the image promises
+   is to *mirror derecho*, and a serial library the image ships under a version
+   derecho no longer has is drift whether or not a case build links it. So both
+   ARGs are compared to derecho, and the fxtags are recorded here only as
+   context:
+
+   | ARG | value | derecho (serial) | CTSM fxtag |
    |---|---|---|---|
-   | `MPI_SERIAL_VERSION` | 2.5.4 | `MPIserial_2.5.4` ✅ | 2.5.3 (not linked) |
-   | `PIO_VERSION` | 2.6.2 | `pio2_6_8` ❌ | 2.6.8 |
+   | `MPI_SERIAL_VERSION` | 2.5.4 | 2.5.3 ❌ | `MPIserial_2.5.4` |
+   | `PIO_VERSION` | 2.6.2 | 2.6.8 ❌ | `pio2_6_8` |
 
-   So `PIO_VERSION` is stale and wants **2.6.8**, which needs an image rebuild.
-
-   What is left to decide is where the check lives. All three existing modes in
-   `check-derecho-versions.py` compare against derecho
-   (`direct`/`deviation`/`snapshot`), and the correct comparison here is against
-   `.gitmodules`. That is a fourth mode in a script whose name and docstring are
-   about derecho, so it may belong in a separate check instead.
+   Both therefore want an image rebuild; no fourth check mode was needed.
 5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
