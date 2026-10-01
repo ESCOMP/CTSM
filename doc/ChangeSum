@@ -1,5 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.062   slevis 10/01/2026 Merge b4b-dev to master
        ctsm5.4.061     erik 09/30/2026 Update to cesm3_0_beta10 externals cime/ccs_config, including more ccs_config grid aliases with MOM grids
        ctsm5.4.060     erik 09/25/2026 Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
        ctsm5.4.059 cathyxin 09/21/2026 Indoor humidity and A/C dehumidification
