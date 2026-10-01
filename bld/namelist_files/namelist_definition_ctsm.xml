@@ -779,6 +779,7 @@ Toggle to turn on FATES satellite phenology mode (only relevant if FATES is bein
 This option sets whether or not to include the interstitial bareground areas from FATES
 patches into the CLM bareground patch area.  If this option is turned off, fates_radiation_model
 must by set to 'twostream'.
+(Only relevant if FATES is on)
 </entry>
 
 <entry id="fates_harvest_mode" type="char*18" category="physics"
