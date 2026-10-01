@@ -331,10 +331,10 @@ not yet been run against the actual container on a Casper compute node; see
 
 ## Remaining steps
 
-1. **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
+1. ✅ **Add a unit-test job to `cirrus-testing.yml`.** Now unblocked. It needs
    the `$HOME/.cime` copy step (GHA overrides `HOME`); see README "Running
    CTSM's unit tests".
-2. **Wire runs into CI.** `simple-build-create_test` currently runs on
+2. ✅ **Wire runs into CI.** `simple-build-create_test` currently runs on
    `ubuntu-latest`, which has no `/glade` at all, so a run job has to move to
    `runs-on: gha-runner-ctsm` and bind-mount inputdata into the container job.
    Whether container jobs on that runner see `/glade` is **unknown** -- the
@@ -343,7 +343,7 @@ not yet been run against the actual container on a Casper compute node; see
    `run_sys_tests --wait` blocks on every launched test and exits nonzero if
    any of them failed, CI has the exit code it needs to fail the job on a
    test failure -- that piece is no longer a gap.
-3. **Validate `run-sys-tests-in-container.sh` on Casper.** See VALIDATION_2026-09.md.
+3. ✅ **Validate `run-sys-tests-in-container.sh` on Casper.** See VALIDATION_2026-09.md.
 4. **Decide whether `MPI_SERIAL_VERSION` and `PIO_VERSION` belong in
    `check-derecho-versions.py`.** Both are new `Dockerfile` ARGs that nothing
    checks, so they can drift from derecho silently -- they are the only ARGs in
