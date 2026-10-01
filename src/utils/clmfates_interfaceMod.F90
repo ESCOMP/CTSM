@@ -1748,7 +1748,7 @@ module CLMFatesInterfaceMod
              ! do exist, and can create potentially negetive bare-soil fractions
              ! (ie -1e-12 or smaller). Even though this is effectively zero,
              ! it can generate weird logic scenarios in the ctsm/elm code, so we
-             ! protext it here with a lower bound of 0.0_r8.
+             ! protect it here with a lower bound of 0.0_r8.
 
              patch%wt_ed(col%patchi(c)) = max(0.0_r8, &
                   1.0_r8-sum(this%fates(nc)%bc_out(s)%patch_fraction(1:npatch)))
