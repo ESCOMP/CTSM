@@ -33,11 +33,19 @@ ARG NETCDF_FORTRAN_VERSION=4.6.1
 ARG PNETCDF_VERSION=1.12.3
 ARG ESMF_VERSION=8.6.0
 ARG PFUNIT_VERSION=4.8.0
-# mpi-serial matches CTSM's libraries/mpi-serial submodule (MPIserial_2.5.4)
-# rather than derecho's 2.3.0, so the mpi-serial PIO below is compiled against
-# exactly the mpi-serial a case build links. PIO matches derecho's
-# parallelio/2.6.2. Both exist only to give the mpiuni ESMF an external PIO;
-# see "ESMF, serial flavor" below.
+# mpi-serial matches CTSM's libraries/mpi-serial submodule (MPIserial_2.5.4),
+# so the mpi-serial PIO below is compiled against exactly the mpi-serial a case
+# build links -- CIME builds mpi-serial from that submodule whenever
+# MPI_SERIAL_PATH is unset (cime/CIME/Tools/Makefile), which is the case on
+# derecho too; derecho's mpi-serial/2.5.3 module is loaded only to unlock
+# parallelio-serial in the Lmod hierarchy and is never linked.
+#
+# PIO_VERSION does NOT track derecho. Both of these exist only to give the
+# mpiuni ESMF an external PIO (see "ESMF, serial flavor" below); neither
+# reaches a CTSM case build, which compiles its own mpi-serial and, with no
+# PIO_LIBDIR set here, its own PIO from libraries/parallelio. The version worth
+# matching is therefore that submodule's, currently pio2_6_8 -- and 2.6.2 below
+# is stale against it. See "Remaining steps" item 4 in NEXT_STEPS.md.
 ARG MPI_SERIAL_VERSION=2.5.4
 ARG PIO_VERSION=2.6.2
 
