@@ -621,7 +621,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
-    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
+    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock, spval
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method
@@ -690,6 +690,8 @@ contains
          tksatu       =>    soilstate_inst%tksatu_col	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, saturated soil [W/m-K]
          thk          =>    soilstate_inst%thk_col             & ! Output: [real(r8) (:,:) ]  thermal conductivity of each layer  [W/m-K] 
          )
+
+       call InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
 
       ! Thermal conductivity of soil from Farouki (1981)
 
@@ -2989,5 +2991,27 @@ end subroutine SetMatrix_Snow
   end subroutine BuildingHAC
 
   !-----------------------------------------------------------------------
+  subroutine InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
+    ! Initialize bw and thk to spval for inactive snow layers (j <= 0)
+    ! Note: Lake columns are handled separately by LakeTemperatureMod
+    use clm_varpar, only : nlevsno
+    use clm_varcon, only : spval
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in)           :: num_nolakec
+    integer, intent(in)           :: filter_nolakec(:)
+    real(r8), intent(inout)       :: bw(bounds%begc:,-nlevsno+1:)
+    real(r8), intent(inout)       :: thk(bounds%begc:,-nlevsno+1:)
+
+    integer :: fc, c, j
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          bw(c,j)  = spval
+          thk(c,j) = spval
+       end do
+    end do
+
+  end subroutine InitSnowThermPropDiagnostics
 
 end module SoilTemperatureMod

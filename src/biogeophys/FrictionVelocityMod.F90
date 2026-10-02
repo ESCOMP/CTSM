@@ -87,6 +87,7 @@ module FrictionVelocityMod
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
+     procedure, public :: SetValues              ! Set diagnostic arrays to setval (e.g. spval)
      procedure, public :: MoninObukIni           ! Initialization of the Obukhov length scale
 
      procedure, public  :: InitForTesting        ! version of Init meant for unit testing
@@ -412,7 +413,40 @@ contains
        end if
     end do
    
+    call this%SetValues(bounds, spval)
+
   end subroutine InitCold
+
+  !------------------------------------------------------------------------------
+  subroutine SetValues(this, bounds, setval)
+    ! Initialize diagnostic arrays to setval
+    ! to avoid carrying over stale values on patches that don't compute them
+    
+    class(frictionvel_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in)          :: setval
+    integer :: begp, endp
+    
+    begp = bounds%begp; endp = bounds%endp
+    
+    this%rah1_patch(begp:endp) = setval
+    this%rah2_patch(begp:endp) = setval
+    this%raw1_patch(begp:endp) = setval
+    this%raw2_patch(begp:endp) = setval
+    this%ustar_patch(begp:endp) = setval
+    this%um_patch(begp:endp) = setval
+    this%uaf_patch(begp:endp) = setval
+    this%taf_patch(begp:endp) = setval
+    this%qaf_patch(begp:endp) = setval
+    this%obu_patch(begp:endp) = setval
+    this%zeta_patch(begp:endp) = setval
+    this%vpd_patch(begp:endp) = setval
+    this%rb1_patch(begp:endp) = setval
+    this%u10_patch(begp:endp) = setval
+    this%u10_clm_patch(begp:endp) = setval
+    this%ram1_patch(begp:endp) = setval
+    
+  end subroutine SetValues
 
   !------------------------------------------------------------------------------
   subroutine ReadParams( this, params_ncid )
