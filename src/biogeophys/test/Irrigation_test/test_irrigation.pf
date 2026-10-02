@@ -22,6 +22,7 @@ module test_irrigation
   use ColumnType    , only : col
   use GridcellType  , only : grc
   use pftconMod , only : pftcon
+  use UrbanParamsType, only : urbanparams_type
   use unittestWaterTypeFactory, only : unittest_water_type_factory_type
   use unittestSimpleSubgridSetupsMod, only : setup_single_veg_patch, setup_n_veg_patches
   use unittestFilterBuilderMod, only : filter_from_range
@@ -37,6 +38,7 @@ module test_irrigation
   type, extends(irrigation_type) :: irrigation_test_type
      real(r8) :: gw_frac_from_con  ! Fraction of groundwater irrigation taken from confined aquifer (same for all columns)
      real(r8), allocatable :: gw_frac_from_uncon(:)  ! Fraction of groundwater irrigation taken from unconfined aquifer in various layers (same for all columns)
+     type(urbanparams_type) :: urbanparams_inst
    contains
      procedure, public :: InitForTesting    ! Call the main irrigation InitForTesting, and also initialize IrrigationTestType's test-specific data to reasonable values
      procedure, public :: SetGwFractions            ! Set fraction of groundwater from various sources
@@ -417,6 +419,8 @@ contains
     !
     ! !ARGUMENTS:
     class(TestIrrigation), intent(in) :: this
+    type(urbanparams_type) :: urbanparams_inst
+
     integer, intent(in) :: maxpft  ! max pft type that needs to be supported
 
     ! Irrigation method (drip by default); just set for the module-level pft_type parameter
@@ -436,6 +440,10 @@ contains
     end if
 
     allocate(pftcon%irrigated(0:maxpft), source=1.0_r8)
+
+    ! Reguired so that the IsBuildingHumidityEnabled and IsACDehumidificationEnabled 
+    ! namelist functions can be used
+    call urbanparams_inst%InitForTesting(bounds)
 
     ! In the production code, irrig_method goes cft_lb:cft_ub; but it's safe to allocate
     ! more space than we really need here.

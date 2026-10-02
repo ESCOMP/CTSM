@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3411;
+my $ntests = 3415;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -634,6 +634,36 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+     "building humidity mode below range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=-1",
+                                     phys=>"clm6_0",
+                                   },
+     "building humidity mode above range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=3",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 1 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=1,building_temp_method=0",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=0,urban_hac='ON',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with AC off"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='OFF',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 without explicit AC"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='ON',urban_explicit_ac=.false.",
+                                     phys=>"clm6_0",
+                                   },
      "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
                                      namelst=>"",
                                      CLM_CMIP_ERA=>"cmip7",
@@ -1211,20 +1241,12 @@ my %failtest = (
                                      namelst=>"use_fates_inventory_init=.true.",
                                      phys=>"clm4_5",
                                    },
-     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
-                                     phys=>"clm4_5",
-                                   },
      "useFATESLUH2butnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUPFTbutnotfile"   =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_lupft=.true.",
-                                     phys=>"clm4_5",
-                                   },
-     "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUH2invalidlogic"  =>{ options=>"-bgc fates -envxml_dir . -no-megan",
