@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.062
 Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 497 1234)
-Date: Thu Oct  1 04:14:40 PM MDT 2026
+Date: Fri Oct 2 07:23:31 AM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
 Purpose and description of changes
@@ -42,6 +42,7 @@ Notes of particular relevance for developers:
 ---------------------------------------------
 Changes to tests or testing:
  Removed DAE test from ExpectedTestFails.xml. See titles of included PRs for other test-related work.
+ ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings passed in COMPARE_base_rest when expected to fail according to issue #2619; I recorded this in #2619 but did not remove the test from the expected fails, yet
 
 Testing summary:
 ----------------
@@ -58,12 +59,12 @@ Testing summary:
 
   regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
 
-    derecho -----
+    derecho ----- OK
     izumi ------- OK
 
 Answer changes
 --------------
-Changes answers relative to baseline: No, only field lists
+Changes answers relative to baseline: No, only field lists differ due to #4199
 
 
 Other details
