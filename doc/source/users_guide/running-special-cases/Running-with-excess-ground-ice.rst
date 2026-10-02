@@ -26,7 +26,7 @@ Example: Crop Simulation
 ::
 
    > cd cime/scripts
-   > ./create_newcase --case I1850Clm60BgcCrop_with_exice --res f19_f19_mt232 --compset I1850Clm60BgcCrop
+   > ./create_newcase --case I1850Clm60BgcCrop_with_exice --res f19_f19_mt233 --compset I1850Clm60BgcCrop
    > cd I1850Clm60BgcCrop_with_exice
 
    > ./case.setup
