@@ -317,7 +317,6 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for a month</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mt233" compset="I1850Clm60SpGag">
   <test name="SMS_Ln9" grid="ne30pg3_t232" compset="I1850Clm60BgcCropCrujraG" testmods="clm-clm60cam7LndTuningMode--clm-norESMTest">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
@@ -328,7 +327,7 @@
       <option name="comment">Test that settting CIME_MODEL==NorESM doesn't break</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mg37" compset="I1850Clm60SpGag">
+  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mt233" compset="I1850Clm60SpGag">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2235,7 +2234,6 @@
     </options>
   </test>
   <test name="ERP_P64x2_Ld1096" grid="f10_f10_mt233" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
-  <test name="ERP_P64x2_Ld1096" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/clm50cropIrrigMonth_interp">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2256,7 +2254,6 @@
     </options>
   </test>
   <test name="ERP_P64x2_Ld366" grid="f10_f10_mt233" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
-  <test name="ERP_P64x2_Ld366" grid="f10_f10_mg37" compset="I2000Clm50BgcCrop" testmods="clm/irrig_alternate_monthly">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2277,7 +2274,6 @@
     </options>
   </test>
   <test name="ERS_D" grid="f10_f10_mt233" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
-  <test name="ERS_D" grid="f10_f10_mg37" compset="I1850Clm50BgcCrop" testmods="clm/reseedresetsnow">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
