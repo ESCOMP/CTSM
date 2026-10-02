@@ -1,4 +1,79 @@
 ===============================================================
+Tag name: ctsm5.4.062
+Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 497 1234)
+Date: Fri Oct 2 07:23:31 AM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Includes these PRs
+#4199 Make additional history fields active in prep. for CMIP7
+#4236 Make the Python unit-test job fail when a test fails
+#4231 test(subset_data): make unit test work outside NCAR cluster, like its siblings do
+#4229 Specify q10 for HR and MR
+#4185 refactor(biogeophys): Rename frac_sno and frac_sno_eff to clarify albedo vs flux roles
+#4225 Fix test_unit_neon_site error
+#4222 Fix test_sys_plumber2_surf_wrapper.py failures
+#4220 Change GLC_NCPL to 4 for DAE test to pass
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #4181
+Resolves #4230 Contributes to #3236
+Resolves #4196
+Resolves #822
+Resolves #4216
+Resolves #4215
+Resolves #4202
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: Minor, as needed
+
+Contributors in addition to originator:
+@Santoshkumarpuppala
+@johnpaulalex
+@wwieder
+@olyson
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Removed DAE test from ExpectedTestFails.xml. See titles of included PRs for other test-related work.
+ ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings passed in COMPARE_base_rest when expected to fail according to issue #2619; I recorded this in #2619 but did not remove the test from the expected fails, yet
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No, only field lists differ due to #4199
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4241 and the PRs listed above
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.061
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
 Date: Wed Sep 30 11:22:16 PM MDT 2026

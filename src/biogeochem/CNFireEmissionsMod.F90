@@ -174,7 +174,7 @@ contains
 
        call hist_addfld1d (fname='FireEmis_TOT', units='gC/m2/sec', &
             avgflag='A', long_name='Total fire emissions flux ', &
-            ptr_patch=this%totfire%emis, default='inactive')
+            ptr_patch=this%totfire%emis)
 
        call hist_addfld1d (fname='FireEmis_ZTOP', units='m', &
             avgflag='A', long_name='Top of vertical fire emissions distribution ', &

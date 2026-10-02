@@ -134,18 +134,6 @@
     </phase>
   </test>
 
-  <test name="DAE_C2_D_Lh12.f10_f10_mg37.I2000Clm50BgcCrop.derecho_intel.clm-DA_multidrv">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#4202</issue>
-    </phase>
-    <!-- Because the RUN fails, the COMPARE phase has a PEND status -->
-    <phase name="COMPARE_base_da">
-      <status>PEND</status>
-      <issue>#4202</issue>
-    </phase>
-  </test>
-
   <!-- mpi-serial failures on derecho_intel with the intel compiler update to intel/2025.3.2 -->
   <test name="ERS_D_Ld7_Mmpi-serial.1x1_smallvilleIA.IHistClm50BgcCropRsGs.derecho_intel.clm-decStart1851_noinitial">
     <phase name="RUN">
