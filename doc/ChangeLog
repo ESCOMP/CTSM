@@ -1,4 +1,298 @@
 ===============================================================
+Tag name: ctsm5.4.062
+Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 497 1234)
+Date: Fri Oct 2 07:23:31 AM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Includes these PRs
+#4199 Make additional history fields active in prep. for CMIP7
+#4236 Make the Python unit-test job fail when a test fails
+#4231 test(subset_data): make unit test work outside NCAR cluster, like its siblings do
+#4229 Specify q10 for HR and MR
+#4185 refactor(biogeophys): Rename frac_sno and frac_sno_eff to clarify albedo vs flux roles
+#4225 Fix test_unit_neon_site error
+#4222 Fix test_sys_plumber2_surf_wrapper.py failures
+#4220 Change GLC_NCPL to 4 for DAE test to pass
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #4181
+Resolves #4230 Contributes to #3236
+Resolves #4196
+Resolves #822
+Resolves #4216
+Resolves #4215
+Resolves #4202
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: Minor, as needed
+
+Contributors in addition to originator:
+@Santoshkumarpuppala
+@johnpaulalex
+@wwieder
+@olyson
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Removed DAE test from ExpectedTestFails.xml. See titles of included PRs for other test-related work.
+ ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings passed in COMPARE_base_rest when expected to fail according to issue #2619; I recorded this in #2619 but did not remove the test from the expected fails, yet
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No, only field lists differ due to #4199
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4241 and the PRs listed above
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.061
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Wed Sep 30 11:22:16 PM MDT 2026
+One-line Summary: Update to cesm3_0_beta10 externals cime/ccs_config, including more ccs_config grid aliases with MOM grids
+
+Purpose and description of changes
+----------------------------------
+
+Update cime and ccs_config to latest version as in the cesm3_0_beta10 tag. Also includes changes so that CIME_MODEL can be set to noresm.
+
+Also include new ccs_config version that has more t233/t201 grid aliases from @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  Add a new test for NorESM, that currently fails. It may be a test to remove.
+
+Testing summary: regular + fates + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (fates-sci.1.93.1_api.46.0.0-ctsm5.4.060)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No b4b
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cime to cime6.5.20
+   ccs_config to ccs_config_cesm1.0.92
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   Update submodules as for final cesm3_0_beta10, cime and ccs_config to latest including more t233 grid aliases #4232
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.060
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Fri Sep 25 12:53:38 PM MDT 2026
+One-line Summary: Update CDEPS/CMEPS to versions with reproducible sums to fix some failing tests
+
+Purpose and description of changes
+----------------------------------
+
+Bring in use of reproducible sums in CDEPS and CMEPS so that our longer threaded tests with DGLC will now PASS. These are turned on with the CMEPS BFBFLAG which was previously not used for anything.
+
+Bugs fixed
+----------
+
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+  - Resolves Threaded exact restart tests that change task/thread count fail with DGLC or CISM when run to a year or more #4160
+
+Notes of particular relevance for users
+---------------------------------------
+
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+  The xml variable BFBFLAG now actually does something
+
+Contributors:
+  - @billsacks did the underlying CDEPS/CMEPS tags
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  - Remove 364-day tests that were there because the longer ones weren't passing previously
+  - Lower wallclock for two ctsm_sci tests that didn't need to be so long
+  - Remove tests that now pass from expected fails
+
+Testing summary:  regular + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Potentially roundoff different
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: compset with either DGLC or CISM AND BFBFLAG==TRUE
+    - what platforms/compilers: all
+    - nature of change: roundoff
+
+   If bitwise differences were observed, how did you show they were no worse
+   than roundoff?
+
+      - The changes were just a few coupled fields and only to roundoff level
+      - The exact restart tests that change PE layouts, which previously failed, now PASS
+      - @billsacks did the evaluation for this in the CMEPS/CDEPS tags
+      - Since most tests were identical even with the change, this gives assurance that the change often doesn't change answers, or only does so when run long enough
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.): cdeps and cmeps
+   - cmeps to cmeps1.1.71 (NOTE: this skips past cmeps1.1.70, which was b4b with changes for threading)
+   - cdeps to cdeps1.0.110
+
+Pull Requests that document the changes (include PR ids):
+   Reproducible sums in CDEPS and CMEPS so that longer threaded tests will PASS #4224
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.059
+Originator(s): cathyxinchangli (Cathy Xinchang Li, U of Illinois - Urbana-Champaign)
+Date: Mon Sep 21 10:55:44 AM MDT 2026
+One-line Summary: Indoor humidity and A/C dehumidification
+
+Purpose and description of changes
+----------------------------------
+
+ This PR adds indoor humidity and air-conditioning dehumidification to the CLMU BEM (Building Energy Model). It prognoses indoor specific humidity, calculates sensible cooling and latent dehumidification loads, and diagnoses condensate production and routes the condensate into urban runoff. The behavior is controlled by an integer CLM namelist variable, building_humidity_mode:
+
+ 0: use the existing CLMU formulation without indoor humidity or AC dehumidification;
+ 1: enable indoor humidity and latent heat exchange, but no AC dehumidification (requires prognostic building temperature, building_temp_method=1); and
+ 2: enable indoor humidity, latent heat exchange, dehumidification load, and condensate production (requires prognostic building temperature, urban_hac to be ON or ON_WASTEHEAT and urban_explicit_ac=.true.).
+
+ The default is set to 0 to ensure bit-for-bit reproducibility with the original scheme.
+
+ Indoor humidity and air-conditioning dehumidification are described by Li et al. (2026), doi:10.1038/s44284-026-00474-4.
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #4162
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to CTSM's user interface (e.g., new/renamed XML or namelist variables):
+ building_humidity_mode is added as a namelist variable
+
+Changes to documentation:
+ #4195 will address the need for new docs
+
+Contributors:
+ Lei Zhao (@Face2sea)
+ Zhiwen Luo
+ Keith Oleson (@olyson)
+ Yifan Cheng (@yifanc17)
+ Xiaoxiong Xie
+ Alvin C. G. Varquez
+ Mitsuna Sekiya
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ 6 new tests in build-namelist_test.pl
+
+Testing summary:
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - OK (2 expected fails)
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No (read the caveat)
+
+ Caveat:
+ - Results remain bit-for-bit under building_humidity_mode=0 (default).
+ - Comparing building_humidity_mode=1 with 0, two new variables are added (QBUILD, RHBUILD), and VENTILATION and EFLXBUILD changes because they now include latent heat exchanges between indoors and outdoors, and URBAN_AC and URBAN_HEAT changes slightly because of the changes in ventilation and higher heat capacity of moist air.
+ - Comparing building_humidity_mode=2 with 1, three more new variables (URBAN_AC_SEN, QCOND_FROM_AC, QCOND_FROM_AC_LUN) are added, and URBAN_AC increases because it now includes sensible (for cooling) and latent (for dehumidification) heat components of urban AC demand. URBAN_HEAT, VENTILATION, EFLXBUILD, WASTEHEAT changes slightly as an indirect results of the changes in AC.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4164
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.058
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
 Date: Fri Sep 18 02:58:26 PM MDT 2026
