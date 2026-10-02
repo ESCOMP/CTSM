@@ -5,6 +5,7 @@ parent directory
 """
 
 import os
+import sys
 import glob
 import argparse
 import logging
@@ -53,7 +54,7 @@ def main(description):
     unit_testing.setup_for_tests(enable_critical_logs=args.debug)
 
     # Run the tests
-    pytest.main(pytest_args)
+    sys.exit(pytest.main(pytest_args))
 
 
 def _commandline_args(description):
