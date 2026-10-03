@@ -7,7 +7,8 @@ import logging
 
 from configparser import ConfigParser
 
-from CIME.buildnml import create_namelist_infile  # pylint: disable=import-error
+from ctsm import add_cime_to_path  # pylint: disable=unused-import,ungrouped-imports
+from CIME.buildnml import create_namelist_infile  # pylint: disable=import-error,wrong-import-order
 
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
