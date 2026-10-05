@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #PBS -N monthly_clim
 #PBS  -r n 
-#PBS  -j oe 
+#PBS  -j oe
+#PBS  -k eod
 #PBS  -S /bin/bash  
 #PBS  -l select=1:ncpus=128:mpiprocs=128:ompthreads=1:mem=235GB
 #PBS  -l walltime=04:00:00
@@ -25,6 +26,8 @@
 set -euo pipefail
 
 default_vars="atmImp_Faxa_bcph2,atmImp_Faxa_bcph3,atmImp_Faxa_ocph1,atmImp_Faxa_ocph2,atmImp_Faxa_ocph3,atmImp_Faxa_dstwet1,atmImp_Faxa_dstdry1,atmImp_Faxa_dstwet2,atmImp_Faxa_dstdry2,atmImp_Faxa_dstwet3,atmImp_Faxa_dstdry3,atmImp_Faxa_dstwet4,atmImp_Faxa_dstdry4"
+# Grid fields that are always written to the output, whatever variable list is used
+always_vars="atmImp_lon,atmImp_lat"
 default_year="1850"
 default_outdir="ARCHDIR"
 # Number of simultaneous ncra jobs: 16 inside a PBS batch job, 1 otherwise
@@ -34,13 +37,16 @@ else
   default_njobs=1
 fi
 
+# Print the help: to stdout and exit 0 for -h, to stderr and exit 1 for bad arguments
 usage() {
-  cat >&2 <<EOF
+  local status=${1:-1}
+  if (( status == 0 )); then exec 3>&1; else exec 3>&2; fi
+  cat >&3 <<EOF
 Usage: $0 [-b [-A ACCOUNT]] [-k] [-h] [-j NJOBS] [-o DIR] [-y YEAR] [-v VARLIST | -a] ARCHDIR CASE BEGYEAR ENDYEAR
   BEGYEAR ENDYEAR  first and last year of the daily files to average (inclusive)
   -a          All variables in the files
   -A ACCOUNT  PBS project account to charge with -b (default: the #PBS -A line in this script)
-  -b          Batch submital. Check the input, then submit this script to the PBS batch queue with the same
+  -b          Batch submission. Check the input, then submit this script to the PBS batch queue with the same
               arguments (uses the #PBS settings at the top of this script)
   -h          Exit with this help
   -j NJOBS    Number of ncra jobs to run at the same time in the background
@@ -51,10 +57,11 @@ Usage: $0 [-b [-A ACCOUNT]] [-k] [-h] [-j NJOBS] [-o DIR] [-y YEAR] [-v VARLIST 
               (default: $default_outdir)
   -v VARLIST  Comma-separated list of variables to average
               (default: $default_vars)
+              $always_vars are always included
   -y YEAR     Year to set the climatology to
               (default: $default_year)
 EOF
-  exit 1
+  exit "$status"
 }
 
 keep=0
@@ -87,7 +94,7 @@ while getopts "bA:kj:v:o:y:ah" opt; do
     o) outdir=$OPTARG;               job_args+=(-o "$OPTARG") ;;
     y) year=$OPTARG;                 job_args+=(-y "$OPTARG") ;;
     a) allvars=1;                    job_args+=(-a) ;;
-    h) usage ;;
+    h) usage 0 ;;
     *) usage ;;
   esac
 done
@@ -126,6 +133,9 @@ if (( allvars )); then
     echo "Averaging all variables"
 else
     [[ -n $varlist ]] || { echo "Variable list given with -v is empty" >&2; exit 1; }
+    # Add the grid fields that are always output, dropping any duplicates
+    IFS=',' read -ra vl <<< "$varlist,$always_vars"
+    varlist=$(printf '%s\n' "${vl[@]}" | awk 'NF && !seen[$0]++' | paste -sd, -)
     vopt=(-v "$varlist")
     echo "Averaging variables: $varlist"
 fi
@@ -222,6 +232,23 @@ wait_ncra() {
     exit 1
   fi
 }
+
+# On Ctrl+C (INT), or when PBS kills the job with qdel or at the walltime limit (TERM),
+# also stop the background ncra jobs. Background jobs in a script ignore Ctrl+C,
+# so without this they would keep running after the script exits.
+stop_on_signal() {
+  local sig=$1 pid
+  trap '' INT TERM
+  echo "Caught SIG$sig, stopping background ncra jobs" >&2
+  for pid in $(jobs -p); do
+    pkill -TERM -P "$pid" 2>/dev/null || true   # the ncra started by this background job
+    kill -TERM "$pid" 2>/dev/null || true
+  done
+  wait 2>/dev/null || true
+  if [[ $sig == INT ]]; then exit 130; else exit 143; fi
+}
+trap 'stop_on_signal INT' INT
+trap 'stop_on_signal TERM' TERM
 
 # Check every month in the range has a full set of daily files before doing any averaging
 bad=0
