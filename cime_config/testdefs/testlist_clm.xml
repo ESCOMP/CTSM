@@ -527,7 +527,7 @@
       <option name="comment">mpasa test with Crujra while Gswp is still the default, also nofireemis for Sp</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
+  <test name="ERI_D_Ld9" grid="ne30_t233" compset="I2000Clm50BgcCru" testmods="clm/vrtlay">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -537,7 +537,7 @@
       <option name="comment">ERI basic test with DEBUG on for plain ne30 for Clm50 and CRUv7 forcing</option>
     </options>
   </test>
-  <test name="ERI_D_Ld9" grid="ne30_g17" compset="I2000Clm50BgcCru" testmods="clm/vrtlay--clm/matrixcnOn">
+  <test name="ERI_D_Ld9" grid="ne30_t233" compset="I2000Clm50BgcCru" testmods="clm/vrtlay--clm/matrixcnOn">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="matrixcn"/>
@@ -1055,7 +1055,7 @@
       <option name="comment">Repeat this science support test with t233 and Crujra while the defaults have not changed</option>
     </options>
   </test>
-  <test name="ERP_D_Ld5" grid="ne30_g17" compset="I1850Clm50BgcCrop" testmods="clm/default">
+  <test name="ERP_D_Ld5" grid="ne30_t233" compset="I1850Clm50BgcCrop" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1184,7 +1184,7 @@
       <option name="comment">Repeat this medium res SE grid test with Crujra while Gswp is still the default</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne30_t233" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1194,7 +1194,7 @@
       <option name="comment">Workhorse SE grid for running with CAM with the latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne30_g17" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne30_t233" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2148,7 +2148,7 @@
       <option name="comment">include a debug test with flooding on</option>
     </options>
   </test>
-  <test name="ERP_P256x2_D_Ld5" grid="f19_g17_gris4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
+  <test name="ERP_P256x2_D_Ld5" grid="f19_t233_gris4" compset="I1850Clm50BgcCropG" testmods="clm/glcMEC_increase">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="prealpha"/>
@@ -2668,7 +2668,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="PEM_D_Ld5" grid="ne30_g17" compset="I2000Clm50Bgc" testmods="clm/default">
+  <test name="PEM_D_Ld5" grid="ne30_t233" compset="I2000Clm50Bgc" testmods="clm/default">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
