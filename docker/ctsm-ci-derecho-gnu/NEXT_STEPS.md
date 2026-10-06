@@ -12,7 +12,8 @@ have now been exercised on Casper. The version-check question is now settled
 stale, and the ninth failure is the `cray-mpich` deviation *guard*, whose
 `MPICH_VERSION` stand-in is deliberately never matched. Only `PFUNIT_VERSION`
 still passes. What is left: that rebuild (item 6), a guard so a stale snapshot
-cannot pass again (item 7), and the Phase 2 drift cron (item 5)._
+cannot pass again (item 7), building the image in CI instead of by hand
+(item 8), and the Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -136,7 +137,10 @@ run the unit tests. Re-save under the new name after the next rebuild.
   workflow is possible with a disk-reclaim step and amd64-only, but is
   follow-up work, not a blocker. The consequence: **nothing republishes
   automatically** — a Dockerfile change needs a manual rebuild, re-validate,
-  push, and a tag bump in `cirrus-testing.yml`.
+  push, and a tag bump in `cirrus-testing.yml`. **Revisited 2026-10-06:** this
+  is now tracked as "Remaining steps" item 8, which keeps the disk and core
+  constraints noted here but drops the amd64-only conclusion -- GitHub's native
+  arm64 runners remove the emulation objection that stood behind it.
 
 ## Added 2026-08-31: run wrappers (VALIDATED on Casper)
 
@@ -532,6 +536,80 @@ not yet been run against the actual container on a Casper compute node; see
    "measured against the module derecho has today" rather than "equal to a
    number someone typed once", and the next `netcdf-mpi` bump goes red by
    itself instead of waiting for someone to notice.
+
+8. **Build the image in CI: build on PRs, build and publish on merges to
+   master, for x86_64 and arm64.** Today the image is built by hand on Casper
+   and pushed by hand (README "Publishing"), which is why item 6's rebuild is a
+   manual errand and why `cirrus-testing.yml`'s pinned tag has to be bumped by
+   hand too. Trigger on changes under `docker/ctsm-ci-derecho-gnu/**` (excluding
+   the `.md` files) and on the workflow file itself; `workflow_dispatch` as
+   well, since a rebuild is sometimes wanted with no file change (a base-image
+   or upstream-tarball refresh).
+
+   **Both architectures build natively, one job per architecture** --
+   `ubuntu-latest` for x86_64 and `ubuntu-24.04-arm` for arm64. No QEMU: this
+   image compiles GCC, MPICH, HDF5, netCDF-C/Fortran, PnetCDF, three ESMF trees,
+   git and pFUnit from source, and emulating any of that is hours-to-days of
+   wall clock. The shape that fits is the standard native multi-arch build:
+   each job builds and, on master only, pushes by digest
+   (`outputs: type=image,push-by-digest=true,name-canonical=true`), and a final
+   job joins the digests with `docker buildx imagetools create`. On a PR the
+   push and the join are skipped and the jobs only have to build.
+
+   Note that the existing `docker-image-*.yml` workflows are not a template:
+   they build the `ctsm-docs` image, which is being retired in favor of an
+   external one, and their single-step `platforms: linux/amd64,linux/arm64`
+   is the emulated form this must not use.
+
+   **The open feasibility question is wall-clock, and it should be measured
+   before the workflow is designed in detail.** The build is about 50 minutes on
+   16 native cores (README "Publishing"); GitHub-hosted runners are much
+   smaller, and a job is killed at 6 hours. **Disk is the tighter limit**: a
+   hosted runner has roughly 14 GB free against a 3.5 GB image whose build
+   unpacks and compiles GCC, three ESMF trees and the rest of the stack, so a
+   reclaim step (dropping the runner's preinstalled Android/.NET/Haskell trees)
+   and aggressive cleanup between layers are both likely required. Two more
+   things follow: `MAKE_JOBS` (default 16) must be set from the runner's actual
+   core count or the build thrashes, and layer caching is not optional. Prefer registry-backed cache
+   (`cache-from`/`cache-to` with `type=registry`) over the GitHub Actions cache,
+   which is capped at 10 GB per repo and small against this image. If a cold
+   build will not fit in 6 hours even with cache, the fallback is to split the
+   Dockerfile: a rarely-changing base image holding the compilers and libraries,
+   rebuilt on demand, and a thin top layer rebuilt per change.
+
+   **An arm64 image is not replicating derecho, which is x86_64 -- and
+   replicating derecho is this image's stated premise.** That does not block
+   building one, but it decides how it is labeled and used:
+
+   - `check-derecho-versions.py` and the whole version-matching argument in this
+     directory describe the x86_64 image only. The arm64 image is the same
+     recipe on different hardware, not "the derecho stack"; its README section
+     should say so plainly.
+   - `cirrus-testing.yml` should keep pinning something x86_64 -- a per-arch tag
+     or a digest -- rather than the multi-arch manifest, so a CI run cannot
+     silently land on arm64.
+   - The validation chain (`smoke-test.sh`, `smoke-test-pfunit.sh`,
+     `run-unit-tests-in-container.sh`, a run wrapper) has only ever run on
+     x86_64. An arm64 image published without exercising it is published
+     untested, and the arm64 runner is the only place that can be done, so at
+     least the smoke tests should run there before its digest joins the
+     manifest.
+
+   The Dockerfile's own build-time assertions (the pFUnit prefix, the two
+   esmf.mk checks) are architecture-independent and run unchanged on both --
+   the cheapest evidence that an arm64 build is coherent.
+
+   **`README.md` has to be reconciled with this.** Its "Publishing" section
+   currently says, of multi-architecture manifests, **"Do not try that here"**,
+   for two reasons. The first -- QEMU is 10-20x slower per core, and is
+   unavailable on Casper anyway, which has no binfmt handlers and no root to
+   register them -- remains exactly right *for building on Casper* and should be
+   kept as such, not deleted; it simply does not apply to a native arm64 runner.
+   The second, that arm64 is not derecho, is answered by labeling rather than by
+   not building, as above.
+
+   GHCR needs no new secret: the package is already public, so `packages: write`
+   on `GITHUB_TOKEN` is enough.
 
 ## Worth raising upstream
 
