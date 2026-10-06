@@ -232,7 +232,7 @@
       <option name="comment">CESM3 development Exact restart test with change in the processor count at f10, for izumi nag</option>
     </options>
   </test>
-  <test name="ERP_D_Ld9" grid="f10_f10_mt201" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
+  <test name="ERP_D_Ld9" grid="f10_f10_mt233" compset="IHistClm60BgcCrop" testmods="clm/clm60cam7LndTuningModeLDust--clm/nnStreamMapAlgo">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -275,7 +275,7 @@
     </options>
   </test>
 
-  <test name="SMS_Ly3" grid="f10_f10_mt201" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
+  <test name="SMS_Ly3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -285,7 +285,7 @@
       <option name="comment">Testing a few years with CMIP6 carbon isotopes</option>
     </options>
   </test>
-  <test name="SMS_Ly3" grid="f10_f10_mt201" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
+  <test name="SMS_Ly3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm-ciso_cmip7_monthly_2013Start">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -317,7 +317,7 @@
       <option name="comment">CESM3 development test at the standard coupled resolution for a month</option>
     </options>
   </test>
-  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mt233" compset="I1850Clm60SpGag">
+  <test name="ERS_Ly3" grid="f10_f10_ais8gris4_mt201" compset="I1850Clm60SpGag">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1064,7 +1064,7 @@
       <option name="wallclock">00:60:00</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mt233" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mt201" compset="IHistClm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1074,7 +1074,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mt233" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mt201" compset="IHistClm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1084,7 +1084,7 @@
       <option name="comment">Repeat this low res SE grid test with Crujra while Gswp is still the default</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mt233" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mt201" compset="I2000Clm60Sp" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -1094,7 +1094,7 @@
       <option name="comment">Low resolution SE grid for running with CAM with latest CLM version in the CTSM science test list, tested in CAM, so test all of Hist, SSP5-8.5 and 2000. Also --nofireemis because this is a Sp compset</option>
     </options>
   </test>
-  <test name="SMS" grid="ne3pg3_ne3pg3_mt233" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
+  <test name="SMS" grid="ne3pg3_ne3pg3_mt201" compset="I2000Clm60SpCrujra" testmods="clm/clm60cam7LndTuningMode--clm/nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="ctsm_sci"/>
       <machine name="derecho" compiler="intel" category="ctsm_release"/>
@@ -2323,7 +2323,7 @@
       <option name="comment">Among other extra outputs, ensure that writing the list of all history fields to a separate file does not cause failure</option>
     </options>
   </test>
-  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt201" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
+  <test name="ERP_P64x2_D_Ld3" grid="f10_f10_mt233" compset="IHistClm60BgcCropCrujra" testmods="clm/default--clm/all_outputs">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="prealpha"/>
@@ -3097,7 +3097,7 @@
       <option name="wallclock">00:20:00</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mt233" compset="I2000Clm50SpRsGs" testmods="clm/ptsRLA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mt201" compset="I2000Clm50SpRsGs" testmods="clm/ptsRLA">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>
       <machine name="derecho" compiler="intel" category="aux_clm_mpi_serial"/>
@@ -3433,7 +3433,7 @@
       <option name="comment">Since bias correction is in CDEPS we want to make sure CESM testing exercises this, in case a CDEPS change causes problems</option>
     </options>
   </test>
-  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mt233" compset="I2000Clm50SpRsGs" testmods="clm/ptsROA">
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="ne3_ne3_mt201" compset="I2000Clm50SpRsGs" testmods="clm/ptsROA">
     <machines>
       <machine name="derecho" compiler="gnu" category="aux_clm"/>
       <machine name="derecho" compiler="gnu" category="aux_clm_mpi_serial"/>
@@ -4864,7 +4864,7 @@
       <option name="comment">mpi-serial self tests with DEBUG</option>
     </options>
   </test>
-  <test name="SMS_D_Ln1" grid="f10_f10_mt201" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
+  <test name="SMS_D_Ln1" grid="f10_f10_mt233" compset="I2000Clm50SpRsGs" testmods="clm-run_self_tests--clm-SimplePhysics--clm-nofireemis">
     <machines>
       <machine name="derecho" compiler="intel" category="decomp_init"/>
       <machine name="derecho" compiler="gnu" category="decomp_init"/>
