@@ -593,7 +593,18 @@ not yet been run against the actual container on a Casper compute node; see
      and is the reason to prefer it: an Apple Silicon developer runs the same
      `podman pull` as everyone else and gets the arm64 image without having to
      know the tag scheme, while CI's explicit pin keeps the canonical path
-     unambiguous.
+     unambiguous. A pull of the manifest tag fetches only the matching
+     architecture -- the index is metadata, and the other architecture's layers
+     are never transferred.
+   - **The README must carry this caveat when the step lands:** on Apple
+     Silicon, which image you get is decided by the architecture of the `podman
+     machine` VM, not by macOS. The default ASi machine is arm64, which is the
+     intent; but a machine created with x86_64 emulation silently resolves the
+     same tag to the amd64 image and runs it emulated. That presents as "the
+     container is mysteriously slow", not as an architecture mistake, so it
+     needs saying outright, along with `podman pull --platform linux/amd64` as
+     the way to ask for x86_64 deliberately -- which is also why the per-arch
+     tags are a convenience and a pinning mechanism rather than a capability.
    - Validation scales to the role. The full chain (`smoke-test.sh`,
      `smoke-test-pfunit.sh`, `run-unit-tests-in-container.sh`, a run wrapper)
      stays an x86_64 gate. For arm64 the bar is lower but not zero: run the
