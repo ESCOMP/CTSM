@@ -25,13 +25,13 @@
 
 FROM docker.io/almalinux:9
 
-ARG GCC_VERSION=12.2.0
+ARG GCC_VERSION=14.3.0
 ARG MPICH_VERSION=3.4.3
-ARG HDF5_VERSION=1.12.2
-ARG NETCDF_C_VERSION=4.9.2
-ARG NETCDF_FORTRAN_VERSION=4.6.1
-ARG PNETCDF_VERSION=1.12.3
-ARG ESMF_VERSION=8.6.0
+ARG HDF5_VERSION=1.14.6
+ARG NETCDF_C_VERSION=4.9.3
+ARG NETCDF_FORTRAN_VERSION=4.6.2
+ARG PNETCDF_VERSION=1.14.1
+ARG ESMF_VERSION=8.9.1
 ARG PFUNIT_VERSION=4.8.0
 # These two build the mpi-serial flavor of the stack: the serial PIO below is
 # compiled against the mpi-serial below, and together they give the mpiuni ESMF
@@ -54,8 +54,8 @@ ARG PFUNIT_VERSION=4.8.0
 # ccs_config_cesm1.0.88 -- derecho has 2.5.3 and 2.6.8 -- and fixing that needs
 # an image rebuild and revalidation. See "Remaining steps" item 4 in
 # NEXT_STEPS.md.
-ARG MPI_SERIAL_VERSION=2.5.4
-ARG PIO_VERSION=2.6.2
+ARG MPI_SERIAL_VERSION=2.5.3
+ARG PIO_VERSION=2.6.8
 
 # Parallelism for the source builds below. Bounded (not $(nproc)) because
 # podman inside a PBS job can report the whole node's CPU count rather than
@@ -101,9 +101,7 @@ ENV TAR_OPTIONS=--no-same-owner
 # (it already retries most other transient errors by default).
 RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc/wgetrc
 
-# ---- GCC (matched derecho's gcc/12.2.0 module as of the 2026-08-31 build;
-# derecho is now at gcc/14.3.0 -- config_machines.xml:59 -- so this ARG is
-# stale pending a rebuild, see "Remaining steps" item 6 in NEXT_STEPS.md) ----
+# ---- GCC (matches derecho's gcc/14.3.0 module, config_machines.xml:59) ----
 # gmp/mpfr/mpc come from AlmaLinux (dnf) rather than GCC's
 # contrib/download_prerequisites, which fetches them from gcc.gnu.org --
 # unreliable from the compute node. The distro ships the versions GCC 12.2
@@ -134,10 +132,9 @@ ENV PATH=/usr/local/bin:/opt/mpich/${MPICH_VERSION}/bin:/opt/gcc/${GCC_VERSION}/
 # ---- MPICH (open equivalent of derecho's cray-mpich, which is
 # MPICH-3.4-ABI-derived). MPICH_VERSION is a deliberate stand-in for the
 # proprietary cray-mpich and is never compared to derecho's version;
-# derecho-versions.ini's deviation guard records cray-mpich 8.1.27, which is
-# what derecho had as of the 2026-08-31 build, and derecho is now at
-# cray-mpich/8.1.32 (config_machines.xml:74) -- so the guard, not the ARG, is
-# what wants attention; see "Remaining steps" item 6 in NEXT_STEPS.md. ch4:ofi
+# derecho-versions.ini's deviation guard records cray-mpich 8.1.32
+# (config_machines.xml:74). 8.1.x is MPICH-3.4-ABI-derived throughout, so
+# moving the guard from 8.1.27 did not change the right stand-in. ch4:ofi
 # matches cray-mpich's libfabric lineage; the libfabric implementation is the
 # one embedded in the MPICH tarball. ----
 RUN cd /tmp \
@@ -168,9 +165,9 @@ ENV CC=mpicc \
 # Only the git tag archive is still downloadable for this version; it
 # includes the generated configure script.
 RUN cd /tmp \
-    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-${HDF5_VERSION//./_}.tar.gz" \
-    && tar xzf "hdf5-${HDF5_VERSION//./_}.tar.gz" \
-    && cd "hdf5-hdf5-${HDF5_VERSION//./_}" \
+    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz" \
+    && tar xzf "hdf5_${HDF5_VERSION}.tar.gz" \
+    && cd "hdf5-hdf5_${HDF5_VERSION}" \
     && ./configure --prefix=/usr/local --enable-parallel --enable-hl --with-zlib \
     && make -j"${MAKE_JOBS}" \
     && make install \
@@ -217,7 +214,7 @@ RUN cd /tmp \
     && rm -rf /tmp/pnetcdf-*
 
 # ---- ESMF, debug flavor (BOPT=g) ----
-# Derecho's gnu DEBUG builds load esmf/8.6.0-debug; this is the default
+# Derecho's gnu DEBUG builds load esmf-mpi/8.9.1-debug; this is the default
 # ESMFMKFILE below since the current CI test is SMS_D (debug).
 # ESMF_COMM=mpich is ESMF's setting for MPICH v3 and later.
 #
@@ -277,9 +274,9 @@ ENV SERIAL_PREFIX=/usr/local/serial
 # Note the compilers: the base image sets ENV CC=mpicc/FC=mpifort, which is
 # exactly what must NOT be used here. Override to the plain gcc toolchain.
 RUN cd /tmp \
-    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5-${HDF5_VERSION//./_}.tar.gz" \
-    && tar xzf "hdf5-${HDF5_VERSION//./_}.tar.gz" \
-    && cd "hdf5-hdf5-${HDF5_VERSION//./_}" \
+    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz" \
+    && tar xzf "hdf5_${HDF5_VERSION}.tar.gz" \
+    && cd "hdf5-hdf5_${HDF5_VERSION}" \
     && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
        CXX="/opt/gcc/${GCC_VERSION}/bin/g++" \
        FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
@@ -394,7 +391,8 @@ RUN cd /tmp \
 # find_package(ESMF REQUIRED) and link_libraries(esmf) unconditionally.
 #
 # derecho keeps a separate ESMF for exactly this and this mirrors it. Its
-# config_machines.xml loads esmf/8.6.0 -- NOT esmf/8.6.0-debug -- whenever
+# config_machines.xml loads the plain esmf module (esmf/8.9.1) -- NOT the
+# esmf-mpi/8.9.1-debug it loads for MPI builds -- whenever
 # mpilib="mpi-serial", even under DEBUG="TRUE", and that install's esmf.mk
 # reports ESMF_COMM=mpiuni, ESMF_BOPT=O, and a link line with no -lmpi. So
 # mpiuni + BOPT=O here; the debug mismatch is deliberate, matching derecho.
@@ -490,7 +488,7 @@ RUN cd /tmp \
 #
 # The compiler necessarily deviates from derecho: ccs_config has a PFUNIT_PATH
 # only for intel_derecho/intel_casper, so there is no gnu pFUnit on derecho to
-# match. This is gfortran 12.2.0 -- same version as the rest of the image.
+# match. This is the same gfortran as the rest of the image (GCC_VERSION).
 #
 # Source is the release .tar ASSET, not the GitHub auto-generated source
 # tarball and not a git clone. It is the only one that ships pFUnit's nested

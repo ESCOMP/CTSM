@@ -8,11 +8,11 @@ pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
 NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
 have now been exercised on Casper. The version-check question is now settled
 (item 4), and settling it showed the image has fallen behind derecho: as of
-`ccs_config_cesm1.0.88` the checker fails 9 of its 10 checks — eight ARGs are
-stale, and the ninth failure is the `cray-mpich` deviation *guard*, whose
-`MPICH_VERSION` stand-in is deliberately never matched. Only `PFUNIT_VERSION`
-still passes. What is left: that rebuild (item 6), building the image in CI
-instead of by hand (item 8), and the Phase 2 drift cron (item 5)._
+`ccs_config_cesm1.0.88` the checker had been failing 9 of its 10 checks. The
+ARGs are now bumped and all 10 pass — but **nothing has been rebuilt**, so the
+published image still predates the bump and this must not merge ahead of the
+rebuild. What is left: that rebuild (item 6), building the image in CI instead
+of by hand (item 8), and the Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -451,56 +451,56 @@ not yet been run against the actual container on a Casper compute node; see
 5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
-6. **Bring the image up to derecho's current stack: rebuild.** As of
-   `ccs_config_cesm1.0.88`, `check-derecho-versions.py` fails **9 of its 10**
-   checks -- every one but `PFUNIT_VERSION`. Item 4 covered only the two
-   mpi-serial-stack ARGs, and only in its body, so the rest were never a
-   tracked item at all. What the checker reports:
+6. **Bring the image up to derecho's current stack: rebuild.** The ARGs are
+   now bumped and `check-derecho-versions.py` passes all 10 checks, but
+   **nothing has been built**. The published `:20260831` image is still the
+   2026-08-31 `ncarenv/23.09` build, so this item is open until a rebuild is
+   validated, published, and pinned.
 
-   | ARG | this image | derecho (gnu) |
+   | ARG | was | now (= derecho) |
    |---|---|---|
-   | `GCC_VERSION` | 12.2.0 | `gcc/14.3.0` |
-   | `NETCDF_C_VERSION` | 4.9.2 | `netcdf-mpi/4.9.3` (serial twin `netcdf/4.9.3`) |
-   | `PNETCDF_VERSION` | 1.12.3 | `parallel-netcdf/1.14.1` |
-   | `ESMF_VERSION` | 8.6.0 | `esmf-mpi/8.9.1` (serial twin `esmf/8.9.1`) |
-   | `MPI_SERIAL_VERSION` | 2.5.4 | `mpi-serial/2.5.3` |
-   | `PIO_VERSION` | 2.6.2 | `parallelio-serial/2.6.8` |
-   | `HDF5_VERSION` | 1.12.2 | 1.14.6 (`hdf5-mpi`, recorded in `derecho-versions.ini`) |
-   | `NETCDF_FORTRAN_VERSION` | 4.6.1 | 4.6.2 (bundled in `netcdf-mpi`, recorded) |
-   | `MPICH_VERSION` guard | 3.4.3 stand-in | `cray-mpich` recorded 8.1.27, live 8.1.32 |
+   | `GCC_VERSION` | 12.2.0 | 14.3.0 |
+   | `NETCDF_C_VERSION` | 4.9.2 | 4.9.3 |
+   | `NETCDF_FORTRAN_VERSION` | 4.6.1 | 4.6.2 |
+   | `HDF5_VERSION` | 1.12.2 | 1.14.6 |
+   | `PNETCDF_VERSION` | 1.12.3 | 1.14.1 |
+   | `ESMF_VERSION` | 8.6.0 | 8.9.1 |
+   | `MPI_SERIAL_VERSION` | 2.5.4 | 2.5.3 |
+   | `PIO_VERSION` | 2.6.2 | 2.6.8 |
 
-   The `cray-mpich` row is not a version to copy -- MPICH stays an open-source
-   stand-in -- but the guard exists so the stand-in gets re-examined whenever
-   derecho moves, so decide whether 3.4.3 is still the right stand-in for
-   cray-mpich 8.1.32 before bumping `[deviation_guard]`.
+   `MPICH_VERSION` stays 3.4.3: cray-mpich 8.1.32 is still 8.1.x and still
+   MPICH-3.4-ABI-derived, so only `[deviation_guard]` moved (8.1.27 ->
+   8.1.32). `PFUNIT_VERSION` was already current.
 
-   Clearing the rest means a rebuild plus the full revalidation chain
-   (`smoke-test.sh`, `smoke-test-pfunit.sh`,
-   `run-unit-tests-in-container.sh`, and at least one run wrapper), then a
-   manual republish and a tag bump in `cirrus-testing.yml` -- nothing
-   republishes automatically.
+   Two coupled edits went with the ARGs. `gnu_container.cmake`'s hardcoded
+   `set(ESMFMKFILE ...)` moved to `esmf-8.9.1-mpiuni` -- the coupling the
+   build-time assertion now guards. And **HDF5's upstream tag scheme changed**:
+   `hdf5-1_12_2` became `hdf5_1.14.6`, so the URL, the tarball name and the
+   extracted directory all had to change. Every download URL and extracted
+   directory name for the new versions was checked against upstream; HDF5 was
+   the only break. GCC's `ftp.gnu.org` URL could not be reached from a login
+   node, but `mirrors.kernel.org` confirms 14.3.0 exists, and the same URL
+   fails for 12.2.0 too, so that is egress and not a bad link.
 
-   **Bumping `ESMF_VERSION` requires editing `cime-macros/gnu_container.cmake`
-   in the same change.** Its `set(ESMFMKFILE ...)` hardcodes
-   `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk` (not templated), and the
-   `Dockerfile` `COPY`s that file verbatim. The Dockerfile now asserts at build
-   time that the path the macro names actually exists and is the mpiuni build,
-   mirroring the guard on `PFUNIT_PATH`, so forgetting it fails the build
-   rather than surfacing much later in `run-unit-tests-in-container.sh` and in
-   every `mpi-serial` case. That assertion has not itself been exercised by a
-   real build yet.
+   **Do not merge this ahead of the rebuild.** The check now passes against the
+   Dockerfile, which is a statement about the recipe, not about what is on
+   GHCR. Merging before the image is published and `cirrus-testing.yml` is
+   repointed puts master in a state where CI is green while pulling an image
+   that matches nothing in the repo.
 
-   **The GCC 12.2.0 -> 14.3.0 jump is the risky part.** It is two major
-   releases, and every other library in the image -- HDF5, netCDF-C/Fortran,
-   PnetCDF, three ESMF trees, PIO, pFUnit, mpi-serial -- gets recompiled
-   against it, so a new diagnostic anywhere in that chain stops the build.
-   Expect the trouble on the **C** side, not the Fortran one. Per GCC 14's
-   porting notes (https://gcc.gnu.org/gcc-14/porting_to.html), several
-   long-standing warnings are errors by default in GCC 14:
-   `-Wimplicit-function-declaration`, `-Wincompatible-pointer-types`,
-   `-Wint-conversion` and `-Wreturn-mismatch`. That is what breaks old autotools
-   `configure` scripts and old C sources -- so HDF5 1.12.2, mpi-serial, and
-   anything else not bumped in the same rebuild are the candidates. The
+   The rebuild needs the full revalidation chain (`smoke-test.sh`,
+   `smoke-test-pfunit.sh`, `run-unit-tests-in-container.sh`, and at least one
+   run wrapper), then a manual republish and a tag bump in
+   `cirrus-testing.yml` -- nothing republishes automatically until item 8.
+
+   **GCC 12.2.0 -> 14.3.0 is the risky part.** It is two major releases, and
+   every other library in the image gets recompiled against it, so a new
+   diagnostic anywhere in that chain stops the build. Expect the trouble on the
+   **C** side, not the Fortran one. Per GCC 14's porting notes
+   (https://gcc.gnu.org/gcc-14/porting_to.html), several long-standing warnings
+   are errors by default in GCC 14: `-Wimplicit-function-declaration`,
+   `-Wincompatible-pointer-types`, `-Wint-conversion` and `-Wreturn-mismatch`.
+   That is what breaks old autotools `configure` scripts and old C sources. The
    `-fallow-argument-mismatch` workaround in `gnu_container.cmake` (see "Worth
    raising upstream" below) is *not* a concern: that file sets the flag
    unconditionally, precisely because ccs_config's version guard cannot fire
@@ -508,13 +508,6 @@ not yet been run against the actual container on a Casper compute node; see
    10) nor the flag itself moved in GCC 14. Budget for a debug cycle, not a
    single clean build.
 
-   Until this is done, **`.github/workflows/derecho-version-check.yml` is red
-   on this branch.** It runs the script on `push` and on `pull_request`, in both
-   cases only when the change touches
-   `docker/ctsm-ci-derecho-gnu/Dockerfile`, `derecho-versions.ini`,
-   `check-derecho-versions.py`, the workflow file itself, or the `ccs_config`
-   gitlink; plus `workflow_dispatch` on demand. The ccs_config bump that caused
-   the drift is one of those paths, so the failure is not hypothetical.
 7. ✅ **`[snapshot]` can no longer go stale silently.** The two snapshot
    versions were re-measured on 2026-10-06 against `netcdf-mpi/4.9.3` under
    `ncarenv/25.10`: HDF5 **1.14.6** (now its own `hdf5-mpi` module, pulled in by

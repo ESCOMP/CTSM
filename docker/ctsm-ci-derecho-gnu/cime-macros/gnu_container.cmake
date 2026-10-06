@@ -137,6 +137,6 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # /usr/local/serial is static, so the loader cannot silently pick the parallel
 # .so that /etc/ld.so.conf.d/ctsm.conf puts on the default path.
 if (MPILIB STREQUAL "mpi-serial")
-  set(ESMFMKFILE "/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk")
+  set(ESMFMKFILE "/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk")
   set(NETCDF_PATH "/usr/local/serial")
 endif()
