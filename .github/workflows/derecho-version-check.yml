@@ -4,7 +4,9 @@ on:
   push:
     # The "branches" line is required, or this also runs on tag pushes even when
     # none of the watched files changed (same as check-clm6-aliases.yml).
-    branches: ['*']
+    # '**' rather than '*': the single star does not match a '/', so branch
+    # names like feature/x would silently never trigger this check.
+    branches: ['**']
     paths:
       - 'docker/ctsm-ci-derecho-gnu/Dockerfile'
       - 'docker/ctsm-ci-derecho-gnu/derecho-versions.ini'
