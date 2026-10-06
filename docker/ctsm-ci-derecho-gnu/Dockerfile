@@ -102,6 +102,14 @@ ENV TAR_OPTIONS=--no-same-owner
 RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc/wgetrc
 
 # ---- GCC (matches derecho's gcc/14.3.0 module, config_machines.xml:59) ----
+# The tarball is tried against several mirrors in turn because ftp.gnu.org (and
+# ftpmirror.gnu.org, which resolves to the same host) is unreachable from NCAR
+# compute nodes -- it times out rather than refusing, so wget burns its full
+# retry budget and the step exits 4 before anything compiles. DNS resolves
+# fine; this is routing. The per-attempt --tries/--timeout override the
+# deliberately patient global wgetrc below so a dead mirror is abandoned
+# quickly instead of eating the job's walltime.
+#
 # gmp/mpfr/mpc come from AlmaLinux (dnf) rather than GCC's
 # contrib/download_prerequisites, which fetches them from gcc.gnu.org --
 # unreliable from the compute node. The distro ships the versions GCC 12.2
@@ -113,7 +121,13 @@ RUN printf '%s\n' 'retry_connrefused = on' 'tries = 10' 'waitretry = 15' >> /etc
 # self-compiled three times.
 RUN dnf -y install gmp-devel mpfr-devel libmpc-devel && dnf clean all \
     && cd /tmp \
-    && wget -nv "https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" \
+    && for base in "https://gcc.gnu.org/pub/gcc/releases" \
+                   "https://mirrors.kernel.org/gnu/gcc" \
+                   "https://ftp.gnu.org/gnu/gcc"; do \
+           echo "fetching gcc from ${base}"; \
+           wget -nv --tries=3 --timeout=30 -O "gcc-${GCC_VERSION}.tar.xz" \
+               "${base}/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz" && break; \
+       done \
     && tar xf "gcc-${GCC_VERSION}.tar.xz" \
     && cd "gcc-${GCC_VERSION}" \
     && mkdir build && cd build \
