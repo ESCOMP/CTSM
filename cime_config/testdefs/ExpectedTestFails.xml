@@ -51,7 +51,7 @@
   </test>
 
   <!-- Hillslope test suite fails -->
-  <test name="SMS_D_Ld3.f10_f10_mt233.I1850Clm60Bgc.derecho_intel.clm-HillslopeFromFile">
+  <test name="SMS_D_Ld3.f10_f10_mt201.I1850Clm60Bgc.derecho_intel.clm-HillslopeFromFile">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#4169</issue>
@@ -82,7 +82,7 @@
     </phase>
   </test>
 
-  <test name="ERP_P64x2_Ld396.f10_f10_mt233.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="ERP_P64x2_Ld396.f10_f10_mt201.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rest">
       <status>FAIL</status>
       <issue>#2619</issue>
@@ -94,14 +94,14 @@
       <comment>This failure relates to the following REP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Ld396.f10_f10_mt233.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396.f10_f10_mt201.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="COMPARE_base_rep2">
       <status>FAIL</status>
       <issue>#2619</issue>
       <comment>This failure relates to the preceding ERP failure.</comment>
     </phase>
   </test>
-  <test name="REP_P64x2_Ld396.f10_f10_mt233.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
+  <test name="REP_P64x2_Ld396.f10_f10_mt201.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings">
     <phase name="BASELINE">
       <status>FAIL</status>
       <issue>#2619</issue>
@@ -109,14 +109,14 @@
     </phase>
   </test>
 
-  <test name="FUNITCTSM_P1x1.f10_f10_mt233.I2000Clm50Sp.izumi_intel">
+  <test name="FUNITCTSM_P1x1.f10_f10_mt201.I2000Clm50Sp.izumi_intel">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3182</issue>
     </phase>
   </test>
 
-  <test name="ERP_D_P64x2_Ld10.f10_f10_mt233.I2000Clm60Bgc.derecho_intel.clm-Hillslope">
+  <test name="ERP_D_P64x2_Ld10.f10_f10_mt201.I2000Clm60Bgc.derecho_intel.clm-Hillslope">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#3788</issue>
@@ -284,7 +284,7 @@
 
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
-  <test name="SMS_Lh3.f10_f10_mt233.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
+  <test name="SMS_Lh3.f10_f10_mt201.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
     <phase name="CREATE_NEWCASE">
       <status>FAIL</status>
       <issue>MOSART#91</issue>
@@ -308,7 +308,7 @@
 
   <!-- interim_restart (and aux_clm) test list-->
 
-  <test name="ERI_Ld41.f10_f10_mt233.I2000Clm60BgcCrop.derecho_gnu.clm-default">
+  <test name="ERI_Ld41.f10_f10_mt201.I2000Clm60BgcCrop.derecho_gnu.clm-default">
     <phase name="COMPARE_branch_hybrid">
      <status>FAIL</status>
      <issue>#3494</issue>
