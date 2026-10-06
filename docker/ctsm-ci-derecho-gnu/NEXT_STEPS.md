@@ -577,23 +577,29 @@ not yet been run against the actual container on a Casper compute node; see
    Dockerfile: a rarely-changing base image holding the compilers and libraries,
    rebuilt on demand, and a thin top layer rebuilt per change.
 
-   **An arm64 image is not replicating derecho, which is x86_64 -- and
-   replicating derecho is this image's stated premise.** That does not block
-   building one, but it decides how it is labeled and used:
+   **The arm64 image exists only for local development on Apple Silicon. The
+   x86_64 image remains the sole canonical one**, because replicating derecho
+   is this image's premise and derecho is x86_64. That settles several things:
 
    - `check-derecho-versions.py` and the whole version-matching argument in this
-     directory describe the x86_64 image only. The arm64 image is the same
-     recipe on different hardware, not "the derecho stack"; its README section
-     should say so plainly.
-   - `cirrus-testing.yml` should keep pinning something x86_64 -- a per-arch tag
-     or a digest -- rather than the multi-arch manifest, so a CI run cannot
-     silently land on arm64.
-   - The validation chain (`smoke-test.sh`, `smoke-test-pfunit.sh`,
-     `run-unit-tests-in-container.sh`, a run wrapper) has only ever run on
-     x86_64. An arm64 image published without exercising it is published
-     untested, and the arm64 runner is the only place that can be done, so at
-     least the smoke tests should run there before its digest joins the
-     manifest.
+     directory describe the x86_64 image. The arm64 image is the same recipe on
+     different hardware, not "the derecho stack", and its README section should
+     say so rather than leaving a reader to assume a test passing there means
+     anything about derecho.
+   - `cirrus-testing.yml` keeps pinning x86_64 explicitly -- a per-arch tag or a
+     digest, not the multi-arch manifest -- so no CI run can land on arm64 even
+     if it is someday run on an arm64 runner.
+   - A multi-arch manifest under one tag is still the right shape despite that,
+     and is the reason to prefer it: an Apple Silicon developer runs the same
+     `podman pull` as everyone else and gets the arm64 image without having to
+     know the tag scheme, while CI's explicit pin keeps the canonical path
+     unambiguous.
+   - Validation scales to the role. The full chain (`smoke-test.sh`,
+     `smoke-test-pfunit.sh`, `run-unit-tests-in-container.sh`, a run wrapper)
+     stays an x86_64 gate. For arm64 the bar is lower but not zero: run the
+     smoke tests on the arm64 runner before its digest joins the manifest, so a
+     plainly broken developer image cannot be published. The arm64 runner is the
+     only place that can be done at all.
 
    The Dockerfile's own build-time assertions (the pFUnit prefix, the two
    esmf.mk checks) are architecture-independent and run unchanged on both --
