@@ -61,3 +61,7 @@ tex = {
     "description": "One line description of project.",
     "category": tex_category,
 }
+
+###############################
+### Purely custom variables ###
+###############################
