@@ -12,9 +12,11 @@ Dockerfile's version ARGs to that config, in three modes:
               compared to derecho; instead the derecho module version (read
               live) must still equal a recorded value, so a derecho change
               trips the check (MPICH_VERSION <-> cray-mpich).
-  snapshot  - the derecho version is bundled inside another Spack module and has
-              NO standalone entry in config_machines.xml, so the ARG is compared
-              to a hand-recorded value (HDF5, netCDF-Fortran).
+  snapshot  - the derecho version has NO standalone entry in
+              config_machines.xml -- netCDF-Fortran is bundled inside the
+              netcdf-mpi module, HDF5 is the hdf5-mpi module netcdf-mpi pulls
+              in via depends_on -- so the ARG is compared to a hand-recorded
+              value (HDF5, netCDF-Fortran).
   pfunit    - derecho has no pFUnit module at all; the version is embedded in
               the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
 
@@ -384,15 +386,17 @@ def main():
             if arg_val == recorded:
                 print(
                     f"✅ {arg}={arg_val} matches recorded derecho {recorded} "
-                    "(bundled in netcdf-mpi; not in config_machines.xml)"
+                    "(recorded from netcdf-mpi; not in config_machines.xml)"
                 )
             else:
                 print(
-                    f"❌ {arg}={arg_val} != recorded derecho {recorded}. HDF5 "
-                    "and netCDF-Fortran are bundled in derecho's netcdf-mpi "
-                    "module (no standalone module in config). Verify on derecho "
-                    "(module show netcdf-mpi / nf-config --version) and update "
-                    "the Dockerfile ARG or [snapshot] in derecho-versions.ini."
+                    f"❌ {arg}={arg_val} != recorded derecho {recorded}. "
+                    "Neither has a standalone module in config_machines.xml: "
+                    "netCDF-Fortran is bundled in netcdf-mpi, HDF5 is the "
+                    "hdf5-mpi module it pulls in. Verify on derecho "
+                    "(module show netcdf-mpi | grep -i hdf5 / nf-config "
+                    "--version) and update the Dockerfile ARG or [snapshot] "
+                    "in derecho-versions.ini."
                 )
                 ok = False
 

@@ -1,6 +1,6 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-10-01. The image builds and validates end-to-end on
+_Last updated: 2026-10-06. The image builds and validates end-to-end on
 Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point
 **runs** with both mpi-serial and mpich -- and is **published and public** at
 `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831`, which `cirrus-testing.yml`
@@ -8,11 +8,11 @@ pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
 NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
 have now been exercised on Casper. The version-check question is now settled
 (item 4), and settling it showed the image has fallen behind derecho: as of
-`ccs_config_cesm1.0.88` the checker fails 7 of its 10 checks — six ARGs are
-stale, and the seventh failure is the `cray-mpich` deviation *guard*, whose
-`MPICH_VERSION` stand-in is deliberately never matched. What is left: that
-rebuild (item 6), re-measuring the two snapshot versions (item 7), and the
-Phase 2 drift cron (item 5)._
+`ccs_config_cesm1.0.88` the checker fails 9 of its 10 checks — eight ARGs are
+stale, and the ninth failure is the `cray-mpich` deviation *guard*, whose
+`MPICH_VERSION` stand-in is deliberately never matched. Only `PFUNIT_VERSION`
+still passes. What is left: that rebuild (item 6), a guard so a stale snapshot
+cannot pass again (item 7), and the Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -449,9 +449,10 @@ not yet been run against the actual container on a Casper compute node; see
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
 6. **Bring the image up to derecho's current stack: rebuild.** As of
-   `ccs_config_cesm1.0.88`, `check-derecho-versions.py` fails **7 of its 10**
-   checks. Item 4 covered only the last two of those, and only in its body, so
-   the other five were never a tracked item at all. What the checker reports:
+   `ccs_config_cesm1.0.88`, `check-derecho-versions.py` fails **9 of its 10**
+   checks -- every one but `PFUNIT_VERSION`. Item 4 covered only the two
+   mpi-serial-stack ARGs, and only in its body, so the rest were never a
+   tracked item at all. What the checker reports:
 
    | ARG | this image | derecho (gnu) |
    |---|---|---|
@@ -461,6 +462,8 @@ not yet been run against the actual container on a Casper compute node; see
    | `ESMF_VERSION` | 8.6.0 | `esmf-mpi/8.9.1` (serial twin `esmf/8.9.1`) |
    | `MPI_SERIAL_VERSION` | 2.5.4 | `mpi-serial/2.5.3` |
    | `PIO_VERSION` | 2.6.2 | `parallelio-serial/2.6.8` |
+   | `HDF5_VERSION` | 1.12.2 | 1.14.6 (`hdf5-mpi`, recorded in `derecho-versions.ini`) |
+   | `NETCDF_FORTRAN_VERSION` | 4.6.1 | 4.6.2 (bundled in `netcdf-mpi`, recorded) |
    | `MPICH_VERSION` guard | 3.4.3 stand-in | `cray-mpich` recorded 8.1.27, live 8.1.32 |
 
    The `cray-mpich` row is not a version to copy -- MPICH stays an open-source
@@ -510,38 +513,28 @@ not yet been run against the actual container on a Casper compute node; see
    cases only when the change touches
    `docker/ctsm-ci-derecho-gnu/Dockerfile`, `derecho-versions.ini`,
    `check-derecho-versions.py`, the workflow file itself, or the `ccs_config`
-   gitlink; plus `workflow_dispatch` on demand. The `push` trigger's filter is
-   `branches: ['*']`, and a single `*` does not match `/`, so pushes to a branch
-   whose name contains a slash do not fire it at all (`'**'` would). This branch
-   has no slash, so it does fire here. The ccs_config bump that caused
+   gitlink; plus `workflow_dispatch` on demand. The ccs_config bump that caused
    the drift is one of those paths, so the failure is not hypothetical.
-7. **Re-measure the two `[snapshot]` versions against derecho's current
-   `netcdf-mpi`.** `HDF5_VERSION` and `NETCDF_FORTRAN_VERSION` are among the
-   three checks still printing ✅, and those two ✅s now assert nothing.
-   `derecho-versions.ini` records 1.12.2 and 4.6.1 as read out of
-   `netcdf-mpi/4.9.2` under `ncarenv/23.09`; the same run of the checker
-   reports derecho at `netcdf-mpi/4.9.3`, so the bundle those numbers were
-   measured from no longer exists. Under the policy in item 4 that is drift
-   being reported as green -- the one place the output actively misleads.
+7. **Guard the `[snapshot]` values against going stale silently.** The two
+   snapshot versions were re-measured on 2026-10-06 against
+   `netcdf-mpi/4.9.3` under `ncarenv/25.10`: HDF5 **1.14.6** (now its own
+   `hdf5-mpi` module, pulled in by `netcdf-mpi` through `depends_on`, where
+   under `ncarenv/23.09` it was bundled) and netCDF-Fortran **4.6.2**. Both had
+   drifted from the recorded 1.12.2 / 4.6.1, so the two checks that had been
+   printing ✅ were reporting stale as green. They now fail, correctly, and the
+   ARG bump belongs in the item 6 rebuild.
 
-   The values cannot be fixed from this repo; it needs a human on derecho:
-
-   ```
-   module --force purge
-   module load ncarenv/25.10 gcc/14.3.0 cray-mpich/8.1.32 netcdf-mpi/4.9.3
-   module show netcdf-mpi     # -> the bundled HDF5 version
-   nf-config --version        # -> the netCDF-Fortran version
-   ```
-
-   then update `[snapshot]`, and the Dockerfile ARGs with it, in the item 6
-   rebuild.
-
-   **The longer-term fix is to give `snapshot` mode the guard `deviation`
-   already has.** Record alongside each snapshot *which* `netcdf-mpi` version
-   it was measured against, read that module's version live from
-   `config_machines.xml`, and fail when the two differ. A stale snapshot then
-   goes red instead of green, and a ✅ means "measured against the module
-   derecho has today" rather than "equal to a number someone typed once".
+   What is still missing is the guard that would have caught it. `snapshot`
+   mode compares an ARG to a number someone typed once, with nothing tying it
+   to the module it was measured from -- so when derecho moved `netcdf-mpi`
+   from 4.9.2 to 4.9.3 the recorded values silently stopped describing
+   anything, and the check went on passing. **Give `snapshot` mode the guard
+   `deviation` already has:** record alongside each snapshot which `netcdf-mpi`
+   version it was measured against, read that module's version live from
+   `config_machines.xml`, and fail when the two differ. A ✅ then means
+   "measured against the module derecho has today" rather than "equal to a
+   number someone typed once", and the next `netcdf-mpi` bump goes red by
+   itself instead of waiting for someone to notice.
 
 ## Worth raising upstream
 

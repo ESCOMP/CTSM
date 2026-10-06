@@ -36,7 +36,7 @@ this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The **this
 image** column is what the published image was actually built with (2026-08-31,
 against derecho's then-current `ncarenv/23.09` stack). **The two no longer
 agree.** Rows marked **stale** are the ones where they differ:
-`check-derecho-versions.py` fails 7 of its 10 ARG checks today, and clearing
+`check-derecho-versions.py` fails 9 of its 10 ARG checks today, and clearing
 that needs an image rebuild — see
 [NEXT_STEPS.md](NEXT_STEPS.md) "Remaining steps" item 6. Read the table as the
 current known state, not as a claim that the image matches derecho.
@@ -45,9 +45,9 @@ current known state, not as a claim that the image matches derecho.
 |---|---|---|---|
 | GCC | 14.3.0 | 12.2.0 | **stale** (two major releases behind); built from source under `/opt/gcc` |
 | MPI | cray-mpich 8.1.32 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary, so this version is deliberately *not* matched. The guard on derecho's own cray-mpich version is **stale** (`derecho-versions.ini` records 8.1.27) |
-| HDF5 | 1.12.2, bundled in netcdf-mpi | 1.12.2 (parallel) | the derecho value was measured under `ncarenv/23.09` + `netcdf-mpi/4.9.2`, a bundle derecho no longer has: **needs re-measuring**, item 7 |
+| HDF5 | 1.14.6 (`hdf5-mpi`, pulled in by `netcdf-mpi` via `depends_on`) | 1.12.2 (parallel) | **stale**; not in `config_machines.xml`, so recorded in `derecho-versions.ini` — measured 2026-10-06 against `netcdf-mpi/4.9.3` |
 | netCDF-C | netcdf-mpi/4.9.3 | 4.9.2 | **stale** |
-| netCDF-Fortran | 4.6.1, bundled in netcdf-mpi | 4.6.1 | the derecho value is `nf-config --version` under `ncarenv/23.09` + `netcdf-mpi/4.9.2`, a bundle derecho no longer has: **needs re-measuring**, item 7 |
+| netCDF-Fortran | 4.6.2, bundled in `netcdf-mpi` | 4.6.1 | **stale**; not in `config_machines.xml`, so recorded in `derecho-versions.ini` — `nf-config --version` on 2026-10-06 against `netcdf-mpi/4.9.3` |
 | PnetCDF | parallel-netcdf/1.14.1 | 1.12.3 | **stale** |
 | ESMF | esmf-mpi/8.9.1-debug, esmf-mpi/8.9.1; `esmf/8.9.1` for `mpilib="mpi-serial"` (that build is `ESMF_COMM=mpiuni`) | 8.6.0, three flavors | **stale**; see "ESMF flavors" below |
 | pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
