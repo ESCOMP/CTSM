@@ -317,6 +317,13 @@ RUN cd /tmp \
     && rm -rf /tmp/netcdf-c-*
 
 # ---- netCDF-Fortran (serial) ----
+# --libs --static, not --libs. netCDF-C 4.9.3 dropped $LIBS from the NC_LIBS it
+# substitutes into nc-config (configure.ac: NC_LIBS="$LDFLAGS $NC_LIBS" where
+# 4.9.2 had "$LDFLAGS $NC_LIBS $LIBS"), so plain --libs now yields a bare
+# -lnetcdf. That is fine against a shared netCDF, where DT_NEEDED pulls the
+# rest in, but this prefix is static-only: without the transitive
+# -lhdf5_hl -lhdf5 -lm -lz -lxml2 -lcurl the configure link test for nc_open
+# fails and the step dies with "Could not link to netcdf C library".
 RUN cd /tmp \
     && wget -nv "https://downloads.unidata.ucar.edu/netcdf-fortran/${NETCDF_FORTRAN_VERSION}/netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
     && tar xzf "netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
@@ -327,7 +334,7 @@ RUN cd /tmp \
        CFLAGS=-fPIC FCFLAGS=-fPIC FFLAGS=-fPIC \
        CPPFLAGS="-I${SERIAL_PREFIX}/include" \
        LDFLAGS="-L${SERIAL_PREFIX}/lib" \
-       LIBS="$(${SERIAL_PREFIX}/bin/nc-config --libs)" \
+       LIBS="$(${SERIAL_PREFIX}/bin/nc-config --libs --static)" \
        ./configure --prefix="${SERIAL_PREFIX}" --disable-shared --enable-static \
     && make -j"${MAKE_JOBS}" \
     && make install \
@@ -414,6 +421,10 @@ RUN cd /tmp \
 # Selected via ESMFMKFILE from cime-macros/gnu_container.cmake when
 # MPILIB=mpi-serial. The image's baked-in ENV ESMFMKFILE still points at the
 # debug mpich flavor, so ordinary create_test builds are untouched.
+# ESMF asks nc-config for "--libs" with no --static (build/common.mk:1583),
+# which against this static prefix returns a bare -lnetcdf, for the reason
+# given at the netcdf-fortran step above. ESMF skips that query entirely when
+# ESMF_NETCDF_LIBS comes from the environment, so supply the complete list.
 RUN cd /tmp \
     && wget -nv "https://github.com/esmf-org/esmf/archive/refs/tags/v${ESMF_VERSION}.tar.gz" \
     && tar xzf "v${ESMF_VERSION}.tar.gz" \
@@ -421,6 +432,8 @@ RUN cd /tmp \
     && sed -i 's|make VERBOSE=1 -f ./Makefile|$(MAKE) VERBOSE=1 -f ./Makefile|; s|make -f ./Makefile install|$(MAKE) -f ./Makefile install|' \
         src/Infrastructure/IO/PIO/makefile \
     && export PATH="${SERIAL_PREFIX}/bin:${PATH}" \
+    && export ESMF_NETCDF_LIBS="$(${SERIAL_PREFIX}/bin/nc-config --libs --static \
+            | tr ' ' '\n' | grep '^-l' | tr '\n' ' ')" \
     && export ESMF_DIR="$PWD" ESMF_COMPILER=gfortran ESMF_COMM=mpiuni ESMF_BOPT=O \
         ESMF_NETCDF=nc-config \
         ESMF_PIO=external \
