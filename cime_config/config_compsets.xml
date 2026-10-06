@@ -95,10 +95,10 @@
   <compset>
     <alias>I2000Clm60SpCrujra</alias>
     <lname>2000_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <!-- compsets for mizuRoute -->
@@ -152,10 +152,10 @@
   <compset>
     <alias>I2000Clm60BgcCropCrujra</alias>
     <lname>2000_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
@@ -181,10 +181,10 @@
   <compset>
     <alias>I1850Clm60SpCrujra</alias>
     <lname>1850_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
@@ -205,10 +205,10 @@
   <compset>
     <alias>I1850Clm60BgcCropCrujra</alias>
     <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
@@ -308,8 +308,8 @@
   <compset>
     <alias>I2000Clm60FatesSpCrujra</alias>
     <lname>2000_DATM%CRUJRA2024b_CLM60%FATES-SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
   </compset>
   <compset>
     <alias>I2000Clm60FatesSpRsGs</alias>
@@ -341,8 +341,8 @@
   <compset>
      <alias>I1850Clm60BgcCrujraNoAnthroRtm</alias>
      <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
-     <science_support grid="f09_t232"/>
-     <science_support grid="f09_f09_mt232"/>
+     <science_support grid="f09_t233"/>
+     <science_support grid="f09_f09_mt233"/>
    </compset>
 
   <compset>
@@ -352,8 +352,8 @@
   <compset>
      <alias>I1850Clm60SpCrujraNoAnthroRtm</alias>
      <lname>1850_DATM%CRUJRA2024b_CLM60%SP-NOANTHRO_SICE_SOCN_RTM_DGLC%NOEVOLVE_SWAV</lname>
-     <science_support grid="f09_t232"/>
-     <science_support grid="f09_f09_mt232"/>
+     <science_support grid="f09_t233"/>
+     <science_support grid="f09_f09_mt233"/>
    </compset>
 
   <compset>
@@ -379,10 +379,10 @@
   <compset>
     <alias>IHistClm60SpCrujra</alias>
     <lname>HIST_DATM%CRUJRA2024b_CLM60%SP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
@@ -406,10 +406,10 @@
   <compset>
     <alias>IHistClm60BgcCropCrujra</alias>
     <lname>HIST_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_DGLC%NOEVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
@@ -611,19 +611,19 @@
   <compset>
     <alias>I1850Clm60BgcCropCrujraG</alias>
     <lname>1850_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <compset>
     <alias>IHistClm60BgcCropCrujraG</alias>
     <lname>HIST_DATM%CRUJRA2024b_CLM60%BGC-CROP_SICE_SOCN_MOSART_CISM2%GRIS-EVOLVE_SWAV</lname>
-    <science_support grid="f09_t232"/>
-    <science_support grid="f09_f09_mt232"/>
-    <science_support grid="ne30pg3_t232"/>
-    <science_support grid="ne30pg3_ne30pg3_mt232"/>
+    <science_support grid="f09_t233"/>
+    <science_support grid="f09_f09_mt233"/>
+    <science_support grid="ne30pg3_t233"/>
+    <science_support grid="ne30pg3_ne30pg3_mt233"/>
   </compset>
 
   <!-- Primarily for testing: same as I1850Clm50SpGag but with SROF -->

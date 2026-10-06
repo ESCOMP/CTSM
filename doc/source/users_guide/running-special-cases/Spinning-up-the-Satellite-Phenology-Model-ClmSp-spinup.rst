@@ -10,11 +10,11 @@ The spin-up of a land surface model is generally defined as an adjustment proces
 
 To spin-up the Clm60Sp model you generally need to run Clm60Sp for a few cycles of repeated atmospheric forcing starting from arbitrary initial conditions (finidat = ' '), the main goal being to ensure that the turbulent fluxes and soil water and temperature have reached equilibrium (minimal trends). You then use the final restart file resulting from that simulation as initial conditions in other simulations. Alternatively, you can also start from an initial file that is typically already provided for you as part of the selected compset. Generally, this will allow for shorter spinup times if your simulation configuration is similar to the one run to generate the default initial file.
 
-The following steps illustrate how to setup and run a 51 year Clm60Sp spinup from arbitrary initial conditions using the ``I2000Clm60SpCrujra`` compset and ``f09_t232`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
+The following steps illustrate how to setup and run a 51 year Clm60Sp spinup from arbitrary initial conditions using the ``I2000Clm60SpCrujra`` compset and ``f09_t233`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
 ::
 
    cd cime/scripts
-   ./create_newcase --case Clm60Sp_ctsm54030_1deg_CRUJRA2024_arbi_2000 --compset I2000Clm60SpCrujra --res f09_t232 --run-unsupported --project XX
+   ./create_newcase --case Clm60Sp_ctsm54030_1deg_CRUJRA2024_arbi_2000 --compset I2000Clm60SpCrujra --res f09_t233 --run-unsupported --project XX
    cd Clm60Sp_ctsm54030_1deg_CRUJRA2024_arbi_2000/
    ./case.setup
    ./xmlchange CLM_FORCE_COLDSTART=on
@@ -54,11 +54,11 @@ The ``subper`` setting tells the script how many years of atmospheric forcing we
 
  ClmSp spinup plot for arbitrary initial conditions. Variables examined are FSH (sensible heat flux), EFLX_LH_TOT (latent heat flux), GPP (photosynthesis), TWS (total water storage), H2OSOI (volumetric soil water in layer 8) and TSOI (soil temperature in layer 10). Generated using ``tools/unsupported/SpinupStability_SP_v10.ncl``.
 
-You can also start from a default initial file that is provided as part of the selected compset. The following steps illustrate how to setup and run a 51 year Clm60Sp spinup from default initial conditions again using the ``I2000Clm60SpCrujra`` compset and ``f09_t232`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
+You can also start from a default initial file that is provided as part of the selected compset. The following steps illustrate how to setup and run a 51 year Clm60Sp spinup from default initial conditions again using the ``I2000Clm60SpCrujra`` compset and ``f09_t233`` spatial resolution.  From a checkout of the CLM code (choose your own case name):
 ::
 
    cd cime/scripts
-   ./create_newcase --case Clm60Sp_ctsm54030_1deg_CRUJRA2024_fini_2000 --compset I2000Clm60SpCrujra --res f09_t232 --run-unsupported --project XX
+   ./create_newcase --case Clm60Sp_ctsm54030_1deg_CRUJRA2024_fini_2000 --compset I2000Clm60SpCrujra --res f09_t233 --run-unsupported --project XX
    cd Clm60Sp_ctsm54030_1deg_CRUJRA2024_fini_2000/
    ./case.setup
    echo "use_init_interp = .true" >> user_nl_clm
