@@ -21,10 +21,17 @@ Dockerfile's version ARGs to that config, in three modes:
               the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
 
 derecho's gnu stack comes in two flavors -- the MPI one (MPILIB=mpich, the
-machine default) and the serial one (MPILIB=mpi-serial) -- and since
-ccs_config_cesm1.0.88 the same library can appear in both under different module
-names and versions (esmf-mpi vs esmf, parallelio vs parallelio-serial). Every
-module-reading check therefore names the flavor it is asking about.
+machine default, asserted against <MPILIBS>) and the serial one
+(MPILIB=mpi-serial) -- and since ccs_config_cesm1.0.88 the same library can
+appear in both under different module names and versions (esmf-mpi vs esmf,
+parallelio vs parallelio-serial). Every module-reading check therefore names the
+flavor it is asking about.
+
+Where one ARG builds both flavors in the container -- ESMF_VERSION and
+NETCDF_C_VERSION each compile twice, once MPI-linked and once serial -- the
+check also asserts derecho's two modules still agree with each other. If they
+ever diverge, no single ARG can match both and the Dockerfile needs a second
+one, so that is reported instead of an arbitrary half-truth.
 
 Recorded values (snapshot + deviation guard) live in derecho-versions.ini.
 
@@ -55,6 +62,10 @@ COMPILER = "gnu"
 # The two mpilib flavors of derecho's gnu stack. MPI_STACK is derecho's default
 # MPILIB (the first entry of <MPILIBS>mpich,openmpi</MPILIBS>) and is what the
 # container's MPICH stand-in replaces; SERIAL_STACK is the mpi-serial build.
+# check_default_mpilib() asserts MPI_STACK is still that first entry: the
+# per-stack module names below (netcdf-mpi vs netcdf, esmf-mpi vs esmf) are
+# hand-written for mpich, so if derecho changes its default the right answer is
+# to fail and have someone re-derive them, not to follow it silently.
 MPI_STACK = "mpich"
 SERIAL_STACK = "mpi-serial"
 
@@ -72,11 +83,16 @@ CHECKS = [
     # MPI_STACK is named here only because every module check names one.
     {"arg": "GCC_VERSION", "mode": "direct", "module": "gcc", "stack": MPI_STACK},
     {
+        # Like ESMF below: one ARG builds both of the container's netCDF-Cs
+        # (the MPICH-linked one and the static serial one under
+        # /usr/local/serial), so derecho's two must agree before either can be
+        # compared to it.
         "arg": "NETCDF_C_VERSION",
         "mode": "direct",
         "module": "netcdf-mpi",
         "stack": MPI_STACK,
         "strip_suffix": "-debug",
+        "also_equal": {"module": "netcdf", "stack": SERIAL_STACK},
     },
     {
         "arg": "PNETCDF_VERSION",
@@ -154,6 +170,24 @@ def attr_applies(attr_value, target):
     if pattern.startswith("!"):
         return re.match(pattern[1:] + "$", target) is None
     return re.match(pattern + "$", target) is not None
+
+
+def check_default_mpilib(path):
+    """Return (None) if derecho's default MPILIB is still MPI_STACK, else why not."""
+    root = ET.parse(path).getroot()  # <machine MACH="derecho">
+    el = root.find("MPILIBS")
+    if el is None or not (el.text or "").strip():
+        return f"no <MPILIBS> element in {path}; cannot confirm the default mpilib"
+    first = el.text.split(",")[0].strip()
+    if first != MPI_STACK:
+        return (
+            f"derecho's default mpilib is now {first!r}, not {MPI_STACK!r} "
+            f"(<MPILIBS>{el.text.strip()}</MPILIBS>). Every MPI-stack check "
+            "below reads modules named for mpich (netcdf-mpi, esmf-mpi, "
+            "cray-mpich); re-derive them for the new default before trusting "
+            "this check."
+        )
+    return None
 
 
 def get_gnu_module_versions(path):
@@ -288,9 +322,18 @@ def snap_get(parser, section, key):
 def main():
     args = parse_dockerfile_args(DOCKERFILE)
     config = get_gnu_module_versions(CONFIG_XML)
+    mpilib_problem = check_default_mpilib(CONFIG_XML)
     snap = load_snapshot(SNAPSHOT)
 
     ok = True
+    if mpilib_problem:
+        print(f"\u274c default mpilib: {mpilib_problem}")
+        ok = False
+    else:
+        print(
+            f'\u2705 derecho\'s default mpilib is still "{MPI_STACK}"; the '
+            "MPI-stack module names below apply"
+        )
     for chk in CHECKS:
         arg = chk["arg"]
         mode = chk["mode"]

@@ -457,7 +457,7 @@ not yet been run against the actual container on a Casper compute node; see
    | ARG | this image | derecho (gnu) |
    |---|---|---|
    | `GCC_VERSION` | 12.2.0 | `gcc/14.3.0` |
-   | `NETCDF_C_VERSION` | 4.9.2 | `netcdf-mpi/4.9.3` |
+   | `NETCDF_C_VERSION` | 4.9.2 | `netcdf-mpi/4.9.3` (serial twin `netcdf/4.9.3`) |
    | `PNETCDF_VERSION` | 1.12.3 | `parallel-netcdf/1.14.1` |
    | `ESMF_VERSION` | 8.6.0 | `esmf-mpi/8.9.1` (serial twin `esmf/8.9.1`) |
    | `MPI_SERIAL_VERSION` | 2.5.4 | `mpi-serial/2.5.3` |
