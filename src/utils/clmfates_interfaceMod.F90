@@ -86,6 +86,8 @@ module CLMFatesInterfaceMod
    use clm_varcon        , only : tfrz
    use clm_varcon        , only : spval
    use clm_varcon        , only : denice
+   use clm_varcon        , only : denh2o
+   use SoilMoistStressMod, only : calc_effective_soilporosity, calc_volumetric_h2oliq
    use clm_varcon        , only : ispval
    use clm_varcon        , only : sum_to_1_tol
    use clm_varpar        , only : surfpft_lb,surfpft_ub
@@ -1158,6 +1160,11 @@ module CLMFatesInterfaceMod
       integer  :: begg,endg
       real(r8) :: harvest_rates(bounds_clump%begg:bounds_clump%endg,num_harvest_inst)
       real(r8) :: s_node, smp_node         ! local for relative water content and potential
+      integer  :: num_fatesc               ! number of columns hosting FATES sites
+      integer  :: filter_fatesc(bounds_clump%endc-bounds_clump%begc+1) ! columns hosting FATES sites
+      integer  :: jtop(bounds_clump%begc:bounds_clump%endc)            ! top soil layer for each column
+      real(r8) :: eff_por(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd)       ! effective porosity [m3/m3]
+      real(r8) :: h2osoi_liqvol(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd) ! liquid volumetric water [m3/m3]
       logical  :: after_start_of_harvest_ts
       integer  :: iharv
       logical  :: nitr_suppl                     ! true -> CLM is supplementing Nitrogen
@@ -1210,6 +1217,34 @@ module CLMFatesInterfaceMod
          gdp_lf_col = this%fates_fire_data_method%GetGDP()
       end if
 
+      ! Liquid volumetric soil water for every column hosting a FATES site. The HLM's own
+      ! h2osoi_liqvol_col is computed in CanopyFluxes only for columns with an exposed
+      ! (snow-free) vegetated patch, and is NaN or stale elsewhere, so it cannot feed this
+      ! daily fill. This uses the same routines, from prognostic water valid on every column.
+      num_fatesc = this%fates(nc)%nsites
+      do s = 1, num_fatesc
+         filter_fatesc(s) = this%f2hmap(nc)%fcolumn(s)
+      end do
+      call calc_effective_soilporosity(bounds_clump, &
+           ubj = nlevgrnd, &
+           numf = num_fatesc, &
+           filter = filter_fatesc(1:num_fatesc), &
+           watsat = soilstate_inst%watsat_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+           h2osoi_ice = waterstatebulk_inst%h2osoi_ice_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+           denice = denice, &
+           eff_por = eff_por(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd))
+      jtop(bounds_clump%begc:bounds_clump%endc) = 1
+      call calc_volumetric_h2oliq(bounds_clump, &
+           jtop = jtop(bounds_clump%begc:bounds_clump%endc), &
+           lbj = 1, &
+           ubj = nlevgrnd, &
+           numf = num_fatesc, &
+           filter = filter_fatesc(1:num_fatesc), &
+           eff_porosity = eff_por(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+           h2osoi_liq = waterstatebulk_inst%h2osoi_liq_col(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd), &
+           denh2o = denh2o, &
+           vol_liq = h2osoi_liqvol(bounds_clump%begc:bounds_clump%endc, 1:nlevgrnd))
+
       do s=1,this%fates(nc)%nsites
          c = this%f2hmap(nc)%fcolumn(s)
          g = col%gridcell(c)
@@ -1244,7 +1279,7 @@ module CLMFatesInterfaceMod
 
          ! Soil water
          this%fates(nc)%bc_in(s)%h2o_liqvol_sl(1:nlevsoil)  = &
-               waterstatebulk_inst%h2osoi_vol_col(c,1:nlevsoil)
+               h2osoi_liqvol(c,1:nlevsoil)
 
          this%fates(nc)%bc_in(s)%max_rooting_depth_index_col = &
               min(nlevsoil, active_layer_inst%altmax_lastyear_indx_col(c))
@@ -1261,7 +1296,9 @@ module CLMFatesInterfaceMod
 
          do j = 1,nlevsoil
             if(this%fates(nc)%bc_out(s)%active_suction_sl(j)) then
-               s_node = max(waterstatebulk_inst%h2osoi_vol_col(c,j)/soilstate_inst%eff_porosity_col(c,j) ,0.01_r8)
+               ! active_suction_sl requires liquid > 0, and calc_volumetric_h2oliq clamps
+               ! liquid to at most eff_por, so this cannot divide by zero.
+               s_node = max(h2osoi_liqvol(c,j)/eff_por(c,j), 0.01_r8)
                call soil_water_retention_curve%soil_suction(c,j,s_node, soilstate_inst, smp_node)
                this%fates(nc)%bc_in(s)%smp_sl(j)           = smp_node
             end if
