@@ -16,7 +16,10 @@ Dockerfile's version ARGs to that config, in three modes:
               config_machines.xml -- netCDF-Fortran is bundled inside the
               netcdf-mpi module, HDF5 is the hdf5-mpi module netcdf-mpi pulls
               in via depends_on -- so the ARG is compared to a hand-recorded
-              value (HDF5, netCDF-Fortran).
+              value (HDF5, netCDF-Fortran). Because that value cannot be read
+              live, the ini also records which netcdf-mpi it was measured
+              against; that IS read live, and a mismatch fails the check
+              rather than letting a stale record pass.
   pfunit    - derecho has no pFUnit module at all; the version is embedded in
               the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
 
@@ -68,6 +71,14 @@ COMPILER = "gnu"
 # to fail and have someone re-derive them, not to follow it silently.
 MPI_STACK = "mpich"
 SERIAL_STACK = "mpi-serial"
+
+# The [snapshot] values are read out of one derecho module: netcdf-mpi bundles
+# netCDF-Fortran and pulls in the hdf5-mpi module. Nothing about those versions
+# can be read live, but the version of the module they came from can be --
+# recording it is what lets a stale snapshot fail instead of pass. If a snapshot
+# ever comes from some other module, this grows a per-check field.
+SNAPSHOT_SOURCE_MODULE = "netcdf-mpi"
+SNAPSHOT_PROVENANCE_KEY = "measured_against_netcdf_mpi"
 
 # Dockerfile ARG -> how to check it.
 #   "direct":    ARG must equal the config gnu module version, in the "stack"
@@ -170,6 +181,34 @@ def attr_applies(attr_value, target):
     if pattern.startswith("!"):
         return re.match(pattern[1:] + "$", target) is None
     return re.match(pattern + "$", target) is not None
+
+
+def check_snapshot_provenance(config, snap):
+    """Return None if [snapshot] still describes derecho's current module.
+
+    The recorded values have no entry in config_machines.xml, so they cannot be
+    read live and the check can only compare an ARG to a number someone typed.
+    What CAN be read live is the version of the module they were measured from.
+    If that has moved, the recorded numbers describe a bundle derecho no longer
+    has -- and an equally stale ARG then compares equal to them and prints a
+    pass, which is exactly how HDF5 and netCDF-Fortran stayed green across a
+    netcdf-mpi bump.
+    """
+    recorded = snap_get(snap, "snapshot", SNAPSHOT_PROVENANCE_KEY)
+    live, reason = resolve_config_version(
+        config, SNAPSHOT_SOURCE_MODULE, MPI_STACK, "-debug"
+    )
+    if live is None:
+        return f"cannot read derecho {SNAPSHOT_SOURCE_MODULE}: {reason}"
+    if live != recorded:
+        return (
+            f"derecho {SNAPSHOT_SOURCE_MODULE} is {live}, but [snapshot] was "
+            f"measured against {recorded}, so the recorded HDF5 and "
+            "netCDF-Fortran versions describe a bundle derecho no longer has. "
+            "Re-measure on derecho (recipe in derecho-versions.ini) and set "
+            f"{SNAPSHOT_PROVENANCE_KEY} = {live}."
+        )
+    return None
 
 
 def check_default_mpilib(path):
@@ -324,6 +363,7 @@ def main():
     config = get_gnu_module_versions(CONFIG_XML)
     mpilib_problem = check_default_mpilib(CONFIG_XML)
     snap = load_snapshot(SNAPSHOT)
+    snapshot_problem = check_snapshot_provenance(config, snap)
 
     ok = True
     if mpilib_problem:
@@ -333,6 +373,14 @@ def main():
         print(
             f'\u2705 derecho\'s default mpilib is still "{MPI_STACK}"; the '
             "MPI-stack module names below apply"
+        )
+    if snapshot_problem:
+        print(f"\u274c [snapshot] provenance: {snapshot_problem}")
+        ok = False
+    else:
+        print(
+            f"\u2705 [snapshot] was measured against the "
+            f"{SNAPSHOT_SOURCE_MODULE} derecho has today"
         )
     for chk in CHECKS:
         arg = chk["arg"]
@@ -426,7 +474,15 @@ def main():
 
         elif mode == "snapshot":
             recorded = snap_get(snap, *chk["snap"])
-            if arg_val == recorded:
+            if snapshot_problem:
+                print(
+                    f"\u274c {arg}={arg_val}: not compared. The recorded "
+                    f"derecho value ({recorded}) came from a superseded "
+                    f"{SNAPSHOT_SOURCE_MODULE}; see the [snapshot] provenance "
+                    "failure above."
+                )
+                ok = False
+            elif arg_val == recorded:
                 print(
                     f"✅ {arg}={arg_val} matches recorded derecho {recorded} "
                     "(recorded from netcdf-mpi; not in config_machines.xml)"

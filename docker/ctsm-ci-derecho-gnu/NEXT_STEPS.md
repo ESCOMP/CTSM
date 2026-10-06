@@ -11,9 +11,8 @@ have now been exercised on Casper. The version-check question is now settled
 `ccs_config_cesm1.0.88` the checker fails 9 of its 10 checks — eight ARGs are
 stale, and the ninth failure is the `cray-mpich` deviation *guard*, whose
 `MPICH_VERSION` stand-in is deliberately never matched. Only `PFUNIT_VERSION`
-still passes. What is left: that rebuild (item 6), a guard so a stale snapshot
-cannot pass again (item 7), building the image in CI instead of by hand
-(item 8), and the Phase 2 drift cron (item 5)._
+still passes. What is left: that rebuild (item 6), building the image in CI
+instead of by hand (item 8), and the Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -516,26 +515,31 @@ not yet been run against the actual container on a Casper compute node; see
    `check-derecho-versions.py`, the workflow file itself, or the `ccs_config`
    gitlink; plus `workflow_dispatch` on demand. The ccs_config bump that caused
    the drift is one of those paths, so the failure is not hypothetical.
-7. **Guard the `[snapshot]` values against going stale silently.** The two
-   snapshot versions were re-measured on 2026-10-06 against
-   `netcdf-mpi/4.9.3` under `ncarenv/25.10`: HDF5 **1.14.6** (now its own
-   `hdf5-mpi` module, pulled in by `netcdf-mpi` through `depends_on`, where
-   under `ncarenv/23.09` it was bundled) and netCDF-Fortran **4.6.2**. Both had
-   drifted from the recorded 1.12.2 / 4.6.1, so the two checks that had been
-   printing ✅ were reporting stale as green. They now fail, correctly, and the
-   ARG bump belongs in the item 6 rebuild.
+7. ✅ **`[snapshot]` can no longer go stale silently.** The two snapshot
+   versions were re-measured on 2026-10-06 against `netcdf-mpi/4.9.3` under
+   `ncarenv/25.10`: HDF5 **1.14.6** (now its own `hdf5-mpi` module, pulled in by
+   `netcdf-mpi` through `depends_on`, where under `ncarenv/23.09` it was
+   bundled) and netCDF-Fortran **4.6.2**. Both had drifted from the recorded
+   1.12.2 / 4.6.1, so the two checks that had been printing ✅ were reporting
+   stale as green. They now fail, and the ARG bump belongs in the item 6
+   rebuild.
 
-   What is still missing is the guard that would have caught it. `snapshot`
-   mode compares an ARG to a number someone typed once, with nothing tying it
-   to the module it was measured from -- so when derecho moved `netcdf-mpi`
-   from 4.9.2 to 4.9.3 the recorded values silently stopped describing
-   anything, and the check went on passing. **Give `snapshot` mode the guard
-   `deviation` already has:** record alongside each snapshot which `netcdf-mpi`
-   version it was measured against, read that module's version live from
-   `config_machines.xml`, and fail when the two differ. A ✅ then means
+   `snapshot` mode now has the guard `deviation` already had.
+   `derecho-versions.ini` records `measured_against_netcdf_mpi` alongside the
+   values; the check reads derecho's live `netcdf-mpi` from
+   `config_machines.xml` and, when the two differ, reports the snapshot as
+   unusable and refuses to compare either ARG against it. A ✅ now means
    "measured against the module derecho has today" rather than "equal to a
-   number someone typed once", and the next `netcdf-mpi` bump goes red by
-   itself instead of waiting for someone to notice.
+   number someone typed once".
+
+   Verified by replaying the original failure: with the pre-bump values
+   (1.12.2 / 4.6.1), their matching ARGs, and provenance recorded as 4.9.2, the
+   old code printed two passes and the new code fails all three lines. A
+   missing provenance key raises rather than passing.
+
+   What this does **not** cover, and item 5 still has to: drift in a module
+   `config_machines.xml` does name, where derecho moves and nothing in the repo
+   changes. This guard only fires once some commit makes the check run.
 
 8. **Build the image in CI: build on PRs, build and publish on merges to
    master, for x86_64 and arm64.** Today the image is built by hand on Casper
