@@ -91,8 +91,9 @@ derecho has exactly the same split: whenever `mpilib="mpi-serial"`, its
 `config_machines.xml` loads the plain `esmf` module (`esmf/8.9.1` today,
 `esmf/8.6.0` when this image was built) rather than the `-debug` variant it
 loads for MPI builds — even under `DEBUG="TRUE"` — and that install reports
-`ESMF_COMM=mpiuni` with `ESMF_BOPT=O`. The debug/optimized mismatch here is
-deliberate, matching derecho.
+`ESMF_COMM=mpiuni` with `ESMF_BOPT=O` (confirmed against `esmf/8.9.1` on
+2026-10-06, and unchanged from the `esmf/8.6.0` reading below). The
+debug/optimized mismatch here is deliberate, matching derecho.
 
 To use the optimized MPI flavor in a workflow step:
 
@@ -431,7 +432,9 @@ which is what the image does and what **derecho does too**. Read from
 derecho's own install (the `esmf` module under its `mpi-serial` module
 hierarchy, the one gnu mpi-serial builds load; read when that was `esmf/8.6.0`
 under `ncarenv/23.09`, since superseded by `esmf/8.9.1` — the arrangement is
-what matters here, not the versions):
+what matters here, not the versions, and it was re-confirmed against 8.9.1 on
+2026-10-06: still `ESMF_COMM=mpiuni`, `ESMF_BOPT=O`, `-DESMF_PIO=1` and
+`-lpioc`, with no bare `-lmpi`):
 
 ```
 ESMF_COMM:         mpiuni

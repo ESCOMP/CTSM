@@ -433,6 +433,13 @@ RUN cd /tmp \
 # the link line legitimately contains -lmpi-serial now (ESMF_PIO_LIBS). A
 # `grep -w -- -lmpi` matches inside "-lmpi-serial" -- '-' is not a word
 # character -- and failed this build for an hour on a false positive.
+#
+# The ESMF_COMM grep is deliberately UNANCHORED. ESMF emits no line-start
+# ESMF_COMM= assignment in esmf.mk: the string appears only inside the
+# ESMF_*COMPILECPPFLAGS lines (-DESMF_COMM=mpiuni) and in trailing comments.
+# Verified against derecho's esmf/8.9.1 as well as 8.6.0. Anchoring this would
+# read as a tightening and would instead fail every build. It still
+# discriminates, since an MPI build names its own comm, not mpiuni.
 RUN set -eu; \
     mk="/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib/esmf.mk"; \
     [ -f "$mk" ] || { echo "ERROR: $mk missing" >&2; exit 1; }; \
