@@ -4,9 +4,8 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = clmdoc
 SOURCEDIR     = source
-DIRWITHCONFPY = doc-builder
+DIRWITHCONFPY = $(if $(wildcard $(dir $(lastword $(MAKEFILE_LIST)))doc-builder),doc-builder,.)
 BUILDDIR      = build
 
 # Put it first so that "make" without argument is like "make help".
