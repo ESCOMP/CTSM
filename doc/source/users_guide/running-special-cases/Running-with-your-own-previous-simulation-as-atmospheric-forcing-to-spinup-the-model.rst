@@ -50,7 +50,7 @@ Example: Simulation Forced with Data from the Previous Simulation
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case frcwmyB1850 -res f09_f09_mt232 -compset I1850Clm60BgcCropSpinup
+   > ./create_newcase -case frcwmyB1850 -res f09_f09_mt233 -compset I1850Clm60BgcCropSpinup
    > cd frcWmyB1850
    # By default this compset will use the CPLHIST-CESM3 and give you the default data from a CESM3 spinup simulation.
 

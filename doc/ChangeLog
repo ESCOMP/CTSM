@@ -1,4 +1,195 @@
 ===============================================================
+Tag name: ctsm5.4.063
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
+Date: Tue Oct  6 09:32:15 MDT 2026
+One-line Summary: Move CTSM tests from t232 to t233
+
+Purpose and description of changes
+----------------------------------
+
+ Updating testlist_clm.xml, ExpectedTestFails.xml, config_compsets.xml, and documentation that needs updating
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #4238 Remove NorESM test
+ Contributes to #2540 Move testing from POP to MOM masks
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: As needed regarding the update from t232 to t233
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: Moving tests from t232 to t233 but postpone the change for LII2 tests (issue #4245)
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only cases with grids that changed to the t233 grid
+    - what platforms/compilers: All
+    - nature of change: Only due to the grid update
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4223
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.062
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
+Date: Fri Oct 2 07:23:31 AM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Includes these PRs
+#4199 Make additional history fields active in prep. for CMIP7
+#4236 Make the Python unit-test job fail when a test fails
+#4231 test(subset_data): make unit test work outside NCAR cluster, like its siblings do
+#4229 Specify q10 for HR and MR
+#4185 refactor(biogeophys): Rename frac_sno and frac_sno_eff to clarify albedo vs flux roles
+#4225 Fix test_unit_neon_site error
+#4222 Fix test_sys_plumber2_surf_wrapper.py failures
+#4220 Change GLC_NCPL to 4 for DAE test to pass
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+Resolves #4181
+Resolves #4230 Contributes to #3236
+Resolves #4196
+Resolves #822
+Resolves #4216
+Resolves #4215
+Resolves #4202
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: Minor, as needed
+
+Contributors in addition to originator:
+@Santoshkumarpuppala
+@johnpaulalex
+@wwieder
+@olyson
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing:
+ Removed DAE test from ExpectedTestFails.xml. See titles of included PRs for other test-related work.
+ ERP_P64x2_Ld396.f10_f10_mg37.IHistClm60Bgc.derecho_intel.clm-monthly--clm-matrixcnOn_ignore_warnings passed in COMPARE_base_rest when expected to fail according to issue #2619; I recorded this in #2619 but did not remove the test from the expected fails, yet
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No, only field lists differ due to #4199
+
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4241 and the PRs listed above
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.061
+Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
+Date: Wed Sep 30 11:22:16 PM MDT 2026
+One-line Summary: Update to cesm3_0_beta10 externals cime/ccs_config, including more ccs_config grid aliases with MOM grids
+
+Purpose and description of changes
+----------------------------------
+
+Update cime and ccs_config to latest version as in the cesm3_0_beta10 tag. Also includes changes so that CIME_MODEL can be set to noresm.
+
+Also include new ccs_config version that has more t233/t201 grid aliases from @slevis-lmwg
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Changes to tests or testing:
+  Add a new test for NorESM, that currently fails. It may be a test to remove.
+
+Testing summary: regular + fates + ctsm_sci
+----------------
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+   build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - OK
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+  fates tests: (fates-sci.1.93.1_api.46.0.0-ctsm5.4.060)
+    derecho ----- OK
+    izumi ------- OK
+
+  any other testing (give details below):
+
+  ctsm_sci
+     derecho ---- OK
+
+If the tag used for baseline comparisons was NOT the previous tag, note that here:
+
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: No b4b
+
+Other details
+-------------
+
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+   cime to cime6.5.20
+   ccs_config to ccs_config_cesm1.0.92
+
+Pull Requests that document the changes (include PR ids):
+(https://github.com/ESCOMP/ctsm/pull)
+   Update submodules as for final cesm3_0_beta10, cime and ccs_config to latest including more t233 grid aliases #4232
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.060
 Originator(s): erik (Erik Kluzek,UCAR/TSS,+1 303 497 1326)
 Date: Fri Sep 25 12:53:38 PM MDT 2026
@@ -787,7 +978,7 @@ https://github.com/ESCOMP/CTSM/pull/4092
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.052
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Mon Aug 17 05:09:21 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
@@ -1605,7 +1796,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.042
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Fri May 22 04:07:30 PM MDT 2026
 One-line Summary: Get hillslope_fsat_equals_zero .true. for use_hillslope
 
@@ -1737,7 +1928,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.040
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Wed May 20 04:13:57 PM MDT 2026
 One-line Summary: Paramfile updates
 
@@ -1883,7 +2074,7 @@ https://github.com/NGEET/fates/pull/1550
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.038
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Thu May  7 03:29:26 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
@@ -2023,7 +2214,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.036
-Originator(s): slevis, rgknox (Samuel Levis,UCAR/TSS,303-665-1310; Ryan Knox,LBNL,rgknox@lbl.gov)
+Originator(s): slevis, rgknox (Samuel Levis,UCAR/TSS, slevis@ucar.edu; Ryan Knox,LBNL,rgknox@lbl.gov)
 Date: Mon Apr 27 03:07:00 PM MDT 2026
 One-line Summary: Complete the FATES-CLM nitrogen coupling
 

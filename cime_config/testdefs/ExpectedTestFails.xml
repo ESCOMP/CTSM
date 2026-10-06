@@ -30,7 +30,7 @@
 
   <!-- ctsm_sci test suite failures -->
   <test name="SMS_Ld12_Mmpi-serial.1x1_urbanc_alpha.I1PtClm60SpRsGs.derecho_intel.clm-output_sp_highfreq">
-    <phase name="RUN">
+    <phase name="SETUP">
       <status>FAIL</status>
       <issue>CDEPS/#243 and/or #2122</issue>
     </phase>
@@ -43,7 +43,7 @@
     </phase>
   </test>
 
-  <test name="SMS_Ld5.f09_t232.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
+  <test name="SMS_Ld5.f09_t233.ISSP245Clm60BgcCropCrujra.derecho_intel.clm-ciso_dec2050Start">
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#4165</issue>
@@ -125,18 +125,6 @@
     <phase name="COMPARE_base_rest">
       <status>PEND</status>
       <issue>#3788</issue>
-    </phase>
-  </test>
-
-  <test name="DAE_C2_D_Lh12.f10_f10_mg37.I2000Clm50BgcCrop.derecho_intel.clm-DA_multidrv">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#4202</issue>
-    </phase>
-    <!-- Because the RUN fails, the COMPARE phase has a PEND status -->
-    <phase name="COMPARE_base_da">
-      <status>PEND</status>
-      <issue>#4202</issue>
     </phase>
   </test>
 

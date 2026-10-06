@@ -145,7 +145,7 @@ class TestSubsetData(unittest.TestCase):
         with self.assertRaisesRegex(
             NotImplementedError, "https://github.com/ESCOMP/CTSM/issues/3269"
         ):
-            setup_files(self.args, self.defaults, self.cesmroot)
+            setup_files(self.args, self.defaults, self.cesmroot, testing=True)
 
     def test_check_args_nooutput(self):
         """
