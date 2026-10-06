@@ -547,6 +547,31 @@ RUN set -eu; \
         echo "  $pkg -> $cfg"; \
     done
 
+# Same guard for the serial ESMF the macro selects when MPILIB=mpi-serial.
+# set(ESMFMKFILE ...) in the macro hardcodes a version, and the macro is COPYed
+# in verbatim, so an ESMF_VERSION bump that forgets to edit it leaves the macro
+# pointing at a prefix that no longer exists. The esmf.mk assertions further up
+# cannot catch that: they check the *templated* path, which a bump moves in
+# step. Without this the image builds clean and the failure surfaces much
+# later, in run-unit-tests-in-container.sh and in every mpi-serial case.
+RUN set -eu; \
+    macro=/opt/ctsm-container/cime-macros/gnu_container.cmake; \
+    mk="$(sed -n 's/^ *set(ESMFMKFILE "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
+    echo "macro ESMFMKFILE=$mk"; \
+    if [ -z "$mk" ]; then \
+        echo "ERROR: no set(ESMFMKFILE ...) found in $macro." >&2; \
+        exit 1; \
+    fi; \
+    if [ ! -f "$mk" ]; then \
+        echo "ERROR: $macro points ESMFMKFILE at $mk, which does not exist." >&2; \
+        echo "       ESMF_VERSION is ${ESMF_VERSION}; the serial ESMF installed" >&2; \
+        echo "       at /usr/local/esmf-${ESMF_VERSION}-mpiuni. Update the" >&2; \
+        echo "       hardcoded path in the macro to match the ARG." >&2; \
+        exit 1; \
+    fi; \
+    grep -q 'ESMF_COMM=mpiuni' "$mk" \
+        || { echo "ERROR: $mk is not an ESMF_COMM=mpiuni build" >&2; exit 1; }
+
 # Runtime environment for CIME's "container" machine:
 # - ESMFMKFILE: not set by the machine config; must come from the image.
 # - CESMDATAROOT: DIN_LOC_ROOT=$CESMDATAROOT/inputdata must exist for

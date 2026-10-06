@@ -478,17 +478,14 @@ not yet been run against the actual container on a Casper compute node; see
    republishes automatically.
 
    **Bumping `ESMF_VERSION` requires editing `cime-macros/gnu_container.cmake`
-   in the same change**, and nothing will tell you if you forget. Its
-   `set(ESMFMKFILE ...)` hardcodes `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`
-   (not templated), and the `Dockerfile` `COPY`s that file verbatim. The
-   Dockerfile's own esmf.mk assertions check the *templated*
-   `/usr/local/esmf-${ESMF_VERSION}-mpiuni/...` path, so after a bump they still
-   pass while the macro points at a prefix that no longer exists: the build
-   finishes clean and the failure appears much later, in
-   `run-unit-tests-in-container.sh` and in every `mpi-serial` case. The durable
-   fix is a build-time assertion mirroring the one that already guards
-   `PFUNIT_PATH` against exactly this drift; it is **not implemented** -- noted
-   here and next to the `PFUNIT_VERSION` requirement in `README.md`.
+   in the same change.** Its `set(ESMFMKFILE ...)` hardcodes
+   `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk` (not templated), and the
+   `Dockerfile` `COPY`s that file verbatim. The Dockerfile now asserts at build
+   time that the path the macro names actually exists and is the mpiuni build,
+   mirroring the guard on `PFUNIT_PATH`, so forgetting it fails the build
+   rather than surfacing much later in `run-unit-tests-in-container.sh` and in
+   every `mpi-serial` case. That assertion has not itself been exercised by a
+   real build yet.
 
    **The GCC 12.2.0 -> 14.3.0 jump is the risky part.** It is two major
    releases, and every other library in the image -- HDF5, netCDF-C/Fortran,

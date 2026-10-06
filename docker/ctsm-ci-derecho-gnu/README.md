@@ -669,17 +669,16 @@ also means updating the hardcoded install path in
 `cime-macros/gnu_container.cmake` — the Dockerfile asserts the two agree at
 build time, so a mismatch fails the build rather than a later test run.
 
-**`ESMF_VERSION` has the same coupling, with no such assertion.**
-`gnu_container.cmake`'s `set(ESMFMKFILE ...)` hardcodes
-`/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`, and the Dockerfile `COPY`s that
-file verbatim, so bumping `ESMF_VERSION` means editing that line in the same
-change. The Dockerfile's esmf.mk checks assert against the *templated*
-`/usr/local/esmf-${ESMF_VERSION}-mpiuni/…` path, so after a bump they still
-pass while the macro points at a prefix that no longer exists: the build
-finishes clean and the failure surfaces much later, in
-`run-unit-tests-in-container.sh` and in every `mpi-serial` case. A build-time
-assertion mirroring the pFUnit one above would make it loud instead; it is not
-implemented.
+**`ESMF_VERSION` has the same coupling.** `gnu_container.cmake`'s
+`set(ESMFMKFILE ...)` hardcodes `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`, and
+the Dockerfile `COPY`s that file verbatim, so bumping `ESMF_VERSION` means
+editing that line in the same change. The Dockerfile's other esmf.mk checks
+cannot catch a miss, because they assert against the *templated*
+`/usr/local/esmf-${ESMF_VERSION}-mpiuni/…` path, which a bump moves in step —
+so a separate assertion reads the path back out of the macro and requires it to
+exist and to be the `ESMF_COMM=mpiuni` build. A forgotten edit fails the build
+instead of surfacing much later, in `run-unit-tests-in-container.sh` and in
+every `mpi-serial` case.
 
 ## Baked-in environment (why each matters)
 
