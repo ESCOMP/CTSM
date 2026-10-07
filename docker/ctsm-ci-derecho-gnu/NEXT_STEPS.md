@@ -579,11 +579,18 @@ not yet been run against the actual container on a Casper compute node; see
    **The feasibility spike is written:**
    `.github/workflows/probe-runner-capacity.yml`, `workflow_dispatch` only,
    informational. Phase A (default, ~2 min) reports what a runner actually has
-   on both architectures, before and after reclaiming the preinstalled
-   toolchains; Phase B (`full_build: true`) attempts the real build and reports
-   how far it gets and how long it takes. Run Phase A first -- if the reclaimed
-   disk is not comfortably above what the build needs, the answer is already no
-   and the base-image split below is the design, not a fallback.
+   on both hosted architectures and on `gha-runner-ctsm`, before and after
+   reclaiming the preinstalled toolchains (hosted only -- the Cirrus runner is
+   shared, persistent hardware); Phase B (`full_build: true`) attempts the real
+   build and reports how far it gets and how long it takes. Run Phase A first:
+   if the reclaimed disk on the hosted runners is not comfortably above what the
+   build needs, the choice is between the Cirrus runner and the base-image split
+   below.
+
+   A job aimed at an offline or busy self-hosted runner queues rather than
+   failing, and `timeout-minutes` does not bound queue time, so that row sitting
+   pending while the hosted ones finish is itself the answer about availability,
+   not a hung workflow.
 
    **The open feasibility question is capacity, and it should be measured
    before the workflow is designed in detail.** The build is about 50 minutes on
