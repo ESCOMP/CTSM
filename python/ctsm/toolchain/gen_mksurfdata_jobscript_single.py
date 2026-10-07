@@ -152,9 +152,12 @@ def write_runscript_part1(
     runfile,
     descrip="input namelist",
     name="mksurfdata",
+    comment=None,
 ):
     """
     Write run script (part 1) Batch headers
+
+    comment: if given, replaces the default description line written after the batch headers
     """
     runfile.write("#!/bin/bash\n")
     runfile.write("# Edit the batch directives for your batch system\n")
@@ -196,9 +199,11 @@ def write_runscript_part1(
         runfile.write(f"cd {tool_path}\n")
 
     runfile.write("\n")
-    runfile.write(
-        f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {descrip}\n"
-    )
+    if comment is None:
+        comment = (
+            f"This is a batch script to run a set of resolutions for mksurfdata_esmf {descrip}"
+        )
+    runfile.write(f"# {comment}\n")
     runfile.write(
         "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
         + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
