@@ -3993,6 +3993,16 @@
       <option name="comment">ERS FATES test covering the Tree Recruitment Scheme without seed dynamics.</option>
     </options>
   </test>
+  <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I1850Clm60Fates" testmods="clm/FatesADspinup">
+    <machines>
+      <machine name="izumi" compiler="nag" category="fates"/>
+      <machine name="izumi" compiler="nag" category="ctsm_release"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Clm60Fates with ADspinup</option>
+    </options>
+  </test>
   <test name="SMS_D_Ld5" grid="f45_f45_mg37" compset="I2000Clm60Fates" testmods="clm/FatesCold">
     <machines>
       <machine name="izumi" compiler="nag" category="aux_clm"/>
