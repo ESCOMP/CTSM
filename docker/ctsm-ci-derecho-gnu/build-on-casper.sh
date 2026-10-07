@@ -27,10 +27,15 @@
 # or as a batch job, submitted FROM THE REPO ROOT so PBS_O_WORKDIR locates the
 # build context (PBS runs a copy of this script from its own spool directory):
 #   qsub -A <account> docker/ctsm-ci-derecho-gnu/build-on-casper.sh
+# On success the image is saved to GLADE, because podman's storage is
+# node-local and dies with the allocation.
+#
 # Overridable via environment:
 #   CTSM_BUILD_CONTEXT build context dir     (default: wherever this file is,
 #                                             else found via PBS_O_WORKDIR)
 #   CTSM_BUILD_TMPDIR  node-local scratch dir (default /var/tmp/$USER)
+#   CTSM_BUILD_SAVEDIR where to save the tar  (default /glade/work/$USER)
+#   CTSM_BUILD_NO_SAVE set to 1 to skip the save
 #   IMAGE_TAG          image tag to build     (default ctsm-ci-derecho-gnu:dev)
 #   DOCKERFILE         Dockerfile to use      (default Dockerfile)
 set -eo pipefail
@@ -88,3 +93,28 @@ podman build \
     -t "${image}" \
     "$@" \
     "${here}" 2>&1 | tee -p "${logdest}"
+
+# podman's storage is node-local (podman info --format '{{.Store.GraphRoot}}'
+# -> /var/tmp/...), and node-local storage is wiped when the allocation ends.
+# A batch build that only tags the image therefore leaves NOTHING behind: the
+# job reports success, and hours of compute are gone with the node. Save to
+# GLADE here, while the image still exists. Plain file I/O, unlike the build
+# itself, so a parallel filesystem is fine. Set CTSM_BUILD_NO_SAVE=1 to skip.
+#
+# set -e plus pipefail above mean this is reached only on a successful build.
+if [ "${CTSM_BUILD_NO_SAVE:-0}" != "1" ]; then
+    case "${image}" in
+        */*) saveref="${image}" ;;
+        *)   saveref="localhost/${image}" ;;
+    esac
+    savedir="${CTSM_BUILD_SAVEDIR:-/glade/work/${user}}"
+    save="${savedir}/ctsm-ci-derecho-gnu_$(date +%Y%m%d).tar"
+    # Never clobber an existing known-good tarball.
+    if [ -e "${save}" ]; then
+        save="${savedir}/ctsm-ci-derecho-gnu_$(date +%Y%m%d-%H%M%S).tar"
+    fi
+    echo "Saving ${saveref} to ${save}"
+    podman save -o "${save}" "${saveref}"
+    echo "Saved: $(du -h "${save}" | cut -f1) ${save}"
+    echo "Restore with: podman load -i ${save}"
+fi
