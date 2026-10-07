@@ -99,6 +99,25 @@ esmf_out="$(grep '^ESMF_VERSION_STRING=' "$ESMFMKFILE")" \
 echo "$esmf_out"
 check esmf "$WANT_ESMF" "$esmf_out"
 
+# The mpiuni ESMF, which is the one every mpi-serial case and the whole Fortran
+# unit-test path actually link. It is NOT $ESMFMKFILE: the macro below selects
+# it by a hardcoded path when MPILIB=mpi-serial. The Dockerfile asserts this at
+# build time, but that says nothing about the image in front of us now -- a
+# mis-tagged or older tarball passes an assertion that ran in some other build.
+echo "### esmf, mpiuni flavor (from the baked-in CIME macro)"
+macro=/opt/ctsm-container/cime-macros/gnu_container.cmake
+[ -f "$macro" ] || fail "no CIME macro at $macro"
+serial_mk="$(sed -n 's/^ *set(ESMFMKFILE "\([^"]*\)").*/\1/p' "$macro" | tail -1)"
+[ -n "$serial_mk" ] || fail "no set(ESMFMKFILE ...) in $macro"
+echo "macro ESMFMKFILE=$serial_mk"
+[ -f "$serial_mk" ] || fail "macro points ESMFMKFILE at $serial_mk, which does not exist"
+grep -q 'ESMF_COMM=mpiuni' "$serial_mk" \
+    || fail "$serial_mk is not an ESMF_COMM=mpiuni build"
+serial_out="$(grep '^ESMF_VERSION_STRING=' "$serial_mk")" \
+    || fail "esmf mpiuni: no ESMF_VERSION_STRING in $serial_mk"
+echo "$serial_out"
+check "esmf mpiuni" "$WANT_ESMF" "$serial_out"
+
 echo "### perl XML::LibXML"
 perl -MXML::LibXML -e 'print "XML::LibXML OK\n"'    || fail "perl XML::LibXML"
 
