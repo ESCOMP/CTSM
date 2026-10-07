@@ -44,14 +44,27 @@ jobs:
           echo "RESULT: 'module' IS available; attempting the derecho gnu load"
 
           echo "=== try loading the derecho gnu stack ==="
+          # Deliberately UNVERSIONED. This file used to pin
+          # ncarenv/23.09 gcc/12.2.0 cray-mpich/8.1.27 netcdf-mpi/4.9.2, and
+          # went stale the moment derecho moved to ncarenv/25.10: the probe
+          # then reported a module-load failure that said nothing about the
+          # runner it exists to test. Loading defaults is also what the Phase 2
+          # cron itself wants -- the whole question is what derecho has TODAY,
+          # not whether it still has what someone once wrote down here.
           module --force purge 2>&1
-          module load ncarenv/23.09 gcc/12.2.0 cray-mpich/8.1.27 netcdf-mpi/4.9.2 2>&1 \
-            || echo "MODULE LOAD FAILED"
+          module load ncarenv 2>&1           || echo "MODULE LOAD FAILED: ncarenv"
+          module load gcc cray-mpich netcdf-mpi 2>&1 \
+            || echo "MODULE LOAD FAILED: gcc / cray-mpich / netcdf-mpi"
           module list 2>&1
 
           echo "=== values the Phase 2 probe would read ==="
+          echo "--- compare these against ccs_config/machines/derecho/config_machines.xml;"
+          echo "--- a difference is exactly the drift Phase 2 is meant to catch."
           nc-config --version 2>&1 || echo "(no nc-config)"
           nf-config --version 2>&1 || echo "(no nf-config)"
+          # HDF5 is no longer bundled in netcdf-mpi: under ncarenv/25.10 it
+          # arrives as a separate hdf5-mpi module pulled in via depends_on, so
+          # this line is a depends_on(...) rather than a version string.
           module show netcdf-mpi 2>&1 | grep -i hdf5 \
             || echo "(no hdf5 line from 'module show netcdf-mpi')"
 
