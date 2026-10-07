@@ -1,72 +1,166 @@
-name: Probe -- can gha-runner-ctsm load the derecho ncarenv modules?
+name: Probe -- can gha-runner-ctsm see derecho's software stack?
 
-# Feasibility spike for the Phase 2 drift-detection cron (see
-# docker/ctsm-ci-derecho-gnu/derecho-versions.ini): does the self-hosted Cirrus
-# runner have Lmod + the ncarenv module stack, and if so how do we make it
-# available in a non-login shell? Run manually (Actions tab -> this workflow ->
-# "Run workflow") and read the log. Informational only -- the job always
-# succeeds; its output is the result.
+# Feasibility spike for the Phase 2 drift check (see
+# docker/ctsm-ci-derecho-gnu/derecho-versions.ini): can that check run as a
+# scheduled workflow on the self-hosted Cirrus runner, instead of as a cron on
+# an NCAR machine? Run manually (Actions tab -> this workflow -> "Run
+# workflow") and read the log. Informational only -- the job always succeeds;
+# its output is the result.
+#
+# The probe used to ask "does this runner have Lmod, and can it load ncarenv?"
+# That was the wrong question. Measuring from a Casper login node on
+# 2026-10-07 showed:
+#
+#   * Loading derecho's stack off derecho DOES NOT WORK and cannot be made to.
+#     ncarenv and gcc load fine from derecho's tree, but cray-mpich dies --
+#     "The path /opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3 does not exist" --
+#     because Cray PE exists only on derecho hardware. netcdf-mpi sits below
+#     cray-mpich in the hierarchy, so it never becomes loadable either.
+#
+#   * None of that matters, because the drift check does not need to load
+#     anything. Every value it wants is a FILE under glade:
+#       - which version is default -> the "default" symlink beside the
+#         modulefiles, e.g. .../gcc/14.3.0/cray-mpich/default -> 8.1.32.lua
+#       - the hdf5 pairing        -> the depends_on("hdf5-mpi/1.14.6") line
+#         inside netcdf-mpi's own modulefile
+#       - netCDF-Fortran          -> derecho's installed nf-config, run by
+#         absolute path out of its Spack prefix. nc-config and nf-config are
+#         generated shell scripts that echo baked-in strings; they load no
+#         libraries, so they run correctly from any machine that can read the
+#         prefix.
+#
+# So the real question for a runner is just "is glade mounted?", which is what
+# this probe now measures. Lmod is probed second, as context, not as a
+# requirement.
 
 on:
   workflow_dispatch:
+
+env:
+  # Resolved from the "default" symlinks below rather than hardcoded; these are
+  # only the roots.
+  DERECHO_MODULES: /glade/u/apps/derecho/modules
 
 jobs:
   probe-modules:
     runs-on: gha-runner-ctsm
     steps:
-      - name: Probe the module system
+      - name: Can this runner reach derecho's stack through glade?
         run: |
           set +e            # never fail the step; the log is the result
           set +o pipefail
 
-          echo "=== is 'module' already available (no sourcing)? ==="
-          command -v module && module --version 2>&1
-          type module 2>/dev/null
+          echo "=== identity ==="
+          echo "hostname:  $(hostname)"
+          echo "NCAR_HOST: ${NCAR_HOST:-<unset>}"
 
-          echo "=== try sourcing an Lmod init script ==="
-          for init in /etc/profile.d/z00_lmod.sh /etc/profile.d/lmod.sh \
-                      /etc/profile.d/00-modulepath.sh \
-                      "${LMOD_PKG:-}/init/bash" "${LMOD_ROOT:-}/lmod/init/bash"; do
-            if [ -r "$init" ]; then echo "sourcing $init"; source "$init"; fi
-          done
-          command -v module || echo "NO 'module' command available"
-
-          echo "=== MODULEPATH ==="
-          echo "${MODULEPATH:-<unset>}"
-
-          if ! command -v module >/dev/null 2>&1; then
-            echo "RESULT: 'module' is NOT available on this runner -- it cannot"
-            echo "        load the ncarenv stack; the Phase 2 probe must run"
-            echo "        elsewhere (e.g. a cron on casper/derecho)."
+          echo "=== THE decisive question: is glade mounted? ==="
+          if [ ! -d "${DERECHO_MODULES}" ]; then
+            echo "RESULT: ${DERECHO_MODULES} is NOT visible from this runner."
+            echo "        Phase 2 cannot run here at all; it needs a cron on an"
+            echo "        NCAR machine. Nothing below will be meaningful."
             echo "=== done (informational; this step always succeeds) ==="
             exit 0
           fi
-          echo "RESULT: 'module' IS available; attempting the derecho gnu load"
+          echo "yes: ${DERECHO_MODULES} is readable"
 
-          echo "=== try loading the derecho gnu stack ==="
-          # Deliberately UNVERSIONED. This file used to pin
-          # ncarenv/23.09 gcc/12.2.0 cray-mpich/8.1.27 netcdf-mpi/4.9.2, and
-          # went stale the moment derecho moved to ncarenv/25.10: the probe
-          # then reported a module-load failure that said nothing about the
-          # runner it exists to test. Loading defaults is also what the Phase 2
-          # cron itself wants -- the whole question is what derecho has TODAY,
-          # not whether it still has what someone once wrote down here.
-          module --force purge 2>&1
-          module load ncarenv 2>&1           || echo "MODULE LOAD FAILED: ncarenv"
-          module load gcc cray-mpich netcdf-mpi 2>&1 \
-            || echo "MODULE LOAD FAILED: gcc / cray-mpich / netcdf-mpi"
-          module list 2>&1
+          echo "=== resolve derecho's CURRENT defaults (pure file reads) ==="
+          # Deliberately nothing is pinned here. Pinning is what rotted the
+          # previous version of this probe: it loaded ncarenv/23.09 long after
+          # derecho had moved to 25.10. The question is always what derecho has
+          # TODAY, so every version below is resolved, not assumed.
+          #
+          # Lmod picks a default either from an explicit "default" symlink or,
+          # absent one, by highest version. deref() handles the symlink case and
+          # says so when it has to fall back, because the fallback is the one
+          # place this reader can disagree with Lmod.
+          deref() {   # deref <dir>  ->  bare version of the default modulefile
+            local d="$1" t
+            if [ -L "$d/default" ]; then
+              t=$(basename "$(readlink -f "$d/default")" .lua)
+              echo "$t"
+            else
+              t=$(ls "$d"/*.lua 2>/dev/null | sort -V | tail -1)
+              [ -n "$t" ] && echo "$(basename "$t" .lua)  (no 'default' symlink; highest version)"
+            fi
+          }
 
-          echo "=== values the Phase 2 probe would read ==="
-          echo "--- compare these against ccs_config/machines/derecho/config_machines.xml;"
-          echo "--- a difference is exactly the drift Phase 2 is meant to catch."
-          nc-config --version 2>&1 || echo "(no nc-config)"
-          nf-config --version 2>&1 || echo "(no nf-config)"
-          # HDF5 is no longer bundled in netcdf-mpi: under ncarenv/25.10 it
-          # arrives as a separate hdf5-mpi module pulled in via depends_on, so
-          # this line is a depends_on(...) rather than a version string.
-          module show netcdf-mpi 2>&1 | grep -i hdf5 \
-            || echo "(no hdf5 line from 'module show netcdf-mpi')"
+          env_root="${DERECHO_MODULES}/environment/ncarenv"
+          ncarenv=$(deref "$env_root" | awk '{print $1}')
+          echo "ncarenv:     $(deref "$env_root")"
+          [ -z "$ncarenv" ] && { echo "could not resolve ncarenv; stopping"; exit 0; }
+
+          R="${DERECHO_MODULES}/${ncarenv}"
+          gcc=$(deref "$R/Core/gcc" | awk '{print $1}')
+          echo "gcc:         $(deref "$R/Core/gcc")"
+          mpich=$(deref "$R/gcc/${gcc}/cray-mpich" | awk '{print $1}')
+          echo "cray-mpich:  $(deref "$R/gcc/${gcc}/cray-mpich")"
+
+          echo "--- serial stack, under gcc/${gcc} ---"
+          for m in netcdf hdf5 esmf mpi-serial parallelio-serial pfunit; do
+            d="$R/gcc/${gcc}/$m"
+            [ -d "$d" ] && printf '  %-18s %s\n' "$m" "$(deref "$d")"
+          done
+
+          echo "--- MPI stack, under cray-mpich/${mpich}/gcc/${gcc} ---"
+          M="$R/cray-mpich/${mpich}/gcc/${gcc}"
+          for m in netcdf-mpi hdf5-mpi esmf-mpi parallelio parallel-netcdf; do
+            d="$M/$m"
+            [ -d "$d" ] && printf '  %-18s %s\n' "$m" "$(deref "$d")"
+          done
+
+          echo "=== the two [snapshot] values, measured without loading anything ==="
+          # These are the only numbers derecho-versions.ini has to hold by hand,
+          # because neither is named in config_machines.xml. Both are derivable
+          # here, which is the whole point of the probe.
+          ncmpi=$(deref "$M/netcdf-mpi" | awk '{print $1}')
+          nc_lua="$M/netcdf-mpi/${ncmpi}.lua"
+          echo "reading $nc_lua"
+
+          # hdf5: netcdf-mpi pulls it in via depends_on, so the pairing is a
+          # line in netcdf-mpi's own modulefile.
+          grep -oE 'depends_on\("hdf5-mpi/[^"]+"\)' "$nc_lua" 2>&1 \
+            || echo "(no hdf5-mpi depends_on line found)"
+
+          # netCDF-Fortran: not a version string anywhere in the modulefile --
+          # it is bundled in the Spack install, so ask the installed tool. Take
+          # its prefix from the modulefile rather than guessing the Spack hash
+          # path, and run it by absolute path with no modules loaded.
+          ncbin=$(grep -oE '"/glade[^"]*/bin"' "$nc_lua" | head -1 | tr -d '"')
+          echo "netcdf prefix bin: ${ncbin:-<not found>}"
+          if [ -x "${ncbin}/nf-config" ]; then
+            echo "  nc-config --version: $("${ncbin}/nc-config" --version 2>&1 | head -1)"
+            echo "  nf-config --version: $("${ncbin}/nf-config" --version 2>&1 | head -1)"
+            echo "RESULT: this runner can measure the FULL Phase 2 drift check."
+            echo "        It needs glade and nothing else -- no Lmod, no module"
+            echo "        loads, no derecho node."
+          else
+            echo "  (nf-config not executable from here)"
+            echo "RESULT: versions are readable but derecho's installed tools are"
+            echo "        not runnable; the netCDF-Fortran value would need a"
+            echo "        different source."
+          fi
+
+          echo "=== context only: does this runner also have Lmod? ==="
+          # Not required by anything above. Recorded because a future check that
+          # wants Lmod's own opinion of a default (rather than deref()'s) would
+          # need it -- and because knowing the runner's class is useful.
+          command -v module >/dev/null 2>&1 || \
+            for init in /etc/profile.d/z00_lmod.sh /etc/profile.d/lmod.sh \
+                        "${LMOD_PKG:-}/init/bash" "${LMOD_ROOT:-}/lmod/init/bash"; do
+              [ -r "$init" ] && { echo "sourcing $init"; source "$init"; }
+            done
+          if command -v module >/dev/null 2>&1; then
+            module --version 2>&1 | head -2
+            echo "MODULEPATH: ${MODULEPATH:-<unset>}"
+            echo "NOTE: if MODULEPATH points at /glade/u/apps/casper, a bare"
+            echo "      'module load ncarenv' here loads CASPER's stack. That is"
+            echo "      worse than failing for a derecho check: the numbers look"
+            echo "      plausible and describe the wrong machine. Another reason"
+            echo "      the file reads above are the right mechanism."
+          else
+            echo "no 'module' command -- which does not block Phase 2"
+          fi
 
           echo "=== done (informational; this step always succeeds) ==="
           exit 0

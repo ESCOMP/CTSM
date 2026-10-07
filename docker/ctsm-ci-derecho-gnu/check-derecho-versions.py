@@ -20,8 +20,12 @@ Dockerfile's version ARGs to that config, in three modes:
               live, the ini also records which netcdf-mpi it was measured
               against; that IS read live, and a mismatch fails the check
               rather than letting a stale record pass.
-  pfunit    - derecho has no pFUnit module at all; the version is embedded in
-              the PFUNIT_PATH set by intel_derecho.cmake, read live from there.
+  pfunit    - CTSM does not use derecho's pFUnit module (there is one under
+              ncarenv/25.10, built gnu). Its unit tests take pFUnit from the
+              PFUNIT_PATH set by intel_derecho.cmake, which names a hand-built
+              tree under CESMDATAROOT and embeds the version; that path is
+              what is read live, so the module's version is deliberately not
+              consulted.
 
 derecho's gnu stack comes in two flavors -- the MPI one (MPILIB=mpich, the
 machine default, asserted against <MPILIBS>) and the serial one
@@ -305,9 +309,10 @@ def resolve_config_version(stacks, module, stack, strip_suffix=None):
 def get_derecho_pfunit_version(path):
     """Return (version, None) or (None, reason) for derecho's pFUnit.
 
-    derecho has no pFUnit module, so there is nothing to read from
-    config_machines.xml. CTSM's unit tests locate pFUnit through PFUNIT_PATH,
-    whose value embeds the version:
+    pFUnit is absent from config_machines.xml, so there is nothing to read
+    there. derecho does carry a pfunit module under ncarenv/25.10, but CTSM
+    does not use it: its unit tests locate pFUnit through PFUNIT_PATH, whose
+    value embeds the version:
 
         set(PFUNIT_PATH "$ENV{CESMDATAROOT}/tools/pFUnit/\
             pFUnit4.8.0_derecho_Intel2023.2.1_noMPI_noOpenMP")
