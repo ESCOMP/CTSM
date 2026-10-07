@@ -16,12 +16,14 @@ jobs:
   # This first job checks that the container can be built, and that we can use it to build the docs without error.
   build-image-and-test-docs:
     name: Build image and test docs
+    if: github.repository == 'ESCOMP/CTSM'
     uses: ./.github/workflows/docker-image-common.yml
     secrets: inherit
 
   # This second job actually builds and publishes the container.
   push-and-attest:
     name: Publish and attest
+    if: github.repository == 'ESCOMP/CTSM'
     runs-on: ubuntu-latest
 
     # Wait to run this job until after build-image-and-test-docs. If that job fails, something might be wrong with the container, so don't try this one. (It might also have failed because of something wrong with doc-builder or the documentation.)
