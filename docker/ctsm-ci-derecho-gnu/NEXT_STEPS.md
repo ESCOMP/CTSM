@@ -3,18 +3,16 @@
 _Last updated: 2026-10-06. The image builds and validates end-to-end on
 Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point
 **runs** with both mpi-serial and mpich -- and is **published and public** at
-`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831`, which `cirrus-testing.yml`
+`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, which `cirrus-testing.yml`
 pins. (The earlier `:20260830` tag predates the serial netCDF stack and does
 NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
 have now been exercised on Casper. The version-check question is now settled
 (item 4), and settling it showed the image has fallen behind derecho: as of
 `ccs_config_cesm1.0.88` the checker had been failing 9 of its 10 checks. The
-ARGs are now bumped, all 10 pass, and the image has been **rebuilt and
-validated on Casper (2026-10-07)** — but it is **not yet published**, and
-`cirrus-testing.yml` still pins the August image, so this must not merge until
-both are done. What is left: publishing and repointing CI (item 6), building
-the image in CI instead of by hand (item 8), and the Phase 2 drift cron
-(item 5)._
+ARGs are bumped, all 10 pass, and the image has been **rebuilt, validated,
+published and pinned**: `:20261007`, built on Casper 2026-10-07, is what
+`cirrus-testing.yml` now uses. What is left: building the image in CI instead
+of by hand (item 8) and the Phase 2 drift cron (item 5)._
 
 ## Where things stand
 
@@ -453,18 +451,16 @@ not yet been run against the actual container on a Casper compute node; see
 5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
-6. **Bring the image up to derecho's current stack: rebuild.** The ARGs are
-   bumped, `check-derecho-versions.py` passes all 10 checks, and the image
-   **has been rebuilt and validated on Casper (2026-10-07)**: `smoke-test.sh`,
+6. ✅ **The image is up to derecho's current stack.** The ARGs are bumped,
+   `check-derecho-versions.py` passes all 10 checks, and the image was rebuilt
+   and validated on Casper on 2026-10-07 -- `smoke-test.sh`,
    `smoke-test-pfunit.sh`, `run-unit-tests-in-container.sh` and
-   `run-test-in-container.sh` all pass. The saved image is
-   `/glade/work/$USER/ctsm-ci-derecho-gnu_20261007.tar` (4.1 GB).
-
-   **What remains: publish it and repoint CI.** The published
-   `:20260831` image is still the 2026-08-31 `ncarenv/23.09` build, and
-   `cirrus-testing.yml:55` still pins it, so this item stays open until the new
-   image is pushed to GHCR and that pin is bumped. Until then the repo
-   describes a stack that nothing in CI actually runs.
+   `run-test-in-container.sh` all pass. Saved at
+   `/glade/work/$USER/ctsm-ci-derecho-gnu_20261007.tar` (4.1 GB), published as
+   `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, and pinned in
+   `cirrus-testing.yml`. The published image's config digest is
+   `sha256:be3badb712...`, matching the Casper build log, so what is on GHCR is
+   demonstrably the artifact that was validated rather than a re-tag.
 
    | ARG | was | now (= derecho) |
    |---|---|---|

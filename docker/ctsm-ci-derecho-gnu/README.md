@@ -36,14 +36,11 @@ this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The
 **Dockerfile** column is what this directory's `Dockerfile` builds today;
 `check-derecho-versions.py` passes all 10 of its checks against it.
 
-**The published image is older than both.**
-`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831` was built on 2026-08-31
-against derecho's then-current `ncarenv/23.09` stack — GCC 12.2.0, netCDF-C
-4.9.2, PnetCDF 1.12.3, ESMF 8.6.0, HDF5 1.12.2, netCDF-Fortran 4.6.1,
-mpi-serial 2.5.4, PIO 2.6.2. The ARGs were bumped ahead of the rebuild, so
-until that rebuild is published and `cirrus-testing.yml` is repointed, what CI
-pulls does not match this table — see [NEXT_STEPS.md](NEXT_STEPS.md)
-"Remaining steps" item 6.
+The published image matches: `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`
+was built and validated on Casper on 2026-10-07 against this Dockerfile, and
+`cirrus-testing.yml` pins it. The preceding `:20260831` image is the 2026-08-31
+`ncarenv/23.09` build (GCC 12.2.0, netCDF-C 4.9.2, ESMF 8.6.0 and so on) and is
+kept only as a fallback.
 
 | Component | derecho gnu | Dockerfile | note |
 |---|---|---|---|
@@ -312,8 +309,8 @@ wrappers' default `IMAGE_TAG`, so nothing needs re-tagging. Alternatively pull
 the published image and point `IMAGE_TAG` at it:
 
 ```bash
-podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831
-IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20260831 \
+podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007
+IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007 \
     docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 ```
 
