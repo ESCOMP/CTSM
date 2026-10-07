@@ -9,10 +9,12 @@ NOT work with the current `gnu_container.cmake`.) All three wrapper scripts
 have now been exercised on Casper. The version-check question is now settled
 (item 4), and settling it showed the image has fallen behind derecho: as of
 `ccs_config_cesm1.0.88` the checker had been failing 9 of its 10 checks. The
-ARGs are now bumped and all 10 pass — but **nothing has been rebuilt**, so the
-published image still predates the bump and this must not merge ahead of the
-rebuild. What is left: that rebuild (item 6), building the image in CI instead
-of by hand (item 8), and the Phase 2 drift cron (item 5)._
+ARGs are now bumped, all 10 pass, and the image has been **rebuilt and
+validated on Casper (2026-10-07)** — but it is **not yet published**, and
+`cirrus-testing.yml` still pins the August image, so this must not merge until
+both are done. What is left: publishing and repointing CI (item 6), building
+the image in CI instead of by hand (item 8), and the Phase 2 drift cron
+(item 5)._
 
 ## Where things stand
 
@@ -452,10 +454,17 @@ not yet been run against the actual container on a Casper compute node; see
    Casper/Derecho reading live derecho versions, opening a GitHub issue on
    drift and emailing on success. Planned as one of the last steps.
 6. **Bring the image up to derecho's current stack: rebuild.** The ARGs are
-   now bumped and `check-derecho-versions.py` passes all 10 checks, but
-   **nothing has been built**. The published `:20260831` image is still the
-   2026-08-31 `ncarenv/23.09` build, so this item is open until a rebuild is
-   validated, published, and pinned.
+   bumped, `check-derecho-versions.py` passes all 10 checks, and the image
+   **has been rebuilt and validated on Casper (2026-10-07)**: `smoke-test.sh`,
+   `smoke-test-pfunit.sh`, `run-unit-tests-in-container.sh` and
+   `run-test-in-container.sh` all pass. The saved image is
+   `/glade/work/$USER/ctsm-ci-derecho-gnu_20261007.tar` (4.1 GB).
+
+   **What remains: publish it and repoint CI.** The published
+   `:20260831` image is still the 2026-08-31 `ncarenv/23.09` build, and
+   `cirrus-testing.yml:55` still pins it, so this item stays open until the new
+   image is pushed to GHCR and that pin is bumped. Until then the repo
+   describes a stack that nothing in CI actually runs.
 
    | ARG | was | now (= derecho) |
    |---|---|---|
@@ -493,7 +502,16 @@ not yet been run against the actual container on a Casper compute node; see
    run wrapper), then a manual republish and a tag bump in
    `cirrus-testing.yml` -- nothing republishes automatically until item 8.
 
-   **GCC 12.2.0 -> 14.3.0 is the risky part.** It is two major releases, and
+   **On the GCC 12.2.0 -> 14.3.0 jump, which was expected to be the risky
+   part:** it was not. Nothing in the stack hit a GCC 14 diagnostic. The two
+   things that did break were unrelated to the compiler, and both are recorded
+   where they bite: HDF5 changed its upstream tag scheme between these releases
+   (`hdf5-1_12_2` -> `hdf5_1.14.6`), and netCDF-C 4.9.3 dropped the transitive
+   libraries from `nc-config --libs`, which only matters where the stack is
+   linked statically. The original reasoning is kept below because it is still
+   the right thing to check first on the next compiler jump.
+
+   It is two major releases, and
    every other library in the image gets recompiled against it, so a new
    diagnostic anywhere in that chain stops the build. Expect the trouble on the
    **C** side, not the Fortran one. Per GCC 14's porting notes
