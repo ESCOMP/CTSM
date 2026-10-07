@@ -632,6 +632,7 @@ LABEL gcc="${GCC_VERSION}" \
       pnetcdf="${PNETCDF_VERSION}" \
       esmf="${ESMF_VERSION}" \
       pfunit="${PFUNIT_VERSION}" \
-      org.opencontainers.image.description="CTSM build/test image for GitHub Actions CI, matching derecho's gnu stack"
+      org.opencontainers.image.description="CTSM build/test image for GitHub Actions CI, matching derecho's gnu stack" \
+      org.opencontainers.image.source="https://github.com/ESCOMP/CTSM"
 
 CMD ["/bin/bash"]
