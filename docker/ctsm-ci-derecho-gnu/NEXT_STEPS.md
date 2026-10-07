@@ -448,9 +448,67 @@ not yet been run against the actual container on a Casper compute node; see
    Both therefore want an image rebuild, now tracked as item 6 below along
    with the four other stale ARGs and the `cray-mpich` deviation guard that the
    same check reports; no fourth check mode was needed.
-5. **Phase 2 drift detection** (see `derecho-versions.ini`): a cron on
-   Casper/Derecho reading live derecho versions, opening a GitHub issue on
-   drift and emailing on success. Planned as one of the last steps.
+5. **Phase 2 drift detection** (see `derecho-versions.ini`): read derecho's
+   live versions on a schedule and open a GitHub issue when they drift from
+   what the `Dockerfile` ARGs and the `[snapshot]` block record.
+
+   This was planned as a cron on Casper/Derecho. **It can be a scheduled
+   GitHub workflow instead**, which is better in the one way that matters:
+   opening an issue needs only the workflow's own `GITHUB_TOKEN`, whereas a
+   cron would need a long-lived PAT sitting in a dotfile on a shared machine.
+
+   The thing that makes that possible, measured 2026-10-07 and now encoded in
+   `probe-derecho-modules.yml`: **the check needs `/glade`, not Lmod.** Both
+   halves of that are load-bearing.
+
+   - **Loading derecho's stack off derecho does not work and cannot be made
+     to.** `ncarenv` and `gcc` load fine from derecho's tree -- it is
+     world-readable over glade -- but `cray-mpich` fails with *"The path
+     /opt/cray/pe/mpich/8.1.32/ofi/gnu/12.3 does not exist"*, because Cray PE
+     ships with the hardware. `netcdf-mpi` hangs off `cray-mpich` in the
+     hierarchy, so it never becomes loadable either, and `module avail` cannot
+     even see it. Worse, on a machine whose own `MODULEPATH` is populated, a
+     bare `module load ncarenv` silently loads *that* machine's stack: for a
+     derecho check, numbers that look plausible and describe Casper are worse
+     than an error.
+   - **Nothing has to be loaded.** Every value is a file:
+
+     | wanted | where it is |
+     |---|---|
+     | which version is default | the `default` symlink beside the modulefiles, e.g. `.../gcc/14.3.0/cray-mpich/default -> 8.1.32.lua` |
+     | `[snapshot] hdf5` | the `depends_on("hdf5-mpi/1.14.6")` line inside `netcdf-mpi`'s own modulefile |
+     | `[snapshot] netcdf_fortran` | derecho's installed `nf-config --version`, run by absolute path out of the Spack prefix named in that same modulefile |
+
+     `nc-config` and `nf-config` are generated shell scripts that echo
+     baked-in strings; they dlopen nothing, so they give correct answers run
+     from any machine that can read the prefix. Confirmed from a Casper login
+     node with no modules loaded: `netCDF 4.9.3` and `netCDF-Fortran 4.6.2`,
+     matching the recorded snapshot.
+
+   **Resolve defaults; do not take the highest version.** `cray-mpich/9.0.0`
+   is already staged in derecho's tree while `default` still points at
+   `8.1.32`, so a highest-version reader would report drift that does not
+   exist. Where there is no `default` symlink (`gcc`, `hdf5`, `esmf`,
+   `mpi-serial`, `parallelio-serial`, `pfunit`) highest-version *is* Lmod's
+   own rule, and no `.modulerc` overrides it anywhere in the three relevant
+   directories -- checked, so the fallback is safe, but it is the one place a
+   file reader could ever disagree with Lmod and the probe says out loud when
+   it is relying on it.
+
+   What remains to decide:
+
+   - **Which runner.** `gha-runner-ctsm` is the only one with glade; the
+     hosted runners have none, so this cannot run on `ubuntu-latest`. The
+     probe answers whether that runner sees glade -- it has not been run yet.
+   - **Scheduled workflows only fire from the default branch**, so this does
+     nothing until it is merged to `master`, and it cannot be tested by
+     schedule on a branch. Give it a `workflow_dispatch` trigger too.
+   - A self-hosted runner that is offline makes a scheduled job queue rather
+     than fail, so a missed run is silent. Worth a staleness check on the last
+     successful run, or accept it.
+   - Emailing on success was in the original sketch; a scheduled workflow that
+     only speaks up on drift is probably the better default, with the Actions
+     run history serving as the "it ran" record.
 6. ✅ **The image is up to derecho's current stack.** The ARGs are bumped,
    `check-derecho-versions.py` passes all 10 checks, and the image was rebuilt
    and validated on Casper on 2026-10-07 -- `smoke-test.sh`,
