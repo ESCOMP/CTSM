@@ -4,10 +4,18 @@ name: Probe -- can a GitHub runner build ctsm-ci-derecho-gnu?
 # docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md: building this image in CI, on
 # native x86_64 and arm64 runners, instead of by hand on Casper.
 #
-# The open question is capacity, and disk is the tight one: a hosted runner has
-# roughly 14 GB free, while this image is ~4.1 GB as a tarball and its build
-# transiently needs GCC's build tree plus three ESMF trees on top. Cores and the
-# 6 h job limit look survivable; disk might simply not fit.
+# The build is going to live in a workflow either way; what is undecided is
+# WHICH runner it targets. Disk is the tight constraint on the hosted ones: they
+# have roughly 14 GB free, while this image is ~4.1 GB as a tarball and its
+# build transiently needs GCC's build tree plus three ESMF trees on top. Cores
+# and the 6 h job limit look survivable; disk might simply not fit. The
+# self-hosted Cirrus runner is the fallback, so it is probed here too -- the
+# same numbers decide it.
+#
+# NOTE on the gha-runner-ctsm row: a job targeting an offline or busy
+# self-hosted runner QUEUES rather than failing, and timeout-minutes does not
+# bound queue time. If that row sits pending while the hosted ones finish, that
+# is the answer about availability, not a hung workflow -- cancel it.
 #
 # Run manually (Actions tab -> this workflow -> "Run workflow") and read the
 # log. Informational only -- every step is best-effort and the job is not
@@ -41,6 +49,8 @@ jobs:
             runner: ubuntu-latest
           - arch: arm64
             runner: ubuntu-24.04-arm
+          - arch: cirrus
+            runner: gha-runner-ctsm
 
     steps:
       - name: What is this runner?
@@ -60,9 +70,16 @@ jobs:
           echo "=== build tooling ==="
           docker --version || echo "(no docker)"
           docker buildx version || echo "(no buildx)"
+          podman --version || echo "(no podman)"
+          echo
+          echo "=== container storage (podman's graphroot may be node-local) ==="
+          podman info --format '{{.Store.GraphRoot}}' 2>/dev/null || true
           exit 0
 
+      # Hosted runners only. gha-runner-ctsm is a persistent machine that other
+      # jobs share; deleting toolchains there would be vandalism, not cleanup.
       - name: Reclaim disk, and say how much that bought
+        if: ${{ matrix.arch != 'cirrus' }}
         run: |
           set +e
           before=$(df --output=avail -BM / | tail -1 | tr -dc '0-9')
@@ -94,8 +111,19 @@ jobs:
           set +e
           echo "MAKE_JOBS is set from nproc: the Dockerfile default of 16 would"
           echo "thrash a runner this size."
+          # The hosted runners have docker; the Cirrus one is an NCAR machine
+          # and may only have podman. Use whichever is there.
+          if command -v docker >/dev/null 2>&1; then
+              rt=docker
+          elif command -v podman >/dev/null 2>&1; then
+              rt=podman
+          else
+              echo "RESULT: no container build tool on this runner at all."
+              exit 0
+          fi
+          echo "using: ${rt}"
           start=$(date +%s)
-          docker build \
+          "${rt}" build \
               --build-arg MAKE_JOBS=$(nproc) \
               -t ctsm-ci-derecho-gnu:probe \
               docker/ctsm-ci-derecho-gnu
@@ -108,7 +136,7 @@ jobs:
           echo
           echo "=== disk at the end ==="
           df -h /
-          docker image ls ctsm-ci-derecho-gnu:probe
+          "${rt}" image ls ctsm-ci-derecho-gnu:probe
           echo
           if [ "${status}" -eq 0 ]; then
               echo "RESULT: a ${{ matrix.arch }} runner CAN build this image."
