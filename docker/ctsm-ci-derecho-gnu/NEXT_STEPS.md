@@ -576,7 +576,16 @@ not yet been run against the actual container on a Casper compute node; see
    external one, and their single-step `platforms: linux/amd64,linux/arm64`
    is the emulated form this must not use.
 
-   **The open feasibility question is wall-clock, and it should be measured
+   **The feasibility spike is written:**
+   `.github/workflows/probe-runner-capacity.yml`, `workflow_dispatch` only,
+   informational. Phase A (default, ~2 min) reports what a runner actually has
+   on both architectures, before and after reclaiming the preinstalled
+   toolchains; Phase B (`full_build: true`) attempts the real build and reports
+   how far it gets and how long it takes. Run Phase A first -- if the reclaimed
+   disk is not comfortably above what the build needs, the answer is already no
+   and the base-image split below is the design, not a fallback.
+
+   **The open feasibility question is capacity, and it should be measured
    before the workflow is designed in detail.** The build is about 50 minutes on
    16 native cores (README "Publishing"); GitHub-hosted runners are much
    smaller, and a job is killed at 6 hours. **Disk is the tighter limit**: a
