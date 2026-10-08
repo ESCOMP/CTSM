@@ -2127,7 +2127,7 @@ foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
 # Run over the different lnd_tuning modes
 #
 my $res = "0.9x1.25";
-my $mask = "gx1v7";
+my $mask = "tx2_3v3";
 my $simyr = "1850";
 foreach my $phys ( "clm4_5", "clm5_0", "clm6_0" ) {
   my $mode = "-phys $phys";

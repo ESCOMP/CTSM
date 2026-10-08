@@ -148,7 +148,7 @@ QUICKSTART: using the NUOPC driver scripts
          cd $CIMEROOT/scripts
          ./create_newcase            # get help on how to run create_newcase
          ./create_newcase --case testI --res f09_t233 --compset I2000Clm60BgcCrop
-                                     # create new "I" case for default machine at 1.9x2.5_gx1v7 
+                                     # create new "I" case for default machine at 1.9x2.5_tx2_3v3
                                      # "I2000Clm60BgcCrop" case is clm6_0 physics, CDEPS, and inactive ice/ocn/glc
                                      # and MOSART for river-routing
          cd testI

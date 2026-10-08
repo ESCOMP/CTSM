@@ -18,7 +18,7 @@ Example: Crop simulation with no tillage
 ----------------------------------------
 ::
 
-   > cime/scripts/create_newcase -case IHistClm60BgcCrop_notill -res f19_g17_gl4 -compset IHistClm60BgcCrop
+   > cime/scripts/create_newcase -case IHistClm60BgcCrop_notill -res f19_t233 -compset IHistClm60BgcCrop
 
 
    > cd IHistClm60BgcCrop_notill
