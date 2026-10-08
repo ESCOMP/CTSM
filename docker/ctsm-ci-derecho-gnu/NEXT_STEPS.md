@@ -12,7 +12,10 @@ have now been exercised on Casper. The version-check question is now settled
 ARGs are bumped, all 10 pass, and the image has been **rebuilt, validated,
 published and pinned**: `:20261007`, built on Casper 2026-10-07, is what
 `cirrus-testing.yml` now uses. What is left: building the image in CI instead
-of by hand (item 8) and the Phase 2 drift cron (item 5)._
+of by hand (item 8), the Phase 2 drift check (item 5, now a scheduled workflow
+rather than a cron), actually running tests in CI rather than only building
+them (items 2 and 9), and taking the workflows off every-push triggers
+(item 10)._
 
 ## Where things stand
 
@@ -712,6 +715,16 @@ not yet been run against the actual container on a Casper compute node; see
 
    GHCR needs no new secret: the package is already public, so `packages: write`
    on `GITHUB_TOKEN` is enough.
+9. **Make the `create_test` CI job actually run the test, not just build it.**
+   `simple-build-create_test` in `cirrus-testing.yml` passes `--no-run`, so CI
+   compiles `cesm.exe` and stops; nothing in CI has ever run the model. Not yet
+   thought through -- it overlaps item 2 (inputdata and the `/glade` question
+   on `gha-runner-ctsm`).
+10. **Require manual runs on PRs instead of running on every push.**
+    `cirrus-testing.yml` triggers on `[push, pull_request]`, so every push to
+    every branch takes the self-hosted runner. Wanted: these run when asked
+    for, not automatically. Not yet thought through -- which trigger, and
+    which workflows it should cover.
 
 ## Worth raising upstream
 

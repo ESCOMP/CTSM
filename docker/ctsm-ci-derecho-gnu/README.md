@@ -55,7 +55,7 @@ kept only as a fallback.
 | BLAS/LAPACK | cray-libsci | reference `lapack`/`blas` (dnf) | libsci is proprietary |
 | PIO | parallelio-serial/2.6.8 module | 2.6.8, mpi-serial only | In the container a case build compiles its own PIO from CTSM's pinned ParallelIO submodule, and the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial"); on derecho the module supplies it through `PIO_LIBDIR` |
 | serial netCDF stack | netcdf/4.9.3 (loaded for mpilib=mpi-serial) | HDF5 1.14.6 + netCDF-C 4.9.3 + netCDF-Fortran 4.6.2 under `/usr/local/serial`, static | mpi-serial builds must not link the parallel, MPICH-linked netCDF |
-| mpi-serial | mpi-serial/2.5.3 module | 2.5.4 under `/usr/local/mpi-serial` | **stale**. Here it exists only to compile the ESMF-external PIO against, and a container case build compiles its own from CTSM's submodule; on derecho the module *is* what a case links, via `MPI_SERIAL_PATH` |
+| mpi-serial | mpi-serial/2.5.3 module | 2.5.3 under `/usr/local/mpi-serial` | Here it exists only to compile the ESMF-external PIO against, and a container case build compiles its own from CTSM's submodule; on derecho the module *is* what a case links, via `MPI_SERIAL_PATH` |
 | conda, nco | loaded on derecho | not included | not needed to build, nor to run the single-point tests; particular testmods or post-processing may want `nco` |
 
 `git` is also built from source (it is not part of derecho's stack): CIME's
@@ -66,16 +66,15 @@ be `dnf install`ed here because that pulls in `openssh`, whose setuid
 
 ## ESMF flavors
 
-Three ESMF 8.6.0 trees are installed:
+Three ESMF 8.9.1 trees are installed:
 
-- `/usr/local/esmf-8.6.0-debug` (`ESMF_BOPT=g`, `ESMF_COMM=mpich`) — mirrors
+- `/usr/local/esmf-8.9.1-debug` (`ESMF_BOPT=g`, `ESMF_COMM=mpich`) — mirrors
   the debug ESMF module derecho loads for gnu MPI `DEBUG=TRUE` builds
-  (`esmf-mpi/8.9.1-debug` today; it was `esmf/8.6.0-debug` when this image was
-  built). **This is the default** (`ESMFMKFILE` points here) because the
-  current CI test is `SMS_D...` (debug).
-- `/usr/local/esmf-8.6.0` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors the
+  (`esmf-mpi/8.9.1-debug`). **This is the default** (`ESMFMKFILE` points here)
+  because the current CI test is `SMS_D...` (debug).
+- `/usr/local/esmf-8.9.1` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors the
   non-debug one (`esmf-mpi/8.9.1`), for non-debug tests.
-- `/usr/local/esmf-8.6.0-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`, and
+- `/usr/local/esmf-8.9.1-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`, and
   **`ESMF_PIO=external`** against the mpi-serial PIO) — the **serial** build,
   used by the unit tests *and* by every `mpi-serial` case. Selected
   automatically; you should not need to set `ESMFMKFILE` for it. The external
@@ -89,18 +88,18 @@ such an executable fails with `libesmf.so: undefined reference to symbol
 'MPI_Bcast' ... DSO missing from command line`.
 
 derecho has exactly the same split: whenever `mpilib="mpi-serial"`, its
-`config_machines.xml` loads the plain `esmf` module (`esmf/8.9.1` today,
-`esmf/8.6.0` when this image was built) rather than the `-debug` variant it
-loads for MPI builds — even under `DEBUG="TRUE"` — and that install reports
-`ESMF_COMM=mpiuni` with `ESMF_BOPT=O` (confirmed against `esmf/8.9.1` on
-2026-10-06, and unchanged from the `esmf/8.6.0` reading below). The
-debug/optimized mismatch here is deliberate, matching derecho.
+`config_machines.xml` loads the plain `esmf` module (`esmf/8.9.1`) rather than
+the `-debug` variant it loads for MPI builds — even under `DEBUG="TRUE"` — and
+that install reports `ESMF_COMM=mpiuni` with `ESMF_BOPT=O` (confirmed against
+`esmf/8.9.1` on 2026-10-06, and unchanged from the older `esmf/8.6.0` reading
+quoted below). The debug/optimized mismatch here is deliberate, matching
+derecho.
 
 To use the optimized MPI flavor in a workflow step:
 
 ```yaml
 env:
-  ESMFMKFILE: /usr/local/esmf-8.6.0/lib/esmf.mk
+  ESMFMKFILE: /usr/local/esmf-8.9.1/lib/esmf.mk
 ```
 
 ## Building the image
@@ -653,17 +652,24 @@ project aimed at local development on Apple Silicon, not a tag on this one.
 Component versions are `ARG`s near the top of the `Dockerfile`
 (`GCC_VERSION`, `MPICH_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`,
 `NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`,
-`PFUNIT_VERSION`), plus
+`PFUNIT_VERSION`, `MPI_SERIAL_VERSION`, `PIO_VERSION`), plus
 `GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
 
 `check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
 locally: `python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`) fails
 if these ARGs drift from derecho's gnu stack in
 `ccs_config/machines/derecho/config_machines.xml`. Most are read live from
-that file. HDF5 and netCDF-Fortran (bundled in `netcdf-mpi`, so not standalone
-modules there) and the intentional `cray-mpich`→MPICH deviation are recorded
-by hand in `derecho-versions.ini`; update that file too when they change
-(verify on derecho with `module show netcdf-mpi` / `nf-config --version`).
+that file — including `MPI_SERIAL_VERSION` and `PIO_VERSION`, which are read
+from its `mpilib="mpi-serial"` blocks rather than the MPI ones, since those
+modules are what a serial build on derecho actually links. HDF5 and
+netCDF-Fortran (bundled in `netcdf-mpi`, so not standalone modules there) and
+the intentional `cray-mpich`→MPICH deviation are recorded by hand in
+`derecho-versions.ini`; update that file too when they change (verify on
+derecho with `module show netcdf-mpi` / `nf-config --version`) — including its
+`measured_against_netcdf_mpi` line, which records the module the snapshot was
+read from. The check compares that against derecho's live `netcdf-mpi` and
+refuses the snapshot when they differ, so a re-measurement that forgets it
+fails rather than passing.
 
 pFUnit is read live too, but from a different place: derecho has no pFUnit
 module, so the check parses the version out of the `PFUNIT_PATH` that
@@ -674,7 +680,7 @@ also means updating the hardcoded install path in
 build time, so a mismatch fails the build rather than a later test run.
 
 **`ESMF_VERSION` has the same coupling.** `gnu_container.cmake`'s
-`set(ESMFMKFILE ...)` hardcodes `/usr/local/esmf-8.6.0-mpiuni/lib/esmf.mk`, and
+`set(ESMFMKFILE ...)` hardcodes `/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk`, and
 the Dockerfile `COPY`s that file verbatim, so bumping `ESMF_VERSION` means
 editing that line in the same change. The Dockerfile's other esmf.mk checks
 cannot catch a miss, because they assert against the *templated*
@@ -682,7 +688,9 @@ cannot catch a miss, because they assert against the *templated*
 so a separate assertion reads the path back out of the macro and requires it to
 exist and to be the `ESMF_COMM=mpiuni` build. A forgotten edit fails the build
 instead of surfacing much later, in `run-unit-tests-in-container.sh` and in
-every `mpi-serial` case.
+every `mpi-serial` case. The concrete install paths quoted in "ESMF flavors"
+and "Baked-in environment" move with the same bump and nothing asserts those,
+so edit them in the same change.
 
 ## Baked-in environment (why each matters)
 
@@ -690,7 +698,7 @@ every `mpi-serial` case.
 |---|---|---|
 | `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt` mpich + gcc | non-login GHA shells need the toolchain on `PATH` without profile scripts |
 | `CC/CXX/FC/F77` | MPICH wrappers (`mpicc`, …) | build everything against MPICH |
-| `ESMFMKFILE` | `/usr/local/esmf-8.6.0-debug/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it |
+| `ESMFMKFILE` | `/usr/local/esmf-8.9.1-debug/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it |
 | `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests") |
 | `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
 | `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain |
