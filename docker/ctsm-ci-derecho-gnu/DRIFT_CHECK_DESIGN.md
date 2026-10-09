@@ -212,13 +212,11 @@ prefix change. The Dockerfile's existing macro-path assertion must be updated in
 the same commit, not after.
 
 **Superseded, 2026-10-09.** `MPI_SERIAL_PATH` and `PIO_LIBDIR`/`PIO_INCDIR`
-are already in that file. `MPI_SERIAL_PATH` is hardcoded the way `PFUNIT_PATH`
-and `ESMFMKFILE` are, because the container has no module to read
-`$ENV{NCAR_ROOT_MPI_SERIAL}` from. The other two are *not*: the image sets
-`$ENV{PIO}` itself, so the macro derives them exactly as
-`derecho.cmake:8-10` does, and the whole block is gated on that variable being
-defined. Nothing here needs hardcoding, and nothing needs to wait for the
-rebuild. **Extend the Dockerfile's macro-path assertion to cover
+are already in that file, all three hardcoded the way `PFUNIT_PATH` and
+`ESMFMKFILE` are, because the container has no modules to read
+`$ENV{NCAR_ROOT_MPI_SERIAL}` and `$ENV{PIO}` from. They name the paths the
+rebuilt image will have, so a container case build fails until that rebuild --
+accepted, rather than gating them. **Extend the Dockerfile's macro-path assertion to cover
 `MPI_SERIAL_PATH`**, so a wrong path fails the image build rather than
 surfacing as a link error in someone's case. See `NEXT_STEPS.md` item 4b for
 why the two settings cannot be split, and for the two further environment

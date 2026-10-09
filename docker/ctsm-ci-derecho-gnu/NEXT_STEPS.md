@@ -436,9 +436,10 @@ kind of documentation and is tracked on its own._
      `PIO_LIBDIR`/`PIO_INCDIR`, so a case build links the image's installs
      instead of compiling CTSM's submodules -- the mechanism
      `ccs_config/machines/derecho/derecho.cmake:4,8-10` uses. `MPI_SERIAL_PATH`
-     is hardcoded as `PFUNIT_PATH` and `ESMFMKFILE` are; the other two are
-     derived from `$ENV{PIO}` the way derecho derives them, which is what keeps
-     the file inert against images that cannot honour them. Still to do here:
+     All three are hardcoded, as `PFUNIT_PATH` and `ESMFMKFILE` are, and they
+     name **4b's** paths -- so a container case build fails against
+     `:20261007` until this item lands, deliberately, and this commit does not
+     have to touch those three lines. Still to do here:
      **extend the Dockerfile's macro-path assertion** to cover
      `MPI_SERIAL_PATH` (`Dockerfile.pio-fortran` has the assertion to lift), so
      a wrong path fails the image build rather than a later case build; and
@@ -502,12 +503,12 @@ kind of documentation and is tracked on its own._
      one in CI.
 
      `cime-macros/gnu_container.cmake` carries the consuming half **already**,
-     gated on `DEFINED ENV{PIO}` -- derecho's own variable
-     (`derecho.cmake:8-10`). That gate is what makes it safe to land before
-     the image exists: inert against `:20261007`, armed against the probe and
-     against 4b, and the `PIO_LIBDIR`/`PIO_INCDIR` half needs no edit when the
-     serial stack moves to `/usr/local`. The hardcoded `ESMFMKFILE` and
-     `NETCDF_PATH` in the same file still do.
+     hardcoded to 4b's paths. Until this item lands, a container case build
+     against `:20261007` therefore fails -- accepted deliberately rather than
+     carrying a gate whose only job is to manage a window this short. The
+     probe image was proven with the paths it had; the committed values are
+     the post-move ones. `ESMFMKFILE` and `NETCDF_PATH` in the same file still
+     need moving here.
 
      **Do not guess the PIO flags -- derecho's modulefile records them.**
      `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/parallelio-serial/2.6.8.lua`

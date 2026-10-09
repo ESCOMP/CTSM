@@ -1,6 +1,19 @@
 # THROWAWAY PROBE IMAGE -- rebuilds ParallelIO with the Fortran interface on
 # top of the already-built ctsm-ci-derecho-gnu image.
 #
+# ANSWERED, 2026-10-09. A case build in this image produced a cesm.exe
+# containing neither "/ctsm/libraries/mpi-serial" nor
+# "/ctsm/libraries/parallelio", and containing /usr/local/mpi-serial and
+# /usr/local/serial instead; mpi-serial.bldlog and pio.bldlog both came back
+# empty, and the run completed. The switch works.
+#
+# This file is now a record, not a thing to re-run as it stands:
+# cime-macros/gnu_container.cmake has since been hardcoded to item 4b's paths
+# (/usr/local/lib, /usr/local/include), which this image does not have --
+# its serial stack is still under /usr/local/serial, inherited from the base.
+# Rebuilding this would fail at the link. Fold the RUN/ENV layers below into
+# the real Dockerfile as part of 4b, then delete this file.
+#
 # THE QUESTION IT ANSWERS. A container case build currently compiles CTSM's
 # own libraries/mpi-serial and libraries/parallelio submodules, so the
 # container and derecho link different mpi-serials -- 2.5.4 here against

@@ -160,9 +160,10 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
 - **`ESMFMKFILE`** and **`NETCDF_PATH`** — select the serial ESMF and the
   serial netCDF when `MPILIB=mpi-serial`.
 - **`MPI_SERIAL_PATH`** and **`PIO_LIBDIR`/`PIO_INCDIR`** — point a serial case
-  build at the image's mpi-serial and PIO instead of CTSM's submodules. Set
-  only when the image exports `PIO`, which the published `:20261007` does not;
-  see that file and `NEXT_STEPS.md` item 4b.
+  build at the image's mpi-serial and PIO instead of CTSM's submodules. These
+  name paths the published `:20261007` does not have, so a container case build
+  fails against it until `NEXT_STEPS.md` item 4b rebuilds the image. See that
+  file and that item.
 
 **In GitHub Actions**, `HOME` is overridden (to `/github/home`), so the
 `/root/.cime` copy is not found. A workflow step must place it:

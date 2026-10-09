@@ -142,7 +142,7 @@ if (MPILIB STREQUAL "mpi-serial")
   set(NETCDF_PATH "/usr/local/serial")
 
   # ---------------------------------------------------------------------------
-  # The image's mpi-serial and PIO, when the image is one that provides them
+  # The image's mpi-serial and PIO
   # ---------------------------------------------------------------------------
   # Without these a container case build compiles CTSM's own
   # libraries/mpi-serial and libraries/parallelio submodules, so the two sides
@@ -150,65 +150,58 @@ if (MPILIB STREQUAL "mpi-serial")
   # every version check reports a match. This mirrors derecho, where
   # ccs_config/machines/derecho/derecho.cmake sets MPI_SERIAL_PATH from
   # $ENV{NCAR_ROOT_MPI_SERIAL} (line 4) and PIO_LIBDIR/PIO_INCDIR from
-  # $ENV{PIO} (lines 8-10), both exported by the modules it loads.
+  # $ENV{PIO} (lines 8-10), both exported by the modules it loads. The
+  # container has no modules, so they are hardcoded, as PFUNIT_PATH and
+  # ESMFMKFILE already are.
+  #
+  # THESE PATHS REQUIRE THE ITEM-4b IMAGE AND DO NOT WORK BEFORE IT. The
+  # published :20261007 built PIO with -DPIO_ENABLE_FORTRAN=OFF -- it was only
+  # ever meant to satisfy ESMF, which links -lpioc and not -lpiof -- so it has
+  # no libpiof to point at, and its serial stack is still under
+  # /usr/local/serial rather than /usr/local. Against that image a container
+  # case build fails, deliberately and loudly, until 4b lands. The paths below
+  # are 4b's, so that commit does not have to touch them.
+  #
+  # THE TWO SETTINGS ARE ONE SWITCH, which was measured rather than reasoned.
+  # With only MPI_SERIAL_PATH set, Tools/Makefile:912-918 points $(MPISERIAL)
+  # at the image's archive; that file already exists, so make skips the
+  # submodule build and leaves $(INSTALL_SHAREDPATH) holding only libgptl.a --
+  # while line 734 still hands PIO's from-source build
+  # -D MPISERIAL_PATH=$(INSTALL_SHAREDPATH), ignoring MPI_SERIAL_PATH
+  # entirely. PIO's configure then dies with "Could NOT find MPISERIAL_C". No
+  # case-level override exists: CMAKE_OPTS is appended again at 738, 915 and
+  # 922, and none of those sets MPISERIAL_PATH.
   #
   # WHAT THIS FILE CAN AND CANNOT DECIDE. It can only set make variables, and
   # that is enough for the CTSM component build: Tools/Makefile:463-466 turns
-  # PIO_INCDIR and PIO_LIBDIR into -I and -L, and 912-918 turns
-  # MPI_SERIAL_PATH into $(MPISERIAL) plus the MPI_C_*/MPI_Fortran_* cmake
-  # flags. It cannot decide whether PIO gets built from source at all. That is
-  # cime/CIME/build_scripts/buildlib.pio:82-91, which reads PIO_VERSION_MAJOR
-  # from the ENVIRONMENT -- os.environ, which no macro file reaches -- and
-  # returns before running make. Setting PIO_LIBDIR here does not substitute:
-  # buildlib.pio:115 passes its own PIO_LIBDIR on the gmake command line,
-  # which beats anything Macros.make carries.
+  # PIO_INCDIR and PIO_LIBDIR into -I and -L. It cannot decide whether PIO is
+  # built from source at all. That is cime/CIME/build_scripts/buildlib.pio:82-91,
+  # which reads PIO_VERSION_MAJOR from the ENVIRONMENT -- os.environ, which no
+  # macro file reaches -- and returns before running make. Setting PIO_LIBDIR
+  # here does not substitute: buildlib.pio:115 passes its own PIO_LIBDIR on the
+  # gmake command line, which beats anything Macros.make carries.
   #
-  # WHY THE GATE, AND WHY IT IS $ENV{PIO}. The two settings below are one
-  # switch, which was measured rather than reasoned. With only MPI_SERIAL_PATH
-  # set, Tools/Makefile:912-918 points $(MPISERIAL) at the image's archive;
-  # that file already exists, so make skips the submodule build and leaves
-  # $(INSTALL_SHAREDPATH) holding only libgptl.a -- while line 734 still hands
-  # PIO's from-source build -D MPISERIAL_PATH=$(INSTALL_SHAREDPATH), ignoring
-  # MPI_SERIAL_PATH entirely. PIO's configure then dies with "Could NOT find
-  # MPISERIAL_C". No case-level override exists: CMAKE_OPTS is appended again
-  # at 738, 915 and 922, and none of those sets MPISERIAL_PATH.
+  # SO THE IMAGE MUST EXPORT PIO_VERSION_MAJOR=2 AND PIO_TYPENAME_VALID_VALUES.
+  # buildlib.pio:76-81 states the contract. Miss PIO_TYPENAME_VALID_VALUES and
+  # line 90 hands None to _set_pio_valid_values, which does
+  # valid_values += ",nothing" at line 224 and raises TypeError. Miss
+  # PIO_VERSION_MAJOR and PIO is built from source while MPI_SERIAL_PATH has
+  # already emptied the directory that build needs -- the "Could NOT find
+  # MPISERIAL_C" failure above.
   #
-  # So MPI_SERIAL_PATH must not fire unless the image also suppresses the PIO
-  # source build, and only an image can do that. Keying both off $ENV{PIO} --
-  # which an image sets exactly when it has a PIO worth pointing at -- makes
-  # this file correct against every image: inert on the ones that predate the
-  # Fortran-enabled PIO (the published :20261007, whose PIO was built
-  # -DPIO_ENABLE_FORTRAN=OFF to serve ESMF, which links -lpioc and not
-  # -lpiof), armed on the ones that have it, with no path here to update when
-  # the serial stack moves from /usr/local/serial to /usr/local in item 4b.
+  # MPI_SERIAL_PATH is /usr/local/mpi-serial, NOT the serial stack's prefix.
+  # The Dockerfile copies the archive into both, but only the dedicated prefix
+  # carries the headers, deliberately kept out of the serial stack so they
+  # cannot shadow a case build's own mpi.h. Dockerfile.pio-fortran asserts
+  # this path at image-build time; item 4b moves that assertion into the real
+  # Dockerfile, beside the PFUNIT_PATH and ESMFMKFILE ones.
   #
-  # THE IMAGE MUST ALSO EXPORT PIO_VERSION_MAJOR=2 AND
-  # PIO_TYPENAME_VALID_VALUES. buildlib.pio:76-81 states the contract: with
-  # PIO_VERSION_MAJOR set it expects PIO_LIBDIR, PIO_INCDIR and
-  # PIO_TYPENAME_VALID_VALUES in the environment too. Miss
-  # PIO_TYPENAME_VALID_VALUES and buildlib.pio:90 hands None to
-  # _set_pio_valid_values, which does valid_values += ",nothing" at line 224
-  # and raises TypeError. Miss PIO_VERSION_MAJOR and PIO is built from source
-  # while MPI_SERIAL_PATH has already emptied the directory that build needs,
-  # which is the "Could NOT find MPISERIAL_C" failure above -- loud, at least,
-  # rather than a quietly vacuous executable.
-  #
-  # MPI_SERIAL_PATH is hardcoded rather than read from the environment because
-  # there is no derecho-style variable to read: the container has no modules.
-  # The prefix is /usr/local/mpi-serial, NOT /usr/local/serial. The Dockerfile
-  # copies the archive into both, but only the dedicated prefix carries the
-  # headers, deliberately kept out of /usr/local/serial so they cannot shadow
-  # a case build's own mpi.h. Dockerfile.pio-fortran asserts this path at
-  # image-build time; item 4b moves that assertion into the real Dockerfile,
-  # beside the PFUNIT_PATH and ESMFMKFILE ones.
-  #
-  # ACCEPTANCE TEST: a freshly built cesm.exe must no longer contain
-  # "/ctsm/libraries/mpi-serial" or "/ctsm/libraries/parallelio" among its
-  # compiled-source strings (strings -a cesm.exe). A passing version check
-  # without that is the old vacuous behaviour unchanged.
-  if (DEFINED ENV{PIO})
-    set(MPI_SERIAL_PATH "/usr/local/mpi-serial")
-    set(PIO_LIBDIR "$ENV{PIO}/lib")
-    set(PIO_INCDIR "$ENV{PIO}/include")
-  endif()
+  # ACCEPTANCE TEST, met by the Dockerfile.pio-fortran probe on 2026-10-09: a
+  # freshly built cesm.exe contains neither "/ctsm/libraries/mpi-serial" nor
+  # "/ctsm/libraries/parallelio" among its compiled-source strings, and does
+  # contain the image's own prefixes (strings -a cesm.exe). A passing version
+  # check without that is the old vacuous behaviour unchanged.
+  set(MPI_SERIAL_PATH "/usr/local/mpi-serial")
+  set(PIO_LIBDIR "/usr/local/lib")
+  set(PIO_INCDIR "/usr/local/include")
 endif()
