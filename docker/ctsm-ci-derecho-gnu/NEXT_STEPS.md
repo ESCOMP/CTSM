@@ -522,6 +522,19 @@ kind of documentation and is tracked on its own._
      -DBUILD_SHARED_LIBS:BOOL=ON
      ```
 
+     **`PIO_ENABLE_NETCDF_INTEGRATION` is the one to NOT copy; keep it off**
+     (decided 2026-10-09). It is PIO's own default (`CMakeLists.txt:91`), and
+     the flag only adds source files to `libpioc`/`libpiof`
+     (`src/clib/CMakeLists.txt:28`, `src/flib/CMakeLists.txt:34`) that nothing
+     in CTSM or CDEPS calls -- with a static PIO the linker never pulls them,
+     so `cesm.exe` is unaffected, and `cesm.exe` is what item 5 compares.
+     Turning it on would need netCDF-C dispatch support this image has not
+     been checked for, and a build that quietly disabled it would leave the
+     docs claiming a parity that was not there. Record it as a deliberate
+     build-flag choice in the `Dockerfile`, not in `README.md`'s
+     accepted-exception list, which is about stack differences that *do* reach
+     the executable.
+
      So **timing stays OFF** -- that matches what the image already does, and
      it is derecho's answer rather than a guess. CIME builds its own GPTL and
      links it separately (`Tools/Makefile:674`, `ULIBS += ... -lgptl`), which
