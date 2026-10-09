@@ -1,0 +1,228 @@
+# THROWAWAY PROBE IMAGE -- rebuilds ParallelIO with the Fortran interface on
+# top of the already-built ctsm-ci-derecho-gnu image.
+#
+# THE QUESTION IT ANSWERS. A container case build currently compiles CTSM's
+# own libraries/mpi-serial and libraries/parallelio submodules, so the
+# container and derecho link different mpi-serials -- 2.5.4 here against
+# derecho's 2.5.3 -- while every version check reports a match. Item 4b in
+# NEXT_STEPS.md fixes that by pointing CIME at the image's installs the way
+# derecho's parallelio-serial and mpi-serial modules point it at derecho's.
+# This image is the cheap way to find out whether that actually links and
+# runs, before spending a from-scratch rebuild on it.
+#
+# WHY IT HAS TO BE AN IMAGE AND NOT A REPO EDIT. The macro's two settings are
+# one switch, which was measured, not reasoned: with only MPI_SERIAL_PATH set
+# against :20261007, cime/CIME/Tools/Makefile:912-918 pointed $(MPISERIAL) at
+# the image's archive, make skipped the submodule build (mpi-serial.bldlog
+# came back 0 bytes), and the build then died in PIO's configure with "Could
+# NOT find MPISERIAL_C" -- because line 734 still hands PIO's from-source
+# build -D MPISERIAL_PATH=$(INSTALL_SHAREDPATH), the directory the skipped
+# build would have filled. The only way out is to stop PIO being built from
+# source, and that is decided by the ENVIRONMENT, not by the macro: see the
+# ENV block below. It needs a PIO with the Fortran interface, and the real
+# Dockerfile builds PIO with -DPIO_ENABLE_FORTRAN=OFF because it was only
+# ever meant to satisfy ESMF, which links -lpioc and not -lpiof. Hence a
+# rebuild, hence this.
+#
+# If it works, the RUN/ENV layers below get folded into the real Dockerfile
+# and this file is deleted. Nothing should come to depend on the tag it
+# produces.
+#
+# SCOPE: this image can build mpi-serial cases only. The ENV block below is
+# unconditional, so CIME skips the PIO build for every case, while
+# cime-macros/gnu_container.cmake supplies PIO_LIBDIR only when
+# MPILIB=mpi-serial -- an mpich case would find no PIO at all. That is fine
+# here and fine after 4b, which removes mpich from the image entirely, but it
+# means this probe image cannot stand in for the real one in CI.
+#
+# Build (from the repo root, on Casper). CTSM_BUILD_NO_SAVE=1 matters:
+# build-on-casper.sh otherwise podman-saves the result to
+# /glade/work/$USER/ctsm-ci-derecho-gnu_<date>.tar -- a name derived from the
+# real image regardless of IMAGE_TAG, so a probe build would drop a
+# multi-gigabyte tarball there indistinguishable from a real image save.
+#   DOCKERFILE=Dockerfile.pio-fortran \
+#   IMAGE_TAG=ctsm-ci-derecho-gnu-piof:probe \
+#   CTSM_BUILD_NO_SAVE=1 \
+#       docker/ctsm-ci-derecho-gnu/build-on-casper.sh
+#
+# Verify -- the acceptance test is on the EXECUTABLE, not on the build
+# succeeding, because a silently-vacuous build is the exact failure this item
+# exists to end:
+#   IMAGE_TAG=localhost/ctsm-ci-derecho-gnu-piof:probe \
+#       docker/ctsm-ci-derecho-gnu/run-test-in-container.sh \
+#       SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
+#   strings -a <bld>/cesm.exe | grep -c /ctsm/libraries/mpi-serial   # must be 0
+#   strings -a <bld>/cesm.exe | grep -c /ctsm/libraries/parallelio   # must be 0
+#
+# The 256GB/3h allocation in build-on-casper.sh is sized for the from-scratch
+# build; this one needs far less, but reusing the wrapper keeps the node-local
+# TMPDIR handling (which rootless podman/buildah requires) in one place.
+
+# Defaults to the published tag because that is what exists on a fresh node
+# after `podman load`. A localhost/... name would work too -- it is fully
+# qualified, so podman serves it from local storage -- but only if a local
+# build is actually present; the prior probe (Dockerfile.pfunit) defaulted
+# that way. Override with --build-arg for either.
+ARG BASE_IMAGE=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007
+FROM ${BASE_IMAGE}
+
+# Must match the base image's PIO_VERSION. A mismatch would leave ESMF linked
+# against one PIO and the case build against another.
+ARG PIO_VERSION=2.6.8
+ARG GCC_VERSION=14.3.0
+ARG MAKE_JOBS=16
+
+# ---- ParallelIO, rebuilt with the Fortran interface, OVER the serial stack ----
+# Installed into ${SERIAL_PREFIX} rather than a prefix of its own, deliberately.
+# The image's mpiuni ESMF was linked with ESMF_PIO_LIBPATH=${SERIAL_PREFIX}/lib
+# and ESMF_PIO_LIBS="-lpioc -lmpi-serial" (Dockerfile:442), so esmf.mk puts
+# that -L on every case link line. A second PIO somewhere else would mean two
+# libpioc on that line -- which is not the configuration 4b will ship (one
+# serial stack, moved to /usr/local), and a probe that tests a layout the real
+# thing will not have is worth very little. This overwrites the existing
+# libpioc.a, from the same sources and the same PIO version, so ESMF's
+# existing link stays valid.
+#
+# FLAGS ARE DERECHO'S, NOT GUESSES. parallelio-serial/2.6.8.lua carries the
+# full configure line in its whatis; these are the ones that matter:
+#   -DPIO_ENABLE_FORTRAN=ON   -DPIO_ENABLE_TIMING=OFF
+#   -DPIO_USE_MPISERIAL=ON    -DPIO_ENABLE_LOGGING=OFF
+#   -DWITH_PNETCDF=OFF        -DPIO_ENABLE_TESTS=OFF
+# Timing stays OFF on both sides: CIME builds its own GPTL and links it
+# separately (Tools/Makefile:674, ULIBS += ... -lgptl).
+#
+# TWO DELIBERATE DEVIATIONS from that modulefile:
+#   BUILD_SHARED_LIBS -- derecho says ON, this says OFF. Tools/Makefile:667
+#   names $(PIO_LIBDIR)/libpiof.a and libpioc.a by path, and they are
+#   prerequisites of both $(CSMSHARELIB) (line 931) and the executable (line
+#   960) while the only rule for them (line 929) carries no recipe. Shared
+#   libraries would therefore stop the build outright with "No rule to make
+#   target". The image's serial stack is static on purpose anyway, and
+#   ${SERIAL_PREFIX}/lib is not in /etc/ld.so.conf.d/ctsm.conf, so a .so there
+#   would not be found at run time either.
+#   PIO_ENABLE_NETCDF_INTEGRATION -- derecho says ON, this leaves it at its
+#   default. It is a second variable, it needs netCDF-C support this image has
+#   not been checked for, and nothing CTSM builds here asks for it. Revisit in
+#   4b rather than confounding this probe.
+#
+# GENF90_PATH and USER_CMAKE_MODULE_PATH are passed so that nothing is fetched
+# during cmake: src/flib/CMakeLists.txt:132-147 ExternalProject-clones genf90
+# when GENF90_PATH is undefined, and CMakeLists.txt:139-157 shells out to
+# `git clone CMake_Fortran_utils` when USER_CMAKE_MODULE_PATH is. genf90.pl is
+# a tracked file in the release tarball; CMake_Fortran_utils is not vendored
+# anywhere, so it is cloned here, once, visibly.
+#
+# CC/FC are overridden for this build only: the image bakes in the MPI
+# wrappers (ENV CC=mpicc, FC=mpifort) and this is deliberately serial.
+RUN cd /tmp \
+    && git clone --depth 1 https://github.com/CESM-Development/CMake_Fortran_utils \
+    && test -f /tmp/CMake_Fortran_utils/mpiexec.cmake \
+    && wget -nv "https://github.com/NCAR/ParallelIO/archive/refs/tags/pio${PIO_VERSION//./_}.tar.gz" \
+    && tar xzf "pio${PIO_VERSION//./_}.tar.gz" \
+    && cd "ParallelIO-pio${PIO_VERSION//./_}" \
+    && src="$PWD" \
+    && mkdir build && cd build \
+    && cmake \
+        -DCMAKE_INSTALL_PREFIX="${SERIAL_PREFIX}" \
+        -DCMAKE_C_COMPILER="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+        -DCMAKE_Fortran_COMPILER="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
+        -DCMAKE_C_FLAGS=-fPIC \
+        -DCMAKE_Fortran_FLAGS=-fPIC \
+        -DNetCDF_PATH="${SERIAL_PREFIX}" \
+        -DWITH_PNETCDF=FALSE \
+        -DPIO_USE_MPIIO=FALSE \
+        -DPIO_USE_MPISERIAL=TRUE \
+        -DMPISERIAL_PATH="${MPISERIAL_PREFIX}" \
+        -DMPI_C_INCLUDE_PATH="${MPISERIAL_PREFIX}/include" \
+        -DMPI_C_LIBRARIES="${MPISERIAL_PREFIX}/lib/libmpi-serial.a" \
+        -DMPI_Fortran_INCLUDE_PATH="${MPISERIAL_PREFIX}/include" \
+        -DMPI_Fortran_LIBRARIES="${MPISERIAL_PREFIX}/lib/libmpi-serial.a" \
+        -DPIO_ENABLE_FORTRAN=ON \
+        -DPIO_ENABLE_TESTS=OFF \
+        -DPIO_ENABLE_TIMING=OFF \
+        -DPIO_ENABLE_LOGGING=OFF \
+        -DPIO_ENABLE_EXAMPLES=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DGENF90_PATH="${src}/scripts" \
+        -DUSER_CMAKE_MODULE_PATH=/tmp/CMake_Fortran_utils \
+        .. \
+    && make -j"${MAKE_JOBS}" \
+    && make install \
+    && rm -rf /tmp/ParallelIO-* /tmp/pio*.tar.gz /tmp/CMake_Fortran_utils
+
+# Named individually so a partial install fails the image build rather than a
+# later case link. libpiof.a and pio.mod are new in this image; libpioc.a was
+# already there and has been overwritten by the Fortran-enabled build. The
+# first two are what Tools/Makefile:667 names by path; pio.mod is what the
+# CTSM sources USE.
+RUN set -eu; \
+    for f in "${SERIAL_PREFIX}/lib/libpiof.a" \
+             "${SERIAL_PREFIX}/lib/libpioc.a" \
+             "${SERIAL_PREFIX}/include/pio.mod"; do \
+        [ -f "$f" ] || { echo "ERROR: $f missing after PIO install" >&2; exit 1; }; \
+    done
+
+# ---- the three environment variables that make CIME use this PIO ----
+# All three come from derecho's parallelio-serial modulefile, and CIME expects
+# all three together: cime/CIME/build_scripts/buildlib.pio:76-81 says so in
+# as many words, and 82-91 is the code.
+#
+# PIO_VERSION_MAJOR is the one that does the work. buildlib.pio reads it from
+# the ENVIRONMENT and returns before running any make, so PIO is never built
+# from source. It cannot come from the macro: a cmake macro file produces make
+# variables, and os.environ does not see them. Without it buildlib.pio builds
+# PIO from source no matter what the macro says, because buildlib.pio:115
+# passes its own PIO_LIBDIR on the gmake command line, which overrides any
+# value Macros.make carries.
+#
+# PIO_TYPENAME_VALID_VALUES is not optional either, and the way it fails is
+# ugly: buildlib.pio:90 passes os.environ.get("PIO_TYPENAME_VALID_VALUES")
+# straight into _set_pio_valid_values, which does valid_values += ",nothing"
+# (line 224). Unset, that is None += str -- a TypeError, inside the branch
+# this image exists to reach. netcdf is the honest value here: the serial
+# stack has no pnetcdf and no parallel netCDF4.
+#
+# PIO itself is what cime-macros/gnu_container.cmake reads to derive
+# PIO_LIBDIR/PIO_INCDIR, mirroring derecho.cmake:8-10. Those two are what
+# Tools/Makefile:465-466 turns into -I and -L for the CTSM component build,
+# which is a separate thing from the sharedlib build buildlib.pio skips.
+ENV PIO=${SERIAL_PREFIX} \
+    PIO_VERSION_MAJOR=2 \
+    PIO_TYPENAME_VALID_VALUES=netcdf
+
+# ---- the macro that consumes them ----
+# Baked at the fixed path AND dropped in /root/.cime, mirroring the real
+# Dockerfile: the fixed path is what a GitHub Actions job copies from (GHA
+# overrides HOME, so /root/.cime is not found there), while /root/.cime makes
+# an interactive `podman run` work with no setup. container-common.sh prefers
+# the mounted repo's copy over both, so an edit can be tested without
+# rebuilding this image.
+COPY cime-macros/gnu_container.cmake /opt/ctsm-container/cime-macros/
+RUN mkdir -p /root/.cime \
+    && cp /opt/ctsm-container/cime-macros/gnu_container.cmake /root/.cime/
+
+# Fail the build, not the case build, if the macro and this image disagree
+# about where mpi-serial lives. This is the assertion NEXT_STEPS item 4b wants
+# added to the real Dockerfile alongside the PFUNIT_PATH and ESMFMKFILE ones;
+# it lives here first because here is where the macro first has a path to get
+# wrong. PIO_LIBDIR/PIO_INCDIR need no equivalent: they are derived from
+# $ENV{PIO}, which is set above.
+RUN set -eu; \
+    macro=/opt/ctsm-container/cime-macros/gnu_container.cmake; \
+    d="$(sed -n 's/^ *set(MPI_SERIAL_PATH "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
+    echo "macro MPI_SERIAL_PATH=$d"; \
+    if [ -z "$d" ]; then \
+        echo "ERROR: $macro sets no MPI_SERIAL_PATH, so this probe would" >&2; \
+        echo "       test nothing -- a case build would compile CTSM's own" >&2; \
+        echo "       mpi-serial submodule exactly as before." >&2; \
+        exit 1; \
+    fi; \
+    if [ ! -f "$d/lib/libmpi-serial.a" ] || [ ! -f "$d/include/mpi.h" ]; then \
+        echo "ERROR: $macro points MPI_SERIAL_PATH at $d, which has no" >&2; \
+        echo "       lib/libmpi-serial.a or include/mpi.h. Expected" >&2; \
+        echo "       ${MPISERIAL_PREFIX}." >&2; \
+        exit 1; \
+    fi
+
+LABEL pio_fortran="${PIO_VERSION}" \
+      org.opencontainers.image.description="THROWAWAY probe: ctsm-ci-derecho-gnu + ParallelIO with Fortran"

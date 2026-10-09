@@ -142,7 +142,7 @@ machine from a container's hostname) and `--enable-genf90` (CTSM's `.F90.in`
 templates have no committed `.F90` counterparts, and `run_tests.py` points
 CMake at the bundled `genf90.pl` only when that flag is set). Expect 55 tests.
 
-Three container-specific settings make this work, all in
+Several container-specific settings make this work, all in
 `cime-macros/gnu_container.cmake`, which is baked in at
 `/opt/ctsm-container/cime-macros/` and copied to `/root/.cime/`. CIME's
 `copy_local_macros_to_dir()` copies `$HOME/.cime/*.cmake` into the case, and
@@ -157,7 +157,12 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
 - **`-fallow-argument-mismatch`** — ccs_config's `gnu.cmake` adds this, but
   guards it on a compiler version CMake has not probed yet at that point in a
   unit-test build.
-- **`ESMFMKFILE`** — selects the serial ESMF when `MPILIB=mpi-serial`.
+- **`ESMFMKFILE`** and **`NETCDF_PATH`** — select the serial ESMF and the
+  serial netCDF when `MPILIB=mpi-serial`.
+- **`MPI_SERIAL_PATH`** and **`PIO_LIBDIR`/`PIO_INCDIR`** — point a serial case
+  build at the image's mpi-serial and PIO instead of CTSM's submodules. Set
+  only when the image exports `PIO`, which the published `:20261007` does not;
+  see that file and `NEXT_STEPS.md` item 4b.
 
 **In GitHub Actions**, `HOME` is overridden (to `/github/home`), so the
 `/root/.cime` copy is not found. A workflow step must place it:

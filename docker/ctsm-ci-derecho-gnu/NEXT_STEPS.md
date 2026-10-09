@@ -432,14 +432,18 @@ kind of documentation and is tracked on its own._
      `NETCDF_PATH`. Check what `PNETCDF_PATH=/usr/local` does once PnetCDF is
      gone. Drop the netCDF-C twin assertion -- there is no second stack left to
      agree with.
-   - `cime-macros/gnu_container.cmake`: set `MPI_SERIAL_PATH` and
-     `PIO_LIBDIR`/`PIO_INCDIR` to the image's installs, so a case build links
-     them instead of compiling CTSM's submodules -- the mechanism
-     `ccs_config/machines/derecho/derecho.cmake:4,8-11` uses. Hardcode them as
-     `PFUNIT_PATH` and `ESMFMKFILE` already are. **Extend the Dockerfile's
-     macro-path assertion to cover them**, so a wrong path fails the image build
-     rather than a later case build. The `ESMFMKFILE` path moves with the prefix
-     change; same commit.
+   - `cime-macros/gnu_container.cmake` **already sets** `MPI_SERIAL_PATH` and
+     `PIO_LIBDIR`/`PIO_INCDIR`, so a case build links the image's installs
+     instead of compiling CTSM's submodules -- the mechanism
+     `ccs_config/machines/derecho/derecho.cmake:4,8-10` uses. `MPI_SERIAL_PATH`
+     is hardcoded as `PFUNIT_PATH` and `ESMFMKFILE` are; the other two are
+     derived from `$ENV{PIO}` the way derecho derives them, which is what keeps
+     the file inert against images that cannot honour them. Still to do here:
+     **extend the Dockerfile's macro-path assertion** to cover
+     `MPI_SERIAL_PATH` (`Dockerfile.pio-fortran` has the assertion to lift), so
+     a wrong path fails the image build rather than a later case build; and
+     move the hardcoded `ESMFMKFILE` and `NETCDF_PATH` with the prefix change,
+     same commit.
 
      **The two halves are coupled; neither can land without the other.**
      Measured 2026-10-09: a container case build against `:20261007` with only
@@ -455,19 +459,25 @@ kind of documentation and is tracked on its own._
      `-D MPISERIAL_PATH=$(INSTALL_SHAREDPATH)` unconditionally, ignoring
      `MPI_SERIAL_PATH`, so PIO looks for `mpi.h` and `libmpi-serial` in the
      directory the first switch just emptied. There is no case-level override:
-     `USER_CMAKE_OPTS` is the only `CMAKE_OPTS` append after line 734 and
-     `cime/CIME/build_scripts/buildlib.pio:114` hardcodes it to `GENF90_PATH`.
+     `CMAKE_OPTS` is appended again at 738, 915 and 922, and none of those sets
+     `MPISERIAL_PATH` -- 738 is `USER_CMAKE_OPTS`, which
+     `cime/CIME/build_scripts/buildlib.pio:114` hardcodes to `GENF90_PATH`, and
+     915/922 set only the `MPI_C_*`/`MPI_Fortran_*` flags.
 
-     derecho never meets this because `derecho.cmake:8-10` also sets
-     `PIO_LIBDIR`, which makes `$(PIOLIB)` (`Tools/Makefile:667`) an existing
-     file -- PIO is never configured from source and line 734 never runs.
+     derecho never meets this because its `parallelio-serial` module exports
+     `PIO_VERSION_MAJOR`, and `cime/CIME/build_scripts/buildlib.pio:82-91`
+     reads that from the environment and returns before running any make --
+     PIO is never configured from source and line 734 never runs. Note it is
+     the environment variable that does this, not `PIO_LIBDIR`: `buildlib.pio`
+     passes its own `PIO_LIBDIR` on the gmake command line (line 115), which
+     overrides whatever `Macros.make` carries.
 
      So `MPI_SERIAL_PATH` is not a cheap first half that can be proven against
      the published image; on its own it is an invalid configuration.
      `PIO_LIBDIR`/`PIO_INCDIR` need `-DPIO_ENABLE_FORTRAN=ON`, because this
      `Dockerfile` passes `OFF` -- PIO was only ever meant to satisfy ESMF,
-     which links `-lpioc` alone -- so there is no `libpiof` and no `.mod` to
-     point at. That is a `Dockerfile` change and therefore a rebuild, which
+     which links `-lpioc` and not `-lpiof` (`Dockerfile:442`) -- so there is no
+     `libpiof` and no `.mod` to point at. That is a `Dockerfile` change and therefore a rebuild, which
      both halves now wait on.
 
      One thing that is *not* a blocker: `/usr/local/mpi-serial` has no
@@ -476,6 +486,28 @@ kind of documentation and is tracked on its own._
      `cp mpi.mod` always no-ops. PIO's `FindMPISERIAL` asks for
      `INCLUDE_NAMES mpi.mod mpif.h` and `cmake/LibFind.cmake:239-249` breaks on
      the first hit, so `mpif.h` alone satisfies the Fortran component.
+
+     **Prove it with a probe image before spending the real rebuild.**
+     `Dockerfile.pio-fortran` derives from `:20261007` and rebuilds only
+     ParallelIO, with Fortran on, into `/usr/local/serial` over the existing
+     one, then exports `PIO`, `PIO_VERSION_MAJOR=2` and
+     `PIO_TYPENAME_VALID_VALUES=netcdf`. Minutes rather than hours. It keeps
+     4b's *shape* -- one serial stack, ESMF and the case build pointing at the
+     same PIO -- though not 4b's path, since 4b moves that stack to
+     `/usr/local`. It is throwaway: fold the layers into the `Dockerfile` and
+     delete the file. It builds mpi-serial cases only: the `ENV` is
+     unconditional while the macro supplies `PIO_LIBDIR` only under
+     `MPILIB=mpi-serial`, so an mpich case would find no PIO. Moot after 4b
+     removes mpich, but it means the probe image cannot stand in for the real
+     one in CI.
+
+     `cime-macros/gnu_container.cmake` carries the consuming half **already**,
+     gated on `DEFINED ENV{PIO}` -- derecho's own variable
+     (`derecho.cmake:8-10`). That gate is what makes it safe to land before
+     the image exists: inert against `:20261007`, armed against the probe and
+     against 4b, and the `PIO_LIBDIR`/`PIO_INCDIR` half needs no edit when the
+     serial stack moves to `/usr/local`. The hardcoded `ESMFMKFILE` and
+     `NETCDF_PATH` in the same file still do.
 
      **Do not guess the PIO flags -- derecho's modulefile records them.**
      `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/parallelio-serial/2.6.8.lua`
@@ -494,22 +526,26 @@ kind of documentation and is tracked on its own._
      links it separately (`Tools/Makefile:674`, `ULIBS += ... -lgptl`), which
      is why PIO does not need its own. `BUILD_SHARED_LIBS` is the one flag to
      think about rather than copy: the image's serial stack is static on
-     purpose, while `Tools/Makefile:667` names `libpiof.a`/`libpioc.a`.
-   - **`PIO_LIBDIR` alone is not enough; the image must also export
-     `PIO_VERSION_MAJOR=2`.** `cime/CIME/Tools/Makefile:463-470` honors
-     `PIO_LIBDIR` only inside `ifeq ($(PIO_VERSION),$(PIO_VERSION_MAJOR))`,
-     and **unexports it and builds from source** when they differ. `PIO_VERSION`
-     is a case XML value (2); `PIO_VERSION_MAJOR` is an *environment* variable
-     that derecho gets from the `parallelio-serial` modulefile
-     (`setenv("PIO_VERSION_MAJOR", "2")`) and that stampede3 sets through
-     `<env>` in its `config_machines.xml`. The container has neither, so the
-     comparison would be `2` against empty, and the switch would fail
-     **silently** -- a case build that quietly compiles the submodule while the
-     macro looks correct, which is the exact failure mode this item exists to
-     end. Set it as a Dockerfile `ENV`, beside the other baked-in variables.
-     Worth checking `PIO_TYPENAME_VALID_VALUES=netcdf` at the same time; the
-     same modulefile sets it, and with no pnetcdf in the image it is probably
-     the honest value.
+     purpose, and `Tools/Makefile:667` names `libpiof.a`/`libpioc.a` by path as
+     prerequisites of both `$(CSMSHARELIB)` (line 931) and the executable (line
+     960), with no recipe to build them (line 929) -- so shared libraries stop
+     the build outright with "No rule to make target".
+   - **The image must export all three of `PIO`, `PIO_VERSION_MAJOR=2` and
+     `PIO_TYPENAME_VALID_VALUES=netcdf`**, as Dockerfile `ENV`s beside the
+     other baked-in variables. `cime/CIME/build_scripts/buildlib.pio:76-81`
+     states the contract and 82-91 is the code: `PIO_VERSION_MAJOR` present
+     and equal to `PIO_VERSION` is what makes CIME use an installed PIO
+     instead of building one, and it is read from `os.environ`, so no macro
+     file can supply it. `PIO_TYPENAME_VALID_VALUES` is not optional polish:
+     line 90 passes `os.environ.get(...)` straight into
+     `_set_pio_valid_values`, which does `valid_values += ",nothing"` at line
+     224 and raises `TypeError` on `None`. `netcdf` is the honest value --
+     the serial stack has no pnetcdf and no parallel netCDF4 -- and is what
+     derecho's `parallelio-serial` modulefile sets. The same variable also
+     reaches `Tools/Makefile:463-470`, which honors the macro's `PIO_LIBDIR`
+     only inside `ifeq ($(PIO_VERSION),$(PIO_VERSION_MAJOR))`; that is the
+     *component* build's `-I`/`-L`, separate from the sharedlib build
+     `buildlib.pio` skips.
    - Add build-time `LABEL`s recording `nf-config --version` and
      `nc-config --has-stdfilters`. Neither can be read back from the built
      executable, and item 5 needs both. `smoke-test.sh` already reads versions
