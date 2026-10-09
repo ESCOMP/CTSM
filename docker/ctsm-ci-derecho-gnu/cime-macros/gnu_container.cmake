@@ -139,4 +139,34 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 if (MPILIB STREQUAL "mpi-serial")
   set(ESMFMKFILE "/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk")
   set(NETCDF_PATH "/usr/local/serial")
+
+  # ---------------------------------------------------------------------------
+  # Link the image's mpi-serial, the way derecho links its module's
+  # ---------------------------------------------------------------------------
+  # Without this a container case build compiles CTSM's own
+  # libraries/mpi-serial submodule, so the two sides link different
+  # mpi-serials -- 2.5.4 here against derecho's 2.5.3 -- while every version
+  # check reports a match. Pointing at the image's install is the same
+  # mechanism derecho uses: ccs_config/machines/derecho/derecho.cmake:4 sets
+  # MPI_SERIAL_PATH from $ENV{NCAR_ROOT_MPI_SERIAL}. The container has no
+  # modules to set that, so the path is hardcoded, as PFUNIT_PATH and
+  # ESMFMKFILE already are.
+  #
+  # cime/CIME/Tools/Makefile:912-918 consumes it: $(MPISERIAL) becomes
+  # $(MPI_SERIAL_PATH)/lib/libmpi-serial.a, which already exists, so the
+  # submodule build never runs. The prefix carries lib/libmpi-serial.a,
+  # include/mpi.h and include/mpif.h -- all four paths the Makefile names.
+  #
+  # NOTE the prefix is /usr/local/mpi-serial, NOT /usr/local/serial. The
+  # Dockerfile copies the archive into both, but only the dedicated prefix
+  # carries the headers; they are deliberately kept out of /usr/local/serial
+  # so they cannot shadow a case build's own mpi.h. That reasoning predates
+  # this change and still holds -- it is exactly why there is a prefix to
+  # point at here.
+  #
+  # ACCEPTANCE TEST: a freshly built cesm.exe must no longer contain
+  # "/ctsm/libraries/mpi-serial" among its compiled-source strings
+  # (strings -a cesm.exe). A passing version check without that is the old
+  # vacuous behaviour unchanged.
+  set(MPI_SERIAL_PATH "/usr/local/mpi-serial")
 endif()
