@@ -441,21 +441,41 @@ kind of documentation and is tracked on its own._
      rather than a later case build. The `ESMFMKFILE` path moves with the prefix
      change; same commit.
 
-     **The two halves are not equally ready, and the difference decides the
-     order.** `MPI_SERIAL_PATH` can point at the *published* image as it
-     stands: `/usr/local/mpi-serial` already carries `lib/libmpi-serial.a`,
-     `include/mpi.h`, `mpif.h` and (best effort) `mpi.mod`, which is what CIME
-     wants. Since `container-common.sh` prefers the mounted repo's
-     `gnu_container.cmake` over the image's baked copy, that half is provable
-     against `:20261007` with a repo edit and one case build -- **no rebuild**.
+     **The two halves are coupled; neither can land without the other.**
+     Measured 2026-10-09: a container case build against `:20261007` with only
+     `MPI_SERIAL_PATH` set. The switch worked -- `mpi-serial.bldlog` came back
+     0 bytes, so the submodule build was skipped -- and the build then died in
+     PIO's configure with `Could NOT find MPISERIAL_C (missing:
+     MPISERIAL_C_LIBRARY MPISERIAL_C_INCLUDE_DIR)`.
 
-     `PIO_LIBDIR`/`PIO_INCDIR` cannot be, and the reason is in this
-     `Dockerfile`: the PIO build passes `-DPIO_ENABLE_FORTRAN=OFF`, because it
-     was only ever meant to satisfy ESMF, which links `-lpioc` alone. A CTSM
-     case build needs the Fortran interface, so there is no `libpiof` and no
-     `.mod` to point at. Turning it on is a `Dockerfile` change and therefore a
-     rebuild. `DRIFT_CHECK_DESIGN.md` left this as something Phase 4 would
-     discover; it is now settled without spending a rebuild to find out.
+     `cime/CIME/Tools/Makefile:912-918` honours `MPI_SERIAL_PATH` by pointing
+     `$(MPISERIAL)` at the image's archive. That file already exists, so make
+     never runs the submodule build and `$(INSTALL_SHAREDPATH)` is left holding
+     `libgptl.a` and nothing else. Line 734 then hands PIO's from-source build
+     `-D MPISERIAL_PATH=$(INSTALL_SHAREDPATH)` unconditionally, ignoring
+     `MPI_SERIAL_PATH`, so PIO looks for `mpi.h` and `libmpi-serial` in the
+     directory the first switch just emptied. There is no case-level override:
+     `USER_CMAKE_OPTS` is the only `CMAKE_OPTS` append after line 734 and
+     `cime/CIME/build_scripts/buildlib.pio:114` hardcodes it to `GENF90_PATH`.
+
+     derecho never meets this because `derecho.cmake:8-10` also sets
+     `PIO_LIBDIR`, which makes `$(PIOLIB)` (`Tools/Makefile:667`) an existing
+     file -- PIO is never configured from source and line 734 never runs.
+
+     So `MPI_SERIAL_PATH` is not a cheap first half that can be proven against
+     the published image; on its own it is an invalid configuration.
+     `PIO_LIBDIR`/`PIO_INCDIR` need `-DPIO_ENABLE_FORTRAN=ON`, because this
+     `Dockerfile` passes `OFF` -- PIO was only ever meant to satisfy ESMF,
+     which links `-lpioc` alone -- so there is no `libpiof` and no `.mod` to
+     point at. That is a `Dockerfile` change and therefore a rebuild, which
+     both halves now wait on.
+
+     One thing that is *not* a blocker: `/usr/local/mpi-serial` has no
+     `mpi.mod`, and never will -- mpi-serial's `fort.F90` is bare subroutines
+     with `include "mpif.h"`, no `module mpi`, so the Dockerfile's best-effort
+     `cp mpi.mod` always no-ops. PIO's `FindMPISERIAL` asks for
+     `INCLUDE_NAMES mpi.mod mpif.h` and `cmake/LibFind.cmake:239-249` breaks on
+     the first hit, so `mpif.h` alone satisfies the Fortran component.
 
      **Do not guess the PIO flags -- derecho's modulefile records them.**
      `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/parallelio-serial/2.6.8.lua`

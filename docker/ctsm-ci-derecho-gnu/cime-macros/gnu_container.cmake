@@ -141,32 +141,38 @@ if (MPILIB STREQUAL "mpi-serial")
   set(NETCDF_PATH "/usr/local/serial")
 
   # ---------------------------------------------------------------------------
-  # Link the image's mpi-serial, the way derecho links its module's
+  # NOT SET YET: MPI_SERIAL_PATH and PIO_LIBDIR (NEXT_STEPS.md item 4b)
   # ---------------------------------------------------------------------------
-  # Without this a container case build compiles CTSM's own
-  # libraries/mpi-serial submodule, so the two sides link different
-  # mpi-serials -- 2.5.4 here against derecho's 2.5.3 -- while every version
-  # check reports a match. Pointing at the image's install is the same
-  # mechanism derecho uses: ccs_config/machines/derecho/derecho.cmake:4 sets
-  # MPI_SERIAL_PATH from $ENV{NCAR_ROOT_MPI_SERIAL}. The container has no
-  # modules to set that, so the path is hardcoded, as PFUNIT_PATH and
-  # ESMFMKFILE already are.
+  # A container case build still compiles CTSM's own libraries/mpi-serial
+  # submodule, so the two sides link different mpi-serials -- 2.5.4 here
+  # against derecho's 2.5.3 -- while every version check reports a match. The
+  # fix is the mechanism derecho uses: ccs_config/machines/derecho/derecho.cmake
+  # sets MPI_SERIAL_PATH from $ENV{NCAR_ROOT_MPI_SERIAL} (line 4) and
+  # PIO_LIBDIR/PIO_INCDIR from $ENV{PIO} (lines 8-10). The container has no
+  # modules, so both would be hardcoded here, as PFUNIT_PATH and ESMFMKFILE
+  # already are.
   #
-  # cime/CIME/Tools/Makefile:912-918 consumes it: $(MPISERIAL) becomes
-  # $(MPI_SERIAL_PATH)/lib/libmpi-serial.a, which already exists, so the
-  # submodule build never runs. The prefix carries lib/libmpi-serial.a,
-  # include/mpi.h and include/mpif.h -- all four paths the Makefile names.
+  # The two cannot be split, which was measured rather than reasoned:
+  # cime/CIME/Tools/Makefile:912-918 honours MPI_SERIAL_PATH by pointing
+  # $(MPISERIAL) at the image's archive, which already exists, so make skips
+  # the submodule build and leaves $(INSTALL_SHAREDPATH) holding only
+  # libgptl.a -- while line 734 still hands PIO's from-source build
+  # -D MPISERIAL_PATH=$(INSTALL_SHAREDPATH), ignoring MPI_SERIAL_PATH. PIO's
+  # configure dies with "Could NOT find MPISERIAL_C". derecho never hits it
+  # because PIO_LIBDIR makes PIO a prebuilt library that is never configured.
   #
-  # NOTE the prefix is /usr/local/mpi-serial, NOT /usr/local/serial. The
-  # Dockerfile copies the archive into both, but only the dedicated prefix
-  # carries the headers; they are deliberately kept out of /usr/local/serial
-  # so they cannot shadow a case build's own mpi.h. That reasoning predates
-  # this change and still holds -- it is exactly why there is a prefix to
-  # point at here.
+  # PIO_LIBDIR in turn needs an image whose PIO carries the Fortran interface
+  # (the Dockerfile passes -DPIO_ENABLE_FORTRAN=OFF today) and which exports
+  # PIO_VERSION_MAJOR=2. Both are Dockerfile changes, so this block lands with
+  # the 4b rebuild, not before.
   #
-  # ACCEPTANCE TEST: a freshly built cesm.exe must no longer contain
+  # When it does: the prefix is /usr/local/mpi-serial, NOT /usr/local/serial.
+  # The Dockerfile copies the archive into both, but only the dedicated prefix
+  # carries the headers, deliberately kept out of /usr/local/serial so they
+  # cannot shadow a case build's own mpi.h.
+  #
+  # ACCEPTANCE TEST for 4b: a freshly built cesm.exe must no longer contain
   # "/ctsm/libraries/mpi-serial" among its compiled-source strings
   # (strings -a cesm.exe). A passing version check without that is the old
   # vacuous behaviour unchanged.
-  set(MPI_SERIAL_PATH "/usr/local/mpi-serial")
 endif()
