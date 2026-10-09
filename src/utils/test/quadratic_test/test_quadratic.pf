@@ -58,7 +58,7 @@ contains
     b = 0.0_r8
     c = 0.0_r8
     do i = 1, size(a)
-       call quadratic (a(i), b, c, r1, r2)
+       call quadratic_roots (a(i), b, c, r1, r2)
        call check_root(a(i), b, c, r1)
        @assertEqual(0.0_r8,    r1, tolerance=tol)
        @assertEqual(1.e+36_r8, r2, tolerance=tol)
@@ -84,7 +84,7 @@ contains
     expectedr1 = (/ -2.0_r8, -2.0_r8 /)
     expectedr2 = (/ -1.0_r8, +2.0_r8 /)
     do i = 1, size(a)
-       call quadratic (a(i), b(i), c(i), r1, r2)
+       call quadratic_roots (a(i), b(i), c(i), r1, r2)
        call check_root(a(i), b(i), c(i), r1)
        call check_root(a(i), b(i), c(i), r2)
        @assertEqual(expectedr1(i), r1, tolerance=tol)
@@ -117,7 +117,7 @@ contains
        do j = 1, size(pert)
           c_coef = c(i)+pert(j)
           print *, 'a, b, c_ = ', a(i), b(i), c_coef
-          call quadratic (a(i), b(i), c_coef, r1, r2)
+          call quadratic_roots (a(i), b(i), c_coef, r1, r2)
           call check_root(a(i), b(i), c_coef, r1)
           call check_root(a(i), b(i), c_coef, r2)
           @assertEqual(expectedr1(i), r1, tolerance=tol_big)
@@ -142,9 +142,10 @@ contains
     a = 0.0_r8
     b = a
     c = a
-    call quadratic (a, b, c, r1, r2)
+    call quadratic_roots (a, b, c, r1, r2, &
+                          file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         'quadratic ERROR: Quadratic solution error')
+         'Quadratic solution error')
     @assertExceptionRaised(expected_msg)
   end subroutine check_errorcondsazero
 
@@ -159,9 +160,10 @@ contains
     a = 1.0_r8
     b = 2.0_r8
     c = 5.0_r8
-    call quadratic (a, b, c, r1, r2)
+    call quadratic_roots (a, b, c, r1, r2, &
+                          file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         'quadratic ERROR: Quadratic solution error: b^2 - 4ac is negative')
+         ' ERROR: Quadratic solution error: root would be complex')
     @assertExceptionRaised(expected_msg)
   end subroutine check_errorcondsimaginary
 
@@ -175,9 +177,10 @@ contains
     a = 1.0_r8
     b = 4.0_r8
     c = 4.0_r8 + 100.0_r8*epsilon(b)
-    call quadratic (a, b, c, r1, r2)
+    call quadratic_roots (a, b, c, r1, r2, &
+                          file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         'quadratic ERROR: Quadratic solution error: b^2 - 4ac is negative')
+         ' ERROR: Quadratic solution error: root would be complex')
     @assertExceptionRaised(expected_msg)
 
   end subroutine check_errorcondsbarelyimaginary

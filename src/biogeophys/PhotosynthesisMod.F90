@@ -19,7 +19,7 @@ module PhotosynthesisMod
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
   use clm_varcon          , only : c14ratio, spval, isecspday
   use decompMod           , only : bounds_type, subgrid_level_patch
-  use QuadraticMod        , only : quadratic
+  use QuadraticMod        , only : quadratic_roots
   use pftconMod           , only : pftcon
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
@@ -1898,7 +1898,7 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,iv))
                cquad = qabs * jmax_z(p,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2)
                je = min(r1,r2)
 
                ! Iterative loop for ci beginning with initial guess
@@ -2650,13 +2650,13 @@ contains
       aquad = params_inst%theta_cj(ivt(p))
       bquad = -(ac(p,iv) + aj(p,iv))
       cquad = ac(p,iv) * aj(p,iv)
-      call quadratic (aquad, bquad, cquad, r1, r2)
+      call quadratic_roots (aquad, bquad, cquad, r1, r2)
       ai = min(r1,r2)
 
       aquad = params_inst%theta_ip
       bquad = -(ai + ap(p,iv))
       cquad = ai * ap(p,iv)
-      call quadratic (aquad, bquad, cquad, r1, r2)
+      call quadratic_roots (aquad, bquad, cquad, r1, r2)
       ag(p,iv) = max(0._r8,min(r1,r2))
 
       ! Net photosynthesis. Exit iteration if an < 0
@@ -2679,13 +2679,13 @@ contains
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol = max(r1,r2) * 1.e06_r8
        else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
           aquad = cs
           bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol = max(r1,r2)
        end if
 
@@ -3566,7 +3566,7 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,sun,iv))
                cquad = qabs * jmax_z(p,sun,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2)
                je_sun = min(r1,r2)
 
                ! sha
@@ -3574,7 +3574,7 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,sha,iv))
                cquad = qabs * jmax_z(p,sha,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2)
                je_sha = min(r1,r2)
 
                ! Iterative loop for ci beginning with initial guess
@@ -4344,26 +4344,26 @@ contains
     aquad = params_inst%theta_cj(ivt(p))
     bquad = -(ac(p,sun,iv) + aj(p,sun,iv))
     cquad = ac(p,sun,iv) * aj(p,sun,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2)
     ai = min(r1,r2)
     
     aquad = params_inst%theta_ip
     bquad = -(ai + ap(p,sun,iv))
     cquad = ai * ap(p,sun,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2)
     ag(p,sun,iv) = max(0._r8,min(r1,r2))
     
     ! Shaded
     aquad = params_inst%theta_cj(ivt(p))
     bquad = -(ac(p,sha,iv) + aj(p,sha,iv))
     cquad = ac(p,sha,iv) * aj(p,sha,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2)
     ai = min(r1,r2)
     
     aquad = params_inst%theta_ip
     bquad = -(ai + ap(p,sha,iv))
     cquad = ai * ap(p,sha,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2)
     ag(p,sha,iv) = max(0._r8,min(r1,r2))
     
     ! Net photosynthesis. Exit iteration if an < 0
@@ -4421,7 +4421,7 @@ contains
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0_r8 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol_sun = max(r1,r2) * 1.e06_r8
        end if
 
@@ -4438,7 +4438,7 @@ contains
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol_sha = max(r1,r2)* 1.e06_r8
        end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
@@ -4450,7 +4450,7 @@ contains
           aquad = cs_sun
           bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol_sun = max(r1,r2)
        end if
 
@@ -4462,7 +4462,7 @@ contains
           aquad = cs_sha
           bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2)
           gs_mol_sha = max(r1,r2)
        end if
     end if
