@@ -473,10 +473,27 @@ kind of documentation and is tracked on its own._
    - **One checker script, two workflows.** The PR gate reads the PR branch and
      only in-repo files, runs on any hosted runner, and blocks the merge. The
      scheduled monitor reads the latest master tag and derecho's live stack,
-     runs on `gha-runner-ctsm` (else a cron on derecho), and opens an issue with
-     its own `GITHUB_TOKEN` -- a cron would need a long-lived PAT in a dotfile on
-     a shared machine. Sharing one script is what keeps their definition of
-     "matching" from drifting apart.
+     runs on `gha-runner-ctsm` (else a cron on an NCAR machine), and opens an
+     issue with its own `GITHUB_TOKEN`. Sharing one script is what keeps their
+     definition of "matching" from drifting apart.
+   - **The cron fallback does not need a PAT, and should not have one.** Split
+     it so the cron never talks to GitHub: the cron reads derecho's module tree
+     and `spack.lock` and writes a small timestamped JSON report somewhere under
+     `/glade/campaign/cesm/cesmdata/cseg`, which the Cirrus runner **already**
+     mounts read-only; the scheduled workflow reads that file through the
+     existing mount and opens the issue with `GITHUB_TOKEN`. No new mount, no
+     stored credential -- the cron's only privilege is writing a file it owns.
+     Two things this needs: the report carries a timestamp and the workflow
+     fails when it is stale, or a dead cron is silent; and the path is chosen
+     deliberately, not inside `inputdata`.
+
+     This is the fallback's shape whether or not the `/glade/u/apps` mount
+     lands. CIRRUS's own GitHub Actions runners already require a PAT, but it
+     lives in NCAR's OpenBao secret store (`<ucar email>/github_pat`,
+     fine-grained, per-repo, one-year expiry), not in a dotfile -- so "no
+     credential on glade" matches the platform's own posture rather than
+     fighting it. A GitHub App is not an improvement here: its private key is
+     still a secret at rest.
    - **The two sides need different instruments**, because the container links
      the serial stack statically and derecho links it dynamically. No single
      tool covers both; the per-component mapping is in
