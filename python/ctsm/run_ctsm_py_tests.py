@@ -24,7 +24,14 @@ SYS_TESTS_DISAMBIGUATION = "If you want to use pytest's -s option, use --capture
 
 
 def _get_files_matching_pattern(pattern):
-    pattern = os.path.join("**", pattern)
+    # Look for the CTSM tests in the directory above this script file -
+    # not whatever tests in whatever working dir the user is in.
+    # Note: This script is in python/ctsm/
+    my_dir = os.path.dirname(os.path.abspath(__file__))
+    # Go up to python/
+    parent_dir = os.path.dirname(my_dir)
+
+    pattern = os.path.join(parent_dir, "**", pattern)
     result = glob.glob(pattern, recursive=True)
     result.sort()
     result = [f for f in result if f.endswith(".py")]
