@@ -516,9 +516,13 @@ kind of documentation and is tracked on its own._
 
      `campaign` is the only entry under `/glade`. So the question was never
      "does the runner see glade" but "which parts", and the fix is another
-     mount of the same shape rather than this item's cron-on-derecho fallback
-     -- which is worth avoiding on its own terms, since a cron needs a
-     long-lived PAT in a dotfile on a shared machine.
+     mount of the same shape rather than this item's cron fallback.
+
+     **Requested 2026-10-09: <https://jira.ucar.edu/browse/CCPP-502>.** Until
+     it is answered, neither the scheduled half of `derecho-version-check.yml`
+     nor this item's live reads can run on the Cirrus runner. The cron
+     fallback above is unblocked either way, so a refusal costs a different
+     shape, not the feature.
 
      **Ask for read-only `/glade/u/apps`, one mount.** If it must be
      narrower, `/glade/u/apps/derecho` and `/glade/u/apps/cesmdev`. Do **not**
