@@ -489,14 +489,28 @@ kind of documentation and is tracked on its own._
    - **`gha-runner-ctsm` cannot reach `/glade/u/apps`, so it cannot host these
      reads as things stand.** Measured 2026-10-09 by running the probe:
      `/glade/u/apps/derecho/modules` is not visible from the runner. The
-     hostname (`gha-runner-ctsm-*-runner-*`) says it is a Kubernetes pod, so
-     glade arrives as specific bind mounts rather than as a filesystem --
-     `/glade/campaign/.../inputdata` is evidently among them, since
-     `cirrus-testing.yml`'s `list-glade-cesm-input` job depends on it, and
-     `/glade/u/apps` is not. The question was never "does the runner see
-     glade" but "which parts", and the cheap fix is a read-only mount of
-     `/glade/u/apps` rather than this item's cron-on-derecho fallback. Until
-     one or the other lands, the scheduled half of
+     hostname (`gha-runner-ctsm-*-runner-*`) says it is a Kubernetes pod, and
+     glade reaches it as exactly **one** NFS mount, nothing else:
+
+     ```
+     gladedm1.ucar.edu:/gpfs/csfs1/cesm/cesmdata/cseg
+         -> /glade/campaign/cesm/cesmdata/cseg   nfs4 ro
+     ```
+
+     `campaign` is the only entry under `/glade`. So the question was never
+     "does the runner see glade" but "which parts", and the fix is another
+     mount of the same shape rather than this item's cron-on-derecho fallback
+     -- which is worth avoiding on its own terms, since a cron needs a
+     long-lived PAT in a dotfile on a shared machine.
+
+     Two tiers, because they differ enormously in size. The
+     **module-existence check needs only `/glade/u/apps/derecho/modules` and
+     `/glade/u/apps/cesmdev/modules`** -- Lua text files, and the `netcdf`
+     modulefile's `depends_on` line gives the HDF5 pairing too. Only
+     **netCDF-Fortran's version** additionally needs the Spack install tree
+     (`/glade/u/apps/derecho/<ncarenv>/spack/opt/spack`), because it is read
+     by running `nf-config` out of the prefix; that is the large, separate
+     ask. Until a mount or the cron lands, the scheduled half of
      `derecho-version-check.yml` would fail every week -- correctly, since an
      unreachable module tree is a loud failure by design, but uselessly.
    - **`[snapshot]`'s HDF5 and netCDF-Fortran need a live source here.**
