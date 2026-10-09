@@ -1164,7 +1164,8 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
         phi = forc_pbot * (1.37_r8 * gs_mol + 1.6_r8 * gb_mol) / (gb_mol * gs_mol)
         bquad = awc - CO2c + phi * Vcmax
         cquad = -(c_p * phi * Vcmax + awc * CO2c)
-        call quadratic_roots(aquad, bquad, cquad, r1, r2)
+        call quadratic_roots(aquad, bquad, cquad, r1, r2, &
+                             file=sourcefile, line=__LINE__)
         ci = max(r1, r2)
         if (ci < 0.0_r8) ci = c_p + 0.5_r8 * ciold
   end do
@@ -1182,7 +1183,8 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
          phi = forc_pbot * (1.37_r8 * gs_mol + 1.6_r8 * gb_mol) / (gb_mol * gs_mol)
          bquad = 2.0_r8 * c_p - CO2c + phi * JmeanL / 4.0_r8
          cquad = -(c_p * phi * JmeanL / 4.0_r8 + 2.0_r8 * c_p * CO2c)
-         call quadratic_roots(aquad, bquad, cquad, r1, r2)
+         call quadratic_roots(aquad, bquad, cquad, r1, r2, &
+                              file=sourcefile, line=__LINE__)
          ci = max(r1, r2)
          if (ci < 0.0_r8) ci = c_p + 0.5_r8 * ciold
          Kj = max(ci - c_p, 0.0_r8) / (4.0_r8 * ci + 8.0_r8 * c_p)

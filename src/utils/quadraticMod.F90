@@ -23,6 +23,7 @@ contains
      !==============================================================================!
      ! Implements the numerically stable formulation from Press et al (1986)
      ! Numerical Recipes: The Art of Scientific Computing (Cambridge University Press, Cambridge)
+     ! Allows for roots that are technically complex if they are close to rounding to zero.
      !
      ! NOTE: Special handling for these cases...
      !   Will truncate the square root term to zero if it is very small and negative, otherwise will error out
