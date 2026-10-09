@@ -454,9 +454,42 @@ kind of documentation and is tracked on its own._
      was only ever meant to satisfy ESMF, which links `-lpioc` alone. A CTSM
      case build needs the Fortran interface, so there is no `libpiof` and no
      `.mod` to point at. Turning it on is a `Dockerfile` change and therefore a
-     rebuild. (`PIO_ENABLE_TIMING=OFF` is worth re-checking at the same time.)
-     `DRIFT_CHECK_DESIGN.md` left this as something Phase 4 would discover;
-     it is now settled without spending a rebuild to find out.
+     rebuild. `DRIFT_CHECK_DESIGN.md` left this as something Phase 4 would
+     discover; it is now settled without spending a rebuild to find out.
+
+     **Do not guess the PIO flags -- derecho's modulefile records them.**
+     `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/parallelio-serial/2.6.8.lua`
+     carries the full configure line in its `whatis`. The ones that matter:
+
+     ```
+     -DPIO_ENABLE_FORTRAN:BOOL=ON     -DPIO_ENABLE_TIMING:BOOL=OFF
+     -DPIO_USE_MPISERIAL:BOOL=ON      -DPIO_ENABLE_LOGGING:BOOL=OFF
+     -DWITH_PNETCDF:BOOL=OFF          -DPIO_ENABLE_TESTS:BOOL=OFF
+     -DPIO_ENABLE_NETCDF_INTEGRATION:BOOL=ON
+     -DBUILD_SHARED_LIBS:BOOL=ON
+     ```
+
+     So **timing stays OFF** -- that matches what the image already does, and
+     it is derecho's answer rather than a guess. CIME builds its own GPTL and
+     links it separately (`Tools/Makefile:674`, `ULIBS += ... -lgptl`), which
+     is why PIO does not need its own. `BUILD_SHARED_LIBS` is the one flag to
+     think about rather than copy: the image's serial stack is static on
+     purpose, while `Tools/Makefile:667` names `libpiof.a`/`libpioc.a`.
+   - **`PIO_LIBDIR` alone is not enough; the image must also export
+     `PIO_VERSION_MAJOR=2`.** `cime/CIME/Tools/Makefile:463-470` honors
+     `PIO_LIBDIR` only inside `ifeq ($(PIO_VERSION),$(PIO_VERSION_MAJOR))`,
+     and **unexports it and builds from source** when they differ. `PIO_VERSION`
+     is a case XML value (2); `PIO_VERSION_MAJOR` is an *environment* variable
+     that derecho gets from the `parallelio-serial` modulefile
+     (`setenv("PIO_VERSION_MAJOR", "2")`) and that stampede3 sets through
+     `<env>` in its `config_machines.xml`. The container has neither, so the
+     comparison would be `2` against empty, and the switch would fail
+     **silently** -- a case build that quietly compiles the submodule while the
+     macro looks correct, which is the exact failure mode this item exists to
+     end. Set it as a Dockerfile `ENV`, beside the other baked-in variables.
+     Worth checking `PIO_TYPENAME_VALID_VALUES=netcdf` at the same time; the
+     same modulefile sets it, and with no pnetcdf in the image it is probably
+     the honest value.
    - Add build-time `LABEL`s recording `nf-config --version` and
      `nc-config --has-stdfilters`. Neither can be read back from the built
      executable, and item 5 needs both. `smoke-test.sh` already reads versions
