@@ -2376,9 +2376,6 @@ contains
     !Use Brent's method to find the root of a single variable function ci_func, which is known to exist between x1 and x2.
     !The found root will be updated until its accuracy is tol.
 
-    !!REVISION HISTORY:
-    !Dec 14/2012: Jinyun Tang, modified from numerical recipes in F90 by press et al. 1188-1189
-    !
     !!ARGUMENTS:
     real(r8), intent(out) :: x                ! indepedent variable of the single value function ci_func(x)
     real(r8), intent(in) :: x1, x2, f1, f2    ! minimum and maximum of the variable domain to search for the solution ci_func(x1) = f1, ci_func(x2)=f2
