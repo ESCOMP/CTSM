@@ -503,13 +503,20 @@ kind of documentation and is tracked on its own._
      -- which is worth avoiding on its own terms, since a cron needs a
      long-lived PAT in a dotfile on a shared machine.
 
-     Read-only `/glade/u/apps` covers everything. If it has to be narrower,
-     three text paths suffice -- and the Spack **install** tree, the one large
-     thing, is not among them:
+     **Ask for read-only `/glade/u/apps`, one mount.** If it must be
+     narrower, `/glade/u/apps/derecho` and `/glade/u/apps/cesmdev`. Do **not**
+     ask for paths below those: everything the check wants lives under an
+     `ncarenv` version directory (`/glade/u/apps/derecho/25.10/envs/public/`)
+     or in a sibling `modules/` tree, so a narrower mount would have to be
+     re-requested every time ccs_config bumps `ncarenv` -- which is one of the
+     events this check exists to notice. Size is not the reason to narrow: it
+     is an NFS mount, not a copy, and the check reads a handful of small
+     files. The Spack **install** tree is not needed at all.
 
-     - `/glade/u/apps/derecho/modules`
-     - `/glade/u/apps/cesmdev/modules`
-     - `/glade/u/apps/derecho/<ncarenv>/envs/public/spack.lock` (one file)
+     Shape to hand the admin: the existing mount re-exports a subtree of the
+     `csfs1` GPFS filesystem over NFSv4 from `gladedm1.ucar.edu`. This is the
+     same thing for the `glade_user` filesystem, which is what `/glade/u`
+     is.
 
      Until a mount or the cron lands, the scheduled half of
      `derecho-version-check.yml` would fail every week -- correctly, since an
