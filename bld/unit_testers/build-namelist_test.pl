@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3415;
+my $ntests = 3425;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -334,6 +334,8 @@ foreach my $driver ( "nuopc" ) {
                          "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=F/\" -bgc bgc -crop",
                          "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=T/\" -bgc bgc -crop",
                          "-bgc bgc -crop -clm_accelerated_spinup sasu",
+                         "-bgc fates -clm_accelerated_spinup on",
+                         "-bgc fates -clm_accelerated_spinup on -namelist '&a spinup_state=1/'",
                          "-res 0.9x1.25 -clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-res 0.9x1.25 -infile myuser_nl_clm",
                          "-res 0.9x1.25 -ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
@@ -1220,6 +1222,22 @@ my %failtest = (
      "usespitfireButNOTFATES"    =>{ options=>"-envxml_dir . -no-megan",
                                      namelst=>"fates_spitfire_mode=1",
                                      phys=>"clm4_5",
+                                   },
+     "clmaccelANDusefatessp"     =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup on",
+                                     namelst=>"use_fates_sp=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "sasuANDusefatessp"         =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup sasu",
+                                     namelst=>"use_fates_sp=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "spinupstateWfatessp"       =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"use_fates_sp=.true.,spinup_state=1",
+                                     phys=>"clm6_0",
+                                   },
+     "fatesspinupWclmacceloff"   =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup off",
+                                     namelst=>"spinup_state=1",
+                                     phys=>"clm6_0",
                                    },
      "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
