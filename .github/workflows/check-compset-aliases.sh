@@ -22,7 +22,7 @@ bad_compsets() {
   # Relies on case sensitivity here: Alias should have $ALIAS and longname should have $LCOMPSET
   # --invert-match can be shortened to -v
   # --fixed-strings can be shortened to -F
-  local bad_matches="$(cime/scripts/query_config --compsets | sort | uniq | grep --fixed-strings -- \"$ALIAS\" | grep --fixed-strings --invert-match -- \"$LCOMPSET\")"
+  local bad_matches="$(cime/scripts/query_config --compsets | sort | uniq | grep --fixed-strings -- "$ALIAS" | grep --fixed-strings --invert-match -- "$LCOMPSET")"
   set -e
   if [[ "${bad_matches}" != "" ]]; then
       echo "One or more compsets with $ALIAS alias but not $LCOMPSET longname:" >&2
@@ -41,7 +41,7 @@ check_missing_alias_matches() {
   # Relies on case sensitivity here: Alias should NOT have a match in $ALIAS but longname should have $LCOMPSET
   # --invert-match can be shortened to -v
   # --fixed-strings can be shortened to -F
-  local bad_compsets="$(cime/scripts/query_config --compsets clm | awk 'NR > 5{print $0}' | grep -E --invert-match -- \"$ALIAS\" | grep --fixed-strings -- \"$LCOMPSET\")"
+  local bad_compsets="$(cime/scripts/query_config --compsets clm | awk 'NR > 5{print $0}' | grep -E --invert-match -- "$ALIAS" | grep --fixed-strings --invert-match -- "$LCOMPSET")"
   set -e
   if [[ "${bad_compsets}" != "" ]]; then
       echo "One or more compsets without $ALIAS alias but not $LCOMPSET longname:" >&2
