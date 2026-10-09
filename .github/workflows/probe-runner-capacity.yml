@@ -1,0 +1,149 @@
+name: Probe -- can a GitHub runner build ctsm-ci-derecho-gnu?
+
+# Feasibility spike for "Remaining steps" item 8 in
+# docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md: building this image in CI, on
+# native x86_64 and arm64 runners, instead of by hand on Casper.
+#
+# The build is going to live in a workflow either way; what is undecided is
+# WHICH runner it targets. Disk is the tight constraint on the hosted ones: they
+# have roughly 14 GB free, while this image is ~4.1 GB as a tarball and its
+# build transiently needs GCC's build tree plus three ESMF trees on top. Cores
+# and the 6 h job limit look survivable; disk might simply not fit. The
+# self-hosted Cirrus runner is the fallback, so it is probed here too -- the
+# same numbers decide it.
+#
+# NOTE on the gha-runner-ctsm row: a job targeting an offline or busy
+# self-hosted runner QUEUES rather than failing, and timeout-minutes does not
+# bound queue time. If that row sits pending while the hosted ones finish, that
+# is the answer about availability, not a hung workflow -- cancel it.
+#
+# Run manually (Actions tab -> this workflow -> "Run workflow") and read the
+# log. Informational only -- every step is best-effort and the job is not
+# allowed to fail the way a real check would.
+#
+# Phase A (default, ~2 min): report what a runner actually has, before and
+#   after reclaiming the preinstalled toolchains, on both architectures.
+# Phase B (full_build: true, up to 6 h): actually attempt the build and report
+#   how far it gets, how long it takes and what the disk looked like at the end.
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_build:
+        description: 'Also attempt the real build (slow; up to the 6h job limit)'
+        type: boolean
+        default: false
+
+jobs:
+  probe:
+    name: ${{ matrix.arch }} capacity
+    runs-on: ${{ matrix.runner }}
+    # Never fail the workflow: the log is the result.
+    continue-on-error: true
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+          - arch: cirrus
+            runner: gha-runner-ctsm
+
+    steps:
+      - name: What is this runner?
+        run: |
+          set +e
+          echo "=== identity ==="
+          uname -m; uname -a
+          echo "runner label requested: ${{ matrix.runner }}"
+          echo
+          echo "=== cpu / memory ==="
+          echo "nproc: $(nproc)"
+          free -h || true
+          echo
+          echo "=== disk, as handed to us ==="
+          df -h / /mnt 2>/dev/null
+          echo
+          echo "=== build tooling ==="
+          docker --version || echo "(no docker)"
+          docker buildx version || echo "(no buildx)"
+          podman --version || echo "(no podman)"
+          echo
+          echo "=== container storage (podman's graphroot may be node-local) ==="
+          podman info --format '{{.Store.GraphRoot}}' 2>/dev/null || true
+          exit 0
+
+      # Hosted runners only. gha-runner-ctsm is a persistent machine that other
+      # jobs share; deleting toolchains there would be vandalism, not cleanup.
+      - name: Reclaim disk, and say how much that bought
+        if: ${{ matrix.arch != 'cirrus' }}
+        run: |
+          set +e
+          before=$(df --output=avail -BM / | tail -1 | tr -dc '0-9')
+          echo "available before: ${before} MB"
+          # The preinstalled toolchains this build never touches. Each is
+          # best-effort; a missing one is not an error.
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android \
+                      /usr/local/.ghcup /opt/hostedtoolcache \
+                      /usr/local/share/boost 2>/dev/null
+          sudo docker image prune -af 2>/dev/null
+          after=$(df --output=avail -BM / | tail -1 | tr -dc '0-9')
+          echo "available after:  ${after} MB"
+          echo "reclaimed:        $(( after - before )) MB"
+          echo
+          echo "For reference: the built image is ~4.1 GB as a tarball, and the"
+          echo "build needs GCC's build tree and three ESMF trees transiently."
+          df -h /
+          exit 0
+
+      - name: Checkout (image sources only)
+        if: ${{ inputs.full_build }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          submodules: false
+
+      - name: Attempt the real build, timed
+        if: ${{ inputs.full_build }}
+        run: |
+          set +e
+          echo "MAKE_JOBS is set from nproc: the Dockerfile default of 16 would"
+          echo "thrash a runner this size."
+          # The hosted runners have docker; the Cirrus one is an NCAR machine
+          # and may only have podman. Use whichever is there.
+          if command -v docker >/dev/null 2>&1; then
+              rt=docker
+          elif command -v podman >/dev/null 2>&1; then
+              rt=podman
+          else
+              echo "RESULT: no container build tool on this runner at all."
+              exit 0
+          fi
+          echo "using: ${rt}"
+          start=$(date +%s)
+          "${rt}" build \
+              --build-arg MAKE_JOBS=$(nproc) \
+              -t ctsm-ci-derecho-gnu:probe \
+              docker/ctsm-ci-derecho-gnu
+          status=$?
+          end=$(date +%s)
+          echo
+          echo "=== result ==="
+          echo "docker build exit status: ${status}"
+          echo "elapsed: $(( (end - start) / 60 )) min"
+          echo
+          echo "=== disk at the end ==="
+          df -h /
+          "${rt}" image ls ctsm-ci-derecho-gnu:probe
+          echo
+          if [ "${status}" -eq 0 ]; then
+              echo "RESULT: a ${{ matrix.arch }} runner CAN build this image."
+          else
+              echo "RESULT: the build did NOT complete on ${{ matrix.arch }}."
+              echo "        If it died on space, item 8's fallback applies:"
+              echo "        split the Dockerfile into a rarely-rebuilt base"
+              echo "        image and a thin top layer."
+          fi
+          exit 0
