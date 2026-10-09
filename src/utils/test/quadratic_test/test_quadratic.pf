@@ -145,7 +145,7 @@ contains
     call quadratic_roots (a, b, c, r1, r2, &
                           file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         'Quadratic solution error')
+         'Quadratic solution error: input equation is linear not quadratic')
     @assertExceptionRaised(expected_msg)
   end subroutine check_errorcondsazero
 
@@ -163,7 +163,7 @@ contains
     call quadratic_roots (a, b, c, r1, r2, &
                           file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         ' ERROR: Quadratic solution error: root would be complex')
+         'Quadratic solution error: root would be complex')
     @assertExceptionRaised(expected_msg)
   end subroutine check_errorcondsimaginary
 
@@ -180,7 +180,7 @@ contains
     call quadratic_roots (a, b, c, r1, r2, &
                           file=__FILE__, line=__LINE__)
     expected_msg = endrun_msg( &
-         ' ERROR: Quadratic solution error: root would be complex')
+         'Quadratic solution error: root would be complex')
     @assertExceptionRaised(expected_msg)
 
   end subroutine check_errorcondsbarelyimaginary
