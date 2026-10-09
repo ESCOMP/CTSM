@@ -440,6 +440,23 @@ kind of documentation and is tracked on its own._
      macro-path assertion to cover them**, so a wrong path fails the image build
      rather than a later case build. The `ESMFMKFILE` path moves with the prefix
      change; same commit.
+
+     **The two halves are not equally ready, and the difference decides the
+     order.** `MPI_SERIAL_PATH` can point at the *published* image as it
+     stands: `/usr/local/mpi-serial` already carries `lib/libmpi-serial.a`,
+     `include/mpi.h`, `mpif.h` and (best effort) `mpi.mod`, which is what CIME
+     wants. Since `container-common.sh` prefers the mounted repo's
+     `gnu_container.cmake` over the image's baked copy, that half is provable
+     against `:20261007` with a repo edit and one case build -- **no rebuild**.
+
+     `PIO_LIBDIR`/`PIO_INCDIR` cannot be, and the reason is in this
+     `Dockerfile`: the PIO build passes `-DPIO_ENABLE_FORTRAN=OFF`, because it
+     was only ever meant to satisfy ESMF, which links `-lpioc` alone. A CTSM
+     case build needs the Fortran interface, so there is no `libpiof` and no
+     `.mod` to point at. Turning it on is a `Dockerfile` change and therefore a
+     rebuild. (`PIO_ENABLE_TIMING=OFF` is worth re-checking at the same time.)
+     `DRIFT_CHECK_DESIGN.md` left this as something Phase 4 would discover;
+     it is now settled without spending a rebuild to find out.
    - Add build-time `LABEL`s recording `nf-config --version` and
      `nc-config --has-stdfilters`. Neither can be read back from the built
      executable, and item 5 needs both. `smoke-test.sh` already reads versions
