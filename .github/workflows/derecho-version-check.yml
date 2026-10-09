@@ -11,6 +11,7 @@ on:
       - 'docker/ctsm-ci-derecho-gnu/Dockerfile'
       - 'docker/ctsm-ci-derecho-gnu/derecho-versions.ini'
       - 'docker/ctsm-ci-derecho-gnu/check-derecho-versions.py'
+      - 'docker/ctsm-ci-derecho-gnu/test_check_derecho_versions.py'
       - '.github/workflows/derecho-version-check.yml'
       # ccs_config is a submodule; a config_machines.xml change arrives as a
       # bump of the ccs_config gitlink. Its gitlink and the .gitmodules fxtag
@@ -23,13 +24,23 @@ on:
       - 'docker/ctsm-ci-derecho-gnu/Dockerfile'
       - 'docker/ctsm-ci-derecho-gnu/derecho-versions.ini'
       - 'docker/ctsm-ci-derecho-gnu/check-derecho-versions.py'
+      - 'docker/ctsm-ci-derecho-gnu/test_check_derecho_versions.py'
       - '.github/workflows/derecho-version-check.yml'
       - 'ccs_config'
+  # The scheduled run is the one that reads derecho's module tree live, so it
+  # catches drift that no PR touched. GitHub only fires schedules from the
+  # default branch, so this does nothing until the workflow is merged to master;
+  # until then, exercise the same path with workflow_dispatch.
+  schedule:
+    - cron: '23 13 * * 1'
   workflow_dispatch:
 
 jobs:
   check-derecho-versions:
-    runs-on: ubuntu-latest
+    # The live module-tree read needs /glade, which only the self-hosted Cirrus
+    # runner has. The PR/push gate reads in-repo files only, so it stays on a
+    # hosted runner and does not consume Cirrus capacity.
+    runs-on: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'gha-runner-ctsm' || 'ubuntu-latest' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -44,5 +55,19 @@ jobs:
       - name: Check out ccs_config
         run: bin/git-fleximod update ccs_config
 
+      # Runs first: if the checker's own logic is broken, the result of the
+      # check below means nothing. Needs no ccs_config and no /glade -- it
+      # builds its own fixtures.
+      - name: Test check-derecho-versions.py
+        run: python docker/ctsm-ci-derecho-gnu/test_check_derecho_versions.py
+
+      # --skip-module-tree on pull_request and push only. Those run on a hosted
+      # runner with no /glade, so they can compare only in-repo files; the
+      # module-existence check would fail there for the wrong reason. The
+      # scheduled (and workflow_dispatch) run is on the Cirrus runner, does the
+      # live read, and must fail loudly if /glade cannot be reached -- so it
+      # must NOT carry the flag.
       - name: Check Dockerfile versions against derecho's gnu stack
-        run: python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py
+        run: >-
+          python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py
+          ${{ (github.event_name == 'pull_request' || github.event_name == 'push') && '--skip-module-tree' || '' }}

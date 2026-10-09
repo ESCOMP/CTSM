@@ -34,7 +34,7 @@ The **derecho gnu** column below is what
 `ccs_config/machines/derecho/config_machines.xml` loads at the `ccs_config`
 this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The
 **Dockerfile** column is what this directory's `Dockerfile` builds today;
-`check-derecho-versions.py` passes all 10 of its checks against it.
+`check-derecho-versions.py` passes against it.
 
 The published image matches: `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`
 was built and validated on Casper on 2026-10-07 against this Dockerfile, and
@@ -46,13 +46,13 @@ kept only as a fallback.
 |---|---|---|---|
 | GCC | 14.3.0 | 14.3.0 | built from source under `/opt/gcc` |
 | MPI | cray-mpich 8.1.32 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary, so this version is deliberately *not* matched. `derecho-versions.ini`'s guard records derecho's own 8.1.32 so the stand-in gets re-examined when derecho moves |
-| HDF5 | 1.14.6 (`hdf5-mpi`, pulled in by `netcdf-mpi` via `depends_on`) | 1.14.6 (parallel) | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — measured 2026-10-06 against `netcdf-mpi/4.9.3` |
-| netCDF-C | netcdf-mpi/4.9.3 | 4.9.3 | |
-| netCDF-Fortran | 4.6.2, bundled in `netcdf-mpi` | 4.6.2 | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — `nf-config --version` on 2026-10-06 against `netcdf-mpi/4.9.3` |
+| HDF5 | 1.14.6 (`hdf5`, pulled in by the serial `netcdf` module via `depends_on`) | 1.14.6 (parallel) | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — measured 2026-10-09 against `netcdf/4.9.3` |
+| netCDF-C | netcdf/4.9.3 for `mpilib="mpi-serial"`; `netcdf-mpi/4.9.3` for the MPI flavor | 4.9.3 | `NETCDF_C_VERSION` is checked against the serial module, which is the one the container's scope covers |
+| netCDF-Fortran | 4.6.2, bundled in the serial `netcdf` module | 4.6.2 | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — `nf-config --version` on 2026-10-09 against `netcdf/4.9.3` |
 | PnetCDF | parallel-netcdf/1.14.1 | 1.14.1 | |
 | ESMF | esmf-mpi/8.9.1-debug, esmf-mpi/8.9.1; `esmf/8.9.1` for `mpilib="mpi-serial"` (that build is `ESMF_COMM=mpiuni`) | 8.9.1, three flavors | see "ESMF flavors" below |
 | pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
-| BLAS/LAPACK | cray-libsci | reference `lapack`/`blas` (dnf) | libsci is proprietary |
+| BLAS/LAPACK | cray-libsci 25.03.0 | reference `lapack`/`blas` (dnf) | libsci is proprietary, so this version is deliberately *not* matched — the dnf packages carry no version ARG at all. `derecho-versions.ini`'s guard records derecho's own 25.03.0 so the stand-in gets re-examined when derecho moves |
 | PIO | parallelio-serial/2.6.8 module | 2.6.8, mpi-serial only | In the container a case build compiles its own PIO from CTSM's pinned ParallelIO submodule, and the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial"); on derecho the module supplies it through `PIO_LIBDIR` |
 | serial netCDF stack | netcdf/4.9.3 (loaded for mpilib=mpi-serial) | HDF5 1.14.6 + netCDF-C 4.9.3 + netCDF-Fortran 4.6.2 under `/usr/local/serial`, static | mpi-serial builds must not link the parallel, MPICH-linked netCDF |
 | mpi-serial | mpi-serial/2.5.3 module | 2.5.3 under `/usr/local/mpi-serial` | Here it exists only to compile the ESMF-external PIO against, and a container case build compiles its own from CTSM's submodule; on derecho the module *is* what a case links, via `MPI_SERIAL_PATH` |
@@ -657,19 +657,43 @@ Component versions are `ARG`s near the top of the `Dockerfile`
 
 `check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
 locally: `python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`) fails
-if these ARGs drift from derecho's gnu stack in
-`ccs_config/machines/derecho/config_machines.xml`. Most are read live from
-that file — including `MPI_SERIAL_VERSION` and `PIO_VERSION`, which are read
-from its `mpilib="mpi-serial"` blocks rather than the MPI ones, since those
-modules are what a serial build on derecho actually links. HDF5 and
-netCDF-Fortran (bundled in `netcdf-mpi`, so not standalone modules there) and
-the intentional `cray-mpich`→MPICH deviation are recorded by hand in
-`derecho-versions.ini`; update that file too when they change (verify on
-derecho with `module show netcdf-mpi` / `nf-config --version`) — including its
-`measured_against_netcdf_mpi` line, which records the module the snapshot was
-read from. The check compares that against derecho's live `netcdf-mpi` and
-refuses the snapshot when they differ, so a re-measurement that forgets it
-fails rather than passing.
+if these ARGs drift from derecho. Its subject is narrower than the list above:
+the software a **gnu + mpi-serial** run on derecho links. So it reads the
+`mpilib="mpi-serial"` blocks of
+`ccs_config/machines/derecho/config_machines.xml` — `netcdf`, `mpi-serial`,
+`parallelio-serial`, `esmf`, alongside the compiler-level `gcc` — and never
+the MPI ones. `MPICH_VERSION` and `PNETCDF_VERSION` are therefore **not**
+covered: nothing a serial run links corresponds to them. They are still in the
+`Dockerfile`; see [NEXT_STEPS.md](NEXT_STEPS.md) item 4b.
+
+Two things cannot be read from `config_machines.xml` and are recorded by hand
+in `derecho-versions.ini`:
+
+- **HDF5 and netCDF-Fortran.** Neither is a standalone module: netCDF-Fortran
+  is bundled in `netcdf`, HDF5 is the `hdf5` module `netcdf` pulls in via
+  `depends_on`. Verify on derecho with `module show netcdf | grep -i hdf5` and
+  `nf-config --version`, and update `measured_against_netcdf` in the same edit
+  — it records which `netcdf` the numbers were measured against, the check
+  compares it to the live one, and a re-measurement that forgets it fails
+  rather than passing.
+- **`cray_libsci`.** libsci is proprietary and the container substitutes dnf's
+  reference `lapack`/`blas`, which carry no version ARG to compare. The guard
+  instead asserts derecho's `cray-libsci` is still the recorded version, so a
+  bump there makes someone re-examine the stand-in.
+
+The check also resolves every pinned module `config_machines.xml` names for
+this path in derecho's module tree under `/glade` — all but `conda/latest`,
+whose "version" is not one, which is reported as skipped rather than passed —
+both
+`/glade/u/apps/derecho/modules` and the `/glade/u/apps/cesmdev/modules` root
+that `cesmdev/1.0` adds, since the `parallelio-serial` `-debug` variant lives
+only in the latter. `config_machines.xml` is CTSM's *claim* about derecho,
+never verified; if it pins a version derecho has removed, a derecho run dies at
+`module load`, and comparing an ARG to that version reports a match that means
+nothing. That part needs `/glade`, so it runs on the Cirrus runner (on the
+weekly schedule, or by `workflow_dispatch`); the PR gate runs on a hosted
+runner and passes `--skip-module-tree`, which prints a `NOT CHECKED` line
+rather than anything that could be mistaken for a pass.
 
 pFUnit is read live too, but from a different place: derecho has no pFUnit
 module, so the check parses the version out of the `PFUNIT_PATH` that

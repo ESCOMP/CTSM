@@ -18,8 +18,8 @@ as a match. Reasoning, evidence and the full design live in
 `DRIFT_CHECK_DESIGN.md`; the items below assert the decisions without
 re-arguing them._
 
-_Unchecked items below are in the order they should be tackled: rewrite the
-checker (4a), rebuild the image to match (4b), build the drift check (5), then
+_Unchecked items below are in the order they should be tackled: rebuild the
+image to match the rewritten checker (4b), build the drift check (5), then
 build the image in CI (8), run tests rather than only build them (9), and take
 the workflows off every-push triggers (10)._
 
@@ -383,33 +383,42 @@ kind of documentation and is tracked on its own._
 4. **Make the checker and the image agree on the right subject.** Two steps, in
    order: fix what the check asks, then rebuild the image to satisfy it.
 
-   **4a -- rewrite `check-derecho-versions.py`.** What the check compares is
-   *the software a gnu+mpi-serial standalone run links* -- not the `Dockerfile`
-   ARGs considered in the abstract. Today's checker compares ARGs that a
-   container case build never links, and is green on real drift as a result.
-   Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
+   **4a ✅ -- `check-derecho-versions.py` rewritten.** It now compares the
+   Dockerfile ARGs against the modules a gnu + mpi-serial run on derecho loads
+   -- the `mpilib="mpi-serial"` blocks of `config_machines.xml`, never the MPI
+   ones. The MPI-flavor checks, the `cray-mpich` guard, the `<MPILIBS>`
+   assertion and the two-stack twin machinery are gone. `cray-libsci` is now
+   guarded; since its stand-in (dnf `lapack`/`blas`) carries no version ARG,
+   `deviation` mode no longer requires one. `MPICH_VERSION` and
+   `PNETCDF_VERSION` stay in the `Dockerfile`, simply unchecked, until 4b
+   deletes them. Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
 
-   - Remove the MPI-flavor checks (`netcdf-mpi`, `parallel-netcdf`, `esmf-mpi`),
-     the `cray-mpich` deviation guard and the `<MPILIBS>` assertion. The scope
-     is gnu + mpi-serial only, and a serial run loads no cray-mpich at all.
-   - Re-aim every remaining module read at the `mpilib="mpi-serial"` blocks of
-     `config_machines.xml`.
-   - Re-measure `[snapshot]` against the serial `netcdf` module and the plain
-     `hdf5` it pulls in via `depends_on`, not `netcdf-mpi`/`hdf5-mpi`. Move
-     `SNAPSHOT_SOURCE_MODULE` and the provenance key with it.
-   - Add a `cray-libsci` deviation guard, the treatment `cray-mpich` had. It is
-     pinned in the `compiler="gnu"` block, so this is one `[deviation_guard]`
-     entry plus one `CHECKS` row using the existing `deviation` mode.
-   - Add an existence check: every module `config_machines.xml` names for the
-     gnu + mpi-serial path must resolve in derecho's module tree. A pinned
-     version derecho has removed means there is no derecho run to compare
-     against, and must fail rather than report a match.
-   - Keep the `direct` comparison for `MPI_SERIAL_VERSION` and `PIO_VERSION`.
-     No fxtag mode is needed, because 4b makes those ARGs describe what a case
-     build actually links. Delete the comment saying they do not reach a case
-     build; after 4b it is false.
-   - Retire the "Phase 1 / Phase 2" vocabulary here and in
-     `derecho-versions.ini`. "Phase 1" was never defined anywhere.
+   Three things a later reader should not have to re-derive:
+
+   - **The snapshot numbers did not move; only the provenance did.** HDF5
+     1.14.6 and netCDF-Fortran 4.6.2 are what the serial `netcdf/4.9.3` gives,
+     the same values `netcdf-mpi` gave. The ini key is now
+     `measured_against_netcdf`, re-measured on Casper 2026-10-09.
+   - **derecho has two module roots and the existence check needs both.**
+     `/glade/u/apps/derecho/modules` and `/glade/u/apps/cesmdev/modules`, the
+     latter contributed by `cesmdev/1.0`. `parallelio-serial/2.6.8-debug`,
+     which `config_machines.xml` loads for `DEBUG="TRUE"`, exists *only* under
+     the CSEG root, so a check that walked the system root alone would have
+     failed on its first run.
+   - **Three search tiers, and no others.** `<system>/environment/<name>/` (for
+     `ncarenv` and `cesmdev` themselves), then `<root>/<env>/Core/` and
+     `<root>/<env>/gcc/<gccver>/` under each root -- exactly what ncarenv's and
+     gcc's modulefiles put on `MODULEPATH`. A module found only under
+     `<root>/<env>/cray-mpich/<ver>/gcc/<gccver>/` must **not** count: that
+     directory is never on a serial run's `MODULEPATH`, and accepting it would
+     hide the drift the check exists for.
+
+   The existence check needs `/glade`, so `derecho-version-check.yml` now picks
+   its runner per event: `gha-runner-ctsm` for `schedule` (weekly) and
+   `workflow_dispatch`, `ubuntu-latest` plus `--skip-module-tree` for
+   `pull_request` and `push`. `test_check_derecho_versions.py` (stdlib
+   `unittest`, temp-directory fixtures) mutation-tests each check and runs as
+   its own CI step before the check itself.
 
    **4b -- rebuild the image serial-only, linking its own mpi-serial and PIO.**
    Everything here needs a Casper rebuild, so it lands as one change. Reasoning
@@ -478,6 +487,17 @@ kind of documentation and is tracked on its own._
      off derecho is impossible -- `cray-mpich` needs Cray PE -- and unnecessary.
      `probe-derecho-modules.yml` encodes this; it answers whether
      `gha-runner-ctsm` sees glade, and has not been run yet.
+   - **`[snapshot]`'s HDF5 and netCDF-Fortran need a live source here.**
+     `check-derecho-versions.py` guards them only against a `netcdf` *version*
+     bump. derecho can repoint an unchanged `netcdf/4.9.3` at a different HDF5
+     and nothing in that check notices:
+     `/glade/u/apps/derecho/modules/24.12/gcc/12.4.0/netcdf/4.9.3.lua` has
+     `depends_on("hdf5/1.12.3")`, while
+     `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/netcdf/4.9.3.lua` has
+     `depends_on("hdf5/1.14.6")` -- and `hdf5` is never named in
+     `config_machines.xml`, so the module-existence check does not look at it
+     either. The scheduled check must read both live. The PR gate cannot: it
+     runs `--skip-module-tree` and has no `/glade`.
    - **derecho's defaults moving is not drift and is not reported.**
      `config_machines.xml` pins exact versions, so a derecho run still uses the
      pinned one and the container still matches. Whether CTSM is keeping up with
