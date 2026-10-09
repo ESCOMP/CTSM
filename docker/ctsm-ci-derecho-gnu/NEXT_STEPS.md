@@ -485,8 +485,20 @@ kind of documentation and is tracked on its own._
      than taking the highest version, take the HDF5 pairing from `netcdf`'s
      `depends_on`, and run `nf-config` by absolute path. Loading derecho's stack
      off derecho is impossible -- `cray-mpich` needs Cray PE -- and unnecessary.
-     `probe-derecho-modules.yml` encodes this; it answers whether
-     `gha-runner-ctsm` sees glade, and has not been run yet.
+     `probe-derecho-modules.yml` encodes this.
+   - **`gha-runner-ctsm` cannot reach `/glade/u/apps`, so it cannot host these
+     reads as things stand.** Measured 2026-10-09 by running the probe:
+     `/glade/u/apps/derecho/modules` is not visible from the runner. The
+     hostname (`gha-runner-ctsm-*-runner-*`) says it is a Kubernetes pod, so
+     glade arrives as specific bind mounts rather than as a filesystem --
+     `/glade/campaign/.../inputdata` is evidently among them, since
+     `cirrus-testing.yml`'s `list-glade-cesm-input` job depends on it, and
+     `/glade/u/apps` is not. The question was never "does the runner see
+     glade" but "which parts", and the cheap fix is a read-only mount of
+     `/glade/u/apps` rather than this item's cron-on-derecho fallback. Until
+     one or the other lands, the scheduled half of
+     `derecho-version-check.yml` would fail every week -- correctly, since an
+     unreachable module tree is a loud failure by design, but uselessly.
    - **`[snapshot]`'s HDF5 and netCDF-Fortran need a live source here.**
      `check-derecho-versions.py` guards them only against a `netcdf` *version*
      bump. derecho can repoint an unchanged `netcdf/4.9.3` at a different HDF5
