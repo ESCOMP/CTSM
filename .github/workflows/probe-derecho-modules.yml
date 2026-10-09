@@ -70,8 +70,46 @@ jobs:
           echo "=== THE decisive question: is glade mounted? ==="
           if [ ! -d "${DERECHO_MODULES}" ]; then
             echo "RESULT: ${DERECHO_MODULES} is NOT visible from this runner."
-            echo "        Phase 2 cannot run here at all; it needs a cron on an"
-            echo "        NCAR machine. Nothing below will be meaningful."
+            echo "        The live module-tree reads cannot run here as things"
+            echo "        stand. Below is what IS visible, which decides whether"
+            echo "        the answer is 'ask for one more bind mount' or 'this"
+            echo "        runner is the wrong host for the check'."
+            echo
+            # Measured 2026-10-09: this runner is a Kubernetes pod
+            # (hostname gha-runner-ctsm-*-runner-*), so glade reaches it as
+            # specific volume mounts rather than as a whole filesystem. The
+            # question is therefore not "is glade mounted" but "which parts",
+            # and the original probe could not tell them apart because it
+            # exited here.
+            echo "--- what exists under /glade at all ---"
+            if [ -d /glade ]; then
+              ls -1 /glade 2>&1 | sed 's/^/  /'
+            else
+              echo "  /glade does not exist on this runner"
+            fi
+
+            echo "--- the paths the drift check actually needs ---"
+            # Each line is a separate ask if it turns out to be missing, so
+            # report them individually rather than as one pass/fail.
+            for p in \
+              /glade/u/apps/derecho/modules \
+              /glade/u/apps/cesmdev/modules \
+              /glade/u/apps/derecho/25.10/spack/opt/spack \
+              /glade/campaign/cesm/cesmdata/cseg/inputdata
+            do
+              if [ -d "$p" ]; then
+                echo "  PRESENT  $p"
+              else
+                echo "  MISSING  $p"
+              fi
+            done
+
+            echo "--- how glade is mounted here, if the mount table says ---"
+            # If these are bind mounts into the pod they show up by name, which
+            # tells whoever administers the runner exactly what to add.
+            grep -E '[[:space:]]/glade' /proc/mounts 2>/dev/null | sed 's/^/  /' \
+              || echo "  (nothing matching /glade in /proc/mounts)"
+
             echo "=== done (informational; this step always succeeds) ==="
             exit 0
           fi
