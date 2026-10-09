@@ -34,6 +34,19 @@ name: Probe -- can gha-runner-ctsm see derecho's software stack?
 # requirement.
 
 on:
+  # workflow_dispatch alone cannot run this yet: GitHub offers that trigger only
+  # for workflows already on the repository's default branch, and this file
+  # exists only on a feature branch. A pull_request trigger has no such
+  # restriction -- and, unlike push, a fork's PR runs in the BASE repository's
+  # context, so it can reach the gha-runner-ctsm runner, which a fork cannot.
+  #
+  # The paths filter names this file, so the commit that adds the trigger is
+  # itself what fires it, and afterwards the probe re-runs only when the probe
+  # changes. That keeps it from becoming noise on every PR without needing a
+  # revert commit.
+  pull_request:
+    paths:
+      - '.github/workflows/probe-derecho-modules.yml'
   workflow_dispatch:
 
 env:
