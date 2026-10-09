@@ -503,14 +503,15 @@ kind of documentation and is tracked on its own._
      -- which is worth avoiding on its own terms, since a cron needs a
      long-lived PAT in a dotfile on a shared machine.
 
-     Two tiers, because they differ enormously in size. The
-     **module-existence check needs only `/glade/u/apps/derecho/modules` and
-     `/glade/u/apps/cesmdev/modules`** -- Lua text files, and the `netcdf`
-     modulefile's `depends_on` line gives the HDF5 pairing too. Only
-     **netCDF-Fortran's version** additionally needs the Spack install tree
-     (`/glade/u/apps/derecho/<ncarenv>/spack/opt/spack`), because it is read
-     by running `nf-config` out of the prefix; that is the large, separate
-     ask. Until a mount or the cron lands, the scheduled half of
+     Read-only `/glade/u/apps` covers everything. If it has to be narrower,
+     three text paths suffice -- and the Spack **install** tree, the one large
+     thing, is not among them:
+
+     - `/glade/u/apps/derecho/modules`
+     - `/glade/u/apps/cesmdev/modules`
+     - `/glade/u/apps/derecho/<ncarenv>/envs/public/spack.lock` (one file)
+
+     Until a mount or the cron lands, the scheduled half of
      `derecho-version-check.yml` would fail every week -- correctly, since an
      unreachable module tree is a loud failure by design, but uselessly.
    - **`[snapshot]`'s HDF5 and netCDF-Fortran need a live source here.**
@@ -524,6 +525,23 @@ kind of documentation and is tracked on its own._
      `config_machines.xml`, so the module-existence check does not look at it
      either. The scheduled check must read both live. The PR gate cannot: it
      runs `--skip-module-tree` and has no `/glade`.
+
+     **Read them from `spack.lock`, not from `nf-config`.** The environment
+     file `/glade/u/apps/derecho/<ncarenv>/envs/public/spack.lock` is the
+     concretized DAG as JSON, and the 4-character token in a module's install
+     prefix is a unique prefix of that spec's dag hash. So the serial gnu
+     `netcdf/4.9.3`, whose prefix ends `/gcc/14.3.0/s6hn`, resolves to exactly
+     one spec there, whose dependencies read (verified 2026-10-09):
+
+     ```
+     netcdf-fortran 4.6.2   netcdf-c 4.9.3   hdf5 1.14.6
+     ```
+
+     That is better than the `nf-config` plan in every way that matters here:
+     one text file instead of the Spack install tree, no executing anything
+     out of derecho's prefix, all three versions from one read, and the hash
+     link pins them to the module the serial path actually loads rather than
+     assuming the environment holds only one version of each.
    - **derecho's defaults moving is not drift and is not reported.**
      `config_machines.xml` pins exact versions, so a derecho run still uses the
      pinned one and the container still matches. Whether CTSM is keeping up with
