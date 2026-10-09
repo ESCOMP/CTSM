@@ -725,6 +725,8 @@ not yet been run against the actual container on a Casper compute node; see
     every branch takes the self-hosted runner. Wanted: these run when asked
     for, not automatically. Not yet thought through -- which trigger, and
     which workflows it should cover.
+11. **If not already there: Add a way for users to customize bind mount targets**
+12. **Add documentation**
 
 ## Worth raising upstream
 
