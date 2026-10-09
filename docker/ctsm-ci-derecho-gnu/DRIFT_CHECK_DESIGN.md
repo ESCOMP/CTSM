@@ -15,6 +15,12 @@ Two things changed during planning, and both shrink the work:
 2. **The check compares built executables**, not version strings in metadata —
    because metadata comparison is demonstrably blind to drift that exists today.
 
+**Settled already, do not reopen:** `VALIDATION_2026-09.md` records the
+end-to-end validation of the wrapper scripts on Casper — suite resolution,
+startup, `--wait` in both directions, both failure paths, and a full
+`aux_clm_mpi_serial` suite, all passing as of 2026-10-01. Its procedure is what
+Phase 4 re-runs against the rebuilt image.
+
 ### The evidence that forced (2)
 
 NEXT_STEPS item 4 already states that `MPI_SERIAL_VERSION` and `PIO_VERSION`
@@ -308,6 +314,13 @@ mpich gone; the phase vocabulary retired.
   always-passing `HEAD` form.
 - After the rebuild, re-run `smoke-test.sh`, `smoke-test-pfunit.sh`,
   `run-unit-tests-in-container.sh` and `run-test-in-container.sh` on Casper.
+  **Follow `VALIDATION_2026-09.md`** for the `run_sys_tests` wrapper rather than
+  improvising: its six sections are ordered by what each one proves, each is
+  self-contained including its `execcasper` and `podman load`, and the ordering
+  is deliberate — a later section looking like it subsumes an earlier one is the
+  trap that ordering exists to prevent. Those runs and the conclusions drawn
+  from them are settled; re-run them against the new image, do not re-derive
+  them.
 - Build a current `_Mmpi-serial` `derecho_gnu` case so the Tier 3 comparison has
   a derecho-side binary from the same CTSM version as the container's.
 - Run the scheduled workflow by `workflow_dispatch` from the branch; the
