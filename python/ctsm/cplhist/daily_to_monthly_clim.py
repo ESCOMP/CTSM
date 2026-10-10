@@ -323,13 +323,20 @@ def check_day_counts(files_by_month, yms):
     return errors
 
 
+def file_vars(filename):
+    """
+    Return the set of variable names in the netCDF file
+    """
+    with Dataset(filename) as ncfile:
+        return set(ncfile.variables)
+
+
 def missing_vars(filename, var_list):
     """
     Return the variables in var_list that are not in the netCDF file
     """
-    with Dataset(filename) as ncfile:
-        file_vars = set(ncfile.variables)
-    return [var for var in var_list if var not in file_vars]
+    in_file = file_vars(filename)
+    return [var for var in var_list if var not in in_file]
 
 
 def check_nco():
@@ -372,16 +379,20 @@ def check_input(args, var_list):
     return files_by_month
 
 
-def ncra_command(infiles, outfile, var_list=None):
+def ncra_command(infiles, outfile, var_list=None, *, skip_existing=False):
     """
     The ncra command (as a list) to average the input files into outfile
-    If file already exists, returns an empty list and logs a message instead of running ncra
+
+    With skip_existing, if outfile already exists, returns an empty list (no command to run)
+    and logs a message
     """
-    if os.path.exists(outfile):
-        log(logger, f"File already exists:{outfile} so skipping ncra command")
+    if skip_existing and os.path.exists(outfile):
+        log(logger, f"File already exists: {outfile} so skipping ncra command")
         return []
     # Use --hst option so that history attribute isn't appended to as it's too long
-    cmd = ["ncra", "--hst"]
+    # Use -O to overwrite the output file without asking (existing files are skipped above
+    # if they should be kept)
+    cmd = ["ncra", "-O", "--hst"]
     if var_list is not None:
         cmd += ["-v", ",".join(var_list)]
     return cmd + list(infiles) + ["-o", outfile]
@@ -393,7 +404,11 @@ def run_jobs(commands, njobs, *, progress_every=None, runner=run_cmd_output_on_e
 
     Stops at the first failure: the jobs that have not started are cancelled and the runner's
     error (normally an abort) is raised. Logs progress every progress_every completed jobs.
+    Empty commands (for output files that already exist) are skipped.
     """
+    commands = [cmd for cmd in commands if cmd]
+    if not commands:
+        return
     ndone = 0
     with concurrent.futures.ThreadPoolExecutor(max_workers=njobs) as executor:
         futures = [executor.submit(runner, cmd, f"Failed creating {cmd[-1]}") for cmd in commands]
@@ -425,15 +440,39 @@ def clim_file(mondir, month):
     return os.path.join(mondir, f"clim_{month:02d}.nc")
 
 
+def check_reused_mon_file(monfile, daily_files, var_list):
+    """
+    Abort if a monthly file left from an earlier run doesn't have all the variables this run
+    needs (for example if it was made with a different variable list)
+
+    With all variables (var_list is None), the monthly file must have all the variables in the
+    first daily file
+    """
+    if var_list is None:
+        var_list = sorted(file_vars(daily_files[0]))
+    missing = missing_vars(monfile, var_list)
+    if missing:
+        abort(
+            f"Existing monthly file {monfile} is missing variables: {' '.join(missing)}"
+            " (it was probably made with a different variable list, remove it and rerun)"
+        )
+
+
 def monthly_means(files_by_month, yms, mondir, var_list, njobs):
     """
     Step 1: average the daily files of each month of each year
+
+    Monthly files left from an earlier run (for example with --keep) are reused, after checking
+    that they have the variables needed
     """
     log(logger, f"Computing monthly means for each year ({njobs} ncra jobs at a time)")
-    commands = [
-        ncra_command(files_by_month[(year, month)], mon_file(mondir, year, month), var_list)
-        for year, month in yms
-    ]
+    commands = []
+    for year, month in yms:
+        monfile = mon_file(mondir, year, month)
+        daily_files = files_by_month[(year, month)]
+        if os.path.exists(monfile):
+            check_reused_mon_file(monfile, daily_files, var_list)
+        commands.append(ncra_command(daily_files, monfile, var_list, skip_existing=True))
     # Show progress every 10 years
     run_jobs(commands, njobs, progress_every=120)
 
@@ -442,7 +481,9 @@ def monthly_climatology(mondir, begyr, endyr, njobs):
     """
     Step 2: average each calendar month over the years
 
-    Only this run's years are used, so leftover files from an earlier --keep run are not included
+    Only this run's years are used, so leftover files from an earlier --keep run are not included.
+    The climatology files are always recreated, so ones left from an earlier run with a
+    different year range are not reused.
     """
     log(logger, f"Averaging each calendar month over the years {begyr}-{endyr}")
     commands = [
@@ -483,46 +524,77 @@ def mid_month_times():
     return [(start + end) / 2.0 for start, end in month_bounds()]
 
 
-def set_time_axis(filename, year):
+def climatology_bounds_values(begyr, endyr, year):
     """
-    Set the time and time_bnds of the 12-month file to the middle (and bounds) of
-    each month of year, in the noleap calendar
+    CF climatology bounds for each calendar month, in days since year-01-01 (noleap calendar)
+
+    Each month's bounds span all the averaged years: from the start of the month in begyr
+    to the end of the month in endyr (for January: begyr-01-01 to endyr-02-01). The values
+    are negative for years before year.
+    """
+    days_per_year = sum(NOLEAP_DAYS)
+    return [
+        ((begyr - year) * days_per_year + start, (endyr - year) * days_per_year + end)
+        for start, end in month_bounds()
+    ]
+
+
+def set_time_axis(filename, year, begyr, endyr):
+    """
+    Set the time of the 12-month file to the middle of each month of year, and its CF
+    climatology bounds to span the averaged years begyr to endyr, in the noleap calendar
     """
     units = f"days since {year:04d}-01-01 00:00:00"
     with Dataset(filename, "a") as ncfile:
         time = ncfile.variables["time"]
         time[:] = mid_month_times()
-        time.setncattr("climatology_bounds", "climatology_bounds")
         time.setncattr("units", units)
         time.setncattr("calendar", "noleap")
+        # For a climatology, CF uses the climatology attribute instead of bounds, and time
+        # itself has no cell_methods (ncra adds one)
+        for attr in ("bounds", "cell_methods"):
+            if attr in time.ncattrs():
+                time.delncattr(attr)
+        time.setncattr("climatology", "climatology_bounds")
         #
-        # Change time_bounds to climatology_bounds or create it if it doesn't exist
+        # Change time_bnds (from CMEPS) to climatology_bounds or create it if it doesn't exist
         #
-        if "time_bounds" in ncfile.variables:
-            ncfile.renameVariable("time_bounds", "climatology_bounds")
+        if "time_bnds" in ncfile.variables:
+            ncfile.renameVariable("time_bnds", "climatology_bounds")
         if "climatology_bounds" not in ncfile.variables:
             if "ntb" not in ncfile.dimensions:
                 ncfile.createDimension("ntb", 2)
             ncfile.createVariable("climatology_bounds", "f8", ("time", "ntb"))
         climatology_bounds = ncfile.variables["climatology_bounds"]
-        climatology_bounds[:] = month_bounds()
+        climatology_bounds[:] = climatology_bounds_values(begyr, endyr, year)
+        # Remove attributes from the renamed time_bnds that don't apply to bounds
+        for attr in ("bounds", "cell_methods", "coordinates"):
+            if attr in climatology_bounds.ncattrs():
+                climatology_bounds.delncattr(attr)
         climatology_bounds.setncattr("units", units)
         climatology_bounds.setncattr("calendar", "noleap")
 
 
 def add_var_attributes(filename):
     """
-    Add variable attributes to the file
+    Add the climatology cell_methods and the lon/lat coordinates attributes to the averaged data
+    variables (the variables on the time dimension, other than time, its bounds and lon/lat)
     """
     with Dataset(filename, "a") as ncfile:
-        for var in ncfile.variables:
-            if var not in ("time", "climatology_bounds"):
-                ncfile.variables[var].setncattr("cell_methods", "time: mean")
-                ncfile.variables[var].setncattr("coordinates", "time atmImp_lon atmImp_lat")
+        coords = " ".join(var for var in ALWAYS_VARS if var in ncfile.variables)
+        for name, var in ncfile.variables.items():
+            if name in ("time", "climatology_bounds") or name in ALWAYS_VARS:
+                continue
+            if "time" not in var.dimensions:
+                continue
+            var.setncattr("cell_methods", "time: mean within years time: mean over years")
+            if coords:
+                var.setncattr("coordinates", coords)
 
 
-# pylint: disable=too-many-positional-arguments
-def write_provenance(case, filename, begyear, endyear, year, todaysdate):
+def write_provenance(  # pylint: disable=too-many-positional-arguments
+    case, filename, begyear, endyear, year, todaysdate
+):
     """
     Add global attributes saying when, by whom and with what the file was created (like
     update_metadata in ctsm/site_and_regional/base_case.py, but using ncatted)
@@ -541,7 +613,7 @@ def write_provenance(case, filename, begyear, endyear, year, todaysdate):
     comment = "Monthly climatology created from daily averaged CPLHIST files for DATM"
     title = (
         "Monthly Climatology of Daily Averaged Atmosphere Coupler History Files"
-        + " for cyclical year {year}"
+        + f" for cyclical year {year}"
     )
     source = (
         f"Created from daily averaged CPLHIST files for case {case} for "
@@ -566,16 +638,19 @@ def write_provenance(case, filename, begyear, endyear, year, todaysdate):
     run_cmd_output_on_error(cmd + [filename], f"Failed adding provenance to {filename}")
 
 
-# pylint: disable=too-many-positional-arguments
-def write_output(case, mondir, outfile, begyear, endyear, year, todaysdate):
+def write_output(  # pylint: disable=too-many-positional-arguments
+    case, mondir, outfile, begyear, endyear, year, todaysdate
+):
     """
     Step 3: put the 12 monthly climatologies in one file, reset its time axis to the middle of
     each month of year, and add provenance attributes
     """
     log(logger, "Putting the climatology into one file and finalizing its metadata")
     clim_files = [clim_file(mondir, month) for month in range(1, 13)]
-    run_cmd_output_on_error(["ncrcat"] + clim_files + [outfile], f"Failed creating {outfile}")
-    set_time_axis(outfile, year)
+    # -O so ncrcat never stops to ask about overwriting (check_args already made sure the
+    # output file didn't exist when the run started)
+    run_cmd_output_on_error(["ncrcat", "-O"] + clim_files + [outfile], f"Failed creating {outfile}")
+    set_time_axis(outfile, year, begyear, endyear)
     add_var_attributes(outfile)
     write_provenance(case, outfile, begyear, endyear, year, todaysdate)
     log(logger, f"Wrote {outfile} (time = mid-month of year {year:04d}, noleap)")
@@ -604,16 +679,18 @@ def job_args(args):
     return argv
 
 
-def batch_script(argv, *, account, walltime, workdir):
+def batch_script(argv, *, account, walltime, workdir, njobs):
     """
     Text of the PBS batch job script that runs this tool with the arguments argv
     Written out to a variable so it can be submitted to qsub from stdin,
     instead of writing a temporary file
+
+    njobs is the number of simultaneous ncra jobs the batch job will run
     """
     runfile = io.StringIO()
     write_runscript_part1(
         number_of_nodes=1,
-        tasks_per_node=argv.njobs,
+        tasks_per_node=njobs,
         machine="derecho",
         account=account,
         walltime=walltime,
@@ -666,7 +743,15 @@ def main():
     if args.batch:
         account = args.account or os.environ.get("ACCOUNT") or DEFAULT_ACCOUNT
         argv = job_args(args)
-        script = batch_script(argv, account=account, walltime=args.walltime, workdir=os.getcwd())
+        # The batch job runs with the njobs given, or the default inside a PBS job
+        job_njobs = args.njobs if args.njobs is not None else PBS_NJOBS
+        script = batch_script(
+            argv,
+            account=account,
+            walltime=args.walltime,
+            workdir=os.getcwd(),
+            njobs=job_njobs,
+        )
         logger.debug("Batch job script:\n%s", script)
         jobid = submit_batch(script, args.queue)
         log(
