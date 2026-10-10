@@ -29,14 +29,15 @@ in this tool as well.
 Another example for Nitrogen deposition is here from Simone Tilmes and Mike Mills:
    https://svn.code.sf.net/p/codescripts/code/trunk/ncl/cam_forcing/CreateDepositionFile.ncl
 
-Neither were quite right for what's needed here. And both are in NCL which is well after end of life now.
+Neither were quite right for what's needed here. And both are in NCL which is well after
+end of life now.
 
 Also there is code in LDF to create monthly climatologies, but it's not setup to bring in ensemble
 averages and not specialized to create datafiles for DATM aerosol forcing.
 """
 
 import argparse
-import concurrent.futures  # Handles parallel multi-processing by sending ncra jobs on different threads
+import concurrent.futures  # Handles parallel multi-processing with ncra jobs on different threads
 import datetime
 import getpass
 import io
@@ -259,8 +260,10 @@ def check_args(args):
     todaysdate = datetime.date.today()
     outdir = output_dir(args.archdir, args.outdir, args.case)
     outfile = output_filename(outdir, args.case, args.begyear, args.endyear, todaysdate)
-    if path.exists(outfile):
-        abort(f"Output file {outfile} already exists, remove it or use a different output directory")
+    if os.path.exists(outfile):
+        abort(
+            f"Output file {outfile} already exists, remove it or use a different output directory"
+        )
 
 
 def build_var_list(variables, always_vars):
@@ -374,7 +377,7 @@ def ncra_command(infiles, outfile, var_list=None):
     The ncra command (as a list) to average the input files into outfile
     If file already exists, returns an empty list and logs a message instead of running ncra
     """
-    if path.exists(outfile):
+    if os.path.exists(outfile):
         log(logger, f"File already exists:{outfile} so skipping ncra command")
         return []
     # Use --hst option so that history attribute isn't appended to as it's too long
@@ -506,28 +509,48 @@ def set_time_axis(filename, year):
         climatology_bounds.setncattr("units", units)
         climatology_bounds.setncattr("calendar", "noleap")
 
+
 def add_var_attributes(filename):
     """
     Add variable attributes to the file
     """
     with Dataset(filename, "a") as ncfile:
         for var in ncfile.variables:
-            if var != "time" and var != "climatology_bounds":
+            if var not in ("time", "climatology_bounds"):
                 ncfile.variables[var].setncattr("cell_methods", "time: mean")
                 ncfile.variables[var].setncattr("coordinates", "time atmImp_lon atmImp_lat")
 
+
+# pylint: disable=too-many-positional-arguments
 def write_provenance(case, filename, begyear, endyear, year, todaysdate):
     """
     Add global attributes saying when, by whom and with what the file was created (like
     update_metadata in ctsm/site_and_regional/base_case.py, but using ncatted)
     """
+    logger.debug(
+        "Write provenance information out to %s for year=%s case=%s years=%s-%s",
+        filename,
+        year,
+        case,
+        begyear,
+        endyear,
+    )
     created_with = f"./{os.path.basename(WRAPPER)} -- {get_ctsm_git_short_hash()}"
     # Use Overwrite option since the file already exists and we want to add attributes to it
     cmd = ["ncatted", "-O"]
     comment = "Monthly climatology created from daily averaged CPLHIST files for DATM"
-    title = "Monthly Climatology of Daily Averaged Atmosphere Coupler History Files for cyclical year {year}"
-    source = f"Created from daily averaged CPLHIST files for case {case} for years {begyear:04d}-{endyear:04d}"
-    institution = "National Science Foundation (NSF) - National Center for Atmospheric Research (NCAR) Community Earth System Model (CESM) project"
+    title = (
+        "Monthly Climatology of Daily Averaged Atmosphere Coupler History Files"
+        + " for cyclical year {year}"
+    )
+    source = (
+        f"Created from daily averaged CPLHIST files for case {case} for "
+        + f"years {begyear:04d}-{endyear:04d}"
+    )
+    institution = (
+        "National Science Foundation (NSF) - National Center for Atmospheric Research"
+        + " (NCAR) Community Earth System Model (CESM) project"
+    )
     for name, value in (
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
@@ -543,6 +566,7 @@ def write_provenance(case, filename, begyear, endyear, year, todaysdate):
     run_cmd_output_on_error(cmd + [filename], f"Failed adding provenance to {filename}")
 
 
+# pylint: disable=too-many-positional-arguments
 def write_output(case, mondir, outfile, begyear, endyear, year, todaysdate):
     """
     Step 3: put the 12 monthly climatologies in one file, reset its time axis to the middle of
@@ -583,7 +607,8 @@ def job_args(args):
 def batch_script(argv, *, account, walltime, workdir):
     """
     Text of the PBS batch job script that runs this tool with the arguments argv
-    Written out to a variable so it can be submitted to qsub from stdin, instead of writing a temporary file
+    Written out to a variable so it can be submitted to qsub from stdin,
+    instead of writing a temporary file
     """
     runfile = io.StringIO()
     write_runscript_part1(
