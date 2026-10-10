@@ -24,16 +24,19 @@ contains
     !
     ! !DESCRIPTION:
     ! Tridiagonal matrix solution
+    !     This implements the Crank-Nicholson method for solving a tridiagonal matrix system of equations.
+    !     The method is from Press, et. al. 1992. Numerical Recipes in FORTRAN:
+    !     The Art of Scientific Computing. Cambridge University Press, New York.
     !
     ! !USES:
     use shr_kind_mod   , only : r8 => shr_kind_r8
     use clm_varctl     , only : iulog
     use decompMod      , only : bounds_type
-    use ColumnType     , only : col                
+    use ColumnType     , only : col
     !
     ! !ARGUMENTS:
     implicit none
-    type(bounds_type), intent(in) :: bounds             
+    type(bounds_type), intent(in) :: bounds
     integer , intent(in)    :: lbj, ubj                 ! lbinning and ubing level indices
     integer , intent(in)    :: jtop( bounds%begc: )     ! top level for each column [col]
     integer , intent(in)    :: numf                     ! filter dimension (should not include hydrologically inactive points)
