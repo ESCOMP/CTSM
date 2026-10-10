@@ -18,10 +18,25 @@ The output file is:
 
 This needs the NCO commands ncra, ncrcat and ncatted (on Derecho: module load nco).
 With --batch, the input is checked and then this tool is submitted to the PBS batch queue.
+
+A previous version of this for CESM2 is in NCL and here on Derecho by Keith Oleson:
+    /glade/u/home/oleson/misc_programs/CLM5Dev/CMIP6/CreateAeroDepFile_Task5B.ncl
+It did 5 year averages over the historical period and then did a linear interpolation
+between the 5-year averages. It also used CPLHIST output from several ensemble members and
+averged them together with ncea. This is something that will have to be done in the future
+in this tool as well.
+
+Another example for Nitrogen deposition is here from Simone Tilmes and Mike Mills:
+   https://svn.code.sf.net/p/codescripts/code/trunk/ncl/cam_forcing/CreateDepositionFile.ncl
+
+Neither were quite right for what's needed here. And both are in NCL which is well after end of life now.
+
+Also there is code in LDF to create monthly climatologies, but it's not setup to bring in ensemble
+averages and not specialized to create datafiles for DATM aerosol forcing.
 """
 
 import argparse
-import concurrent.futures
+import concurrent.futures  # Handles parallel multi-processing by sending ncra jobs on different threads
 import datetime
 import getpass
 import io
@@ -238,6 +253,14 @@ def check_args(args):
     indir = input_dir(args.archdir, args.case)
     if not os.path.isdir(indir):
         abort(f"{indir} directory does not exist")
+    #
+    # Abort if the output file already exists
+    #
+    todaysdate = datetime.date.today()
+    outdir = output_dir(args.archdir, args.outdir, args.case)
+    outfile = output_filename(outdir, args.case, args.begyear, args.endyear, todaysdate)
+    if path.exists(outfile):
+        abort(f"Output file {outfile} already exists, remove it or use a different output directory")
 
 
 def build_var_list(variables, always_vars):
@@ -349,8 +372,13 @@ def check_input(args, var_list):
 def ncra_command(infiles, outfile, var_list=None):
     """
     The ncra command (as a list) to average the input files into outfile
+    If file already exists, returns an empty list and logs a message instead of running ncra
     """
-    cmd = ["ncra", "-O"]
+    if path.exists(outfile):
+        log(logger, f"File already exists:{outfile} so skipping ncra command")
+        return []
+    # Use --hst option so that history attribute isn't appended to as it's too long
+    cmd = ["ncra", "--hst"]
     if var_list is not None:
         cmd += ["-v", ",".join(var_list)]
     return cmd + list(infiles) + ["-o", outfile]
@@ -374,6 +402,7 @@ def run_jobs(commands, njobs, *, progress_every=None, runner=run_cmd_output_on_e
                     log(logger, f"  completed {ndone} of {len(commands)}")
         except BaseException:
             # Includes KeyboardInterrupt and the SystemExit from abort
+            # Will die if the user hits Ctrl-C or if the batch job is killed
             for future in futures:
                 future.cancel()
             raise
@@ -402,7 +431,7 @@ def monthly_means(files_by_month, yms, mondir, var_list, njobs):
         ncra_command(files_by_month[(year, month)], mon_file(mondir, year, month), var_list)
         for year, month in yms
     ]
-    # Progress every 10 years
+    # Show progress every 10 years
     run_jobs(commands, njobs, progress_every=120)
 
 
@@ -423,12 +452,12 @@ def monthly_climatology(mondir, begyr, endyr, njobs):
     run_jobs(commands, njobs)
 
 
-def output_filename(outdir, case, begyr, endyr, date):
+def output_filename(outdir, case, begyr, endyr, todaysdate):
     """
     Name of the output climatology file, with the year range and creation date
     """
     return os.path.join(
-        outdir, f"{case}.cpl.hx.atm.monclim.{begyr:04d}-{endyr:04d}_c{date:%Y%m%d}.nc"
+        outdir, f"{case}.cpl.hx.atm.monclim.{begyr:04d}-{endyr:04d}_c{todaysdate:%Y%m%d}.nc"
     )
 
 
@@ -453,48 +482,79 @@ def mid_month_times():
 
 def set_time_axis(filename, year):
     """
-    Set the time (and time_bnds, if present) of the 12-month file to the middle (and bounds) of
+    Set the time and time_bnds of the 12-month file to the middle (and bounds) of
     each month of year, in the noleap calendar
     """
     units = f"days since {year:04d}-01-01 00:00:00"
     with Dataset(filename, "a") as ncfile:
         time = ncfile.variables["time"]
         time[:] = mid_month_times()
+        time.setncattr("climatology_bounds", "climatology_bounds")
         time.setncattr("units", units)
         time.setncattr("calendar", "noleap")
-        if "time_bnds" in ncfile.variables:
-            time_bnds = ncfile.variables["time_bnds"]
-            time_bnds[:] = month_bounds()
-            time_bnds.setncattr("units", units)
+        #
+        # Change time_bounds to climatology_bounds or create it if it doesn't exist
+        #
+        if "time_bounds" in ncfile.variables:
+            ncfile.renameVariable("time_bounds", "climatology_bounds")
+        if "climatology_bounds" not in ncfile.variables:
+            if "ntb" not in ncfile.dimensions:
+                ncfile.createDimension("ntb", 2)
+            ncfile.createVariable("climatology_bounds", "f8", ("time", "ntb"))
+        climatology_bounds = ncfile.variables["climatology_bounds"]
+        climatology_bounds[:] = month_bounds()
+        climatology_bounds.setncattr("units", units)
+        climatology_bounds.setncattr("calendar", "noleap")
 
+def add_var_attributes(filename):
+    """
+    Add variable attributes to the file
+    """
+    with Dataset(filename, "a") as ncfile:
+        for var in ncfile.variables:
+            if var != "time" and var != "climatology_bounds":
+                ncfile.variables[var].setncattr("cell_methods", "time: mean")
+                ncfile.variables[var].setncattr("coordinates", "time atmImp_lon atmImp_lat")
 
-def write_provenance(filename, date):
+def write_provenance(case, filename, begyear, endyear, year, todaysdate):
     """
     Add global attributes saying when, by whom and with what the file was created (like
     update_metadata in ctsm/site_and_regional/base_case.py, but using ncatted)
     """
     created_with = f"./{os.path.basename(WRAPPER)} -- {get_ctsm_git_short_hash()}"
+    # Use Overwrite option since the file already exists and we want to add attributes to it
     cmd = ["ncatted", "-O"]
+    comment = "Monthly climatology created from daily averaged CPLHIST files for DATM"
+    title = "Monthly Climatology of Daily Averaged Atmosphere Coupler History Files for cyclical year {year}"
+    source = f"Created from daily averaged CPLHIST files for case {case} for years {begyear:04d}-{endyear:04d}"
+    institution = "National Science Foundation (NSF) - National Center for Atmospheric Research (NCAR) Community Earth System Model (CESM) project"
     for name, value in (
-        ("Created_on", f"{date:%Y-%m-%d}"),
+        ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
         ("Created_with", created_with),
+        ("comment", comment),
+        ("title", title),
+        ("source", source),
+        ("institution", institution),
+        ("Conventions", "CF-1.13"),
+        ("case", case),
     ):
         cmd += ["-a", f"{name},global,o,c,{value}"]
     run_cmd_output_on_error(cmd + [filename], f"Failed adding provenance to {filename}")
 
 
-def write_output(mondir, out, year, date):
+def write_output(case, mondir, outfile, begyear, endyear, year, todaysdate):
     """
     Step 3: put the 12 monthly climatologies in one file, reset its time axis to the middle of
     each month of year, and add provenance attributes
     """
     log(logger, "Putting the climatology into one file and finalizing its metadata")
     clim_files = [clim_file(mondir, month) for month in range(1, 13)]
-    run_cmd_output_on_error(["ncrcat", "-O"] + clim_files + [out], f"Failed creating {out}")
-    set_time_axis(out, year)
-    write_provenance(out, date)
-    log(logger, f"Wrote {out} (time = mid-month of year {year:04d}, noleap)")
+    run_cmd_output_on_error(["ncrcat"] + clim_files + [outfile], f"Failed creating {outfile}")
+    set_time_axis(outfile, year)
+    add_var_attributes(outfile)
+    write_provenance(case, outfile, begyear, endyear, year, todaysdate)
+    log(logger, f"Wrote {outfile} (time = mid-month of year {year:04d}, noleap)")
 
 
 def job_args(args):
@@ -523,11 +583,12 @@ def job_args(args):
 def batch_script(argv, *, account, walltime, workdir):
     """
     Text of the PBS batch job script that runs this tool with the arguments argv
+    Written out to a variable so it can be submitted to qsub from stdin, instead of writing a temporary file
     """
     runfile = io.StringIO()
     write_runscript_part1(
         number_of_nodes=1,
-        tasks_per_node=1,
+        tasks_per_node=argv.njobs,
         machine="derecho",
         account=account,
         walltime=walltime,
@@ -593,16 +654,16 @@ def main():
     outdir = output_dir(args.archdir, args.outdir, args.case)
     mondir = os.path.join(outdir, "mon")
     os.makedirs(mondir, exist_ok=True)
-    date = datetime.date.today()
+    todaysdate = datetime.date.today()
 
     monthly_means(files_by_month, year_months(args.begyear, args.endyear), mondir, var_list, njobs)
     monthly_climatology(mondir, args.begyear, args.endyear, njobs)
-    out = output_filename(outdir, args.case, args.begyear, args.endyear, date)
-    write_output(mondir, out, args.year, date)
+    outfile = output_filename(outdir, args.case, args.begyear, args.endyear, todaysdate)
+    write_output(args.case, mondir, outfile, args.begyear, args.endyear, args.year, todaysdate)
 
     if args.keep:
         log(logger, f"Kept intermediate files in {mondir}")
     else:
         shutil.rmtree(mondir)
 
-    log(logger, f"Successfully created monthly climatology: {out}")
+    log(logger, f"Successfully created monthly climatology: {outfile}")
