@@ -577,8 +577,11 @@ def set_time_axis(filename, year, begyr, endyr):
         climatology_bounds.setncattr("units", units)
         climatology_bounds.setncattr("long_name", "time")
         climatology_bounds.setncattr("standard_name", "time")
-        climatology_bounds.setncattr("axis", "T")
-        climatology_bounds.setncattr("calendar", "noleap")
+        # Bounds take axis and calendar from their coordinate (time), so CF checkers report
+        # these as non-standard on a bounds variable; remove them (time_bnds from CMEPS has them)
+        for attr in ("axis", "calendar"):
+            if attr in climatology_bounds.ncattrs():
+                climatology_bounds.delncattr(attr)
 
 
 def add_var_attributes(filename):
@@ -589,7 +592,12 @@ def add_var_attributes(filename):
     with Dataset(filename, "a") as ncfile:
         coords = " ".join(var for var in ALWAYS_VARS if var in ncfile.variables)
         for name, var in ncfile.variables.items():
-            if name in ("time", "climatology_bounds") or name in ALWAYS_VARS:
+            if name in ALWAYS_VARS:
+                # cell_methods is for data variables, not coordinates like lon/lat (ncra adds it)
+                if "cell_methods" in var.ncattrs():
+                    var.delncattr("cell_methods")
+                continue
+            if name in ("time", "climatology_bounds"):
                 continue
             if "time" not in var.dimensions:
                 continue
