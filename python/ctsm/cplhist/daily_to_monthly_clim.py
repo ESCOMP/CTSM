@@ -549,7 +549,10 @@ def set_time_axis(filename, year, begyr, endyr):
         time = ncfile.variables["time"]
         time[:] = mid_month_times()
         time.setncattr("units", units)
+        time.setncattr("long_name", "time")
+        time.setncattr("standard_name", "time")
         time.setncattr("calendar", "noleap")
+        time.setncattr("cell_methods", "time: mean")
         # For a climatology, CF uses the climatology attribute instead of bounds, and time
         # itself has no cell_methods (ncra adds one)
         for attr in ("bounds", "cell_methods"):
@@ -572,6 +575,9 @@ def set_time_axis(filename, year, begyr, endyr):
             if attr in climatology_bounds.ncattrs():
                 climatology_bounds.delncattr(attr)
         climatology_bounds.setncattr("units", units)
+        climatology_bounds.setncattr("long_name", "time")
+        climatology_bounds.setncattr("standard_name", "time")
+        climatology_bounds.setncattr("axis", "T")
         climatology_bounds.setncattr("calendar", "noleap")
 
 
@@ -587,7 +593,7 @@ def add_var_attributes(filename):
                 continue
             if "time" not in var.dimensions:
                 continue
-            var.setncattr("cell_methods", "time: mean within years time: mean over years")
+            var.setncattr("cell_methods", "time: mean")
             if coords:
                 var.setncattr("coordinates", coords)
 
@@ -616,13 +622,14 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         + f" for cyclical year {year}"
     )
     source = (
-        f"Created from daily averaged CPLHIST files for case {case} for "
+        f"Created from daily averaged CESM CPLHIST files for case {case} for "
         + f"years {begyear:04d}-{endyear:04d}"
     )
     institution = (
         "National Science Foundation (NSF) - National Center for Atmospheric Research"
         + " (NCAR) Community Earth System Model (CESM) project"
     )
+    hostname = os.getenv("HOSTNAME")
     for name, value in (
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
@@ -632,6 +639,7 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         ("source", source),
         ("institution", institution),
         ("Conventions", "CF-1.13"),
+        ("host", hostname),
         ("case", case),
     ):
         cmd += ["-a", f"{name},global,o,c,{value}"]
