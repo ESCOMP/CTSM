@@ -125,7 +125,8 @@ def get_parser():
     vars_group.add_argument(
         "--vars",
         help=f"""Comma-separated list of variables to average
-            ({",".join(ALWAYS_VARS)} are always included)
+            ({",".join(ALWAYS_VARS)} are always included, copied from the first daily file
+            without the time dimension)
             (default: {",".join(DEFAULT_VARS)})""",
         action="store",
         dest="vars",
@@ -246,8 +247,8 @@ def check_args(args):
         abort(f"NJOBS must be a positive integer: {args.njobs}")
     if args.account is not None and not args.batch:
         abort("--account is only used with --batch")
-    if not args.all_vars and not build_var_list(args.vars, []):
-        abort("Variable list given with --vars is empty")
+    if not args.all_vars and not averaged_vars(args.vars):
+        abort(f"No variables to average given with --vars (besides {','.join(ALWAYS_VARS)})")
     if not os.path.isdir(args.archdir):
         abort(f"Input {args.archdir} directory does not exist")
     if args.outdir is not None and not os.path.isdir(args.outdir):
@@ -281,6 +282,17 @@ def build_var_list(variables, always_vars):
         if var and var not in var_list:
             var_list.append(var)
     return var_list
+
+
+def averaged_vars(variables):
+    """
+    The variables for ncra to average: the ones given, without duplicates, empty names or the
+    ALWAYS_VARS (which are copied to the output without the time dimension instead). Returns
+    None when variables is None, meaning all variables.
+    """
+    if variables is None:
+        return None
+    return [var for var in build_var_list(variables, []) if var not in ALWAYS_VARS]
 
 
 def year_months(begyr, endyr):
@@ -351,8 +363,9 @@ def check_nco():
 
 def check_input(args, var_list):
     """
-    Check the input files before doing any work: every requested variable is in the first file,
-    and every month in the range has a full set of daily files
+    Check the input files before doing any work: every variable in var_list (the requested
+    variables and the ALWAYS_VARS) is in the first file, and every month in the range has a full
+    set of daily files
 
     Returns the dictionary of daily files from index_daily_files
     """
@@ -364,14 +377,13 @@ def check_input(args, var_list):
     )
     files_by_month = index_daily_files(indir, args.case)
 
-    if var_list is not None:
-        first_files = files_by_month.get(yms[0], [])
-        if not first_files:
-            abort(f"No files for {yms[0][0]:04d}-{yms[0][1]:02d} in {indir}")
-        log(logger, f"Checking the requested variables are in {first_files[0]}")
-        missing = missing_vars(first_files[0], var_list)
-        if missing:
-            abort(f"Variables not found in {first_files[0]}: {' '.join(missing)}")
+    first_files = files_by_month.get(yms[0], [])
+    if not first_files:
+        abort(f"No files for {yms[0][0]:04d}-{yms[0][1]:02d} in {indir}")
+    log(logger, f"Checking the requested variables are in {first_files[0]}")
+    missing = missing_vars(first_files[0], var_list)
+    if missing:
+        abort(f"Variables not found in {first_files[0]}: {' '.join(missing)}")
 
     log(logger, "Checking that every month has the expected number of daily files")
     errors = check_day_counts(files_by_month, yms)
@@ -380,9 +392,12 @@ def check_input(args, var_list):
     return files_by_month
 
 
-def ncra_command(infiles, outfile, var_list=None, *, skip_existing=False):
+def ncra_command(infiles, outfile, var_list=None, *, exclude=None, skip_existing=False):
     """
     The ncra command (as a list) to average the input files into outfile
+
+    var_list is the variables to average (None for all). When var_list is None, the variables
+    in exclude (if given) are left out.
 
     With skip_existing, if outfile already exists, returns an empty list (no command to run)
     and logs a message
@@ -396,6 +411,8 @@ def ncra_command(infiles, outfile, var_list=None, *, skip_existing=False):
     cmd = ["ncra", "-O", "--hst"]
     if var_list is not None:
         cmd += ["-v", ",".join(var_list)]
+    elif exclude:
+        cmd += ["-x", "-v", ",".join(exclude)]
     return cmd + list(infiles) + ["-o", outfile]
 
 
@@ -447,11 +464,19 @@ def check_reused_mon_file(monfile, daily_files, var_list):
     needs (for example if it was made with a different variable list)
 
     With all variables (var_list is None), the monthly file must have all the variables in the
-    first daily file
+    first daily file, except the ALWAYS_VARS. The monthly file must not have the ALWAYS_VARS
+    (older versions of this tool averaged them with the time dimension).
     """
+    in_monfile = file_vars(monfile)
+    stale = [var for var in ALWAYS_VARS if var in in_monfile]
+    if stale:
+        abort(
+            f"Existing monthly file {monfile} has {' '.join(stale)}, so it was made by an older"
+            " version of this tool, remove it and rerun"
+        )
     if var_list is None:
-        var_list = sorted(file_vars(daily_files[0]))
-    missing = missing_vars(monfile, var_list)
+        var_list = sorted(file_vars(daily_files[0]) - set(ALWAYS_VARS))
+    missing = [var for var in var_list if var not in in_monfile]
     if missing:
         abort(
             f"Existing monthly file {monfile} is missing variables: {' '.join(missing)}"
@@ -464,7 +489,8 @@ def monthly_means(files_by_month, yms, mondir, var_list, njobs):
     Step 1: average the daily files of each month of each year
 
     Monthly files left from an earlier run (for example with --keep) are reused, after checking
-    that they have the variables needed
+    that they have the variables needed. The ALWAYS_VARS are never averaged (with all
+    variables they are excluded), as they are copied to the output at the end without time.
     """
     log(logger, f"Computing monthly means for each year ({njobs} ncra jobs at a time)")
     commands = []
@@ -473,7 +499,9 @@ def monthly_means(files_by_month, yms, mondir, var_list, njobs):
         daily_files = files_by_month[(year, month)]
         if os.path.exists(monfile):
             check_reused_mon_file(monfile, daily_files, var_list)
-        commands.append(ncra_command(daily_files, monfile, var_list, skip_existing=True))
+        commands.append(
+            ncra_command(daily_files, monfile, var_list, exclude=ALWAYS_VARS, skip_existing=True)
+        )
     # Show progress every 10 years
     run_jobs(commands, njobs, progress_every=120)
 
@@ -586,6 +614,33 @@ def set_time_axis(filename, year, begyr, endyr):
                 climatology_bounds.delncattr(attr)
 
 
+def copy_grid_vars(src_file, dst_file, names):
+    """
+    Copy the grid variables (names) from src_file (a daily file) to dst_file, without the time
+    dimension, using the first time slice
+
+    The grid doesn't change in time, so the first time slice is the same as all the others (this
+    isn't checked). Missing dimensions are created in dst_file, and the attributes are copied
+    (without cell_methods, which is for data variables).
+    """
+    with Dataset(src_file) as src, Dataset(dst_file, "a") as dst:
+        for name in names:
+            src_var = src.variables[name]
+            dims = tuple(dim for dim in src_var.dimensions if dim != "time")
+            for dim in dims:
+                if dim not in dst.dimensions:
+                    dst.createDimension(dim, len(src.dimensions[dim]))
+            attrs = {attr: src_var.getncattr(attr) for attr in src_var.ncattrs()}
+            # _FillValue can only be set when the variable is created
+            fill_value = attrs.pop("_FillValue", None)
+            attrs.pop("cell_methods", None)
+            dst_var = dst.createVariable(name, src_var.dtype, dims, fill_value=fill_value)
+            dst_var.setncatts(attrs)
+            # Index 0 for time, all of every other dimension
+            first_time = tuple(0 if dim == "time" else slice(None) for dim in src_var.dimensions)
+            dst_var[...] = src_var[first_time]
+
+
 def add_var_attributes(filename):
     """
     Add the climatology cell_methods and the lon/lat coordinates attributes to the averaged data
@@ -595,7 +650,8 @@ def add_var_attributes(filename):
         coords = " ".join(var for var in ALWAYS_VARS if var in ncfile.variables)
         for name, var in ncfile.variables.items():
             if name in ALWAYS_VARS:
-                # cell_methods is for data variables, not coordinates like lon/lat (ncra adds it)
+                # cell_methods is for data variables, not coordinates like lon/lat (copy_grid_vars
+                # already leaves it out, this is just in case)
                 if "cell_methods" in var.ncattrs():
                     var.delncattr("cell_methods")
                 continue
@@ -671,10 +727,11 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
 
 
 def write_output(  # pylint: disable=too-many-positional-arguments
-    case, mondir, outfile, begyear, endyear, year, todaysdate
+    case, mondir, outfile, begyear, endyear, year, todaysdate, *, grid_file
 ):
     """
-    Step 3: put the 12 monthly climatologies in one file, reset its time axis to the middle of
+    Step 3: put the 12 monthly climatologies in one file, copy the grid variables (ALWAYS_VARS)
+    from grid_file (the first daily file) without time, reset the time axis to the middle of
     each month of year, and add provenance attributes
     """
     log(logger, "Putting the climatology into one file and finalizing its metadata")
@@ -682,6 +739,7 @@ def write_output(  # pylint: disable=too-many-positional-arguments
     # -O so ncrcat never stops to ask about overwriting (check_args already made sure the
     # output file didn't exist when the run started)
     run_cmd_output_on_error(["ncrcat", "-O"] + clim_files + [outfile], f"Failed creating {outfile}")
+    copy_grid_vars(grid_file, outfile, ALWAYS_VARS)
     set_time_axis(outfile, year, begyear, endyear)
     add_var_attributes(outfile)
     write_provenance(case, outfile, begyear, endyear, year, todaysdate)
@@ -761,15 +819,18 @@ def main():
     check_args(args)
 
     njobs = args.njobs if args.njobs is not None else default_njobs()
-    var_list = None if args.all_vars else build_var_list(args.vars, ALWAYS_VARS)
+    # Variables for ncra to average (None for all), and the variables the input must have
+    var_list = None if args.all_vars else averaged_vars(args.vars)
+    check_list = build_var_list(var_list or [], ALWAYS_VARS)
     if var_list is None:
-        log(logger, "Averaging all variables")
+        log(logger, f"Averaging all variables except {','.join(ALWAYS_VARS)}")
     else:
         log(logger, f"Averaging variables: {','.join(var_list)}")
+    log(logger, f"Copying without time from the first daily file: {','.join(ALWAYS_VARS)}")
     log(logger, "Create a monthly climatology from daily averaged CPLHIST files for DATM")
 
     check_nco()
-    files_by_month = check_input(args, var_list)
+    files_by_month = check_input(args, check_list)
 
     # With --batch: the input has been checked, so submit to PBS and stop here
     if args.batch:
@@ -798,10 +859,20 @@ def main():
     os.makedirs(mondir, exist_ok=True)
     todaysdate = datetime.date.today()
 
-    monthly_means(files_by_month, year_months(args.begyear, args.endyear), mondir, var_list, njobs)
+    yms = year_months(args.begyear, args.endyear)
+    monthly_means(files_by_month, yms, mondir, var_list, njobs)
     monthly_climatology(mondir, args.begyear, args.endyear, njobs)
     outfile = output_filename(outdir, args.case, args.begyear, args.endyear, todaysdate)
-    write_output(args.case, mondir, outfile, args.begyear, args.endyear, args.year, todaysdate)
+    write_output(
+        args.case,
+        mondir,
+        outfile,
+        args.begyear,
+        args.endyear,
+        args.year,
+        todaysdate,
+        grid_file=files_by_month[yms[0]][0],
+    )
 
     if args.keep:
         log(logger, f"Kept intermediate files in {mondir}")
