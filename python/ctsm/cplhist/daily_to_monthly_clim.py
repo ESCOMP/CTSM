@@ -46,6 +46,7 @@ import os
 import re
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 
@@ -554,7 +555,6 @@ def set_time_axis(filename, year, begyr, endyr):
         )
         time.setncattr("standard_name", "time")
         time.setncattr("calendar", "noleap")
-        time.setncattr("cell_methods", "time: mean")
         # For a climatology, CF uses the climatology attribute instead of bounds, and time
         # itself has no cell_methods (ncra adds one)
         for attr in ("bounds", "cell_methods"):
@@ -604,10 +604,12 @@ def add_var_attributes(filename):
             if "time" not in var.dimensions:
                 continue
             var.setncattr("cell_methods", "time: mean within years time: mean over years")
-            var.delncattr(
-                "standard_name"
-            )  # Remove standard_name as they don't match CF-Convention standard names
-            var.setncattr("long_name", name)
+            # Remove standard_name, as the CMEPS field names aren't CF-Convention standard names
+            if "standard_name" in var.ncattrs():
+                var.delncattr("standard_name")
+            # Use the variable name as the long_name, unless the file already has one
+            if "long_name" not in var.ncattrs():
+                var.setncattr("long_name", name)
             if coords:
                 var.setncattr("coordinates", coords)
 
@@ -629,7 +631,7 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
     )
     created_with = f"./{os.path.basename(WRAPPER)} -- {get_ctsm_git_short_hash()}"
     # Use Overwrite option since the file already exists and we want to add attributes to it
-    # USe --hst option so that history attribute isn't appended as it's not helpful
+    # Use --hst option so that history attribute isn't appended as it's not helpful
     cmd = ["ncatted", "-O", "--hst"]
     comment = "Monthly climatology created from daily averaged CPLHIST files for DATM"
     title = (
@@ -644,30 +646,28 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         "National Science Foundation (NSF) - National Center for Atmospheric Research"
         + " (NCAR) Community Earth System Model (CESM) project"
     )
-    hostname = os.getenv("HOSTNAME")
     for name, value in (
         ("title", title),
         ("comment", comment),
         ("source", source),
         ("institution", institution),
-        ("Conventions", "CF-1.11"),  # Use CF-11 as the compliance-checker doens't support CF-12 yet
+        # Use CF-1.11 as the compliance-checker doesn't support CF-1.12 yet
+        ("Conventions", "CF-1.11"),
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
         ("Created_with", created_with),
         ("time_period_freq", "month_1"),
-        ("hostname", hostname),
-        ("model_doi_url", "https://doi.org/10.5065/D67H1H0V"),  # NOTE: this is the CESM2 DOI, and should be updated when a CESM3 is available
+        ("hostname", socket.gethostname()),
+        # NOTE: this is the CESM2 DOI, and should be updated when a CESM3 DOI is available
+        ("model_doi_url", "https://doi.org/10.5065/D67H1H0V"),
         ("made_from_cesm_case", case),
     ):
         cmd += ["-a", f"{name},global,o,c,{value}"]
+    # Delete global attributes that don't apply to the climatology (in the same ncatted call,
+    # so --hst covers it too)
+    for name in ("file_version",):
+        cmd += ["-a", f"{name},global,d,,"]
     run_cmd_output_on_error(cmd + [filename], f"Failed adding provenance to {filename}")
-    #
-    # Delete a few global attributes
-    #
-    name = "file_version"
-    cmd = ["ncatted", "-O"]
-    cmd += ["-a", f"{name},global,d,,"]
-    run_cmd_output_on_error(cmd + [filename], f"Failed removing attribute {name} from {filename}")
 
 
 def write_output(  # pylint: disable=too-many-positional-arguments
