@@ -549,7 +549,7 @@ def set_time_axis(filename, year, begyr, endyr):
         time = ncfile.variables["time"]
         time[:] = mid_month_times()
         time.setncattr("units", units)
-        time.setncattr("long_name", "time")
+        time.setncattr("long_name", "climatological time at exact middle of each month of climatology_bounds")
         time.setncattr("standard_name", "time")
         time.setncattr("calendar", "noleap")
         time.setncattr("cell_methods", "time: mean")
@@ -575,7 +575,7 @@ def set_time_axis(filename, year, begyr, endyr):
             if attr in climatology_bounds.ncattrs():
                 climatology_bounds.delncattr(attr)
         climatology_bounds.setncattr("units", units)
-        climatology_bounds.setncattr("long_name", "time")
+        climatology_bounds.setncattr("long_name", "climatology time interval endpoints")
         climatology_bounds.setncattr("standard_name", "time")
         # Bounds take axis and calendar from their coordinate (time), so CF checkers report
         # these as non-standard on a bounds variable; remove them (time_bnds from CMEPS has them)
@@ -601,7 +601,9 @@ def add_var_attributes(filename):
                 continue
             if "time" not in var.dimensions:
                 continue
-            var.setncattr("cell_methods", "time: mean")
+            var.setncattr("cell_methods", "time: mean within years time: mean over years")
+            var.delncattr("standard_name") # Remove standard_name as they don't match CF-Convention standard names
+            var.setncattr("long_name", name)
             if coords:
                 var.setncattr("coordinates", coords)
 
@@ -623,7 +625,8 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
     )
     created_with = f"./{os.path.basename(WRAPPER)} -- {get_ctsm_git_short_hash()}"
     # Use Overwrite option since the file already exists and we want to add attributes to it
-    cmd = ["ncatted", "-O"]
+    # USe --hst option so that history attribute isn't appended as it's not helpful
+    cmd = ["ncatted", "-O", "--hst"]
     comment = "Monthly climatology created from daily averaged CPLHIST files for DATM"
     title = (
         "Monthly Climatology of Daily Averaged Atmosphere Coupler History Files"
@@ -639,19 +642,28 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
     )
     hostname = os.getenv("HOSTNAME")
     for name, value in (
+        ("title", title),
+        ("comment", comment),
+        ("source", source),
+        ("institution", institution),
+        ("Conventions", "CF-1.11"),   # Use CF-11 as the compliance-checker doens't support CF-12 yet
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
         ("Created_with", created_with),
-        ("comment", comment),
-        ("title", title),
-        ("source", source),
-        ("institution", institution),
-        ("Conventions", "CF-1.13"),
-        ("host", hostname),
-        ("case", case),
+        ("time_period_freq", "month_1"),
+        ("hostname", hostname),
+        ("model_doi_url", "https://doi.org/10.5065/D67H1H0V"),
+        ("made_from_cesm_case", case),
     ):
         cmd += ["-a", f"{name},global,o,c,{value}"]
     run_cmd_output_on_error(cmd + [filename], f"Failed adding provenance to {filename}")
+    #
+    # Delete a few global attributes
+    #
+    name = "file_version"
+    cmd = ["ncatted", "-O"]
+    cmd += ["-a", f"{name},global,d,,"]
+    run_cmd_output_on_error(cmd + [filename], f"Failed removing attribute {name} from {filename}")
 
 
 def write_output(  # pylint: disable=too-many-positional-arguments
