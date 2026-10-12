@@ -92,8 +92,9 @@ NOLEAP_DAYS = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 HIST_TAG = "cpl.hx.atm.24h.avrg"
 # NCO commands that are needed
 NCO_COMMANDS = ("ncra", "ncrcat", "ncatted")
-# Number of simultaneous ncra jobs inside a PBS batch job
+# Number of simultaneous ncra jobs inside a PBS batch job, and otherwise (on a login node)
 PBS_NJOBS = 64
+INTERACTIVE_NJOBS = 12
 # PBS batch settings
 PBS_JOBNAME = "daily_to_monthly_clim"
 DEFAULT_ACCOUNT = "P93300606"
@@ -169,7 +170,7 @@ def get_parser():
         "-j",
         "--njobs",
         help=f"""Number of ncra jobs to run at the same time
-            (default: {PBS_NJOBS} in a PBS batch job, 16 otherwise)""",
+            (default: {PBS_NJOBS} in a PBS batch job, {INTERACTIVE_NJOBS} otherwise)""",
         action="store",
         dest="njobs",
         type=int,
@@ -215,7 +216,7 @@ def default_njobs():
     """
     if os.environ.get("PBS_JOBID"):
         return PBS_NJOBS
-    return 16
+    return INTERACTIVE_NJOBS
 
 
 def input_dir(archdir, case):
