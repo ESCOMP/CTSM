@@ -549,7 +549,9 @@ def set_time_axis(filename, year, begyr, endyr):
         time = ncfile.variables["time"]
         time[:] = mid_month_times()
         time.setncattr("units", units)
-        time.setncattr("long_name", "climatological time at exact middle of each month of climatology_bounds")
+        time.setncattr(
+            "long_name", "climatological time at exact middle of each month of climatology_bounds"
+        )
         time.setncattr("standard_name", "time")
         time.setncattr("calendar", "noleap")
         time.setncattr("cell_methods", "time: mean")
@@ -602,7 +604,9 @@ def add_var_attributes(filename):
             if "time" not in var.dimensions:
                 continue
             var.setncattr("cell_methods", "time: mean within years time: mean over years")
-            var.delncattr("standard_name") # Remove standard_name as they don't match CF-Convention standard names
+            var.delncattr(
+                "standard_name"
+            )  # Remove standard_name as they don't match CF-Convention standard names
             var.setncattr("long_name", name)
             if coords:
                 var.setncattr("coordinates", coords)
@@ -646,7 +650,7 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         ("comment", comment),
         ("source", source),
         ("institution", institution),
-        ("Conventions", "CF-1.11"),   # Use CF-11 as the compliance-checker doens't support CF-12 yet
+        ("Conventions", "CF-1.11"),  # Use CF-11 as the compliance-checker doens't support CF-12 yet
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
         ("Created_with", created_with),
