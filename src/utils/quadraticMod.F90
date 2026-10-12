@@ -21,7 +21,7 @@ contains
      !==============================================================================!
      !----------------- Solve quadratic equation for its two roots -----------------!
      !==============================================================================!
-     ! Implements the numerically stable formulation from Press et al (1986)
+     ! Implements the numerically stable formulation as discussed in Press et al (1986)
      ! Numerical Recipes: The Art of Scientific Computing (Cambridge University Press, Cambridge)
      ! Allows for roots that are technically complex if they are close to rounding to zero.
      !
