@@ -25,7 +25,7 @@ contains
     ! !DESCRIPTION:
     ! Tridiagonal matrix solution
     !     This implements the Crank-Nicholson method for solving a tridiagonal matrix system of equations, customized to CLM Fortran structures.
-    !     The method is from Press, et. al. 1992. Numerical Recipes in FORTRAN:
+    !     The method is based on Press, et. al. 1992. Numerical Recipes in FORTRAN:
     !     The Art of Scientific Computing. Cambridge University Press, New York.
     !
     ! !USES:
