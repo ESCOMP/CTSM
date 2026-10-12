@@ -75,7 +75,7 @@ contains
 
      ! Compute the term that will have a square root taken
      discriminant = b*b - 4._r8*a*c
-     if ( discriminant < 0.0 )then
+     if ( discriminant < 0.0_r8 )then
         ! Truncate to zero if the term is very small and negative (relative to b), otherwise error out
         if ( -discriminant < 3.0_r8*epsilon(b) )then
            discriminant = 0.0_r8
