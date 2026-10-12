@@ -696,7 +696,7 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         + f" for cyclical year {year}"
     )
     source = (
-        f"Created from daily averaged CESM CPLHIST files for case {case} for "
+        f"Created from daily averaged CESM3.0 CPLHIST files for case {case} for "
         + f"years {begyear:04d}-{endyear:04d}"
     )
     institution = (
