@@ -716,7 +716,8 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         ("time_period_freq", "month_1"),
         ("hostname", socket.gethostname()),
         # NOTE: this is the CESM2 DOI, and should be updated when a CESM3 DOI is available
-        ("model_doi_url", "https://doi.org/10.5065/D67H1H0V"),
+        # ("model_doi_url", "https://doi.org/10.5065/D67H1H0V"),
+        # TODO: Uncomment the above when we have a DOI for CESM3.0
         ("made_from_cesm_case", case),
     ):
         cmd += ["-a", f"{name},global,o,c,{value}"]
