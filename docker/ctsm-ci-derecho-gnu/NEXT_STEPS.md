@@ -437,7 +437,7 @@ kind of documentation and is tracked on its own._
    - ✅ **Revalidated 2026-10-15** with all four wrapper scripts (`run-unit-tests-`, `run-test-`, `run-case-`, `run-sys-tests-in-container.sh`), `smoke-test.sh` and `smoke-test-pfunit.sh`. All pass.
    - ✅ **Acceptance test, on the EXECUTABLE.** A freshly built `cesm.exe` must contain neither `/ctsm/libraries/mpi-serial` nor `/ctsm/libraries/parallelio` among its compiled-source strings (`strings -a`). A passing version check without that is the old vacuous behaviour unchanged. The probe image met this on 2026-10-09, and **the real image met it on 2026-10-15**: both a `SMS_D_Ld1_Mmpi-serial.1x1_brazil` test build and a standalone `IHistClm60BgcQianRsGs` case build came back with zero hits for either submodule path and non-zero for `/usr/local/mpi-serial`.
    - ✅ **Republished to GHCR** as `:20261015`, 2026-10-15.
-   - ✅ **Repinned `cirrus-testing.yml` to `:20261015` and added `_Mmpi-serial`**, together in one commit, as required: the tests carried no `_M` modifier and so took the machine default of `mpich`, which the image no longer has, while the old pin named an image whose paths `gnu_container.cmake` no longer matches. Only `simple-build-create_test` changed; `simple-build-run_sys_tests` runs in an unrelated mpich image. **Not yet exercised by an actual CI run** -- and that job builds a different test (`SMS_D_Ld3_Mmpi-serial.f10_f10_mg37.I1850Clm50BgcCrop`, global grid, `--no-run`) than anything validated on Casper, on `ubuntu-latest` rather than `gha-runner-ctsm`.
+   - ✅ **Repinned `cirrus-testing.yml` to `:20261015` and added `_Mmpi-serial`**, together in one commit, as required: the tests carried no `_M` modifier and so took the machine default of `mpich`, which the image no longer has, while the old pin named an image whose paths `gnu_container.cmake` no longer matches. Only `simple-build-create_test` changed; `simple-build-run_sys_tests` runs in an unrelated mpich image. **Not yet exercised by a passing CI run** -- that job is currently red for a reason unrelated to 4b (item 13), and it builds a different test (`SMS_D_Ld3_Mmpi-serial.f10_f10_mg37.I1850Clm50BgcCrop`, global grid, `--no-run`) than anything validated on Casper, on `ubuntu-latest` rather than `gha-runner-ctsm`.
    - Consider an upstream `ccs_config` PR so `machines/container/config_machines.xml` declares `mpi-serial` in `<MPILIBS>`. mpi-serial works there today despite only `mpich` being listed, but the file is lying -- and now that mpich is gone from the image, `<MPILIBS>mpich</MPILIBS>` names the one thing the container cannot do. Shared with CESM, so it is separate work.
 5. **The drift check.** One scheduled thing that compares *built executables* --
    container against derecho, gnu + mpi-serial -- given the latest CTSM master
@@ -792,6 +792,21 @@ kind of documentation and is tracked on its own._
 11. **If not already there: Add a way for users to customize bind mount targets**
 12. **Add documentation.** User-facing docs beyond this directory's README;
     separate from the README updates folded into the items above.
+13. **Both `cirrus-testing.yml` jobs are currently red, for two unrelated reasons.** Neither is caused by item 4b; both predate the `:20261015` repin, and the first is confirmed to predate it.
+
+    **`simple-build-run_sys_tests` dies before it reaches CTSM at all**, at the `git checkout -b tmp` that opens its "Call run_sys_tests" step:
+
+    ```
+    fatal: detected dubious ownership in repository at '/__w/CTSM/CTSM'
+    Error: failed to run script step: command terminated with non-zero exit code: exit status 128
+    Error: Executing the custom container implementation failed. Please contact your self hosted runner administrator.
+    ```
+
+    That is git's `safe.directory` protection: the checked-out workspace is owned by a different uid than the user git runs as inside the container. No workflow in this repo sets `safe.directory` anywhere. The fix is a `git config --global --add safe.directory "$GITHUB_WORKSPACE"` -- but **put it inside the same step**, not in a step of its own: this job runs under the k8s container hook (`/home/runner/k8s/index.js`), where `HOME` can differ between steps, so a `--global` config written in an earlier step need not be visible later. That is also the likely reason `actions/checkout`, which normally registers the workspace itself, did not prevent this. Worth checking whether the submodules need `'*'` rather than just the workspace, though `bin/git-fleximod update -o` in the preceding step appears to survive as-is.
+
+    **`simple-build-create_test` also fails, for a different reason, not yet captured here.** Paste its error in and write it up before working either one -- the two jobs share a workflow file and a runner but almost nothing else, so a shared cause should not be assumed. Note this job currently has `runs-on: ubuntu-latest` with `gha-runner-ctsm` commented out one line above, so it pulls the 3.1 GB image onto a hosted runner with roughly 14 GB free and has no `/glade` mount; if its failure is disk or inputdata, that is where to look rather than at the image.
+
+    Related but distinct: item 9 is about that job building without running, and item 10 about when these jobs fire at all. Both assume the jobs pass first.
 
 ## Worth raising upstream
 
