@@ -165,7 +165,7 @@ my $testType="namelistTest";
 #
 # Figure out number of tests that will run
 #
-my $ntests = 3411;
+my $ntests = 3425;
 
 if ( defined($opts{'compare'}) ) {
    $ntests += 2061;
@@ -334,6 +334,8 @@ foreach my $driver ( "nuopc" ) {
                          "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=F/\" -bgc bgc -crop",
                          "-namelist \"&a soil_decomp_method='MIMICSWieder2015',use_matrixcn=T/\" -bgc bgc -crop",
                          "-bgc bgc -crop -clm_accelerated_spinup sasu",
+                         "-bgc fates -clm_accelerated_spinup on",
+                         "-bgc fates -clm_accelerated_spinup on -namelist '&a spinup_state=1/'",
                          "-res 0.9x1.25 -clm_start_type startup", "-namelist '&a irrigate=.false./' -crop -bgc bgc",
                          "-res 0.9x1.25 -infile myuser_nl_clm",
                          "-res 0.9x1.25 -ignore_ic_date -clm_start_type branch -namelist '&a nrevsn=\"thing.nc\"/' -bgc bgc -crop",
@@ -634,6 +636,36 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+     "building humidity mode below range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=-1",
+                                     phys=>"clm6_0",
+                                   },
+     "building humidity mode above range"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=3",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 1 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=1,building_temp_method=0",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with simple temperature"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=0,urban_hac='ON',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 with AC off"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='OFF',urban_explicit_ac=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "humidity mode 2 without explicit AC"
+                                  =>{ options=>"-envxml_dir .",
+                                     namelst=>"building_humidity_mode=2,building_temp_method=1,urban_hac='ON',urban_explicit_ac=.false.",
+                                     phys=>"clm6_0",
+                                   },
      "cmip7_w_issp"              =>{ options=>"-envxml_dir . -use_case 1850-2100_SSP2-4.5_transient",
                                      namelst=>"",
                                      CLM_CMIP_ERA=>"cmip7",
@@ -1191,6 +1223,22 @@ my %failtest = (
                                      namelst=>"fates_spitfire_mode=1",
                                      phys=>"clm4_5",
                                    },
+     "clmaccelANDusefatessp"     =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup on",
+                                     namelst=>"use_fates_sp=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "sasuANDusefatessp"         =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup sasu",
+                                     namelst=>"use_fates_sp=.true.",
+                                     phys=>"clm6_0",
+                                   },
+     "spinupstateWfatessp"       =>{ options=>"-envxml_dir . --bgc fates",
+                                     namelst=>"use_fates_sp=.true.,spinup_state=1",
+                                     phys=>"clm6_0",
+                                   },
+     "fatesspinupWclmacceloff"   =>{ options=>"-envxml_dir . --bgc fates -clm_accelerated_spinup off",
+                                     namelst=>"spinup_state=1",
+                                     phys=>"clm6_0",
+                                   },
      "usespitfireusefatessp"    =>{ options=>"-envxml_dir . --bgc fates",
                                      namelst=>"fates_spitfire_mode=1,use_fates_sp=.true.",
                                      phys=>"clm5_0",
@@ -1211,20 +1259,12 @@ my %failtest = (
                                      namelst=>"use_fates_inventory_init=.true.",
                                      phys=>"clm4_5",
                                    },
-     "inventoryfileDNE"          =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_inventory_init=.true., fates_inventory_ctrl_filename='zztop'",
-                                     phys=>"clm4_5",
-                                   },
      "useFATESLUH2butnotfile"    =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_luh=.true.",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUPFTbutnotfile"   =>{ options=>"--res 0.9x1.25 --bgc fates --envxml_dir . --no-megan",
                                      namelst=>"use_fates_lupft=.true.",
-                                     phys=>"clm4_5",
-                                   },
-     "useFATESLUH2fileDNE"       =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_luh=.true., fluh_timeseries='zztop'",
                                      phys=>"clm4_5",
                                    },
      "useFATESLUH2invalidlogic"  =>{ options=>"-bgc fates -envxml_dir . -no-megan",

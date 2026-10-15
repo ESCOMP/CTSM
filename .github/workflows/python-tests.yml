@@ -23,6 +23,13 @@ jobs:
     steps:
       # Checkout the code
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          lfs: true
+
+      # Check out cime because some unit tests import it
+      - name: Checkout cime submodule
+        run: |
+          bin/git-fleximod update cime
 
       # Set up the conda environment
       - uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
