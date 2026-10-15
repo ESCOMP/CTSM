@@ -52,7 +52,7 @@ docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -t SMS_D_Ld1_Mmpi-seria
 docker/ctsm-ci-derecho-gnu/run-case-in-container.sh --case brazil_test --compset IHistClm60BgcQianRsGs --res 1x1_brazil --run-unsupported
 ```
 
-`--machine container`, `--compiler gnu` and `--mpilib mpi-serial` are injected for you; anything you pass yourself wins.
+`--machine container`, `--compiler gnu` and `--mpilib mpi-serial` are injected for you; anything you pass yourself wins. `run-sys-tests-in-container.sh` additionally injects `--skip-compare` and `--skip-generate`, because `run_sys_tests` requires one of each pair and a fresh image has no baselines — pass `-c` or `-g` to override either.
 
 ## The acceptance test is on the executable
 

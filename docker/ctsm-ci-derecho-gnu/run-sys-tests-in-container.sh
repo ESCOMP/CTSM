@@ -32,6 +32,8 @@
 #   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial
 #   # see what would run, without running it
 #   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial --dry-run
+#   # compare against an existing baseline instead of the default skip
+#   docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -s aux_clm_mpi_serial -c ctsm5.4.054
 #
 # These defaults are injected only if you did not pass them yourself:
 #   --machine-name ctsm-ci-container  picks up
@@ -41,6 +43,13 @@
 #   --wait                    run_sys_tests otherwise backgrounds create_test and
 #                             returns, and podman would tear the container down
 #                             while it was still running
+#   --skip-compare            run_sys_tests REQUIRES one of -c/--compare and
+#   --skip-generate           --skip-compare, and likewise for generate, so
+#                             without these argparse rejects the command before
+#                             anything runs. A fresh image has no baselines to
+#                             compare against, and /scratch dies with the
+#                             allocation, so generating would be wasted. Pass
+#                             -c or -g yourself to override either one.
 #   --extra-create-test-args "--machine container --compiler gnu"
 #                             run_sys_tests never passes --machine to
 #                             create_test itself, only --xml-machine, so
@@ -112,6 +121,23 @@ ctsm_has_arg --machine-name "${args[@]+"${args[@]}"}" \
 ctsm_has_arg --wait "${args[@]+"${args[@]}"}" \
     || cime_args+=(--wait)
 cime_args+=(--extra-create-test-args "${injected_extra}${user_extra:+ ${user_extra}}")
+
+# run_sys_tests puts compare and generate in REQUIRED mutually exclusive groups
+# (python/ctsm/run_sys_tests.py:347-367), so a command carrying neither half of
+# either pair dies in argparse before anything runs:
+#   run_sys_tests: error: one of the arguments -c/--compare --skip-compare is required
+# Default to skipping both. A container validating a fresh image has no
+# baselines to compare against and no business writing any, and /scratch dies
+# with the allocation, so generating would be throwing work away. Pass -c or -g
+# yourself and the matching skip is not injected.
+ctsm_has_arg -c "${args[@]+"${args[@]}"}" \
+    || ctsm_has_arg --compare "${args[@]+"${args[@]}"}" \
+    || ctsm_has_arg --skip-compare "${args[@]+"${args[@]}"}" \
+    || cime_args+=(--skip-compare)
+ctsm_has_arg -g "${args[@]+"${args[@]}"}" \
+    || ctsm_has_arg --generate "${args[@]+"${args[@]}"}" \
+    || ctsm_has_arg --skip-generate "${args[@]+"${args[@]}"}" \
+    || cime_args+=(--skip-generate)
 
 # Suite-only injections. --xml-machine and --suite-compiler are meaningless
 # without -s, and passing them anyway would just be confusing output.
