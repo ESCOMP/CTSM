@@ -66,18 +66,6 @@ strings -a <bld>/cesm.exe | grep -c /usr/local                   # must be nonze
 
 The first two being zero is the real result; the third is the positive control that stops a zero from meaning "grepped the wrong file".
 
-## Two known failure modes
-
-Recognize these rather than debugging them from scratch.
-
-**cprnc fails to link.** It did this twice on the rebuilds after item 4b, for two unrelated reasons, and both are now prevented in the `Dockerfile`. Read the undefined symbols to tell them apart.
-
-Undefined `H5*`, curl or xml2 symbols means the `.pc` files are back to describing a shared link: `pkg_check_modules` reads `Libs` only, and a static prefix has no `DT_NEEDED` to make up the difference. The image folds `Libs.private` into `Libs` and then asserts `pkg-config --libs netcdf` contains `-lhdf5`, so that assertion should have failed the image build first.
-
-Undefined `__truncsfhf2`, `__truncdfhf2` or `__truncxfhf2` means cprnc was built with the wrong compiler. Those are libgcc `_Float16` helpers that GCC 11 does not have; cime passes no `-DCMAKE_*_COMPILER`, so cmake reads `CC`/`FC` from the environment or else searches for `cc` and `f95` — names that exist only in `/usr/bin`, as AlmaLinux's bootstrap GCC 11.5.0. The image sets `CC`/`CXX`/`FC` to absolute `/opt/gcc/<version>` paths. Check `CMakeCache.txt` in the cprnc build directory: `CMAKE_Fortran_COMPILER` must not be `/usr/bin/f95`.
-
-**The build dies in its very last layer** complaining that `nc-config` has no `--has-stdfilters`. That is the stack-facts guard, which deliberately fails loudly rather than recording an empty value that item 5's drift check would misread. An empty *answer* is fine and does not fail; only a missing *option* does.
-
 ## Don't
 
 - Don't call `podman build` directly — the node-local `TMPDIR` handling lives in the wrapper, and without it the build dies creating the rootfs before any Dockerfile instruction runs.
