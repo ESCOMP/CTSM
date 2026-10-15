@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # Smoke-test the built ctsm-ci-derecho-gnu image. Asserts the toolchain versions
-# match derecho's gnu stack and that a small MPI + netCDF Fortran program
-# compiles, links (-lnetcdff -lnetcdf -llapack -lblas) and runs under
-# mpiexec. Run after build-on-casper.sh tags the image.
+# match derecho's gnu + mpi-serial stack, that the PIO a case build links is
+# actually installed and advertised, and that a small netCDF Fortran program
+# compiles, links (-lnetcdff -lnetcdf -llapack -lblas) and runs. Run after
+# build-on-casper.sh tags the image.
+#
+# There is no MPI here to test: since NEXT_STEPS item 4b the image carries one
+# serial stack and no MPICH.
 #
 # Usage: docker/ctsm-ci-derecho-gnu/smoke-test.sh
 #   IMAGE_TAG overrides the image (default localhost/ctsm-ci-derecho-gnu:dev)
@@ -31,7 +35,12 @@ lbl() {
     printf '%s' "$v"
 }
 
-for l in gcc mpich netcdf-c netcdf-fortran pnetcdf hdf5 esmf; do
+# mpi-serial and pio are existence-only, here and below: there is no honest
+# source in the image to compare their values against (see the Dockerfile's
+# LABEL block). Their presence is still worth asserting -- item 5 reads the
+# container's mpi-serial and PIO versions from exactly these two labels, so an
+# image that lost them would leave the drift check with nothing to read.
+for l in gcc netcdf-c netcdf-fortran hdf5 esmf mpi-serial pio; do
     if [ -z "$(lbl "$l")" ]; then
         echo "SMOKE FAIL: image has no '$l' label to check against" >&2
         exit 1
@@ -42,10 +51,8 @@ done
 # environment (non-login shell, image ENV only) that GitHub Actions sees.
 podman run --rm -i \
     -e "WANT_GCC=$(lbl gcc)" \
-    -e "WANT_MPICH=$(lbl mpich)" \
     -e "WANT_NETCDF_C=$(lbl netcdf-c)" \
     -e "WANT_NETCDF_F=$(lbl netcdf-fortran)" \
-    -e "WANT_PNETCDF=$(lbl pnetcdf)" \
     -e "WANT_HDF5=$(lbl hdf5)" \
     -e "WANT_ESMF=$(lbl esmf)" \
     "${image}" bash -s <<'INSIDE'
@@ -64,9 +71,6 @@ check gcc "$WANT_GCC" "$(gcc --version | head -1)"
 echo "### gfortran";   gfortran --version | head -1
 check gfortran "$WANT_GCC" "$(gfortran --version | head -1)"
 
-echo "### mpich";      mpichversion | head -1
-check mpich "$WANT_MPICH" "$(mpichversion)"
-
 echo "### netcdf-c";   nc-config --version; echo "prefix=$(nc-config --prefix)"
 check netcdf-c "$WANT_NETCDF_C" "$(nc-config --version)"
 [ "$(nc-config --prefix)" = /usr/local ]            || fail "netcdf-c prefix != /usr/local"
@@ -74,18 +78,13 @@ check netcdf-c "$WANT_NETCDF_C" "$(nc-config --version)"
 echo "### netcdf-fortran"; nf-config --version
 check netcdf-fortran "$WANT_NETCDF_F" "$(nf-config --version)"
 
-echo "### pnetcdf";    pnetcdf-config --version
-check pnetcdf "$WANT_PNETCDF" "$(pnetcdf-config --version)"
-
-# h5dump rather than h5cc: the parallel build installs h5pcc, not h5cc, so the
-# compiler wrapper's name depends on how HDF5 was configured. The tools are
-# installed either way. Fall back to whichever wrapper exists if h5dump is not
-# there, so this reports a real version or fails, never silently passes.
+# h5dump rather than h5cc: the tools are installed whatever the wrapper is
+# called. Fall back to whichever wrapper exists if h5dump is not there, so this
+# reports a real version or fails, never silently passes.
 echo "### hdf5"
 hdf5_out="$(h5dump --version 2>/dev/null)" || hdf5_out=""
-[ -n "$hdf5_out" ] || hdf5_out="$(h5pcc -showconfig 2>/dev/null | grep -i 'HDF5 Version')"
 [ -n "$hdf5_out" ] || hdf5_out="$(h5cc  -showconfig 2>/dev/null | grep -i 'HDF5 Version')"
-[ -n "$hdf5_out" ] || fail "hdf5: no h5dump/h5pcc/h5cc available to report a version"
+[ -n "$hdf5_out" ] || fail "hdf5: no h5dump/h5cc available to report a version"
 echo "$hdf5_out"
 check hdf5 "$WANT_HDF5" "$hdf5_out"
 
@@ -98,11 +97,15 @@ esmf_out="$(grep '^ESMF_VERSION_STRING=' "$ESMFMKFILE")" \
     || fail "esmf: no ESMF_VERSION_STRING in $ESMFMKFILE"
 echo "$esmf_out"
 check esmf "$WANT_ESMF" "$esmf_out"
+# Since item 4b the default is the mpiuni build, because it is the only build.
+# Catching a tarball that still carries an ESMF_COMM=mpich default here is the
+# cheapest way to notice that the image in front of us predates the switch.
+grep -q 'ESMF_COMM=mpiuni' "$ESMFMKFILE" \
+    || fail "$ESMFMKFILE is not an ESMF_COMM=mpiuni build; this image predates item 4b"
 
-# The mpiuni ESMF, which is the one every mpi-serial case and the whole Fortran
-# unit-test path actually link. It is NOT $ESMFMKFILE: the macro below selects
-# it by a hardcoded path when MPILIB=mpi-serial. The Dockerfile asserts this at
-# build time, but that says nothing about the image in front of us now -- a
+# The same file reached the other way: through the hardcoded path the CIME
+# macro selects when MPILIB=mpi-serial. The Dockerfile asserts both at build
+# time, but that says nothing about the image in front of us now -- a
 # mis-tagged or older tarball passes an assertion that ran in some other build.
 echo "### esmf, mpiuni flavor (from the baked-in CIME macro)"
 macro=/opt/ctsm-container/cime-macros/gnu_container.cmake
@@ -118,26 +121,81 @@ serial_out="$(grep '^ESMF_VERSION_STRING=' "$serial_mk")" \
 echo "$serial_out"
 check "esmf mpiuni" "$WANT_ESMF" "$serial_out"
 
+# The PIO a case build links. These three files are what makes the switch real:
+# cime/CIME/Tools/Makefile:667 names libpiof.a and libpioc.a by path, and the
+# CTSM sources USE pio. Without them a case build fails at the link, having
+# already skipped CTSM's libraries/parallelio submodule.
+#
+# EXISTENCE ONLY, NO VERSION COMPARISON, for PIO or for mpi-serial. Neither the
+# `pio` nor the `mpi-serial` label can be checked against what the image
+# reports: nothing in the image reports an mpi-serial version at all, and PIO's
+# own lib/libpio.settings reports 2.6.6 for every tag from pio2_6_6 through
+# pio2_6_8 because upstream stopped bumping the in-tree version. Comparing
+# either label to itself would prove nothing; comparing `pio` to
+# libpio.settings would fail a correct image. See the LABEL block in the
+# Dockerfile.
+echo "### PIO install"
+for f in /usr/local/lib/libpiof.a /usr/local/lib/libpioc.a /usr/local/include/pio.mod; do
+    [ -f "$f" ] || fail "PIO: $f missing"
+    echo "  $f"
+done
+
+# The environment half of that same switch, and it has to be the ENVIRONMENT:
+# cime/CIME/build_scripts/buildlib.pio:82-91 reads PIO_VERSION_MAJOR from
+# os.environ, which no macro file reaches. Unset PIO_TYPENAME_VALID_VALUES does
+# not fall back to a default either -- line 90 hands None to
+# _set_pio_valid_values and it raises TypeError.
+echo "### PIO environment"
+for v in PIO PIO_VERSION_MAJOR PIO_TYPENAME_VALID_VALUES; do
+    eval "val=\${$v:-}"
+    [ -n "$val" ] || fail "$v is not set in the image environment"
+    echo "  $v=$val"
+done
+[ "${PIO}" = /usr/local ]                || fail "PIO=${PIO}, expected /usr/local"
+[ "${PIO_VERSION_MAJOR}" = 2 ]           || fail "PIO_VERSION_MAJOR=${PIO_VERSION_MAJOR}, expected 2"
+[ "${PIO_TYPENAME_VALID_VALUES}" = netcdf ] \
+    || fail "PIO_TYPENAME_VALID_VALUES=${PIO_TYPENAME_VALID_VALUES}, expected netcdf"
+
+# Two facts about the built stack that no label can carry and no container
+# cesm.exe reports: see the Dockerfile for why they are a file. Item 5's drift
+# check reads this; check here that it exists and is populated, so a missing or
+# empty field is caught at build time rather than read as agreement.
+echo "### stack facts"
+facts=/opt/ctsm-container/stack-facts.txt
+[ -f "$facts" ] || fail "no $facts in the image"
+cat "$facts"
+# Both KEYS must be present. Only netcdf_fortran_version must have a VALUE:
+# an empty netcdf_c_stdfilters is a legitimate answer meaning "no standard
+# filters", which is a real difference from derecho for item 5 to report, not a
+# broken image. See the Dockerfile for the same distinction at build time.
+for k in netcdf_fortran_version netcdf_c_stdfilters; do
+    grep -q "^${k}=" "$facts" || fail "stack facts: no ${k}= line in $facts"
+done
+[ -n "$(sed -n 's/^netcdf_fortran_version=//p' "$facts")" ] \
+    || fail "stack facts: netcdf_fortran_version is empty in $facts"
+# The recorded netCDF-Fortran version must be the one the image advertises;
+# otherwise the drift check and the version check describe different images.
+check "stack facts netcdf-fortran" "$WANT_NETCDF_F" \
+    "$(sed -n 's/^netcdf_fortran_version=//p' "$facts")"
+
 echo "### perl XML::LibXML"
 perl -MXML::LibXML -e 'print "XML::LibXML OK\n"'    || fail "perl XML::LibXML"
 
-echo "### MPI + netCDF Fortran build/run"
+# No MPI here: gfortran, not mpifort, and no mpiexec. -lnetcdff -lnetcdf is the
+# link ccs_config/machines/container/container.cmake appends to SLIBS.
+echo "### netCDF Fortran build/run"
 cat > /tmp/hello.f90 <<'EOF'
 program hello
-  use mpi
   use netcdf
   implicit none
-  integer :: ierr, rank, nprocs
-  call MPI_Init(ierr)
-  call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierr)
-  call MPI_Comm_size(MPI_COMM_WORLD, nprocs, ierr)
-  if (rank == 0) print '(A,I0,A,A)', 'ranks=', nprocs, ' netcdf=', trim(nf90_inq_libvers())
-  call MPI_Finalize(ierr)
+  print '(A,A)', 'netcdf=', trim(nf90_inq_libvers())
 end program hello
 EOF
-mpifort -I/usr/local/include /tmp/hello.f90 -o /tmp/hello \
-    -L/usr/local/lib -lnetcdff -lnetcdf -llapack -lblas || fail "compile/link"
-mpiexec -n 2 /tmp/hello                                 || fail "mpiexec run"
+gfortran -I/usr/local/include /tmp/hello.f90 -o /tmp/hello \
+    -L/usr/local/lib -lnetcdff -lnetcdf -llapack -lblas \
+    $(nc-config --libs --static | tr ' ' '\n' | grep '^-l' | tr '\n' ' ') \
+    || fail "compile/link"
+/tmp/hello                                          || fail "run"
 
 echo "ALL SMOKE TESTS PASSED"
 INSIDE

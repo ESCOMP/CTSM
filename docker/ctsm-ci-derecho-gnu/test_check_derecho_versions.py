@@ -46,17 +46,16 @@ def _load_checker():
 
 checker = _load_checker()
 
-# MPICH_VERSION and PNETCDF_VERSION are present but no longer checked; they stay
-# in the real Dockerfile until the image is stripped to serial-only, and their
-# presence here guards against a check reappearing for them by accident.
+# Mirrors the real Dockerfile's ARG set. MPICH_VERSION and PNETCDF_VERSION are
+# gone from both: item 4b stripped the image to the serial stack, and 4a had
+# already stopped checking them. GIT_VERSION and MAKE_JOBS are omitted because
+# no check reads them and the fixture is about what the checks see.
 BASE_DOCKERFILE = """\
 FROM fedora:40
 ARG GCC_VERSION=14.3.0
-ARG MPICH_VERSION=3.4.3
 ARG HDF5_VERSION=1.14.6
 ARG NETCDF_C_VERSION=4.9.3
 ARG NETCDF_FORTRAN_VERSION=4.6.2
-ARG PNETCDF_VERSION=1.14.1
 ARG ESMF_VERSION=8.9.1
 ARG PFUNIT_VERSION=4.8.0
 ARG MPI_SERIAL_VERSION=2.5.3

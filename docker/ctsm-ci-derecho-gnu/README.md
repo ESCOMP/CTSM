@@ -18,17 +18,27 @@ stack wherever an open equivalent exists.
 1. **Match derecho's gnu software stack** (what
    `ccs_config/machines/derecho/config_machines.xml` loads for gnu builds) as
    closely as a public container allows.
-2. **Satisfy CIME's `container` machine unmodified**: netCDF/PnetCDF under
-   `/usr/local`, LAPACK/BLAS linkable as `-llapack -lblas`, `ESMFMKFILE`,
-   `USER`, and `CESMDATAROOT` preset.
+2. **Satisfy CIME's `container` machine unmodified**: netCDF under `/usr/local`,
+   LAPACK/BLAS linkable as `-llapack -lblas`, `ESMFMKFILE`, `USER`, and
+   `CESMDATAROOT` preset. (That machine also sets `PNETCDF_PATH=/usr/local`,
+   which nothing backs any more and nothing reads — `cime/CIME/Tools/Makefile`
+   undefines it outright for `mpilib=mpi-serial`.)
 3. **Work in GitHub Actions**: GHA runs steps in *non-login* shells, so
    profile scripts never fire. Everything needed is baked in as Docker `ENV`.
 
 ## Software stack vs. derecho gnu
 
-The toolchain (GCC, MPICH) lives under `/opt`; libraries install under
-`/usr/local` (where the `container` machine hard-codes `NETCDF_PATH` /
-`PNETCDF_PATH`); ESMF is located via `ESMFMKFILE`.
+The image carries **one software stack, and it is serial**: no MPICH, no
+parallel HDF5/netCDF, no PnetCDF, one `ESMF_COMM=mpiuni` ESMF. A gnu +
+mpi-serial run on derecho loads none of those, and carrying a second stack only
+created ways to link the wrong half. The toolchain (GCC) lives under `/opt`;
+libraries install under `/usr/local`, where the `container` machine hard-codes
+`NETCDF_PATH`; ESMF is located via `ESMFMKFILE`.
+
+A `create_test` case here must ask for mpi-serial explicitly — `_Mmpi-serial`
+in the test name, or `--mpilib mpi-serial`. The `container` machine's
+`<MPILIBS>` still says `mpich`, so a test that names no modifier takes that
+default and finds no MPI in this image.
 
 The **derecho gnu** column below is what
 `ccs_config/machines/derecho/config_machines.xml` loads at the `ccs_config`
@@ -36,27 +46,44 @@ this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The
 **Dockerfile** column is what this directory's `Dockerfile` builds today;
 `check-derecho-versions.py` passes against it.
 
-The published image matches: `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`
-was built and validated on Casper on 2026-10-07 against this Dockerfile, and
-`cirrus-testing.yml` pins it. The preceding `:20260831` image is the 2026-08-31
+**No published image matches this Dockerfile yet.** The serial-only rebuild
+(NEXT_STEPS item 4b) has landed in this directory but has not been built on
+Casper or pushed. `cirrus-testing.yml` still pins
+`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, which is the two-stack
+image: it was built and validated on Casper on 2026-10-07 against the previous
+Dockerfile. A container case build against `:20261007` now fails, deliberately,
+because `cime-macros/gnu_container.cmake` names paths only the new image has.
+The pin bump and the `_Mmpi-serial` test-name change land together once the
+rebuild is published. The older `:20260831` image is the 2026-08-31
 `ncarenv/23.09` build (GCC 12.2.0, netCDF-C 4.9.2, ESMF 8.6.0 and so on) and is
 kept only as a fallback.
 
 | Component | derecho gnu | Dockerfile | note |
 |---|---|---|---|
 | GCC | 14.3.0 | 14.3.0 | built from source under `/opt/gcc` |
-| MPI | cray-mpich 8.1.32 | MPICH 3.4.3 (ch4:ofi) | cray-mpich 8.x is MPICH-3.4-ABI-derived; Cray code is proprietary, so this version is deliberately *not* matched. `derecho-versions.ini`'s guard records derecho's own 8.1.32 so the stand-in gets re-examined when derecho moves |
-| HDF5 | 1.14.6 (`hdf5`, pulled in by the serial `netcdf` module via `depends_on`) | 1.14.6 (parallel) | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — measured 2026-10-09 against `netcdf/4.9.3` |
-| netCDF-C | netcdf/4.9.3 for `mpilib="mpi-serial"`; `netcdf-mpi/4.9.3` for the MPI flavor | 4.9.3 | `NETCDF_C_VERSION` is checked against the serial module, which is the one the container's scope covers |
-| netCDF-Fortran | 4.6.2, bundled in the serial `netcdf` module | 4.6.2 | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — `nf-config --version` on 2026-10-09 against `netcdf/4.9.3` |
-| PnetCDF | parallel-netcdf/1.14.1 | 1.14.1 | |
-| ESMF | esmf-mpi/8.9.1-debug, esmf-mpi/8.9.1; `esmf/8.9.1` for `mpilib="mpi-serial"` (that build is `ESMF_COMM=mpiuni`) | 8.9.1, three flavors | see "ESMF flavors" below |
+| HDF5 | 1.14.6 (`hdf5`, pulled in by the serial `netcdf` module via `depends_on`) | 1.14.6, serial, static | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — measured 2026-10-09 against `netcdf/4.9.3` |
+| netCDF-C | netcdf/4.9.3 for `mpilib="mpi-serial"` | 4.9.3, serial, static | `NETCDF_C_VERSION` is checked against the serial module, which is the one the container's scope covers |
+| netCDF-Fortran | 4.6.2, bundled in the serial `netcdf` module | 4.6.2, serial, static | not in `config_machines.xml`, so recorded in `derecho-versions.ini` — `nf-config --version` on 2026-10-09 against `netcdf/4.9.3` |
+| ESMF | `esmf/8.9.1` for `mpilib="mpi-serial"` (that build is `ESMF_COMM=mpiuni`) | 8.9.1, one flavor, `ESMF_COMM=mpiuni` | see "ESMF flavor" below |
 | pFUnit | 4.8.0, intel only | 4.8.0, gnu, noMPI/noOpenMP | needed by CTSM's Fortran unit tests; derecho ships no gnu pFUnit, so only the version is matched |
 | BLAS/LAPACK | cray-libsci 25.03.0 | reference `lapack`/`blas` (dnf) | libsci is proprietary, so this version is deliberately *not* matched — the dnf packages carry no version ARG at all. `derecho-versions.ini`'s guard records derecho's own 25.03.0 so the stand-in gets re-examined when derecho moves |
-| PIO | parallelio-serial/2.6.8 module | 2.6.8, mpi-serial only | In the container a case build compiles its own PIO from CTSM's pinned ParallelIO submodule, and the copy here exists solely as the mpiuni ESMF's external PIO (see "mpi-serial"); on derecho the module supplies it through `PIO_LIBDIR` |
-| serial netCDF stack | netcdf/4.9.3 (loaded for mpilib=mpi-serial) | HDF5 1.14.6 + netCDF-C 4.9.3 + netCDF-Fortran 4.6.2 under `/usr/local/serial`, static | mpi-serial builds must not link the parallel, MPICH-linked netCDF |
-| mpi-serial | mpi-serial/2.5.3 module | 2.5.3 under `/usr/local/mpi-serial` | Here it exists only to compile the ESMF-external PIO against, and a container case build compiles its own from CTSM's submodule; on derecho the module *is* what a case links, via `MPI_SERIAL_PATH` |
+| PIO | parallelio-serial/2.6.8 module | 2.6.8, mpi-serial, Fortran on, static | both sides are what a case *links*: derecho through the module's `PIO_LIBDIR`/`PIO_INCDIR`, the container through the same two settings in `cime-macros/gnu_container.cmake` plus `PIO_VERSION_MAJOR` in the image environment. The same install is the mpiuni ESMF's external PIO |
+| mpi-serial | mpi-serial/2.5.3 module | 2.5.3 under `/usr/local/mpi-serial` | likewise both sides link the installed one: derecho via the module, the container via `MPI_SERIAL_PATH`. Neither compiles CTSM's `libraries/mpi-serial` submodule |
+| distro runtime | `GCC: (SUSE Linux) 13.3.1` | `GCC: (GNU) 11.5.0 (Red Hat)` | the C runtime startup objects an executable picks up from its base system. Deliberately *not* matched and not checked — closing it means rebasing the image on SLES |
 | conda, nco | loaded on derecho | not included | not needed to build, nor to run the single-point tests; particular testmods or post-processing may want `nco` |
+
+**Two accepted exceptions**, and only two: BLAS/LAPACK and the distro runtime,
+both rows above. The first is *guarded* — `derecho-versions.ini` records
+derecho's `cray-libsci` version and the check fails when derecho moves it, so
+someone re-examines the stand-in. The second is *documented only*: nothing
+short of a SLES base image would close it, so there is no useful check to
+write. Everything else in the table is matched version-for-version.
+
+A deliberate *build-flag* choice is not an accepted exception and is not
+listed here: `PIO_ENABLE_NETCDF_INTEGRATION` is ON for derecho's
+`parallelio-serial` and OFF here, recorded in the `Dockerfile` at the PIO
+build, because the flag adds only source files nothing in CTSM or CDEPS calls
+and a static link never pulls them into `cesm.exe`.
 
 `git` is also built from source (it is not part of derecho's stack): CIME's
 cprnc and PIO builds clone `genf90` via git during the case build. git can't
@@ -64,43 +91,33 @@ be `dnf install`ed here because that pulls in `openssh`, whose setuid
 `ssh-keysign` fails to `chown` under NCAR's rootless single-UID podman — see
 [NEXT_STEPS.md](NEXT_STEPS.md) for the full story.
 
-## ESMF flavors
+## ESMF flavor
 
-Three ESMF 8.9.1 trees are installed:
+One ESMF 8.9.1 tree is installed:
 
-- `/usr/local/esmf-8.9.1-debug` (`ESMF_BOPT=g`, `ESMF_COMM=mpich`) — mirrors
-  the debug ESMF module derecho loads for gnu MPI `DEBUG=TRUE` builds
-  (`esmf-mpi/8.9.1-debug`). **This is the default** (`ESMFMKFILE` points here)
-  because the current CI test is `SMS_D...` (debug).
-- `/usr/local/esmf-8.9.1` (`ESMF_BOPT=O`, `ESMF_COMM=mpich`) — mirrors the
-  non-debug one (`esmf-mpi/8.9.1`), for non-debug tests.
 - `/usr/local/esmf-8.9.1-mpiuni` (`ESMF_BOPT=O`, `ESMF_COMM=mpiuni`, and
-  **`ESMF_PIO=external`** against the mpi-serial PIO) — the **serial** build,
-  used by the unit tests *and* by every `mpi-serial` case. Selected
-  automatically; you should not need to set `ESMFMKFILE` for it. The external
-  PIO is what lets CDEPS read its stream meshes; see "mpi-serial".
+  **`ESMF_PIO=external`** against the mpi-serial PIO) — used by the unit tests
+  *and* by every case. It is both the image's default `ESMFMKFILE` and what
+  `cime-macros/gnu_container.cmake` names for `MPILIB=mpi-serial`, so you
+  should never need to set `ESMFMKFILE`. The external PIO is what lets CDEPS
+  read its stream meshes; see "mpi-serial".
 
-The serial flavor exists because `run_tests.py` forces `mpilib=mpi-serial`, so
-unit-test executables link with plain `gfortran` and no MPI library — while
-CTSM's `src/CMakeLists.txt` calls `find_package(ESMF REQUIRED)` and
-`link_libraries(esmf)` unconditionally. Linking an `ESMF_COMM=mpich` ESMF into
-such an executable fails with `libesmf.so: undefined reference to symbol
-'MPI_Bcast' ... DSO missing from command line`.
+It is an `ESMF_COMM=mpiuni` build because `run_tests.py` forces
+`mpilib=mpi-serial` and every case here is mpi-serial too, so executables link
+with plain `gfortran` and no MPI library — while CTSM's `src/CMakeLists.txt`
+calls `find_package(ESMF REQUIRED)` and `link_libraries(esmf)`
+unconditionally. Linking an `ESMF_COMM=mpich` ESMF into such an executable
+fails with `libesmf.so: undefined reference to symbol 'MPI_Bcast' ... DSO
+missing from command line`. The image used to carry two such flavors, for
+`mpich` cases it no longer builds.
 
-derecho has exactly the same split: whenever `mpilib="mpi-serial"`, its
+derecho makes the same choice: whenever `mpilib="mpi-serial"`, its
 `config_machines.xml` loads the plain `esmf` module (`esmf/8.9.1`) rather than
 the `-debug` variant it loads for MPI builds — even under `DEBUG="TRUE"` — and
 that install reports `ESMF_COMM=mpiuni` with `ESMF_BOPT=O` (confirmed against
 `esmf/8.9.1` on 2026-10-06, and unchanged from the older `esmf/8.6.0` reading
-quoted below). The debug/optimized mismatch here is deliberate, matching
-derecho.
-
-To use the optimized MPI flavor in a workflow step:
-
-```yaml
-env:
-  ESMFMKFILE: /usr/local/esmf-8.9.1/lib/esmf.mk
-```
+quoted below). So a `DEBUG=TRUE` case in this container gets this optimized
+ESMF; the debug/optimized mismatch is deliberate, and it is derecho's.
 
 ## Building the image
 
@@ -407,18 +424,28 @@ initialized and the other MPI is called uninitialized:
 Attempting to use an MPI routine before initializing MPICH
 ```
 
-Two things in a default build would do exactly that, so both are redirected by
-`cime-macros/gnu_container.cmake` on `MPILIB=mpi-serial`:
+Two things in a default build used to do exactly that, when the image still
+carried an MPI stack, and `cime-macros/gnu_container.cmake` redirects both on
+`MPILIB=mpi-serial`:
 
-| Redirect | Why |
+| Redirect | What it used to prevent |
 |---|---|
-| `NETCDF_PATH=/usr/local/serial` | the default netCDF is `--enable-parallel` against MPICH (`ldd libnetcdf.so` shows `libmpi.so.12`) |
+| `NETCDF_PATH=/usr/local` | the default netCDF was `--enable-parallel` against MPICH (`ldd libnetcdf.so` showed `libmpi.so.12`); the serial one lived at `/usr/local/serial` and this line was what reached it |
 | `ESMFMKFILE` → the mpiuni ESMF | a real-MPI `libesmf.so` carries its own `DT_NEEDED` on `libmpi.so.12` |
 
+Since the image was stripped to one serial stack and that stack moved to
+`/usr/local`, both lines name what the image has anyway. They are kept because
+they say, at the point of use, which netCDF and which ESMF an `mpi-serial`
+executable may link — and because they are what makes the macro work against
+any image, not only this one.
+
 `cime/CIME/Tools/Makefile` turns `NETCDF_PATH` into `INC_NETCDF`/`LIB_NETCDF`,
-and already drops `PNETCDF_PATH` for mpi-serial. The serial stack is built
-**static** so the loader cannot silently pick the parallel `.so` that
-`/etc/ld.so.conf.d/ctsm.conf` puts on the default path.
+and drops `PNETCDF_PATH` outright for mpi-serial (lines 214-217), which is what
+makes the `container` machine's now-unbacked `PNETCDF_PATH=/usr/local`
+harmless. The stack is still built **static**, now for a different reason: see
+"WHY /usr/local, AND WHY STATIC" in the `Dockerfile`. There is no
+`/etc/ld.so.conf.d/ctsm.conf` any more either — nothing shared installs in
+`/usr/local/lib`.
 
 **The mpiuni ESMF needs PIO, and that is the subtle part.** CDEPS calls
 `ESMF_MeshCreateFromFile` to read its stream meshes, which requires ESMF to
@@ -450,23 +477,48 @@ ESMF_PIO_LIBS:     -lpioc
 ESMF_NETCDF:       serial netcdf-c 4.9.2 + netcdf-fortran 4.6.1
 ```
 
-So the image builds, under `/usr/local/serial`: serial HDF5, netCDF-C,
-netCDF-Fortran, and PIO (`PIO_USE_MPISERIAL`, no pnetcdf, no MPI-IO); plus
-mpi-serial under `/usr/local/mpi-serial` purely to compile that PIO against.
-`ESMF_PIO_LIBS` is `-lpioc -lmpi-serial`, because PIO compiled against
-mpi-serial's headers emits real `MPI_*` names that ESMF's renamed mpiuni stubs
-do not satisfy. The Dockerfile asserts all of this at build time, so a
-PIO-less or MPI-linking serial ESMF fails the build rather than a later run.
+So the image builds, under `/usr/local`: serial HDF5, netCDF-C, netCDF-Fortran,
+and PIO (`PIO_USE_MPISERIAL`, no pnetcdf, no MPI-IO, and `PIO_ENABLE_FORTRAN=ON`
+so a case build has a `libpiof` and a `pio.mod` to link); plus mpi-serial under
+`/usr/local/mpi-serial`. `ESMF_PIO_LIBS` is `-lpioc -lmpi-serial`, because PIO
+compiled against mpi-serial's headers emits real `MPI_*` names that ESMF's
+renamed mpiuni stubs do not satisfy. The Dockerfile asserts all of this at build
+time, so a PIO-less or MPI-linking serial ESMF fails the build rather than a
+later run.
+
+### Linking the image's mpi-serial and PIO, not CTSM's submodules
+
+A case build here links the installs above, the way derecho's `mpi-serial` and
+`parallelio-serial` modules make derecho link its own. That takes two halves
+and neither works alone:
+
+- `cime-macros/gnu_container.cmake` sets `MPI_SERIAL_PATH`, `PIO_LIBDIR` and
+  `PIO_INCDIR`, hardcoded the way `PFUNIT_PATH` and `ESMFMKFILE` are, because
+  the container has no modules for `derecho.cmake`'s `$ENV{NCAR_ROOT_MPI_SERIAL}`
+  and `$ENV{PIO}` to come from.
+- The image exports `PIO`, `PIO_VERSION_MAJOR=2` and
+  `PIO_TYPENAME_VALID_VALUES=netcdf` as `ENV`s.
+  `cime/CIME/build_scripts/buildlib.pio` reads `PIO_VERSION_MAJOR` from
+  `os.environ` — which no macro file reaches — and that is what makes it use an
+  installed PIO instead of building one. With `MPI_SERIAL_PATH` set but
+  `PIO_VERSION_MAJOR` unset, make skips the mpi-serial submodule build and PIO's
+  from-source configure then dies looking for the archive that build would have
+  produced.
+
+The acceptance test is on the executable, not on the build succeeding: a freshly
+built `cesm.exe` must contain neither `/ctsm/libraries/mpi-serial` nor
+`/ctsm/libraries/parallelio` among its compiled-source strings (`strings -a`).
+A passing version check without that is the old vacuous behaviour unchanged.
 
 What needs no work at all, and should not be "fixed":
 
-- CIME builds mpi-serial from CTSM's own `libraries/mpi-serial` submodule
-  (`cime/CIME/config.py`).
-- `<MPILIBS>mpich</MPILIBS>` does not block it: `Machines.is_valid_MPIlib()`
-  special-cases `mpi-serial`.
+- `<MPILIBS>mpich</MPILIBS>` does not block mpi-serial:
+  `Machines.is_valid_MPIlib()` special-cases it. But it *is* the machine
+  default, so a test must say `_Mmpi-serial` (or `--mpilib mpi-serial`) to get
+  it.
 - No `<mpirun mpilib="mpi-serial">` entry is needed; its *absence* is how CIME
   says "launch with no `mpirun`".
-- It forces `NTASKS=1`, which a 1x1 grid needs, and selects
+- mpi-serial forces `NTASKS=1`, which a 1x1 grid needs, and selects
   `PIO_TYPENAME=netcdf`.
 
 ### No batch system
@@ -535,8 +587,10 @@ which is the normal case on NCAR HPC. If it is not, add
 The image is published to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing
 from Casper, **not** by a GitHub Actions workflow. That is deliberate: the
 build needs far more than a standard hosted runner's ~14 GB of free disk (the
-image alone is 3.5 GB, and the build compiles GCC and three ESMF trees from
-source), and at 4 cores it would take 3-4 h against a 6 h job limit. Pushing
+two-stack image measured 3.5 GB, and the build compiles GCC, the netCDF stack
+and ESMF from source), and at 4 cores it would take 3-4 h against a 6 h job
+limit. The serial-only image is smaller and faster to build, but by how much is
+not yet measured. Pushing
 from Casper also publishes exactly the artifact that was validated there.
 
 The consequence is that publishing is a **manual step after any Dockerfile
@@ -640,8 +694,9 @@ publishes a multi-architecture manifest via `podman manifest create` plus
 
 That works for `ctsm-docs` because it is a ~241 MB image of pip/conda packages
 that compiles almost nothing, so QEMU emulation costs little. This image
-compiles GCC, MPICH, HDF5, netCDF-C/Fortran, PnetCDF, three ESMF trees, git
-and pFUnit from source — about 50 minutes on 16 native cores. Emulated arm64
+compiles GCC, HDF5, netCDF-C/Fortran, mpi-serial, PIO, ESMF, git and pFUnit
+from source — the two-stack image took about 50 minutes on 16 native cores and
+this one takes less. Emulated arm64
 is 10-20x slower per core, i.e. days.
 
 It is not merely slow, it is unavailable: Casper is x86_64 with no
@@ -656,21 +711,18 @@ project aimed at local development on Apple Silicon, not a tag on this one.
 ## Bumping versions
 
 Component versions are `ARG`s near the top of the `Dockerfile`
-(`GCC_VERSION`, `MPICH_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`,
-`NETCDF_FORTRAN_VERSION`, `PNETCDF_VERSION`, `ESMF_VERSION`,
-`PFUNIT_VERSION`, `MPI_SERIAL_VERSION`, `PIO_VERSION`), plus
+(`GCC_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`, `NETCDF_FORTRAN_VERSION`,
+`ESMF_VERSION`, `PFUNIT_VERSION`, `MPI_SERIAL_VERSION`, `PIO_VERSION`), plus
 `GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
 
 `check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
 locally: `python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`) fails
-if these ARGs drift from derecho. Its subject is narrower than the list above:
-the software a **gnu + mpi-serial** run on derecho links. So it reads the
-`mpilib="mpi-serial"` blocks of
-`ccs_config/machines/derecho/config_machines.xml` — `netcdf`, `mpi-serial`,
-`parallelio-serial`, `esmf`, alongside the compiler-level `gcc` — and never
-the MPI ones. `MPICH_VERSION` and `PNETCDF_VERSION` are therefore **not**
-covered: nothing a serial run links corresponds to them. They are still in the
-`Dockerfile`; see [NEXT_STEPS.md](NEXT_STEPS.md) item 4b.
+if these ARGs drift from derecho. Its subject is the software a **gnu +
+mpi-serial** run on derecho links, so it reads the `mpilib="mpi-serial"` blocks
+of `ccs_config/machines/derecho/config_machines.xml` — `netcdf`, `mpi-serial`,
+`parallelio-serial`, `esmf`, alongside the compiler-level `gcc` — and never the
+MPI ones. That is now the whole image: every version `ARG` above is covered
+except `GIT_VERSION`, since git is not part of derecho's stack at all.
 
 Two things cannot be read from `config_machines.xml` and are recorded by hand
 in `derecho-versions.ini`:
@@ -718,7 +770,7 @@ cannot catch a miss, because they assert against the *templated*
 so a separate assertion reads the path back out of the macro and requires it to
 exist and to be the `ESMF_COMM=mpiuni` build. A forgotten edit fails the build
 instead of surfacing much later, in `run-unit-tests-in-container.sh` and in
-every `mpi-serial` case. The concrete install paths quoted in "ESMF flavors"
+every `mpi-serial` case. The concrete install paths quoted in "ESMF flavor"
 and "Baked-in environment" move with the same bump and nothing asserts those,
 so edit them in the same change.
 
@@ -726,9 +778,9 @@ so edit them in the same change.
 
 | Variable | Value | Why |
 |---|---|---|
-| `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt` mpich + gcc | non-login GHA shells need the toolchain on `PATH` without profile scripts |
-| `CC/CXX/FC/F77` | MPICH wrappers (`mpicc`, …) | build everything against MPICH |
-| `ESMFMKFILE` | `/usr/local/esmf-8.9.1-debug/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it |
+| `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt/gcc` | non-login GHA shells need the toolchain on `PATH` without profile scripts |
+| `ESMFMKFILE` | `/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it. There is one ESMF now, so this and the CIME macro name the same file |
+| `PIO` / `PIO_VERSION_MAJOR` / `PIO_TYPENAME_VALID_VALUES` | `/usr/local` / `2` / `netcdf` | what makes CIME link the image's PIO instead of building one. `buildlib.pio` reads `PIO_VERSION_MAJOR` from `os.environ`, which no macro file can reach; an unset `PIO_TYPENAME_VALID_VALUES` is a `TypeError`, not a default |
 | `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests") |
 | `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
-| `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain |
+| `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain. Those `.pc` files now describe a *static* stack; see the `Dockerfile` comment for what that means for cprnc |

@@ -94,9 +94,11 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # run_tests.py forces mpilib="mpi-serial", so test executables link with plain
 # gfortran and no MPI library -- but CTSM's src/CMakeLists.txt calls
 # find_package(ESMF REQUIRED) and link_libraries(esmf) unconditionally. Linking
-# the image's default ESMF_COMM=mpich ESMF into a serial executable fails with
-# "libesmf.so: undefined reference to symbol 'MPI_Bcast' ... DSO missing from
-# command line", because nothing on the link line provides libmpi.
+# an ESMF_COMM=mpich ESMF into a serial executable fails with "libesmf.so:
+# undefined reference to symbol 'MPI_Bcast' ... DSO missing from command line",
+# because nothing on the link line provides libmpi. The image used to carry two
+# such flavors; since item 4b it carries none, and the ESMF_COMM=mpiuni build
+# named below is the only one installed.
 #
 # derecho has a separate ESMF for this case, and its config_machines.xml
 # selects it on exactly this condition: mpilib="mpi-serial" loads the plain
@@ -108,8 +110,9 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # before consulting the environment, and this file is included from
 # CIME_initial_setup at src/CMakeLists.txt line 4 -- well before the
 # find_package(ESMF) at line 24 -- so setting it here wins over the image's
-# baked-in ENV ESMFMKFILE. Non-serial builds fall through and keep that
-# default, so create_test is unaffected.
+# baked-in ENV ESMFMKFILE. Since item 4b the two name the same file, so this
+# is no longer an override; it keeps the macro self-contained and keeps
+# working against an image whose default ESMFMKFILE ever moves again.
 # EVERYTHING in an mpi-serial executable must speak ONE MPI.
 #
 # CTSM's mpi-serial build statically links mpi-serial, which defines every
@@ -127,19 +130,29 @@ string(APPEND FFLAGS " -fallow-argument-mismatch -fallow-invalid-boz")
 # CDEPS mesh reads (see the Dockerfile); ESMF disables PIO for mpiuni unless
 # ESMF_PIO is set in the environment at build time.
 #
-# The serial netCDF matters for the same one-MPI reason: the image's default
-# netCDF is built --enable-parallel against MPICH (`ldd libnetcdf.so` shows
-# libmpi.so.12), so linking it would put a second, uninitialized MPI in the
-# executable. derecho splits exactly this way, loading the serial netcdf module
-# (netcdf/4.9.3 today, config_machines.xml:87) for mpilib="mpi-serial" rather
-# than netcdf-mpi. cime/CIME/Tools/Makefile turns NETCDF_PATH into
-# INC_NETCDF/LIB_NETCDF and already drops PNETCDF_PATH for mpi-serial.
+# NETCDF_PATH is set for the same one-MPI reason, even though since item 4b it
+# names the same prefix ccs_config/machines/container/container.cmake:4 already
+# does. The image used to carry a second netCDF at /usr/local built
+# --enable-parallel against MPICH (`ldd libnetcdf.so` showed libmpi.so.12), and
+# linking that would have put a second, uninitialized MPI in the executable;
+# the serial stack lived at /usr/local/serial and this line was what reached
+# it. 4b deleted the parallel stack and promoted the serial one to /usr/local,
+# so the hazard is gone and this line is now a restatement rather than a
+# redirection -- kept because it says, at the point of use, which netCDF an
+# mpi-serial executable is allowed to link. derecho splits the same way,
+# loading the serial netcdf module (netcdf/4.9.3 today,
+# config_machines.xml:87) for mpilib="mpi-serial" rather than netcdf-mpi.
+# cime/CIME/Tools/Makefile turns NETCDF_PATH into INC_NETCDF/LIB_NETCDF and
+# drops PNETCDF_PATH outright for mpi-serial (lines 214-217), which is what
+# makes the container machine's now-unbacked PNETCDF_PATH=/usr/local harmless.
 #
-# /usr/local/serial is static, so the loader cannot silently pick the parallel
-# .so that /etc/ld.so.conf.d/ctsm.conf puts on the default path.
+# That prefix is static (see "WHY /usr/local, AND WHY STATIC" in the
+# Dockerfile), so there is no .so for the loader to pick at all; the image no
+# longer ships an /etc/ld.so.conf.d/ctsm.conf either, because nothing shared
+# installs there.
 if (MPILIB STREQUAL "mpi-serial")
   set(ESMFMKFILE "/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk")
-  set(NETCDF_PATH "/usr/local/serial")
+  set(NETCDF_PATH "/usr/local")
 
   # ---------------------------------------------------------------------------
   # The image's mpi-serial and PIO
@@ -154,13 +167,14 @@ if (MPILIB STREQUAL "mpi-serial")
   # container has no modules, so they are hardcoded, as PFUNIT_PATH and
   # ESMFMKFILE already are.
   #
-  # THESE PATHS REQUIRE THE ITEM-4b IMAGE AND DO NOT WORK BEFORE IT. The
-  # published :20261007 built PIO with -DPIO_ENABLE_FORTRAN=OFF -- it was only
-  # ever meant to satisfy ESMF, which links -lpioc and not -lpiof -- so it has
-  # no libpiof to point at, and its serial stack is still under
-  # /usr/local/serial rather than /usr/local. Against that image a container
-  # case build fails, deliberately and loudly, until 4b lands. The paths below
-  # are 4b's, so that commit does not have to touch them.
+  # THESE PATHS REQUIRE THE ITEM-4b IMAGE. They name the serial stack at
+  # /usr/local with a Fortran-enabled PIO in it, which is what the 4b Dockerfile
+  # builds. Any earlier image -- the published :20261007 and before -- put the
+  # serial stack under /usr/local/serial and built PIO with
+  # -DPIO_ENABLE_FORTRAN=OFF, since PIO was only ever meant to satisfy ESMF,
+  # which links -lpioc and not -lpiof. A container case build against one of
+  # those fails, deliberately and loudly, rather than silently reverting to the
+  # submodules.
   #
   # THE TWO SETTINGS ARE ONE SWITCH, which was measured rather than reasoned.
   # With only MPI_SERIAL_PATH set, Tools/Makefile:912-918 points $(MPISERIAL)
@@ -189,14 +203,15 @@ if (MPILIB STREQUAL "mpi-serial")
   # already emptied the directory that build needs -- the "Could NOT find
   # MPISERIAL_C" failure above.
   #
-  # MPI_SERIAL_PATH is /usr/local/mpi-serial, NOT the serial stack's prefix.
-  # The Dockerfile copies the archive into both, but only the dedicated prefix
-  # carries the headers, deliberately kept out of the serial stack so they
-  # cannot shadow a case build's own mpi.h. Dockerfile.pio-fortran asserts
-  # this path at image-build time; item 4b moves that assertion into the real
-  # Dockerfile, beside the PFUNIT_PATH and ESMFMKFILE ones.
+  # MPI_SERIAL_PATH is /usr/local/mpi-serial, NOT /usr/local. The Dockerfile
+  # copies the archive into both -- the mpiuni ESMF's link line wants it beside
+  # libpioc -- but only the dedicated prefix carries mpi.h and mpif.h, kept out
+  # of /usr/local/include because that directory is PIO_INCDIR and therefore on
+  # the -I path of every case compile. The Dockerfile asserts this path at
+  # image-build time, beside its PFUNIT_PATH and ESMFMKFILE assertions.
   #
-  # ACCEPTANCE TEST, met by the Dockerfile.pio-fortran probe on 2026-10-09: a
+  # ACCEPTANCE TEST, met on 2026-10-09 by a throwaway probe image (since folded
+  # into the Dockerfile and deleted; see NEXT_STEPS.md item 4b): a
   # freshly built cesm.exe contains neither "/ctsm/libraries/mpi-serial" nor
   # "/ctsm/libraries/parallelio" among its compiled-source strings, and does
   # contain the image's own prefixes (strings -a cesm.exe). A passing version

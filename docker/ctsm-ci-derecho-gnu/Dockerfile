@@ -1,23 +1,40 @@
 # Container image for building CTSM in GitHub Actions CI.
 #
 # Built from scratch on AlmaLinux 9 so every component can match what
-# CIME loads for gnu builds on derecho (per
+# CIME loads for a gnu + mpi-serial build on derecho (per
 # ccs_config/machines/derecho/config_machines.xml) exactly where an open
-# equivalent exists; see README.md for the version-match table and the
-# accepted deviations (cray-mpich -> MPICH 3.4.3, cray-libsci ->
-# reference LAPACK/BLAS).
+# equivalent exists; see README.md for the version-match table and the two
+# accepted deviations (cray-libsci -> reference LAPACK/BLAS, and the distro
+# runtime).
 #
-# Libraries are installed under /usr/local because CIME's "container"
-# machine (ccs_config/machines/container/) hard-codes
-# NETCDF_PATH=/usr/local and PNETCDF_PATH=/usr/local. The toolchain
-# lives under /opt. ESMF is located via ESMFMKFILE instead, so its three
-# build flavors (debug, optimized, and a serial ESMF_COMM=mpiuni build for
-# unit tests) live in their own prefixes.
+# ONE SOFTWARE STACK, AND IT IS SERIAL. There is no MPICH here, no parallel
+# HDF5/netCDF, no PnetCDF and no ESMF_COMM=mpich flavor: a gnu + mpi-serial run
+# on derecho loads none of them, and a second stack only ever created ways for
+# a build to link the wrong half. Everything installs under /usr/local, which
+# is where CIME's "container" machine hard-codes NETCDF_PATH
+# (ccs_config/machines/container/container.cmake:4, and the matching <env> in
+# that directory's config_machines.xml). The same machine hard-codes
+# PNETCDF_PATH=/usr/local, which is now a dead letter rather than a lie:
+# cime/CIME/Tools/Makefile:214-217 undefines PNETCDF_PATH outright for
+# MPILIB=mpi-serial, so nothing goes looking for the PnetCDF that is no longer
+# installed. The toolchain lives under /opt. ESMF is located via ESMFMKFILE
+# instead, so its one build flavor (ESMF_COMM=mpiuni) lives in its own prefix.
 #
-# The image serves two CIME workflows: create_test builds (mpilib=mpich) and
-# CTSM's Fortran unit tests (cime/scripts/fortran_unit_testing/run_tests.py,
-# which forces mpilib=mpi-serial). The unit-test path additionally needs
-# pFUnit and the cime-macros drop-in near the bottom of this file.
+# The image serves two CIME workflows, both of them mpi-serial: create_test
+# builds, and CTSM's Fortran unit tests
+# (cime/scripts/fortran_unit_testing/run_tests.py, which forces
+# mpilib=mpi-serial). A create_test case has to ask for mpi-serial explicitly
+# -- "_Mmpi-serial" in the test name, or --mpilib mpi-serial -- because the
+# container machine's <MPILIBS> still says mpich, so a test that names no
+# modifier takes that default and finds no MPI in this image.
+#
+# A case build here links the IMAGE's mpi-serial and PIO rather than compiling
+# CTSM's libraries/mpi-serial and libraries/parallelio submodules, which is
+# what derecho gets from its mpi-serial and parallelio-serial modules. That
+# takes two things together: cime-macros/gnu_container.cmake (MPI_SERIAL_PATH,
+# PIO_LIBDIR, PIO_INCDIR) and the PIO environment variables in the ENV block
+# near the bottom of this file. Neither works without the other; see those
+# sections.
 #
 # All environment needed at runtime is baked in with ENV: GitHub
 # Actions runs steps in non-login shells, so profile.d scripts never
@@ -26,34 +43,28 @@
 FROM docker.io/almalinux:9
 
 ARG GCC_VERSION=14.3.0
-ARG MPICH_VERSION=3.4.3
 ARG HDF5_VERSION=1.14.6
 ARG NETCDF_C_VERSION=4.9.3
 ARG NETCDF_FORTRAN_VERSION=4.6.2
-ARG PNETCDF_VERSION=1.14.1
 ARG ESMF_VERSION=8.9.1
 ARG PFUNIT_VERSION=4.8.0
-# These two build the mpi-serial flavor of the stack: the serial PIO below is
-# compiled against the mpi-serial below, and together they give the mpiuni ESMF
-# an external PIO (see "ESMF, serial flavor" below). Neither ARG reaches a CTSM
-# case build *in the container*: nothing sets MPI_SERIAL_PATH here, so such a
-# build compiles its own mpi-serial from libraries/mpi-serial, and with no
-# PIO_LIBDIR set here it compiles its own PIO from libraries/parallelio. On
-# derecho the corresponding modules ARE what a case links; see "Remaining steps"
-# item 4 in NEXT_STEPS.md for the tracing.
+# These two are load-bearing for a CTSM case build in the container, not just
+# for the image's internals. cime-macros/gnu_container.cmake sets
+# MPI_SERIAL_PATH, PIO_LIBDIR and PIO_INCDIR, and the ENV block near the bottom
+# of this file exports PIO/PIO_VERSION_MAJOR/PIO_TYPENAME_VALID_VALUES, so CIME
+# links these installs instead of compiling CTSM's own libraries/mpi-serial and
+# libraries/parallelio submodules -- mirroring derecho, where
+# ccs_config/machines/derecho/derecho.cmake:4,8-10 reads the same three
+# settings out of what the mpi-serial and parallelio-serial modules export. The
+# serial PIO is ALSO the mpiuni ESMF's external PIO (see "ESMF, the only
+# flavor" below), so one install serves both; that is why it is built first.
 #
-# They track derecho all the same, like every other version ARG here except two:
-# MPICH_VERSION (a deliberate open-source stand-in for proprietary cray-mpich,
-# never compared to derecho's version -- see the top of this file) and
-# GIT_VERSION (git is not part of derecho's stack at all; see the git section
-# near the bottom of this file): the image
-# mirrors what you get from CTSM's current ccs_config plus derecho's default
-# software stack, so check-derecho-versions.py compares both "direct" against
-# the mpilib="mpi-serial" <modules> blocks of derecho's config_machines.xml
-# (mpi-serial and parallelio-serial). Both are stale there as of
-# ccs_config_cesm1.0.88 -- derecho has 2.5.3 and 2.6.8 -- and fixing that needs
-# an image rebuild and revalidation. See "Remaining steps" item 4 in
-# NEXT_STEPS.md.
+# They track derecho like every other version ARG here except one: GIT_VERSION
+# (git is not part of derecho's stack at all; see the git section below). The
+# image mirrors what you get from CTSM's current ccs_config plus derecho's
+# default software stack, so check-derecho-versions.py compares both "direct"
+# against the mpilib="mpi-serial" <modules> blocks of derecho's
+# config_machines.xml (mpi-serial and parallelio-serial).
 ARG MPI_SERIAL_VERSION=2.5.3
 ARG PIO_VERSION=2.6.8
 
@@ -140,153 +151,50 @@ RUN dnf -y install gmp-devel mpfr-devel libmpc-devel && dnf clean all \
     && ldconfig \
     && rm -rf /tmp/gcc-*
 
-ENV PATH=/usr/local/bin:/opt/mpich/${MPICH_VERSION}/bin:/opt/gcc/${GCC_VERSION}/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
-    LD_LIBRARY_PATH=/usr/local/lib:/opt/gcc/${GCC_VERSION}/lib64:/opt/mpich/${MPICH_VERSION}/lib
+ENV PATH=/usr/local/bin:/opt/gcc/${GCC_VERSION}/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin \
+    LD_LIBRARY_PATH=/usr/local/lib:/opt/gcc/${GCC_VERSION}/lib64
 
-# ---- MPICH (open equivalent of derecho's cray-mpich, which is
-# MPICH-3.4-ABI-derived). MPICH_VERSION is a deliberate stand-in for the
-# proprietary cray-mpich and is never compared to derecho's version;
-# derecho-versions.ini's deviation guard records cray-mpich 8.1.32
-# (config_machines.xml:74). 8.1.x is MPICH-3.4-ABI-derived throughout, so
-# moving the guard from 8.1.27 did not change the right stand-in. ch4:ofi
-# matches cray-mpich's libfabric lineage; the libfabric implementation is the
-# one embedded in the MPICH tarball. ----
-RUN cd /tmp \
-    && wget -nv "https://www.mpich.org/static/downloads/${MPICH_VERSION}/mpich-${MPICH_VERSION}.tar.gz" \
-    && tar xzf "mpich-${MPICH_VERSION}.tar.gz" \
-    && cd "mpich-${MPICH_VERSION}" \
-    && CC="/opt/gcc/${GCC_VERSION}/bin/gcc" \
-       CXX="/opt/gcc/${GCC_VERSION}/bin/g++" \
-       F77="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
-       FC="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
-       FFLAGS="-fallow-argument-mismatch" \
-       FCFLAGS="-fallow-argument-mismatch" \
-       ./configure --prefix="/opt/mpich/${MPICH_VERSION}" \
-        --with-device=ch4:ofi --enable-shared \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && printf '%s\n' /usr/local/lib "/opt/mpich/${MPICH_VERSION}/lib" \
-        > /etc/ld.so.conf.d/ctsm.conf \
-    && ldconfig \
-    && rm -rf /tmp/mpich-*
-
-ENV CC=mpicc \
-    CXX=mpicxx \
-    FC=mpifort \
-    F77=mpif77
-
-# ---- HDF5 (parallel) ----
-# Only the git tag archive is still downloadable for this version; it
-# includes the generated configure script.
-RUN cd /tmp \
-    && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz" \
-    && tar xzf "hdf5_${HDF5_VERSION}.tar.gz" \
-    && cd "hdf5-hdf5_${HDF5_VERSION}" \
-    && ./configure --prefix=/usr/local --enable-parallel --enable-hl --with-zlib \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && ldconfig \
-    && rm -rf /tmp/hdf5-*
-
-# ---- netCDF-C ----
-# libxml2-devel is installed here rather than in the base dnf layer to
-# keep the (expensive) GCC layer cache valid; fold it into the base
-# layer whenever a clean rebuild happens anyway.
-RUN dnf -y install libxml2-devel && dnf clean all \
-    && cd /tmp \
-    && wget -nv "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_C_VERSION}/netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
-    && tar xzf "netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
-    && cd "netcdf-c-${NETCDF_C_VERSION}" \
-    && CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" \
-       ./configure --prefix=/usr/local --enable-netcdf-4 --enable-shared \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && ldconfig \
-    && rm -rf /tmp/netcdf-c-*
-
-# ---- netCDF-Fortran ----
-RUN cd /tmp \
-    && wget -nv "https://downloads.unidata.ucar.edu/netcdf-fortran/${NETCDF_FORTRAN_VERSION}/netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
-    && tar xzf "netcdf-fortran-${NETCDF_FORTRAN_VERSION}.tar.gz" \
-    && cd "netcdf-fortran-${NETCDF_FORTRAN_VERSION}" \
-    && CPPFLAGS="-I/usr/local/include" LDFLAGS="-L/usr/local/lib" \
-       ./configure --prefix=/usr/local --enable-shared \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && ldconfig \
-    && rm -rf /tmp/netcdf-fortran-*
-
-# ---- PnetCDF ----
-RUN cd /tmp \
-    && wget -nv "https://parallel-netcdf.github.io/Release/pnetcdf-${PNETCDF_VERSION}.tar.gz" \
-    && tar xzf "pnetcdf-${PNETCDF_VERSION}.tar.gz" \
-    && cd "pnetcdf-${PNETCDF_VERSION}" \
-    && ./configure --prefix=/usr/local --enable-shared MPICC=mpicc MPICXX=mpicxx MPIF77=mpif77 MPIF90=mpif90 \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && ldconfig \
-    && rm -rf /tmp/pnetcdf-*
-
-# ---- ESMF, debug flavor (BOPT=g) ----
-# Derecho's gnu DEBUG builds load esmf-mpi/8.9.1-debug; this is the default
-# ESMFMKFILE below since the current CI test is SMS_D (debug).
-# ESMF_COMM=mpich is ESMF's setting for MPICH v3 and later.
+# WHY /usr/local, AND WHY STATIC
+# The serial stack is the only stack, so it installs at the prefix CIME's
+# "container" machine hard-codes NETCDF_PATH to
+# (ccs_config/machines/container/container.cmake:4). SERIAL_PREFIX stays a
+# variable because every step below names it, and keeping it keeps this layout
+# legible against the two-stack one it replaces.
 #
-# The sed patch fixes an upstream bug in ESMF's bundled-PIO recipe: it
-# invokes the cmake-generated sub-make as plain `make` instead of
-# `$(MAKE)`, so GNU make doesn't mark it recursive and the jobserver
-# file descriptors it inherits via MAKEFLAGS are invalid ("write
-# jobserver: Bad file descriptor" under parallel builds).
-RUN cd /tmp \
-    && wget -nv "https://github.com/esmf-org/esmf/archive/refs/tags/v${ESMF_VERSION}.tar.gz" \
-    && tar xzf "v${ESMF_VERSION}.tar.gz" \
-    && cd "esmf-${ESMF_VERSION}" \
-    && sed -i 's|make VERBOSE=1 -f ./Makefile|$(MAKE) VERBOSE=1 -f ./Makefile|; s|make -f ./Makefile install|$(MAKE) -f ./Makefile install|' \
-        src/Infrastructure/IO/PIO/makefile \
-    && export ESMF_DIR="$PWD" ESMF_COMPILER=gfortran ESMF_COMM=mpich ESMF_BOPT=g \
-        ESMF_NETCDF=nc-config \
-        ESMF_INSTALL_PREFIX="/usr/local/esmf-${ESMF_VERSION}-debug" \
-        ESMF_INSTALL_HEADERDIR="/usr/local/esmf-${ESMF_VERSION}-debug/include" \
-        ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}-debug/mod" \
-        ESMF_INSTALL_LIBDIR="/usr/local/esmf-${ESMF_VERSION}-debug/lib" \
-        ESMF_INSTALL_BINDIR="/usr/local/esmf-${ESMF_VERSION}-debug/bin" \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
-
-# ---- ESMF, optimized flavor (BOPT=O) ----
-# For future non-debug CI tests; select it by overriding ESMFMKFILE.
-# Same PIO-makefile patch as the debug flavor above.
-RUN cd /tmp \
-    && wget -nv "https://github.com/esmf-org/esmf/archive/refs/tags/v${ESMF_VERSION}.tar.gz" \
-    && tar xzf "v${ESMF_VERSION}.tar.gz" \
-    && cd "esmf-${ESMF_VERSION}" \
-    && sed -i 's|make VERBOSE=1 -f ./Makefile|$(MAKE) VERBOSE=1 -f ./Makefile|; s|make -f ./Makefile install|$(MAKE) -f ./Makefile install|' \
-        src/Infrastructure/IO/PIO/makefile \
-    && export ESMF_DIR="$PWD" ESMF_COMPILER=gfortran ESMF_COMM=mpich ESMF_BOPT=O \
-        ESMF_NETCDF=nc-config \
-        ESMF_INSTALL_PREFIX="/usr/local/esmf-${ESMF_VERSION}" \
-        ESMF_INSTALL_HEADERDIR="/usr/local/esmf-${ESMF_VERSION}/include" \
-        ESMF_INSTALL_MODDIR="/usr/local/esmf-${ESMF_VERSION}/mod" \
-        ESMF_INSTALL_LIBDIR="/usr/local/esmf-${ESMF_VERSION}/lib" \
-        ESMF_INSTALL_BINDIR="/usr/local/esmf-${ESMF_VERSION}/bin" \
-    && make -j"${MAKE_JOBS}" \
-    && make install \
-    && rm -rf /tmp/esmf-* /tmp/v${ESMF_VERSION}.tar.gz
-
-# WHY /usr/local/serial AND WHY STATIC
-# A separate prefix keeps the parallel stack at /usr/local untouched, so
-# ordinary mpich builds are unaffected. Static (--disable-shared) is
-# deliberate: the base image lists /usr/local/lib in
-# /etc/ld.so.conf.d/ctsm.conf, so a SHARED serial libnetcdf.so would link
-# correctly and then silently load the PARALLEL one at runtime -- the same bug
-# again, in a much harder-to-see form. Static makes that impossible.
+# Static (--disable-shared) is no longer about shadowing. That WAS the reason:
+# a parallel libnetcdf.so also lived in /usr/local/lib, so a shared serial
+# build would have linked correctly and then silently loaded the parallel one.
+# There is no parallel twin any more. Static stays for two reasons that remain
+# true:
+#   - PIO has to be static. cime/CIME/Tools/Makefile:667 names
+#     $(PIO_LIBDIR)/libpiof.a and libpioc.a BY PATH as prerequisites of both
+#     $(CSMSHARELIB) (line 931) and the executable (line 960), and the only
+#     rule for them (line 929) carries no recipe -- shared PIO libraries stop a
+#     case build outright with "No rule to make target".
+#   - PIO, the mpiuni ESMF and every case executable link this netCDF/HDF5
+#     chain, so it is built the same way. Static also puts each library's
+#     version banner inside cesm.exe, which is where DRIFT_CHECK_DESIGN.md's
+#     instrument map reads the container's netCDF-C and HDF5 versions from
+#     (`strings`); a shared stack would move them into the .so instead.
 # -fPIC because ESMF links these into position-independent objects.
-ENV SERIAL_PREFIX=/usr/local/serial
+#
+# NOTHING SHARED LANDS IN /usr/local/lib, which is why there is no
+# /etc/ld.so.conf.d/ctsm.conf any more. That file was written by the MPICH
+# block, listed /usr/local/lib plus the mpich lib dir, and went with it.
+# Traced over what is left: HDF5, netCDF-C and netCDF-Fortran are
+# --disable-shared --enable-static; PIO is BUILD_SHARED_LIBS=OFF; mpi-serial is
+# a hand-copied .a; git installs to bin/, libexec/ and share/; pFUnit and ESMF
+# have their own prefixes, which ctsm.conf never listed either. ldconfig has
+# nothing to cache here. ENV LD_LIBRARY_PATH above still lists /usr/local/lib,
+# so anything shared that did appear would still be found at run time.
+ENV SERIAL_PREFIX=/usr/local
 
 # ---- HDF5 (serial) ----
-# Note the compilers: the base image sets ENV CC=mpicc/FC=mpifort, which is
-# exactly what must NOT be used here. Override to the plain gcc toolchain.
+# Note the compilers: named by absolute path into /opt. They used to be an
+# override of the ENV CC=mpicc/FC=mpifort the MPICH block baked in; those are
+# gone, but the explicit paths stay, because AlmaLinux's bootstrap gcc (11.5.0,
+# the one that built GCC ${GCC_VERSION}) is still installed in /usr/bin and
+# nothing in this stack should be able to fall back to it.
 RUN cd /tmp \
     && wget -nv "https://github.com/HDFGroup/hdf5/archive/refs/tags/hdf5_${HDF5_VERSION}.tar.gz" \
     && tar xzf "hdf5_${HDF5_VERSION}.tar.gz" \
@@ -302,7 +210,15 @@ RUN cd /tmp \
     && rm -rf /tmp/hdf5-*
 
 # ---- netCDF-C (serial) ----
-RUN cd /tmp \
+# libxml2-devel is installed here rather than in the base dnf layer to keep the
+# (expensive) GCC layer cache valid; fold it into the base layer whenever a
+# clean rebuild happens anyway. It used to be installed by the MPI-linked
+# netCDF-C build that ran before this one; that build is gone, and this is now
+# the first step that needs it. netCDF-C links libxml2 -- it is in the
+# -l list `nc-config --libs --static` returns, which the netCDF-Fortran step
+# below depends on.
+RUN dnf -y install libxml2-devel && dnf clean all \
+    && cd /tmp \
     && wget -nv "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_C_VERSION}/netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
     && tar xzf "netcdf-c-${NETCDF_C_VERSION}.tar.gz" \
     && cd "netcdf-c-${NETCDF_C_VERSION}" \
@@ -340,10 +256,17 @@ RUN cd /tmp \
     && make install \
     && rm -rf /tmp/netcdf-fortran-*
 
-# ---- mpi-serial, solely to build ESMF's external PIO against ----
-# Installed under its OWN prefix, not ${SERIAL_PREFIX}, so its mpi.h cannot
-# shadow anything for the CTSM case build (which compiles its own mpi-serial
-# from CTSM's submodule).
+# ---- mpi-serial: PIO builds against it, and so does every case ----
+# cime-macros/gnu_container.cmake points MPI_SERIAL_PATH at ${MPISERIAL_PREFIX}
+# below, so cime/CIME/Tools/Makefile:912-918 links THIS archive and skips
+# building CTSM's libraries/mpi-serial submodule. The copy into
+# ${SERIAL_PREFIX}/lib is what the mpiuni ESMF's link line asks for
+# (ESMF_PIO_LIBS="-lpioc -lmpi-serial" against ESMF_PIO_LIBPATH, below).
+#
+# The HEADERS go only into the dedicated prefix, never ${SERIAL_PREFIX}: that
+# is now /usr/local, whose include/ is PIO_INCDIR and therefore on the -I path
+# of every case compile (Tools/Makefile:465). Keeping mpi.h/mpif.h out of it
+# means exactly one mpi.h is reachable, the one MPI_SERIAL_PATH names.
 #
 # The files are copied by hand rather than via `make install`: mpi-serial's
 # install rule expands $(INSTALL) and $(MKINSTALLDIRS), and neither is defined
@@ -367,20 +290,101 @@ RUN cd /tmp \
     && (cp mpi.mod "${MPISERIAL_PREFIX}/include/" 2>/dev/null || true) \
     && rm -rf /tmp/mpi-serial-* /tmp/MPIserial_*
 
-# ---- PIO for ESMF, built against mpi-serial + the serial netCDF ----
-# ESMF links only -lpioc, so the Fortran interface is not needed. No pnetcdf
-# and no MPI-IO: both would reintroduce a real-MPI dependency, which is the
-# whole thing we are avoiding. Mirrors the flags CIME itself uses for a
-# PIO_USE_MPISERIAL build.
+# ---- git (built from source; NO openssh dependency) ----
+# CIME build steps clone helper repos at build time via CMake
+# ExternalProject_Add: cprnc fetches genf90 (github.com/PARALLELIO/genf90),
+# and PIO/CDEPS/CMEPS generate code with genf90 too -- so the image needs a
+# real git at runtime. git cannot be dnf-installed here: it pulls openssh,
+# whose rpm chowns a setuid helper (ssh-keysign) to a non-root id, which
+# fails under rootless single-UID podman ("cpio: chown failed"). Building
+# from source avoids openssh entirely -- https clones go through libcurl --
+# and behaves like a stock git. NO_OPENSSL/NO_EXPAT/NO_GETTEXT/NO_TCLTK drop
+# optional deps we don't ship.
+#
+# IT SITS HERE, BEFORE PIO, because the PIO layer below needs it AT BUILD TIME:
+# with -DPIO_ENABLE_FORTRAN=ON, ParallelIO's CMakeLists.txt:137-158 shells out
+# to `git clone CMake_Fortran_utils` unless USER_CMAKE_MODULE_PATH is defined,
+# and that clone is what defines it. The whole block is inside
+# `if (PIO_ENABLE_FORTRAN)`, which is why the old FORTRAN=OFF PIO build could
+# sit ahead of git and still configure. Still placed after the toolchain, so
+# editing this layer does not rebuild GCC or the netCDF stack -- it does now
+# rebuild PIO, ESMF and pFUnit, which is the price of the move and is cheap
+# next to those.
+ARG GIT_VERSION=2.45.2
 RUN cd /tmp \
+    && wget -nv "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.xz" \
+    && tar xf "git-${GIT_VERSION}.tar.xz" \
+    && cd "git-${GIT_VERSION}" \
+    && make -j"${MAKE_JOBS}" prefix=/usr/local CC=gcc \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 all \
+    && make prefix=/usr/local \
+        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 install \
+    && rm -rf /tmp/git-*
+
+# ---- ParallelIO, with the Fortran interface, against mpi-serial + netCDF ----
+# ONE PIO SERVES TWO CONSUMERS. The mpiuni ESMF below links it as its external
+# PIO (-lpioc), and a CTSM case build links it through the PIO_LIBDIR/PIO_INCDIR
+# that cime-macros/gnu_container.cmake sets -- which needs -lpiof and pio.mod,
+# hence PIO_ENABLE_FORTRAN=ON. (It was OFF before item 4b, when PIO existed only
+# for ESMF and a case compiled CTSM's libraries/parallelio submodule instead.)
+#
+# No pnetcdf and no MPI-IO: both would reintroduce a real-MPI dependency, which
+# is the whole thing this image avoids.
+#
+# FLAGS ARE DERECHO'S, NOT GUESSES. parallelio-serial/2.6.8.lua carries the full
+# configure line in its whatis; these are the ones that matter:
+#   -DPIO_ENABLE_FORTRAN=ON   -DPIO_ENABLE_TIMING=OFF
+#   -DPIO_USE_MPISERIAL=ON    -DPIO_ENABLE_LOGGING=OFF
+#   -DWITH_PNETCDF=OFF        -DPIO_ENABLE_TESTS=OFF
+# Timing stays OFF on both sides: CIME builds its own GPTL and links it
+# separately (cime/CIME/Tools/Makefile:674, ULIBS += ... -lgptl).
+#
+# TWO DELIBERATE DEVIATIONS from that modulefile:
+#   BUILD_SHARED_LIBS -- derecho says ON, this says OFF, for the reason given at
+#   "WHY /usr/local, AND WHY STATIC" above: Tools/Makefile names libpiof.a and
+#   libpioc.a by path as recipe-less prerequisites, so a shared PIO stops a case
+#   build with "No rule to make target".
+#   PIO_ENABLE_NETCDF_INTEGRATION -- derecho says ON, this leaves it at PIO's
+#   own default of OFF (CMakeLists.txt:91). The flag only adds source files to
+#   libpioc/libpiof (src/clib/CMakeLists.txt:28, src/flib/CMakeLists.txt:34)
+#   that nothing in CTSM or CDEPS calls, and with a static PIO the linker never
+#   pulls them, so cesm.exe -- which is what the item-5 drift check compares --
+#   is unaffected. Turning it on would instead need netCDF-C dispatch support
+#   this image has not been checked for, and a build that quietly disabled it
+#   would leave the docs claiming a parity that was not there.
+#
+# GENF90_PATH and USER_CMAKE_MODULE_PATH are passed so that nothing is fetched
+# during cmake: src/flib/CMakeLists.txt:132-147 ExternalProject-clones genf90
+# when GENF90_PATH is undefined, and CMakeLists.txt:137-158 shells out to
+# `git clone CMake_Fortran_utils` when USER_CMAKE_MODULE_PATH is. genf90.pl is a
+# tracked file in the release tarball; CMake_Fortran_utils is not vendored
+# anywhere, so it is cloned here, once, visibly -- with the git built in the
+# layer above.
+#
+# The clone retries. Everything else that reaches the network here goes through
+# wget, which /etc/wgetrc configures to be patient (see the wgetrc step near the
+# top: compute-node networking is flaky). git honours none of that, and this
+# layer sits an hour of GCC into the build, so a single transient failure would
+# be expensive. Five attempts with a short backoff, then give up loudly.
+RUN cd /tmp \
+    && for i in 1 2 3 4 5; do \
+           git clone --depth 1 https://github.com/CESM-Development/CMake_Fortran_utils && break; \
+           echo "CMake_Fortran_utils clone failed (attempt $i); retrying"; \
+           rm -rf /tmp/CMake_Fortran_utils; \
+           sleep 15; \
+       done \
+    && test -f /tmp/CMake_Fortran_utils/mpiexec.cmake \
     && wget -nv "https://github.com/NCAR/ParallelIO/archive/refs/tags/pio${PIO_VERSION//./_}.tar.gz" \
     && tar xzf "pio${PIO_VERSION//./_}.tar.gz" \
     && cd "ParallelIO-pio${PIO_VERSION//./_}" \
+    && src="$PWD" \
     && mkdir build && cd build \
     && cmake \
         -DCMAKE_INSTALL_PREFIX="${SERIAL_PREFIX}" \
         -DCMAKE_C_COMPILER="/opt/gcc/${GCC_VERSION}/bin/gcc" \
+        -DCMAKE_Fortran_COMPILER="/opt/gcc/${GCC_VERSION}/bin/gfortran" \
         -DCMAKE_C_FLAGS=-fPIC \
+        -DCMAKE_Fortran_FLAGS=-fPIC \
         -DNetCDF_PATH="${SERIAL_PREFIX}" \
         -DWITH_PNETCDF=FALSE \
         -DPIO_USE_MPIIO=FALSE \
@@ -388,20 +392,36 @@ RUN cd /tmp \
         -DMPISERIAL_PATH="${MPISERIAL_PREFIX}" \
         -DMPI_C_INCLUDE_PATH="${MPISERIAL_PREFIX}/include" \
         -DMPI_C_LIBRARIES="${MPISERIAL_PREFIX}/lib/libmpi-serial.a" \
-        -DPIO_ENABLE_FORTRAN=OFF \
+        -DMPI_Fortran_INCLUDE_PATH="${MPISERIAL_PREFIX}/include" \
+        -DMPI_Fortran_LIBRARIES="${MPISERIAL_PREFIX}/lib/libmpi-serial.a" \
+        -DPIO_ENABLE_FORTRAN=ON \
         -DPIO_ENABLE_TESTS=OFF \
         -DPIO_ENABLE_TIMING=OFF \
+        -DPIO_ENABLE_LOGGING=OFF \
         -DPIO_ENABLE_EXAMPLES=OFF \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DGENF90_PATH="${src}/scripts" \
+        -DUSER_CMAKE_MODULE_PATH=/tmp/CMake_Fortran_utils \
         .. \
     && make -j"${MAKE_JOBS}" \
     && make install \
-    && test -f "${SERIAL_PREFIX}/lib/libpioc.a" -o -f "${SERIAL_PREFIX}/lib/libpioc.so" \
-    && rm -rf /tmp/ParallelIO-* /tmp/pio*.tar.gz
+    && rm -rf /tmp/ParallelIO-* /tmp/pio*.tar.gz /tmp/CMake_Fortran_utils
 
-# ---- ESMF, serial flavor (ESMF_COMM=mpiuni, BOPT=O) ----
-# run_tests.py forces mpilib="mpi-serial", so the unit-test executables link
-# with plain gfortran and no MPI library. Both ESMF flavors in the base image
-# are ESMF_COMM=mpich, and linking one of those into a serial executable fails:
+# Named individually so a partial install fails the image build rather than a
+# later case link. libpiof.a and libpioc.a are what Tools/Makefile:667 names by
+# path; pio.mod is what the CTSM sources USE.
+RUN set -eu; \
+    for f in "${SERIAL_PREFIX}/lib/libpiof.a" \
+             "${SERIAL_PREFIX}/lib/libpioc.a" \
+             "${SERIAL_PREFIX}/include/pio.mod"; do \
+        [ -f "$f" ] || { echo "ERROR: $f missing after PIO install" >&2; exit 1; }; \
+    done
+
+# ---- ESMF, the only flavor (ESMF_COMM=mpiuni, BOPT=O) ----
+# run_tests.py forces mpilib="mpi-serial", and so does every case this image
+# builds, so executables link with plain gfortran and no MPI library. An
+# ESMF_COMM=mpich ESMF linked into one of those fails -- this is what the image
+# used to carry, and the failure it produced:
 #
 #   /usr/bin/ld: /usr/local/esmf-8.6.0-debug/lib/libesmf.so: undefined
 #       reference to symbol 'MPI_Bcast'
@@ -416,11 +436,14 @@ RUN cd /tmp \
 # esmf-mpi/8.9.1-debug it loads for MPI builds -- whenever
 # mpilib="mpi-serial", even under DEBUG="TRUE", and that install's esmf.mk
 # reports ESMF_COMM=mpiuni, ESMF_BOPT=O, and a link line with no -lmpi. So
-# mpiuni + BOPT=O here; the debug mismatch is deliberate, matching derecho.
+# mpiuni + BOPT=O here; the debug mismatch is deliberate, matching derecho --
+# a DEBUG=TRUE case in this container still gets this optimized ESMF, exactly
+# as a DEBUG=TRUE mpi-serial case on derecho does.
 #
-# Selected via ESMFMKFILE from cime-macros/gnu_container.cmake when
-# MPILIB=mpi-serial. The image's baked-in ENV ESMFMKFILE still points at the
-# debug mpich flavor, so ordinary create_test builds are untouched.
+# Both the baked-in ENV ESMFMKFILE at the bottom of this file and the
+# set(ESMFMKFILE ...) in cime-macros/gnu_container.cmake now name THIS install;
+# the macro's copy is no longer overriding a different default, it just keeps
+# the macro self-contained.
 # ESMF asks nc-config for "--libs" with no --static (build/common.mk:1583),
 # which against this static prefix returns a bare -lnetcdf, for the reason
 # given at the netcdf-fortran step above. ESMF skips that query entirely when
@@ -484,28 +507,6 @@ RUN set -eu; \
              echo "       not support mpiuni -- it fails on a missing mpi.h." >&2; exit 1; }; \
     echo "serial ESMF OK: $mk"
 
-# ---- git (built from source; NO openssh dependency) ----
-# CIME build steps clone helper repos at build time via CMake
-# ExternalProject_Add: cprnc fetches genf90 (github.com/PARALLELIO/genf90),
-# and PIO/CDEPS/CMEPS generate code with genf90 too -- so the image needs a
-# real git at runtime. git cannot be dnf-installed here: it pulls openssh,
-# whose rpm chowns a setuid helper (ssh-keysign) to a non-root id, which
-# fails under rootless single-UID podman ("cpio: chown failed"). Building
-# from source avoids openssh entirely -- https clones go through libcurl --
-# and behaves like a stock git. NO_OPENSSL/NO_EXPAT/NO_GETTEXT/NO_TCLTK drop
-# optional deps we don't ship. Placed after the toolchain so editing this
-# layer doesn't rebuild those.
-ARG GIT_VERSION=2.45.2
-RUN cd /tmp \
-    && wget -nv "https://mirrors.edge.kernel.org/pub/software/scm/git/git-${GIT_VERSION}.tar.xz" \
-    && tar xf "git-${GIT_VERSION}.tar.xz" \
-    && cd "git-${GIT_VERSION}" \
-    && make -j"${MAKE_JOBS}" prefix=/usr/local CC=gcc \
-        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 all \
-    && make prefix=/usr/local \
-        NO_OPENSSL=1 NO_EXPAT=1 NO_GETTEXT=1 NO_TCLTK=1 install \
-    && rm -rf /tmp/git-*
-
 # ---- pFUnit (noMPI, noOpenMP) ----
 # noMPI/noOpenMP matches the prebuilt derecho/casper installs
 # (pFUnit4.8.0_derecho_Intel2023.2.1_noMPI_noOpenMP) and is what CIME wants
@@ -522,10 +523,11 @@ RUN cd /tmp \
 # submodules already populated (extern/fArgParse -> extern/gFTL-shared ->
 # extern/gFTL), so the build needs no network of its own beyond this fetch.
 #
-# CC/CXX/FC are overridden for this build only: the image bakes in the MPI
-# wrappers (ENV CC=mpicc / FC=mpifort) and this is deliberately serial. CMake
-# caches the compilers at configure time, so the override does not need to
-# extend to the make step.
+# CC/CXX/FC are named for this build only. They were an override of the MPI
+# wrappers the MPICH block used to bake in (ENV CC=mpicc / FC=mpifort); that is
+# gone, but naming them still pins this build to the /opt toolchain on PATH
+# rather than leaving CMake to probe. CMake caches the compilers at configure
+# time, so the setting does not need to extend to the make step.
 #
 # CMAKE_BUILD_TYPE is deliberately left unset: pFUnit's cmake/BuildType.cmake
 # defaults it to Debug, which is also what run_tests.py builds by default
@@ -604,19 +606,127 @@ RUN set -eu; \
     grep -q 'ESMF_COMM=mpiuni' "$mk" \
         || { echo "ERROR: $mk is not an ESMF_COMM=mpiuni build" >&2; exit 1; }
 
+# Same idea for MPI_SERIAL_PATH, which is the other path the macro hardcodes
+# against this image. Get it wrong and nothing fails here: the case build
+# quietly falls back to compiling CTSM's own libraries/mpi-serial submodule
+# (cime/CIME/Tools/Makefile:919-925, the else branch), which is the vacuous
+# behaviour item 4b exists to end -- or, worse, half-takes, and dies much later
+# in PIO's configure with "Could NOT find MPISERIAL_C". The headers are checked
+# as well as the archive, because only the dedicated prefix carries them; see
+# the mpi-serial section above.
+RUN set -eu; \
+    macro=/opt/ctsm-container/cime-macros/gnu_container.cmake; \
+    d="$(sed -n 's/^ *set(MPI_SERIAL_PATH "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
+    echo "macro MPI_SERIAL_PATH=$d"; \
+    if [ -z "$d" ]; then \
+        echo "ERROR: $macro sets no MPI_SERIAL_PATH, so a case build would" >&2; \
+        echo "       compile CTSM's own mpi-serial submodule exactly as" >&2; \
+        echo "       before this image existed." >&2; \
+        exit 1; \
+    fi; \
+    if [ ! -f "$d/lib/libmpi-serial.a" ] || [ ! -f "$d/include/mpi.h" ]; then \
+        echo "ERROR: $macro points MPI_SERIAL_PATH at $d, which has no" >&2; \
+        echo "       lib/libmpi-serial.a or include/mpi.h. Expected" >&2; \
+        echo "       ${MPISERIAL_PREFIX}." >&2; \
+        exit 1; \
+    fi
+
+# And the same for PIO_LIBDIR/PIO_INCDIR, which the macro also hardcodes.
+#
+# This is NOT covered by the PIO install assertion further up. That one checks
+# ${SERIAL_PREFIX}/lib/libpiof.a and friends, so it moves with the prefix and
+# stays green while the macro still points somewhere stale. These two are read
+# from the macro, exactly as the PFUNIT_PATH, ESMFMKFILE and MPI_SERIAL_PATH
+# checks are, so a prefix change that forgets the macro fails HERE.
+#
+# They are literals in the macro, not $ENV{PIO}: a container has no modules, so
+# gnu_container.cmake hardcodes them the way it hardcodes PFUNIT_PATH and
+# ESMFMKFILE. ($ENV{PIO} is what the MACHINE files of real machines do --
+# ccs_config/machines/derecho/derecho.cmake:8-10, casper.cmake:9-10,
+# cirrus.cmake:6-7 -- and container.cmake does not.)
+#
+# The failure this prevents is cime/CIME/Tools/Makefile:667 turning a stale
+# PIO_LIBDIR into a prerequisite with no recipe, and the case build dying with
+# "No rule to make target '<stale>/libpiof.a'" after the sharedlib phase has
+# already succeeded.
+RUN set -eu; \
+    macro=/opt/ctsm-container/cime-macros/gnu_container.cmake; \
+    libdir="$(sed -n 's/^ *set(PIO_LIBDIR "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
+    incdir="$(sed -n 's/^ *set(PIO_INCDIR "\([^"]*\)").*/\1/p' "$macro" | tail -1)"; \
+    echo "macro PIO_LIBDIR=$libdir"; \
+    echo "macro PIO_INCDIR=$incdir"; \
+    if [ -z "$libdir" ] || [ -z "$incdir" ]; then \
+        echo "ERROR: $macro sets no PIO_LIBDIR and/or PIO_INCDIR, so a case" >&2; \
+        echo "       build would compile CTSM's own libraries/parallelio" >&2; \
+        echo "       submodule instead of linking this image's PIO." >&2; \
+        exit 1; \
+    fi; \
+    for f in "$libdir/libpiof.a" "$libdir/libpioc.a" "$incdir/pio.mod"; do \
+        [ -f "$f" ] || { \
+            echo "ERROR: $macro points PIO_LIBDIR/PIO_INCDIR at" >&2; \
+            echo "       $libdir / $incdir, where $f does not exist." >&2; \
+            echo "       PIO installed under ${SERIAL_PREFIX}; update the" >&2; \
+            echo "       hardcoded paths in the macro to match." >&2; \
+            exit 1; }; \
+        echo "  $f"; \
+    done
+
 # Runtime environment for CIME's "container" machine:
-# - ESMFMKFILE: not set by the machine config; must come from the image.
+# - ESMFMKFILE: not set by the machine config; must come from the image. There
+#   is one ESMF now, the ESMF_COMM=mpiuni one, so this and the macro's
+#   set(ESMFMKFILE ...) name the same file.
+# - PIO / PIO_VERSION_MAJOR / PIO_TYPENAME_VALID_VALUES: all three come from
+#   derecho's parallelio-serial modulefile, and CIME expects all three together
+#   -- cime/CIME/build_scripts/buildlib.pio:76-81 says so in as many words, and
+#   82-91 is the code. PIO_VERSION_MAJOR is the one that does the work:
+#   buildlib.pio reads it from the ENVIRONMENT and returns before running any
+#   make, so PIO is never built from source. It cannot come from the macro -- a
+#   cmake macro file produces make variables, and os.environ does not see them
+#   -- and setting PIO_LIBDIR there does not substitute, because
+#   buildlib.pio:115 passes its own PIO_LIBDIR on the gmake command line, which
+#   beats anything Macros.make carries. PIO_TYPENAME_VALID_VALUES is not
+#   optional polish either, and it fails ugly: line 90 passes
+#   os.environ.get("PIO_TYPENAME_VALID_VALUES") straight into
+#   _set_pio_valid_values, which does valid_values += ",nothing" at line 224 and
+#   raises TypeError on None -- inside the very branch these variables exist to
+#   reach. "netcdf" is the honest value: this stack has no pnetcdf and no
+#   parallel netCDF4.
+#     PIO itself is read by NOTHING IN THIS IMAGE, and that is deliberate
+#   rather than an oversight. buildlib.pio reads only the other two
+#   (os.environ at lines 82 and 90), and the $ENV{PIO} that derives
+#   PIO_LIBDIR/PIO_INCDIR belongs to real machines' ccs_config files --
+#   derecho.cmake:8-10, casper.cmake:9-10, cirrus.cmake:6-7 -- not to
+#   container.cmake. gnu_container.cmake hardcodes both paths as literals
+#   instead, because a container has no modules to export PIO in the first
+#   place; its only $ENV{} read is PFUNIT_PATH. PIO is exported anyway because
+#   it is the variable derecho's parallelio-serial module sets, so the image
+#   satisfies the same contract a machine with modules would, and the day
+#   ccs_config's container.cmake grows the derecho.cmake lines the macro can
+#   drop its hardcoding with nothing else to change. The assertion above, not
+#   this variable, is what actually guards those two paths.
 # - CESMDATAROOT: DIN_LOC_ROOT=$CESMDATAROOT/inputdata must exist for
 #   namelist generation even in build-only (--no-run) testing.
 # - USER: CIME requires it; GitHub Actions container jobs don't set it.
 # - PKG_CONFIG_PATH: EL9's pkg-config search path omits
 #   /usr/local/lib/pkgconfig, and CIME's cprnc build locates
-#   netCDF/netCDF-Fortran via pkg-config.
+#   netCDF/netCDF-Fortran via pkg-config. That really is the path taken:
+#   cime/CIME/non_py/cprnc/CMakeLists.txt:78 tries find_package(NetCDF) first,
+#   but this stack is autotools-built (no netCDFConfig.cmake) and cime ships no
+#   FindNetCDF.cmake, so the pkg_check_modules fallback at :91-101 is what runs.
+#   NOTE what it now finds: these .pc files describe the STATIC serial stack, so
+#   `pkg-config --libs netcdf` yields a bare -lnetcdf with the transitive
+#   -lhdf5_hl -lhdf5 -lz -lcurl -lxml2 only in Libs.private, which `--static`
+#   reads and CMake's pkg_check_modules does not. Before item 4b this directory
+#   held the shared parallel stack, where that did not matter. Watch cprnc at
+#   the first rebuild.
 # - PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: EL9's pkgconf filters
 #   -I/usr/local/include out of --cflags as a "system" dir, but that is
 #   only true for the system gcc; the /opt toolchain does not search
 #   /usr/local/include by default.
-ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-debug/lib/esmf.mk \
+ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib/esmf.mk \
+    PIO=${SERIAL_PREFIX} \
+    PIO_VERSION_MAJOR=2 \
+    PIO_TYPENAME_VALID_VALUES=netcdf \
     CESMDATAROOT=/opt/cesmdata \
     USER=root \
     PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
@@ -624,14 +734,78 @@ ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-debug/lib/esmf.mk \
 
 RUN mkdir -p "${CESMDATAROOT}/inputdata"
 
+# ---- build-time record of what the installed stack reports ----
+# netCDF-Fortran's version and netCDF-C's filter set cannot be recovered from a
+# container cesm.exe: this stack is static, so `ldd` is blind to the filter
+# libraries, and nothing stamps the netCDF-Fortran version into the executable.
+# DRIFT_CHECK_DESIGN.md's instrument map marks both as gaps. Item 5's drift
+# check reads them back out of this file with `podman run ... cat`.
+#
+# A FILE, NOT A LABEL, deliberately. NEXT_STEPS item 4b asks for LABELs, but
+# LABEL takes a literal string -- it cannot run nf-config -- and a LABEL fed
+# from a build ARG would only repeat what this Dockerfile already says instead
+# of what the build produced, which is the whole point of these two values. Do
+# not "fix" this back into a LABEL.
+#
+# The --has-stdfilters option is confirmed to exist before it is used: some
+# builds of nc-config answer an unknown option with usage text on stdout and
+# exit 0, which would get recorded as if it were the filter list.
+#
+# AN EMPTY FILTER LIST IS NOT AN ERROR and must not fail the build. It is a
+# legitimate answer -- it means no standard filters beyond what is compiled in,
+# and this image has only zlib where derecho carries szip, c-blosc, zstd,
+# bzip2 and lz4 (DRIFT_CHECK_DESIGN.md's instrument map). That difference is
+# the kind of thing item 5 exists to REPORT, so recording it honestly is the
+# whole job; failing here would turn a real finding into a broken build, at the
+# very last layer, after everything expensive. The --help guard above already
+# covers the case this was defending against. nf-config --version is different:
+# empty there genuinely is wrong, so it stays required.
+RUN set -eu; \
+    nc-config --help 2>&1 | grep -q -- '--has-stdfilters' \
+        || { echo "ERROR: this nc-config has no --has-stdfilters, which item" >&2; \
+             echo "       5's drift check needs; see DRIFT_CHECK_DESIGN.md." >&2; \
+             exit 1; }; \
+    nfv="$(nf-config --version)"; \
+    ncf="$(nc-config --has-stdfilters)"; \
+    [ -n "$nfv" ] || { echo "ERROR: nf-config --version returned nothing" >&2; exit 1; }; \
+    mkdir -p /opt/ctsm-container; \
+    { echo "netcdf_fortran_version=${nfv}"; \
+      echo "netcdf_c_stdfilters=${ncf}"; } > /opt/ctsm-container/stack-facts.txt; \
+    cat /opt/ctsm-container/stack-facts.txt
+
+# mpi-serial and pio are labelled because since item 4b they are what a case
+# build LINKS, not just image internals, and item 5's drift check reads the
+# container side of both "from the ARG" (DRIFT_CHECK_DESIGN.md's instrument
+# map) -- so the ARG has to be readable from the image.
+#
+# Unlike the other labels, these two cannot be cross-checked against what the
+# image reports, and smoke-test.sh deliberately does not try:
+#   - Nothing in the image reports an mpi-serial version. The step above copies
+#     libmpi-serial.a, mpi.h and mpif.h by hand and nothing else; there is no
+#     config script and no version file.
+#   - PIO installs lib/libpio.settings ("PIO Version:"), and that is the ONLY
+#     place a built PIO states its version: pio_meta.h is generated into the
+#     build tree (CMakeLists.txt:507-511), never installed, and read only by
+#     tests/cunit, which this image does not build. But UPSTREAM HAS NOT BUMPED
+#     THE IN-TREE VERSION SINCE 2.6.6:
+#     CMakeLists.txt:11-13 still sets VERSION_PATCH 6 at the pio2_6_7 and
+#     pio2_6_8 tags (checked against all three tags on 2026-10-15), and
+#     derecho's own Spack-built parallelio/2.6.8 reads "PIO Version: 2.6.6"
+#     in its libpio.settings -- so this is upstream, not a container
+#     artifact. A build of
+#     ${PIO_VERSION}=2.6.8 therefore reports 2.6.6 about itself, and a check of
+#     this label against libpio.settings would fail a CORRECT image. Do not add
+#     one, and do not "correct" PIO_VERSION to 2.6.6 -- the tag the Dockerfile
+#     fetches is the honest version, and it is what check-derecho-versions.py
+#     compares to derecho's parallelio-serial module.
 LABEL gcc="${GCC_VERSION}" \
-      mpich="${MPICH_VERSION}" \
       hdf5="${HDF5_VERSION}" \
       netcdf-c="${NETCDF_C_VERSION}" \
       netcdf-fortran="${NETCDF_FORTRAN_VERSION}" \
-      pnetcdf="${PNETCDF_VERSION}" \
       esmf="${ESMF_VERSION}" \
       pfunit="${PFUNIT_VERSION}" \
+      mpi-serial="${MPI_SERIAL_VERSION}" \
+      pio="${PIO_VERSION}" \
       org.opencontainers.image.description="CTSM build/test image for GitHub Actions CI, matching derecho's gnu stack" \
       org.opencontainers.image.source="https://github.com/ESCOMP/CTSM"
 

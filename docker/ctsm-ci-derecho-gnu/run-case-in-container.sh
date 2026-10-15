@@ -33,6 +33,12 @@
 # These defaults are injected only if you did not pass them yourself:
 #   --machine container   CIME cannot detect the machine from a container hostname
 #   --compiler gnu        the only compiler in the image
+#   --mpilib mpi-serial   the only MPI in the image. Without this create_newcase
+#                         takes the first entry of <MPILIBS> in
+#                         ccs_config/machines/container/config_machines.xml,
+#                         which is mpich -- and there has been no MPICH in the
+#                         image since it was stripped to one serial stack. The
+#                         build would fail for want of an MPI that is not there.
 #   --output-root /scratch  bld/ and run/ land on the persistent host mount
 #
 # Overridable via environment (see container-common.sh for the full list):
@@ -84,6 +90,7 @@ esac
 cime_args=()
 ctsm_has_arg --machine "$@"     || cime_args+=(--machine container)
 ctsm_has_arg --compiler "$@"    || cime_args+=(--compiler gnu)
+ctsm_has_arg --mpilib "$@"      || cime_args+=(--mpilib mpi-serial)
 ctsm_has_arg --output-root "$@" || cime_args+=(--output-root /scratch)
 cime_args+=("$@")
 

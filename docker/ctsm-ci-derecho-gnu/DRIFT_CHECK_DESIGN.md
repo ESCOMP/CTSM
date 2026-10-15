@@ -153,11 +153,11 @@ stack on purpose, derecho links it dynamically. No single tool covers both.
 | ESMF | RPATH → `esmf/8.9.1` | RPATH → `/usr/local/esmf-8.9.1-mpiuni/lib` (version **and** flavor) |
 | netCDF-C | RPATH; `ldd` path | `strings` → `4.9.3 of Oct  7 2026 …` |
 | HDF5 | RPATH; `ldd` path | `strings` → `HDF5 library version: 1.14.6` |
-| netCDF-Fortran | `nf-config --version` by absolute path | ❌ gap — needs a build-time LABEL |
+| netCDF-Fortran | `nf-config --version` by absolute path | ✅ `netcdf_fortran_version` in `/opt/ctsm-container/stack-facts.txt`, recorded at image-build time |
 | mpi-serial | RPATH → `mpi-serial/2.5.3` | version from the ARG (load-bearing after the switch); the binary's job is to **confirm the mechanism** — see below |
-| PIO | RPATH → `parallelio/2.6.8` | same |
+| PIO | RPATH → `parallelio/2.6.8` | same — and the version must come from the ARG/`pio` label, **not** from the install. PIO's `lib/libpio.settings` is the only place a built PIO states its version — `pio_meta.h` is generated into the build tree (`CMakeLists.txt:507-511`) and never installed — and it reports `2.6.6` for every tag from `pio2_6_6` through `pio2_6_8`: upstream stopped bumping `VERSION_PATCH` in `CMakeLists.txt:11-13` (checked against all three tags, 2026-10-15). Derecho's own Spack-built `parallelio/2.6.8` reads `PIO Version: 2.6.6` too, so this is upstream rather than a container artifact. Reading it there would report a false mismatch against derecho's `parallelio-serial/2.6.8` |
 | BLAS/LAPACK | RPATH → `libsci/25.03.0` | `ldd` → `liblapack.so.3` (ABI only) |
-| compression filters | `ldd` closure + `libnetcdff.so.7`'s RPATH (szip 2.1.1, c-blosc 1.21.6, zstd 1.5.7, bzip2 1.0.8, lz4 1.10.0) | ❌ static → `ldd` blind; needs a build-time LABEL |
+| compression filters | `ldd` closure + `libnetcdff.so.7`'s RPATH (szip 2.1.1, c-blosc 1.21.6, zstd 1.5.7, bzip2 1.0.8, lz4 1.10.0) | static → `ldd` blind; `netcdf_c_stdfilters` in `/opt/ctsm-container/stack-facts.txt` instead |
 
 Tool properties that constrain the design:
 
@@ -194,45 +194,23 @@ controls.
 
 ## Work
 
-### Phase 1 — strip the image to serial
+### Phase 1 ✅ (repo side) — the image is stripped to serial
 
-`docker/ctsm-ci-derecho-gnu/Dockerfile`:
+Done in `docker/ctsm-ci-derecho-gnu/`, NEXT_STEPS item 4b: MPICH, PnetCDF, the MPI-linked netCDF-C and HDF5 builds and two of the three ESMF flavors are gone, with their version ARGs and the `/opt/mpich/...` entries in `PATH`/`LD_LIBRARY_PATH`. The serial stack is the only stack and moved to `/usr/local`. `cime-macros/gnu_container.cmake`'s `NETCDF_PATH` moved with it; `ESMFMKFILE`, `MPI_SERIAL_PATH`, `PIO_LIBDIR` and `PIO_INCDIR` were already written against the post-move paths. The `Dockerfile` now asserts `MPI_SERIAL_PATH` alongside `PFUNIT_PATH` and `ESMFMKFILE`, so a wrong path fails the image build rather than surfacing as a link error in someone's case. `smoke-test.sh` lost the MPI hello-world and the mpich/pnetcdf checks.
 
-- remove the MPICH build and `MPICH_VERSION`; drop `/opt/mpich/...` from `PATH`
-- remove PnetCDF entirely and `PNETCDF_VERSION` — parallel I/O only
-- remove the MPI-linked netCDF-C and HDF5 builds; the serial stack becomes the
-  only one. It can move from `/usr/local/serial` to `/usr/local`, which is where
-  `ccs_config/machines/container/config_machines.xml` hardcodes `NETCDF_PATH`.
-  Check what `PNETCDF_PATH=/usr/local` does once PnetCDF is gone.
-- remove two of the three ESMF flavors; keep only `ESMF_COMM=mpiuni`
-- drop the netCDF-C twin assertion — there is no second stack to agree with
+`PNETCDF_PATH=/usr/local` in the `container` machine config was the open question here. Answer: harmless. `cime/CIME/Tools/Makefile:214-217` undefines it outright for `mpilib=mpi-serial`, so nothing looks for the PnetCDF that is no longer installed.
 
-`cime-macros/gnu_container.cmake` and the `ESMFMKFILE` path move with the
-prefix change. The Dockerfile's existing macro-path assertion must be updated in
-the same commit, not after.
+**Still outstanding:** the Casper rebuild, the revalidation, and the republish. Nothing below has been built or measured against the new image. See `NEXT_STEPS.md` item 4b for the remaining list and for the one thing to watch at that rebuild (cprnc against a now-static netCDF via pkg-config).
 
-**Superseded, 2026-10-09.** `MPI_SERIAL_PATH` and `PIO_LIBDIR`/`PIO_INCDIR`
-are already in that file, all three hardcoded the way `PFUNIT_PATH` and
-`ESMFMKFILE` are, because the container has no modules to read
-`$ENV{NCAR_ROOT_MPI_SERIAL}` and `$ENV{PIO}` from. They name the paths the
-rebuilt image will have, so a container case build fails until that rebuild --
-accepted, rather than gating them. **Extend the Dockerfile's macro-path assertion to cover
-`MPI_SERIAL_PATH`**, so a wrong path fails the image build rather than
-surfacing as a link error in someone's case. See `NEXT_STEPS.md` item 4b for
-why the two settings cannot be split, and for the two further environment
-variables the image must export.
+### Phase 2 ✅ (repo side) — the binary's gaps are recorded at build time
 
-`smoke-test.sh`: drop the MPI hello-world and the mpich version check.
+netCDF-Fortran's version and the compression-filter set cannot be read from the container binary. The `Dockerfile` records both at build time, from the installed tools, in `/opt/ctsm-container/stack-facts.txt` as `key=value` (`netcdf_fortran_version`, `netcdf_c_stdfilters`), both asserted non-empty. The scheduled check reads that file with `podman run ... cat` rather than running `nf-config` itself.
 
-### Phase 2 — record what the binary can't carry
+**A file, not a `LABEL`, and that is not an oversight.** This section originally said to extend the LABEL mechanism `smoke-test.sh` already uses. `LABEL` takes a literal string and cannot run `nf-config`; a `LABEL` fed from a build `ARG` would record what the `Dockerfile` claims rather than what the build produced, which is exactly the distinction these two values exist to make. `smoke-test.sh` still reads versions from LABELs for everything that *does* have an ARG, and additionally checks that the recorded netCDF-Fortran version agrees with the `netcdf-fortran` label.
 
-netCDF-Fortran's version and the compression-filter set cannot be read from the
-container binary. `smoke-test.sh` already reads versions from image LABELs set
-at build time; extend that mechanism so the Dockerfile also records
-`nf-config --version` and `nc-config --has-stdfilters`. The scheduled check then
-reads a manifest rather than needing to run things inside the image.
+### Phase 3 ✅ — the checker is rewritten
 
-### Phase 3 — rewrite the checker
+Done, NEXT_STEPS item 4a. The list below is what was asked for, kept as the record of why each piece is the way it is.
 
 `docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`:
 

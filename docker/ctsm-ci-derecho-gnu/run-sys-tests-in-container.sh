@@ -72,7 +72,15 @@ ctsm_host_setup
 # later splits. So a value the user passed has to be merged with ours rather
 # than either one clobbering the other. Pull it out of the argument list here
 # and re-add the combined value below.
-injected_extra="--machine container --compiler gnu"
+# --mpilib mpi-serial is the only MPI in the image; without it create_test takes
+# the first entry of <MPILIBS> in the container machine config, which is mpich,
+# and a test whose name carries no _M modifier would build against an MPI that
+# is not installed. It is safe to inject unconditionally alongside suites whose
+# test names DO carry _Mmpi-serial: cime/CIME/test_scheduler.py:735-738 applies
+# create_test's --mpilib only when the test name sets no _M case option
+# ("create_test mpilib option overrides default but not explicitly set case_opt
+# mpilib"), so a named modifier always wins.
+injected_extra="--machine container --compiler gnu --mpilib mpi-serial"
 user_extra=""
 args=()
 skip_next=0

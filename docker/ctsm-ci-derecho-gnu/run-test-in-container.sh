@@ -43,6 +43,13 @@
 #   --compiler gnu         the only compiler in the image. Fills in the compiler
 #                          for tests named on the command line; a test name that
 #                          encodes one (..._gnu) still wins.
+#   --mpilib mpi-serial    the only MPI in the image. DEFAULT_TEST already names
+#                          _Mmpi-serial, but a test name you pass yourself need
+#                          not, and without this one falls back to the first
+#                          <MPILIBS> entry of the container machine, which is
+#                          mpich -- an MPI the image does not have. Same
+#                          precedence as --compiler: a test name that sets _M
+#                          wins (cime/CIME/test_scheduler.py:735-738).
 #   --xml-compiler gnu     the filter for --xml-* suite queries, which is a
 #                          DIFFERENT knob from --compiler. Ignored unless the
 #                          query branch is taken (create_test.py takes
@@ -65,10 +72,13 @@ source "${here}/container-common.sh"
 set -u
 
 # mpi-serial, matching how CTSM's own single-point tests are written in
-# cime_config/testdefs/testlist_clm.xml (they all use _Mmpi-serial). CIME
-# builds mpi-serial from CTSM's libraries/mpi-serial submodule, forces
-# NTASKS=1 -- which a 1x1 grid needs, since it cannot decompose over the
-# container machine's four default tasks -- and selects PIO_TYPENAME=netcdf.
+# cime_config/testdefs/testlist_clm.xml (they all use _Mmpi-serial). It is also
+# the only mpilib this image can build: since NEXT_STEPS item 4b the container
+# carries no MPICH. mpi-serial forces NTASKS=1 -- which a 1x1 grid needs, since
+# it cannot decompose over the container machine's four default tasks -- and
+# selects PIO_TYPENAME=netcdf. The mpi-serial and PIO a case links come from the
+# image, not from CTSM's libraries/mpi-serial and libraries/parallelio
+# submodules; see docker/ctsm-ci-derecho-gnu/README.md.
 #
 # Mirrors testlist_clm.xml's
 # SMS_Ld5_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs, minus its testmods and
@@ -84,6 +94,7 @@ ctsm_host_setup
 cime_args=()
 ctsm_has_arg --machine "$@"      || cime_args+=(--machine container)
 ctsm_has_arg --compiler "$@"     || cime_args+=(--compiler gnu)
+ctsm_has_arg --mpilib "$@"       || cime_args+=(--mpilib mpi-serial)
 ctsm_has_arg --xml-compiler "$@" || cime_args+=(--xml-compiler gnu)
 ctsm_has_arg --test-root "$@"    || cime_args+=(--test-root /cases)
 ctsm_has_arg --output-root "$@"  || cime_args+=(--output-root /scratch)

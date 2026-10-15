@@ -1,12 +1,8 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-10-09. The image builds and validates end-to-end on Casper
--- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point **runs** with
-both mpi-serial and mpich -- and is **published and public** at
-`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, which `cirrus-testing.yml`
-pins. (The earlier `:20260830` tag predates the serial netCDF stack and does NOT
-work with the current `gnu_container.cmake`.) All three wrapper scripts have been
-exercised on Casper._
+_Last updated: 2026-10-15. The **published** image, `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, builds and validates end-to-end on Casper -- pFUnit and CTSM's Fortran unit tests (55/55), plus single-point **runs** with both mpi-serial and mpich -- and is what `cirrus-testing.yml` pins. All four wrapper scripts have been exercised on Casper against it. (The earlier `:20260830` tag predates the serial netCDF stack and does NOT work with the current `gnu_container.cmake`.)_
+
+_**The repo no longer describes that image.** Item 4b has landed on the repo side and stripped the Dockerfile to a single serial stack; nothing has been rebuilt or republished yet, and `gnu_container.cmake` now names paths only the unbuilt image has, so a container case build against `:20261007` fails on purpose. Everything below that says "the image" in the present tense means the published one unless it says otherwise._
 
 _**Two decisions reshape the remaining work.** The container's scope is now
 **gnu + mpi-serial only**, so mpich comes out of the image entirely. And the
@@ -25,21 +21,10 @@ the workflows off every-push triggers (10)._
 
 ## Where things stand
 
-- **The from-scratch image builds and is VALIDATED on Casper.** `Dockerfile`
-  (FROM `almalinux:9`) builds the full gnu stack — GCC 14.3.0, MPICH 3.4.3
-  ch4:ofi, HDF5 1.14.6, netCDF-C 4.9.3, netCDF-Fortran 4.6.2, PnetCDF 1.14.1,
-  ESMF 8.9.1 (debug + optimized + mpiuni), mpi-serial 2.5.3, PIO 2.6.8, pFUnit
-  4.8.0, plus **git built from source**. These match derecho's `ncarenv/25.10`
-  gnu stack as of the 2026-10-07 rebuild (item 6) — see the README table.
-  **Item 4b removes a large part of this**: with the scope now serial-only,
-  MPICH, PnetCDF, the MPI-linked netCDF/HDF5 and two of the three ESMF flavors
-  all come out.
-  - `docker/ctsm-ci-derecho-gnu/smoke-test.sh` passes (versions, `$ESMFMKFILE`, perl
-    `XML::LibXML`, and an MPI + netCDF Fortran hello world that links
-    `-lnetcdff -lnetcdf -llapack -lblas` and runs under `mpiexec -n 2`).
-  - `create_test --no-run --machine container
-    SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.container_gnu.clm-default`
-    passes all phases and builds `cesm.exe`.
+- **`Dockerfile` (FROM `almalinux:9`) now builds ONE serial stack** — GCC 14.3.0, HDF5 1.14.6, netCDF-C 4.9.3, netCDF-Fortran 4.6.2 (all serial and static), mpi-serial 2.5.3, PIO 2.6.8 with the Fortran interface, ESMF 8.9.1 `ESMF_COMM=mpiuni` only, pFUnit 4.8.0, plus **git built from source**. These match derecho's `ncarenv/25.10` gnu + mpi-serial stack — see the README table. **Not yet built**: item 4b did this on the repo side only.
+  - What item 4b took out, relative to the published `:20261007`: MPICH 3.4.3 ch4:ofi, PnetCDF 1.14.1, the MPI-linked netCDF-C and HDF5, and the two `ESMF_COMM=mpich` ESMF flavors.
+  - `docker/ctsm-ci-derecho-gnu/smoke-test.sh` was rewritten with the image and has not been run against one. It now checks versions from labels, both `ESMFMKFILE` routes, the PIO install and its three `ENV`s, the stack-facts file, perl `XML::LibXML`, and a **serial** netCDF Fortran hello world built with `gfortran` — no `mpiexec`, no `use mpi`.
+  - The last validated build was the published image's: `create_test --no-run --machine container SMS_D_Ld3.f10_f10_mg37.I1850Clm50BgcCrop.container_gnu.clm-default` passed all phases and built `cesm.exe` on 2026-10-07.
 - The old derived-image recipe (FROM the CISL base) has been **deleted**;
   `Dockerfile` is now the from-scratch recipe (formerly `Dockerfile.scratch`).
 - `.github/workflows/cirrus-testing.yml` `simple-build-create_test` runs in the
@@ -257,6 +242,8 @@ against; and the mpiuni ESMF rebuilt with `ESMF_PIO=external` and
 `ESMF_PIO_LIBS="-lpioc -lmpi-serial"`. In `cime-macros/gnu_container.cmake`,
 `MPILIB=mpi-serial` selects that ESMF and `NETCDF_PATH=/usr/local/serial`.
 
+Versions and paths in that paragraph are as of 2026-08-31 and have since been superseded twice -- by item 6 (the version bumps) and by item 4b (the serial stack moved to `/usr/local` and PIO gained its Fortran interface). The *arrangement* it describes is what is still worth reading.
+
 Gotchas worth not rediscovering:
 
 - **ESMF errors go to `PET0.ESMF_LogFile`, not `cesm.log`.** The PIO failure
@@ -267,11 +254,13 @@ Gotchas worth not rediscovering:
   as CIME's own `buildlib.mpi-serial` does.
 - PIO compiled against mpi-serial emits real `MPI_*` symbol names, which
   ESMF's renamed mpiuni stubs do not satisfy -- hence `-lmpi-serial` in
-  `ESMF_PIO_LIBS`. Only the archive is copied into `/usr/local/serial/lib`;
-  the header stays out so it cannot shadow the case build's own `mpi.h`.
+  `ESMF_PIO_LIBS`. Only the archive is copied into the serial stack's `lib`
+  (`/usr/local/serial/lib` then, `/usr/local/lib` since item 4b); the headers
+  stay out, in `/usr/local/mpi-serial/include`, so they cannot shadow anything
+  on the case build's include path.
 - The image bakes a snapshot of `gnu_container.cmake`, which silently shadowed
-  edits during debugging. All three wrapper scripts now prefer the mounted
-  repo's copy.
+  edits during debugging. The wrapper scripts now prefer the mounted repo's
+  copy.
 
 `Dockerfile.serial-netcdf` was the throwaway probe used to prove all this. It
 has been folded into `Dockerfile` and deleted, exactly as `Dockerfile.pfunit`
@@ -390,8 +379,9 @@ kind of documentation and is tracked on its own._
    assertion and the two-stack twin machinery are gone. `cray-libsci` is now
    guarded; since its stand-in (dnf `lapack`/`blas`) carries no version ARG,
    `deviation` mode no longer requires one. `MPICH_VERSION` and
-   `PNETCDF_VERSION` stay in the `Dockerfile`, simply unchecked, until 4b
-   deletes them. Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
+   `PNETCDF_VERSION` stayed in the `Dockerfile`, simply unchecked, until 4b
+   deleted them -- which it has. Reasoning and evidence:
+   `DRIFT_CHECK_DESIGN.md`.
 
    Three things a later reader should not have to re-derive:
 
@@ -420,169 +410,33 @@ kind of documentation and is tracked on its own._
    `unittest`, temp-directory fixtures) mutation-tests each check and runs as
    its own CI step before the check itself.
 
-   **4b -- rebuild the image serial-only, linking its own mpi-serial and PIO.**
-   Everything here needs a Casper rebuild, so it lands as one change. Reasoning
-   and evidence: `DRIFT_CHECK_DESIGN.md`.
+   **4b ✅ (repo side) -- the image is serial-only and links its own mpi-serial and PIO.** Everything in this item needed one Casper rebuild, so it landed as one change; the rebuild itself is still outstanding, below. Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
 
-   - `Dockerfile`: remove MPICH and `MPICH_VERSION`; remove PnetCDF and
-     `PNETCDF_VERSION`; remove the MPI-linked netCDF-C and HDF5 builds; keep
-     only the `ESMF_COMM=mpiuni` ESMF. The serial stack becomes the only one and
-     moves from `/usr/local/serial` to `/usr/local`, which is where
-     `ccs_config/machines/container/config_machines.xml` hardcodes
-     `NETCDF_PATH`. Check what `PNETCDF_PATH=/usr/local` does once PnetCDF is
-     gone. Drop the netCDF-C twin assertion -- there is no second stack left to
-     agree with.
-   - `cime-macros/gnu_container.cmake` **already sets** `MPI_SERIAL_PATH` and
-     `PIO_LIBDIR`/`PIO_INCDIR`, so a case build links the image's installs
-     instead of compiling CTSM's submodules -- the mechanism
-     `ccs_config/machines/derecho/derecho.cmake:4,8-10` uses. `MPI_SERIAL_PATH`
-     All three are hardcoded, as `PFUNIT_PATH` and `ESMFMKFILE` are, and they
-     name **4b's** paths -- so a container case build fails against
-     `:20261007` until this item lands, deliberately, and this commit does not
-     have to touch those three lines. Still to do here:
-     **extend the Dockerfile's macro-path assertion** to cover
-     `MPI_SERIAL_PATH` (`Dockerfile.pio-fortran` has the assertion to lift), so
-     a wrong path fails the image build rather than a later case build; and
-     move the hardcoded `ESMFMKFILE` and `NETCDF_PATH` with the prefix change,
-     same commit.
+   What landed:
 
-     **The two halves are coupled; neither can land without the other.**
-     Measured 2026-10-09: a container case build against `:20261007` with only
-     `MPI_SERIAL_PATH` set. The switch worked -- `mpi-serial.bldlog` came back
-     0 bytes, so the submodule build was skipped -- and the build then died in
-     PIO's configure with `Could NOT find MPISERIAL_C (missing:
-     MPISERIAL_C_LIBRARY MPISERIAL_C_INCLUDE_DIR)`.
+   - `Dockerfile`: MPICH, PnetCDF, the MPI-linked netCDF-C and HDF5 builds and both `ESMF_COMM=mpich` ESMF flavors are gone, with `MPICH_VERSION` and `PNETCDF_VERSION`. The serial stack is the only stack and moved from `/usr/local/serial` to `/usr/local`, where `ccs_config/machines/container/container.cmake:4` hardcodes `NETCDF_PATH`. `PNETCDF_PATH=/usr/local` survives in that machine config and is harmless: `cime/CIME/Tools/Makefile:214-217` undefines it outright for `mpilib=mpi-serial`. PIO is rebuilt with `-DPIO_ENABLE_FORTRAN=ON`, and the image exports `PIO`, `PIO_VERSION_MAJOR=2` and `PIO_TYPENAME_VALID_VALUES=netcdf`.
+   - `cime-macros/gnu_container.cmake`: `NETCDF_PATH` moved to `/usr/local`. `ESMFMKFILE`, `MPI_SERIAL_PATH`, `PIO_LIBDIR` and `PIO_INCDIR` were already written against these paths and did not change.
+   - The `Dockerfile` grew a `MPI_SERIAL_PATH` macro-path assertion beside the `PFUNIT_PATH` and `ESMFMKFILE` ones, and a PIO install assertion on `libpiof.a`/`libpioc.a`/`pio.mod`.
+   - `smoke-test.sh` lost the MPI hello-world and the mpich/pnetcdf checks and gained checks on the PIO install, the three PIO `ENV`s and the stack-facts file.
+   - `README.md`'s accepted-exception list is two entries: `cray-libsci` (guarded) and the distro runtime (documented only).
+   - `Dockerfile.pio-fortran`, the throwaway probe, is deleted; its PIO layer, flag list, assertions and `ENV`s are folded into the `Dockerfile`.
 
-     `cime/CIME/Tools/Makefile:912-918` honours `MPI_SERIAL_PATH` by pointing
-     `$(MPISERIAL)` at the image's archive. That file already exists, so make
-     never runs the submodule build and `$(INSTALL_SHAREDPATH)` is left holding
-     `libgptl.a` and nothing else. Line 734 then hands PIO's from-source build
-     `-D MPISERIAL_PATH=$(INSTALL_SHAREDPATH)` unconditionally, ignoring
-     `MPI_SERIAL_PATH`, so PIO looks for `mpi.h` and `libmpi-serial` in the
-     directory the first switch just emptied. There is no case-level override:
-     `CMAKE_OPTS` is appended again at 738, 915 and 922, and none of those sets
-     `MPISERIAL_PATH` -- 738 is `USER_CMAKE_OPTS`, which
-     `cime/CIME/build_scripts/buildlib.pio:114` hardcodes to `GENF90_PATH`, and
-     915/922 set only the `MPI_C_*`/`MPI_Fortran_*` flags.
+   Four things a later reader should not have to re-derive:
 
-     derecho never meets this because its `parallelio-serial` module exports
-     `PIO_VERSION_MAJOR`, and `cime/CIME/build_scripts/buildlib.pio:82-91`
-     reads that from the environment and returns before running any make --
-     PIO is never configured from source and line 734 never runs. Note it is
-     the environment variable that does this, not `PIO_LIBDIR`: `buildlib.pio`
-     passes its own `PIO_LIBDIR` on the gmake command line (line 115), which
-     overrides whatever `Macros.make` carries.
+   - **The `git` block moved above the PIO block, deliberately.** With `-DPIO_ENABLE_FORTRAN=ON`, ParallelIO's `CMakeLists.txt:137-158` shells out to `git clone CMake_Fortran_utils` unless `USER_CMAKE_MODULE_PATH` is defined, and the whole block sits inside `if (PIO_ENABLE_FORTRAN)` -- which is why the old `FORTRAN=OFF` build could sit ahead of a git that is built from source. The clone is done explicitly in the PIO layer and the path passed in, so nothing is fetched behind cmake's back. Cost of the move: editing the git layer now rebuilds PIO, ESMF and pFUnit too.
+   - **`/etc/ld.so.conf.d/ctsm.conf` is gone, not rehomed.** It was written by the MPICH block and listed `/usr/local/lib` plus the mpich lib dir. After the move nothing shared installs in `/usr/local/lib`: HDF5, netCDF-C and netCDF-Fortran are `--disable-shared --enable-static`, PIO is `BUILD_SHARED_LIBS=OFF`, mpi-serial is a hand-copied `.a`, git installs to `bin/`, `libexec/` and `share/`, and pFUnit and ESMF have their own prefixes, which that file never listed. `ENV LD_LIBRARY_PATH` still carries `/usr/local/lib` if anything shared ever does appear.
+   - **The build-time stack facts are a FILE, not `LABEL`s.** This item originally asked for `LABEL`s recording `nf-config --version` and `nc-config --has-stdfilters`. `LABEL` takes a literal string and cannot run a command, and a `LABEL` fed from a build `ARG` would only repeat what the `Dockerfile` says rather than what the build produced -- which is the entire point of those two values. They are written to `/opt/ctsm-container/stack-facts.txt` as `key=value`, both required non-empty, and item 5 reads them with `podman run ... cat`.
+   - **`/usr/local/mpi-serial` has no `mpi.mod`, and never will.** mpi-serial's `fort.F90` is bare subroutines with `include "mpif.h"`, no `module mpi`, so the `Dockerfile`'s best-effort `cp mpi.mod` always no-ops. PIO's `FindMPISERIAL` asks for `INCLUDE_NAMES mpi.mod mpif.h` and `cmake/LibFind.cmake:239-249` breaks on the first hit, so `mpif.h` alone satisfies the Fortran component. Not a blocker; do not go looking for the missing `.mod`.
 
-     So `MPI_SERIAL_PATH` is not a cheap first half that can be proven against
-     the published image; on its own it is an invalid configuration.
-     `PIO_LIBDIR`/`PIO_INCDIR` need `-DPIO_ENABLE_FORTRAN=ON`, because this
-     `Dockerfile` passes `OFF` -- PIO was only ever meant to satisfy ESMF,
-     which links `-lpioc` and not `-lpiof` (`Dockerfile:442`) -- so there is no
-     `libpiof` and no `.mod` to point at. That is a `Dockerfile` change and therefore a rebuild, which
-     both halves now wait on.
+   What is left, in order:
 
-     One thing that is *not* a blocker: `/usr/local/mpi-serial` has no
-     `mpi.mod`, and never will -- mpi-serial's `fort.F90` is bare subroutines
-     with `include "mpif.h"`, no `module mpi`, so the Dockerfile's best-effort
-     `cp mpi.mod` always no-ops. PIO's `FindMPISERIAL` asks for
-     `INCLUDE_NAMES mpi.mod mpif.h` and `cmake/LibFind.cmake:239-249` breaks on
-     the first hit, so `mpif.h` alone satisfies the Fortran component.
-
-     **Prove it with a probe image before spending the real rebuild.**
-     `Dockerfile.pio-fortran` derives from `:20261007` and rebuilds only
-     ParallelIO, with Fortran on, into `/usr/local/serial` over the existing
-     one, then exports `PIO`, `PIO_VERSION_MAJOR=2` and
-     `PIO_TYPENAME_VALID_VALUES=netcdf`. Minutes rather than hours. It keeps
-     4b's *shape* -- one serial stack, ESMF and the case build pointing at the
-     same PIO -- though not 4b's path, since 4b moves that stack to
-     `/usr/local`. It is throwaway: fold the layers into the `Dockerfile` and
-     delete the file. It builds mpi-serial cases only: the `ENV` is
-     unconditional while the macro supplies `PIO_LIBDIR` only under
-     `MPILIB=mpi-serial`, so an mpich case would find no PIO. Moot after 4b
-     removes mpich, but it means the probe image cannot stand in for the real
-     one in CI.
-
-     `cime-macros/gnu_container.cmake` carries the consuming half **already**,
-     hardcoded to 4b's paths. Until this item lands, a container case build
-     against `:20261007` therefore fails -- accepted deliberately rather than
-     carrying a gate whose only job is to manage a window this short. The
-     probe image was proven with the paths it had; the committed values are
-     the post-move ones. `ESMFMKFILE` and `NETCDF_PATH` in the same file still
-     need moving here.
-
-     **Do not guess the PIO flags -- derecho's modulefile records them.**
-     `/glade/u/apps/derecho/modules/25.10/gcc/14.3.0/parallelio-serial/2.6.8.lua`
-     carries the full configure line in its `whatis`. The ones that matter:
-
-     ```
-     -DPIO_ENABLE_FORTRAN:BOOL=ON     -DPIO_ENABLE_TIMING:BOOL=OFF
-     -DPIO_USE_MPISERIAL:BOOL=ON      -DPIO_ENABLE_LOGGING:BOOL=OFF
-     -DWITH_PNETCDF:BOOL=OFF          -DPIO_ENABLE_TESTS:BOOL=OFF
-     -DPIO_ENABLE_NETCDF_INTEGRATION:BOOL=ON
-     -DBUILD_SHARED_LIBS:BOOL=ON
-     ```
-
-     **`PIO_ENABLE_NETCDF_INTEGRATION` is the one to NOT copy; keep it off**
-     (decided 2026-10-09). It is PIO's own default (`CMakeLists.txt:91`), and
-     the flag only adds source files to `libpioc`/`libpiof`
-     (`src/clib/CMakeLists.txt:28`, `src/flib/CMakeLists.txt:34`) that nothing
-     in CTSM or CDEPS calls -- with a static PIO the linker never pulls them,
-     so `cesm.exe` is unaffected, and `cesm.exe` is what item 5 compares.
-     Turning it on would need netCDF-C dispatch support this image has not
-     been checked for, and a build that quietly disabled it would leave the
-     docs claiming a parity that was not there. Record it as a deliberate
-     build-flag choice in the `Dockerfile`, not in `README.md`'s
-     accepted-exception list, which is about stack differences that *do* reach
-     the executable.
-
-     So **timing stays OFF** -- that matches what the image already does, and
-     it is derecho's answer rather than a guess. CIME builds its own GPTL and
-     links it separately (`Tools/Makefile:674`, `ULIBS += ... -lgptl`), which
-     is why PIO does not need its own. `BUILD_SHARED_LIBS` is the one flag to
-     think about rather than copy: the image's serial stack is static on
-     purpose, and `Tools/Makefile:667` names `libpiof.a`/`libpioc.a` by path as
-     prerequisites of both `$(CSMSHARELIB)` (line 931) and the executable (line
-     960), with no recipe to build them (line 929) -- so shared libraries stop
-     the build outright with "No rule to make target".
-   - **The image must export all three of `PIO`, `PIO_VERSION_MAJOR=2` and
-     `PIO_TYPENAME_VALID_VALUES=netcdf`**, as Dockerfile `ENV`s beside the
-     other baked-in variables. `cime/CIME/build_scripts/buildlib.pio:76-81`
-     states the contract and 82-91 is the code: `PIO_VERSION_MAJOR` present
-     and equal to `PIO_VERSION` is what makes CIME use an installed PIO
-     instead of building one, and it is read from `os.environ`, so no macro
-     file can supply it. `PIO_TYPENAME_VALID_VALUES` is not optional polish:
-     line 90 passes `os.environ.get(...)` straight into
-     `_set_pio_valid_values`, which does `valid_values += ",nothing"` at line
-     224 and raises `TypeError` on `None`. `netcdf` is the honest value --
-     the serial stack has no pnetcdf and no parallel netCDF4 -- and is what
-     derecho's `parallelio-serial` modulefile sets. The same variable also
-     reaches `Tools/Makefile:463-470`, which honors the macro's `PIO_LIBDIR`
-     only inside `ifeq ($(PIO_VERSION),$(PIO_VERSION_MAJOR))`; that is the
-     *component* build's `-I`/`-L`, separate from the sharedlib build
-     `buildlib.pio` skips.
-   - Add build-time `LABEL`s recording `nf-config --version` and
-     `nc-config --has-stdfilters`. Neither can be read back from the built
-     executable, and item 5 needs both. `smoke-test.sh` already reads versions
-     from LABELs; this extends that mechanism.
-   - `smoke-test.sh`: drop the MPI hello-world and the mpich version check.
-   - `README.md` "Software stack vs. derecho gnu": the accepted-exception list
-     becomes **two**, and loses MPI. `cray-libsci` → reference `lapack`/`blas`
-     stays and is now guarded (4a). Add the distro runtime as the second: a
-     container executable carries Red Hat's GCC 11.5.0 startup objects where
-     derecho's carries SUSE's 13.3.1, which is unfixable short of rebasing the
-     image on SLES and is documented rather than checked.
-   - Rebuild on Casper, revalidate with all four wrapper scripts, republish to
-     GHCR, repin `cirrus-testing.yml`.
-   - `cirrus-testing.yml`: add `_Mmpi-serial` to the test names, in the same
-     commit as the pin bump. They carry no `_M` modifier today, so they take the
-     machine default, which is mpich.
-   - **Acceptance test:** a freshly built `cesm.exe` must no longer contain
-     `/ctsm/libraries/mpi-serial` among its compiled-source strings. A passing
-     version check without that is the old vacuous behaviour unchanged.
-   - Consider an upstream `ccs_config` PR so
-     `machines/container/config_machines.xml` declares `mpi-serial` in
-     `<MPILIBS>`. mpi-serial works there today despite only `mpich` being
-     listed, but the file is lying. Shared with CESM, so it is separate work.
+   - **Rebuild on Casper** (`docker/ctsm-ci-derecho-gnu/build-on-casper.sh`). Nothing in this item has been built or run; the repo side is the whole of what landed.
+   - **Watch `cprnc` on that first build.** `PKG_CONFIG_PATH=/usr/local/lib/pkgconfig` now describes a *static* netCDF, where it used to describe the shared parallel one. `cime/CIME/non_py/cprnc/CMakeLists.txt:78` tries `find_package(NetCDF)` first, but this stack is autotools-built and cime ships no `FindNetCDF.cmake`, so the `pkg_check_modules` fallback at `:91-101` is what runs -- and `pkg-config --libs netcdf` yields a bare `-lnetcdf`, with the transitive `-lhdf5_hl -lhdf5 -lz -lcurl -lxml2` only in `Libs.private`, which `--static` reads and CMake does not. If cprnc fails to link, that is why, and the likely fix is to fold `Libs.private` into `Libs` in the installed `/usr/local/lib/pkgconfig/netcdf.pc` and `netcdf-fortran.pc` -- the shared-library link line those files describe is simply wrong for a static-only prefix. Not done pre-emptively: untested `.pc` surgery on a build we are about to spend hours on is the worse trade, and if `pkg_check_modules` turns out to cope we would have added permanent machinery for a problem that never existed. Untested in either direction.
+   - **Revalidate with all four wrapper scripts** (`run-unit-tests-`, `run-test-`, `run-case-`, `run-sys-tests-in-container.sh`), plus `smoke-test.sh` and `smoke-test-pfunit.sh`.
+   - **Acceptance test, on the EXECUTABLE.** A freshly built `cesm.exe` must contain neither `/ctsm/libraries/mpi-serial` nor `/ctsm/libraries/parallelio` among its compiled-source strings (`strings -a`). A passing version check without that is the old vacuous behaviour unchanged. The probe image met this on 2026-10-09; the real image has not been measured.
+   - **Republish to GHCR.**
+   - **Then, as a SEPARATE later commit:** repin `cirrus-testing.yml` to the new tag and add `_Mmpi-serial` to the test names, together. The tests carry no `_M` modifier today, so they take the machine default, which is `mpich` -- and there is no mpich in the image any more. Deliberately not in this commit: the pin must not move before the image it names exists, and a half-applied pair breaks CI either way.
+   - Consider an upstream `ccs_config` PR so `machines/container/config_machines.xml` declares `mpi-serial` in `<MPILIBS>`. mpi-serial works there today despite only `mpich` being listed, but the file is lying -- and now that mpich is gone from the image, `<MPILIBS>mpich</MPILIBS>` names the one thing the container cannot do. Shared with CESM, so it is separate work.
 5. **The drift check.** One scheduled thing that compares *built executables* --
    container against derecho, gnu + mpi-serial -- given the latest CTSM master
    tag and derecho's current stack. Version metadata is not enough; it is what
