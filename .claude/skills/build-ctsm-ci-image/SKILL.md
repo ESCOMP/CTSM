@@ -49,8 +49,10 @@ docker/ctsm-ci-derecho-gnu/smoke-test.sh
 docker/ctsm-ci-derecho-gnu/run-unit-tests-in-container.sh
 docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -t SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
-docker/ctsm-ci-derecho-gnu/run-case-in-container.sh --case brazil_test --compset IHistClm60BgcQianRsGs --res 1x1_brazil --run-unsupported
+docker/ctsm-ci-derecho-gnu/run-case-in-container.sh --case "brazil_$(date +%Y%m%d_%H%M%S)" --compset IHistClm60BgcQianRsGs --res 1x1_brazil --run-unsupported
 ```
+
+The case name is timestamped on purpose. `create_newcase` has no `--overwrite` and refuses an existing case directory with `ERROR: Case directory /cases/<name> already exists`, so a fixed name fails on every run after the first. Case directories live on the host in `$HOME/cases_devcontainer`; the test wrappers name theirs uniquely already. Delete old ones when they pile up — but check the date first, since one built against a previous image tells you nothing about the current one.
 
 `--machine container`, `--compiler gnu` and `--mpilib mpi-serial` are injected for you; anything you pass yourself wins. `run-sys-tests-in-container.sh` additionally injects `--skip-compare` and `--skip-generate`, because `run_sys_tests` requires one of each pair and a fresh image has no baselines — pass `-c` or `-g` to override either.
 
