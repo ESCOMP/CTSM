@@ -137,8 +137,8 @@ run the unit tests. Re-save under the new name after the next rebuild.
   "Publishing to GHCR". Decided **not** to model it on
   `.github/workflows/docker-image-build-publish.yml` (the `ctsm-docs`
   pattern): that builds on `ubuntu-latest`, which has ~14 GB free disk against
-  a 3.5 GB image whose build compiles GCC and three ESMF trees from source,
-  and 4 cores against a build that takes ~50 min on Casper's 16. A CI publish
+  a 3.1 GB image whose build compiles GCC and ESMF from source, and 4 cores
+  against a build that takes ~50 min on Casper's 16. A CI publish
   workflow is possible with a disk-reclaim step and amd64-only, but is
   follow-up work, not a blocker. The consequence: **nothing republishes
   automatically** — a Dockerfile change needs a manual rebuild, re-validate,
@@ -272,7 +272,8 @@ was before it. Rebuilt and re-validated from scratch on 2026-08-31; saved to
 One publishing gotcha, since it presents as something else entirely: if
 `podman load` is OOM-killed, it exits **137** having printed nothing, and the
 next `podman tag` fails with the misleading `image not known`. `vfs` storage
-duplicates every layer, so a 3.9 GB archive peaks around 54 GB -- load it from
+duplicates every layer, so a 3.9 GB archive peaks around 54 GB (measured on the
+two-stack image; 4b's is smaller, so treat this as an upper bound) -- load it from
 an allocation with real memory, e.g.
 `execcasper -A <PROJECT> -l select=1:ncpus=4:mem=96GB -l walltime=02:00:00`.
 
@@ -704,8 +705,8 @@ kind of documentation and is tracked on its own._
    before the workflow is designed in detail.** The build is about 50 minutes on
    16 native cores (README "Publishing"); GitHub-hosted runners are much
    smaller, and a job is killed at 6 hours. **Disk is the tighter limit**: a
-   hosted runner has roughly 14 GB free against a 3.5 GB image whose build
-   unpacks and compiles GCC, three ESMF trees and the rest of the stack, so a
+   hosted runner has roughly 14 GB free against a 3.1 GB image whose build
+   unpacks and compiles GCC, ESMF and the rest of the stack, so a
    reclaim step (dropping the runner's preinstalled Android/.NET/Haskell trees)
    and aggressive cleanup between layers are both likely required. Two more
    things follow: `MAKE_JOBS` (default 16) must be set from the runner's actual

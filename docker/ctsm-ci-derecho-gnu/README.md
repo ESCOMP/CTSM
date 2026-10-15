@@ -587,10 +587,11 @@ which is the normal case on NCAR HPC. If it is not, add
 The image is published to `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu` by pushing
 from Casper, **not** by a GitHub Actions workflow. That is deliberate: the
 build needs far more than a standard hosted runner's ~14 GB of free disk (the
-two-stack image measured 3.5 GB, and the build compiles GCC, the netCDF stack
-and ESMF from source), and at 4 cores it would take 3-4 h against a 6 h job
-limit. The serial-only image is smaller and faster to build, but by how much is
-not yet measured. Pushing
+serial-only image measures 3.1 GB, down from the two-stack image's 3.5 GB, and
+the build compiles GCC, the netCDF stack and ESMF from source), and at 4 cores
+it would take 3-4 h against a 6 h job limit. Dropping the MPI stack in item 4b
+therefore did not change this calculus: it saved 0.4 GB where the gap is about
+an order of magnitude. Pushing
 from Casper also publishes exactly the artifact that was validated there.
 
 The consequence is that publishing is a **manual step after any Dockerfile
@@ -621,14 +622,16 @@ Prerequisites, one time:
 
   Do not put the token in a file in this repo.
 
-To publish, after `build-on-casper.sh` and all three validation scripts pass.
+To publish, after `build-on-casper.sh`, `smoke-test.sh` and all four `run-*-in-container.sh` wrappers pass.
 Podman's storage does not survive the session, so if you have logged out since
 building, restore the image first — it saves and restores under the same
 `localhost/ctsm-ci-derecho-gnu:dev` name, so nothing needs re-tagging.
 
 **Give the session real memory, or the load is silently OOM-killed.** Podman
 here uses the `vfs` storage driver, which duplicates every layer rather than
-sharing them, so unpacking the ~3.9 GB archive peaks around 54 GB. An
+sharing them, so unpacking the ~3.9 GB archive peaks around 54 GB. That peak
+was measured on the two-stack image; 4b's is smaller, so it is an upper bound
+rather than a current figure, and the 96 GB below stays the safe ask. An
 interactive session started without an explicit `mem=` gets a small default
 and `podman load` is SIGKILLed: it prints *nothing*, exits 137, and the next
 command fails with the thoroughly misleading
