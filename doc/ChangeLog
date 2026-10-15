@@ -1,6 +1,57 @@
 ===============================================================
+Tag name: ctsm5.4.063
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
+Date: Tue Oct  6 09:32:15 MDT 2026
+One-line Summary: Move CTSM tests from t232 to t233
+
+Purpose and description of changes
+----------------------------------
+
+ Updating testlist_clm.xml, ExpectedTestFails.xml, config_compsets.xml, and documentation that needs updating
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #4238 Remove NorESM test
+ Contributes to #2540 Move testing from POP to MOM masks
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation: As needed regarding the update from t232 to t233
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Changes to tests or testing: Moving tests from t232 to t233 but postpone the change for LII2 tests (issue #4245)
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+
+Changes answers relative to baseline: Yes
+
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Only cases with grids that changed to the t233 grid
+    - what platforms/compilers: All
+    - nature of change: Only due to the grid update
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4223
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.062
-Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 497 1234)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Fri Oct 2 07:23:31 AM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
@@ -927,7 +978,7 @@ https://github.com/ESCOMP/CTSM/pull/4092
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.052
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Mon Aug 17 05:09:21 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
@@ -1745,7 +1796,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.042
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Fri May 22 04:07:30 PM MDT 2026
 One-line Summary: Get hillslope_fsat_equals_zero .true. for use_hillslope
 
@@ -1877,7 +1928,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.040
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Wed May 20 04:13:57 PM MDT 2026
 One-line Summary: Paramfile updates
 
@@ -2023,7 +2074,7 @@ https://github.com/NGEET/fates/pull/1550
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.038
-Originator(s): slevis (Samuel Levis,UCAR/TSS,303-665-1310)
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Thu May  7 03:29:26 PM MDT 2026
 One-line Summary: Merge b4b-dev to master
 
@@ -2163,7 +2214,7 @@ Pull Requests that document the changes (include PR ids):
 ===============================================================
 ===============================================================
 Tag name: ctsm5.4.036
-Originator(s): slevis, rgknox (Samuel Levis,UCAR/TSS,303-665-1310; Ryan Knox,LBNL,rgknox@lbl.gov)
+Originator(s): slevis, rgknox (Samuel Levis,UCAR/TSS, slevis@ucar.edu; Ryan Knox,LBNL,rgknox@lbl.gov)
 Date: Mon Apr 27 03:07:00 PM MDT 2026
 One-line Summary: Complete the FATES-CLM nitrogen coupling
 
