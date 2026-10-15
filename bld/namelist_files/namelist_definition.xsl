@@ -264,7 +264,6 @@
       <xsl:apply-templates select="entry[@category='mkgriddata']"/>
     </table>
     <table border="1" cellpadding="10">
-    <table border="1" cellpadding="10">
     <caption>CLM mkgriddata</caption>
       <tr>
       <th rowspan="2">Name</th>
@@ -323,6 +322,9 @@
 <hr/>
 
   </body>
+
+
+
 </xsl:template>
 
 <xsl:template match="entry">
