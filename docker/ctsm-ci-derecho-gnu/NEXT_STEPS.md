@@ -411,7 +411,7 @@ kind of documentation and is tracked on its own._
    `unittest`, temp-directory fixtures) mutation-tests each check and runs as
    its own CI step before the check itself.
 
-   **4b ✅ (repo side) -- the image is serial-only and links its own mpi-serial and PIO.** Everything in this item needed one Casper rebuild, so it landed as one change; the rebuild itself is still outstanding, below. Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
+   **4b ✅ -- the image is serial-only and links its own mpi-serial and PIO.** Built, validated on Casper, published as `:20261015` and pinned in `cirrus-testing.yml`, all 2026-10-15. Everything in this item needed one Casper rebuild, so the repo side landed as one change. The only bullet left below is the upstream `ccs_config` PR, which is deliberately separate work shared with CESM. Reasoning and evidence: `DRIFT_CHECK_DESIGN.md`.
 
    What landed:
 
