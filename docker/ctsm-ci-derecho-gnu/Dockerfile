@@ -759,6 +759,29 @@ RUN set -eu; \
 #   ccs_config's container.cmake grows the derecho.cmake lines the macro can
 #   drop its hardcoding with nothing else to change. The assertion above, not
 #   this variable, is what actually guards those two paths.
+# - CC / CXX / FC: which toolchain a CMake-driven build inside the container
+#   uses. CIME's Makefile builds set their own from $(SCC)/$(SFC), but cprnc is
+#   built by cmake (cime/CIME/build_scripts/buildlib.cprnc), and the cmake
+#   command line it generates passes no -DCMAKE_*_COMPILER at all. CMake then
+#   falls back to its built-in name search -- `cc` for C, `f95` for Fortran --
+#   and NEITHER NAME EXISTS in /opt/gcc/${GCC_VERSION}/bin, which ships `gcc`
+#   and `gfortran`. PATH order cannot help: cmake searches by name first, so it
+#   lands on /usr/bin/cc and /usr/bin/f95, AlmaLinux's bootstrap GCC 11.5.0.
+#
+#   MEASURED 2026-10-15, the rebuild after the .pc fix above: cprnc linked the
+#   static HDF5 correctly and then died on undefined __truncsfhf2 /
+#   __truncdfhf2 / __truncxfhf2 from libhdf5.a(H5Tconv_float.o). Those are
+#   libgcc's _Float16 conversion helpers. HDF5 here is compiled by GCC
+#   ${GCC_VERSION}, which has _Float16 on x86-64; GCC 11.5.0 does not (it
+#   arrived in GCC 12), so its libgcc cannot resolve them. CMakeCache.txt
+#   recorded CMAKE_Fortran_COMPILER:FILEPATH=/usr/bin/f95.
+#
+#   Before item 4b the image set ENV CC=mpicc/CXX=mpicxx/FC=mpifort, which
+#   CMake reads as $ENV{CC}/$ENV{FC}; those wrapped the same GCC
+#   ${GCC_VERSION}, so cprnc was built with the right toolchain by accident of
+#   the MPI stack. 4b deleted that ENV with the stack, and the bare -lnetcdf
+#   failure masked the consequence until it was fixed. Absolute paths rather
+#   than bare names so this cannot depend on PATH.
 # - CESMDATAROOT: DIN_LOC_ROOT=$CESMDATAROOT/inputdata must exist for
 #   namelist generation even in build-only (--no-run) testing.
 # - USER: CIME requires it; GitHub Actions container jobs don't set it.
@@ -780,10 +803,28 @@ ENV ESMFMKFILE=/usr/local/esmf-${ESMF_VERSION}-mpiuni/lib/esmf.mk \
     PIO=${SERIAL_PREFIX} \
     PIO_VERSION_MAJOR=2 \
     PIO_TYPENAME_VALID_VALUES=netcdf \
+    CC=/opt/gcc/${GCC_VERSION}/bin/gcc \
+    CXX=/opt/gcc/${GCC_VERSION}/bin/g++ \
+    FC=/opt/gcc/${GCC_VERSION}/bin/gfortran \
     CESMDATAROOT=/opt/cesmdata \
     USER=root \
     PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
     PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+
+# Fail the build, not a later cprnc link, if CC/CXX/FC name something that is
+# not there. A GCC_VERSION bump moves /opt/gcc/<ver>/bin, and these are the
+# only paths in the file that a bump could leave dangling without any earlier
+# step noticing -- every other consumer of the toolchain either uses it during
+# the build (and so fails then) or goes through PATH.
+RUN set -eu; \
+    for v in CC CXX FC; do \
+        eval "p=\${$v}"; \
+        [ -x "$p" ] || { \
+            echo "ERROR: $v=$p is not an executable. GCC_VERSION is" >&2; \
+            echo "       ${GCC_VERSION}; update the CC/CXX/FC ENV to match." >&2; \
+            exit 1; }; \
+        echo "$v=$p -> $("$p" --version | head -1)"; \
+    done
 
 RUN mkdir -p "${CESMDATAROOT}/inputdata"
 
