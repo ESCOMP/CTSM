@@ -70,7 +70,7 @@ The first two being zero is the real result; the third is the positive control t
 
 Recognize these rather than debugging them from scratch.
 
-**cprnc fails to link**, with undefined HDF5, curl or xml2 symbols. `PKG_CONFIG_PATH` points at a static-only prefix, and `pkg_check_modules` reads `Libs` but not `Libs.private`, so the transitive `-l` flags go missing. The fix is to fold `Libs.private` into `Libs` in the installed `netcdf.pc` and `netcdf-fortran.pc`; see `NEXT_STEPS.md` item 4b, which records why this was left to be discovered rather than pre-empted.
+**cprnc fails to link**, with undefined `H5*`, curl or xml2 symbols. This happened once, on the first rebuild after item 4b, and the `Dockerfile` now folds `Libs.private` into `Libs` in the installed `netcdf.pc` and `netcdf-fortran.pc` to prevent it — `pkg_check_modules` reads `Libs` only, and a static prefix has no `DT_NEEDED` to cover the difference. If you see it *again*, the `.pc` rewrite did not take: check the build log for the assertion that `pkg-config --libs netcdf` contains `-lhdf5`, which should have failed the image build long before cprnc got a chance to.
 
 **The build dies in its very last layer** complaining that `nc-config` has no `--has-stdfilters`. That is the stack-facts guard, which deliberately fails loudly rather than recording an empty value that item 5's drift check would misread. An empty *answer* is fine and does not fail; only a missing *option* does.
 

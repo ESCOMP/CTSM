@@ -671,6 +671,61 @@ RUN set -eu; \
         echo "  $f"; \
     done
 
+# ---- make the installed .pc files describe a STATIC link ----
+# MEASURED on the first rebuild after item 4b (2026-10-15): cprnc died at link
+# with ~200 undefined H5* symbols, and the link line was
+#   f95 ... -o cprnc /usr/local/lib/libnetcdff.a /usr/local/lib/libnetcdf.a
+# -- the two archives and nothing else.
+#
+# cime/CIME/non_py/cprnc/CMakeLists.txt:78 tries find_package(NetCDF), which
+# cannot succeed against this stack (autotools-built, so no netCDFConfig.cmake,
+# and cime ships no FindNetCDF.cmake), and falls through to pkg_check_modules
+# at :91-101. The build log says so in as many words: "NetCDF was not found,
+# falling back on pkg-config". pkg_check_modules fills NETCDF_LDFLAGS from the
+# .pc file's Libs: field alone -- it puts the --static answer in a separate
+# NETCDF_STATIC_LDFLAGS that cprnc never reads -- while netCDF's configure
+# records the transitive -lhdf5_hl -lhdf5 -lz -lcurl -lxml2 in Libs.private.
+#
+# Before 4b this directory held the SHARED parallel stack, where none of that
+# mattered: DT_NEEDED on libnetcdf.so pulled HDF5 in at link time. A static
+# prefix has no such mechanism, so these .pc files are simply WRONG about how
+# to link the stack they describe. Fix them rather than patching a consumer:
+# every pkg-config user gets the right answer, and cime stays unmodified.
+#
+# Private libraries are appended AFTER the existing Libs:, which is the order a
+# static link needs -- dependencies follow the things that depend on them.
+#
+# Deliberately placed this late, after everything expensive: it rewrites two
+# text files and depends only on the netCDF installs, so a cache-warm rebuild
+# redoes this layer and nothing before it.
+RUN set -eu; \
+    for pc in "${SERIAL_PREFIX}/lib/pkgconfig/netcdf.pc" \
+              "${SERIAL_PREFIX}/lib/pkgconfig/netcdf-fortran.pc"; do \
+        [ -f "$pc" ] || { echo "ERROR: $pc missing" >&2; exit 1; }; \
+        priv="$(sed -n 's/^Libs\.private:[[:space:]]*//p' "$pc")"; \
+        if [ -z "$priv" ]; then \
+            echo "note: $pc carries no Libs.private; nothing to fold"; \
+            continue; \
+        fi; \
+        awk -v priv="$priv" '/^Libs:/ { print $0 " " priv; next } { print }' \
+            "$pc" > "$pc.new"; \
+        mv "$pc.new" "$pc"; \
+    done; \
+    export PKG_CONFIG_PATH="${SERIAL_PREFIX}/lib/pkgconfig"; \
+    echo "netcdf         ->$(pkg-config --libs netcdf)"; \
+    echo "netcdf-fortran ->$(pkg-config --libs netcdf-fortran)"; \
+    pkg-config --libs netcdf | tr ' ' '\n' | grep -qx -- '-lhdf5' \
+        || { echo "ERROR: 'pkg-config --libs netcdf' still omits -lhdf5, so a" >&2; \
+             echo "       cprnc link would fail on undefined H5* symbols." >&2; \
+             exit 1; }; \
+    pkg-config --libs netcdf-fortran | tr ' ' '\n' | grep -qx -- '-lnetcdf' \
+        || { echo "ERROR: 'pkg-config --libs netcdf-fortran' omits -lnetcdf." >&2; \
+             exit 1; }
+# The two greps split into tokens and match EXACTLY, because -lnetcdff contains
+# -lnetcdf as a substring and '-' is not a word character, so a plain grep -w
+# would pass on the wrong flag. Same trap as the -lmpi/-lmpi-serial test at the
+# serial ESMF assertion above.
+
 # Runtime environment for CIME's "container" machine:
 # - ESMFMKFILE: not set by the machine config; must come from the image. There
 #   is one ESMF now, the ESMF_COMM=mpiuni one, so this and the macro's
@@ -713,12 +768,10 @@ RUN set -eu; \
 #   cime/CIME/non_py/cprnc/CMakeLists.txt:78 tries find_package(NetCDF) first,
 #   but this stack is autotools-built (no netCDFConfig.cmake) and cime ships no
 #   FindNetCDF.cmake, so the pkg_check_modules fallback at :91-101 is what runs.
-#   NOTE what it now finds: these .pc files describe the STATIC serial stack, so
-#   `pkg-config --libs netcdf` yields a bare -lnetcdf with the transitive
-#   -lhdf5_hl -lhdf5 -lz -lcurl -lxml2 only in Libs.private, which `--static`
-#   reads and CMake's pkg_check_modules does not. Before item 4b this directory
-#   held the shared parallel stack, where that did not matter. Watch cprnc at
-#   the first rebuild.
+#   These .pc files describe the STATIC serial stack, and as netCDF installs
+#   them `pkg-config --libs netcdf` yields a bare -lnetcdf -- which broke cprnc
+#   on the first rebuild after 4b. The layer above rewrites them; see it for
+#   the measurement and the mechanism.
 # - PKG_CONFIG_ALLOW_SYSTEM_CFLAGS: EL9's pkgconf filters
 #   -I/usr/local/include out of --cflags as a "system" dir, but that is
 #   only true for the system gcc; the /opt toolchain does not search
