@@ -446,6 +446,8 @@ kind of documentation and is tracked on its own._
    Reasoning, the instrument map and the measurements behind it:
    `DRIFT_CHECK_DESIGN.md`.
 
+   **2026-10-16: implementation plan written, execution deferred until CCPP-502 is answered.** The plan is `docs/superpowers/specs/2026-10-16-drift-check-plan.md`. It records the decisions taken that day -- the executable comparison runs per CI build as a `strings` assertion in `cirrus-testing.yml`; the scheduled monitor compares the published image's as-built facts and the recipe against derecho's live module tree and `spack.lock`, and never builds a derecho binary; a hosted-runner heartbeat catches a silent self-hosted runner; the cron fallback is built only if the mount is refused -- and its Task 1 rewrites this item and `DRIFT_CHECK_DESIGN.md` to match. Until that task runs, the text below predates those decisions where the two differ.
+
    - **One checker script, two workflows.** The PR gate reads the PR branch and
      only in-repo files, runs on any hosted runner, and blocks the merge. The
      scheduled monitor reads the latest master tag and derecho's live stack,
