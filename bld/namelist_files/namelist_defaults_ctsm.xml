@@ -74,7 +74,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_fates=".true."
->'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS','H2OSNO'</hist_fincl1>
+>'TOTSOMC','TOTSOMN','FATES_LAI','FATES_GPP','FATES_NPP','FATES_VEGC','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
@@ -82,7 +82,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
->'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS','H2OSNO'</hist_fincl1>
+>'TOTSOMC','TOTSOMN','FATES_LAI','FATES_GPP','FATES_NPP','FATES_VEGC','TWS','H2OSNO'</hist_fincl1>
 <hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
 <hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
 <hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
