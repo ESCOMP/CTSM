@@ -87,3 +87,18 @@ jobs:
           cat $RUNNER_TEMP/tests_*/STDERR*
           echo "STDOUT:"
           cat $RUNNER_TEMP/tests_*/STDOUT*
+
+      # In a container job ${{ runner.temp }} is the host's path, not the
+      # container's /__w/_temp where create_test wrote, so hand the action the
+      # path as the container sees it.
+      - name: Locate test directory
+        if: failure()
+        run: |
+          echo "TEST_DIR_GLOB=$RUNNER_TEMP/${SIMPLE_TEST_NAME}.*" >> $GITHUB_ENV
+
+      - name: Upload test directory on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: simple-build-create_test-failed
+          path: ${{ env.TEST_DIR_GLOB }}
