@@ -72,7 +72,7 @@ def main(cime_path):
     )
     logger.debug("Machine info: %s", machine)
 
-    run_sys_tests(
+    return_code = run_sys_tests(
         machine=machine,
         cime_path=cime_path,
         skip_testroot_creation=args.skip_testroot_creation,
@@ -82,6 +82,7 @@ def main(cime_path):
         testfile=args.testfile,
         testlist=args.testname,
         suite_compilers=args.suite_compiler,
+        xml_machine=args.xml_machine,
         testid_base=args.testid_base,
         testroot_base=args.testroot_base,
         rerun_existing_failures=args.rerun_existing_failures,
@@ -92,7 +93,9 @@ def main(cime_path):
         queue=args.queue,
         retry=args.retry,
         extra_create_test_args=args.extra_create_test_args,
+        wait=args.wait,
     )
+    sys.exit(return_code)
 
 
 def run_sys_tests(
@@ -106,6 +109,7 @@ def run_sys_tests(
     testfile=None,
     testlist=None,
     suite_compilers=None,
+    xml_machine=None,
     testid_base=None,
     testroot_base=None,
     rerun_existing_failures=False,
@@ -116,6 +120,7 @@ def run_sys_tests(
     queue=None,
     retry=None,
     extra_create_test_args="",
+    wait=False,
 ):
     """Implementation of run_sys_tests command
 
@@ -134,6 +139,9 @@ def run_sys_tests(
     suite_compilers (list of strings): compilers to use in the test suite; only applicable
         with suite_name; if not specified, use all compilers that are defined for this
         test suite
+    xml_machine (str or None): machine name to use when querying which tests are in
+        the given suite (only used with suite_name); if not specified, use
+        machine.name
     testid_base (str): test id, or start of the test id in the case of a test suite (if
         not provided, will be generated automatically)
     testroot_base (str): path to the directory that will contain the testroot (if not
@@ -156,6 +164,9 @@ def run_sys_tests(
     extra_create_test_args (str): any extra arguments to create_test, as a single,
         space-delimited string
     testlist: list of strings giving test names to run
+    wait (bool): if True, wait for all launched create_test processes to complete and
+        return a nonzero exit status if any of them failed (rather than returning as
+        soon as they have been launched)
 
     """
     num_provided_options = (
@@ -165,6 +176,12 @@ def run_sys_tests(
     )
     if num_provided_options != 1:
         raise RuntimeError("Exactly one of suite_name, testfile or testlist must be provided")
+
+    if wait and not machine.job_launcher.supports_waiting():
+        raise RuntimeError(
+            "--wait requires the no-batch job launcher; this machine's job launcher "
+            "is a {}".format(type(machine.job_launcher).__name__)
+        )
 
     if testid_base is None:
         testid_base = _get_testid_base(machine.name)
@@ -229,6 +246,7 @@ def run_sys_tests(
             cime_path=cime_path,
             suite_name=suite_name,
             suite_compilers=suite_compilers,
+            xml_machine=xml_machine,
             machine=machine,
             testid_base=testid_base,
             testroot=testroot,
@@ -262,6 +280,10 @@ def run_sys_tests(
             create_test_args=create_test_args,
             dry_run=dry_run,
         )
+
+    if wait and not dry_run:
+        return machine.job_launcher.wait_for_processes_to_complete()
+    return 0
 
 
 # ========================================================================
@@ -494,12 +516,40 @@ or tests listed individually on the command line (via the -t/--testname argument
     )
 
     parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="Wait for the launched create_test to finish, and exit with its\n"
+        "status, rather than returning as soon as it has been launched.\n"
+        "This makes a failing test produce a nonzero exit status.\n"
+        "Only supported with the no-batch job launcher.\n"
+        "If the suite spans multiple compilers, this waits for ALL of the\n"
+        "launched create_test processes to finish, and exits with a nonzero\n"
+        "status if any of them failed.\n"
+        "Needed when running inside a container, which would otherwise be torn\n"
+        "down - killing any create_test processes still running - as soon as\n"
+        "run_sys_tests exits.",
+    )
+
+    parser.add_argument(
         "--machine-name",
         default=machine_name,
         help="Name of machine for which create_test is run.\n"
         "This typically is not needed, but can be provided\n"
         "for the sake of testing this script.\n"
         "Defaults to current machine: {}".format(machine_name),
+    )
+
+    parser.add_argument(
+        "--xml-machine",
+        default=None,
+        help="Machine name to use when looking up which tests are in a suite.\n"
+        "This is separate from --machine-name, which says what machine we are\n"
+        "actually running on. Separating them lets one machine run another\n"
+        "machine's tests - e.g. a container that replicates derecho running\n"
+        "derecho's suites, since the container has no testlist entries of its\n"
+        "own.\n"
+        "Only used together with --suite-name.\n"
+        "Default: the value of --machine-name.",
     )
 
     add_logging_args(parser)
@@ -514,6 +564,8 @@ or tests listed individually on the command line (via the -t/--testname argument
 def _check_arg_validity(args):
     if args.suite_compiler and not args.suite_name:
         raise RuntimeError("--suite-compiler can only be specified if using --suite-name")
+    if args.xml_machine and not args.suite_name:
+        raise RuntimeError("--xml-machine can only be specified if using --suite-name")
     if args.rerun_existing_failures and not args.testid_base:
         raise RuntimeError("With --rerun-existing-failures, must also specify --testid-base")
 
@@ -683,6 +735,7 @@ def _run_test_suite(
     cime_path,
     suite_name,
     suite_compilers,
+    xml_machine,
     machine,
     testid_base,
     testroot,
@@ -690,14 +743,17 @@ def _run_test_suite(
     dry_run,
     running_ctsm_py_tests,
 ):
+    xml_machine_final = xml_machine if xml_machine else machine.name
     if not suite_compilers:
-        suite_compilers = _get_compilers_for_suite(suite_name, machine.name, running_ctsm_py_tests)
+        suite_compilers = _get_compilers_for_suite(
+            suite_name, xml_machine_final, running_ctsm_py_tests
+        )
     for compiler in suite_compilers:
         test_args = [
             "--xml-category",
             suite_name,
             "--xml-machine",
-            machine.name,
+            xml_machine_final,
             "--xml-compiler",
             compiler,
         ]

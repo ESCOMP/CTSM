@@ -205,6 +205,13 @@
     </phase>
   </test>
 
+  <test name="FSURDATMODIFYCTSM_D_Mmpi-serial_Ld1.5x5_amazon.I2000Clm50SpRsGs.container_gnu">
+    <phase name="SHAREDLIB_BUILD">
+      <status>PEND</status>
+      <comment>Failed because the container doesn't have the required third-party Python libraries.</comment>
+    </phase>
+  </test>
+
   <!-- fates test suite failures -->
 
   <!--- NOTE: This test is also in aux_clm, but just including it here so it's not duplicated -->

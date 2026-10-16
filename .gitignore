@@ -120,3 +120,8 @@ Depends
 _build*/
 _publish*/
 doc/.coverage
+
+# Build logs / scratch produced by build-on-casper.sh and related work
+build-on-casper.log.*
+logs/
+*.tar.xz*
