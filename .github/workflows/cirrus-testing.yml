@@ -20,6 +20,11 @@ jobs:
     name: Build one simple case with run_sys_tests
     runs-on: gha-runner-ctsm
 
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
+
     container:
       image: docker.io/ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
 
@@ -44,6 +49,11 @@ jobs:
   simple-build-create_test:
     name: Build one simple case with create_test
     runs-on: gha-runner-ctsm
+
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
     
     container:
       # Built from docker/ctsm-ci-derecho-gnu/ and published by hand from Casper;
