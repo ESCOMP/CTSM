@@ -79,25 +79,16 @@ determine default values for namelists.
 <ssp_rcp>hist</ssp_rcp>
 
 <!-- Default land/ocean mask type -->
-<mask hgrid="0.23x0.31"           >gx1v6</mask>
-<mask hgrid="0.47x0.63"           >gx1v6</mask>
 <mask hgrid="0.9x1.25"            >tx2_3v3</mask>
 <mask hgrid="1.9x2.5"             >tx2_3v3</mask>
-<mask hgrid="2.5x3.33"            >gx3v7</mask>
 <mask hgrid="4x5"                 >tx2_0v1</mask>
 <mask hgrid="10x15"               >tx2_0v1</mask>
 
 <mask hgrid="360x720cru"          >cruncep</mask>
-<mask hgrid="128x256"             >gx1v7</mask>
-<mask hgrid="64x128"              >gx1v7</mask>
-<mask hgrid="48x96"               >gx3v7</mask>
-<mask hgrid="32x64"               >gx3v7</mask>
-<mask hgrid="8x16"                >gx3v7</mask>
 
 <mask hgrid="94x192"              >T62</mask>
 
 <mask hgrid="ne120"               >tx2_3v3</mask>
-<mask hgrid="ne240"               >gx1v6</mask>
 <mask hgrid="ne30"                >tx2_3v3</mask>
 
 <mask hgrid="0.125nldas2"         >nldas2</mask>
