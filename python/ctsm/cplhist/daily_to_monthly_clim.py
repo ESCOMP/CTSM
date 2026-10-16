@@ -69,6 +69,7 @@ logger = logging.getLogger(__name__)
 
 # Variables averaged by default
 DEFAULT_VARS = [
+    "atmImp_Faxa_bcph1",
     "atmImp_Faxa_bcph2",
     "atmImp_Faxa_bcph3",
     "atmImp_Faxa_ocph1",
@@ -713,6 +714,7 @@ def write_provenance(  # pylint: disable=too-many-positional-arguments
         ("Created_on", f"{todaysdate}"),
         ("Created_by", getpass.getuser()),
         ("Created_with", created_with),
+        ("command_used", shlex.join(sys.argv)),
         ("time_period_freq", "month_1"),
         ("hostname", socket.gethostname()),
         # NOTE: this is the CESM2 DOI, and should be updated when a CESM3 DOI is available
