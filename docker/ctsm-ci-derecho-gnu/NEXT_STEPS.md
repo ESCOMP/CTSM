@@ -1,6 +1,6 @@
 # Next steps: ctsm-ci-derecho-gnu container
 
-_Last updated: 2026-10-15. The **published** image, `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261015`, is item 4b's: one serial stack at `/usr/local`, no MPICH, and a case build that links the image's own mpi-serial and PIO. It builds and validates end-to-end on Casper -- `smoke-test.sh`, pFUnit and CTSM's Fortran unit tests, and single-point **runs** -- and is what `cirrus-testing.yml` pins. All four wrapper scripts have been exercised on Casper against it. (Earlier tags do NOT work with the current `gnu_container.cmake`: `:20261007` predates the serial-only strip, and `:20260830` predates the serial netCDF stack.)_
+_Last updated: 2026-10-16. The **published** image, `ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261015`, is item 4b's: one serial stack at `/usr/local`, no MPICH, and a case build that links the image's own mpi-serial and PIO. It builds and validates end-to-end on Casper -- `smoke-test.sh`, pFUnit and CTSM's Fortran unit tests, and single-point **runs** -- and is what `cirrus-testing.yml` pins. All four wrapper scripts have been exercised on Casper against it. (Earlier tags do NOT work with the current `gnu_container.cmake`: `:20261007` predates the serial-only strip, and `:20260830` predates the serial netCDF stack.)_
 
 _**Only mpi-serial works in this image now.** A test name with no `_M` modifier takes the first `<MPILIBS>` entry of `ccs_config`'s container machine, which is `mpich` -- an MPI the image no longer carries. `cirrus-testing.yml` pins `_Mmpi-serial` for that reason; so does anything else that names a test._
 
@@ -682,8 +682,29 @@ kind of documentation and is tracked on its own._
 
    Note that the existing `docker-image-*.yml` workflows are not a template:
    they build the `ctsm-docs` image, which is being retired in favor of an
-   external one, and their single-step `platforms: linux/amd64,linux/arm64`
-   is the emulated form this must not use.
+   external one, and `docker-image-build-publish.yml` asks a single
+   `ubuntu-latest` job for `platforms: linux/amd64,linux/arm64`, which is the
+   emulated form this must not use. The `platforms:` option is not itself the
+   problem -- it is how a native per-architecture job names what it is
+   building, and both jobs here will set it. What makes a build emulated is
+   naming a platform the builder has no native node for, which is exactly what
+   one x86_64 runner asked for `linux/arm64` does.
+
+   **CIRRUS has only x86_64 runners today** (CIRRUS admin, 2026-10-16); Mac
+   hardware is on order to provide organizational osx arm64 and linux arm64,
+   with no date given. Two consequences. First, if the capacity measurement
+   below sends the build to `gha-runner-ctsm`, that fallback covers x86_64
+   only; arm64 stays on `ubuntu-24.04-arm` and so keeps whatever capacity
+   problem pushed x86_64 off the hosted runners, until the CIRRUS arm64 runners
+   exist. Revisit this when they land -- that would give the arm64 job a native
+   self-hosted home. Second, the workaround the admin offered for the meantime
+   -- add `platforms: linux/arm64` to the build-push action and build arm64 on
+   an x86_64 runner -- is the QEMU route under another name. It is the right
+   advice for an ordinary image and the wrong one for this one, which would be
+   emulating the compilation of GCC, netCDF, ESMF and pFUnit. (The suggested
+   snippet also omits `docker/setup-qemu-action`, without which that build does
+   not run at all on an x86_64 runner -- which is itself the tell that it is
+   emulation.)
 
    **The feasibility spike is written:**
    `.github/workflows/probe-runner-capacity.yml`, `workflow_dispatch` only,
