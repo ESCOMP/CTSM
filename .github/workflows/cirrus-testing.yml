@@ -27,6 +27,7 @@ jobs:
       GIT_CONFIG_COUNT: 1
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: '*'
+      CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg
 
     container:
       image: docker.io/ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
@@ -53,6 +54,7 @@ jobs:
       GIT_CONFIG_COUNT: 1
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: '*'
+      CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg
     
     container:
       # Built from docker/ctsm-ci-derecho-gnu/ and published by hand from Casper;
@@ -70,13 +72,6 @@ jobs:
       image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261015
 
     steps:
-
-      # The runner pod is known to mount this read-only; whether the k8s hook's
-      # job container gets it too is what this checks. Non-fatal on purpose so
-      # create_test still runs.
-      - name: List Glade inputdata from inside the container
-        run: |
-          ls /glade/campaign/cesm/cesmdata/cseg/inputdata || echo "inputdata NOT visible from the job container"
 
       - name: Check out CTSM
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2

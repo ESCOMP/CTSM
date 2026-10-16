@@ -371,6 +371,8 @@ Dockerfile creates empty, so `DIN_LOC_ROOT` resolves with **no** `xmlchange`
 and no `CESMDATAROOT` override. It is read-only because nothing in a run
 should write to the shared tree.
 
+**In GitHub Actions it works the other way round.** A `container:` job on the CIRRUS runner (`gha-runner-ctsm`) gets no bind mount onto `/opt/cesmdata/inputdata`; instead the runner's read-only NFS mount of `/glade/campaign/cesm/cesmdata/cseg` is visible at its own path inside the job container (checked 2026-10-16 with an `ls` step in `simple-build-create_test`). So `cirrus-testing.yml` sets `CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg` in each job's `env:`, which overrides the image's `ENV`. Without it, `DIN_LOC_ROOT` is the image's empty placeholder, and every case build warns `File not found: ... will attempt to download in check_input_data phase`; `--no-run` never reaches that phase, so the job stays green and the warnings are the only sign. That NFS mount is the only part of `/glade` the runner has, so the symlink problem above is **not** solved there: inputdata files that are symlinks into other campaign collections will look missing once CI actually runs cases.
+
 The two persistent directories carry a `_devcontainer` suffix because cases
 built here use a different toolchain than a native derecho or casper build;
 keeping them apart stops the two from being confused. Container paths are
@@ -784,6 +786,6 @@ so edit them in the same change.
 | `PATH` / `LD_LIBRARY_PATH` | `/usr/local` first, then `/opt/gcc` | non-login GHA shells need the toolchain on `PATH` without profile scripts |
 | `ESMFMKFILE` | `/usr/local/esmf-8.9.1-mpiuni/lib/esmf.mk` | CMEPS/CDEPS builds require it; the `container` machine config does not set it. There is one ESMF now, so this and the CIME macro name the same file |
 | `PIO` / `PIO_VERSION_MAJOR` / `PIO_TYPENAME_VALID_VALUES` | `/usr/local` / `2` / `netcdf` | what makes CIME link the image's PIO instead of building one. `buildlib.pio` reads `PIO_VERSION_MAJOR` from `os.environ`, which no macro file can reach; an unset `PIO_TYPENAME_VALID_VALUES` is a `TypeError`, not a default |
-| `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests") |
+| `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests"). `cirrus-testing.yml` overrides it to `/glade/campaign/cesm/cesmdata/cseg`; see "Mounts" |
 | `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
 | `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain. Those `.pc` files now describe a *static* stack; see the `Dockerfile` comment for what that means for cprnc |
