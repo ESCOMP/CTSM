@@ -71,6 +71,13 @@ jobs:
 
     steps:
 
+      # The runner pod is known to mount this read-only; whether the k8s hook's
+      # job container gets it too is what this checks. Non-fatal on purpose so
+      # create_test still runs.
+      - name: List Glade inputdata from inside the container
+        run: |
+          ls /glade/campaign/cesm/cesmdata/cseg/inputdata || echo "inputdata NOT visible from the job container"
+
       - name: Check out CTSM
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
