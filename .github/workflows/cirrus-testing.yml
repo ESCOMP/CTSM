@@ -43,8 +43,7 @@ jobs:
 
   simple-build-create_test:
     name: Build one simple case with create_test
-    # runs-on: gha-runner-ctsm
-    runs-on: ubuntu-latest
+    runs-on: gha-runner-ctsm
     
     container:
       # Built from docker/ctsm-ci-derecho-gnu/ and published by hand from Casper;
