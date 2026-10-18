@@ -4643,6 +4643,31 @@
     </options>
   </test>
 
+  <test name="SMS_D_Ld1" grid="f10_f10_mg37" compset="I2000Clm60Sp" testmods="clm/default--clm/nofireemis--clm/ftorch_demo">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:20:00</option>
+      <option name="comment">Test building and running CTSM case with FTorch demo inference enabled</option>
+    </options>
+  </test>
+
+  <test name="SMS_D_Ld1_Mmpi-serial" grid="1x1_brazil" compset="I2000Clm60SpRsGs" testmods="clm/default--clm/nofireemis--clm/ftorch_demo">
+    <machines>
+      <machine name="derecho" compiler="intel" category="aux_clm"/>
+      <machine name="derecho" compiler="gnu" category="aux_clm"/>
+    </machines>
+    <options>
+      <option name="wallclock">00:10:00</option>
+      <option name="comment">Test building and running standalone single-point CTSM case (LEAP/M2LInES setup) with FTorch demo inference enabled</option>
+    </options>
+  </test>
+
+
+
+
   <test name="ERP_D_P128x1_Ld26" grid="f10_f10_mg37" compset="IHistClm60BgcCrop" testmods="clm/crop--clm/midDecStart--clm/RxCropCalsAdaptGGCMI">
     <machines>
       <machine name="derecho" compiler="intel" category="aux_clm"/>

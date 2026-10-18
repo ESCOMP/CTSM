@@ -441,6 +441,7 @@ module clm_varctl
   !----------------------------------------------------------
 
   logical,           public :: use_bedrock = .false. ! true => use spatially variable soil depth
+  logical,           public :: use_ftorch_demo = .false. ! true => run the demo ftorch test
   character(len=16), public :: soil_layerstruct_predefined = 'UNSET'
   real(r8), public :: soil_layerstruct_userdefined(99) = rundef
   integer, public :: soil_layerstruct_userdefined_nlevsoi = iundef

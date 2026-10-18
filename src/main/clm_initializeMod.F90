@@ -140,7 +140,7 @@ contains
     use clm_varctl                    , only : use_hillslope
     use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
     use clm_varctl                    , only : use_cropcal_streams
-    use clm_varctl                    , only : use_noio
+    use clm_varctl                    , only : use_noio, use_ftorch_demo
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
     use pftconMod                     , only : pftcon
     use decompInitMod                 , only : decompInit_clumps, decompInit_glcp
@@ -183,6 +183,7 @@ contains
     use FATESFireFactoryMod           , only : scalar_lightning
     use dynFATESLandUseChangeMod      , only : dynFatesLandUseInit
     use HillslopeHydrologyMod         , only : InitHillslope
+    use FTorch_cesm_interface         , only : torch_model, torch_tensor, torch_model_load, torch_tensor_from_array, torch_model_forward, torch_kCPU, torch_delete
     !
     ! !ARGUMENTS
     integer, intent(in) :: ni, nj         ! global grid sizes
@@ -219,6 +220,11 @@ contains
     logical            :: lexists
     real(r8), pointer  :: data2dptr(:,:) ! temp. pointers for slicing larger arrays
     character(len=32)  :: subname = 'initialize2' ! subroutine name
+    type(torch_model)  :: demo_ftorch_model
+    type(torch_tensor) :: demo_ftorch_in_tensor(1), demo_ftorch_out_tensor(1)
+    real(r8), target   :: demo_ftorch_in_data(4)
+    real(r8), target   :: demo_ftorch_out_data(4)
+    integer            :: demo_ftorch_in_layout(1), demo_ftorch_out_layout(1)
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init2_part1')
@@ -791,6 +797,38 @@ contains
           call water_inst%TracerConsistencyCheck(bounds_clump, 'end of initialization')
        end do
        !$OMP END PARALLEL DO
+    end if
+
+    if (use_ftorch_demo) then
+       if (masterproc) then
+          write(iulog,*) '========================================='
+          write(iulog,*) ' RUNNING DEMO FTORCH TEST '
+       end if
+       
+       demo_ftorch_in_data = [1.0_r8, 2.0_r8, 3.0_r8, 4.0_r8]
+       demo_ftorch_out_data = [0.0_r8, 0.0_r8, 0.0_r8, 0.0_r8]
+       demo_ftorch_in_layout = [1]
+       demo_ftorch_out_layout = [1]
+       
+       ! model_load belongs here in the initialization phase.
+       call torch_model_load(demo_ftorch_model, "constant_model.pt", torch_kCPU)
+       
+       ! In a real parameterization, model_forward and tensor creation would happen 
+       ! inside the main physics loop (e.g., inside clm_drv).
+       call torch_tensor_from_array(demo_ftorch_in_tensor(1), demo_ftorch_in_data, demo_ftorch_in_layout, torch_kCPU)
+       call torch_tensor_from_array(demo_ftorch_out_tensor(1), demo_ftorch_out_data, demo_ftorch_out_layout, torch_kCPU)
+       call torch_model_forward(demo_ftorch_model, demo_ftorch_in_tensor, demo_ftorch_out_tensor)
+       
+       if (masterproc) then
+          write(iulog,*) ' FTORCH INFERENCE SUCCESSFUL: output = ', demo_ftorch_out_data
+          write(iulog,*) '========================================='
+       end if
+       
+       ! In a real parameterization, tensor deletion happens at the end of the 
+       ! time step, and model deletion happens in the model finalize phase.
+       call torch_delete(demo_ftorch_in_tensor(1))
+       call torch_delete(demo_ftorch_out_tensor(1))
+       call torch_delete(demo_ftorch_model)
     end if
 
     call t_stopf('clm_init2_part3')
