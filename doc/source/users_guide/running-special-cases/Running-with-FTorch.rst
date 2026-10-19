@@ -1,8 +1,8 @@
 .. _running-with-ftorch-section:
 
-#####################################
+###############################################
 Running with Machine Learning Models via FTorch
-#####################################
+###############################################
 
 FTorch (Fortran interface to PyTorch) allows CTSM Fortran routines to call PyTorch models at runtime for machine learning parameterizations, emulators, and data-driven subgrid processes.
 
@@ -36,7 +36,7 @@ Prerequisites
       ./bin/git-fleximod update
 
 Workflow: Exporting PyTorch Models to TorchScript (.pt)
-======================================================
+=======================================================
 
 FTorch requires models to be exported into TorchScript format (``.pt``). You can export custom PyTorch ``nn.Module`` models using ``torch.jit.script`` / ``torch.jit.trace`` (or ``ctsm.machine_learning.export_torchscript.export_model_to_torchscript``), or generate a built-in demonstration model (``constant`` or ``identity``) using the provided CTSM export tool:
 
@@ -58,7 +58,7 @@ To build CTSM with FTorch enabled, set ``USE_FTORCH=TRUE`` in your case configur
    ./case.build
 
 Interfacing Fortran Code with FTorch
-===================================
+====================================
 
 To load and execute a PyTorch model in CTSM Fortran code, import from ``FTorch_cesm_interface`` (see ``use_ftorch_demo`` for a working example):
 
