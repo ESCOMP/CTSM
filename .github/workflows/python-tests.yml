@@ -39,6 +39,9 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
+      - name: Print installed Python packages
+        run: conda list
+
       # Run Python unit tests check
       - name: Run Python unit tests
         run: |
@@ -58,6 +61,9 @@ jobs:
           environment-file: python/conda_env_ctsm_py.yml
           channels: conda-forge
           auto-activate-base: false
+
+      - name: Print installed Python packages
+        run: conda list
 
       # Run pylint check
       - name: Run pylint

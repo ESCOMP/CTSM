@@ -61,6 +61,9 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
+      - name: Print installed Python packages
+        run: conda list
+
       - name: Build Sphinx docs with makefile
         run: |
           if ${{ inputs.use_conda }}; then
