@@ -41,17 +41,19 @@ jobs:
     name: Docs dependency update tests
     uses: ./.github/workflows/docs-update-dependency-common.yml
 
-  # File an issue if the docs build failed during a scheduled run.
+  # File an issue if any docs test failed during a scheduled or manual run.
   # The main thing we're concerned about in that case is something having
   # changed outside the repository that's causing the ctsm_pylib setup to
-  # fail. Thus, we don't need this job to wait for BOTH the above jobs---
-  # if one fails, they both will.
+  # fail.
   file-issue-on-failure:
     if: |
       failure() &&
-      github.event_name == 'schedule'
-    needs: test-build-docs-ctsm_pylib
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    needs: [test-build-docs-ctsm_pylib, test-update-dependency]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
