@@ -1,4 +1,37 @@
 ===============================================================
+Tag name: ctsm5.4.065
+Originator(s): samrabin (Sam Rabin, UCAR/TSS)
+Date: Tue Oct 20 10:30:51 MDT 2026
+One-line Summary: Fix scheduled docs-update-ctsm_pylib workflow
+
+Purpose and description of changes
+----------------------------------
+
+Fix scheduled docs-update-ctsm_pylib workflow so that it (1) posts an issue as it's supposed to when failing and (b) emails Sam Rabin about it instead of Sam Levis.
+
+Notes of particular relevance for developers:
+---------------------------------------------
+
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+- Note that this ONLY fixes the workflow so that it behaves as expected. The Are both methods identical?" job will still fail. However, it shouldn't trigger on anyone else's PR unless they're working on one of the following (or the `docs-update-ctsm_pylib.yml` file itself):
+- `python/conda_env_ctsm_py.yml`
+- `doc/ctsm-docs_container/requirements.txt`
+- `.github/workflows/docs-common.yml`
+- `.github/workflows/docs-update-dependency-common.yml`
+
+Testing summary:
+----------------
+
+No testing was performed on Derecho or Izumi. The ctsm5.4.065 baselines are just softlinks to the ctsm5.4.064 ones.
+
+Other details
+-------------
+
+Pull Requests that document the changes (include PR ids):
+- [ESCOMP/CTSM Pull Request #4266: ctsm5.4.065: Fix scheduled docs-update-ctsm_pylib workflow by samsrabin](https://github.com/ESCOMP/CTSM/pull/4266)
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.063
 Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
 Date: Tue Oct  6 09:32:15 MDT 2026
