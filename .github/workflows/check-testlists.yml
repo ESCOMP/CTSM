@@ -30,6 +30,9 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
+      - name: Print installed Python packages
+        run: conda list
+
       # Run add_supertestlists
       - name: Run testlist checker for that lists that should be subsets of others are valid
         run: |

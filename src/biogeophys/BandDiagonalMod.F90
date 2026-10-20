@@ -29,7 +29,7 @@ contains
   subroutine BandDiagonal(bounds, lbj, ubj, jtop, jbot, numf, filter, nband, b, r, u)
     !
     ! !DESCRIPTION:
-    ! Tridiagonal matrix solution
+    ! Band-diagonal matrix solution from LAPACK
     !
     ! !ARGUMENTS:
     implicit none
