@@ -87,6 +87,7 @@ module FrictionVelocityMod
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
+     procedure, public :: SetValues              ! Set diagnostic arrays to setval (e.g. spval)
      procedure, public :: MoninObukIni           ! Initialization of the Obukhov length scale
 
      procedure, public  :: InitForTesting        ! version of Init meant for unit testing
@@ -267,7 +268,6 @@ contains
             avgflag='A', long_name='friction velocity', &
             ptr_patch=this%fv_patch, default='inactive')
 
-       this%rah1_patch(begp:endp) = spval
 !      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='RAH1', units='s/m', &
 !           avgflag='A', long_name='aerodynamical resistance ', &
@@ -412,7 +412,46 @@ contains
        end if
     end do
    
+    call this%SetValues(bounds, spval)
+
   end subroutine InitCold
+
+  !------------------------------------------------------------------------------
+  subroutine SetValues(this, bounds, setval, p)
+    ! Set to setval the diagnostic arrays that are written only by CanopyFluxes
+    ! (i.e., only for patches in filter_exposedvegp), either over all of bounds or
+    ! for a single patch p. Used at initialization and when a patch leaves that
+    ! filter, so that stale values from the last time it was computed do not persist.
+    !
+    ! Deliberately NOT included: obu (restart variable, read by the dust model for
+    ! bare-ground patches, and BareGroundFluxes keeps its own local copy), and
+    ! zeta, u10, u10_clm, ram1, rb1, fv, which FrictionVelocity or BareGroundFluxes
+    ! recompute every step for all non-lake, non-urban patches.
+    
+    class(frictionvel_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in)          :: setval
+    integer, intent(in), optional :: p      ! if present, set values for this patch only
+    integer :: begp, endp
+    
+    if (present(p)) then
+       begp = p; endp = p
+    else
+       begp = bounds%begp; endp = bounds%endp
+    end if
+    
+    this%rah1_patch(begp:endp) = setval
+    this%rah2_patch(begp:endp) = setval
+    this%raw1_patch(begp:endp) = setval
+    this%raw2_patch(begp:endp) = setval
+    this%ustar_patch(begp:endp) = setval
+    this%um_patch(begp:endp) = setval
+    this%uaf_patch(begp:endp) = setval
+    this%taf_patch(begp:endp) = setval
+    this%qaf_patch(begp:endp) = setval
+    this%vpd_patch(begp:endp) = setval
+    
+  end subroutine SetValues
 
   !------------------------------------------------------------------------------
   subroutine ReadParams( this, params_ncid )
