@@ -23,6 +23,17 @@ contains
     create_landunit_weights = [.25_r8, .2_r8, 0._r8, .3_r8, .08_r8, .06_r8, .05_r8, .04_r8, .02_r8]
   end function create_landunit_weights
 
+  function lunit_message(lunit) result(message)
+    ! Create a message identifying the given landunit, for use in assertions
+    integer, intent(in) :: lunit
+    character(len=:), allocatable :: message
+
+    character(len=16) :: lunit_str
+
+    write(lunit_str, '(i0)') lunit
+    message = 'landunit ' // trim(lunit_str)
+  end function lunit_message
+
   @Test
   subroutine test_no_change()
     ! Test with no changes needed in landunit areas, because they already add to 100%
@@ -44,6 +55,7 @@ contains
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
+    integer  :: l
 
     landunit_weights = create_landunit_weights()
     landunit_weights(istice) = landunit_weights(istice) - 0.01_r8
@@ -51,7 +63,16 @@ contains
     expected(istsoil) = landunit_weights(istsoil) + 0.01_r8
 
     call update_landunit_weights_one_gcell(landunit_weights)
-    @assertEqual(expected, landunit_weights, tolerance=tol)
+
+    ! istsoil is changed by an arithmetic operation, so should match within a tolerance;
+    ! all other landunits should be unchanged, so should match exactly
+    do l = 1, max_lunit
+       if (l == istsoil) then
+          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
+       else
+          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
+       end if
+    end do
   end subroutine test_less_than_1
 
   @Test
@@ -61,6 +82,7 @@ contains
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
+    integer  :: l
 
     landunit_weights = create_landunit_weights()
     landunit_weights(istice) = landunit_weights(istice) + 0.01_r8
@@ -68,7 +90,16 @@ contains
     expected(istsoil) = landunit_weights(istsoil) - 0.01_r8
 
     call update_landunit_weights_one_gcell(landunit_weights)
-    @assertEqual(expected, landunit_weights, tolerance=tol)
+
+    ! istsoil is changed by an arithmetic operation, so should match within a tolerance;
+    ! all other landunits should be unchanged, so should match exactly
+    do l = 1, max_lunit
+       if (l == istsoil) then
+          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
+       else
+          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
+       end if
+    end do
   end subroutine test_greater_than_1_one_change
 
   @Test
@@ -78,6 +109,7 @@ contains
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
+    integer  :: l
 
     landunit_weights = create_landunit_weights()
 
@@ -91,7 +123,17 @@ contains
     expected(isturb_md) = expected(isturb_md) - 0.01_r8
     
     call update_landunit_weights_one_gcell(landunit_weights)
-    @assertEqual(expected, landunit_weights, tolerance=tol)
+
+    ! isturb_md is changed by an arithmetic operation, so should match within a
+    ! tolerance; istsoil and istcrop should be exactly 0 and all other landunits should be
+    ! unchanged, so these should match exactly
+    do l = 1, max_lunit
+       if (l == isturb_md) then
+          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
+       else
+          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
+       end if
+    end do
   end subroutine test_greater_than_1_multiple_changes
 
   @Test
@@ -102,6 +144,7 @@ contains
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
+    integer  :: l
 
     landunit_weights = create_landunit_weights()
     landunit_weights(istice) = 0.99_r8
@@ -112,7 +155,17 @@ contains
     expected(istdlak) = 0.01_r8
     
     call update_landunit_weights_one_gcell(landunit_weights)
-    @assertEqual(expected, landunit_weights, tolerance=tol)
+
+    ! istdlak is changed by an arithmetic operation, so should match within a tolerance;
+    ! all other landunits except istice should be exactly 0 and istice should be
+    ! unchanged, so these should match exactly
+    do l = 1, max_lunit
+       if (l == istdlak) then
+          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
+       else
+          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
+       end if
+    end do
   end subroutine test_greater_than_1_all_changes
 
   @Test
@@ -122,6 +175,7 @@ contains
 
     real(r8) :: landunit_weights(max_lunit)
     real(r8) :: expected(max_lunit)
+    integer  :: l
 
     landunit_weights = create_landunit_weights()
     landunit_weights(istice) = 1.0_r8
@@ -129,7 +183,17 @@ contains
     expected(istice) = 1.0_r8
 
     call update_landunit_weights_one_gcell(landunit_weights)
-    @assertEqual(expected, landunit_weights, tolerance=tol)
+
+    ! istdlak is computed by subtracting the remaining excess, so it is only guaranteed
+    ! to be 0 within roundoff; all other landunits except istice should be exactly 0 and
+    ! istice should be unchanged, so these should match exactly
+    do l = 1, max_lunit
+       if (l == istdlak) then
+          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
+       else
+          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
+       end if
+    end do
   end subroutine test_greater_than_1_all_changes_to_0
 
 end module test_update_landunit_weights_one_gcell
