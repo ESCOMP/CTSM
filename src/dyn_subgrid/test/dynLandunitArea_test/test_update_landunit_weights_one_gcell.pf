@@ -4,7 +4,7 @@ module test_update_landunit_weights_one_gcell
 
   use funit
   use dynLandunitAreaMod
-  use landunit_varcon, only : istsoil, istcrop, isturb_md, istice, istdlak, max_lunit
+  use landunit_varcon, only : istsoil, istcrop, isturb_tbd, isturb_hd, isturb_md, istice, istdlak, istwet, max_lunit
   use shr_kind_mod   , only : r8 => shr_kind_r8
   
 
@@ -184,16 +184,64 @@ contains
 
     call update_landunit_weights_one_gcell(landunit_weights)
 
-    ! istdlak is computed by subtracting the remaining excess, so it is only guaranteed
-    ! to be 0 within roundoff; all other landunits except istice should be exactly 0 and
-    ! istice should be unchanged, so these should match exactly
-    do l = 1, max_lunit
-       if (l == istdlak) then
-          @assertEqual(expected(l), landunit_weights(l), tolerance=tol, message=lunit_message(l))
-       else
-          @assertEqual(expected(l), landunit_weights(l), message=lunit_message(l))
-       end if
-    end do
+    ! All landunits except istice should be exactly 0 and istice should be unchanged, so
+    ! all should match exactly
+    @assertEqual(expected, landunit_weights)
   end subroutine test_greater_than_1_all_changes_to_0
+
+  @Test
+  subroutine test_greater_than_1_all_changes_to_0_roundoff()
+    ! Similar to test_greater_than_1_all_changes_to_0, but with an istdlak weight chosen
+    ! so that a naive computation of the excess area leaves istdlak with a roundoff-level
+    ! positive weight rather than exactly 0
+
+    real(r8) :: landunit_weights(max_lunit)
+    real(r8) :: expected(max_lunit)
+
+    landunit_weights = create_landunit_weights()
+    landunit_weights(istice) = 1.0_r8
+    landunit_weights(istdlak) = 0.2_r8
+    expected(:) = 0._r8
+    expected(istice) = 1.0_r8
+
+    call update_landunit_weights_one_gcell(landunit_weights)
+
+    ! All landunits except istice should be exactly 0 and istice should be unchanged, so
+    ! all should match exactly
+    @assertEqual(expected, landunit_weights)
+  end subroutine test_greater_than_1_all_changes_to_0_roundoff
+
+  @Test
+  subroutine test_greater_than_1_multiple_changes_to_0_roundoff()
+    ! Test with the input summing to greater than 1, where the excess is exactly the
+    ! weight of istsoil plus istcrop, so these two landunits should go to exactly 0 and
+    ! all others should be unchanged. Weights are chosen so that a naive computation of
+    ! the excess area leaves istcrop with a roundoff-level positive weight rather than
+    ! exactly 0.
+
+    real(r8) :: landunit_weights(max_lunit)
+    real(r8) :: expected(max_lunit)
+
+    ! In the following, we assume that the first two elements of decrease_order are:
+    ! istsoil, istcrop
+    landunit_weights(:) = 0._r8
+    landunit_weights(istsoil) = 0.25_r8
+    landunit_weights(istcrop) = 0.23_r8
+    landunit_weights(istice) = 0.62_r8
+    landunit_weights(istdlak) = 0.02_r8
+    landunit_weights(istwet) = 0.13_r8
+    landunit_weights(isturb_tbd) = 0.07_r8
+    landunit_weights(isturb_hd) = 0.12_r8
+    landunit_weights(isturb_md) = 0.04_r8
+    expected = landunit_weights
+    expected(istsoil) = 0._r8
+    expected(istcrop) = 0._r8
+
+    call update_landunit_weights_one_gcell(landunit_weights)
+
+    ! istsoil and istcrop should be exactly 0 and all other landunits should be unchanged,
+    ! so all should match exactly
+    @assertEqual(expected, landunit_weights)
+  end subroutine test_greater_than_1_multiple_changes_to_0_roundoff
 
 end module test_update_landunit_weights_one_gcell
