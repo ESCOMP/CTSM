@@ -15,12 +15,21 @@ module test_update_landunit_weights_one_gcell
 
 contains
 
-  function create_landunit_weights()
+  function create_landunit_weights() result(landunit_weights)
     ! Create default version of the landunit weights
-    real(r8), dimension(max_lunit), allocatable :: create_landunit_weights(:)
+    real(r8) :: landunit_weights(max_lunit)
 
-    ! Landunit 3 (previously istice) is currently unused, so set its area to 0.
-    create_landunit_weights = [.25_r8, .2_r8, 0._r8, .3_r8, .08_r8, .06_r8, .05_r8, .04_r8, .02_r8]
+    ! Start by setting all weights to 0 so that any landunits not explicitly set below
+    ! (e.g., landunit 3, which is currently unused) have 0 area
+    landunit_weights(:) = 0._r8
+    landunit_weights(istsoil) = 0.25_r8
+    landunit_weights(istcrop) = 0.2_r8
+    landunit_weights(istice) = 0.3_r8
+    landunit_weights(istdlak) = 0.08_r8
+    landunit_weights(istwet) = 0.06_r8
+    landunit_weights(isturb_tbd) = 0.05_r8
+    landunit_weights(isturb_hd) = 0.04_r8
+    landunit_weights(isturb_md) = 0.02_r8
   end function create_landunit_weights
 
   function lunit_message(lunit) result(message)
