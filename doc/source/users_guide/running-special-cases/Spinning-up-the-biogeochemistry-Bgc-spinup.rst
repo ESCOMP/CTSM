@@ -39,7 +39,7 @@ For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will se
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case AD_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > ./create_newcase -case AD_spinup -res f19_t233 -compset I1850Clm60BgcCrop --run-unsupported
    > cd AD_spinup
    # Change accelerated spinup mode
    > ./xmlchange CLM_ACCELERATED_SPINUP="on"
@@ -76,7 +76,7 @@ Example: SASU_spinup Simulation for ClmBgcCrop
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > ./create_newcase -case SASU_spinup -res f19_t233 -compset I1850Clm60BgcCrop --run-unsupported
    > cd SASU_spinup
    # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
    > ./xmlchange CLM_ACCELERATED_SPINUP="sasu",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
@@ -104,7 +104,7 @@ Example: Normal mode simulation for ClmBgcCrop
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > ./create_newcase -case pSASU_spinup -res f19_t233 -compset I1850Clm60BgcCrop --run-unsupported
    > cd pSASU_spinup
    # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
    > ./xmlchange CLM_ACCELERATED_SPINUP="off",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
