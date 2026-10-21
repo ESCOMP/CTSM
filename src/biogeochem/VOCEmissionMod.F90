@@ -23,7 +23,7 @@ module VOCEmissionMod
   use decompMod          , only : bounds_type
   use abortutils         , only : endrun
   use fileutils          , only : getfil
-  use clm_varcon         , only : grlnd
+  use clm_varcon         , only : grlnd, spval
   use atm2lndType        , only : atm2lnd_type
   use CanopyStateType    , only : canopystate_type
   use PhotosynthesisMod  , only : photosyns_type
@@ -274,7 +274,6 @@ contains
             avgflag='A', long_name='total VOC flux into atmosphere', &
             ptr_patch=this%vocflx_tot_patch, set_lake=0._r8, set_urb=0._r8, default='inactive')
 
-       this%gamma_out_patch(begp:endp)   = spval
 !      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
 !      call hist_addfld1d (fname='GAMMA', units='non',  &
 !           avgflag='A', long_name='total gamma for VOC calc', &
@@ -723,6 +722,31 @@ contains
                    Eopt_out(p)=Eopt
 
                 end if
+             else if (imeg==1) then
+                ! gamma out of range: the diagnostics for this patch are undefined this
+                ! step. Set them to spval rather than leaving the previous step's values,
+                ! which are not restart variables and would break exact restart (#3661).
+                gamma_out(p)=spval
+                gammaP_out(p)=spval
+                gammaT_out(p)=spval
+                gammaA_out(p)=spval
+                gammaS_out(p)=spval
+                gammaL_out(p)=spval
+                gammaC_out(p)=spval
+
+                paru_out(p)=spval
+                par24u_out(p)=spval
+                par240u_out(p)=spval
+
+                para_out(p)=spval
+                par24a_out(p)=spval
+                par240a_out(p)=spval
+
+                alpha_out(p)=spval
+                cp_out(p)=spval
+
+                topt_out(p)=spval
+                Eopt_out(p)=spval
              endif
 
              if (debug .and. gamma > 0.0_r8) then
@@ -1171,5 +1195,6 @@ contains
     get_gamma_C = gamma_ci * gamma_ca
 
   end function get_gamma_C
+
 
 end module VOCEmissionMod
