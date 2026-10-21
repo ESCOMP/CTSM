@@ -75,7 +75,7 @@ module CLMFatesInterfaceMod
    use clm_varctl        , only : use_fates_luh
    use clm_varctl        , only : use_fates_lupft
    use clm_varctl        , only : use_fates_potentialveg
-   use clm_varctl        , only : use_fates_interstitial_bareground
+   use clm_varctl        , only : use_fates_handles_bareground
    use clm_varctl        , only : flandusepftdat
    use clm_varctl        , only : fates_seeddisp_cadence
    use clm_varctl        , only : fates_inventory_ctrl_filename
@@ -525,12 +525,12 @@ module CLMFatesInterfaceMod
         pass_vertsoilc = 1
         call set_fates_ctrlparms('use_vertsoilc',ival=pass_vertsoilc)
 
-        if(use_fates_interstitial_bareground) then
+        if(use_fates_handles_bareground) then
            pass_interstitial_bareground = 1
         else
            pass_interstitial_bareground = 0
         end if
-        call set_fates_ctrlparms('use_fates_interstitial_bareground',ival=pass_interstitial_bareground)
+        call set_fates_ctrlparms('use_fates_handles_bareground',ival=pass_interstitial_bareground)
 
         if(use_fates_ed_st3) then
            pass_ed_st3 = 1
@@ -1743,7 +1743,7 @@ module CLMFatesInterfaceMod
 
           ! FATES sets the bareground fraction for the given site as the fraction
           ! of the site that is not covered by the sum of the canopy. 
-          if (use_fates_interstitial_bareground) then
+          if (use_fates_handles_bareground) then
              ! Precision errors on the patch_fraction sum, even small (e-12)
              ! do exist, and can create potentially negetive bare-soil fractions
              ! (ie -1e-12 or smaller). Even though this is effectively zero,
@@ -2328,7 +2328,7 @@ module CLMFatesInterfaceMod
 
               ! Pass in the bareground roughness lengths if not using 
               ! interstitial bareground in FATES
-              if (.not.use_fates_interstitial_bareground) then
+              if (.not.use_fates_handles_bareground) then
                  call frictionvel_inst%SetRoughnessLengthsOverGround(waterdiagnosticbulk_inst, c)
               end if
 

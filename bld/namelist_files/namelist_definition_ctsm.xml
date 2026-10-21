@@ -774,12 +774,13 @@ Toggle to turn on no competition mode (only relevant if FATES is being used).
 Toggle to turn on FATES satellite phenology mode (only relevant if FATES is being used).
 </entry>
 
-<entry id="use_fates_interstitial_bareground" type="logical" category="physics"
-        group="clm_inparm" valid_values="" value=".true.">
-This option sets whether or not to include the interstitial bareground areas from FATES
-patches into the CLM bareground patch area.  If this option is turned off, fates_radiation_model
-must by set to 'twostream'.
-(Only relevant if FATES is on)
+<entry id="use_fates_handles_bareground" type="logical" category="physics"
+        group="clm_inparm" valid_values="" value=".false.">
+This option sets whether or not FATES or the land model manages the bareground weights.
+With this option turned off, FATES calculates the bareground patch (col%patchi) weighting
+based on the total canopy area for a given site.  If the option is turned on, the land model
+bareground patch weighting is set to zero and FATES manages bareground flux calculations.
+If this option is turned on, fates_radiation_model must by set to 'twostream'.
 </entry>
 
 <entry id="fates_harvest_mode" type="char*18" category="physics"

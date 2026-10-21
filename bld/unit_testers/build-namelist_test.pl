@@ -1264,7 +1264,7 @@ my %failtest = (
                                      phys=>"clm5_0",
                                    },
      "useFATESBGOffNorman"     =>{ options=>"-bgc fates -envxml_dir . -no-megan",
-                                     namelst=>"use_fates_interstitial_bareground=F,fates_radiation_model='norman'",
+                                     namelst=>"use_fates_handles_bareground=F,fates_radiation_model='norman'",
                                      phys=>"clm6_0",
                                    },
      "useFATESLUPFTWOFBG"        =>{ options=>"-bgc fates -envxml_dir . -no-megan",
