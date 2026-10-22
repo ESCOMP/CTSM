@@ -433,7 +433,7 @@ contains
     integer  :: j,p,c,l,index       ! indices
     logical  :: found                  ! temporary for error check
     real(r8) :: sumwt(bounds%begl:bounds%endl)         ! sum of weights
-    real(r8) :: scale_p2c(bounds%begc:bounds%endc)     ! scale factor for patch->column mapping
+    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor for patch->column mapping
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor for column->landunit mapping
     !------------------------------------------------------------------------
 

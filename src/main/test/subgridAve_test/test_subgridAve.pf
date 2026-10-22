@@ -1,0 +1,67 @@
+module test_subgridAve
+
+  use funit
+  use shr_kind_mod, only : r8 => shr_kind_r8
+  use clm_varcon, only : spval
+  use subgridAveMod, only : p2l
+  use unittestSimpleSubgridSetupsMod, only : setup_n_veg_patches
+  use unittestSubgridMod, only : bounds, unittest_subgrid_teardown
+
+  implicit none
+
+  real(r8), parameter :: tol = 1.e-14_r8
+
+contains
+
+  @Test
+  subroutine test_p2l_2d_more_patches_than_columns()
+    ! Two patches on one column must both have patch-to-column scale factors.
+    real(r8) :: parr(2,2)
+    real(r8) :: larr(1,2)
+    real(r8) :: larr_1d(1)
+    integer :: j
+
+    call setup_n_veg_patches(pwtcol = [0.25_r8, 0.75_r8])
+    parr(:,1) = [2._r8, 6._r8]
+    parr(:,2) = [8._r8, 12._r8]
+
+    call p2l(bounds, num2d=2, parr=parr, larr=larr, &
+         p2c_scale_type='unity', c2l_scale_type='unity')
+
+    @assertEqual([5._r8, 11._r8], larr(1,:), tolerance=tol)
+    do j = 1,2
+       call p2l(bounds, parr=parr(:,j), larr=larr_1d, &
+            p2c_scale_type='unity', c2l_scale_type='unity')
+       @assertEqual(larr_1d, larr(:,j), tolerance=tol)
+    end do
+
+    call unittest_subgrid_teardown()
+  end subroutine test_p2l_2d_more_patches_than_columns
+
+  @Test
+  subroutine test_p2l_2d_missing_values()
+    real(r8) :: parr(2,3)
+    real(r8) :: larr(1,3)
+    real(r8) :: larr_1d(1)
+    integer :: j
+
+    call setup_n_veg_patches(pwtcol = [0.25_r8, 0.75_r8])
+    parr(:,1) = [spval, 6._r8]
+    parr(:,2) = [8._r8, spval]
+    parr(:,3) = spval
+
+    call p2l(bounds, num2d=3, parr=parr, larr=larr, &
+         p2c_scale_type='unity', c2l_scale_type='unity')
+
+    @assertEqual([6._r8, 8._r8], larr(1,1:2), tolerance=tol)
+    @assertEqual(spval, larr(1,3))
+    do j = 1,3
+       call p2l(bounds, parr=parr(:,j), larr=larr_1d, &
+            p2c_scale_type='unity', c2l_scale_type='unity')
+       @assertEqual(larr_1d, larr(:,j), tolerance=tol)
+    end do
+
+    call unittest_subgrid_teardown()
+  end subroutine test_p2l_2d_missing_values
+
+end module test_subgridAve
