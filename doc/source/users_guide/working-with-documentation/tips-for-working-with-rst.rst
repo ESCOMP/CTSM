@@ -43,6 +43,38 @@ Note (a) the leading spaces for each line after ``.. math::`` and (b) the empty 
 
 reStructuredText math largely follows LaTeX syntax.
 
+.. _rst-figures:
+
+reStructuredText: Figures
+--------------------------
+
+Use the ``figure`` directive to add an image with a caption. Image paths are relative to the source file containing the directive; the example below uses an existing image in the same directory as this page. Put new images alongside the documentation that uses them, or adjust the relative path if they are in another directory.
+
+Provide alternative text with ``:alt:`` to describe the image for readers who cannot see it. Put the caption after a blank line, keeping both the options and caption indented under the directive. Add a unique, meaningful label immediately before the directive so you can cross-reference the figure.
+
+.. code-block:: reStructuredText
+
+  .. _rst-figure-example:
+
+  .. figure:: esbonio-sphinx-buildcmd.png
+     :alt: VS Code settings showing the Esbonio Sphinx build command.
+
+     Configuring the documentation build command in VS Code.
+
+This renders as:
+
+.. _rst-figure-example:
+
+.. figure:: esbonio-sphinx-buildcmd.png
+   :alt: VS Code settings showing the Esbonio Sphinx build command.
+
+   Configuring the documentation build command in VS Code.
+
+- Link using the figure number: ``:numref:`rst-figure-example``` → :numref:`rst-figure-example`
+- Link using the caption: ``:ref:`rst-figure-example``` → :ref:`rst-figure-example`
+
+Image files ending in ``.svg``, ``.png``, ``.jpg``, ``.jpeg``, ``.gif``, and ``.pdf`` are already configured to use Git LFS in the repository's ``.gitattributes``. Make sure Git LFS is installed (see :ref:`docs-git-tools`) and run ``git lfs install`` before staging new images with ``git add``. You do not need to run ``git lfs track`` for these extensions. The ``doc/build_docs`` script fetches the image files automatically; build and preview your changes to check the image, caption, and links.
+
 .. _rst-cross-references:
 
 reStructuredText: Cross-references

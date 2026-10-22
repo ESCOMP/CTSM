@@ -52,6 +52,35 @@ Then you can get the equation number {eq}`my-equation-label` like so:
 Then you can get the equation number {eq}`my-equation-label` like so:
 ```
 
+(md-figures)=
+
+## Markdown: Figures
+
+Use MyST's `figure` directive to add a captioned image rather than Markdown's plain image syntax (`![alternative text](image.png)`). Image paths are relative to the source file; this example uses an existing image in the same directory as this page. See {ref}`rst-figures` for image placement and Git LFS requirements.
+
+Set `:alt:` to a description of the image for readers who cannot see it, and `:name:` to a unique, meaningful label for cross-references. Leave a blank line between the options and the caption.
+
+~~~markdown
+```{figure} esbonio-sphinx-buildcmd.png
+:alt: VS Code settings showing the Esbonio Sphinx build command.
+:name: md-figure-example
+
+Configuring the documentation build command in VS Code.
+```
+~~~
+
+This renders as:
+
+```{figure} esbonio-sphinx-buildcmd.png
+:alt: VS Code settings showing the Esbonio Sphinx build command.
+:name: md-figure-example
+
+Configuring the documentation build command in VS Code.
+```
+
+- Link using the figure number: `` {numref}`md-figure-example` `` → {numref}`md-figure-example`
+- Link using the caption: `` {ref}`md-figure-example` `` → {ref}`md-figure-example`
+
 ## Markdown: Comments
 If you want to add some text that's only visible in the documentation source file, you can put a `%` at the beginning of a line. E.g.:
 
