@@ -1060,6 +1060,23 @@ sub setup_cmdl_fire_light_res {
   if ( &value_is_true($nl->get_value('use_cn')) ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fire_method');
   }
+
+  # we have to process defaults for fates fire modes before and not in setup_logc_fates, however, they should not be defined for use_cn or other bgc
+  if ( &value_is_true($nl->get_value('use_fates')) ) {
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_managed_fire',
+                 'use_fates'=>$nl_flags->{'use_fates'}, 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+     add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
+                 'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'), 'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+     # Check use_fates_managed_fire mode is running with spitfire on
+     if ( defined($nl->get_value('use_fates_managed_fire'))  ) {
+        if ( &value_is_true($nl->get_value('use_fates_managed_fire')) ) {
+           if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
+              $log->fatal_error("fates_spitfire_mode must be non-zero when use_fates_managed_fire is true");
+           }
+        }
+     }
+  }
+
   my $fire_method = remove_leading_and_trailing_quotes( $nl->get_value('fire_method') );
   if ( $val eq "default" ) {
      add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, $var,
@@ -4998,9 +5015,7 @@ sub setup_logic_fates {
         add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'use_fates_fixed_biogeog', 'use_fates'=>$nl_flags->{'use_fates'},
                     'use_fates_lupft'=>$nl->get_value('use_fates_lupft'),
                     'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
-        add_default($opts, $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'fates_spitfire_mode', 'use_fates'=>$nl_flags->{'use_fates'},
-                    'use_fates_managed_fire'=>$nl->get_value('use_fates_managed_fire'),
-                    'use_fates_sp'=>$nl_flags->{'use_fates_sp'} );
+
 
         # For FATES SP mode make sure no-competetiion, and fixed-biogeography are also set
         # And also check for other settings that can't be trigged on as well
@@ -5129,16 +5144,6 @@ sub setup_logic_fates {
               if ( ! defined($nl->get_value($var))  ) {
                 $log->fatal_error("$var is required when fates_harvest_mode is landuse_timeseries" );
               }
-           }
-        }
-
-        # Check use_fates_managed_fire mode is running with spitfire on
-        my $var = "use_fates_managed_fire";
-        if ( defined($nl->get_value($var))  ) {
-           if ( &value_is_true($nl->get_value($var)) ) {
-              if ( $nl->get_value('fates_spitfire_mode') == 0 ) {
-                 $log->fatal_error("fates_spitfire_mode must be non-zero when $var is true");
-	      }
            }
         }
     }
