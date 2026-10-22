@@ -1,6 +1,6 @@
 ---
-title: Scheduled ctsm_pylib docs build test failed
+title: ctsm_pylib docs build test failed
 assignees: samsrabin
 labels: bug, next
 ---
-{{ date }}: A failure occurred during the most recent run of the `test-build-docs-ctsm_pylib` job in `.github/workflows/docs-ctsm_pylib.yml`.
+{{ date | date('YYYY-MM-DD') }}: A failure occurred during the most recent scheduled or manual run of a docs test: {{ env.GITHUB_SERVER_URL }}/{{ env.GITHUB_REPOSITORY }}/actions/runs/{{ env.GITHUB_RUN_ID }}.
