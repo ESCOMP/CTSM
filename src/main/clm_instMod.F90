@@ -459,6 +459,9 @@ contains
     ! Even for a FATES simulation, we call this to initialize product pools
     call bgc_vegetation_inst%Init(bounds, nlfilename, GetBalanceCheckSkipSteps(), params_ncid )
 
+    ! Close parameter file - this was its last use (no subsequent reads through params_ncid)
+    call ncd_pio_closefile(params_ncid)
+
     if (use_cn .or. use_fates) then
        call crop_inst%Init(bounds)
     end if
@@ -505,8 +508,6 @@ contains
 
     call print_accum_fields()
 
-    call ncd_pio_closefile(params_ncid)
-
     call t_stopf('init_accflds')
 
   end subroutine clm_instInit
@@ -516,7 +517,7 @@ contains
     !
     ! !USES:
     use ncdio_pio       , only : file_desc_t
-    use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp
+    use UrbanParamsType , only : IsSimpleBuildTemp, IsProgBuildTemp, IsBuildingHumidityEnabled
     use decompMod       , only : get_proc_bounds, get_proc_clumps, get_clump_bounds
     use clm_varpar      , only : nlevsno
 
@@ -566,8 +567,9 @@ contains
     call water_inst%restart(bounds, ncid, flag=flag, &
          writing_finidat_interp_dest_file = writing_finidat_interp_dest_file, &
          watsat_col = soilstate_inst%watsat_col(bounds%begc:bounds%endc,:), &
-         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), &
-         altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc))
+         t_soisno_col=temperature_inst%t_soisno_col(bounds%begc:bounds%endc, -nlevsno+1:), & 
+         altmax_lastyear_indx=active_layer_inst%altmax_lastyear_indx_col(bounds%begc:bounds%endc), &
+         is_prog_buildhumidity = IsBuildingHumidityEnabled())
 
     call irrigation_inst%restart (bounds, ncid, flag=flag)
 

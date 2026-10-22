@@ -50,7 +50,7 @@ contains
     ! Determine number of PFTs on the natural vegetation landunit, and number of CFTs on
     ! the crop landunit.
     !
-    ! For the sake of dynamic PFTs and dynamic landunits, it helps for the structure of the
+    ! For the sake of transient data (changing PFTs and dynamic landunits), it helps for the structure of the
     ! surface dataset to reflect the subgrid structure that will be used by CLM. Currently
     ! generic crops will always go on the crop landunit, regardless of whether or not we're
     ! using the extra specific crops (so we always run CLM with create_crop_landunit=.true.).

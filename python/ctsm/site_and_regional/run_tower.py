@@ -264,9 +264,9 @@ def main(description):
 
     res = "CLM_USRDAT"
     if run_type == "transient":
-        compset = "IHist1PtClm60Bgc"
+        compset = "IHist1PtClm60BgcRsGs"
     else:
-        compset = "I1PtClm60Bgc"
+        compset = "I1PtClm60BgcRsGs"
 
     # --  Looping over neon sites
     if neon_site_list:

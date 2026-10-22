@@ -120,6 +120,7 @@ contains
     use FATESFireFactoryMod   , only : scalar_lightning
     use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
     use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    use shr_log_mod, only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -611,7 +612,7 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! update surface water fraction (this may modify frac_sno)
+       ! update surface water fraction (this may modify frac_sno_albedo and frac_sno_fluxes)
        call UpdateFracH2oSfc(bounds_clump, &
             filter(nc)%num_soilc, filter(nc)%soilc, &
             water_inst)
@@ -822,6 +823,12 @@ contains
 
        if (irrigate) then
 
+          if (use_fates) then
+             call endrun(msg=' ERROR: Can not have ' // &
+                             'use_fates = .true. and irrigate = .true. ' // &
+                             'Set one of them to .false. in your user_nl_clm. ' // &
+                             errMsg(sourcefile, __LINE__))
+          endif
           ! ============================================================================
           ! Determine irrigation needed for future time steps
           ! ============================================================================
@@ -1029,7 +1036,7 @@ contains
           l = col%landunit(c)
           if (lun%urbpoi(l)) then
              ! Urban landunit use Bonan 1996 (LSM Technical Note)
-             water_inst%waterdiagnosticbulk_inst%frac_sno_col(c) = &
+             water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(c) = &
                   min( water_inst%waterdiagnosticbulk_inst%snow_depth_col(c)/0.05_r8, 1._r8)
           end if
        end do
@@ -1182,7 +1189,8 @@ contains
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_carbonstate_inst)
+               soilbiogeochem_carbonstate_inst, &
+               solarabs_inst, energyflux_inst, temperature_inst)
 
 
           if( is_beg_curr_day() ) then

@@ -81,7 +81,7 @@ class TestSysMeshMaskModifier(unittest.TestCase):
         # The mask will be idnetically 1, no matter the input grid (you can, change it, but you have to get it from a mapping file)
         # Since, the mask is going to be changed later, it's fine that the mask at this point is identically 1.
 
-        # This could also alturnatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
+        # This could also alternatively be done, by using the stored SCRIP grid file for the resolution under CESM inputdata
         ncks_cmd = (
             f"ncks --rgr infer --rgr scrip={self.scrip_file} {fsurdat_in} {self.metadata_file}"
         )

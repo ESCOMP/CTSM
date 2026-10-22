@@ -17,17 +17,3 @@ To add or change the default filenames you edit the ``$CTSMROOT/bld/namelist_fil
 
 Other ``fsurdat`` files are distinguished from this one by their resolution (``hgrid``), simulation year (``sim_year``) and prognostic crop (``use_crop``) attributes.
 
-----------------------------
-What are the required files?
-----------------------------
-
-Different types of simulations and different types of configurations for CLM require different lists of files. The |version|-BGC or Carbon Nitrogen (cn) Biogeochemistry model for example requires ``stream_fldfilename_ndep`` files, which are NOT required by CLMSP. Transient simulations also require transient datasets, and the names of these datasets are sometimes different from the static versions (sometimes both are required as in the dynamic PFT cases).
-
-In the following table we list the different files used by CLM, they are listed in order of importance, dependencies, and customizing. So the required files are all near the top, and the files used only under different conditions are listed later, and files with the fewest dependencies are near the top, as are the files that are least likely to be customized.
-
-.. _reqd-files-table:
-
-Table 3-1. Required Files for Different Configurations and Simulation Types
----------------------------------------------------------------------------
-.. todo::
-    Insert table 3-1

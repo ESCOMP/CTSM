@@ -353,12 +353,12 @@ Plant water demand depends on stomatal conductance, which is described in sectio
    E_{shade} = E_{shade,max} \cdot 2^{-\left(\dfrac{\psi_{shadeleaf}}{p50_e}\right)^{c_k}}
 
 .. math::
-   :label: 11.203
+   :label: beta_t_sun
 
    \beta_{t,sun} = \dfrac{g_{s,sun}}{g_{s,sun,\beta_t=1}}
 
 .. math::
-   :label: 11.204
+   :label: beta_t_sha
 
    \beta_{t,shade} = \dfrac{g_{s,shade}}{g_{s,shade,\beta_t=1}}
 
@@ -382,9 +382,9 @@ Plant water demand depends on stomatal conductance, which is described in sectio
 
 :math:`g_{s,shade}` = stomatal conductance of water corresponding to :math:`E_{shade}`
 
-:math:`g_{s,sun,max}` = stomatal conductance of water corresponding to :math:`E_{sun,max}`
+:math:`g_{s,sun,\beta_t=1}` = stomatal conductance of water corresponding to :math:`E_{sun,max}`
 
-:math:`g_{s,shade,max}` = stomatal conductance of water corresponding to :math:`E_{shade,max}`
+:math:`g_{s,shade,\beta_t=1}` = stomatal conductance of water corresponding to :math:`E_{shade,max}`
 
 .. _Vegetation Water Potential:
 
@@ -574,16 +574,14 @@ Now we compute all the entries for :math:`A` and :math:`b` based on the soil moi
 
 We iterate until :math:`b\to 0`, signifying water flux balance through the system. The result is a final set of water potentials ( :math:`\psi_{root}`, :math:`\psi_{xylem}`, :math:`\psi_{shadeleaf}`, :math:`\psi_{sunleaf}`) satisfying non-divergent water flux through the system. The magnitude of the water flux is driven by soil matric potential and unstressed ( :math:`\beta_t=1`) transpiration.
 
-We use the transpiration solution (corresponding to the final solution for :math:`\psi`) to compute stomatal conductance. The stomatal conductance is then used to compute :math:`\beta_t`.
+We use the transpiration solution (corresponding to the final solution for :math:`\psi`) to compute stomatal conductance. The stomatal conductance is then used to compute :math:`\beta_t` as in Eqs :eq:`beta_t_sun`, :eq:`beta_t_sha` shown again here:
+
+.. SKIP math labels here, as these equations have been numbered elsewhere
 
 .. math::
-   :label: 11.416
-
    \beta_{t,sun} = \dfrac{g_{s,sun}}{g_{s,sun,\beta_t=1}}
 
 .. math::
-   :label: 11.417
-
    \beta_{t,shade} = \dfrac{g_{s,shade}}{g_{s,shade,\beta_t=1}}
 
 The :math:`\beta_t` values are used in the Photosynthesis module (see section :numref:`Photosynthesis`) to apply water stress. The solution for :math:`\psi` is saved as a new variable (vegetation water potential) and is indicative of plant water status. The soil-to-root fluxes :math:`\left( q_{3,1},q_{3,2},\mbox{...},q_{3,n}\right)` are used as the soil transpiration sink in the Richards' equation subsurface flow equations (see section :numref:`Soil Water`).

@@ -1,2 +1,0 @@
- h2osfcflag  = 0
- use_subgrid_fluxes = .false.

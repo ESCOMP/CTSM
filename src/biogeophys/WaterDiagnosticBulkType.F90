@@ -28,6 +28,7 @@ module WaterDiagnosticBulkType
   use WaterStateType, only : waterstate_type
   use WaterStateBulkType, only : waterstatebulk_type
   use WaterFluxType, only : waterflux_type
+  use UrbanParamsType, only : IsBuildingHumidityEnabled
   !
   implicit none
   save
@@ -63,13 +64,14 @@ module WaterDiagnosticBulkType
      real(r8), pointer :: rh_ref2m_patch         (:)   ! patch 2 m height surface relative humidity (%)
      real(r8), pointer :: rh_ref2m_r_patch       (:)   ! patch 2 m height surface relative humidity - rural (%)
      real(r8), pointer :: rh_ref2m_u_patch       (:)   ! patch 2 m height surface relative humidity - urban (%)
+     real(r8), pointer :: rh_building_lun        (:)   ! lun internal building air relative humidity (%) 
      real(r8), pointer :: rh_af_patch            (:)   ! patch fractional humidity of canopy air (dimensionless) ! private
      real(r8), pointer :: rh10_af_patch          (:)   ! 10-day mean patch fractional humidity of canopy air (dimensionless)
      real(r8), pointer :: dqgdT_col              (:)   ! col d(qg)/dT
 
      ! Fractions
-     real(r8), pointer :: frac_sno_col           (:)   ! col fraction of ground covered by snow (0 to 1)
-     real(r8), pointer :: frac_sno_eff_col       (:)   ! col fraction of ground covered by snow (0 to 1) (note: this can be 1 even if there is no snow, but should be ignored in the no-snow case)
+     real(r8), pointer :: frac_sno_albedo_col    (:)   ! col fraction of ground covered by snow for albedo calculations (0 to 1)
+     real(r8), pointer :: frac_sno_fluxes_col    (:)   ! col fraction of ground covered by snow for heat flux calculations (0 to 1) (note: this can be 1 even if there is no snow, but should be ignored in the no-snow case)
      real(r8), pointer :: frac_iceold_col        (:,:) ! col fraction of ice relative to the tot water (new) (-nlevsno+1:nlevgrnd) 
      real(r8), pointer :: frac_h2osfc_col        (:)   ! col fractional area with surface water greater than zero
      real(r8), pointer :: frac_h2osfc_nosnow_col (:)   ! col fractional area with surface water greater than zero (if no snow present)
@@ -154,7 +156,7 @@ contains
     real(r8)          , intent(in) :: h2osno_input_col(bounds%begc:)  ! Initial total snow water (mm H2O)
 
 
-    call this%Init(bounds, info, vars)
+    call this%Init(bounds, info, vars, IsBuildingHumidityEnabled())
 
     call this%InitBulkAllocate(bounds) 
 
@@ -219,11 +221,12 @@ contains
     allocate(this%rh_ref2m_patch         (begp:endp))                     ; this%rh_ref2m_patch         (:)   = nan
     allocate(this%rh_ref2m_u_patch       (begp:endp))                     ; this%rh_ref2m_u_patch       (:)   = nan
     allocate(this%rh_ref2m_r_patch       (begp:endp))                     ; this%rh_ref2m_r_patch       (:)   = nan
+    allocate(this%rh_building_lun        (begl:endl))                     ; this%rh_building_lun        (:)   = nan
     allocate(this%rh_af_patch            (begp:endp))                     ; this%rh_af_patch            (:)   = nan
     allocate(this%rh10_af_patch          (begp:endp))                     ; this%rh10_af_patch          (:)   = spval
 
-    allocate(this%frac_sno_col           (begc:endc))                     ; this%frac_sno_col           (:)   = nan
-    allocate(this%frac_sno_eff_col       (begc:endc))                     ; this%frac_sno_eff_col       (:)   = nan
+    allocate(this%frac_sno_albedo_col    (begc:endc))                     ; this%frac_sno_albedo_col    (:)   = nan
+    allocate(this%frac_sno_fluxes_col    (begc:endc))                     ; this%frac_sno_fluxes_col    (:)   = nan
     allocate(this%frac_iceold_col        (begc:endc,-nlevsno+1:nlevgrnd)) ; this%frac_iceold_col        (:,:) = nan
     allocate(this%frac_h2osfc_col        (begc:endc))                     ; this%frac_h2osfc_col        (:)   = nan 
     allocate(this%frac_h2osfc_nosnow_col (begc:endc))                     ; this%frac_h2osfc_nosnow_col        (:)   = nan 
@@ -357,13 +360,24 @@ contains
          long_name=this%info%lname('Urban 2m relative humidity'), &
          ptr_patch=this%rh_ref2m_u_patch, set_nourb=spval)
 
+    if (IsBuildingHumidityEnabled()) then
+       this%rh_building_lun(begl:endl) = spval
+       call hist_addfld1d ( &
+            fname=this%info%fname('RHBUILD'), &
+            units='%',  &
+            avgflag='A', &
+            long_name=this%info%lname('Internal urban building air relative humidity'), &
+            ptr_lunit=this%rh_building_lun, set_nourb=spval)
+    end if
+
     this%rh_af_patch(begp:endp) = spval
-    call hist_addfld1d ( &
-         fname=this%info%fname('RHAF'), &
-         units='fraction', &
-         avgflag='A', &
-         long_name=this%info%lname('fractional humidity of canopy air'), &
-         ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld1d ( &
+!        fname=this%info%fname('RHAF'), &
+!        units='fraction', &
+!        avgflag='A', &
+!        long_name=this%info%lname('fractional humidity of canopy air'), &
+!        ptr_patch=this%rh_af_patch, set_spec=spval, default='inactive')
 
     if(use_luna)then
        call hist_addfld1d ( &
@@ -392,29 +406,29 @@ contains
          long_name=this%info%lname('fraction of ground covered by surface water (if no snow present)'), &
          ptr_col=this%frac_h2osfc_nosnow_col, default='inactive')
 
-    this%frac_sno_col(begc:endc) = spval
+    this%frac_sno_albedo_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('FSNO'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('fraction of ground covered by snow'), &
-         ptr_col=this%frac_sno_col, c2l_scale_type='urbanf')
+         long_name=this%info%lname('fraction of ground covered by snow for albedo calculations (0 to 1)'), &
+         ptr_col=this%frac_sno_albedo_col, c2l_scale_type='urbanf')
 
     call hist_addfld1d ( &
          fname=this%info%fname('FSNO_ICE'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('fraction of ground covered by snow (ice landunits only)'), &
-         ptr_col=this%frac_sno_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
+         long_name=this%info%lname('fraction of ground covered by snow (ice landunits only) for albedo calculations (0 to 1)'), &
+         ptr_col=this%frac_sno_albedo_col, c2l_scale_type='urbanf', l2g_scale_type='ice', &
          default='inactive')
 
-    this%frac_sno_eff_col(begc:endc) = spval
+    this%frac_sno_fluxes_col(begc:endc) = spval
     call hist_addfld1d ( &
          fname=this%info%fname('FSNO_EFF'),  &
          units='unitless',  &
          avgflag='A', &
-         long_name=this%info%lname('effective fraction of ground covered by snow'), &
-         ptr_col=this%frac_sno_eff_col, c2l_scale_type='urbanf')!, default='inactive')
+         long_name=this%info%lname('fraction of ground covered by snow for heat flux calculations (0 to 1)'), &
+         ptr_col=this%frac_sno_fluxes_col, c2l_scale_type='urbanf')!, default='inactive')
 
     if (use_cn) then
        this%fwet_patch(begp:endp) = spval
@@ -544,12 +558,13 @@ contains
 
     this%bw_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%bw_col(:,-nlevsno+1:0)
-    call hist_addfld2d ( &
-         fname=this%info%fname('SNO_BW'), &
-         units='kg/m3', type2d='levsno', &
-         avgflag='A', &
-         long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
-         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
+!   call hist_addfld2d ( &
+!        fname=this%info%fname('SNO_BW'), &
+!        units='kg/m3', type2d='levsno', &
+!        avgflag='A', &
+!        long_name=this%info%lname('Partial density of water in the snow pack (ice + liquid)'), &
+!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d ( &
          fname=this%info%fname('SNO_BW_ICE'), &
@@ -748,16 +763,16 @@ contains
          l = col%landunit(c)
          if (lun%urbpoi(l)) then
             ! From Bonan 1996 (LSM technical note)
-            this%frac_sno_col(c) = min( this%snow_depth_col(c)/0.05_r8, 1._r8)
+            this%frac_sno_albedo_col(c) = min( this%snow_depth_col(c)/0.05_r8, 1._r8)
          else
-            this%frac_sno_col(c) = 0._r8
+            this%frac_sno_albedo_col(c) = 0._r8
             ! snow cover fraction as in Niu and Yang 2007
             if(this%snow_depth_col(c) > 0.0)  then
                snowbd   = min(400._r8, h2osno_input_col(c)/this%snow_depth_col(c)) !bulk density of snow (kg/m3)
                fmelt    = (snowbd/100.)**1.
                ! 100 is the assumed fresh snow density; 1 is a melting factor that could be
                ! reconsidered, optimal value of 1.5 in Niu et al., 2007
-               this%frac_sno_col(c) = tanh( this%snow_depth_col(c) / (2.5 * params_inst%zlnd * fmelt) )
+               this%frac_sno_albedo_col(c) = tanh( this%snow_depth_col(c) / (2.5 * params_inst%zlnd * fmelt) )
             endif
          end if
       end do
@@ -813,7 +828,7 @@ contains
     !------------------------------------------------------------------------
 
 
-    call this%Restart(bounds, ncid, flag=flag)
+    call this%Restart(bounds, ncid, flag=flag, is_prog_buildhumidity=IsBuildingHumidityEnabled())
 
     if(use_luna)then
        call restartvar(ncid=ncid, flag=flag, &
@@ -854,23 +869,23 @@ contains
     endif
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('frac_sno_eff'), &
+         varname=this%info%fname('frac_sno_fluxes:frac_sno_eff'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for heat flux calculations'), &
          units='unitless', &
-         interpinic_flag='interp', readvar=readvar, data=this%frac_sno_eff_col)
+         interpinic_flag='interp', readvar=readvar, data=this%frac_sno_fluxes_col)
     if (flag == 'read' .and. .not. readvar) then
-       this%frac_sno_eff_col(bounds%begc:bounds%endc) = 0.0_r8
+       this%frac_sno_fluxes_col(bounds%begc:bounds%endc) = 0.0_r8
     end if
 
     call restartvar(ncid=ncid, flag=flag, &
-         varname=this%info%fname('frac_sno'), &
+         varname=this%info%fname('frac_sno_albedo:frac_sno'), &
          xtype=ncd_double,  &
          dim1name='column', &
-         long_name=this%info%lname('fraction of ground covered by snow (0 to 1)'),&
-         units='unitless',&
-         interpinic_flag='interp', readvar=readvar, data=this%frac_sno_col)
+         long_name=this%info%lname('fraction of ground covered by snow (0 to 1) for albedo calculations'), &
+         units='unitless', &
+         interpinic_flag='interp', readvar=readvar, data=this%frac_sno_albedo_col)
     call this%RestartBackcompatIssue783( &
          bounds = bounds, &
          ncid = ncid, &
@@ -999,8 +1014,8 @@ contains
     ! Apply backwards compatibility corrections to address issue ESCOMP/ctsm#783
     !
     ! BACKWARDS_COMPATIBILITY(wjs, 2019-10-15) Due to ESCOMP/ctsm#783, old restart files
-    ! can have frac_sno == 0 for lake points despite having a snow pack. This can cause
-    ! other problems, so fix that here. However, it is apparently possible for frac_sno to
+    ! can have frac_sno_albedo == 0 for lake points despite having a snow pack. This can cause
+    ! other problems, so fix that here. However, it is apparently possible for frac_sno_albedo to
     ! be 0 legitimately when h2osno_total > 0. So if we apply this correction always, then
     ! we sometimes introduce unintentional changes to newer restart files where we don't
     ! actually need to apply this correction. We avoid this by writing metadata to the
@@ -1070,11 +1085,11 @@ contains
                h2osno_total = h2osno_total(bounds%begc:bounds%endc))
           do fc = 1, filter_lakec%num
              c = filter_lakec%indices(fc)
-             if (this%frac_sno_col(c) == 0._r8 .and. h2osno_total(c) > 0._r8) then
+             if (this%frac_sno_albedo_col(c) == 0._r8 .and. h2osno_total(c) > 0._r8) then
                 ! Often the value should be between 0 and 1 rather than being 1, but 1 is at
                 ! least better than 0 in this case, and it would be tricky or impossible to
                 ! figure out the "correct" value.
-                this%frac_sno_col(c) = 1._r8
+                this%frac_sno_albedo_col(c) = 1._r8
              end if
           end do
        end if

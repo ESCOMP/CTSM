@@ -11,6 +11,10 @@ Aber, J.D., Melillo, J.M. and McClaugherty, C.A., 1990. Predicting long-term pat
 
 Aber, J.D., Goodale, C.L., Ollinger, S.V., Smith, M.-L., Magill, A.H., Martin, M.E., Hallett, R.A., and Stoddard, J.L. 2003. Is nitrogen deposition altering the nitrogen status of northeastern forests? BioScience 53:375-389.
 
+.. _AinsworthRogers2007:
+
+Ainsworth, E. A. and Rogers, A. 2007. The response of photosynthesis and stomatal conductance to rising (CO2): mechanisms and environmental interactions, Plant Cell Environ. 30:258-270.
+
 .. _AlduchovandEskridge1996:
 
 Alduchov, O.A., and Eskridge, R.E. 1996. Improved Magnus form approximation of saturation vapor pressure. J. Appl. Meteor. 35:601-609.
@@ -47,6 +51,10 @@ Arah, J. and Vinten, A., 1995. Simplified models of anoxia and denitrification i
 
 Arendt, A., et al. 2012. Randolph Glacier Inventory: A Dataset of Global Glacier Outlines Version: 1.0, Global Land Ice Measurements from Space, Boulder Colorado, USA. Digital Media.
 
+.. _arnfield2003:
+
+Arnfield, A.J. 2003. Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat island. Int. J. Climatol. 23:1-26.
+
 .. _AroraBoer2005:
 
 Arora, V.K. and Boer, G.J. 2005. Fire as an interactive component of dynamic vegetation models. J. Geophys. Res. 110:G02008. DOI:10.1029/2005JG000042.
@@ -59,17 +67,29 @@ Arya, S.P. 2001. Introduction to Meteorology. Academic Press, San Diego, CA.
 
 Asner, G.P., Wessman, C.A., Schimel, D.S., and Archer, S. 1998. Variability in leaf and litter optical properties: implications for BRDF model inversions using AVHRR, MODIS, and MISR. Remote Sens. Environ. 63:243-257.
 
+.. _Atkinetal2015:
+
+Atkin O.K., Bloomfield K.J., Reich P.B., Tjoelker M.G., Asner G.P., Bonal D. et al. 2015. Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
+
+.. _Atkinetal2017:
+
+Atkin O.K., Abdul Bahar N., Bloomfield K., Griffin K.L., Heskel M.A., Huntingford C., Martinez-de la Torre A., Turnbull, M.H. 2017. Leaf Respiration in Terrestrial Biosphere Models. In Plant Respiration: Metabolic Fluxes and Carbon Balance, Advances in Photosynthesis and Respiration 43, G. Tcherkez, J. Ghashghaie (eds.) Springer International Publishing AG 2017
+
+.. _atkinson2003:
+
+Atkinson, B.W. 2003. Numerical modeling of urban heat-island intensity. Bound.-Layer Meteor. 109:285-310.
+
+.. _auchetal2004:
+
+Auch, R., Taylor, J., and Acevedo, W. 2004. Urban growth in American cities: Glimpses of U.S. urbanization. Circular 1252, U.S. Geological Survey, U.S. Department of the Interior, 52 pp.
+
+.. _avissar1996:
+
+Avissar, R. 1996. Potential effects of vegetation on the urban thermal environment. Atmos. Environ. 30:437-448.
+
 .. _AxelssonAxelsson1986:
 
 Axelsson, E., and Axelsson, B. 1986. Changes in carbon allocation patterns in spruce and pine trees following irrigation and fertilization. Tree Phys. 2:189-204.
-
-.. _Atkin2016:
-
-Atkin OK, Bloomfield KJ, Reich PB, Tjoelker MG, Asner GP, Bonal D et al (2015) Global variability in leaf respiration in relation to climate, plant functional types and leaf traits. New Phytologist 206:614–636
-
-.. _Atkin2017:
-
-Leaf Respiration in Terrestrial Biosphere Models. In Plant Respiration: Metabolic Fluxes and Carbon Balance, Advances in Photosynthesis and Respiration 43, G. Tcherkez, J. Ghashghaie (eds.) Springer International Publishing AG 2017
 
 .. _BadgerandDirmeyer2015:
 
@@ -83,6 +103,10 @@ Baird, A.J., Beckwith, C.W., Waldron, S. and Waddington, J.M., 2004. Ebullition 
 
 Baldocchi, D., et al. 2001. FLUXNET: A new tool to study the temporal and spatial variability of ecosystem-scale carbon dioxide, water vapor, and energy flux densities. Bull. Amer. Meteor. Soc. 82:2415-2433.
 
+.. _Balletal1987:
+
+Ball, J.T., Woodrow, I.E., and Berry, J.A. 1987. A model predicting stomatal conductance and its contribution to the control of photosynthesis under different environmental conditions. Dordrecht, The Netherlands, 221-224.
+
 .. _Barbottinetal2005:
 
 Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen remobilization during grain filling in wheat: Genotypic and environmental effects. Crop Sci. 45:1141-1150.
@@ -90,6 +114,10 @@ Barbottin, A., Lecomte, C., Bouchard, C., and Jeuffroy, M.-H. 2005. Nitrogen rem
 .. _Batjes2006:
 
 Batjes, N.H., 2006. ISRIC-WISE derived soil properties on a 5 by 5 arc-minutes global grid. Report 2006/02 (available through : http://www.isric.org)
+
+.. _Bauerleetal2012:
+
+Bauerle, W.L., Oren, R., Way, D.A., Qian, S.S., Stoy, P.C., Thornton, P.E., Bowden, J.D., Hoffman, F.M., and Reynolds, R.F. 2012. Photoperiodic regulation of the seasonal pattern of photosynthetic capacity and the implications for carbon cycling. Proc. Natl. Acad. Sci. USA, 109:8612-8617.
 
 .. _Berger1978a:
 
@@ -107,9 +135,25 @@ Berger, A., Loutre, M.-F., and Tricot, C. 1993. Insolation and Earth's orbital p
 
 Berkowitz, B., and Balberg, I. 1992. Percolation approach to the problem of hydraulic conductivity in porous media. Transport in Porous Media 9:275–286.
 
+.. _best2005:
+
+Best, M.J. 2005. Representing urban areas within operational numerical weather prediction models. Bound.-Layer Meteor. 114:91-109.
+
+.. _best2006:
+
+Best, M.J. 2006. Progress towards better weather forecasts for city dwellers: from short range to climate change. Theor. Appl. Climatol. 84:47-55. DOI:10.1007/s00704-005-0143-2.
+
+.. _betts2001:
+
+Betts, R.A. 2001. Biogeophysical impacts of land use on present-day climate: near-surface temperature change and radiative forcing. Atmos. Sci. Lett. 2:39-51. DOI:10.1006/asle.2001.0023.
+
 .. _BevenKirkby1979:
 
 Beven, K.J., and Kirkby, M.J. 1979. A physically based variable contributing area model of basin hydrology. Hydrol. Sci. Bull. 24:43-69.
+
+.. _Birchetal2021:
+
+Birch, L., Schwalm, C.R., Natali, S., Lombardozzi, D., Keppel-Aleks, G., Watts, J., Lin, X., Zona, D., Oechel, W., Sachs, T., Black, T.A., and Rogers, B.M. 2021. Addressing biases in Arctic–boreal carbon cycling in the Community Land Model Version 5, Geosci. Model Dev., 14, 3361–3382.
 
 .. _BohrenHuffman1983:
 
@@ -155,9 +199,25 @@ Bonan, G.B., Williams, M., Fisher, R.A., and Oleson, K.W. 2014. Modeling stomata
 
 Botta, A et al., 2000. A global prognostic scheme of leaf onset using satellite data. Global Change Biology 6.7, pp. 709-725.
 
+.. _bounouaetal2002:
+
+Bounoua, L., DeFries, R., Collatz, G.J., Sellers, P., and Khan, H. 2002. Effects of land cover conversion on surface climate. Clim. Change 52:29-64.
+
+.. _BrieglebLight2007:
+
+Briegleb, B. P. and Light, B.: A Delta-Eddington multiple scattering parameterization for solar radiation in the sea ice component of the Community Climate System Model, NCAR/TN- 472+STR, National Center for Atmospheric Research, 108 pp., 2007
+
+.. _brovkinetal2004:
+
+Brovkin, V., Sitch, S., von Bloh, W., Claussen, M., Bauer, E., and Cramer, W. 2004. Role of land cover changes for atmospheric CO\ :sub:`2` increase and climate change during the last 150 years. Global Change Biol. 10:1253-1266. DOI:10.1111/j.1365-2486.2004.00812.x.
+
 .. _Brownetal1997:
 
 Brown J., Ferrians O. J. Jr, Heginbottom J. A. and Melnikov E. S. 1997.  Circum-Arctic Map of Permafrost and Ground-Ice Conditions (Boulder, CO: National Snow and Ice Data Center) version 2, DOI: 10.3133/cp45
+
+.. _brown2000:
+
+Brown, M. 2000. Urban parameterizations for mesoscale meteorological models. pp. 193-255. In: Z. Boybeyi (editor) Mesoscale Atmospheric Dispersion. WIT Press, Southampton, Boston.
 
 .. _Brun1989:
 
@@ -175,6 +235,10 @@ Brzostek, E. R., J. B. Fisher, and R. P. Phillips, 2014. Modeling the carbon cos
 
 Bugmann, H., and Solomon, A.M. 2000. Explaining forest composition and biomass across multiple biogeographical regions. Ecol. Appl. 10:95-114.
 
+.. _Buotteetal2021:
+
+Buotte, P. C., Koven, C. D., Xu, C., Shuman, J. K., Goulden, M. L., Levis, S., Katz, J., Ding, J., Ma, W., Robbins, Z., and Kueppers, L. M. 2021. Capturing functional strategies and compositional dynamics in vegetation demographic models, Biogeosciences, 18, 4473–4490, DOI:10.5194/bg-18-4473-2021.
+
 .. _Busing2005:
 
 Busing, R.T. 2005. Tree mortality, canopy turnover, and woody detritus in old cove forests of the southern Appalachians. Ecology 86:73-84.
@@ -187,17 +251,25 @@ Buzan, J.R., Oleson, K., and Huber, M. 2015: Implementation and comparison of a 
 
 Byram, G.M., 1959. Combustion of forest fuels. In Forest fire: control and use.(Ed. KP Davis) pp. 61-89.
 
+.. _Bytnerowiczetal2022:
+
+Bytnerowicz, T. A., Akana, P. R., Griffin, K. L., & Menge, D. N. L. 2022: Temperature sensitivity of woody nitrogen fixation across species and growing temperatures. Nature Plants, 8(3), 209-216. doi: 10.1038/s41477-021-01090-x.
+
 .. _CampbellNorman1998:
 
-Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2:math:`{}^{nd}` edition). Springer-Verlag, New York.
-
-.. _Castilloetal2012:
-
-Castillo, G., Kendra, C., Levis, S., and Thornton, P. 2012. Evaluation of the new CNDV option of the Community Land Model: effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702–3714.
+Campbell, G.S., and Norman, J.M. 1998. An Introduction to Environmental Biophysics (2nd edition). Springer-Verlag, New York.
 
 .. _Caoetal1996:
 
 Cao, M., Marshall, S. and Gregson, K., 1996. Global carbon exchange and methane emissions from natural wetlands: Application of a process-based model. J. Geophys. Res. 101(D9):14,399-14,414.
+
+.. _changnon1992:
+
+Changnon, S.A. 1992. Inadvertent weather modification in urban areas: Lessons for global climate change. Bull. Amer. Meteor. Soc. 73:619-627.
+
+.. _Chenetal2023:
+
+Chen, Y., Hall, J., van Wees, D., Andela, N., Hantson, S., Giglio, L., van der Werf, G.R., Morton, D.C., Randerson, J.T. 2023. Multi-decadal trends and variability in burned area from the fifth version of the Global Fire Emissions Database (GFED5). Earth Syst. Sci. Data 15:5227-5259.
 
 .. _Chengetal2019:
 
@@ -210,6 +282,14 @@ Chuang Y.L., Oren R., Bertozzi A.L, Phillips N., Katul G.G. 2006. The porous med
 .. _Churkinaetal2003:
 
 Churkina, G. et al., 2003. Analyzing the ecosystem carbon dynamics of four European coniferous forests using a biogeochemistry model. Ecosystems, 6: 168-184.
+
+.. _chyleketal1987:
+
+Chylek, P., Srivastava, V., Cahenzli, L., Pinnick, R.G., Dod, R.L., Novakov, T., Cook, T.L., and Hinds, B.D. 1987. Aerosol and graphitic carbon content of snow. J. Geophys. Res. 92:9801-9809.
+
+.. _ciesin2004:
+
+CIESIN (Center for International Earth Science Information Network), Columbia University; International Food Policy Research Institute (IPFRI), the World Bank; and Centro Internacional de Agricultura Tropical (CIAT), 2004. Global Rural-Urban Mapping Project (GRUMP): Urban Extents. Palisades, NY: CIESIN, Columbia University. Available at http://beta.sedac.ciesin.columbia.edu/gpw.
 
 .. _CIESIN2005:
 
@@ -239,13 +319,33 @@ Collatz, G.J., Ribas-Carbo, M., and Berry, J.A. 1992. Coupled photosynthesis-sto
 
 Colmer, T.D., 2003. Long-distance transport of gases in plants: a perspective on internal aeration and radial oxygen loss from roots. Plant Cell and Environment 26:17-36.
 
+.. _Comolaetal2019:
+
+Comola, F., Kok, J.F., Chamecki, M. and Martin, R.L., 2019. The intermittency of wind‐driven sand transport. Geophysical Research Letters, 46(22), pp.13430-13440. DOI:10.1029/2019GL085739.
+
+.. _comrie2000:
+
+Comrie, A.C. 2000. Mapping a wind-modified urban heat island in Tucson, Arizona (with comments on integrating research and undergraduate learning). Bull. Amer. Meteor. Soc. 81:2417-2431.
+
+.. _ComstockEhleringer1986:
+
+Comstock, J. and Ehleringer, J.R. 1986. Photoperiod and photosynthetic capacity in *Lotus scoparius*. Plant Cell Environ. 9:609-612.
+
 .. _Conwayetal1996:
 
 Conway, H., Gades, A., and Raymond, C.F. 1996. Albedo of dirty snow during conditions of melt. Water Resour. Res. 32:1713-1718.
 
+.. _copelandetal1996:
+
+Copeland, J.H., Pielke, R.A., and Kittel, T.G.F. 1996. Potential climatic impacts of vegetation change: a regional modeling study. J. Geophys. Res. 101:7409-7418.
+
 .. _Cosbyetal1984:
 
 Cosby, B.J., Hornberger, G.M., Clapp, R.B., and Ginn, T.R. 1984. A statistical exploration of the relationships of soil moisture characteristics to the physical properties of soils. Water Resour. Res. 20:682-690.
+
+.. _cramer2001:
+
+Cramer, W., et al. 2001. Global response of terrestrial ecosystem structure and function to CO\ :sub:`2` and climate change: results from six dynamic global vegetation models. Global Change Biol. 7:357-373.
 
 .. _Crawfordetal1982:
 
@@ -255,13 +355,17 @@ Crawford, T. W., Rendig, V. V., and Broadent, F. E. 1982. Sources, fluxes, and s
 
 Dahlin, K., R. Fisher, and P. Lawrence, 2015: Environmental drivers of drought deciduous phenology in the Community Land Model. Biogeosciences, 12:5061-5074.
 
+.. _DaiTrenberth2002:
+
+Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from continents: Latitudinal and seasonal variations. J. Hydrometeor. 3:660-687.
+
 .. _DaiZeng1997:
 
 Dai, Y., and Zeng, Q. 1997. A land surface model (IAP94) for climate studies. Part I: formulation and validation in off-line experiments. Adv. Atmos. Sci. 14:433-460.
 
 .. _Daietal2001:
 
-Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at http://climate.eas.gatech.edu/dai/clmdoc.pdf].
+Dai, Y., et al. 2001. Common Land Model: Technical documentation and user's guide [Available online at https://journals.ametsoc.org/view/journals/bams/84/8/bams-84-8-1013.xml].
 
 .. _Daietal2003:
 
@@ -271,9 +375,21 @@ Dai, Y., Zeng, X., Dickinson, R.E., Baker, I., Bonan, G.B., Bosilovich, M.G., De
 
 Dai, Y., Dickinson, R.E., and Wang, Y.-P. 2004. A two-big-leaf model for canopy temperature, photosynthesis, and stomatal conductance. J. Climate 17:2281-2299.
 
-.. _DaiTrenberth2002:
+.. _Damseauxetal2025:
 
-Dai, A., and Trenberth, K.E. 2002. Estimates of freshwater discharge from continents: Latitudinal and seasonal variations. J. Hydrometeor. 3:660-687.
+Damseaux, A., Matthes, H., Dutch, V.R., Wake, L., and Rutter, N. 2025. Impact of snow thermal conductivity schemes on pan-Arctic permafrost dynamics in the Community Land Model version 5.0, The Cryosphere, 19, 1539–1558, DOI:10.5194/tc-19-1539-2025.
+
+.. _dandouetal2005:
+
+Dandou, A., Tombrou, M., Akylas, E., Soulakellis, N., and Bossioli, E. 2005. Development and evaluation of an urban parameterization scheme in the Penn State/NCAR Mesoscale Model (MM5). J. Geophys. Res. 110:D10102. DOI: 10.1029/2004JD005192.
+
+.. _Dangetal2019:
+
+Dang, C., Zender, C. S., & Flanner, M. G. (2019). Intercomparison and improvement of two‐stream shortwave radiative transfer schemes in Earth system models for a unified treatment of cryospheric surfaces. The Cryosphere, 13(9), 2325–2343.
+
+.. _Darmenovaetal2009:
+
+Darmenova, K., Sokolik, I.N., Shao, Y., Marticorena, B. and Bergametti, G., 2009. Development of a physically based dust emission module within the Weather Research and Forecasting (WRF) model: Assessment of dust emission parameterizations and input parameters for source regions in Central and East Asia. Journal of Geophysical Research: Atmospheres, 114(D14). DOI:10.1029/2008JD011236.
 
 .. _DeFriesetal2000:
 
@@ -331,6 +447,26 @@ Drewniak, B., Song, J., Prell, J., Kotamarthi, V.R., and Jacob, R. 2013. Modelin
 
 Dunfield, P., Knowles, R., Dumont, R. and Moore, T.R., 1993. Methane Production and Consumption in Temperate and Sub-Arctic Peat Soils - Response to Temperature and Ph. Soil Biology & Biochemistry 25:321-326.
 
+.. _Dutchetal2022:
+
+Dutch, V.R., Rutter, N., Wake, L., Sandells, M., Derksen, C., Walker, B., Hould Gosselin, G., Sonnentag, O., Essery, R., Kelly, R., Marsh, P., King, J.,  Boike, J. 2022. Impact of measured and simulated tundra snowpack properties on heat transfer, The Cryosphere, 16, 4201–4222, doi:10.5194/tc-16-4201-2022.
+
+.. _eastmanetal2001:
+
+Eastman, J.L., Coughenour, M.B., and Pielke Sr., R.A. 2001. The regional effects of CO\ :sub:`2` and landscape change using a coupled plant and meteorological model. Global Change Biol. 7:797-815.
+
+.. _Eiteletal2019:
+
+Eitel, J.U., Maguire, A.J., Boelman, N., Vierling, L.A., Griffin, K.L., Jensen, J., Magney, T.S., Mahoney, P.J., Meddens, A.J., Silva, C., and Sonnentag, O. 2019. Proximal remote sensing of tree physiology at northern treeline: Do late-season changes in the photochemical reflectance index (PRI) respond to climate or photoperiod? Remote Sens. Environ. 221:340–350.
+
+.. _elvidgeetal2004:
+
+Elvidge, C.D., Sutton, P.C., Wagner, T.W., Ryzner, R., Vogelmann, J.E., Goetz, S.J., Smith, A.J., Jantz, C., Seto, K.C., Imhoff, M.L., Wang, Y.Q., Milesi, C. and Nemani, R. 2004. Urbanization. pp. 315-328. In: G. Gutman, A. C. Janetos, C.O. Justice, E.F. Moran, J.F. Mustard, R.R. Rindfuss, D. Skole, B.L. Turner II, and M.A Cochrane (editors), Land Change Science: Observing, Monitoring and Understanding Trajectories of Change on the Earth's Surface. Kluwer Academic Publishers, The Netherlands.
+
+.. _Emmonsetal2020:
+
+Emmons, L.K., Schwantes, R. H., Orlando, J. J., Tyndall, G., Kinnison, D., Lamarque, J. -F., Marsh, D., Mills, M., Tilmes, S., Bardeen, C., Buchholz, R. R., Conley, A., Gettelman, A., Garcia, R., Simpson, I., Blake, D. R., Meinardi, S., Petron, G. 2020. The Chemistry Mechanism in the Community Earth System Model version 2 (CESM2), J. Advances in Modeling Earth Systems, 12, https://doi.org/10.1029/2019MS001882.
+
 .. _EntekhabiEagleson1989:
 
 Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization for atmospheric general circulation models including subgrid scale spatial variability. J. Climate 2:816-831.
@@ -338,6 +474,10 @@ Entekhabi, D., and Eagleson, P.S. 1989. Land surface hydrology parameterization 
 .. _FangStefan1996:
 
 Fang, X. and Stefan, H.G., 1996. Long-term lake water temperature and ice cover simulations/measurements. Cold Regions Science and Technology 24:289-304.
+
+.. _Fangetal2026:
+
+Fang, B., Zhao, L., Oleson, K., Zhang, K., Lawrence, P., Sacks, B., Cao, C., He, C., Huang, Q., Liu, Z., and Lee, X. 2026. Representing dynamic urban land change in the Community Earth System Model (CESM). JAMES, in revision.
 
 .. _Farouki1981:
 
@@ -351,9 +491,17 @@ Farquhar, G.D., von Caemmerer, S., and Berry, J.A. 1980. A biochemical model of 
 
 Farquhar, G.D., and von Caemmerer, S. 1982. Modeling of photosynthetic response to environmental conditions. pp. 549-587. In: O.L. Lange, P.S. Nobel, C.B. Osmond, and H. Zeigler (editors) Encyclopedia of Plant Physiology. Vol. 12B. Physiological Plant Ecology. II. Water Relations and Carbon Assimilation. Springer-Verlag, New York.
 
+.. _Fecanetal1999:
+
+Fécan, F., Marticorena, B. and Bergametti, G., 1998, December. Parametrization of the increase of the aeolian erosion threshold wind friction velocity due to soil moisture for arid and semi-arid areas. In Annales Geophysicae (Vol. 17, No. 1, pp. 149-157). Berlin/Heidelberg: Springer-Verlag. DOI:10.1007/s00585-999-0149-7.
+
+.. _feddemaetal2005:
+
+Feddema, J.J., Oleson, K.W., Bonan, G., Mearns, L.O., Buja, L.E., Meehl, G.A., and Washington, W.M. 2005: The importance of land cover change in simulating future climates. Science 310:1674-1678.
+
 .. _FeddemaKauffman2016:
 
-Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://svn-iam-thesis-release.cgd.ucar.edu/urban_properties/. doi:10.5065/D6R78CMT.
+Feddema, J., Kauffman, B. 2016. Urban Properties Tool (Version 1.2). NCAR THESIS Tools Library. Retrieved from: https://zenodo.org/records/15501878. doi:10.5065/zrph-dq73
 
 .. _Ferrari1999:
 
@@ -375,6 +523,10 @@ Fisher, R. A., S. Muszala, M. Verteinstein, P. Lawrence, C. Xu, N. G. McDowell, 
 
 Fisher, R.A., C.D. Koven, W.R.L. Anderegg, et al., 2018: Vegetation demographics in Earth System Models: A review of progress and priorities. Glob Change Biol. 2018;24:35–54. https://doi.org/10.1111/gcb.13910
 
+.. _Fisheretal2019:
+
+Fisher, R.A., Wieder, W.R., Sanderson, B., Koven, C.D., Oleson, K.W., Xu, C., Fisher, J.B., Shi, M., Walker, A.P., Lawrence, D.M. 2019. Parametric controls on vegetation responses to biogeochemical forcing in the CLM5. Journal of Advances in Modeling Earth Systems, 11, 2879–2895. DOI:10.1029/2019MS001609
+
 .. _FlannerZender2005:
 
 Flanner, M.G., and Zender. C.S. 2005. Snowpack radiative heating: Influence on Tibetan Plateau climate. Geophys. Res. Lett. 32:L06501. DOI:10.1029/2004GL022076.
@@ -387,6 +539,10 @@ Flanner, M.G., and Zender, C.S. 2006. Linking snowpack microphysics and albedo e
 
 Flanner, M.G., Zender, C.S., Randerson, J.T., and Rasch, P.J. 2007. Present day climate forcing and response from black carbon in snow. J. Geophys. Res. 112:D11202. DOI:10.1029/2006JD008003.
 
+.. _Flanneretal2021:
+
+Flanner, M. G., Arnheim, J. B., Cook, J. M., Dang, C., He, C., Huang, X., Singh, D., Skiles, S. M., Whicker, C. A., and Zender, C. S.: SNICAR-ADv3: a community tool for modeling spectral snow albedo, Geosci. Model Dev., 14, 7673–7704, 2021
+
 .. _Flatauetal1992:
 
 Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation vapor pressure. J. Appl. Meteor. 31:1507-1513.
@@ -395,6 +551,14 @@ Flatau, P.J., Walko, R.L., and Cotton, W.R. 1992. Polynomial fits to saturation 
 
 Foley, J.A. et al., 1996. An integrated biosphere model of land surface processes, terrestrial carbon balance, and vegetation dynamics. Global Biogeochemical Cycles 10.4, pp. 603-628.
 
+.. _foley2005:
+
+Foley, J.A., et al. 2005. Global consequences of land use. Science 309:570-574.
+
+.. _Fosteretal2026:
+
+Foster, A.C., Hawkins, L.R., Kennedy, D., Bonan, G.B., Fisher, R.A., Needham, J.F, Knox, R.G., Koven, C.D., Wieder, W.R., Dagon, K., and Lawrence, D.M. 2026. Contrasting parametric sensitivities in two global vegetation models using parameter perturbation ensembles. Journal of Advances in Modeling Earth Systems. 18, e2025MS005590. DOI:10.1029/2025MS005590.
+
 .. _Friedl,etal2002:
 
 Friedl, M.A., McIver, D.K., Hodges, J.C.F., Zhang, X.Y., Muchoney, D., Strahler, A.H., Woodcock, C.E., Gopal, S., Schneider, A., Cooper, A., Baccini, A., Gao, F., and Schaaf, C. 2002. Global land cover mapping from MODIS: algorithms and early results. Remote Sens. Environ. 83:287-302.
@@ -402,6 +566,10 @@ Friedl, M.A., McIver, D.K., Hodges, J.C.F., Zhang, X.Y., Muchoney, D., Strahler,
 .. _Frolkingetal2001:
 
 Frolking, S., et al. 2001. Modeling Northern Peatland Decomposition and Peat Accumulation. Ecosystems. 4:479-498.
+
+.. _fu2003:
+
+Fu, C. 2003. Potential impacts of human-induced land cover change in East Asia monsoon. Glob. Planet. Change 37:219-229. DOI:10.1016/S0921-8181(02)00207-2.
 
 .. _fyllas2014:
 
@@ -418,6 +586,10 @@ Gallais, A., Coque, M., Gouis, J. L., Prioul, J. L., Hirel, B., and Quillere, I.
 .. _Gallowayetal2004:
 
 Galloway, J.N., et al. 2004. Nitrogen cycles: past, present, and future. Biogeochem. 70:153-226.
+
+.. _GaoOneill2020:
+
+Gao, J., and O'Neill, B.C. 2020. Mapping global urban land for the 21st century with data-driven simulations and Shared Socioeconomic Pathways. Nature Communications, 11(1), 2302. https://doi.org/10.1038/s41467-020-15788-7.
 
 .. _Garciaetal1988:
 
@@ -443,10 +615,6 @@ Ghimire, B., W. J. Riley, C. D. Koven, M. Mu, and J. T. Randerson, 2016: Represe
 
 Gholz, H.L., Perry, C.S., Cropper, W.P., Jr. and Hendry, L.C., 1985. Litterfall, decomposition, and nitrogen and phosphorous dynamics in a chronosequence of slash pine (*Pinus elliottii*) plantations. Forest Science, 31: 463-478.
 
-.. _Giglioetal2006:
-
-Giglio, L., Csiszar, I., and Justice, C.O. 2006. Global distribution and seasonality of active fires as observed with the Terra and Aqua Moderate Resolution Imaging Spectroradiometer (MODIS) sensors. J. Geophys. Res. 111:G02016. DOI:10.1029/2005JG000142.
-
 .. _GlobalSoilDataTask2000:
 
 Global Soil Data Task 2000. Global soil data products CD-ROM (IGBP-DIS). International Geosphere-Biosphere Programme-Data and Information Available Services [Available online at http://www.daac.ornl.gov].
@@ -458,10 +626,6 @@ Gomes, E.P.C., Mantovani, W., and Kageyama, P.Y. 2003. Mortality and recruitment
 .. _Goszetal1973:
 
 Gosz, J.R., Likens, G.E., and Bormann, F.H. 1973. Nutrient release from decomposing leaf and branch litter in the Hubbard Brook Forest, New Hampshire. Ecological Monographs 43:173-191.
-
-.. _GotangcoCastilloetal2012:
-
-Gotangco Castillo C., Levis S., and Thornton P. 2012. Evaluation of the new CNDV option of the Community Land Model: Effects of dynamic vegetation and interactive nitrogen on CLM4 means and variability. J. Climate 25:3702-3714. DOI:10.1175/JCLID-11-00372.1.
 
 .. _Grahametal1999:
 
@@ -478,6 +642,18 @@ Graven, H., C. E. Allison, D. M. Etheridge, S. Hammer, R. F. Keeling, I. Levin, 
 .. _GrenfellWarren1999:
 
 Grenfell, T.C., and Warren, S.G. 1999. Representation of a nonspherical ice particle by a collection of independent spheres for scattering and absorption of radiation. J. Geophys. Res. 104(D24):37697-37709.
+
+.. _grimmondetal1991:
+
+Grimmond, C.S.B., Cleugh, H.A., and Oke, T.R. 1991. An objective urban heat storage model and its comparison with other schemes. Atmos. Environ. 25B:311-326.
+
+.. _grimmondandoke1999:
+
+Grimmond, C.S.B., and Oke, T.R. 1999. Aerodynamic properties of urban areas derived from analysis of surface form. J. Appl. Meteor. 38:1262-1292.
+
+.. _grimmondandoke2002:
+
+Grimmond, C.S.B., and Oke, T.R. 2002. Turbulent heat fluxes in urban areas: observations and a local-scale urban meteorological parameterization scheme (LUMPS). J. Appl. Meteor. 41:792-810.
 
 .. _delGrossoetal2000:
 
@@ -503,9 +679,29 @@ Hack, J.J., Caron, J.M., Yeager, S.G., Oleson, K.W., Holland, M.M., Truesdale, J
 
 Hansen, M., DeFries, R.S., Townshend, J.R.G., Carroll, M., Dimiceli, C., and Sohlberg, R.A. 2003. Global percent tree cover at a spatial resolution of 500 meters: first results of the MODIS vegetation continuous fields algorithm. Earth Interactions 7:1-15.
 
+.. _harmanetal2004:
+
+Harman, I.N., Best, M.J., and Belcher, S.E. 2004. Radiative exchange in an urban street canyon. Bound.-Layer Meteor. 110:301-316.
+
 .. _Hastingsetal1999:
 
 Hastings, D.A., Dunbar, P.K., Elphingstone, G.M., Bootz, M., Murakami, H., Maruyama, H., Masaharu, H., Holland, P., Payne, J., Bryant, N.A., Logan, T.L., Muller, J.-P., Schreier, G., and MacDonald, J.S., eds., 1999. The Global Land One-kilometer Base Elevation (GLOBE) Digital Elevation Model, Version 1.0. National Oceanic and Atmospheric Administration, National Geophysical Data Center, 325 Broadway, Boulder, Colorado 80305-3328, U.S.A.
+
+.. _Hauseretal2023:
+
+Hauser, E., Wieder, W.R., Bonan, G.B., and Cleveland, C.C. 2023. Flexible foliar stoichiometry reduces the magnitude of the global land carbon sink. Geophys. Res. Lett. 50(21), e2023GL105493.  DOI:10.1029/2023GL105493
+
+.. _Heetal2017:
+
+He, C., Takano, Y., Liou, K. N., Yang, P., Li, Q., & Chen, F. (2017). Impact of snow grain shape and black carbon–snow internal mixing on snow optical properties: Parameterizations for climate models. Journal of Climate, 30(24), 10019–10036.
+
+.. _Heetal2019:
+
+He, C., Liou, K. N., Takano, Y., Chen, F., & Barlage, M. (2019). Enhanced snow absorption and albedo reduction by dust‐snow internal mixing: Modeling and parameterization. Journal of Advances in Modeling Earth Systems, 11(11), 3755–3776.
+
+.. _Heetal2024:
+
+He, C., Flanner, M., Lawrence, D. M., & Gu, Y. (2024). New features and enhancements in community land model (CLM5) snow albedo modeling: Description, sensitivity, and evaluation. Journal of Advances in Modeling Earth Systems, 16, e2023MS003861.
 
 .. _Healdetal2008:
 
@@ -543,9 +739,17 @@ Hostetler, S.W., Giorgi, F., Bates, G.T., and Bartlein, P.J. 1994. Lake-atmosphe
 
 Hou, Z., Huang, M., Leung, L.R., Lin, G., and Ricciuto, D.M. 2012. Sensitivity of surface flux simulations to hydrologic parameters based on an uncertainty quantification framework applied to the Community Land Model. J. Geophys. Res. 117:D15108.
 
+.. _houghtonetal2001:
+
+Houghton, J.T., Ding, Y., Griggs, D.J., Noguer, M., van der Linden, P.J., Dai, X., Maskell, K., and Johnson, C.A. (editors) 2001. Climate Change 2001: The Scientific Basis. Cambridge University Press, 881 pp.
+
 .. _Houltonetal2008:
 
 Houlton, B.Z., Wang, Y.P., Vitousek, P.M. and Field, C.B., 2008. A unifying framework for dinitrogen fixation in the terrestrial biosphere. Nature, 454(7202), p.327.
+
+.. _Houltonetal2015:
+
+Houlton, B., Marklein, A. & Bai, E. Representation of nitrogen in climate change forecasts. Nature Clim Change 5, 398–401 (2015). https://doi.org/10.1038/nclimate2538
 
 .. _HuangLiang2006:
 
@@ -553,11 +757,7 @@ Huang, M., and Liang, X. 2006. On the assessment of the impact of reducing param
 
 .. _Hugeliusetal2012:
 
-Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (http://dev1.geo.su.se/bbcc/dev/ncscd/).
-
-.. _Huntetal1988:
-
-Hunt, H.W., Ingham, E.R., Coleman, D.C., Elliott, E.T., and Reid, C.P.P. 1988. Nitrogen limitation of production and decomposition in prairie, mountain meadow, and pine forest. Ecology 69:1009-1016.
+Hugelius, G., C. Tarnocai, G. Broll, J.G. Canadell, P. Kuhry, adn D.K. Swanson, 2012. The Northern Circumpolar Soil Carbon Database: spatially distributed datasets of soil coverage and soil carbon storage in the northern permafrost regions. Earth Syst. Sci. Data Discuss., 5, 707-733 (available online at (https://essd.copernicus.org/articles/5/3/2013/essd-5-3-2013.html).
 
 .. _HuntRunning1992:
 
@@ -567,6 +767,10 @@ Hunt, E.R., Jr. and Running, S.W., 1992. Simulated dry matter yields for aspen a
 
 Hunt, E.R., Jr. et al., 1996. Global net carbon exchange and intra-annual atmospheric CO\ :sub:`2` concentrations predicted by an ecosystem process model and three-dimensional atmospheric transport model. Global Biogeochemical Cycles, 10: 431-456.
 
+.. _Huntetal1988:
+
+Hunt, H.W., Ingham, E.R., Coleman, D.C., Elliott, E.T., and Reid, C.P.P. 1988. Nitrogen limitation of production and decomposition in prairie, mountain meadow, and pine forest. Ecology 69:1009-1016.
+
 .. _Hurttetal2006:
 
 Hurtt, G.C., Frolking, S., Fearon, M.G., Moore, B., Shevliakova, E., Malyshev, S., Pacala, S.W., and Houghton, R.A. 2006. The underpinnings of land-use history: three centuries of global gridded land-use transitions, wood-harvest activity, and resulting secondary lands. Global Change Biol. 12:1208-1229.
@@ -574,6 +778,10 @@ Hurtt, G.C., Frolking, S., Fearon, M.G., Moore, B., Shevliakova, E., Malyshev, S
 .. _Hurttetal2011:
 
 Hurtt, G.C., et al. 2011. Harmonization of land-use scenarios for the period 1500-2100: 600 years of global gridded annual land-use transitions, wood harvest, and resulting secondary lands. Climatic Change 109:117-161. DOI:10.1007/s10584-011-0153-2.
+
+.. _ichinoseetal1999:
+
+Ichinose, T., Shimodozono, K., Hanaki, K. 1999. Impact of anthropogenic heat on urban climate in Tokyo. Atmos. Environ. 33:3897-3909.
 
 .. _Idso1981:
 
@@ -585,7 +793,7 @@ Iiyama, I. and Hasegawa, S., 2005. Gas diffusion coefficient of undisturbed peat
 
 .. _Jacksonetal1996:
 
-Jacksonetal1996: E., and Schulze, E. D. 1996. A global analysis of root distributions for terrestrial biomes Oecologia 108:389–411. DOI:10.1007/BF00333714.
+Jackson, R. B., Canadell, J., Ehleringer, J. R., Mooney, H. A., Sala, O. E., and Schulze, E. D. 1996. A global analysis of root distributions for terrestrial biomes. Oecologia 108: 389–411. DOI: 10.1007/BF00333714.
 
 .. _Jacksonetal2010:
 
@@ -595,9 +803,21 @@ Jackson, T.L., Feddema, J.J., Oleson, K.W., Bonan, G.B., and Bauer, J.T. 2010. P
 
 Jenkinson, D. and Coleman, K. 2008. The turnover of organic carbon in subsoils. Part 2. Modelling carbon turnover. European Journal of Soil Science 59:400-413.
 
+.. _jinetal2005:
+
+Jin, M., Dickinson, R.E., and Zhang, D.-L. 2005. The footprint of urban areas on global climate as characterized by MODIS. J. Climate 18:1551-1565.
+
+.. _johnsonetal1991:
+
+Johnson, G.T., Oke, T.R., Lyons, T.J., Steyn, D.G., Watson, I.D., and Voogt, J.A. 1991. Simulation of surface urban heat islands under 'ideal' conditions at night. Part 1: Theory and tests against field data. Bound.-Layer Meteor. 56:275-294.
+
 .. _Jordan1991:
 
 Jordan, R. 1991. A One-dimensional Temperature Model for a Snow Cover: Technical Documentation for SNTHERM.89. U.S. Army Cold Regions Research and Engineering Laboratory, Special Report 91-16.
+
+.. _kalnayandcai2003:
+
+Kalnay, E., and Cai, M. 2003. Impact of urbanization and land-use change on climate. Nature 423:528-531.
 
 .. _KattgeKnorr2007:
 
@@ -619,6 +839,10 @@ Keller, M., Palace, M., Asner, G.P., Pereira, R., Jr. and Silva, J.N.M., 2004. C
 
 Kellner, E., Baird, A.J., Oosterwoud, M., Harrison, K. and Waddington, J.M., 2006. Effect of temperature and atmospheric pressure on methane (CH4) ebullition from near-surface peats. Geophys. Res. Lett. 33. DOI:10.1029/2006GL027509.
 
+.. _Khatiwala2024:
+
+Khatiwala, S., 2024. Efficient spin-up of Earth System Models using sequence acceleration. Science Advances 10, eadn2839.
+
 .. _Kimballetal1997:
 
 Kimball, J.S., Thornton, P.E., White, M.A. and Running, S.W. 1997. Simulating forest productivity and surface-atmosphere exchange in the BOREAS study region. Tree Physiology 17:589-599.
@@ -626,6 +850,22 @@ Kimball, J.S., Thornton, P.E., White, M.A. and Running, S.W. 1997. Simulating fo
 .. _Kohyamaetal2001:
 
 Kohyama, T., Suzuki, E., Partomihardjo, T., and Yamada, T. 2001. Dynamic steady state of patch-mosaic tree size structure of a mixed diptocarp forest regulated by local crowding. Ecological Research 16:85-98.
+
+.. _Koketal2012:
+
+Kok, J.F., Parteli, E.J., Michaels, T.I. and Karam, D.B., 2012. The physics of wind-blown sand and dust. Reports on progress in Physics, 75(10), p.106901. DOI:10.1088/0034-4885/75/10/106901.
+
+.. _Koketal2014a:
+
+Kok, J.F., Mahowald, N.M., Fratini, G., Gillies, J.A., Ishizuka, M., Leys, J.F., Mikami, M., Park, M.S., Park, S.U., Van Pelt, R.S. and Zobeck, T.M., 2014a. An improved dust emission model–Part 1: Model description and comparison against measurements. Atmospheric Chemistry and Physics, 14(23), pp.13023-13041.
+
+.. _Koketal2014b:
+
+Kok, J.F., Albani, S., Mahowald, N.M. and Ward, D.S., 2014b. An improved dust emission model–Part 2: Evaluation in the Community Earth System Model, with implications for the use of dust source functions. Atmospheric Chemistry and Physics, 14(23), pp.13043-13061. DOI: 10.5194/acp-14-13043-2014.
+
+.. _Kou-Giesbrechtetal2025:
+
+Kou-Giesbrecht, C.R. Reis Ely, S.S. Perakis, C.C. Cleveland, D.N.L. Menge, S.C. Reed, B.N. Taylor, S.A. Batterman, T.E. Crews, K.A. Dynarski, M. Gei, M.J. Gundale, D.F. Herridge, S.E. Jovan, M.B. Peoples, J. Piipponen, E. Rodríguez-Caballero, V.G. Salmon, F.M. Soper, A.P. Staccone, B. Weber, C.A. Williams, & N. Wurzburger, 2025. Overestimated natural biological nitrogen fixation translates to an exaggerated CO2 fertilization effect in Earth system models, Proc. Natl. Acad. Sci. U.S.A. 122 (48) e2514628122, DOI:10.1073/pnas.2514628122.
 
 .. _Kourzeneva2009:
 
@@ -659,6 +899,10 @@ Koven, C.D. et al. 2015. Permafrost carbon-climate feedback is sensitive to deep
 
 Koven, C.D., G. Hugelius, D.M. Lawrence, and W.R. Wieder, 2017: Higher climatological temperature sensitivity of soil carbon in cold than warm climates. Nature Clim. Change, 7, doi:10.1038/nclimate3421.
 
+.. _Kovenetal2020:
+
+Koven, C. D., Knox, R. G., Fisher, R. A., Chambers, J. Q., Christoffersen, B. O., Davies, S. J., Detto, M., Dietze, M. C., Faybishenko, B., Holm, J., Huang, M., Kovenock, M., Kueppers, L. M., Lemieux, G., Massoud, E., McDowell, N. G., Muller-Landau, H. C., Needham, J. F., Norby, R. J., Powell, T., Rogers, A., Serbin, S. P., Shuman, J. K., Swann, A. L. S., Varadharajan, C., Walker, A. P., Wright, S. J., and Xu, C. 2020. Benchmarking and parameter sensitivity of physiological and vegetation dynamics using the Functionally Assembled Terrestrial Ecosystem Simulator (FATES) at Barro Colorado Island, Panama, Biogeosciences, 17, 3017–3044, DOI:10.5194/bg-17-3017-2020.
+
 .. _kucharik1998:
 
 Kucharik, C.J., J.M. Norman, and S.T. Gower, 1998. Measurements of branch area and adjusting leaf area index indirect measurements. Agricultural and Forest Meteorology 91.1, pp. 69-88.
@@ -671,6 +915,18 @@ Kucharik, C.J., Foley, J.A., Delire, C., Fisher, V.A., Coe, M.T., Lenters, J.D.,
 
 Kucharik, C.J., and Brye, K.R. 2003. Integrated BIosphere Simulator (IBIS) yield and nitrate loss predictions for Wisconsin maize receiving varied amounts of nitrogen fertilizer. Journal of Environmental Quality 32: 247–268.
 
+.. _kusakaetal2001:
+
+Kusaka, H., Kondo, H., Kikegawa, Y., and Kimura, F. 2001. A simple single-layer urban canopy model for atmospheric models: comparison with multi-layer and slab models. Bound.-Layer Meteor. 101:329-358.
+
+.. _kusakaandkimura2004:
+
+Kusaka, H., and Kimura, F. 2004. Thermal effects of urban canyon structure on the nocturnal heat island: numerical experiment using a mesoscale model coupled with an urban canopy model. J. Appl. Meteor. 43:1899-1910.
+
+.. _KykerSnowmanetal2020:
+
+Kyker-Snowman, E., Wieder, W.R., Frey, S.D., Grandy, A.S., 2020. Stoichiometrically coupled carbon and nitrogen cycling in the MIcrobial-MIneral Carbon Stabilization model version 1.0 (MIMICS-CN v1. 0). Geoscientific Model Development 13, 4413-4434.
+
 .. _Laddetal2992:
 
 Ladd, J.N., Jocteur-Monrozier, L. and Amato, M., 1992. Carbon turnover and nitrogen transformations in an alfisol and vertisol amended with [U-:math:`{}^{14}`\ C] glucose and [:math:`{}^{15}`\ N] ammonium sulfate. Soil Biology and Biochemistry, 24: 359-371.
@@ -678,6 +934,14 @@ Ladd, J.N., Jocteur-Monrozier, L. and Amato, M., 1992. Carbon turnover and nitro
 .. _Lamarqueetal2010:
 
 Lamarque, J.-F., et al. 2010. Historical (1850-2000) gridded anthropogenic and biomass burning emissions of reactive gases and aerosols: methodology and application. Atmos. Chem. Phys. Discuss. 10:4963-5019. DOI:10.5194/acpd-10-4963-2010.
+
+.. _Lamarqueetal2012:
+
+Lamarque, J.-F., Emmons, L. K., Hess, P. G., Kinnison, D. E., Tilmes, S., Vitt, F., Heald, C. L., Holland, E. A., Lauritzen, P. H., Neu, J., Orlando, J. J., Rasch, P. J., and Tyndall, G. K.  2012.CAM-chem: description and evaluation of interactive atmospheric chemistry in the Community Earth System Model, Geosci. Model Dev., 5, 369–411, https://doi.org/10.5194/gmd-5-369-2012.
+
+.. _landsberg1981:
+
+Landsberg, H.E. 1981. The Urban Climate. New York, Academic Press, 275 pp.
 
 .. _Larcher1995:
 
@@ -690,10 +954,6 @@ Lavigne, M.B., and Ryan, M.G. 1997. Growth and maintenance respiration rates of 
 .. _Lawetal2003:
 
 Law, B.E., Sun, O.J., Campbell, J., Van Tuyl, S. and Thornton, P.E. 2003. Changes in carbon storage and fluxes in a chronosequence of ponderosa pine. Global Change Biology, 9: 510-514.
-
-.. _Lawrence2005:
-
-Lawrence, M.G. 2005. The relationship between relative humidity and the dewpoint temperature in moist air. Bull. Amer. Meteorol. Soc. 86:225-234. DOI:10.1175/BAMS-86-2-225.
 
 .. _Lawrenceetal2007:
 
@@ -715,6 +975,10 @@ Lawrence, D.M., K.W. Oleson, M.G. Flanner, P.E. Thornton, S.C. Swenson, P.J. Law
 
 Lawrence, D.M., Hurtt, G.C., Arneth, A., Brovkin, V., Calvin, K.V., Jones, A.D., Jones, C.D., Lawrence, P.J., de Noblet-Ducoudré, N., Pongratz, J., Seneviratne, S.I., and Shevliakova, E. 2016. The Land Use Model Intercomparison Project (LUMIP) contribution to CMIP6: rationale and experimental design. Geosci. Model Dev. 9:2973-2998. DOI:10.5194/gmd-9-2973-2016.
 
+.. _Lawrence2005:
+
+Lawrence, M.G. 2005. The relationship between relative humidity and the dewpoint temperature in moist air. Bull. Amer. Meteorol. Soc. 86:225-234. DOI:10.1175/BAMS-86-2-225.
+
 .. _LawrenceChase2007:
 
 Lawrence, P.J., and Chase, T.N. 2007. Representing a MODIS consistent land surface in the Community Land Model (CLM 3.0). J. Geophys. Res. 112:G01023. DOI:10.1029/2006JG000168.
@@ -727,21 +991,29 @@ Lawrence, P.J., and Chase, T.N. 2010. Investigating the climate impacts of globa
 
 Lawrence, P.J., et al. 2012. Simulating the biogeochemical and biogeophysical impacts of transient land cover change and wood harvest in the Community Climate System Model (CCSM4) from 1850 to 2100. J. Climate 25:3071-3095. DOI:10.1175/JCLI-D-11-00256.1.
 
-.. _LehnerDoll2004:
-
-Lehner, B. and Döll, P., 2004. Development and validation of a global database of lakes, reservoirs and wetlands, J. Hydrol., 296, 1–22.
-
 .. _Leeetal2014:
 
 Lee, H., Swenson, S.C., Slater A.G. and Lawrence D.M., 2014. Effects of excess ground ice on projections of permafrost in a warming climate. Environmental Research Letters 9:12 124006. DOI: 10.1088/1748-9326/9/12/124006
+
+.. _leeandpark2007:
+
+Lee, S.-H., and Park, S.-U. 2007. A vegetated urban canopy model for meteorological and environmental modeling. Bound.-Layer Meteor. DOI:10:1007/s10546-007-9221-6.
+
+.. _LehnerDoll2004:
+
+Lehner, B. and Döll, P., 2004. Development and validation of a global database of lakes, reservoirs and wetlands, J. Hydrol., 296, 1–22.
 
 .. _Lehneretal2008:
 
 Lehner, B., Verdin, K. and Jarvis, A., 2008. New global hydrograhy derived from spaceborne elevation data. Eos Trans., AGU, 89, 93 – 94.
 
-.. _LePageetal2010:
+.. _lemonsuandmasson2002:
 
-Le Page, Y., van der Werf, G.R., Morton, D.C., and Pereira, J.M.C. 2010. Modeling fire-driven deforestation potential in Amazonia under current and projected climate conditions. J. Geophys. Res. 115:G03012. DOI:10.1029/2009JG001190.
+Lemonsu, A., and Masson, V. 2002. Simulation of a summer urban breeze over Paris. Bound.-Layer Meteor. 104:463-490.
+
+.. _lemonsuetal2004:
+
+Lemonsu, A., Grimmond, C.S.B., and Masson, V. 2004. Modeling the surface energy balance of the core of an old Mediterranean city: Marseille. J. Appl. Meteor. 43:312-327.
 
 .. _Lerman1979:
 
@@ -750,6 +1022,14 @@ Lerman, A., 1979. Geochemical processes: Water and sediment environments. John W
 .. _Lettsetal2000:
 
 Letts, M.G., Roulet, N.T., Comer, N.T., Skarupa, M.R., and Verseghy, D.L. 2000. Parametrization of peatland hydraulic properties for the Canadian Land Surface Scheme. Atmos.-Ocean 38:141-160.
+
+.. _Leungetal2023:
+
+Leung, D.M., Kok, J.F., Li, L., Okin, G.S., Prigent, C., Klose, M., Pérez García-Pando, C., Menut, L., Mahowald, N.M., Lawrence, D.M. and Chamecki, M., 2023. A new process-based and scale-aware desert dust emission scheme for global climate models–Part I: Description and evaluation against inverse modeling emissions. Atmos. Chem. Phys., 23(11), pp.6487-6523. DOI:10.5194/acp-23-6487-2023.
+
+.. _Leungetal2024:
+
+Leung, D.M., Kok, J.F., Li, L., Mahowald, N.M., Lawrence, D.M., Tilmes, S., Kluzek, E., Klose, M. and Pérez García-Pando, C., 2024. A new process-based and scale-aware desert dust emission scheme for global climate models–Part II: Evaluation in the Community Earth System Model version 2 (CESM2). Atmos. Chem. Phys., 24(4), pp.2287-2318. DOI:10.5194/acp-24-2287-2024.
 
 .. _Levisetal2003:
 
@@ -791,13 +1071,21 @@ Li, F., Levis, S., and Ward, D. S. 2013a. Quantifying the role of fire in the Ea
 
 Li, F., and Lawrence, D. 2017. Role of fire in the global land water budget during the 20th century through changing ecosystems. J. Clim. 30: 1894-1908.
 
-.. _Lietal2013b:
+.. _Lietal2019:
 
-Li, H.-Y., Huang, M., Tesfa, T., Ke, Y., Sun, Y., Liu, Y., and Leung, L. R. 2013b. A subbasin-based framework to represent land surface processes in an Earth System Model, Geosci. Model Dev. Discuss. 6:2699-2730. DOI:10.5194/gmdd-6-2699-2013.
+Li, F., Val Martin, M., Andreae, M.O., Arneth, A., Hantson, S., Kaiser, J.W., Lasslop, G., Yue, C., Bachelet, D., Forrest, M., Kluzek, E., Liu, X., Mangeon, S., Melton, J.R., Ward, D.S., Darmenov, A., Hickler, T., Ichoku, C., Magi, B.I., Sitch, S., van der Werf, G.R., Wiedinmyer, C., Rabin, S.S. 2019. Historical (1700-2012) global multi-model estimates of the fire emissions from the Fire Modeling Intercomparison Project (FireMIP). Atmos. Chem. Phys. 19:12545-12567.
+
+.. _Lietal2024b:
+
+Li, F. et al. 2024. Quantifying the role of fire in the Earth system: Improved global fire modeling in Earth system models. AGU Fall Meeting 2024, Washington, D.C., USA, 9-13 December 2024, GC41E-01. https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1529786.
 
 .. _Lietal2011:
 
 Li, H., Huang, M., Wigmosta, M.S., Ke, Y., Coleman, A.M., Leung, L.R., Wang, A., and Ricciuto, D.M. 2011. Evaluating runoff simulations from the Community Land Model 4.0 using observations from flux towers and a mountainous watershed. J. Geophys. Res. 116:D24120. DOI:10.1029/2011JD016276.
+
+.. _Lietal2013b:
+
+Li, H.-Y., Huang, M., Tesfa, T., Ke, Y., Sun, Y., Liu, Y., and Leung, L. R. 2013b. A subbasin-based framework to represent land surface processes in an Earth System Model, Geosci. Model Dev. Discuss. 6:2699-2730. DOI:10.5194/gmdd-6-2699-2013.
 
 .. _Lietal2015a:
 
@@ -807,17 +1095,21 @@ Li, H., L. Leung, A. Getirana, M. Huang, H. Wu, Y. Xu, J. Guo and N. Voisin. 201
 
 Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu, and X. Yang. 2015. Modeling stream temperature in the Anthropocene: An earth system modeling approach, J. Adv. Model. Earth Syst., 7, doi:10.1002/2015MS000471.
 
+.. _Lietal2024a:
+
+Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
+
 .. _Liangetal1994:
 
 Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrologically based model of land surface water and energy fluxes for GSMs. J. Geophys. Res. 99(D7):14,415–14,428.
 
+.. _Liaoetal2023:
+
+Liao, C., Lu X., Huang Y., Tao F., Lawrence D.M, Koven C.D., Oleson K.W., Wieder W.R., Kluzek E., Huang X., Luo Y. 2023 . Matrix Approach to Accelerate Spin-Up of CLM5. Journal of Advances in Modeling Earth Systems, 15(8), e2023MS003625. doi:10.1029/2023MS003625.
+
 .. _lichstein2011:
 
 Lichstein, J.W. and S.W. Pacala, 2011. Local diversity in heterogeneous landscapes: quantitative assessment with a height-structured forest metacommunity model`. Theoretical Ecology 4.2, pp. 269-281.
-
-.. _LipscombSacks2012:
-
-Lipscomb, W., and Sacks, W. 2012. The CESM land ice model documentation and user's guide. 46 pp. [Available online at http://www.cesm.ucar.edu/models/cesm1.1/cism/].
 
 .. _lischke2006:
 
@@ -847,13 +1139,21 @@ Loveland, T.R., Reed, B.C., Brown, J.F., Ohlen, D.O., Zhu, Z., Yang, L., and Mer
 
 Lowe, P.R. 1977. An approximating polynomial for the computation of saturation vapor pressure. J. Appl. Meteor. 16:100-103.
 
-.. _Luoetal2006:
+.. _Luetal2020:
 
-Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations of carbon and nitrogen in land ecosystems: a meta-analysis. Ecology 87:53-63.
+Lu, X., Du, Z., Huang, Y., Lawrence, D., Kluzek, E., Collier, N., Lombardozzi, D., Sobhani, N., Schuur, E.A. and Luo, Y., 2020. Full implementation of matrix approach to biogeochemistry module of CLM5. Journal of Advances in Modeling Earth Systems, 12(11), p.e2020MS002105.
 
 .. _Luoetal2025:
 
 Luo J, Hess P G, Hall S, et al. Agricultural emissions of reactive nitrogen gases from constrained simulations using the Community Land Model. Authorea Preprints, 2025.
+
+.. _Luoetal2006:
+
+Luo, Y., Hui, D., and Zhang, D. 2006. Elevated CO2 stimulates net accumulations of carbon and nitrogen in land ecosystems: a meta-analysis. Ecology 87:53-63.
+
+.. _macdonaldetal1998:
+
+Macdonald, R.W., Griffiths, R.F., and Hall, D.J. 1998. An improved method for the estimation of surface roughness of obstacle arrays. Atmos. Environ. 32:1857-1864.
 
 .. _Magilletal1997:
 
@@ -862,6 +1162,14 @@ Magill, A.H. et al., 1997. Biogeochemical response of forest ecosystems to simul
 .. _Mahowaldetal2006:
 
 Mahowald, N.M., Muhs, D.R., Levis, S., Rasch, P.J., Yoshioka, M., Zender, C.S., and Luo, C. 2006. Change in atmospheric mineral aerosols in response to climate: last glacial period, pre-industrial, modern and doubled CO\ :sub:`2` climates. J. Geophys. Res\ *.* 111:D10202. DOI:10.1029/2005JD006653.
+
+.. _Maireetal2012:
+
+Maire, V., Martre, P., Kattge, J., Gastal, F., Esser, G., Fontaine, S., and Soussana, F. 2012. The coordination of leaf photosynthesis links C and N fluxes in C3 plant species, PLos ONE, 7:e38245. doi:38310.31371/journal.pone.0038345.
+
+.. _MajasalmiBright2019:
+
+Majasalmi, T., and Bright, R.M. 2019. Evaluation of leaf-level optical properties employed in land surface models. Geosci. Model Dev. 12:3923-3938. https://doi.org/10.5194/gmd-12-3923-2019.
 
 .. _Makela2002:
 
@@ -875,6 +1183,18 @@ Mao, J., Thornton, P.E., Shi, X., Zhao, M., and Post, W.M. 2012. Remote sensing 
 
 Mao, J., Shi, X., Thornton, P.E., Hoffman, F.M., Zhu, Z., and Ranga B. Myneni, R.B. 2013. Global latitudinal-asymmetric vegetation growth trends and their driving mechanisms: 1982-2009. Remote Sensing 5:1484-1497.
 
+.. _marshall1989:
+
+Marshall, S.E. 1989. A physical parameterization of snow albedo for use in climate models. NCAR Cooperative Thesis NCAR/CT-123, National Center for Atmospheric Research, Boulder, CO.
+
+.. _MarticorenaBergametti1995:
+
+Marticorena, B. and Bergametti, G., 1995. Modeling the atmospheric dust cycle: 1. Design of a soil‐derived dust emission scheme. Journal of geophysical research: atmospheres, 100(D8), pp.16415-16430. DOI: 10.1029/95JD00690.
+
+.. _martillietal2002:
+
+Martilli, A., Clappier, A., Rotach, M.W. 2002. An urban surface exchange parameterization for mesoscale models. Bound.-Layer Meteor. 104:261-304.
+
 .. _Martinetal1980:
 
 Martin, J.P., Haider, K. and Kassim, G., 1980. Biodegradation and stabilization after 2 years of specific crop, lignin, and polysaccharide carbons in soils. Soil Science Society of America Journal 44:1250-1255.
@@ -882,6 +1202,22 @@ Martin, J.P., Haider, K. and Kassim, G., 1980. Biodegradation and stabilization 
 .. _Maryetal1993:
 
 Mary, B., Fresneau, C., Morel, J.L. and Mariotti, A., 1993. C and N cycling during decomposition of root mucilage, roots and glucose in soil. Soil Biology and Biochemistry 25:1005-1014.
+
+.. _masson2000:
+
+Masson, V. 2000. A physically-based scheme for the urban energy budget in atmospheric models. Bound.-Layer Meteor. 94:357-397.
+
+.. _massonetal2002:
+
+Masson, V., Grimmond, C.S.B., and Oke, T.R. 2002. Evaluation of the Town Energy Balance (TEB) scheme with direct measurements from dry districts in two cities. J. Appl. Meteor. 41:1011-1026.
+
+.. _masson2006:
+
+Masson, V. 2006. Urban surface modeling and the meso-scale impact of cities. Theor. Appl. Climatol. 84:35-45.
+
+.. _mathewsetal2004:
+
+Mathews, H.D., Weaver, A.J., Meissner, K.J., Gillett, N.P., and Eby, M. 2004. Natural and anthropogenic climate change: incorporating historical land cover change, vegetation dynamics and the global carbon cycle. Clim. Dyn. 22:461-479. DOI:10.1007/s00382-004-0392-2.
 
 .. _Mcdowelletal2013:
 
@@ -897,16 +1233,15 @@ Medlyn, B.E., Duursma, R.A., Eamus, D., Ellsworth, D.S., Prentice, I.C., Barton,
 
 .. _Meieretal2022:
 
-Meier, R., Davin, E. L., Bonan, G. B., Lawrence, D. M., Hu, X.,
-Duveiller, G., Prigent, C., and Seneviratne, S. I., 2022. Impacts of a
-revised surface roughness parameterization in the Community Land Model
-5.1, Geosci. Model Dev., 15, 2365–2393,
-https://doi.org/10.5194/gmd-15-2365-2022
-
+Meier, R., Davin, E. L., Bonan, G. B., Lawrence, D. M., Hu, X., Duveiller, G., Prigent, C., and Seneviratne, S. I., 2022. Impacts of a revised surface roughness parameterization in the Community Land Model 5.1, Geosci. Model Dev., 15, 2365–2393, https://doi.org/10.5194/gmd-15-2365-2022
 
 .. _MelzerOLeary1987:
 
 Melzer, E., and O'Leary, M.H. 1987. Anapleurotic CO2 Fixation by Phosphoenolpyruvate Carboxylase in C3 Plants. Plant. Physiol. 84:58.
+
+.. _Mengetal2022:
+
+Meng, J., Huang, Y., Leung, D.M., Li, L., Adebiyi, A.A., Ryder, C.L., Mahowald, N.M. and Kok, J.F., 2022. Improved parameterization for the size distribution of emitted dust aerosols reduces model underestimation of super coarse dust. Geophysical Research Letters, 49(8), p.e2021GL097287. DOI:10.1029/2021GL097287.
 
 .. _Milleretal1994:
 
@@ -932,29 +1267,49 @@ Moldrup, P. et al. 2003. Modeling diffusion and reaction in soils: X. A unifying
 
 Moorcroft, P.R., G.C. Hurtt, and S.W. Pacala, 2001. A method for scaling vegetation dynamics: the ecosystem demography model ED. Ecological monographs 71.4, pp. 557-586.
 
+.. _myhreandmyhre2003:
+
+Myhre, G., and Myhre, A. 2003. Uncertainties in radiative forcing due to surface albedo changes caused by land-use changes. J. Climate 16:1511-1524.
+
 .. _Mynenietal2002:
 
 Myneni, R.B., et al. 2002. Global products of vegetation leaf area and fraction absorbed PAR from year one of MODIS data. Remote Sens. Environ. 83:214-231.
+
+.. _narismaandpitman2003:
+
+Narisma, G.T., and Pitman, A.J. 2003. The impact of 2000 years of land cover change on the Australian near-surface climate. J. Hydrometeor. 4:424-436.
+
+.. _Needhametal2022:
+
+Needham, J. F., Johnson, D. J., Anderson-Teixeira, K. J., Bourg, N., Bunyavejchewin, S., Butt, N., Cao, M., Cárdenas, D., Chang-Yang, C.-H., Chen, Y.-Y., Chuyong, G., Dattaraja, H. S., Davies, S. J., Duque, A., Ewango, C. E. N., Fernando, E. S., Fisher, R., Fletcher, C. D., Foster, R., ... McMahon, S. M. 2022. Demographic composition, not demographic diversity, predicts biomass and turnover across temperate and tropical forests. Global Change Biology, 28, 2895–2909. DOI:10.1111/gcb.16100
 
 .. _Neffetal2005:
 
 Neff, J.C., Harden, J.W. and Gleixner, G. 2005. Fire effects on soil organic matter content, composition, and nutrients in boreal interior Alaska. Canadian Journal of Forest Research-Revue Canadienne De Recherche Forestiere 35:2178-2187.
 
-.. _Neitschetal2005:
-
-Neitsch, S.L., Arnold, J.G., Kiniry, J.R., and Williams J.R. 2005. Soil and Water Assessment Tool, Theoretical Documentation: Version 2005. Temple, TX. USDA Agricultural Research Service and Texas A&M Blackland Research Center.
-
 .. _NegronJuarezetal2015:
 
 Negron-Juarez, R. Koven, C.D., Riley, W.J., Knox, R.G., Chambers, J.Q. 2015. Environmental Research Letters 10:064017. DOI:10.1088/1748-9326/10/6/064017.
+
+.. _Neitschetal2005:
+
+Neitsch, S.L., Arnold, J.G., Kiniry, J.R., and Williams J.R. 2005. Soil and Water Assessment Tool, Theoretical Documentation: Version 2005. Temple, TX. USDA Agricultural Research Service and Texas A&M Blackland Research Center.
 
 .. _NemaniRunning1996:
 
 Nemani, R.R., and Running, S.W. 1996. Implementation of a hierarchical global vegetation classification in ecosystem function models. J. Veg. Sci. 7:337-346.
 
+.. _Nevisonetal2022:
+
+Nevison, C., Hess, P., Goodale, C., Zhu Q., and Vira, J. 2022. Nitrification, Denitrification, and Competition for Soil N: Evaluation of Two Earth System Models against Observations. Ecological Applications 32(4): e2528. doi:10.1002/eap.2528
+
+.. _NiinetmetsTenhunen1997:
+
+Niinemets, Ü. and Tenhunen, J.D. 1997. A model separating leaf structural and biphysiological effects on carbon gain along light gradients for the shade-tolerant species *Acer saccharum*. Plant Cell Environ., 20:845-86.
+
 .. _Niinemetstal1998:
 
-Niinemets, U., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
+Niinemets, Ü., Kull, O., and Tenhunen, J.D. 1998. An analysis of light effects on foliar morphology, physiology, and light interception in temperate deciduous woody species of contrasting shade tolerance. Tree Phys. 18:681-696.
 
 .. _Niuetal2005:
 
@@ -964,7 +1319,11 @@ Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., and Gulden, L.E. 2005. A simple TOPMOD
 
 Niu, G.-Y., and Yang, Z.-L. 2006. Effects of frozen soil on snowmelt runoff and soil water storage at a continental scale. J. Hydrometeor. 7:937-952.
 
+.. _Niuetal2007:
+
 Niu, G.-Y., Yang, Z.-L., Dickinson, R.E., Gulden, L.E., and Su, H. 2007. Development of a simple groundwater model for use in climate models and evaluation with Gravity Recovery and Climate Experiment data. J. Geophys. Res. 112:D07103. DOI:10.1029/2006JD007522.
+
+.. _NiuYang2007:
 
 Niu, G.-Y., and Yang, Z.-L. 2007. An observation-based formulation of snow cover fraction and its evaluation over large North American river basins. J. Geophys. Res. 112:D21101. DOI:10.1029/2007JD008674.
 
@@ -972,13 +1331,41 @@ Niu, G.-Y., and Yang, Z.-L. 2007. An observation-based formulation of snow cover
 
 Norman, J.M., 1979. Modeling the complete crop canopy. Modification of the Aerial Environment of Crops, pp. 249-280.
 
+.. _nunezandoke1976:
+
+Nunez, M., and Oke, T.R. 1976. Long-wave radiative flux divergence and nocturnal cooling of the urban atmosphere. II: Within and urban canyon. Bound.-Layer Meteor. 10:121-135.
+
+.. _nunezandoke1977:
+
+Nunez, M., and Oke, T.R. 1977. The energy balance of an urban canyon. J. Appl. Meterorol. 16:11-19.
+
 .. _Oikawaetal2005:
 
 Oikawa, S., Hikosaka, K. and Hirose, T., 2005. Dynamics of leaf area and nitrogen in the canopy of an annual herb, Xanthium canadense. Oecologia, 143: 517-526.
 
+.. _oke1981:
+
+Oke, T.R. 1981. Canyon geometry and the nocturnal urban heat island: comparison of scale model and field observations. J. Climatol. 1:237-254.
+
+.. _oke1982:
+
+Oke, T.R. 1982. The energetic basis of the urban heat island. Quart. J. Royal Meteor. Soc. 108:1-24.
+
 .. _Oke1987:
 
-Oke, T. 1987. Boundary Layer Climates (2:math:`{}^{nd}` edition). Routledge, London and New York.
+Oke, T. 1987. Boundary Layer Climates (2nd edition). Routledge, London and New York.
+
+.. _okeandcleugh1987:
+
+Oke, T.R., and Cleugh, H.A. 1987. Urban heat storage derived as energy balance residuals. Bound.-Layer Meteor. 39:233-245.
+
+.. _okeetal1991:
+
+Oke, T.R., Johnson, G.T., Steyn, D.G., and Watson, I.D. 1991. Simulation of surface urban heat islands under "ideal" conditions at night, part 2: diagnosis of causation. Bound.-Layer Meteor. 56:339-358.
+
+.. _Okin2008:
+
+Okin, G.S., 2008. A new model of wind erosion in the presence of vegetation. Journal of Geophysical Research: Earth Surface, 113(F2). DOI: 10.1029/2007JF000758.
 
 .. _OlesonBonan2000:
 
@@ -1008,25 +1395,33 @@ Oleson, K.W., et al. 2010a. Technical description of version 4.0 of the Communit
 
 Oleson, K.W., Bonan, G.B., Feddema, J., Vertenstein, M., and Kluzek, E. 2010b. Technical description of an urban parameterization for the Community Land Model (CLMU). NCAR Technical Note NCAR/TN-480+STR, National Center for Atmospheric Research, Boulder, CO, 169 pp.
 
+.. _Olesonetal2010c:
+
+Oleson, K.W., Bonan, G.B., and Feddema, J. 2010c. The effects of white roofs on urban temperature in a global climate model. Geophys. Res. Lett. 37:L03701. DOI:10.1029/2009GL042194.
+
 .. _Olesonetal2013:
 
 Oleson, K.W., et al. 2013. Technical description of version 4.5 of the Community Land Model (CLM). NCAR Technical Note NCAR/TN-503+STR, National Center for Atmospheric Research, Boulder, CO, 420 pp.
 
-.. _OlesonFeddema2018:
+.. _OlesonFeddema2020:
 
-Oleson, K.W., and Feddema, J. 2018. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, submitted.
-
-.. _Olson1963:
-
-Olson, J.S., 1963. Energy storage and the balance of producers and decomposers in ecological systems. Ecology 44:322-331.
+Oleson, K.W., and Feddema, J. 2020. Parameterization and surface data improvements and new capabilities for the Community Land Model Urban (CLMU). JAMES, 12, e2018MS0001586, https://doi.org/10.1029/2018MS001586.
 
 .. _Olsonetal2001:
 
 Olson, D.M., Dinerstein, E., Wikramanayake, E.D., Burgess, N.D., Powell, G.V.N., Underwood, E.C., D'Amico, J.A., Itoua, I., Strand, H. E., Morrison, J. C., Loucks, C. J., Allnutt, T. F., Ricketts, T. H., Kura, Y., Lamoreux, J. F., Wettengel, W. W., Heda, P., and Kassem, K. R., 2001. Terrestrial ecoregions of the world a new map of life on earth, Bioscience, 51, 933–938.
 
+.. _Olson1963:
+
+Olson, J.S., 1963. Energy storage and the balance of producers and decomposers in ecological systems. Ecology 44:322-331.
+
 .. _OrchardCook1983:
 
 Orchard, V.A. and Cook, F.J., 1983. Relationship between soil respiration and soil moisture. Soil Biology and Biochemistry, 15: 447-453.
+
+.. _otteetal2004:
+
+Otte, T.L., Lacser, A., Dupont, S., and Ching, J.K.S. 2004. Implementation of an urban canopy parameterization in a mesoscale meteorological model. J. Appl. Meteor. 43:1648-1665.
 
 .. _Owen1964:
 
@@ -1039,6 +1434,10 @@ Ozdogan, M., Rodell, M., Beaudoing, H.K., and Toll, D.L. 2010. Simulating the ef
 .. _Pageetal2002:
 
 Page, S.E., Siegert, F., Rieley, J.O., Boehm, H-D.V., Jaya, A., and Limin, S. 2002. The amount of carbon released from peat and forest fires in Indonesia in 1997. Nature 420:61-65.
+
+.. _Panofskyetal1977:
+
+Panofsky, H.A., Tennekes, H., Lenschow, D.H. and Wyngaard, J.C., 1977. The characteristics of turbulent velocity components in the surface layer under convective conditions. Boundary-Layer Meteorology, 11(3), pp.355-361. DOI:10.1007/BF02186086.
 
 .. _PanofskyDutton1984:
 
@@ -1092,6 +1491,22 @@ Philip, J.R. 1957. Evaporation, and moisture and heat fields in the soil. J. Met
 
 Piao, S.L., et al. 2012. The carbon budget of terrestrial ecosystems in East Asia over the last two decades. Biogeosciences 9:3571-3586.
 
+.. _Picardetal2016:
+
+Picard, G., Libois, Q., & Arnaud, L. (2016). Refinement of the ice absorption spectrum in the visible using radiance profile measurements in Antarctic snow. The Cryosphere, 10(6), 2655–2672.
+
+.. _pielkeetal2002:
+
+Pielke Sr., R.A., Marland, G., Betts, R.A., Chase, T.N., Eastman, J.L., Niles, J.O., Niyogi, D.D.S., and Running, S.W. 2002. The influence of land-use change and landscape dynamics on the climate system: relevance to climate-change policy beyond the radiative effect of greenhouse gases. Phil. Trans. R. Soc. Lond. A, 360:1705-1719.
+
+.. _Pierreetal2014:
+
+Pierre, C., Bergametti, G., Marticorena, B., Kergoat, L., Mougin, E. and Hiernaux, P., 2014. Comparing drag partition schemes over a herbaceous Sahelian rangeland. Journal of Geophysical Research: Earth Surface, 119(10), pp.2291-2313. DOI: 10.1002/2014JF003177.
+
+.. _piringeretal2002:
+
+Piringer, M., Grimmond, C.S.B., Joffre, S.M., Mestayer, P., Middleton, D.R., Rotach, A. Baklanov, M.W., De Ridder, K., Ferreira, J., Guilloteau, E., Karppinen, A., Martilli, A., Masson, V., and Tombrou, M. 2002. Investigating the surface energy balance in urban areas - recent advances and future needs. Water, Air, Soil Pollution: Focus, 2:1-16.
+
 .. _Pivovarov1972:
 
 Pivovarov, A.A., 1972. Thermal Conditions in Freezing Lakes and Reservoirs. John Wiley, New York.
@@ -1108,9 +1523,17 @@ Pomeroy, J. W., D. M. Gray, K. R. Shook, B. Toth, R. L. H. Essery, A. Pietroniro
 
 Portmann, F.T., Siebert, S., and Döll, P. 2010. MIRCA2000 - Global monthly irrigated and rainfed crop areas around the year 2000: A new high-resolution data set for agricultural and hydrological modeling. Global Biogeochem. Cycles. 24, GB1011. DOI:10.1029/2008GB003435.
 
+.. _Potosnaketal2014:
+
+Potosnak, M. J., LeStourgeon, L., Pallardy, S. G., Hosman, K. P., Gu, L., Karl, T., et al. (2014). Observed and modeled ecosystem isoprene fluxes from an oak-dominated temperate forest and the influence of drought stress. Atmospheric Environment, 84, 314–322. http://www.sciencedirect.com/science/article/pii/S1352231013009059
+
 .. _Pressetal1992:
 
 Press, W.H., Teukolsky, S.A., Vetterling, W.T., and Flannery, B.P. 1992. Numerical Recipes in FORTRAN: The Art of Scientific Computing. Cambridge University Press, New York.
+
+.. _Prigentetal2005:
+
+Prigent, C., Tegen, I., Aires, F., Marticorena, B. and Zribi, M., 2005. Estimation of the aerodynamic roughness length in arid and semi‐arid regions over the globe with the ERS scatterometer. Journal of Geophysical Research: Atmospheres, 110(D9). DOI:10.1029/2004JD005370.
 
 .. _Prigentetal2007:
 
@@ -1168,9 +1591,9 @@ Rogers, A., 2014: The use and misuse of Vcmax in Earth system models. Photosynt.
 
 Rogers, A., B. E. Medlyn, J. S. Dukes, G. Bonan, S. Caemmerer, M. C. Dietze, J. Kattge, A. D. Leakey, L. M. Mercado, and U. Niinemets, 2017: A roadmap for improving the representation of photosynthesis in Earth system models. New Phytologist, 213:22-42.
 
-.. _Ryan1991:
+.. _rowleyetal1930:
 
-Ryan, M. G. 1991. A simple method for estimating gross carbon budgets for vegetation in forest ecosystems. Tree Phys. 9:255-266.
+Rowley, F.B., Algren, A.B., and Blackshaw, J.L. 1930. Surface conductances as affected by air velocity, temperature, and character of surface. ASHRAE Trans. 36:429-446.
 
 .. _RunningCoughlan1988:
 
@@ -1188,6 +1611,10 @@ Running, S.W. and Gower, S.T., 1991. FOREST BGC, A general model of forest ecosy
 
 Running, S.W. and Hunt, E.R., Jr., 1993. Generalization of a forest ecosystem process model for other biomes, BIOME-BGC, and an applicationfor global-scale models. In: J.R. Ehleringer and C. Field (Editors), Scaling Physiological Processes: Leaf to Globe. Academic Press, San Diego, CA, pp. 141-158.
 
+.. _Ryan1991:
+
+Ryan, M. G. 1991. A simple method for estimating gross carbon budgets for vegetation in forest ecosystems. Tree Phys. 9:255-266.
+
 .. _Sacksetal2009:
 
 Sacks, W. J., Cook, B. I., Buenning, N., Levis, S., and Helkowski, J. H. 2009. Effects of global irrigation on the near-surface climate. Climate Dyn., 33, 159–175. DOI:10.1007/s00382-008-0445-z.
@@ -1196,13 +1623,21 @@ Sacks, W. J., Cook, B. I., Buenning, N., Levis, S., and Helkowski, J. H. 2009. E
 
 Saggar, S., Tate, K.R., Feltham, C.W., Childs, C.W. and Parshotam, A., 1994. Carbon turnover in a range of allophanic soils amended with :math:`{}^{14}`\ C-labelled glucose. Soil Biology and Biochemistry, 26: 1263-1271.
 
+.. _sailor1995:
+
+Sailor, D.J. 1995. Simulated urban climate response to modifications in surface albedo and vegetative cover. J. App. Meteor. 34:1694-1704.
+
+.. _sailorandlu2004:
+
+Sailor, D.J., and Lu, L. 2004. A top-down methodology for developing diurnal and seasonal anthropogenic heating profiles for urban areas. Atmos. Environ. 38:2737-2748.
+
 .. _Sakaguchietal2009:
 
 Sakaguchi, K., and Zeng, X. 2009. Effects of soil wetness, plant litter, and under-canopy atmospheric stability on ground evaporation in the Community Land Model (CLM3.5). J. Geophys. Res. 114:D01107. DOI:10.1029/2008JD010834.
 
-.. _sato2007:
+.. _sakakibara1996:
 
-Sato, H., A. Itoh, and T. Kohyama, 2007. SEIB-DGVM: A new Dynamic Global Vegetation Model using a spatially explicit individual-based approach. Ecological Modelling 200.3, pp. 2793307.
+Sakakibara, Y. 1996. A numerical study of the effect of urban geometry upon the surface energy budget. Atmos. Environ. 30:487-496.
 
 .. _Schaafetal2002:
 
@@ -1246,19 +1681,35 @@ Sellers, P.J., Randall, D.A., Collatz, G.J., Berry, J.A., Field, C.B., Dazlich, 
 
 .. _sellers1996:
 
-Sellers, Piers J et al. (1996). A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data. Journal of climate 9.4, pp. 706-737.
+Sellers, P.J., et al. 1996. A revised land surface parameterization (SiB2) for atmospheric GCMs. Part II: The generation of global fields of terrestrial biophysical parameters from satellite data. Journal of climate 9.4, pp. 706-737.
 
-.. _Shietal2013:
+.. _sellersetal1997:
 
-Shi, X., Mao, J., Thornton, P.E., and Huang, M. 2013. Spatiotemporal patterns of evapotranspiration in response to multiple environmental factors simulated by the Community Land Model. Environ. Res. Lett. 8:024012.
+Sellers, P.J., Dickinson, R.E., Randall, D.A., Betts, A.K., Hall, F.G., Berry, J.A., Collatz, G.J., Denning, A.S., Mooney, H.A., Nobre, C.A., Sato, N., Field, C.B., and Henderson-Sellers, A. 1997. Modeling the exchanges of energy, water, and carbon between continents and the atmosphere. Science 275:502-509.
+
+.. _ShaoLu2000:
+
+Shao, Y. and Lu, H., 2000. A simple expression for wind erosion threshold friction velocity. Journal of Geophysical Research: Atmospheres, 105(D17), pp.22437-22443. DOI:10.1029/2000JD900304.
+
+.. _shepherd2005:
+
+Shepherd, J.M. 2005. A review of current investigations of urban-induced rainfall and recommendations for the future. Earth Interact. 9:1-27.
 
 .. _Shietal2016:
 
 Shi, M., J. B. Fisher, E. R. Brzostek, and R. P. Phillips, 2016: Carbon cost of plant nitrogen acquisition: global carbon cycle impact from an improved plant nitrogen cycle in the Community Land Model. Glob. Change Biol., 22:1299-1314.
 
+.. _Shietal2013:
+
+Shi, X., Mao, J., Thornton, P.E., and Huang, M. 2013. Spatiotemporal patterns of evapotranspiration in response to multiple environmental factors simulated by the Community Land Model. Environ. Res. Lett. 8:024012.
+
 .. _Shiklomanov2000:
 
 Shiklomanov, I.A. 2000. Appraisal and assessment of world water resources. Water International 25:11-32.
+
+.. _Shumanetal2024:
+
+Shuman, J. K., Fisher, R. A., Koven, C., Knox, R., Kueppers, L., and Xu, C. 2024. Dynamic ecosystem assembly and escaping the "fire trap" in the tropics: insights from FATES_15.0.0, Geosci. Model Dev., 17, 4643–4671, DOI:10.5194/gmd-17-4643-2024.
 
 .. _Siebertetal2005:
 
@@ -1284,17 +1735,21 @@ Sivak, M. 2013. Air conditioning versus heating: climate control is more energy 
 
 Smerald, A., Rahimi, J., & Scheer, C., 2023. A global dataset for the production and usage of cereal residues in the period 1997–2021. Scientific Data, 10(1), 685. doi: 10.1038/s41597-023-02587-0
 
-.. _smith2001:
+.. _smith2007:
 
-Smith, B., I.C. Prentice, and M.T. Sykes, 2001. Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space. Global Ecology and Biogeography 10.6, pp. 621-637.
+Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. Plant, cell & environment 30.9, pp. 1126-1149.
 
 .. _Smithetal2005:
 
 Smith, A.M.S., Wooster, M.J., Drake, N.A., Dipotso, F.M. and Perry, G.L.W., 2005. Fire in African savanna: Testing the impact of incomplete combustion on pyrogenic emissions estimates. Ecological Applications, 15: 1074-1082.
 
-.. _smith2007:
+.. _smith2001:
 
-Smith, A.M. and M. Stitt, 2007. Coordination of carbon supply and plant growth. Plant, cell & environment 30.9, pp. 1126-1149.
+Smith, B., I.C. Prentice, and M.T. Sykes, 2001. Representation of vegetation dynamics in the modelling of terrestrial ecosystems: comparing two contrasting approaches within European climate space. Global Ecology and Biogeography 10.6, pp. 621-637.
+
+.. _Smith1937:
+
+Smith, E. 1937. The influence of light and carbon dioxide on photosynthesis. General Physiology, 20:807-830.
 
 .. _Sollins1982:
 
@@ -1304,9 +1759,17 @@ Sollins, P., 1982. Input and decay of coarse woody debris in coniferous stands i
 
 Son, Y. and Gower, S.T., 1991. Aboveground nitrogen and phosphorus use by five plantation-grown trees with different leaf longevities. Biogeochemistry, 14: 167-191.
 
+.. _Songetal2013:
+
+Song, Y.H., Ito, S., and Imaizumi, T. 2013. Flowering time regulation: photoperiod- and temperature-sensing in leaves. Trends Plant Sci. 18:575–583.
+
 .. _Sorensen1981:
 
 Sørensen, L.H., 1981. Carbon-nitrogen relationships during the humification of cellulose in soils containing different amounts of clay. Soil Biology and Biochemistry, 13: 313-321.
+
+.. _sparrowandcess1978:
+
+Sparrow, E.M., and Cess, R.D. 1978. Radiation Heat Transfer. Hemisphere Publishing Corporation, 366 pp.
 
 .. _Sperryetal1998:
 
@@ -1332,6 +1795,10 @@ Still, C.J., Berry, J.A., Collatz, G.J., and DeFries, R.S. 2003. Global distribu
 
 Stöckli, R., Lawrence, D.M., Niu, G.-Y., Oleson, K.W., Thornton, P.E., Yang, Z.-L., Bonan, G.B., Denning, A.S., and Running, S.W. 2008. Use of FLUXNET in the Community Land Model development. J. Geophys. Res. 113:G01025. DOI:10.1029/2007JG000562.
 
+.. _stohlgrenetal1998:
+
+Stohlgren, T.J., Chase, T.N., Pielke Sr., R.A., Kittel, T.G.F., and Baron, J.S. 1998. Evidence that local land use practices influence regional climate, vegetation, and stream flow patterns in adjacent natural areas. Global Change Biol. 4:495-504.
+
 .. _Stracketal2006:
 
 Strack, M., Kellner, E. and Waddington, J.M., 2006. Effect of entrapped gas on peatland surface level fluctuations. Hydrological Processes 20:3611-3622.
@@ -1343,6 +1810,10 @@ Strahler, A.H., Muchoney, D., Borak, J., Friedl, M., Gopal, S., Lambin, E., and 
 .. _Stull1988:
 
 Stull, R.B. 1988. An Introduction to Boundary Layer Meteorology. Kluwer Academic Publishers, Dordrecht.
+
+.. _Sturmetal1997:
+
+Sturm, M., Holmgren, J., Konig, M., and Morris, K. 1997. The thermal conductivity of seasonal snow. Journal of Glaciology 43:26-41.
 
 .. _Subinetal2012a:
 
@@ -1356,13 +1827,17 @@ Subin, Z.M., Murphy, L.N., Li, F., Bonfils, C. and Riley, W.J., 2012b. Boreal la
 
 Sun, Y., Gu, L., and Dickinson, R. E. 2012. A numerical issue in calculating the coupled carbon and water fluxes in a climate model, J. Geophys. Res., 117, D22103. DOI:10.1029/2012JD018059.
 
-.. _Swensonetal2012:
+.. _Suzukietal2001:
 
-Swenson, S.C., Lawrence, D.M., and Lee, H. 2012. Improved Simulation of the Terrestrial Hydrological Cycle in Permafrost Regions by the Community Land Model. JAMES, 4, M08002. DOI:10.1029/2012MS000165.
+Suzuki, Y., Makino, A. and Mae, T. 2001. Changes in the turnover of Rubisco and levels of mRNAs of rbcL and rbcS in rice leaves from emergence to senescence. Plant, Cell & Environment, 24:1353-1360. DOI:10.1046/j.0016-8025.2001.00789.x
 
 .. _SwensonLawrence2012:
 
 Swenson, S.C. and Lawrence, D.M. 2012. A New Fractional Snow Covered Area Parameterization for the Community Land Model and its Effect on the Surface Energy Balance. JGR, 117, D21107. DOI:10.1029/2012JD018178.
+
+.. _Swensonetal2012:
+
+Swenson, S.C., Lawrence, D.M., and Lee, H. 2012. Improved Simulation of the Terrestrial Hydrological Cycle in Permafrost Regions by the Community Land Model. JAMES, 4, M08002. DOI:10.1029/2012MS000165.
 
 .. _SwensonLawrence2014:
 
@@ -1372,9 +1847,25 @@ Swenson, S.C., and D. M. Lawrence. 2014. Assessing a dry surface layer-based soi
 
 Swenson, S.C., and D. M. Lawrence. 2015. A GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. WRR, 51, doi:10.1002/2015WR017582.
 
+.. _Swensonetal2019:
+
+Swenson, S.C., M. Clark, Y. Fan, D.M. Lawrence, and J. Perket. 2019. Representing intra-hillslope lateral subsurface flow in the community land model. JAMES, 11, doi:10.1002/2015WR017582.
+
+.. _Swensonetal2019b:
+
+Swenson, S.C., S.P. Burns, and D. M. Lawrence. 2019. The impact of biomass heat storage on the canopy energy balance and atmospheric stability in the community land model. JAMES, 11, https://doi.org/10.1029/2018MS001476.
+
+.. _SwensonLawrence2025:
+
+Swenson, S.C., and D. M. Lawrence. 2025. Development of a global representative hillslope data set for use in Earth system modelsA GRACE-based assessment of interannual groundwater dynamics in the Community Land Model. JAMES, 17, https://doi.org/10.1029/2024MS004410.
+
 .. _TaWeiland1992:
 
 Ta, C.T. and Weiland, R.T. 1992. Nitrogen partitioning in maize during ear development. Crop Sci. 32:443-451.
+
+.. _taha1999:
+
+Taha, H. 1999. Modifying a mesoscale meteorological model to better incorporate urban heat storage: a bulk-parameterization approach. J. Appl. Meteor. 38:466-473.
 
 .. _TangRiley2013:
 
@@ -1452,6 +1943,10 @@ Unland, H.E., Houser, P.R., Shuttleworth, W.J., and Yang, Z.-L. 1996. Surface fl
 
 UNSTAT, 2005. National Accounts Main Aggregates Database, United Nations Statistics Division.
 
+.. _upmanisetal1998:
+
+Upmanis, H., Eliasson, I., and Lindqvist, S. 1998. The influence of green areas on nocturnal temperatures in a high latitude city (Göteborg, Sweden). Int. J. Climatol. 18:681-700.
+
 .. _uriarte2009:
 
 Uriarte, M. et al., 2009. Natural disturbance and human land use as determinants of tropical forest dynamics: results from a forest simulator. Ecological Monographs 79.3, pp. 423-443.
@@ -1460,29 +1955,33 @@ Uriarte, M. et al., 2009. Natural disturbance and human land use as determinants
 
 Vallano, D.M. and Sparks, J.P. 2007. Quantifying foliar uptake of gaseous itrogen dioxide using enriched foliar :math:`\delta^{15}`\  N values. New Phytologist 177:946-955.
 
+.. _ValMartinetal2014:
+
+Val Martin, M., Heald, C. L. and Arnold, S. R.  2014. Coupling dry deposition to vegetation phenology in the Community Earth System Model: Implications for the simulation of surface O3, Geophys. Res. Lett., 41, 2988–2996, doi:10.1002/2014GL059651.
+
 .. _vanderWerfetal2010:
 
 van der Werf, G.R., Randerson, J.T., Giglio, L., Collatz, G.J., Mu, M., Kasibhatla, S.P., Morton, D.C., DeFries, R.S., Jin, Y., van Leeuwen, T.T. 2010. Global fire emissions and the contribution of deforestation, savanna, forest, agricultural, and peat fires (1997-2009) Atmos. Chem. Phys. 10:11707-11735.
-
-.. _van Veenetal1984:
-
-van Veen, J.A., Ladd, J.N. and Frissel, M.J., 1984. Modelling C and N turnover through the microbial biomass in soil. Plant and Soil, 76: 257-274.
 
 .. _vanKampenhoutetal2017:
 
 van Kampenhout, L., J.T.M. Lenaerts, W.H. Lipscomb, W.J. Sacks, D.M. Lawrence, A.G. Slater, and M.R. van den Broeke, 2017. Improving the Representation of Polar Snow and Firn in the Community Earth System Model. Journal of Advances in Modeling Earth Systems 9, no. 7: 2583–2600. https://doi.org/10.1002/2017MS000988.
 
+.. _VanninenMakela2005:
+
+Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees: effects of size, competition and site fertility on growth allocation and production. Tree Phys. 25:17-30.
+
 .. _VanTrichtetal2016:
 
 Van Tricht, K., Lhermitte, S., Gorodetskaya, I.V. and van Lipzig, N.P.M., 2016. Improving satellite-retrieved surface radiative fluxes in polar regions using a smart sampling approach. The Cryosphere 10:2379-2397. doi:10.5194/tc-10-2379-2016
 
+.. _van Veenetal1984:
+
+van Veen, J.A., Ladd, J.N. and Frissel, M.J., 1984. Modelling C and N turnover through the microbial biomass in soil. Plant and Soil, 76: 257-274.
+
 .. _VanVuurenetal2006:
 
 Van Vuuren, D.P., Lucas, P.S., and Hilderink, H.B.M., 2006. Downscaling drivers of global environmental change: enabling use of global SRES scenarios at the national and grid levels, Report 550025001, Netherlands Environmental Assessment Agency, 45 pp.
-
-.. _VanninenMakela2005:
-
-Vanninen, P., and Makela, A. 2005. Carbon budget for Scots pine trees: effects of size, competition and site fertility on growth allocation and production. Tree Phys. 25:17-30.
 
 .. _venevsky2002:
 
@@ -1498,15 +1997,39 @@ Vionnet, V., E. Brun, S. Morin, A. Boone, S. Faroux, P. Le Moigne, E. Martin, an
 
 .. _Viovy2011:
 
-Viovy, N. 2011. CRUNCEP dataset. [Description available at http://dods.extra.cea.fr/data/p529viov/cruncep/readme.htm. Data available at http://dods.extra.cea.fr/store/p529viov/cruncep/V4\_1901\_2011/].
+Viovy, N. 2011. CRUNCEP dataset. [Description available at https://rda.ucar.edu/datasets/d314003/ Data available at https://rda.ucar.edu/datasets/d314003/dataaccess/].
 
 .. _VitousekHowarth1991:
 
 Vitousek, P.M., and Howarth, R.W. 1991. Nitrogen limitation on land and in the sea: How can it occur? Biogeochem. 13:87-115.
 
+.. _Walkeretal2014:
+
+Walker, A. P., Beckerman, A. P., Gu, L., Kattge, J., Cernusak, L. A., Domingues, T. F., Scales, J. C., Wohlfahrt, G., Wullschleger, S. D., and Woodward, F. I. 2014. The relationship of leaf photosynthetic traits - Vcmax and Jmax - to leaf nitrogen, leaf phosphorus, and specific leaf area: a meta-analysis and modeling study. Ecology and Evolution, 4:3218-3235.
+
 .. _Walteretal2001:
 
 Walter, B.P., Heimann, M. and Matthews, E., 2001. Modeling modern methane emissions from natural wetlands 1. Model description and results. J. Geophys. Res. 106(D24):34189-34206.
+
+.. _WangZeng2009:
+
+Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+
+.. _wangetal2003:
+
+Wang, H., Pitman, A.J., Zhao, M., and Leemans, R. 2003. The impact of land-cover modification on the June meteorology of China since 1700, simulated using a regional climate model. Int. J. Climatol. 23:511-527.
+
+.. _Wangetal2022:
+
+Wang, H., Lu, X., Seco, R., Stavrakou, T., Karl, T., Jiang, X., et al. 2022. Modeling Isoprene Emission Response to Drought and Heatwaves Within MEGAN Using Evapotranspiration Data and by Coupling With the Community Land Model. Journal of Advances in Modeling Earth Systems, 14, e2022MS003174. https://doi.org/10.1029/2022MS003174.
+
+.. _Wangetal2024a:
+
+Wang, H., Welch, A., Nagalingam, S., Leong, C., Kittitananuvong, P., Barsanti, K. C., et al. 2024a. Arctic Heatwaves Could Significantly Influence the Isoprene Emissions From Shrubs. Geophysical Research Letters, 51, e2023GL107599. https://doi.org/10.1029/2023GL107599.
+
+.. _Wangetal2024b:
+
+Wang, H., Welch, A. M., Nagalingam, S., Leong, C., Czimczik, C. I., Tang, J., et al. 2024b. High temperature sensitivity of Arctic isoprene emissions explained by sedges. Nature Communications, 15(1), 6144. https://doi.org/10.1038/s41467-024-49960-0.
 
 .. _Waniaetal2009:
 
@@ -1516,9 +2039,9 @@ Wania, R., Ross, I. and Prentice, I.C. 2009. Integrating peatlands and permafros
 
 Wania, R., Ross, I. and Prentice, I.C. 2010. Implementation and evaluation of a new methane model within a dynamic global vegetation model LPJ-WHyMe v1.3. Geoscientific Model Development Discussions 3:1-59.
 
-.. _WangZeng2009:
+.. _WarrenBrandt2008:
 
-Wang, A., and Zeng, X. 2009. Improving the treatment of vertical snow burial fraction over short vegetation in the NCAR CLM3. Adv. Atmos. Sci. 26:877-886. DOI:10.1007/s00376-009-8098-3.
+Warren, S. G., & Brandt, R. E. (2008). Optical constants of ice from the ultraviolet to the microwave: A revised compilation. Journal of Geophysical Research, 113(D14), D14220.
 
 .. _weng2014:
 
@@ -1532,9 +2055,25 @@ White, M.A., Thornton, P.E., and Running, S.W. 1997. A continental phenology mod
 
 White, M.A., Thornton, P.E., Running, S.W., and Nemani, R.R. 2000. Parameterization and sensitivity analysis of the Biome-BGC terrestrial ecosystem model: net primary production controls. Earth Interactions 4:1-85.
 
+.. _Wiederetal2014:
+
+Wieder, W., Grandy, A., Kallenbach, C., Bonan, G., 2014. Integrating microbial physiology and physio-chemical principles in soils with the MIcrobial-MIneral Carbon Stabilization (MIMICS) model. Biogeosciences 11, 3899-3917.
+
 .. _Wiederetal2015:
 
 Wieder, W. R., Cleveland, C. C., Lawrence, D. M., and Bonan, G. B. 2015. Effects of model structural uncertainty on carbon cycle projections: biological nitrogen fixation as a case study. Environmental Research Letters, 10(4), 044016.
+
+.. _Wiederetal2015b:
+
+Wieder, W., Grandy, A., Kallenbach, C., Taylor, P., Bonan, G., 2015. Representing life in the Earth system with soil microbial functional traits in the MIMICS model. Geoscientific Model Development 8, 1789-1808.
+
+.. _Wiederetal2019:
+
+Wieder, W.R., Lawrence, D.M., Fisher, R.A., Bonan, G.B., Cheng, S.J., Goodale, C.L., Grandy, A.S., Koven, C.D., Lombardozzi, D.L., Oleson, K.W. and Thomas, R.Q., 2019. Beyond static benchmarking: Using experimental manipulations to evaluate land model assumptions. Global Biogeochemical Cycles, 33(10), 1289-1309. DOI:10.1029/2018GB006141
+
+.. _Wiederetal2021:
+
+Wieder, W.R., Butterfield, Z., Lindsay, K., Lombardozzi, D.L., Keppel-Aleks, G. 2021. Interannual and seasonal drivers of carbon cycle variability represented by the Community Earth System Model (CESM2). Global Biogeochemical Cycles, 35, e2021GB007034. DOI:10.1029/2021GB007034
 
 .. _Williamsetal1996:
 
@@ -1560,6 +2099,10 @@ Wu, H., J. S. Kimball, N. Mantua, and J. Stanford, 2011: Automated upscaling of 
 
 Wu, H., J. S. Kimball, H. Li, M. Huang, L. R. Leung, and R. F. Adler, 2012. A New Global River Network Database for Macroscale Hydrologic modeling, Water Resour. Res., 48, W09701, doi:10.1029/2012WR012313.
 
+.. _Wullschleger1993:
+
+Wullschleger, S.D. 1993.  Biochemical limitations to carbon assimilation in C3 plants: a retrospective analysis of A/Ci curves from 109 species. J. Exp Bot. 44:907-920.
+
 .. _xiaodong2005:
 
 Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dynamics and patterns of eastern Eurasian forests. Journal of Biogeography 32.9, pp. 1641-1658.
@@ -1568,9 +2111,17 @@ Xiaodong, Y. and H.H. Shugart, 2005. FAREAST: a forest gap model to simulate dyn
 
 Xu, C., R. Fisher, S. D. Wullschleger, C. J. Wilson, M. Cai, and N. G. McDowell, 2012: Toward a mechanistic modeling of nitrogen limitation on vegetation dynamics. PloS one, 7:e37914.
 
+.. _Yangetal1995:
+
+Yang, Z.-L., R.E. Dickinson, A. Henderson-Sellers, and A.J. Pitman, 1995. Preliminary study of spin-up processes in land surface models with the first stage data of Project for Intercomparison of Land Surface Parameterization Schemes Phase 1(a). J. Geophys. Res. 100:16,553-16,578.
+
 .. _Yang1998:
 
 Yang, Z.-L. 1998. Technical note of a 10-layer soil moisture and temperature model. Unpublished manuscript.
+
+.. _ZaehleandFriend2010:
+
+Zaehle, S. and A.D.Friend 2010. Carbon and nitrogen cycle dynamics in the O-CN land surface model: 1. Model description, site-scale evaluation, and sensitivity to parameter estimates, Global Biogeochem. Cycles, 24, GB1005, DOI:10.1029/2009GB003521.
 
 .. _Zenderetal2003:
 
@@ -1600,15 +2151,21 @@ Zeng, X., Dickinson, R.E., Barlage, M., Dai, Y., Wang, G., and Oleson, K. 2005. 
 
 Zeng, X., and Wang, A. 2007. Consistent parameterization of roughness length and displacement height for sparse and dense canopies in land models. J. Hydrometeor. 8:730-737.
 
-Zeng, X., and Decker, M. 2009. Improving the numerical solution of soil moisture-based Richards equation for land models with a deep or shallow water table. J. Hydrometeor. 10:308-319.
-
 .. _Zengetal2008:
 
 Zeng, X., Zeng, X., and Barlage, M. 2008. Growing temperate shrubs over arid and semiarid regions in the Community Land Model - Dynamic Global Vegetation Model. Global Biogeochem. Cycles 22:GB3003. DOI:10.1029/2007GB003014.
 
+.. _ZengandDecker2009:
+
+Zeng, X., and Decker, M. 2009. Improving the numerical solution of soil moisture-based Richards equation for land models with a deep or shallow water table. J. Hydrometeor. 10:308-319.
+
 .. _Zhangetal2002:
 
 Zhang, Y., Li, C.S., Trettin, C.C., Li, H. and Sun, G., 2002. An integrated model of soil, hydrology, and vegetation for carbon dynamics in wetland ecosystems. Global Biogeochemical Cycles 16. DOI:10.1029/2001GB001838.
+
+.. _zhouetal2004:
+
+Zhou, L., Dickinson, R.E., Tian, Y., Fang, J., Li, Q., Kaufmann, R.K., Tucker, C.J., and Myneni, R.B. 2004. Evidence for a significant urbanization effect on climate in China. Proc. Natl. Acad. Sci. U.S.A. 101:9540-9544.
 
 .. _Zhuangetal2004:
 
@@ -1617,4 +2174,3 @@ Zhuang, Q., et al. 2004. Methane fluxes between terrestrial ecosystems and the a
 .. _Zilitinkevich1970:
 
 Zilitinkevich, S.S. 1970. Dynamics of the Atmospheric Boundary Layer. Leningrad Gidrometeor.
-

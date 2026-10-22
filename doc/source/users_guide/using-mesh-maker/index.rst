@@ -7,11 +7,12 @@
 
 .. _using-mesh-maker-index:
 
-#####################################
-Using mesh_maker
-#####################################
+#######################################
+Using mesh_maker and mesh_mask_modifier
+#######################################
 
 .. toctree::
    :maxdepth: 2
 
    how-to-make-mesh.rst
+   run-mesh-mask-modifier.rst

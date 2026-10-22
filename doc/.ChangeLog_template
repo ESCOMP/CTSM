@@ -11,6 +11,7 @@ Purpose and description of changes
 
 Significant changes to scientifically-supported configurations
 --------------------------------------------------------------
+[Remove entire section if none of the boxes are checked.]
 
 Does this tag change answers significantly for any of the following physics configurations?
 (Details of any changes will be given in the "Answer changes" section below.)
@@ -22,9 +23,6 @@ Does this tag change answers significantly for any of the following physics conf
 [ ] clm5_0
 
 [ ] ctsm5_0-nwp
-
-[ ] clm4_5
-
 
 Bugs fixed
 ----------
@@ -52,6 +50,8 @@ Substantial timing or memory changes:
 [e.g., check PFS test in the test suite and look at timings, if you
 expect possible significant timing changes]
 
+Contributors:
+
 Notes of particular relevance for developers:
 ---------------------------------------------
 NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the coding style in the Developers Guide
@@ -60,8 +60,6 @@ NOTE: Be sure to review the steps in README.CHECKLIST.master_tags as well as the
 Caveats for developers (e.g., code that is duplicated that requires double maintenance):
 
 Changes to tests or testing:
-
-Contributors:
 
 Testing summary:
 ----------------
@@ -78,7 +76,9 @@ here is guidance on different available levels of system testing:
     c) python only (for use where the only changes are in the python directory:
                     run the python testing listed below)
     d) regular (regular tests on normal machines if CTSM source is modified)
-    e) release (regular tests plus the fates, ctsm_sci, mosart and rtm test lists
+    e) extended (regular tests plus ctsm_sci or other development testlists)
+    f) fates (regular tests plus fates testlist)
+    g) release (ctsm_release testlist (includes any test in the testlist), mosart, mizu and rtm test lists
                 and normally all of the ancillary tests (build-namelist, python, etc.)
 		            would be run as well)
 
@@ -95,7 +95,7 @@ infrastructure should be run when appropriate, as described below.
 
     derecho -
 
-  python testing (if python code has changed; see instructions in python/README.md; document testing done):
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
 
     derecho -
 
@@ -122,6 +122,10 @@ infrastructure should be run when appropriate, as described below.
 
   ctsm_sci
      derecho ----
+
+  ctsm_release
+     derecho ----
+     izumi ------
 
 If the tag used for baseline comparisons was NOT the previous tag, note that here:
 

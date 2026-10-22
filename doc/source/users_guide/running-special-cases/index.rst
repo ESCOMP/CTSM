@@ -19,8 +19,8 @@ Running Special Cases
    Running-with-irrigation.rst
    Running-with-custom-crop-calendars.rst
    Running-with-tillage.rst
-   Spinning-up-the-Satellite-Phenology-Model-CLMSP-spinup.rst
-   Spinning-up-the-biogeochemistry-BGC-spinup.rst
+   Spinning-up-the-Satellite-Phenology-Model-ClmSp-spinup.rst
+   Spinning-up-the-biogeochemistry-Bgc-spinup.rst
    Running-with-excess-ground-ice.rst
    Running-with-MOAR-data-as-atmospheric-forcing-to-spinup-the-model.rst
    Running-with-your-own-previous-simulation-as-atmospheric-forcing-to-spinup-the-model.rst

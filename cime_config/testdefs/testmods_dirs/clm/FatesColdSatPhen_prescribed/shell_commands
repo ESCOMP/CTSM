@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# This testmod should only ever be run with a FatesSp compset. Why not just set use_fates_sp in user_nl_clm? Because there are (or may be) *other* things set in a FatesSp compset, so if this test doesn't use one, it's not representative.
+compset="$(./xmlquery COMPSET --value)"
+if [[ "${compset}" != *"FATES-SP"* ]]; then
+    echo "FatesColdSatPhen_prescribed testmod should only ever be run with a FatesSp compset; this test has compset ${compset}" >&2
+    exit 1
+fi

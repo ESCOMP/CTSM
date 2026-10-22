@@ -327,7 +327,7 @@ contains
     ! last year for both time_index_lower and time_index_upper, forcing constant weights for the remainder of the
     ! simulation.
     !
-    ! This mechanism permits the introduction of a dynamic pft period in the middle of a
+    ! This mechanism permits the introduction of a period with changing pft weights in the middle of a
     ! simulation, with constant weights before and after the dynamic period.
 
     associate( &
