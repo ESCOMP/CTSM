@@ -10,6 +10,11 @@ Once a case has run ``case.setup``, we can then customize the case further, by e
 
 In the following, various examples of namelists are provided that feature the use of different namelist options to customize a case for particular uses. Most the examples revolve around how to customize the output history fields. This should give you a good basis for setting up your own CLM namelist.
 
+.. contents::
+   :depth: 2
+   :backlinks: top
+   :local:
+
 .. _def-nl-items-and-defaults:
 
 -----------------------------------------------------

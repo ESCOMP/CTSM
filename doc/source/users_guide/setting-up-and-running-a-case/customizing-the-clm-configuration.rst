@@ -20,6 +20,11 @@ There are five different types of customization for the configuration that we wi
 
 Information on all of the CLM script, configuration, build and run items is found under ``$CTSMROOT/cime_config/config_component.xml``. See `CLM CASEROOT Variable Definitions <https://docs.cesm.ucar.edu/models/cesm2/settings/current/clm5_0_input.html>`_.
 
+.. contents::
+   :depth: 2
+   :backlinks: top
+   :local:
+
 ================================
  CLM Script configuration items
 ================================
