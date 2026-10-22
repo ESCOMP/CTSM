@@ -722,7 +722,9 @@ contains
                   if (t_soisno(c,j) >= SHR_CONST_TKFRZ) then
                      t_scalar(c,1)=t_scalar(c,1) + &
                           (Q10hr**((t_soisno(c,j)-(SHR_CONST_TKFRZ+25._r8))/10._r8))*fr(c,j)
-                  else
+                  else 
+                  ! 'frozen q10' option 
+                  ! if Q10hr = froz_q10 this formula simplifies to the equation above
                      t_scalar(c,1)=t_scalar(c,1) + &
                           (Q10hr**(-25._r8/10._r8))*(froz_q10**((t_soisno(c,j)-SHR_CONST_TKFRZ)/10._r8))*fr(c,j)
                   endif
