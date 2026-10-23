@@ -229,8 +229,18 @@ contains
     ! update this frequently, and even if it did, the change in glacier area in a single
     ! time step would typically be very small.
     !
+    ! It is relatively safe to do this initial update of glacier areas because the
+    ! landunits that can potentially increase in area - glacier and natural veg - have
+    ! virtual columns over the areas where there could be changes (so initialization of a
+    ! newly-existing column isn't an issue), and we don't care hugely about C/N dynamics
+    ! in glacier transitions. In contrast, there could be more issues with doing a similar
+    ! initial update for (say) crop areas, if that were ever desired: there, at least in
+    ! some scenarios, it could be more important to do the full adjustments following area
+    ! changes that are bypassed by doing this initial update.
+    !
     ! If we are ever able to change the CESM initialization sequence so that GLC fields
-    ! are passed to CLM in initialization, then this code block can be removed.
+    ! are passed to CLM in initialization for a startup/hybrid run, then this code block
+    ! can be removed.
     ! ========================================================================
 
     need_glacier_initialization = is_first_step()
