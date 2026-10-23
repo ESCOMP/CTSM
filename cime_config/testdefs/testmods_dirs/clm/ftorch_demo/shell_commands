@@ -1,0 +1,5 @@
+#!/bin/bash
+lndroot=$(./xmlquery --value COMP_ROOT_DIR_LND)
+rundir=$(./xmlquery --value RUNDIR)
+mkdir -p "${rundir}"
+cp "${lndroot}/cime_config/testdefs/testmods_dirs/clm/ftorch_demo/constant_model.pt" "${rundir}/constant_model.pt"
