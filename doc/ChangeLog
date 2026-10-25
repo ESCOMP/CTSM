@@ -1,7 +1,7 @@
 ===============================================================
 Tag name: ctsm5.4.066
 Originator(s): rgknox (Ryan Knox, LAWRENCE BERKELEY NATIONAL LABORATORY, rgknox@lbl.gov)
-Date: Fri Oct 23 11:37:00 PM MDT 2026
+Date: Sat Oct 24 11:19:11 PM MDT 2026
 One-line Summary: Add bc_out to FATES restart and remove litter flux recalculations
 
 Purpose and description of changes
