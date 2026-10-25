@@ -252,12 +252,12 @@ def check_args(args):
     if not args.all_vars and not averaged_vars(args.vars):
         abort(f"No variables to average given with --vars (besides {','.join(ALWAYS_VARS)})")
     if not os.path.isdir(args.archdir):
-        abort(f"Input {args.archdir} directory does not exist")
+        abort(f"Input {args.archdir} archive directory does not exist")
     if args.outdir is not None and not os.path.isdir(args.outdir):
-        abort(f"Output {args.outdir} directory does not exist")
+        abort(f"Output {args.outdir} output archive directory does not exist")
     indir = input_dir(args.archdir, args.case)
     if not os.path.isdir(indir):
-        abort(f"{indir} directory does not exist")
+        abort(f"Input {indir} case directory does not exist")
     #
     # Abort if the output file already exists
     #
@@ -425,22 +425,36 @@ def run_jobs(commands, njobs, *, progress_every=None, runner=run_cmd_output_on_e
     Stops at the first failure: the jobs that have not started are cancelled and the runner's
     error (normally an abort) is raised. Logs progress every progress_every completed jobs.
     Empty commands (for output files that already exist) are skipped.
+    Args:
+        commands (list): Command to execute and it's arguments
+        njobs (int): Number of jobs to run simultaneously
+        process_every (int): Report on the progress by this count
+        runner (function): python function to call to run the commands
+
+    Returns:
+        Nothing if commands aren't valid or if it was successful
+        Raises exception if something failed or the job was killed
     """
     commands = [cmd for cmd in commands if cmd]
     if not commands:
         return
-    ndone = 0
+    ndone = 0 # number of jobs that have completed
+    # concurrent.futures executes up to njobs at the same time, but prepares all of them
     with concurrent.futures.ThreadPoolExecutor(max_workers=njobs) as executor:
         futures = [executor.submit(runner, cmd, f"Failed creating {cmd[-1]}") for cmd in commands]
         try:
+            # Check which jobs are completed
             for future in concurrent.futures.as_completed(futures):
                 future.result()
                 ndone += 1
+                # Report on the progress
                 if progress_every and ndone % progress_every == 0:
                     log(logger, f"  completed {ndone} of {len(commands)}")
         except BaseException:
             # Includes KeyboardInterrupt and the SystemExit from abort
             # Will die if the user hits Ctrl-C or if the batch job is killed
+
+            # Cancel all the future jobs
             for future in futures:
                 future.cancel()
             raise
