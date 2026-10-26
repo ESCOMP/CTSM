@@ -489,12 +489,6 @@ def check_reused_mon_file(monfile, daily_files, var_list):
     (older versions of this tool averaged them with the time dimension).
     """
     in_monfile = file_vars(monfile)
-    stale = [var for var in ALWAYS_VARS if var in in_monfile]
-    if stale:
-        abort(
-            f"Existing monthly file {monfile} has {' '.join(stale)}, so it was made by an older"
-            " version of this tool, remove it and rerun"
-        )
     if var_list is None:
         var_list = sorted(file_vars(daily_files[0]) - set(ALWAYS_VARS))
     missing = [var for var in var_list if var not in in_monfile]

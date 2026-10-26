@@ -345,15 +345,6 @@ class TestNetcdfVars(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is missing variables: b"):
             d2mc.check_reused_mon_file(monfile, [self._daily], None)
 
-    # This checks against an original version that had the ALWAYS_VARS on the monthly files
-    # TODO: Remove this since it's not really needed
-    def test_checkReusedMonFile_stale(self):
-        """A monthly file with the ALWAYS_VARS was made by an older version, so aborts"""
-        monfile = self._monfile(["a", "b", d2mc.ALWAYS_VARS[0]])
-        with self.assertRaisesRegex(SystemExit, "older version"):
-            d2mc.check_reused_mon_file(monfile, [self._daily], ["a"])
-
-
 #
 # Check some of the NCO (NetCDF Climate Operators) functions
 #
@@ -585,6 +576,8 @@ class TestSetTimeAxis(unittest.TestCase):
 
     def test_withoutTimeBnds(self):
         """climatology_bounds is created when there is no time_bnds"""
+        self._write_clim()
+        self._check()
         self._write_clim(with_time_bnds=False)
         self._check()
 
