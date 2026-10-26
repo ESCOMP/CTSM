@@ -438,7 +438,7 @@ def run_jobs(commands, njobs, *, progress_every=None, runner=run_cmd_output_on_e
     commands = [cmd for cmd in commands if cmd]
     if not commands:
         return
-    ndone = 0 # number of jobs that have completed
+    ndone = 0  # number of jobs that have completed
     # concurrent.futures executes up to njobs at the same time, but prepares all of them
     with concurrent.futures.ThreadPoolExecutor(max_workers=njobs) as executor:
         futures = [executor.submit(runner, cmd, f"Failed creating {cmd[-1]}") for cmd in commands]
