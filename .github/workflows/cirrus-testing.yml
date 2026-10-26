@@ -80,6 +80,13 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
+      # The image replaces ccs_config's container machine with a copy that adds
+      # CCSM_CPRNC; see that file's header. Fail if ccs_config's version has
+      # moved on, rather than let the copy silently mask the change.
+      - name: Check container machine override against ccs_config
+        run: |
+          diff <(sed '/^<!--$/,/^-->$/d; /<CCSM_CPRNC>/d' docker/ctsm-ci-derecho-gnu/cime-machines/container/config_machines.xml) ccs_config/machines/container/config_machines.xml
+
       - name: Call create_test
         run: |
           cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --verbose ${SIMPLE_TEST_NAME}

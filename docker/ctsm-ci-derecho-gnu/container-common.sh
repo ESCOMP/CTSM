@@ -219,4 +219,17 @@ ctsm_container_setup() {
         echo "installing gnu_container.cmake into ${HOME}/.cime (baked into the image)"
         cp "${image_macro}" "${HOME}/.cime/"
     fi
+
+    # Same arrangement for the container machine override (CCSM_CPRNC); see
+    # the header of cime-machines/container/config_machines.xml.
+    local repo_mach=/ctsm/docker/ctsm-ci-derecho-gnu/cime-machines/container/config_machines.xml
+    local image_mach=/opt/ctsm-container/cime-machines/container/config_machines.xml
+    mkdir -p "${HOME}/.cime/container"
+    if [ -f "${repo_mach}" ]; then
+        echo "installing container/config_machines.xml into ${HOME}/.cime (from the mounted repo)"
+        cp "${repo_mach}" "${HOME}/.cime/container/"
+    elif [ -f "${image_mach}" ] && [ ! -f "${HOME}/.cime/container/config_machines.xml" ]; then
+        echo "installing container/config_machines.xml into ${HOME}/.cime (baked into the image)"
+        cp "${image_mach}" "${HOME}/.cime/container/"
+    fi
 }
