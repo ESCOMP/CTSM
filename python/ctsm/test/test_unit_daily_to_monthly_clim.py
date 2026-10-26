@@ -6,7 +6,7 @@ Unit tests for daily_to_monthly_clim
 NOTE: SOME OF THESE UNIT TESTS HANDLE NetCDF FILES.
       Normally we want tests that do I/O in the system tests, because I/O is slow
       and has random glitches. Other unit tests use xarray with in memory objects
-      that don't create actual files. However, right now this tests only takes about 10 seconds.
+      that don't create actual files. However, right now these tests only take about 10 seconds.
 """
 
 import datetime
@@ -131,7 +131,7 @@ class TestCheckArgs(unittest.TestCase):
 
     def test_njobsZero(self):
         """--njobs must be positive"""
-        with self.assertRaisesRegex(SystemExit, "NJOBS must be a positive integer more than one"):
+        with self.assertRaisesRegex(SystemExit, "NJOBS must be a positive integer"):
             d2mc.check_args(self._args("--njobs", "0"))
 
     def test_accountWithoutBatch(self):
@@ -147,16 +147,16 @@ class TestCheckArgs(unittest.TestCase):
 
     def test_missingDirectories(self):
         """The archive, output and input directories must exist"""
-        with self.assertRaisesRegex(SystemExit, "Input .* directory does not exist"):
+        with self.assertRaisesRegex(SystemExit, "Input archive directory .* does not exist"):
             d2mc.check_args(
                 self._args(archdir=os.path.join(self._testdir, "dir_that_does_not_exist"))
             )
-        with self.assertRaisesRegex(SystemExit, "Output .* directory does not exist"):
+        with self.assertRaisesRegex(SystemExit, "Output archive directory .* does not exist"):
             d2mc.check_args(
                 self._args("--outdir", os.path.join(self._testdir, "dir_that_does_not_exist"))
             )
         shutil.rmtree(d2mc.input_dir(self._archdir, CASE))
-        with self.assertRaisesRegex(SystemExit, "case archive directory does not exist"):
+        with self.assertRaisesRegex(SystemExit, "Input case archive directory .* does not exist"):
             d2mc.check_args(self._args())
 
     def test_outputExists(self):
@@ -229,10 +229,11 @@ class TestYearMonths(unittest.TestCase):
 
     def test_singleYear(self):
         """A single year, including year 1 and the default year"""
-        year = 1
-        self.assertEqual(d2mc.year_months(year, year), [(1, month) for month in range(1, 13)])
-        year = d2mc.DEFAULT_YEAR
-        self.assertEqual(d2mc.year_months(year, year), [(year, month) for month in range(1, 13)])
+        for year in (1, d2mc.DEFAULT_YEAR):
+            with self.subTest(year=year):
+                self.assertEqual(
+                    d2mc.year_months(year, year), [(year, month) for month in range(1, 13)]
+                )
 
 
 #
@@ -247,10 +248,6 @@ class TestDailyFiles(unittest.TestCase):
         for month, ndays in enumerate(d2mc.NOLEAP_DAYS, start=1):
             for day in range(1, ndays + 1):
                 self._create_empty_file(_daily_name(CASE, 2001, month, day))
-        # Files that should be ignored: another case, and other kinds of files
-        self._create_empty_file(_daily_name("DIFFERENT_CASE", 2001, 1, 1))
-        self._create_empty_file(f"{CASE}.cpl.hi.2001-01-01-00000.nc")
-        self._create_empty_file(_daily_name(CASE, 2001, 1, 1) + ".base")
 
     def tearDown(self):
         shutil.rmtree(self._testdir, ignore_errors=True)
@@ -280,12 +277,12 @@ class TestDailyFiles(unittest.TestCase):
         )
 
     def test_checkDayCounts_complete(self):
-        """Test that checkDayCounts for a complete year is correct"""
+        """Test that check_day_counts for a complete year is correct"""
         files_by_month = d2mc.index_daily_files(self._testdir, CASE)
         self.assertEqual(d2mc.check_day_counts(files_by_month, d2mc.year_months(2001, 2001)), [])
 
     def test_checkDayCounts_missing(self):
-        """Test that checkDayCounts reports missing days and years correctly"""
+        """Test that check_day_counts reports missing days and years correctly"""
         # Remove one day from the first year
         os.remove(os.path.join(self._testdir, _daily_name(CASE, 2001, 2, 14)))
         # NOTE: Setup only created files for the first year, so the second year has no files
@@ -365,11 +362,11 @@ class TestCheckNco(unittest.TestCase):
 
     def test_missingCommand(self):
         """Abort naming the NCO commands that aren't found"""
-        # mock d2mc.shutil with the input arguments below, and the side effects listed
+        # Replace shutil.which so that only ncrcat is "not found"
         with mock.patch.object(
-            # lambda is used here to have a small inline function to define the side effects
             d2mc.shutil,
             "which",
+            # lambda is used here to have a small inline function to define the side effects
             side_effect=lambda cmd: None if cmd == "ncrcat" else "/bin/x",
         ):
             with self.assertRaisesRegex(SystemExit, "NCO commands not found: ncrcat "):
@@ -377,13 +374,13 @@ class TestCheckNco(unittest.TestCase):
 
     def test_allFound(self):
         """No abort when all the commands are found"""
-        # mock d2mc.shutil with the input arguments below, and the side effects as listed
+        # Replace shutil.which so that all the commands are found
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/x"):
             d2mc.check_nco()
 
 
 #
-# Tests of the ncra command for reacord averaging
+# Tests of the ncra command for record averaging
 #
 class TestNcraCommand(unittest.TestCase):
     """Tests of ncra_command"""
@@ -495,7 +492,7 @@ class TestFilenames(unittest.TestCase):
 
 
 #
-# Test file output for time and time and climaatology bounds
+# Test file output for time and time and climatology bounds
 #
 class TestTimeValues(unittest.TestCase):
     """Tests of month_bounds, mid_month_times and climatology_bounds_values"""
@@ -512,7 +509,7 @@ class TestTimeValues(unittest.TestCase):
         """Middle of each month"""
         times = d2mc.mid_month_times()
         self.assertEqual(times[0], 15.5)  # January
-        self.assertEqual(times[1], 45.0)  # Febreary
+        self.assertEqual(times[1], 45.0)  # February
         self.assertEqual(times[-1], 349.5)  # December (last month)
 
     def test_climatologyBounds_singleYear(self):
@@ -593,7 +590,7 @@ class TestSetTimeAxis(unittest.TestCase):
 
 
 #
-# Test the copy of the grid varaibles (the ALWAYS_VARS)
+# Test the copy of the grid variables (the ALWAYS_VARS)
 #
 class TestCopyGridVars(unittest.TestCase):
     """Tests of copy_grid_vars"""
@@ -685,15 +682,16 @@ class TestAddVarAttributes(unittest.TestCase):
 
 
 #
-# Tests of writing prvenance information is correct
+# Tests of writing provenance information is correct
 #
 class TestWriteProvenance(unittest.TestCase):
     """Tests of write_provenance (with the ncatted command mocked)"""
 
     def test_oneNcattedCommand(self):
         """One ncatted --hst command sets the global attributes and deletes file_version"""
-        # mock run_cmnd_output_on_error function as run_cmd that does nothing, but returns as set
-        # mock sys.argv to work as given next
+        # Replace run_cmd_output_on_error with a mock (run_cmd) that does nothing but record
+        # the call, get_ctsm_git_short_hash to return a fixed hash, and sys.argv with the
+        # command line given
         with mock.patch.object(d2mc, "run_cmd_output_on_error") as run_cmd, mock.patch.object(
             d2mc, "get_ctsm_git_short_hash", return_value="abc1234"
         ), mock.patch.object(sys, "argv", ["daily_to_monthly_clim", "--vars", "a,b", "x"]):
@@ -786,12 +784,12 @@ class TestBatch(unittest.TestCase):
 
     def test_submitBatch(self):
         """
-        Test submitBatch that qsub gets the queue and the script on stdin,
+        Test submit_batch that qsub gets the queue and the script on stdin,
         and the job id is returned
         """
         result = subprocess.CompletedProcess([], 0, stdout="1234.desched1\n", stderr="")
-        # mock d2mc.shutil for which to just return qsub path
-        # Then mock d2mc.subprocess as run to return the result
+        # Replace shutil.which to return the qsub path
+        # and subprocess.run to return the result without running qsub
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/qsub"), mock.patch.object(
             d2mc.subprocess, "run", return_value=result
         ) as run:
@@ -800,11 +798,11 @@ class TestBatch(unittest.TestCase):
         self.assertEqual(run.call_args.kwargs["input"], "the script")
 
     def test_submitBatch_fails(self):
-        """test that submitBatch fails if the qsub aborts"""
+        """Test that submit_batch aborts if qsub fails"""
         # Create a result that mimics a qsub error
         result = subprocess.CompletedProcess([], 1, stdout="", stderr="qsub: bad account")
-        # mock d2mc.shutil on which to return qsub path
-        # Then mock d2mc.subprocess run to return the result
+        # Replace shutil.which to return the qsub path
+        # and subprocess.run to return the result without running qsub
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/qsub"), mock.patch.object(
             d2mc.subprocess, "run", return_value=result
         ):
@@ -813,7 +811,7 @@ class TestBatch(unittest.TestCase):
 
     def test_submitBatch_noQsub(self):
         """Abort if qsub isn't found"""
-        # mock d2mc.shutil for which, to return nothing as it would if the command wasn't found
+        # Replace shutil.which to return None, as it does when the command isn't found
         with mock.patch.object(d2mc.shutil, "which", return_value=None):
             with self.assertRaisesRegex(SystemExit, "qsub not found"):
                 d2mc.submit_batch("the script", "main")

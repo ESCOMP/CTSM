@@ -246,18 +246,18 @@ def check_args(args):
     if args.begyear > args.endyear:
         abort(f"BEGYEAR ({args.begyear}) must not be after ENDYEAR ({args.endyear})")
     if args.njobs is not None and args.njobs < 1:
-        abort(f"NJOBS must be a positive integer more than one: {args.njobs}")
+        abort(f"NJOBS must be a positive integer: {args.njobs}")
     if args.account is not None and not args.batch:
         abort("--account is only used with --batch")
     if not args.all_vars and not averaged_vars(args.vars):
         abort(f"No variables to average given with --vars (besides {','.join(ALWAYS_VARS)})")
     if not os.path.isdir(args.archdir):
-        abort(f"Input {args.archdir} archive directory does not exist")
+        abort(f"Input archive directory {args.archdir} does not exist")
     if args.outdir is not None and not os.path.isdir(args.outdir):
-        abort(f"Output {args.outdir} output archive directory does not exist")
+        abort(f"Output archive directory {args.outdir} does not exist")
     indir = input_dir(args.archdir, args.case)
     if not os.path.isdir(indir):
-        abort(f"Input {indir} case archive directory does not exist")
+        abort(f"Input case archive directory {indir} does not exist")
     #
     # Abort if the output file already exists
     #
@@ -425,15 +425,20 @@ def run_jobs(commands, njobs, *, progress_every=None, runner=run_cmd_output_on_e
     Stops at the first failure: the jobs that have not started are cancelled and the runner's
     error (normally an abort) is raised. Logs progress every progress_every completed jobs.
     Empty commands (for output files that already exist) are skipped.
+
     Args:
-        commands (list): Command to execute and it's arguments
+        commands (list): The commands to run, each a list of the command and its arguments,
+                         with the output file last (an empty list is skipped)
         njobs (int): Number of jobs to run simultaneously
-        process_every (int): Report on the progress by this count
-        runner (function): python function to call to run the commands
+        progress_every (int): Log the progress every time this many jobs have completed
+        runner (function): Python function to call to run each command
 
     Returns:
-        Nothing if commands aren't valid or if it was successful
-        Raises exception if something failed or the job was killed
+        None
+
+    Raises:
+        SystemExit: From the runner's abort if a command fails
+        KeyboardInterrupt: If the user hits Ctrl-C
     """
     commands = [cmd for cmd in commands if cmd]
     if not commands:
