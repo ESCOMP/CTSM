@@ -104,6 +104,18 @@ jobs:
 
     steps:
 
+      # TEMPORARY: CCPP-502's /glade/u/apps mounts were reported added on
+      # 2026-10-26 but probe-derecho-modules.yml (runner pod, no container:)
+      # does not see them. Check whether they reach a container job instead.
+      # Non-fatal on purpose; remove once answered.
+      - name: Look for the /glade/u/apps mounts from inside the container
+        run: |
+          echo "--- under /glade:"; ls /glade || true
+          for p in /glade/u/apps/derecho/modules /glade/u/apps/cesmdev/modules /glade/u/apps/derecho/25.10/spack/opt/spack; do
+            if [ -d "$p" ]; then echo "PRESENT  $p"; else echo "MISSING  $p"; fi
+          done
+          echo "--- glade in the mount table:"; grep glade /proc/mounts || true
+
       - name: Check out CTSM
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
