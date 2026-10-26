@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Build the image and run the full validation (the build-ctsm-ci-image skill's
-# five wrappers plus the strings acceptance test on cesm.exe) in one go.
+# five wrappers, smoke-test-pfunit.sh, and the strings acceptance test on
+# cesm.exe) in one go.
 #
 # Run it inside an INTERACTIVE Casper allocation: podman storage is node-local,
 # so validation has to happen in the allocation that built the image. A
@@ -42,6 +43,7 @@ echo "======== build"
 "${here}/build-on-casper.sh" "$@" || { echo "BUILD FAILED; not validating"; exit 1; }
 
 step "smoke-test"      "${here}/smoke-test.sh"
+step "pFUnit smoke-test" "${here}/smoke-test-pfunit.sh"
 step "unit tests"      "${here}/run-unit-tests-in-container.sh"
 step "create_test"     "${here}/run-test-in-container.sh"
 step "run_sys_tests"   "${here}/run-sys-tests-in-container.sh" -t "${test_name}"
@@ -78,7 +80,7 @@ echo
 echo "======== summary"
 failed=0
 for i in "${!names[@]}"; do
-    printf '%-16s %s\n' "${names[$i]}" "${results[$i]}"
+    printf '%-18s %s\n' "${names[$i]}" "${results[$i]}"
     [ "${results[$i]}" = PASS ] || failed=1
 done
 echo "log: ${log}"
