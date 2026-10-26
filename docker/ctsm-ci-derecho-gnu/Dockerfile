@@ -553,9 +553,10 @@ RUN cd /tmp \
 # ---- CIME macro drop-in that points run_tests.py at the install above ----
 # See the file itself for why PFUNIT_PATH cannot simply be an env var or a
 # -D flag. Baked at a fixed path AND dropped in /root/.cime: the fixed path is
-# what a GitHub Actions job copies from (GHA overrides HOME, so /root/.cime is
-# not found there), while /root/.cime makes an interactive `podman run` work
-# with no setup.
+# what a GitHub Actions job copies from where HOME is /github/home (GitHub's
+# standard container handling), while /root/.cime serves an interactive
+# `podman run` with no setup -- and also CI on the CIRRUS runner, where HOME
+# was measured as /root (2026-10-16).
 COPY cime-macros/gnu_container.cmake /opt/ctsm-container/cime-macros/
 RUN mkdir -p /root/.cime \
     && cp /opt/ctsm-container/cime-macros/gnu_container.cmake /root/.cime/
@@ -677,11 +678,11 @@ RUN set -eu; \
 #   f95 ... -o cprnc /usr/local/lib/libnetcdff.a /usr/local/lib/libnetcdf.a
 # -- the two archives and nothing else.
 #
-# cime/CIME/non_py/cprnc/CMakeLists.txt:78 tries find_package(NetCDF), which
-# cannot succeed against this stack (autotools-built, so no netCDFConfig.cmake,
-# and cime ships no FindNetCDF.cmake), and falls through to pkg_check_modules
-# at :91-101. The build log says so in as many words: "NetCDF was not found,
-# falling back on pkg-config". pkg_check_modules fills NETCDF_LDFLAGS from the
+# That was cprnc v1.1.2, whose CMakeLists.txt:78 tries find_package(NetCDF),
+# which cannot succeed against this stack (autotools-built, so no
+# netCDFConfig.cmake, and cime ships no FindNetCDF.cmake), and falls through to
+# pkg_check_modules at :91-101. The build log said so in as many words: "NetCDF
+# was not found, falling back on pkg-config". pkg_check_modules fills NETCDF_LDFLAGS from the
 # .pc file's Libs: field alone -- it puts the --static answer in a separate
 # NETCDF_STATIC_LDFLAGS that cprnc never reads -- while netCDF's configure
 # records the transitive -lhdf5_hl -lhdf5 -lz -lcurl -lxml2 in Libs.private.
@@ -691,6 +692,16 @@ RUN set -eu; \
 # prefix has no such mechanism, so these .pc files are simply WRONG about how
 # to link the stack they describe. Fix them rather than patching a consumer:
 # every pkg-config user gets the right answer, and cime stays unmodified.
+#
+# THIS NO LONGER FIXES A CASE BUILD'S cprnc. cime6.5.5 pins cprnc v1.1.5,
+# which tries find_library(netcdf) BEFORE pkg-config; that finds the bare
+# static archives in /usr/local/lib and links them with none of their
+# dependencies, so the .pc files are never consulted and the link fails exactly
+# as above (measured in CI, 2026-10-16; NEXT_STEPS item 13). The fix for that
+# is to build cprnc once in the image and point CCSM_CPRNC at it -- being
+# proven in Dockerfile.cprnc-probe, whose cprnc build takes its link libraries
+# from these .pc files. Keep this layer for that and for any other pkg-config
+# user.
 #
 # Private libraries are appended AFTER the existing Libs:, which is the order a
 # static link needs -- dependencies follow the things that depend on them.
@@ -760,9 +771,13 @@ RUN set -eu; \
 #   drop its hardcoding with nothing else to change. The assertion above, not
 #   this variable, is what actually guards those two paths.
 # - CC / CXX / FC: which toolchain a CMake-driven build inside the container
-#   uses. CIME's Makefile builds set their own from $(SCC)/$(SFC), but cprnc is
+#   uses. CIME's Makefile builds set their own from $(SCC)/$(SFC). cprnc is
 #   built by cmake (cime/CIME/build_scripts/buildlib.cprnc), and the cmake
-#   command line it generates passes no -DCMAKE_*_COMPILER at all. CMake then
+#   command line it generates passes no -DCMAKE_*_COMPILER at all. Since cprnc
+#   v1.1.5 (cime6.5.5) cprnc's own CMakeLists.txt sets the compilers from the
+#   case's Macros.cmake before project(), so what follows -- measured with
+#   v1.1.2 -- no longer applies to cprnc; it still applies to any other CMake
+#   build run in the container without explicit compilers. CMake then
 #   falls back to its built-in name search -- `cc` for C, `f95` for Fortran --
 #   and NEITHER NAME EXISTS in /opt/gcc/${GCC_VERSION}/bin, which ships `gcc`
 #   and `gfortran`. PATH order cannot help: cmake searches by name first, so it

@@ -182,8 +182,7 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
   fails against it until `NEXT_STEPS.md` item 4b rebuilds the image. See that
   file and that item.
 
-**In GitHub Actions**, `HOME` is overridden (to `/github/home`), so the
-`/root/.cime` copy is not found. A workflow step must place it:
+**In GitHub Actions**, `HOME` depends on the runner. GitHub's standard container handling sets it to `/github/home`, where the `/root/.cime` copy is not found; on the CIRRUS runner (`gha-runner-ctsm`, Kubernetes container hook) it was measured as `/root` on 2026-10-16, so the baked copy is used as-is. A workflow that has to work on either can place it:
 
 ```yaml
 - run: |
@@ -377,7 +376,7 @@ The two persistent directories carry a `_devcontainer` suffix because cases
 built here use a different toolchain than a native derecho or casper build;
 keeping them apart stops the two from being confused. Container paths are
 fixed (`/cases`, `/scratch`) rather than `$HOME`-relative, because `HOME`
-differs by context -- `/root` under podman, `/github/home` in GitHub Actions.
+differs by context -- `/root` under podman and on the CIRRUS runner, `/github/home` under GitHub's standard container handling.
 
 `DOUT_S_ROOT` is redirected to `/scratch/archive/$CASE`, since the machine
 config's default (`$ENV{HOME}/archive/$CASE`) would be ephemeral container
@@ -788,4 +787,4 @@ so edit them in the same change.
 | `PIO` / `PIO_VERSION_MAJOR` / `PIO_TYPENAME_VALID_VALUES` | `/usr/local` / `2` / `netcdf` | what makes CIME link the image's PIO instead of building one. `buildlib.pio` reads `PIO_VERSION_MAJOR` from `os.environ`, which no macro file can reach; an unset `PIO_TYPENAME_VALID_VALUES` is a `TypeError`, not a default |
 | `CESMDATAROOT` | `/opt/cesmdata` | `DIN_LOC_ROOT=$CESMDATAROOT/inputdata` must exist even for `--no-run`; it is also the mount point for real inputdata when running (see "Running cases and tests"). `cirrus-testing.yml` overrides it to `/glade/campaign/cesm/cesmdata/cseg`; see "Mounts" |
 | `USER` | `root` | CIME requires `$USER`; GHA container jobs don't set it |
-| `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | CIME's cprnc locates netCDF via pkg-config with the non-system `/opt` toolchain. Those `.pc` files now describe a *static* stack; see the `Dockerfile` comment for what that means for cprnc |
+| `PKG_CONFIG_PATH` / `PKG_CONFIG_ALLOW_SYSTEM_CFLAGS` | `/usr/local/lib/pkgconfig` / `1` | let pkg-config find the image's netCDF with the non-system `/opt` toolchain. Those `.pc` files describe a *static* stack. cprnc v1.1.2 found netCDF this way; v1.1.5 (cime6.5.5) finds the bare archives with `find_library` first and never reads them — see the `Dockerfile` comment and `NEXT_STEPS.md` item 13 |

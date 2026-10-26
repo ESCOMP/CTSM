@@ -40,8 +40,9 @@ set -eu
 build_dir="$1"; shift
 
 # Shared with the run-case/run-test wrappers: places gnu_container.cmake where
-# CIME will look (GitHub Actions overrides HOME, so the image's /root/.cime
-# copy is not necessarily it), preferring the MOUNTED REPO's copy over the
+# CIME will look (HOME is not always /root -- GitHub's standard container
+# handling uses /github/home -- so the image's /root/.cime copy is not
+# necessarily it), preferring the MOUNTED REPO's copy over the
 # snapshot baked into the image -- otherwise a macro edit silently has no
 # effect here until the image is rebuilt.
 source /ctsm/docker/ctsm-ci-derecho-gnu/container-common.sh

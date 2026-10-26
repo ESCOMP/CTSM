@@ -98,8 +98,9 @@ ctsm_host_setup() {
     # nothing in a run should ever write to the shared inputdata tree.
     #
     # /cases and /scratch are fixed container paths rather than $HOME-relative
-    # ones because HOME differs by context (/root under podman, /github/home
-    # in GitHub Actions); fixed paths keep these scripts portable to CI.
+    # ones because HOME differs by context (/root under podman and on the
+    # CIRRUS runner, /github/home under GitHub's standard container handling);
+    # fixed paths keep these scripts portable to CI.
     CTSM_PODMAN_ARGS=(
         --rm -i
         -v "${repo}:/ctsm:rw${suffix}"
@@ -187,7 +188,8 @@ ctsm_podman_run() {
 # --------------------------------------------------------------------------
 # CIME's copy_local_macros_to_dir() copies $HOME/.cime/*.cmake into the case.
 # The image bakes a copy into /root/.cime, which is enough for a plain
-# `podman run`, but HOME is overridden in GitHub Actions (/github/home), so
+# `podman run`, but HOME is not always /root (GitHub's standard container
+# handling uses /github/home; the CIRRUS runner was measured as /root), so
 # place the file wherever HOME actually points. See the README section
 # "Running CTSM's unit tests" and the header of cime-macros/gnu_container.cmake.
 # The REPO's copy wins over the image's baked one whenever the repo is

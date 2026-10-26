@@ -71,12 +71,13 @@ check gcc "$WANT_GCC" "$(gcc --version | head -1)"
 echo "### gfortran";   gfortran --version | head -1
 check gfortran "$WANT_GCC" "$(gfortran --version | head -1)"
 
-# CC/CXX/FC decide which toolchain a CMake build inside the container picks,
-# and cprnc is exactly that: cime passes no -DCMAKE_*_COMPILER, so cmake reads
-# these or falls back to searching for `cc`/`f95` -- names that exist only in
-# /usr/bin, as AlmaLinux's bootstrap GCC. Unset, cprnc links the image's
-# GCC-built static HDF5 with the wrong libgcc and dies on undefined
-# __truncsfhf2. Checking the version each one REPORTS, not just that the path
+# CC/CXX/FC decide which toolchain a CMake build inside the container picks
+# when it is not told: cmake reads these or falls back to searching for
+# `cc`/`f95` -- names that exist only in /usr/bin, as AlmaLinux's bootstrap
+# GCC. That is how cprnc v1.1.2 linked the image's GCC-built static HDF5 with
+# the wrong libgcc and died on undefined __truncsfhf2. cprnc v1.1.5
+# (cime6.5.5) takes its compilers from the case's Macros.cmake instead, so
+# this now guards other CMake builds rather than cprnc's. Checking the version each one REPORTS, not just that the path
 # exists, is what makes this a real check: the Dockerfile already asserts
 # existence at build time, which says nothing about the image in front of us.
 echo "### CC/CXX/FC (what a cmake build in here will use)"

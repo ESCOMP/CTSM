@@ -25,9 +25,12 @@
 # The eventual upstream fix is a one-line set(PFUNIT_PATH ...) in
 # ccs_config/machines/container/container.cmake.
 #
-# NOTE ON $HOME: GitHub Actions container jobs override HOME (to /github/home),
-# so the copy baked into /root/.cime is not found in CI. The workflow step has
-# to place this file itself:
+# NOTE ON $HOME: GitHub Actions' standard container handling sets HOME to
+# /github/home, where the copy baked into /root/.cime is not found. That does
+# NOT hold everywhere: on the CIRRUS runner (gha-runner-ctsm, which runs jobs
+# through the Kubernetes container hook) HOME was measured as /root on
+# 2026-10-16, so the baked copy is what CI used. A workflow that must work on
+# either can place this file itself:
 #   mkdir -p "$HOME/.cime"
 #   cp /opt/ctsm-container/cime-macros/gnu_container.cmake "$HOME/.cime/"
 #
