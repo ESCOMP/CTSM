@@ -22,6 +22,12 @@ ARG MAKE_JOBS=16
 # the bare archives with find_library before it ever reaches pkg-config, and
 # links them with none of their HDF5/zlib/curl/xml2 dependencies.
 #
+# Both packages are named because `pkg-config --libs netcdf-fortran` alone
+# stops at "-lnetcdff -lnetcdf": the .pc layer folded netCDF-C's HDF5 & co.
+# into netcdf.pc, not netcdf-fortran.pc, and pkg-config does not follow a
+# Requires.private without --static. Measured: the first probe build linked
+# with exactly that and died on undefined H5* symbols.
+#
 # The final check runs cprnc on two copies of its own test file. A link that
 # succeeds is not enough: this proves the binary starts and reads netCDF.
 # The expected line is cprnc.F90's own wording (write at line 170 in v1.1.5).
@@ -34,7 +40,7 @@ RUN set -eu; \
         -DCMAKE_C_COMPILER="${CC}" \
         -DCMAKE_Fortran_COMPILER="${FC}" \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DCMAKE_Fortran_STANDARD_LIBRARIES="$(pkg-config --libs netcdf-fortran)"; \
+        -DCMAKE_Fortran_STANDARD_LIBRARIES="$(pkg-config --static --libs netcdf-fortran netcdf)"; \
     make -j"${MAKE_JOBS}" VERBOSE=1; \
     make install; \
     out="$(/usr/local/bin/cprnc ../test_inputs/control.nc ../test_inputs/control.nc)"; \
