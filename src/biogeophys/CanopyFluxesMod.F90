@@ -1641,8 +1641,7 @@ bioms:   do f = 1, fn
          custom_rel_epsilon=1.e-10_r8)
       
       if ( use_fates ) then
-         
-         
+
          call clm_fates%wrap_accumulatefluxes(nc,fn,filterp(1:fn))
          call clm_fates%wrap_hydraulics_drive(bounds,nc,soilstate_inst, &
                waterstatebulk_inst,waterdiagnosticbulk_inst,waterfluxbulk_inst, &
