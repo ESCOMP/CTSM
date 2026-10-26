@@ -46,15 +46,7 @@ this repo pins (`ccs_config_cesm1.0.88`, i.e. `ncarenv/25.10`). The
 **Dockerfile** column is what this directory's `Dockerfile` builds today;
 `check-derecho-versions.py` passes against it.
 
-**No published image matches this Dockerfile yet.** The serial-only rebuild
-(NEXT_STEPS item 4b) has landed in this directory but has not been built on
-Casper or pushed. `cirrus-testing.yml` still pins
-`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007`, which is the two-stack
-image: it was built and validated on Casper on 2026-10-07 against the previous
-Dockerfile. A container case build against `:20261007` now fails, deliberately,
-because `cime-macros/gnu_container.cmake` names paths only the new image has.
-The pin bump and the `_Mmpi-serial` test-name change land together once the
-rebuild is published. The older `:20260831` image is the 2026-08-31
+**`ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026` matches this Dockerfile** and is what `cirrus-testing.yml` pins: built and validated on Casper on 2026-10-26 (NEXT_STEPS item 13). Earlier tags do not work with the current repo: `:20261015` has no built-in cprnc, so a case build compiles cprnc itself and fails at link; `:20261007` is the two-stack image, without the paths `cime-macros/gnu_container.cmake` names. The older `:20260831` image is the 2026-08-31
 `ncarenv/23.09` build (GCC 12.2.0, netCDF-C 4.9.2, ESMF 8.6.0 and so on) and is
 kept only as a fallback.
 
@@ -177,9 +169,8 @@ over everything ccs_config ships without shadowing anything (ccs_config has no
   serial netCDF when `MPILIB=mpi-serial`.
 - **`MPI_SERIAL_PATH`** and **`PIO_LIBDIR`/`PIO_INCDIR`** — point a serial case
   build at the image's mpi-serial and PIO instead of CTSM's submodules. These
-  name paths the published `:20261007` does not have, so a container case build
-  fails against it until `NEXT_STEPS.md` item 4b rebuilds the image. See that
-  file and that item.
+  name paths only images from item 4b on have (`:20261015` and later); see
+  `NEXT_STEPS.md` item 4b.
 
 **In GitHub Actions**, `HOME` depends on the runner. GitHub's standard container handling sets it to `/github/home`, where the `/root/.cime` copy is not found; on the CIRRUS runner (`gha-runner-ctsm`, Kubernetes container hook) it was measured as `/root` on 2026-10-16, so the baked copy is used as-is. A workflow that has to work on either can place it:
 
@@ -329,8 +320,8 @@ wrappers' default `IMAGE_TAG`, so nothing needs re-tagging. Alternatively pull
 the published image and point `IMAGE_TAG` at it:
 
 ```bash
-podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007
-IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261007 \
+podman pull ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026
+IMAGE_TAG=ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026 \
     docker/ctsm-ci-derecho-gnu/run-test-in-container.sh
 ```
 

@@ -69,7 +69,12 @@ jobs:
       # ccs_config's container machine, which is mpich. And :20261007 predates
       # 4b, so it does not have the library paths gnu_container.cmake now
       # hardcodes. Either change alone leaves this job red.
-      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261015
+      #
+      # :20261026 is the first image with cprnc built in and the container
+      # machine override pointing CCSM_CPRNC at it (NEXT_STEPS item 13). An
+      # older tag makes the case build cprnc itself, which fails at link
+      # against this static stack.
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026
 
     steps:
 
