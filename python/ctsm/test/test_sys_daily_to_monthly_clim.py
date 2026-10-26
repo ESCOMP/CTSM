@@ -22,6 +22,7 @@ sys.path.insert(1, _CTSM_PYTHON)
 # pylint: disable=wrong-import-position
 from ctsm import unit_testing
 from ctsm.cplhist import daily_to_monthly_clim as d2mc
+from ctsm.os_utils import run_cmd_output_on_error
 
 # Allow test names that pylint doesn't like; otherwise hard to make them
 # readable
@@ -39,13 +40,16 @@ LAT = -60.0 + np.arange(NX, dtype="f4")
 
 def _value(year, month):
     """Value of the default variables in the daily files for a year and month"""
+    # This is arbitrary, but having it be a function of year and month makes it predictable
+    # but also different for files of different years and months
     return (year - 2000) * 100 + month
 
 
 def _write_daily_file(filename, year, month, day_of_year):
     """
-    Write a daily file like the CMEPS 24h average coupler history files: 2 time samples, time_bnds,
-    the default variables and EXTRA_VAR on (time, atmImp_ny, atmImp_nx), and lon/lat with time too
+    Write a daily file like the CMEPS CPLHIST 24h average coupler history files:
+       2 time samples, time_bnds, the default variables and EXTRA_VAR on
+       (time, atmImp_ny, atmImp_nx), and lon/lat with time too
     """
     with Dataset(filename, "w") as ncfile:
         ncfile.createDimension("time", None)
@@ -66,12 +70,13 @@ def _write_daily_file(filename, year, month, day_of_year):
             var = ncfile.createVariable(name, "f4", dims, fill_value=1.0e30)
             var.setncatts({"units": "kg m-2 s-1", "standard_name": name})
             var[:] = (2.0 * value if name == EXTRA_VAR else value) * np.ones((2, 1, NX))
-        for name, values, units in (
-            ("atmImp_lon", LON, "degrees_E"),
-            ("atmImp_lat", LAT, "degrees_N"),
+        for name, values, coord, units in (
+            ("atmImp_lon", LON, "longitude", "degrees_E"),
+            ("atmImp_lat", LAT, "latitude", "degrees_N"),
         ):
             var = ncfile.createVariable(name, "f4", dims, fill_value=1.0e30)
-            var.setncatts({"long_name": name, "units": units})
+            # Same attributes as CMEPS, the standard_name is needed for CF compliance
+            var.setncatts({"long_name": coord, "units": units, "standard_name": coord})
             var[:] = values * np.ones((2, 1, NX))
 
 
@@ -134,6 +139,11 @@ class TestSysDailyToMonthlyClim(unittest.TestCase):
         self.assertTrue(os.path.exists(outfile), msg=f"{outfile} not created")
         return outfile, output.getvalue(), argv
 
+    def _check_cf_compliance(self, outfile):
+        """Check the output file for CF compliance with the compliance-checker tool"""
+        cmd = ["compliance-checker", "--test", "cf", outfile]
+        run_cmd_output_on_error(cmd, "The output file did not pass the CF compliance checker")
+
     def _check_output(self, outfile, data_vars, year=d2mc.DEFAULT_YEAR):
         """Check the variables, values, grid, time axis and metadata of the output file"""
         units = f"days since {year:04d}-01-01 00:00:00"
@@ -177,6 +187,7 @@ class TestSysDailyToMonthlyClim(unittest.TestCase):
         """The default variables, with the intermediate files removed at the end"""
         outfile, _, argv = self._run()
         command_used = self._check_output(outfile, d2mc.DEFAULT_VARS)
+        self._check_cf_compliance(outfile)
         self.assertEqual(command_used, shlex.join(argv))
         self.assertFalse(os.path.exists(os.path.join(os.path.dirname(outfile), "mon")))
 
@@ -184,6 +195,7 @@ class TestSysDailyToMonthlyClim(unittest.TestCase):
         """A variable list (including a grid variable) and the time axis set to another year"""
         outfile, _, argv = self._run("--vars", f"{EXTRA_VAR},atmImp_lat", "--year", "2001")
         command_used = self._check_output(outfile, [EXTRA_VAR], year=2001)
+        self._check_cf_compliance(outfile)
         # The comma in the --vars list makes it through ncatted
         self.assertEqual(command_used, shlex.join(argv))
 
@@ -191,6 +203,7 @@ class TestSysDailyToMonthlyClim(unittest.TestCase):
         """All variables: time_bnds is renamed to climatology_bounds, lon/lat aren't averaged"""
         outfile, _, _ = self._run("--all-vars")
         self._check_output(outfile, d2mc.DEFAULT_VARS + [EXTRA_VAR])
+        self._check_cf_compliance(outfile)
 
     def test_keepAndReuse(self):
         """With --keep the monthly files are kept, and reused on a rerun"""
@@ -203,6 +216,7 @@ class TestSysDailyToMonthlyClim(unittest.TestCase):
         outfile, printed, _ = self._run("--keep", outdir=outdir)
         self.assertEqual(printed.count("skipping ncra command"), 12 * nyears)
         self._check_output(outfile, d2mc.DEFAULT_VARS)
+        self._check_cf_compliance(outfile)
 
     def test_reuseWithDifferentVars_aborts(self):
         """Monthly files kept from a run with fewer variables abort a run with all variables"""
