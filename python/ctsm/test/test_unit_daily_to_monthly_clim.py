@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
-"""Unit tests for daily_to_monthly_clim"""
+"""
+Unit tests for daily_to_monthly_clim
+
+NOTE: SOME OF THESE UNIT TESTS HANDLE NetCDF FILES.
+      Normally we want tests that do I/O in the system tests, because I/O is slow
+      and has random glitches. Other unit tests use xarray with in memory objects
+      that don't create actual files. However, right now this tests only takes about 10 seconds.
+"""
 
 import datetime
 import io
