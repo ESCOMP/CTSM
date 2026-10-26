@@ -23,9 +23,10 @@ from ctsm.cplhist import daily_to_monthly_clim as d2mc
 # to make readable unit test names
 # pylint: disable=invalid-name
 
-CASE = "TC"
+CASE = "TESTCASE"
 
 
+# A couple utility functions for the tests
 def _daily_name(case, year, month, day):
     """Name of a daily coupler history file"""
     return f"{case}.{d2mc.HIST_TAG}.{year:04d}-{month:02d}-{day:02d}-00000.nc"
@@ -46,6 +47,9 @@ def _write_nc(filename, variables, ntime=1):
             var[...] = np.ones(shape)
 
 
+#
+# Tests for argument parsing
+#
 class TestGetParser(unittest.TestCase):
     """Tests of get_parser"""
 
@@ -78,6 +82,9 @@ class TestGetParser(unittest.TestCase):
                 d2mc.get_parser().parse_args(["-a", "--vars", "a", "arch", CASE, "1", "2"])
 
 
+#
+# Tests for the argument error checking
+#
 class TestCheckArgs(unittest.TestCase):
     """Tests of check_args"""
 
@@ -100,11 +107,15 @@ class TestCheckArgs(unittest.TestCase):
         d2mc.check_args(self._args())
 
     def test_yearOutOfRange(self):
-        """BEGYEAR, ENDYEAR and YEAR must be from 0 to 9999"""
-        with self.assertRaisesRegex(SystemExit, "ENDYEAR must be an integer from 0 to 9999"):
+        """BEGYEAR, ENDYEAR and YEAR must be from 1 to 9999"""
+        with self.assertRaisesRegex(SystemExit, "ENDYEAR must be an integer from 1 to 9999"):
             d2mc.check_args(self._args(years=("2001", "10000")))
-        with self.assertRaisesRegex(SystemExit, "YEAR must be an integer from 0 to 9999"):
+        with self.assertRaisesRegex(SystemExit, "BEGYEAR must be an integer from 1 to 9999"):
+            d2mc.check_args(self._args(years=("0", "2001")))
+        with self.assertRaisesRegex(SystemExit, "YEAR must be an integer from 1 to 9999"):
             d2mc.check_args(self._args("--year", "10000"))
+        with self.assertRaisesRegex(SystemExit, "YEAR must be an integer from 1 to 9999"):
+            d2mc.check_args(self._args("--year", "0"))
 
     def test_begyearAfterEndyear(self):
         """BEGYEAR can't be after ENDYEAR"""
@@ -113,7 +124,7 @@ class TestCheckArgs(unittest.TestCase):
 
     def test_njobsZero(self):
         """--njobs must be positive"""
-        with self.assertRaisesRegex(SystemExit, "NJOBS must be a positive integer"):
+        with self.assertRaisesRegex(SystemExit, "NJOBS must be a positive integer more than one"):
             d2mc.check_args(self._args("--njobs", "0"))
 
     def test_accountWithoutBatch(self):
@@ -130,9 +141,13 @@ class TestCheckArgs(unittest.TestCase):
     def test_missingDirectories(self):
         """The archive, output and input directories must exist"""
         with self.assertRaisesRegex(SystemExit, "Input .* directory does not exist"):
-            d2mc.check_args(self._args(archdir=os.path.join(self._testdir, "nothere")))
+            d2mc.check_args(
+                self._args(archdir=os.path.join(self._testdir, "dir_that_does_not_exist"))
+            )
         with self.assertRaisesRegex(SystemExit, "Output .* directory does not exist"):
-            d2mc.check_args(self._args("--outdir", os.path.join(self._testdir, "nothere")))
+            d2mc.check_args(
+                self._args("--outdir", os.path.join(self._testdir, "dir_that_does_not_exist"))
+            )
         shutil.rmtree(d2mc.input_dir(self._archdir, CASE))
         with self.assertRaisesRegex(SystemExit, "hist directory does not exist"):
             d2mc.check_args(self._args())
@@ -148,6 +163,9 @@ class TestCheckArgs(unittest.TestCase):
             d2mc.check_args(self._args())
 
 
+#
+# Tests for batch and number of jobs
+#
 class TestDefaultNjobs(unittest.TestCase):
     """Tests of default_njobs"""
 
@@ -163,6 +181,9 @@ class TestDefaultNjobs(unittest.TestCase):
             self.assertEqual(d2mc.default_njobs(), d2mc.INTERACTIVE_NJOBS)
 
 
+#
+# Tests for the variable lists
+#
 class TestVarLists(unittest.TestCase):
     """Tests of build_var_list and averaged_vars"""
 
@@ -184,6 +205,9 @@ class TestVarLists(unittest.TestCase):
         self.assertIsNone(d2mc.averaged_vars(None))
 
 
+#
+# Tests for the year/month list and the daily file indexing
+#
 class TestYearMonths(unittest.TestCase):
     """Tests of year_months"""
 
@@ -196,11 +220,17 @@ class TestYearMonths(unittest.TestCase):
         self.assertEqual(yms[12], (2002, 1))
         self.assertEqual(yms[-1], (2002, 12))
 
-    def test_yearZero(self):
-        """A single year, including year 0"""
-        self.assertEqual(d2mc.year_months(0, 0), [(0, month) for month in range(1, 13)])
+    def test_singleYear(self):
+        """A single year, including year 1"""
+        year = 1
+        self.assertEqual(d2mc.year_months(year, year), [(0, month) for month in range(1, 13)])
+        year = d2mc.DEFAULT_YEAR
+        self.assertEqual(d2mc.year_months(year, year), [(year, month) for month in range(1, 13)])
 
 
+#
+# Test the list of daily files and the file count
+#
 class TestDailyFiles(unittest.TestCase):
     """Tests of index_daily_files and check_day_counts"""
 
@@ -209,22 +239,30 @@ class TestDailyFiles(unittest.TestCase):
         # Empty files are enough, the files are found by name
         for month, ndays in enumerate(d2mc.NOLEAP_DAYS, start=1):
             for day in range(1, ndays + 1):
-                self._touch(_daily_name(CASE, 2001, month, day))
+                self._create_empty_file(_daily_name(CASE, 2001, month, day))
         # Files that should be ignored: another case, and other kinds of files
-        self._touch(_daily_name("OTHER", 2001, 1, 1))
-        self._touch(f"{CASE}.cpl.hi.2001-01-01-00000.nc")
-        self._touch(_daily_name(CASE, 2001, 1, 1) + ".bak")
+        self._create_empty_file(_daily_name("DIFFERENT_CASE", 2001, 1, 1))
+        self._create_empty_file(f"{CASE}.cpl.hi.2001-01-01-00000.nc")
+        self._create_empty_file(_daily_name(CASE, 2001, 1, 1) + ".base")
 
     def tearDown(self):
         shutil.rmtree(self._testdir, ignore_errors=True)
 
-    def _touch(self, filename):
+    def _create_empty_file(self, filename):
         """Create an empty file in the test directory"""
         with open(os.path.join(self._testdir, filename), "w", encoding="utf-8"):
             pass
 
     def test_indexDailyFiles(self):
-        """The files are grouped by year and month, sorted, and other files are ignored"""
+        """
+        Check that index_daily_files properly groups and sorts by year and month
+        and ignores any other files
+        """
+        # Files that should be ignored: another case, and other kinds of files
+        self._create_empty_file(_daily_name("DIFFERENT_CASE", 2001, 1, 1))
+        self._create_empty_file(f"{CASE}.cpl.hi.2001-01-01-00000.nc")
+        self._create_empty_file(_daily_name(CASE, 2001, 1, 1) + ".base")
+        #
         files_by_month = d2mc.index_daily_files(self._testdir, CASE)
         self.assertEqual(sorted(files_by_month), d2mc.year_months(2001, 2001))
         for (_, month), files in files_by_month.items():
@@ -235,20 +273,28 @@ class TestDailyFiles(unittest.TestCase):
         )
 
     def test_checkDayCounts_complete(self):
-        """A complete year has no errors"""
+        """Test that checkDayCounts for a complete year is correct"""
         files_by_month = d2mc.index_daily_files(self._testdir, CASE)
         self.assertEqual(d2mc.check_day_counts(files_by_month, d2mc.year_months(2001, 2001)), [])
 
     def test_checkDayCounts_missing(self):
-        """A missing day and a missing year are all reported"""
+        """Test that checkDayCounts reports missing days and years correctly"""
+        # Remove one day from the first year
         os.remove(os.path.join(self._testdir, _daily_name(CASE, 2001, 2, 14)))
+        # NOTE: Setup only created files for the first year, so the second year has no files
         files_by_month = d2mc.index_daily_files(self._testdir, CASE)
         errors = d2mc.check_day_counts(files_by_month, d2mc.year_months(2001, 2002))
         self.assertEqual(len(errors), 13)
+        # There will be an error reported for the missing day in the first year
+        # and each month of the second year
         self.assertEqual(errors[0], "2001-02 has 27 daily files (expected 28)")
         self.assertEqual(errors[1], "2002-01 has 0 daily files (expected 31)")
 
 
+#
+# Test the netCDF variable handling functions for the monthly files that were kept
+# previously -- to make sure they have the needed variables
+#
 class TestNetcdfVars(unittest.TestCase):
     """Tests of file_vars, missing_vars and check_reused_mon_file"""
 
@@ -295,6 +341,8 @@ class TestNetcdfVars(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is missing variables: b"):
             d2mc.check_reused_mon_file(monfile, [self._daily], None)
 
+    # This checks against an original version that had the ALWAYS_VARS on the monthly files
+    # TODO: Remove this since it's not really needed
     def test_checkReusedMonFile_stale(self):
         """A monthly file with the ALWAYS_VARS was made by an older version, so aborts"""
         monfile = self._monfile(["a", "b", d2mc.ALWAYS_VARS[0]])
@@ -302,23 +350,34 @@ class TestNetcdfVars(unittest.TestCase):
             d2mc.check_reused_mon_file(monfile, [self._daily], ["a"])
 
 
+#
+# Check some of the NCO (NetCDF Climate Operators) functions
+#
 class TestCheckNco(unittest.TestCase):
     """Tests of check_nco"""
 
     def test_missingCommand(self):
         """Abort naming the NCO commands that aren't found"""
+        # mock d2mc.shutil with the input arguments below, and the side effects listed
         with mock.patch.object(
-            d2mc.shutil, "which", side_effect=lambda cmd: None if cmd == "ncrcat" else "/bin/x"
+            # lambda is used here to have a small inline function to define the side effects
+            d2mc.shutil,
+            "which",
+            side_effect=lambda cmd: None if cmd == "ncrcat" else "/bin/x",
         ):
             with self.assertRaisesRegex(SystemExit, "NCO commands not found: ncrcat "):
                 d2mc.check_nco()
 
     def test_allFound(self):
         """No abort when all the commands are found"""
+        # mock d2mc.shutil with the input arguments below, and the side effects as listed
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/x"):
             d2mc.check_nco()
 
 
+#
+# Tests of the ncra command for reacord averaging
+#
 class TestNcraCommand(unittest.TestCase):
     """Tests of ncra_command"""
 
@@ -354,31 +413,45 @@ class TestNcraCommand(unittest.TestCase):
         self.assertEqual(d2mc.ncra_command(["f1"], self._out), expected)
 
 
+#
+# Tests of running jobs
+#
 class TestRunJobs(unittest.TestCase):
     """Tests of run_jobs (with a mock runner instead of running the commands)"""
 
     def test_allRun(self):
         """Every non-empty command is run, with an error message naming its output file"""
+        # Create runner as a MagicMock so that it does nothing, but records each call
         runner = mock.MagicMock()
-        d2mc.run_jobs([["a", "o1"], [], ["b", "o2"]], 2, runner=runner)
+        # Run a job in one call sending it three different commands to run at the same time
+        commands = [
+            ["a", "o1"],  # run "a" creating file o1
+            [],  # empty command (output already exists) is skipped
+            ["b", "o2"],  # run "b" creating file o2
+        ]
+        d2mc.run_jobs(commands, 2, runner=runner)
+        # Check that runner had recorded these two calls, and the appropriate error
         runner.assert_has_calls(
             [
                 mock.call(["a", "o1"], "Failed creating o1"),
                 mock.call(["b", "o2"], "Failed creating o2"),
             ],
-            any_order=True,
+            any_order=True,  # running jobs simultaneously we don't know which one will be first
         )
         self.assertEqual(runner.call_count, 2)
 
     def test_oneJobInOrder(self):
         """With one job at a time the commands run in order"""
+        # Create runner as a MagicMock so that it does nothing, but records each call
         runner = mock.MagicMock()
         commands = [[f"c{i}", f"o{i}"] for i in range(5)]
         d2mc.run_jobs(commands, 1, runner=runner)
+        # Check that the calls ran from runner match what's expected
         self.assertEqual([call.args[0] for call in runner.call_args_list], commands)
 
     def test_noCommands(self):
         """Only empty commands runs nothing"""
+        # Create runner as a MagicMock so that it does nothing, but records each call
         runner = mock.MagicMock()
         d2mc.run_jobs([[], []], 4, runner=runner)
         runner.assert_not_called()
@@ -386,6 +459,7 @@ class TestRunJobs(unittest.TestCase):
     def test_failure(self):
         """A failing command (the runner aborts) stops with SystemExit"""
 
+        # Define a runner that aborts if the input command is "bad"
         def runner(cmd, errmsg):
             if cmd[0] == "bad":
                 sys.exit(errmsg)
@@ -394,6 +468,9 @@ class TestRunJobs(unittest.TestCase):
             d2mc.run_jobs([["good", "o1"], ["bad", "o2"], ["good", "o3"]], 2, runner=runner)
 
 
+#
+# Tests of the different output files
+#
 class TestFilenames(unittest.TestCase):
     """Tests of output_filename, mon_file and clim_file"""
 
@@ -410,23 +487,26 @@ class TestFilenames(unittest.TestCase):
         self.assertEqual(d2mc.clim_file("/m", 2), os.path.join("/m", "clim_02.nc"))
 
 
+#
+# Test file output for time and time and climaatology bounds
+#
 class TestTimeValues(unittest.TestCase):
     """Tests of month_bounds, mid_month_times and climatology_bounds_values"""
 
     def test_monthBounds(self):
         """Start and end of each month of a noleap year"""
         bounds = d2mc.month_bounds()
-        self.assertEqual(len(bounds), 12)
-        self.assertEqual(bounds[0], (0, 31))
-        self.assertEqual(bounds[1], (31, 59))
-        self.assertEqual(bounds[-1], (334, 365))
+        self.assertEqual(len(bounds), 12)  # Check that there is just 12 bounds for each month
+        self.assertEqual(bounds[0], (0, 31))  # January
+        self.assertEqual(bounds[1], (31, 59))  # February
+        self.assertEqual(bounds[-1], (334, 365))  # December (last month)
 
     def test_midMonthTimes(self):
         """Middle of each month"""
         times = d2mc.mid_month_times()
-        self.assertEqual(times[0], 15.5)
-        self.assertEqual(times[1], 45.0)
-        self.assertEqual(times[-1], 349.5)
+        self.assertEqual(times[0], 15.5)  # January
+        self.assertEqual(times[1], 45.0)  # Febreary
+        self.assertEqual(times[-1], 349.5)  # December (last month)
 
     def test_climatologyBounds_singleYear(self):
         """Averaging only YEAR gives the bounds of each month of YEAR"""
@@ -441,6 +521,9 @@ class TestTimeValues(unittest.TestCase):
         self.assertTrue(all(start < 0 and end < 0 for start, end in bounds))
 
 
+#
+# Test setting of the time axis
+#
 class TestSetTimeAxis(unittest.TestCase):
     """Tests of set_time_axis"""
 
@@ -451,8 +534,11 @@ class TestSetTimeAxis(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self._testdir, ignore_errors=True)
 
-    def _write_clim(self, with_time_bnds):
-        """Write a 12-record file like the one from ncrcat, optionally with time_bnds"""
+    def _write_clim(self, with_time_bnds=False):
+        """
+        Write a 12-record file like the one from ncrcat, optionally with time_bnds
+        This is a utility function called both ways in later tests
+        """
         with Dataset(self._file, "w") as ncfile:
             ncfile.createDimension("time", None)
             time = ncfile.createVariable("time", "f8", ("time",))
@@ -499,6 +585,9 @@ class TestSetTimeAxis(unittest.TestCase):
         self._check()
 
 
+#
+# Test the copy of the grid varaibles (the ALWAYS_VARS)
+#
 class TestCopyGridVars(unittest.TestCase):
     """Tests of copy_grid_vars"""
 
@@ -506,7 +595,8 @@ class TestCopyGridVars(unittest.TestCase):
         self._testdir = tempfile.mkdtemp()
         self._src = os.path.join(self._testdir, "daily.nc")
         self._dst = os.path.join(self._testdir, "clim.nc")
-        # Like CMEPS: float lon/lat on (time, ny, nx) with a fill value and attributes
+        # Create a CPLHIST history file like from CMEPS:
+        # float lon/lat on (time, ny, nx) with a fill value and attributes
         with Dataset(self._src, "w") as ncfile:
             ncfile.createDimension("time", None)
             ncfile.createDimension("atmImp_ny", 1)
@@ -544,6 +634,9 @@ class TestCopyGridVars(unittest.TestCase):
                 np.testing.assert_array_equal(var[:], base + np.arange(3.0).reshape(1, 3))
 
 
+#
+# Test that adding variable attributes works correctly
+#
 class TestAddVarAttributes(unittest.TestCase):
     """Tests of add_var_attributes"""
 
@@ -584,11 +677,16 @@ class TestAddVarAttributes(unittest.TestCase):
                 self.assertNotIn("coordinates", ncfile.variables[name].ncattrs())
 
 
+#
+# Tests of writing prvenance information is correct
+#
 class TestWriteProvenance(unittest.TestCase):
     """Tests of write_provenance (with the ncatted command mocked)"""
 
     def test_oneNcattedCommand(self):
         """One ncatted --hst command sets the global attributes and deletes file_version"""
+        # mock run_cmnd_output_on_error function as run_cmd that does nothing, but returns as set
+        # mock sys.argv to work as given next
         with mock.patch.object(d2mc, "run_cmd_output_on_error") as run_cmd, mock.patch.object(
             d2mc, "get_ctsm_git_short_hash", return_value="abc1234"
         ), mock.patch.object(sys, "argv", ["daily_to_monthly_clim", "--vars", "a,b", "x"]):
@@ -609,6 +707,9 @@ class TestWriteProvenance(unittest.TestCase):
         self.assertTrue(title[0].endswith("for cyclical year 1850"))
 
 
+#
+# Test the batch options
+#
 class TestBatch(unittest.TestCase):
     """Tests of job_args, batch_script and submit_batch"""
 
@@ -617,8 +718,8 @@ class TestBatch(unittest.TestCase):
         args = d2mc.get_parser().parse_args(["arch", CASE, "2001", "2002"])
         self.assertEqual(d2mc.job_args(args), ["arch", CASE, "2001", "2002"])
 
-    def test_jobArgs_options(self):
-        """The options given are passed on, but not the batch options"""
+    def test_jobArgs_removes_batch_options(self):
+        """Set all options, but show that job_args returns only the non-batch options"""
         args = d2mc.get_parser().parse_args(
             [
                 "--batch",
@@ -651,12 +752,14 @@ class TestBatch(unittest.TestCase):
         )
 
     def test_jobArgs_allVars(self):
-        """--all-vars is passed on"""
+        """Test that --all-vars is passed on when it's called as '-a'"""
         args = d2mc.get_parser().parse_args(["-a", "arch", CASE, "2001", "2002"])
         self.assertEqual(d2mc.job_args(args), ["arch", CASE, "2001", "2002", "--all-vars"])
 
     def test_batchScript(self):
-        """The PBS settings, NCO, the directory and the quoted command line"""
+        """
+        Test that batch_script creates: PBS settings, NCO, the directory and the quoted command
+        """
         argv = ["arch", CASE, "2001", "2002", "--vars", "a,b", "--outdir", "my dir"]
         script = d2mc.batch_script(
             argv, account="P1", walltime="01:00:00", workdir="/work dir", njobs=8
@@ -675,8 +778,13 @@ class TestBatch(unittest.TestCase):
         self.assertEqual(command[2:], argv)
 
     def test_submitBatch(self):
-        """qsub gets the queue and the script on stdin, and the job id is returned"""
+        """
+        Test submitBatch that qsub gets the queue and the script on stdin,
+        and the job id is returned
+        """
         result = subprocess.CompletedProcess([], 0, stdout="1234.desched1\n", stderr="")
+        # mock d2mc.shutil for which to just return qsub path
+        # Then mock d2mc.subprocess as run to return the result
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/qsub"), mock.patch.object(
             d2mc.subprocess, "run", return_value=result
         ) as run:
@@ -685,8 +793,11 @@ class TestBatch(unittest.TestCase):
         self.assertEqual(run.call_args.kwargs["input"], "the script")
 
     def test_submitBatch_fails(self):
-        """A qsub error aborts"""
+        """test that submitBatch fails if the qsub aborts"""
+        # Create a result that mimics a qsub error
         result = subprocess.CompletedProcess([], 1, stdout="", stderr="qsub: bad account")
+        # mock d2mc.shutil on which to return qsub path
+        # Then mock d2mc.subprocess run to return the result
         with mock.patch.object(d2mc.shutil, "which", return_value="/bin/qsub"), mock.patch.object(
             d2mc.subprocess, "run", return_value=result
         ):
@@ -695,6 +806,7 @@ class TestBatch(unittest.TestCase):
 
     def test_submitBatch_noQsub(self):
         """Abort if qsub isn't found"""
+        # mock d2mc.shutil for which, to return nothing as it would if the command wasn't found
         with mock.patch.object(d2mc.shutil, "which", return_value=None):
             with self.assertRaisesRegex(SystemExit, "qsub not found"):
                 d2mc.submit_batch("the script", "main")
