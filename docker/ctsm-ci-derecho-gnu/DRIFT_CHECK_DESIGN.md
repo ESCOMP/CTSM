@@ -267,7 +267,7 @@ see (`ccs_config`, `Dockerfile`, `derecho-versions.ini`, the checker):
 - read `github.event.pull_request.base.ref`; don't hardcode `master`
 
 **Live reads need no modules.** Use the method proven in
-`probe-derecho-modules.yml`: resolve `default` symlinks, take the HDF5 pairing
+`probe-derecho-modules.yml` (deleted 2026-10-26; `git show 31a3fef45:.github/workflows/probe-derecho-modules.yml`): resolve `default` symlinks, take the HDF5 pairing
 from `netcdf`'s `depends_on`, run `nf-config` by absolute path. Loading
 derecho's stack off-derecho is impossible (`cray-mpich` needs Cray PE) and
 unnecessary.

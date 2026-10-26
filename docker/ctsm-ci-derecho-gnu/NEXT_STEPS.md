@@ -365,7 +365,7 @@ kind of documentation and is tracked on its own._
    `runs-on: gha-runner-ctsm` and bind-mount inputdata into the container job.
    Whether container jobs on that runner see `/glade` is **unknown** -- the
    existing `list-glade-cesm-input` job proves only that the *host* does. Worth
-   a probe workflow in the style of `probe-derecho-modules.yml`. Now that
+   a probe workflow in the style of `probe-derecho-modules.yml` (deleted 2026-10-26; `git show 31a3fef45:.github/workflows/probe-derecho-modules.yml`). (Answered since: container jobs on that runner do see `/glade/campaign/cesm/cesmdata/cseg`, measured 2026-10-16.) Now that
    `run_sys_tests --wait` blocks on every launched test and exits nonzero if
    any of them failed, CI has the exit code it needs to fail the job on a
    test failure -- that piece is no longer a gap.
@@ -482,8 +482,8 @@ kind of documentation and is tracked on its own._
      than taking the highest version, take the HDF5 pairing from `netcdf`'s
      `depends_on`, and run `nf-config` by absolute path. Loading derecho's stack
      off derecho is impossible -- `cray-mpich` needs Cray PE -- and unnecessary.
-     `probe-derecho-modules.yml` encodes this.
-   - **`gha-runner-ctsm` cannot reach `/glade/u/apps`, so it cannot host these
+     `probe-derecho-modules.yml` (deleted 2026-10-26; `git show 31a3fef45:.github/workflows/probe-derecho-modules.yml`) encoded this.
+   - **Superseded 2026-10-26 (top of this item): `/glade/u/apps/derecho` and `cesmdev` now reach container jobs.** Originally: **`gha-runner-ctsm` cannot reach `/glade/u/apps`, so it cannot host these
      reads as things stand.** Measured 2026-10-09 by running the probe:
      `/glade/u/apps/derecho/modules` is not visible from the runner. The
      hostname (`gha-runner-ctsm-*-runner-*`) says it is a Kubernetes pod, and
