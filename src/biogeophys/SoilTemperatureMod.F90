@@ -541,8 +541,10 @@ contains
 
       if ( IsProgBuildTemp() )then
          call BuildingTemperature(bounds, num_urbanl, filter_urbanl, num_nolakec, filter_nolakec, &
+                                  num_urbanc, filter_urbanc,                                      &
                                   tk(bounds%begc:bounds%endc, :), urbanparams_inst,               &
-                                  temperature_inst, energyflux_inst, urbantv_inst, atm2lnd_inst)
+                                  temperature_inst, energyflux_inst, urbantv_inst,                &
+                                  waterdiagnosticbulk_inst, waterfluxbulk_inst, atm2lnd_inst)
       end if
 
       do fc = 1,num_nolakec
@@ -621,7 +623,7 @@ contains
     !
     ! !USES:
     use clm_varpar      , only : nlevsno, nlevgrnd, nlevurb, nlevsoi, nlevmaxurbgrnd
-    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock
+    use clm_varcon      , only : denh2o, denice, tfrz, tkwat, tkice, tkair, cpice,  cpliq, thk_bedrock, csol_bedrock, spval
     use landunit_varcon , only : istice, istwet
     use column_varcon   , only : icol_roof, icol_sunwall, icol_shadewall, icol_road_perv, icol_road_imperv
     use clm_varctl      , only : iulog, snow_thermal_cond_method, snow_thermal_cond_glc_method
@@ -690,6 +692,9 @@ contains
          tksatu       =>    soilstate_inst%tksatu_col	     , & ! Input:  [real(r8) (:,:) ]  thermal conductivity, saturated soil [W/m-K]
          thk          =>    soilstate_inst%thk_col             & ! Output: [real(r8) (:,:) ]  thermal conductivity of each layer  [W/m-K] 
          )
+
+       call InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, &
+            bw(bounds%begc:bounds%endc, -nlevsno+1:0), thk(bounds%begc:bounds%endc, -nlevsno+1:0))
 
       ! Thermal conductivity of soil from Farouki (1981)
 
@@ -1632,7 +1637,7 @@ contains
          dlrad                   => energyflux_inst%dlrad_patch             , & ! Input:  [real(r8) (:)   ]  downward longwave radiation blow the canopy [W/m2]
          eflx_traffic            => energyflux_inst%eflx_traffic_lun        , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_wasteheat          => energyflux_inst%eflx_wasteheat_lun      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-         eflx_ventilation        => energyflux_inst%eflx_ventilation_lun    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
+         eflx_ventilation        => energyflux_inst%eflx_ventilation_lun    , & ! Input:  [real(r8) (:)   ]  sensible and latent heat flux from building ventilation (W/m**2)
          eflx_heat_from_ac       => energyflux_inst%eflx_heat_from_ac_lun   , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
          eflx_sh_snow            => energyflux_inst%eflx_sh_snow_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from snow (W/m**2) [+ to atm]
          eflx_sh_soil            => energyflux_inst%eflx_sh_soil_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from soil (W/m**2) [+ to atm]
@@ -1640,7 +1645,7 @@ contains
          eflx_sh_grnd            => energyflux_inst%eflx_sh_grnd_patch      , & ! Input:  [real(r8) (:)   ]  sensible heat flux from ground (W/m**2) [+ to atm]
          eflx_lwrad_net          => energyflux_inst%eflx_lwrad_net_patch    , & ! Input:  [real(r8) (:)   ]  net infrared (longwave) rad (W/m**2) [+ = to atm]
          eflx_wasteheat_patch    => energyflux_inst%eflx_wasteheat_patch    , & ! Input:  [real(r8) (:)   ]  sensible heat flux from urban heating/cooling sources of waste heat (W/m**2)
-         eflx_ventilation_patch  => energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible heat flux from building ventilation (W/m**2)
+         eflx_ventilation_patch  => energyflux_inst%eflx_ventilation_patch  , & ! Input:  [real(r8) (:)   ]  sensible and latent heat flux from building ventilation (W/m**2)
          eflx_heat_from_ac_patch => energyflux_inst%eflx_heat_from_ac_patch , & ! Input:  [real(r8) (:)   ]  sensible heat flux put back into canyon due to removal by AC (W/m**2)
          eflx_traffic_patch      => energyflux_inst%eflx_traffic_patch      , & ! Input:  [real(r8) (:)   ]  traffic sensible heat flux (W/m**2)     
          eflx_anthro             => energyflux_inst%eflx_anthro_patch       , & ! Input:  [real(r8) (:)   ]  total anthropogenic heat flux (W/m**2)  
@@ -2989,5 +2994,37 @@ end subroutine SetMatrix_Snow
   end subroutine BuildingHAC
 
   !-----------------------------------------------------------------------
+  subroutine InitSnowThermPropDiagnostics(bounds, num_nolakec, filter_nolakec, bw, thk)
+    ! Initialize snow thermal property diagnostics (bw, thk) to spval across all
+    ! possible snow layers (j <= 0) prior to SoilThermProp calculations.
+    !
+    ! SoilThermProp only evaluates active layers (snl(c)+1:0). Initializing all layers
+    ! to spval prevents stale values from persisting when snow layers divide later
+    ! in the timestep (e.g. in SnowHydrologyMod). Layers that become inactive later via
+    ! melt or compaction are automatically masked to spval during history accumulation
+    ! by hist_set_snow_field_2d based on the final timestep snl(c) (see issue #3661).
+    ! Note: Lake columns are handled separately by LakeTemperatureMod.
+    use clm_varpar, only : nlevsno
+    use clm_varcon, only : spval
+    type(bounds_type), intent(in) :: bounds
+    integer, intent(in)           :: num_nolakec
+    integer, intent(in)           :: filter_nolakec(:)
+    real(r8), intent(inout)       :: bw(bounds%begc:,-nlevsno+1:)   ! must be passed as the clump section (begc:endc, -nlevsno+1:0)
+    real(r8), intent(inout)       :: thk(bounds%begc:,-nlevsno+1:)  ! must be passed as the clump section (begc:endc, -nlevsno+1:0)
+
+    integer :: fc, c, j
+
+    SHR_ASSERT_ALL_FL((ubound(bw)  == (/bounds%endc, 0/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(thk) == (/bounds%endc, 0/)), sourcefile, __LINE__)
+
+    do j = -nlevsno+1, 0
+       do fc = 1, num_nolakec
+          c = filter_nolakec(fc)
+          bw(c,j)  = spval
+          thk(c,j) = spval
+       end do
+    end do
+
+  end subroutine InitSnowThermPropDiagnostics
 
 end module SoilTemperatureMod
