@@ -241,12 +241,12 @@ def check_args(args):
     Check the command line arguments, aborting if there is a problem
     """
     for name, year in (("BEGYEAR", args.begyear), ("ENDYEAR", args.endyear), ("YEAR", args.year)):
-        if not 0 <= year <= 9999:
-            abort(f"{name} must be an integer from 0 to 9999: {year}")
+        if not 1 <= year <= 9999:
+            abort(f"{name} must be an integer from 1 to 9999: {year}")
     if args.begyear > args.endyear:
         abort(f"BEGYEAR ({args.begyear}) must not be after ENDYEAR ({args.endyear})")
     if args.njobs is not None and args.njobs < 1:
-        abort(f"NJOBS must be a positive integer: {args.njobs}")
+        abort(f"NJOBS must be a positive integer more than one: {args.njobs}")
     if args.account is not None and not args.batch:
         abort("--account is only used with --batch")
     if not args.all_vars and not averaged_vars(args.vars):
@@ -257,7 +257,7 @@ def check_args(args):
         abort(f"Output {args.outdir} output archive directory does not exist")
     indir = input_dir(args.archdir, args.case)
     if not os.path.isdir(indir):
-        abort(f"Input {indir} case directory does not exist")
+        abort(f"Input {indir} case archive directory does not exist")
     #
     # Abort if the output file already exists
     #

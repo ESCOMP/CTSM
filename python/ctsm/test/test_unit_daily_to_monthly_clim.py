@@ -149,7 +149,7 @@ class TestCheckArgs(unittest.TestCase):
                 self._args("--outdir", os.path.join(self._testdir, "dir_that_does_not_exist"))
             )
         shutil.rmtree(d2mc.input_dir(self._archdir, CASE))
-        with self.assertRaisesRegex(SystemExit, "hist directory does not exist"):
+        with self.assertRaisesRegex(SystemExit, "case archive directory does not exist"):
             d2mc.check_args(self._args())
 
     def test_outputExists(self):
@@ -221,9 +221,9 @@ class TestYearMonths(unittest.TestCase):
         self.assertEqual(yms[-1], (2002, 12))
 
     def test_singleYear(self):
-        """A single year, including year 1"""
+        """A single year, including year 1 and the default year"""
         year = 1
-        self.assertEqual(d2mc.year_months(year, year), [(0, month) for month in range(1, 13)])
+        self.assertEqual(d2mc.year_months(year, year), [(1, month) for month in range(1, 13)])
         year = d2mc.DEFAULT_YEAR
         self.assertEqual(d2mc.year_months(year, year), [(year, month) for month in range(1, 13)])
 
