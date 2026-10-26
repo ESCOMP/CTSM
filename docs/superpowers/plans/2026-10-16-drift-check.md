@@ -10,7 +10,7 @@
 
 **Spec:** `docker/ctsm-ci-derecho-gnu/DRIFT_CHECK_DESIGN.md` plus `docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md` item 5. Where they disagree with each other, the decisions in this plan's Context section win, and Task 1 writes those decisions back into both.
 
-**Status: blocked on Jira CCPP-502** (the read-only `/glade/u/apps` mount on `gha-runner-ctsm`). The user's decision on 2026-10-16: no implementation on item 5 until that ticket is answered. Tasks 2–4 do not technically depend on the ticket; Tasks 5 and 6 do (they need `/glade/u/apps` to be validated), and Appendix A exists only if the ticket is refused. This file is `docs/superpowers/specs/2026-10-16-drift-check-plan.md`; NEXT_STEPS item 5 points here.
+**Status: blocked on Jira CCPP-502** (the read-only `/glade/u/apps` mount on `gha-runner-ctsm`). The user's decision on 2026-10-16: no implementation on item 5 until that ticket is answered. Tasks 2–4 and 7 do not technically depend on the ticket; Tasks 5 and 6 do (they need `/glade/u/apps` to be validated), and Appendix A exists only if the ticket is refused. This file is `docs/superpowers/specs/2026-10-16-drift-check-plan.md`; NEXT_STEPS item 5 points here.
 
 ## Context
 
@@ -197,6 +197,41 @@ Verified on 2026-10-16 from a glade login node, so the implementer does not have
 
 ---
 
+### Task 7: Gate the image's couplings to ccs_config's container machine and cime's cprnc
+
+Added 2026-10-26. Depends on Task 2 (the gate's shape, and the staleness guard reads the same `paths:` list); independent of CCPP-502. Can run any time after Task 2.
+
+**Why:** since 2026-10-26 (NEXT_STEPS item 13) the image (a) bakes `docker/ctsm-ci-derecho-gnu/cime-machines/container/config_machines.xml`, a stopgap copy of `ccs_config/machines/container/config_machines.xml` plus one `<CCSM_CPRNC>` line, which CIME reads *instead of* ccs_config's file; and (b) builds cprnc at the Dockerfile's `CPRNC_VERSION`, which is meant to be the cprnc commit cime records for `CIME/non_py/cprnc`. Both are recipe-vs-checkout couplings, which is this gate's job. Today (a) is guarded only by a `diff` step in `cirrus-testing.yml`, which item 10 will make on-demand, and (b) by nothing. Neither drift breaks a case build, so neither would be noticed: a stale (a) masks ccs_config changes to the container machine; a stale (b) leaves the image's cprnc behind cime's.
+
+**Files:**
+- Modify: `docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`, `docker/ctsm-ci-derecho-gnu/test_check_derecho_versions.py`
+- Modify: `.github/workflows/derecho-version-check.yml`
+- Modify: `.github/workflows/cirrus-testing.yml` (remove the `Check container machine override against ccs_config` step)
+- Modify: `docker/ctsm-ci-derecho-gnu/README.md` ("cprnc is built into the image", "Bumping versions"), `docker/ctsm-ci-derecho-gnu/NEXT_STEPS.md` (item 13), and the header comment of `cime-machines/container/config_machines.xml` (which names `cirrus-testing.yml` as the guard)
+
+**Interfaces:**
+- `override_differences(override_path: str, upstream_path: str) -> list[str]` — strip from the override the leading comment block (a line `<!--` through a line `-->`) and the single `<CCSM_CPRNC>` line, then return `difflib.unified_diff` lines against the upstream file; empty list = match. Raise `ValueError` if the override has zero or more than one `<CCSM_CPRNC>` line (that is a malformed override, i.e. a setup problem). Report lines: `✅ container machine override matches ccs_config's except CCSM_CPRNC` / `❌ container machine override differs from ccs_config/machines/container/config_machines.xml beyond CCSM_CPRNC (first lines of the diff …): re-copy ccs_config's file, re-add the CCSM_CPRNC line, rebuild and republish the image (the copy is baked in).`
+- `cime_cprnc_commit(cime_dir: str) -> str` — `git -C <cime_dir> ls-tree HEAD CIME/non_py/cprnc`, the gitlink SHA. Needs cime checked out, not cprnc.
+- `resolve_cprnc_tag(tag: str) -> str` — `git ls-remote https://github.com/ESMCI/cprnc refs/tags/<tag> refs/tags/<tag>^{}`, the peeled commit if present, else the plain one; `ValueError` if the tag does not exist. Network failure propagates (setup problem, per the exit-code constraint).
+- `run_checks` gains `override=…`, `upstream_container_xml=…`, `cime_dir=…` and `resolve_tag=resolve_cprnc_tag` (injectable for tests). Report lines: `✅ CPRNC_VERSION <tag> is the cprnc commit cime records (<sha7>)` / `❌ CPRNC_VERSION <tag> is <sha7> but cime records cprnc <sha7>: set CPRNC_VERSION to cime's cprnc tag, rebuild and republish.`
+
+- [ ] **Step 0 (orchestrator): Reconcile and stop.** Review what Tasks 1–6 landed; re-read this task against the current `cime-machines/` file, `CPRNC_VERSION`, cime's cprnc pin and `cirrus-testing.yml`, and amend anything stale (in particular: whether ccs_config has since gained `CCSM_CPRNC` upstream, in which case the override and half this task go away). Collect questions. **Stop for the user's approval before anything else in this task.**
+- [ ] **Step 1: Write the failing tests** in `test_check_derecho_versions.py`, using temp files and a temp git repo:
+  - `test_override_matches`: override = upstream text with a header comment and a `<CCSM_CPRNC>` line inserted → `[]`.
+  - `test_override_extra_difference_fails`: additionally change `<GMAKE_J>` → non-empty, and the report line starts with `❌ container machine override`.
+  - `test_override_without_cprnc_line_is_setup_error` and `test_override_with_two_cprnc_lines_is_setup_error` → `ValueError`.
+  - `test_cprnc_pin_matches` / `test_cprnc_pin_mismatch_fails`: a temp repo whose index carries a gitlink (`git update-index --add --cacheinfo 160000,<sha>,CIME/non_py/cprnc`, then commit) and a fake `resolve_tag` returning the same / a different SHA.
+  - `test_real_override_matches_checkout`: the real override against the real `ccs_config` file (skip if ccs_config is not populated).
+- [ ] **Step 2: Run** `python docker/ctsm-ci-derecho-gnu/test_check_derecho_versions.py -v` → new tests FAIL.
+- [ ] **Step 3: Implement** in the checker (stdlib only: `difflib`, `subprocess`). Update the module docstring's subject paragraph to say the gate also covers these two couplings.
+- [ ] **Step 4: Run** the checker tests → PASS. Run the real checker on the login node with `--skip-module-tree` → the two new `✅` lines and `OK:` (needs `cime` populated, which a normal checkout is).
+- [ ] **Step 5: Edit `derecho-version-check.yml`.** Add `docker/ctsm-ci-derecho-gnu/cime-machines/container/config_machines.xml` and `cime` to `pull_request: paths:` (so the staleness guard watches them too), with a comment in the style of the existing `ccs_config` one; add a step `bin/git-fleximod update cime` next to the `ccs_config` one.
+- [ ] **Step 6: Remove the `diff` step from `cirrus-testing.yml`** and point the override file's header comment at the gate instead.
+- [ ] **Step 7: Docs.** README "cprnc is built into the image" and "Bumping versions" (`CPRNC_VERSION` is now checked against cime's pin); NEXT_STEPS item 13.
+- [ ] **Step 8: Commit** — `drift check: gate the container machine override and the cprnc pin`. Body states the workflow change is not CI-verified until a PR touching a watched path runs it. Then stop and ask the user to review.
+
+---
+
 ### Appendix A (only if CCPP-502 is refused): cron-written derecho snapshot
 
 Build this only after the ticket is refused; expand into full steps then. Shape, so the interfaces above are not designed against it:
@@ -214,6 +249,7 @@ Build this only after the ticket is refused; expand into full steps then. Shape,
 - PR gate: a PR touching `docker/ctsm-ci-derecho-gnu/Dockerfile` runs `derecho-version-check.yml` on `ubuntu-latest` and passes the staleness guard; after a watched file lands on the base branch and before the PR is updated, a re-run of the gate fails with the `❌ stale` message.
 - Monitor: the `pull_request` self-trigger run of `derecho-drift.yml` (Task 6 Step 9) shows `image-facts` reading all eight keys from `:20261015` and `check` reporting `OK:` with image and live lines.
 - Executable assertion (user, Casper): Task 3 Step 8.
+- Override and cprnc pin (Task 7): a PR touching `cime-machines/container/config_machines.xml` runs the gate and prints both new `✅` lines; a scratch commit that edits a second line of the override, or sets a wrong `CPRNC_VERSION`, turns each into `❌`.
 - Manual derecho-binary validation (user, derecho; once): build a current `_Mmpi-serial` `derecho_gnu` case and confirm its `readelf -d cesm.exe` RPATH names `mpi-serial/2.5.3`, `parallelio/2.6.8`, `esmf/8.9.1`, and that `nf-config --version` under the netcdf prefix prints `4.6.2` — i.e. that the `spack.lock` read in Task 5 reports what a derecho binary actually links. Record the date in `DRIFT_CHECK_DESIGN.md`'s instrument map.
 - Schedule itself: only observable after merge to the default branch; the first Monday run should show all four jobs, with `report` skipped and `heartbeat` printing `⚠️ no completed scheduled run yet`.
 
