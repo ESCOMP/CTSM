@@ -24,6 +24,7 @@ ARG MAKE_JOBS=16
 #
 # The final check runs cprnc on two copies of its own test file. A link that
 # succeeds is not enough: this proves the binary starts and reads netCDF.
+# The expected line is cprnc.F90's own wording (write at line 170 in v1.1.5).
 ARG CPRNC_VERSION=v1.1.5
 RUN set -eu; \
     cd /tmp; \
@@ -38,7 +39,7 @@ RUN set -eu; \
     make install; \
     out="$(/usr/local/bin/cprnc ../test_inputs/control.nc ../test_inputs/control.nc)"; \
     echo "$out" | tail -5; \
-    echo "$out" | grep -q IDENTICAL \
+    echo "$out" | grep -q 'the two files seem to be IDENTICAL' \
         || { echo "ERROR: cprnc does not report a file identical to itself" >&2; exit 1; }; \
     rm -rf /tmp/cprnc
 
