@@ -215,5 +215,14 @@ gfortran -I/usr/local/include /tmp/hello.f90 -o /tmp/hello \
     || fail "compile/link"
 /tmp/hello                                          || fail "run"
 
+# A case build uses the image's cprnc only if the baked container machine
+# override names it; see the cprnc layer in the Dockerfile.
+echo "### cprnc and the container machine override"
+mach=/root/.cime/container/config_machines.xml
+[ -f "$mach" ]                                      || fail "$mach missing"
+cprnc="$(sed -n 's:.*<CCSM_CPRNC>\(.*\)</CCSM_CPRNC>.*:\1:p' "$mach")"
+echo "CCSM_CPRNC=$cprnc"
+[ -x "$cprnc" ]                                     || fail "CCSM_CPRNC '$cprnc' is not an executable"
+
 echo "ALL SMOKE TESTS PASSED"
 INSIDE

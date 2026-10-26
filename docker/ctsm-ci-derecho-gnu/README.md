@@ -85,8 +85,7 @@ listed here: `PIO_ENABLE_NETCDF_INTEGRATION` is ON for derecho's
 build, because the flag adds only source files nothing in CTSM or CDEPS calls
 and a static link never pulls them into `cesm.exe`.
 
-`git` is also built from source (it is not part of derecho's stack): CIME's
-cprnc and PIO builds clone `genf90` via git during the case build. git can't
+`git` is also built from source (it is not part of derecho's stack): the image's own cprnc build clones `genf90` via git, and so would any CIME build step that fetches it during a case build. git can't
 be `dnf install`ed here because that pulls in `openssh`, whose setuid
 `ssh-keysign` fails to `chown` under NCAR's rootless single-UID podman — see
 [NEXT_STEPS.md](NEXT_STEPS.md) for the full story.
@@ -487,6 +486,12 @@ renamed mpiuni stubs do not satisfy. The Dockerfile asserts all of this at build
 time, so a PIO-less or MPI-linking serial ESMF fails the build rather than a
 later run.
 
+### cprnc is built into the image
+
+A case build on CIME's `container` machine would otherwise compile cprnc from cime's submodule, and cprnc v1.1.5 (pinned by cime6.5.5) cannot link against this static stack: it finds the bare `libnetcdf.a`/`libnetcdff.a` with `find_library` and links them without HDF5 and the rest. So the image builds cprnc once, at `/usr/local/bin/cprnc` (`CPRNC_VERSION` in the `Dockerfile`), and points `CCSM_CPRNC` at it; `cime/CIME/build.py` skips the per-case cprnc build when `CCSM_CPRNC` names an existing file. That is also how derecho works.
+
+CIME cannot override a single machine value, only replace a machine's whole `config_machines.xml`, so `cime-machines/container/config_machines.xml` is a **stopgap copy** of ccs_config's container machine with that one line added. It is baked at `/opt/ctsm-container/cime-machines/container/` and copied to `/root/.cime/container/`, where CIME reads it *instead of* ccs_config's; the wrapper scripts install the mounted repo's copy over it. `cirrus-testing.yml` fails if the copy differs from ccs_config's in anything but that line, so a ccs_config bump that touches the container machine is caught rather than masked. Delete the copy once ccs_config carries the line itself.
+
 ### Linking the image's mpi-serial and PIO, not CTSM's submodules
 
 A case build here links the installs above, the way derecho's `mpi-serial` and
@@ -717,7 +722,7 @@ project aimed at local development on Apple Silicon, not a tag on this one.
 Component versions are `ARG`s near the top of the `Dockerfile`
 (`GCC_VERSION`, `HDF5_VERSION`, `NETCDF_C_VERSION`, `NETCDF_FORTRAN_VERSION`,
 `ESMF_VERSION`, `PFUNIT_VERSION`, `MPI_SERIAL_VERSION`, `PIO_VERSION`), plus
-`GIT_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild.
+`GIT_VERSION`, `CPRNC_VERSION` and `MAKE_JOBS` (build parallelism). Change one and rebuild. `CPRNC_VERSION` follows the cprnc commit cime records for `CIME/non_py/cprnc`, not derecho, and nothing checks it; bump the two together.
 
 `check-derecho-versions.py` (run in CI by `derecho-version-check.yml`, or
 locally: `python docker/ctsm-ci-derecho-gnu/check-derecho-versions.py`) fails
@@ -726,7 +731,7 @@ mpi-serial** run on derecho links, so it reads the `mpilib="mpi-serial"` blocks
 of `ccs_config/machines/derecho/config_machines.xml` — `netcdf`, `mpi-serial`,
 `parallelio-serial`, `esmf`, alongside the compiler-level `gcc` — and never the
 MPI ones. That is now the whole image: every version `ARG` above is covered
-except `GIT_VERSION`, since git is not part of derecho's stack at all.
+except `GIT_VERSION`, since git is not part of derecho's stack at all, and `CPRNC_VERSION`, since derecho's cprnc is unversioned.
 
 Two things cannot be read from `config_machines.xml` and are recorded by hand
 in `derecho-versions.ini`:

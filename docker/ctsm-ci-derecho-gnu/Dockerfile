@@ -85,9 +85,10 @@ SHELL ["/bin/bash", "-c"]
 #
 # git is NOT dnf-installed: it pulls in openssh, whose rpm chowns a setuid
 # helper (ssh-keysign) to a non-root id, which fails under NCAR's rootless
-# single-UID podman ("cpio: chown failed"). git IS needed at runtime --
-# CIME's cprnc/PIO builds clone genf90 via git -- so it is built from
-# source in a later layer instead (see the git section near the bottom).
+# single-UID podman ("cpio: chown failed"). git IS needed -- the cprnc
+# build below clones genf90 via git, and so would any CIME build step that
+# fetches it at case-build time -- so it is built from source in a later
+# layer instead (see the git section near the bottom).
 RUN dnf -y install dnf-plugins-core \
     && dnf config-manager --set-enabled crb \
     && dnf -y install \
@@ -294,7 +295,9 @@ RUN cd /tmp \
 # CIME build steps clone helper repos at build time via CMake
 # ExternalProject_Add: cprnc fetches genf90 (github.com/PARALLELIO/genf90),
 # and PIO/CDEPS/CMEPS generate code with genf90 too -- so the image needs a
-# real git at runtime. git cannot be dnf-installed here: it pulls openssh,
+# real git. (cprnc is now built once in this image, near the bottom, so a
+# container case build no longer builds it; see "cprnc" there.) git cannot
+# be dnf-installed here: it pulls openssh,
 # whose rpm chowns a setuid helper (ssh-keysign) to a non-root id, which
 # fails under rootless single-UID podman ("cpio: chown failed"). Building
 # from source avoids openssh entirely -- https clones go through libcurl --
@@ -698,10 +701,9 @@ RUN set -eu; \
 # static archives in /usr/local/lib and links them with none of their
 # dependencies, so the .pc files are never consulted and the link fails exactly
 # as above (measured in CI, 2026-10-16; NEXT_STEPS item 13). The fix for that
-# is to build cprnc once in the image and point CCSM_CPRNC at it -- being
-# proven in Dockerfile.cprnc-probe, whose cprnc build takes its link libraries
-# from these .pc files. Keep this layer for that and for any other pkg-config
-# user.
+# is to build cprnc once in the image and point CCSM_CPRNC at it: see the
+# cprnc layer near the bottom, which takes its link libraries from these .pc
+# files. Keep this layer for that and for any other pkg-config user.
 #
 # Private libraries are appended AFTER the existing Libs:, which is the order a
 # static link needs -- dependencies follow the things that depend on them.
@@ -843,6 +845,68 @@ RUN set -eu; \
 
 RUN mkdir -p "${CESMDATAROOT}/inputdata"
 
+# ---- cprnc, built once here so case builds never build it ----
+# A container case build would otherwise compile cprnc from cime's submodule,
+# and cprnc v1.1.5 (pinned by cime6.5.5) cannot link against this static
+# stack that way: its CMakeLists.txt finds the bare libnetcdf.a/libnetcdff.a
+# with find_library before it ever reaches pkg-config, and links them with
+# none of their HDF5/zlib/curl/xml2 dependencies (measured in CI, 2026-10-16;
+# NEXT_STEPS item 13). derecho never builds cprnc per case either: its machine
+# entry points CCSM_CPRNC at a prebuilt one. The container machine override
+# below does the same for this build, and build.py skips the per-case build
+# when CCSM_CPRNC names an existing file.
+#
+# CPRNC_VERSION should match the cprnc commit cime records for
+# CIME/non_py/cprnc; bump the two together. Nothing checks this:
+# check-derecho-versions.py compares against derecho, and derecho's cprnc is
+# unversioned.
+#
+# The link libraries come from pkg-config and are appended as
+# CMAKE_Fortran_STANDARD_LIBRARIES, i.e. AFTER the two netCDF archives on the
+# link line, which is the order a static link needs. That works whatever
+# cprnc's CMakeLists does to find netCDF. Both packages are named because
+# `pkg-config --libs netcdf-fortran` alone stops at
+# "-L/usr/local/lib -lnetcdff -lnetcdf"; HDF5 and the rest are only in
+# netcdf.pc's answer (see the .pc layer above). Measured: a first build that
+# asked for netcdf-fortran's alone died on undefined H5* symbols. --static is
+# belt and braces.
+#
+# The final check runs cprnc on its own test file against itself. A link that
+# succeeds is not enough: this proves the binary starts and reads netCDF. The
+# expected line is cprnc.F90's own wording (the write at line 170 in v1.1.5).
+ARG CPRNC_VERSION=v1.1.5
+RUN set -eu; \
+    cd /tmp; \
+    git clone --depth 1 --branch "${CPRNC_VERSION}" https://github.com/ESMCI/cprnc; \
+    mkdir cprnc/build; cd cprnc/build; \
+    cmake .. \
+        -DCMAKE_C_COMPILER="${CC}" \
+        -DCMAKE_Fortran_COMPILER="${FC}" \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DCMAKE_Fortran_STANDARD_LIBRARIES="$(pkg-config --static --libs netcdf-fortran netcdf)"; \
+    make -j"${MAKE_JOBS}" VERBOSE=1; \
+    make install; \
+    out="$(/usr/local/bin/cprnc ../test_inputs/control.nc ../test_inputs/control.nc)"; \
+    echo "$out" | tail -5; \
+    echo "$out" | grep -q 'the two files seem to be IDENTICAL' \
+        || { echo "ERROR: cprnc does not report a file identical to itself" >&2; exit 1; }; \
+    rm -rf /tmp/cprnc
+
+# ---- container machine override: point CCSM_CPRNC at the build above ----
+# See the header of cime-machines/container/config_machines.xml for why this
+# is a whole copy of ccs_config's container machine. Baked at a fixed path and
+# dropped in /root/.cime, the same arrangement as
+# cime-macros/gnu_container.cmake (container-common.sh likewise prefers the
+# mounted repo's copy). Fail the build, not a later case build, if the path
+# the override names is not an executable.
+COPY cime-machines/container/config_machines.xml /opt/ctsm-container/cime-machines/container/
+RUN set -eu; \
+    mkdir -p /root/.cime/container; \
+    cp /opt/ctsm-container/cime-machines/container/config_machines.xml /root/.cime/container/; \
+    p="$(sed -n 's:.*<CCSM_CPRNC>\(.*\)</CCSM_CPRNC>.*:\1:p' /root/.cime/container/config_machines.xml)"; \
+    [ -x "$p" ] || { echo "ERROR: CCSM_CPRNC='$p' is not an executable" >&2; exit 1; }; \
+    echo "CCSM_CPRNC=$p"
+
 # ---- build-time record of what the installed stack reports ----
 # netCDF-Fortran's version and netCDF-C's filter set cannot be recovered from a
 # container cesm.exe: this stack is static, so `ldd` is blind to the filter
@@ -915,6 +979,7 @@ LABEL gcc="${GCC_VERSION}" \
       pfunit="${PFUNIT_VERSION}" \
       mpi-serial="${MPI_SERIAL_VERSION}" \
       pio="${PIO_VERSION}" \
+      cprnc="${CPRNC_VERSION}" \
       org.opencontainers.image.description="CTSM build/test image for GitHub Actions CI, matching derecho's gnu stack" \
       org.opencontainers.image.source="https://github.com/ESCOMP/CTSM"
 
