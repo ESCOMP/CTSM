@@ -1,0 +1,150 @@
+name: CIRRUS runner test workflow
+
+env:
+  SIMPLE_TEST_NAME: SMS_D_Ld1_Mmpi-serial.1x1_brazil.IHistClm60BgcQianRsGs
+
+on: [push, pull_request] # Trigger on push or pull request
+
+jobs:
+
+  hello-world:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: Print a little message
+        run: echo "Hello, world!"
+
+  list-glade-cesm-input:
+    runs-on: gha-runner-ctsm
+    steps:
+      - name: List Glade inputdata
+        run: ls /glade/campaign/cesm/cesmdata/cseg/inputdata
+
+  simple-build-run_sys_tests:
+    name: Build one simple case with run_sys_tests
+    runs-on: gha-runner-ctsm
+
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
+      CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg
+
+    # Same image as simple-build-create_test; see the pin comment there.
+    container:
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026
+
+    steps:
+
+      - name: Check out CTSM
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      # run-sys-tests-in-container.sh is for Casper: it launches the image with
+      # podman. This job is already inside the image, so call run_sys_tests
+      # directly with the flags that wrapper injects, plus --no-run: this job
+      # only builds. The ctsm-ci-container defaults put the testroot and
+      # baselines under /scratch, which only the wrapper's mounts provide, so
+      # both are redirected to $RUNNER_TEMP.
+      - name: Call run_sys_tests
+        run: |
+          git checkout -b tmp
+          ./run_sys_tests -t ${SIMPLE_TEST_NAME} \
+            --machine-name ctsm-ci-container --wait \
+            --skip-compare --skip-generate \
+            --testroot-base $RUNNER_TEMP --baseline-root $RUNNER_TEMP/baselines \
+            --extra-create-test-args "--no-run --machine container --compiler gnu --mpilib mpi-serial"
+
+      # In a container job ${{ runner.temp }} is the host's path, not the
+      # container's /__w/_temp where run_sys_tests wrote, so hand the action the
+      # path as the container sees it.
+      - name: Locate test directory
+        if: failure()
+        run: |
+          echo "TEST_DIR_GLOB=$RUNNER_TEMP/tests_*" >> $GITHUB_ENV
+
+      - name: Upload test directory on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: simple-build-run_sys_tests-failed
+          path: ${{ env.TEST_DIR_GLOB }}
+
+  simple-build-create_test:
+    name: Build one simple case with create_test
+    runs-on: gha-runner-ctsm
+
+    env:
+      GIT_CONFIG_COUNT: 1
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: '*'
+      CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg
+    
+    container:
+      # Built from docker/ctsm-ci-derecho-gnu/ and published by hand from Casper;
+      # see that directory's README ("Publishing to GHCR"). The dated tag is
+      # pinned deliberately rather than :latest, so a republish cannot silently
+      # change what CI tested -- bump it here when a new image is published.
+      # The package is public, so no credentials block is needed.
+      #
+      # THIS TAG AND THE _Mmpi-serial BELOW ARE ONE SWITCH. Since NEXT_STEPS
+      # item 4b the image carries no MPICH, so the test name must pin
+      # mpi-serial; without it the test takes the first <MPILIBS> entry of
+      # ccs_config's container machine, which is mpich. And :20261007 predates
+      # 4b, so it does not have the library paths gnu_container.cmake now
+      # hardcodes. Either change alone leaves this job red.
+      #
+      # :20261026 is the first image with cprnc built in and the container
+      # machine override pointing CCSM_CPRNC at it (NEXT_STEPS item 13). An
+      # older tag makes the case build cprnc itself, which fails at link
+      # against this static stack.
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026
+
+    steps:
+
+      # TEMPORARY: CCPP-502's /glade/u/apps mounts were reported added on
+      # 2026-10-26 but probe-derecho-modules.yml (runner pod, no container:)
+      # does not see them. Check whether they reach a container job instead.
+      # Non-fatal on purpose; remove once answered.
+      - name: Look for the /glade/u/apps mounts from inside the container
+        run: |
+          echo "--- under /glade:"; ls /glade || true
+          for p in /glade/u/apps/derecho/modules /glade/u/apps/cesmdev/modules /glade/u/apps/derecho/25.10/spack/opt/spack; do
+            if [ -d "$p" ]; then echo "PRESENT  $p"; else echo "MISSING  $p"; fi
+          done
+          echo "--- glade in the mount table:"; grep glade /proc/mounts || true
+
+      - name: Check out CTSM
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
+
+      # The image replaces ccs_config's container machine with a copy that adds
+      # CCSM_CPRNC; see that file's header. Fail if ccs_config's version has
+      # moved on, rather than let the copy silently mask the change.
+      - name: Check container machine override against ccs_config
+        run: |
+          diff <(sed '/^<!--$/,/^-->$/d; /<CCSM_CPRNC>/d' docker/ctsm-ci-derecho-gnu/cime-machines/container/config_machines.xml) ccs_config/machines/container/config_machines.xml
+
+      - name: Call create_test
+        run: |
+          cime/scripts/create_test --no-run --machine container --output-root $RUNNER_TEMP --test-root $RUNNER_TEMP --verbose ${SIMPLE_TEST_NAME}
+
+      # In a container job ${{ runner.temp }} is the host's path, not the
+      # container's /__w/_temp where create_test wrote, so hand the action the
+      # path as the container sees it.
+      - name: Locate test directory
+        if: failure()
+        run: |
+          echo "TEST_DIR_GLOB=$RUNNER_TEMP/${SIMPLE_TEST_NAME}.*" >> $GITHUB_ENV
+
+      - name: Upload test directory on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: simple-build-create_test-failed
+          path: ${{ env.TEST_DIR_GLOB }}
