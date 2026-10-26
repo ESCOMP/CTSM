@@ -29,8 +29,9 @@ jobs:
       GIT_CONFIG_VALUE_0: '*'
       CESMDATAROOT: /glade/campaign/cesm/cesmdata/cseg
 
+    # Same image as simple-build-create_test; see the pin comment there.
     container:
-      image: docker.io/ncarcisl/cisldev-x86_64-almalinux9-gcc14-mpich:25.08
+      image: ghcr.io/escomp/ctsm/ctsm-ci-derecho-gnu:20261026
 
     steps:
 
@@ -41,10 +42,20 @@ jobs:
         run: |
           bin/git-fleximod update -o
 
+      # run-sys-tests-in-container.sh is for Casper: it launches the image with
+      # podman. This job is already inside the image, so call run_sys_tests
+      # directly with the flags that wrapper injects, plus --no-run: this job
+      # only builds. The ctsm-ci-container defaults put the testroot and
+      # baselines under /scratch, which only the wrapper's mounts provide, so
+      # both are redirected to $RUNNER_TEMP.
       - name: Call run_sys_tests
         run: |
           git checkout -b tmp
-          docker/ctsm-ci-derecho-gnu/run-sys-tests-in-container.sh -t ${SIMPLE_TEST_NAME}
+          ./run_sys_tests -t ${SIMPLE_TEST_NAME} \
+            --machine-name ctsm-ci-container --wait \
+            --skip-compare --skip-generate \
+            --testroot-base $RUNNER_TEMP --baseline-root $RUNNER_TEMP/baselines \
+            --extra-create-test-args "--no-run --machine container --compiler gnu --mpilib mpi-serial"
 
   simple-build-create_test:
     name: Build one simple case with create_test
