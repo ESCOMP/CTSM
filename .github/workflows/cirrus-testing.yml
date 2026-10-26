@@ -57,6 +57,21 @@ jobs:
             --testroot-base $RUNNER_TEMP --baseline-root $RUNNER_TEMP/baselines \
             --extra-create-test-args "--no-run --machine container --compiler gnu --mpilib mpi-serial"
 
+      # In a container job ${{ runner.temp }} is the host's path, not the
+      # container's /__w/_temp where run_sys_tests wrote, so hand the action the
+      # path as the container sees it.
+      - name: Locate test directory
+        if: failure()
+        run: |
+          echo "TEST_DIR_GLOB=$RUNNER_TEMP/tests_*" >> $GITHUB_ENV
+
+      - name: Upload test directory on failure
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: simple-build-run_sys_tests-failed
+          path: ${{ env.TEST_DIR_GLOB }}
+
   simple-build-create_test:
     name: Build one simple case with create_test
     runs-on: gha-runner-ctsm
