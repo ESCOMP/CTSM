@@ -23,10 +23,11 @@ ARG MAKE_JOBS=16
 # links them with none of their HDF5/zlib/curl/xml2 dependencies.
 #
 # Both packages are named because `pkg-config --libs netcdf-fortran` alone
-# stops at "-lnetcdff -lnetcdf": the .pc layer folded netCDF-C's HDF5 & co.
-# into netcdf.pc, not netcdf-fortran.pc, and pkg-config does not follow a
-# Requires.private without --static. Measured: the first probe build linked
-# with exactly that and died on undefined H5* symbols.
+# stops at "-L/usr/local/lib -lnetcdff -lnetcdf"; HDF5 and the rest are only
+# in netcdf.pc's answer ("-lnetcdf -lhdf5_hl -lhdf5 -lm -lz -lxml2 -lcurl", as
+# the .pc layer printed on 2026-10-15). Measured: the first probe build linked
+# with netcdf-fortran's alone and died on undefined H5* symbols. --static is
+# belt and braces.
 #
 # The final check runs cprnc on two copies of its own test file. A link that
 # succeeds is not enough: this proves the binary starts and reads netCDF.
