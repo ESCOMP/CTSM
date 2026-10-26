@@ -345,6 +345,7 @@ class TestNetcdfVars(unittest.TestCase):
         with self.assertRaisesRegex(SystemExit, "is missing variables: b"):
             d2mc.check_reused_mon_file(monfile, [self._daily], None)
 
+
 #
 # Check some of the NCO (NetCDF Climate Operators) functions
 #
