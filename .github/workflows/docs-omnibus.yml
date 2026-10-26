@@ -43,6 +43,9 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
+      - name: Print installed Python packages
+        run: conda list
+
       - name: Text Sphinx builds with omnibus script
         run: |
           cd doc/test/ && ./testing.sh
