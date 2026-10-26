@@ -446,7 +446,9 @@ kind of documentation and is tracked on its own._
    Reasoning, the instrument map and the measurements behind it:
    `DRIFT_CHECK_DESIGN.md`.
 
-   **2026-10-16: implementation plan written, execution deferred until CCPP-502 is answered.** The plan is `docs/superpowers/specs/2026-10-16-drift-check-plan.md`. It records the decisions taken that day -- the executable comparison runs per CI build as a `strings` assertion in `cirrus-testing.yml`; the scheduled monitor compares the published image's as-built facts and the recipe against derecho's live module tree and `spack.lock`, and never builds a derecho binary; a hosted-runner heartbeat catches a silent self-hosted runner; the cron fallback is built only if the mount is refused -- and its Task 1 rewrites this item and `DRIFT_CHECK_DESIGN.md` to match. Until that task runs, the text below predates those decisions where the two differ.
+   **2026-10-26: CCPP-502 answered.** The CIRRUS admin added read-only mounts of `/glade/u/apps/derecho` and `/glade/u/apps/cesmdev` to `gha-runner-ctsm`, at their own paths -- not all of `/glade/u/apps`. Those two are the checker's two module roots, and derecho's `25.10` Spack tree and `spack.lock` live under the first, so they cover what the plan reads; no symlink under them escapes to an unmounted path except `cesmdev/modules/{23.06,23.09,24.12}`, which point into `/glade/u/apps/cseg` and matter only if ccs_config goes back to an env older than `25.10` (checked from a login node, 2026-10-26). **Not yet observed from the runner.** Appendix A of the plan (the cron fallback) is not needed unless the mounts turn out not to work.
+
+   **2026-10-16: implementation plan written, execution deferred until CCPP-502 is answered.** The plan is `docs/superpowers/plans/2026-10-16-drift-check.md`. It records the decisions taken that day -- the executable comparison runs per CI build as a `strings` assertion in `cirrus-testing.yml`; the scheduled monitor compares the published image's as-built facts and the recipe against derecho's live module tree and `spack.lock`, and never builds a derecho binary; a hosted-runner heartbeat catches a silent self-hosted runner; the cron fallback is built only if the mount is refused -- and its Task 1 rewrites this item and `DRIFT_CHECK_DESIGN.md` to match. Until that task runs, the text below predates those decisions where the two differ.
 
    - **One checker script, two workflows.** The PR gate reads the PR branch and
      only in-repo files, runs on any hosted runner, and blocks the merge. The
@@ -496,8 +498,8 @@ kind of documentation and is tracked on its own._
      "does the runner see glade" but "which parts", and the fix is another
      mount of the same shape rather than this item's cron fallback.
 
-     **Requested 2026-10-09: <https://jira.ucar.edu/browse/CCPP-502>.** Until
-     it is answered, neither the scheduled half of `derecho-version-check.yml`
+     **Requested 2026-10-09: <https://jira.ucar.edu/browse/CCPP-502>; answered 2026-10-26 with mounts of `/glade/u/apps/derecho` and `/glade/u/apps/cesmdev` (see the top of this item).** Until
+     it was answered, neither the scheduled half of `derecho-version-check.yml`
      nor this item's live reads can run on the Cirrus runner. The cron
      fallback above is unblocked either way, so a refusal costs a different
      shape, not the feature.
