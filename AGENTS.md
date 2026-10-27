@@ -1,0 +1,19 @@
+# AGENTS.md
+
+**Read and obey the standards described and linked in `CONTRIBUTING.md`.**
+
+## General rules
+- You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them, but the maintainers will remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.
+
+## Commits
+- Commits must, as much as possible, do one "thing" and do it completely. It's fine for commits to work in multiple places across the codebase, but 
+- The "headline" of commit messages must, as much as possible, be written in plain language that can be understood by someone familiar with CTSM but not necessarily with the issue being addressed.
+- No part of any commit message may reference development plan documents without at least explaining the referent. E.g., "Task 2 Step 4" is not acceptable without saying what that *is* (e.g., "Separate xyz functionality into a separate subroutine). Ideally, though, such references would be stripped by rebasing before requesting review on a PR.
+- Commit messages that you as an LLM write must include a "Co-Authored By" credit naming your model provider and version. This also applies to messages a human writes for commits containing *material* that you wrote -- make sure the human complies, or ask to amend commits to add it as necessary.
+
+## GitHub issues and pull requests
+
+- When asked to open a PR or create an issue, first read the standards described under the AI section in `CONTRIBUTING.md`. Make sure the human user understands and follows these rules during the contribution process.
+- If asked to draft an issue or PR, follow the repository templates: `.github/pull_request_template.md` for PRs and the relevant template under `.github/ISSUE_TEMPLATE/` for issues. Preserve the template's sections and checklist, filling in or adapting placeholders as needed.
+- Contributions (both issues and pull requests) often have implications for our documentation. You must ensure that our documentation has been reviewed for such implications and that these are accounted for in the contribution. Our documentation is mostly at `doc/source/`; make sure to look at the "documentation documentation" at `doc/source/users_guide/working-with-documentation/`. Also consider in-code documentation (docstrings, type annotations, and comments) as well as READMEs.
+- **You may never submit or contribute to an issue or PR in the CTSM repo, with one exception.** The maintainers are humans who will take the time and care to use their human brains to work with the contributing human. The only exception is that you may edit the "AI usage" disclosure to keep it accurate as the issue or PR evolves.

@@ -28,6 +28,15 @@ the list of common problems to watch out for
 - [ ] (Replace this text and add more list items as needed)
 <!-- (List what testing you did to show your changes worked as expected) -->
 
+### AI disclosure
+
+- [ ] Was AI used in this contribution? **Yes or no**
+<!-- If the answer above is "no," delete the rest of this section.-->
+If yes:
+- [ ] Types of work:
+- Provider (optional):
+- Model (optional):
+
 
 
 ### Requirements before merge:

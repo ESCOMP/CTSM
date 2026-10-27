@@ -16,6 +16,15 @@ about: Report a problem with the code
 
 **Configurations affected:** [Fill this in if known.]
 
+### AI disclosure
+
+- [ ] Was AI used in this contribution? Yes/no:
+<!-- If the answer above is "no," delete the rest of this section.-->
+If yes:
+- [ ] Types of work:
+- Provider (optional):
+- Model (optional):
+
 ### Details of bug
 
 [Fill in details here.]

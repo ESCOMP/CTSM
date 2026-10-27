@@ -22,3 +22,12 @@ A clear and concise description of what is missing or wrong.
 
 ### Additional context (optional)
 Add any other context or screenshots about the issue here.
+
+### AI disclosure
+
+- [ ] Was AI used in this contribution? **Yes/no**
+<!-- If the answer above is "no," delete the rest of this section.-->
+If yes:
+-  [ ] Types of work:
+- Provider (optional):
+- Model (optional):
