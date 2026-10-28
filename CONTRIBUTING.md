@@ -39,7 +39,7 @@ AI tools make it very easy to find apparent issues and submit suggested changes.
 
 We permit generative AI assistance, but responsibility remains with people. AI assistance must not shift the work of understanding, debugging, or validating a contribution onto maintainers. The same quality, licensing, and reproducibility standards apply whether or not AI is used.
 
-In this policy, "you" refers to the human contributor. AI tools assisting with a contribution should direct their human operator to this policy and remind them to personally review and understand an issue before submission, or the complete set of changes in a PR before requesting review. An AI tool must not claim that the operator has done so unless the operator confirms it.
+In this policy, "you" refers to the human contributor. AI tools drafting an issue or PR (or whose humans say they will be opening one) should direct their human operator to this policy and remind them to personally review and understand an issue before submission, or the complete set of changes in a PR before requesting review. An AI tool must not claim that the operator has done so unless the operator confirms it.
 
 Before requesting review on a PR, personally review and understand the complete set of changes in the PR, whether or not AI was used. This includes code, tests, configuration, documentation, and generated files. If your PR does not yet satisfy this requirement, leave it as a draft.
 
