@@ -383,6 +383,7 @@ contains
             ! rootr effectively defines the active root fraction in each layer      
             if (h2osoi_liqvol(c,j) .le. 0._r8 .or. t_soisno(c,j) .le. tfrz-2._r8) then
                rootr(p,j) = 0._r8
+               rresis(p,j) = 0._r8
             else
                s_node = max(h2osoi_liqvol(c,j)/eff_porosity(c,j),0.01_r8)
 

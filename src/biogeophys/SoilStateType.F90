@@ -82,6 +82,7 @@ module SoilStateType
 
      procedure, public  :: Init         
      procedure, public  :: Restart
+     procedure, public  :: SetValues
      procedure, private :: InitAllocate 
      procedure, private :: InitHistory  
      procedure, private :: InitCold     
@@ -214,17 +215,14 @@ contains
          avgflag='A', long_name='soil matric potential (natural vegetated and crop landunits only)', &
          ptr_col=this%smp_l_col, set_spec=spval, l2g_scale_type='veg')
 
-    this%root_conductance_patch(begp:endp,:) = spval
-!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
-!   call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
-!        avgflag='A', long_name='root conductance each soil layer', &
-!        ptr_patch=this%root_conductance_patch, default='inactive')
+    call this%SetValues(bounds, spval)
+    call hist_addfld2d (fname='KROOT', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='root conductance each soil layer', &
+         ptr_patch=this%root_conductance_patch, default='inactive')
     
-    this%soil_conductance_patch(begp:endp,:) = spval
-!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
-!   call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
-!        avgflag='A', long_name='soil conductance in each soil layer', &
-!        ptr_patch=this%soil_conductance_patch, default='inactive')
+    call hist_addfld2d (fname='KSOIL', units='1/s', type2d='levsoi', &
+         avgflag='A', long_name='soil conductance in each soil layer', &
+         ptr_patch=this%soil_conductance_patch, default='inactive')
 
     if (use_cn) then
        this%bsw_col(begc:endc,:) = spval 
@@ -260,10 +258,9 @@ contains
 
     this%thk_col(begc:endc,-nlevsno+1:0) = spval
     data2dptr => this%thk_col(:,-nlevsno+1:0)
-!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
-!   call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
-!        avgflag='A', long_name='Thermal conductivity', &
-!        ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
+    call hist_addfld2d (fname='SNO_TK', units='W/m-K', type2d='levsno', &
+         avgflag='A', long_name='Thermal conductivity', &
+         ptr_col=data2dptr, no_snow_behavior=no_snow_normal, default='inactive')
 
     call hist_addfld2d (fname='SNO_TK_ICE', units='W/m-K', type2d='levsno', &
          avgflag='A', long_name='Thermal conductivity (ice landunits only)', &
@@ -294,10 +291,9 @@ contains
 
     if (use_cn) then
        this%eff_porosity_col(begc:endc,:) = spval
-!      Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
-!      call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
-!           avgflag='A', long_name='effective porosity = porosity - vol_ice', &
-!           ptr_col=this%eff_porosity_col, default='inactive')
+       call hist_addfld2d (fname='EFF_POROSITY', units='proportion', type2d='levgrnd', &
+            avgflag='A', long_name='effective porosity = porosity - vol_ice', &
+            ptr_col=this%eff_porosity_col, default='inactive')
     end if
 
     if (use_cn) then
@@ -336,6 +332,8 @@ contains
 
     this%smp_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = -1000._r8
     this%hk_l_col(bounds%begc:bounds%endc,1:nlevgrnd) = 0._r8
+
+    call this%SetValues(bounds, spval)
 
   end subroutine InitCold
 
@@ -396,5 +394,37 @@ contains
          end if
     
   end subroutine Restart
+
+  !------------------------------------------------------------------------
+  subroutine SetValues(this, bounds, setval, p)
+    !
+    ! !DESCRIPTION:
+    ! Set the patch-level root and soil conductance diagnostic arrays to setval,
+    ! either over all of bounds or for a single patch p. Used at initialization
+    ! and when a patch leaves the exposed-vegetation filter, so that stale values
+    ! from the last time step it was computed do not persist across timesteps.
+    ! Because these diagnostic fields are not stored in restart files, stale values
+    ! would cause exact-restart divergence between continuous and restarted runs (#3661).
+    !
+    ! !ARGUMENTS:
+    class(soilstate_type), intent(inout) :: this
+    type(bounds_type), intent(in)        :: bounds
+    real(r8), intent(in)                 :: setval
+    integer, intent(in), optional        :: p      ! if present, set values for this patch only
+    !
+    ! !LOCAL VARIABLES:
+    integer :: begp, endp
+    !-----------------------------------------------------------------------
+
+    if (present(p)) then
+       begp = p; endp = p
+    else
+       begp = bounds%begp; endp = bounds%endp
+    end if
+
+    this%root_conductance_patch(begp:endp,:) = setval
+    this%soil_conductance_patch(begp:endp,:) = setval
+
+  end subroutine SetValues
 
 end module SoilStateType
