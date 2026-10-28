@@ -165,20 +165,6 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_gnu.mizuroute-default">
-    <phase name="NLCOMP">
-      <status>FAIL</status>
-      <issue>ESMCI/cime#4966</issue>
-    </phase>
-  </test>
-  
-  <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.derecho_intel.mizuroute-default">
-    <phase name="NLCOMP">
-      <status>FAIL</status>
-      <issue>ESMCI/cime#4966</issue>
-    </phase>
-  </test>
-
   <test name="SMS_D_Ld5.5x5_amazon_rHDMA.I2000Clm60SpMizGs.izumi_nag.mizuroute-default">
     <phase name="RUN">
       <status>FAIL</status>
@@ -195,14 +181,7 @@
 
   <!-- fates test suite failures -->
 
-  <!--- NOTE: This test is also in aux_clm, but just including it here so it's not duplicated -->
-  <test name="ERP_Ld9.f45_f45_mt201.I2000Clm50Fates.derecho_intel.clm-FatesColdAllVars">
-    <phase name="COMPARE_base_rest">
-      <status>FAIL</status>
-      <issue>#3660</issue>
-      <comment>Restart issues with default "inactive" fields added to history by hist_all_fields.</comment>
-    </phase>
-  </test>
+  <!--- NOTE: Tests also in aux_clm can be included under this comment to avoid duplication -->
 
   <!-- This is commented out because cime currently does NOT allow longnames in the XML in the XSD for this file
   <test name="ERS_D_Ld30.f45_f45_mt201.HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP.izumi_nag.clm-FatesColdLandUse">
