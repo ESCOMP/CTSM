@@ -18,7 +18,7 @@ about: Report a problem with the code
 
 ### AI disclosure
 
-- [ ] Was AI used in this contribution? Yes/no:
+- [ ] Was AI used in this contribution? **Yes/no**:
 <!-- If the answer above is "no," delete the rest of this section.-->
 If yes:
 - [ ] Types of work:

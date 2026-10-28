@@ -50,10 +50,12 @@ You must be able to explain why the changes are correct, how they fit CTSM, and 
 **Do not delegate conversations with maintainers to an agent.** The maintainers of this repo are human beings who will use their human brains to review every single line of your contribution. Please show them the same courtesy when discussing an issue or PR.
 
 Every issue and PR must state whether generative AI was used in preparing the contribution, including research, code, tests, documentation, or language assistance. If AI was used, briefly describe how it was used; this description is required. Provider and model are optional. Keep the disclosure current as the PR changes, even if generated material was subsequently rewritten. Ordinary formatters, compilers, and test runners do not require AI disclosure. For example:
-> AI used: Yes
-> Usage: Suggested XML parsing tests and helped edit documentation.
-> Provider (optional): Anthropic
-> Model (optional): Claude Opus 5.5 (extra-high effort)
+
+> - [x] Was AI used in this contribution? **Yes**:
+> If yes:
+> - [x] Types of work: Designing changes, writing tests.
+> - Provider (optional): Anthropic
+> - Model (optional): Claude Opus 5.5 (extra-high effort)
 
 Further instructions can be found in `AGENTS.md`.
 
