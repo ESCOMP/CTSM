@@ -1,6 +1,6 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
-       ctsm5.4.067   slevis 10/27/2026 Move CTSM tests from gx (POP) grids to tx (MOM) grids
+       ctsm5.4.067   slevis 10/28/2026 Move CTSM tests from gx (POP) grids to tx (MOM) grids
        ctsm5.4.066   rgknox 10/24/2026 Add bc_out to FATES restart and remove litter flux recalculations
        ctsm5.4.065 samrabin 10/20/2026 Fix scheduled docs-update-ctsm_pylib workflow
        ctsm5.4.064 samrabin 10/16/2026 b4b-dev merge 2026-10-15
