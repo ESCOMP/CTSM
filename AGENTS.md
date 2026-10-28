@@ -15,6 +15,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
 
 ## GitHub issues and pull requests
+"The CTSM repo" in this section specifically refers to the GitHub repo ESCOMP/CTSM, not forks.
 
 - **You may never submit, edit, comment on, or otherwise interact with an issue or PR in the CTSM repo, with one exception.** The maintainers are humans who will take the time and care to use their human brains to work with the contributing human. The only exception is that you may edit the "AI usage" disclosure section to keep it accurate as the issue or PR evolves.
 - You *are* allowed to help draft issues and PRs. If doing so, first read the standards described under the AI section in `CONTRIBUTING.md`. Make sure the human user understands and follows these rules during the contribution process. Then follow the repository templates: `.github/PULL_REQUEST_TEMPLATE.md` for PRs and the relevant template under `.github/ISSUE_TEMPLATE/` for issues. Preserve the template's sections and checklist, filling in or adapting placeholders as needed.
