@@ -42,9 +42,11 @@ The simplest way to preview your built documentation on Casper is to use [NCAR's
 
 ```{hint}
 Note that if you wait too long after opening your Casper Login VNC Desktop session to click the "Launch Casper Login VNC Desktop" button, it goes away and the session completes.
+```
 
 ```{hint}
 Make sure you click the "Launch Casper Login VNC Desktop" button as instructed above. The page with that button also has a link next to "Session ID:", but that only opens a file browser that will not render the HTML.
+```
 
 If you rebuild the documentation but don't see your changes updated in the webpage, and the reload button doesn't work, you may need to navigate to a different page and then come back.
 
