@@ -13,7 +13,7 @@ Example: Crop Simulation
 ::
 
    > cd cime/scripts
-   > ./create_newcase --case CROP --res f19_f19_mt232 --compset I1850Clm60BgcCrop
+   > ./create_newcase --case CROP --res f19_f19_mt233 --compset I1850Clm60BgcCrop
    > cd CROP
 
    > ./case.setup

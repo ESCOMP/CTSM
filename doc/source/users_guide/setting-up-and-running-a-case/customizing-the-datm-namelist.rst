@@ -89,9 +89,9 @@ If you are using your own data for this mode and it's not at least hourly you'll
 .. _cplhistforcing:
 
 ------------------------------------------
-CPLHISTForcing mode and it's DATM settings
+CPLHIST-CESM3 mode and it's DATM settings
 ------------------------------------------
 
-In ``CPLHISTForcing`` mode the model is assumed to have 3-hourly for a global grid from a previous CESM simulation. Like ``CLM_QIAN`` mode the data is divided into three streams: one for precipitation, one for solar, and one for everything else. The time-stamps for Coupler history files for CESM is at the end of the interval, so the ``offset`` needs to be set in order to adjust the time-stamps to what it needs to be for the ``tintalgo`` settings. For precipitation ``taxmode`` is set to ``nearest`` so the ``offset`` is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For solar ``taxmode`` is set to ``coszen`` so the offset is set to ``-10800`` seconds so that the ending time-step is adjust by three hours to the beginning of the interval. For everything else ``taxmode`` is set to ``linear`` so the offset is set to ``-5400`` seconds so that the ending time-step is adjusted by an hour and half to the middle of the interval. For an example of such a case see :ref:`running-with-moar-data`.
+In ``CPLHIST-CESM3`` mode the model uses CPLHIST data from a previous CESM simulation at temporal frequencies from an hour to daily. The data is divided into several streams: one for for hourly solar, one for 3-hourly non-Solar fluxes, one for 3 hourly state variables, and one for hourly state variables. For an example of such a case see :ref:`running-with-moar-data`.
 
-Normally you wouldn't modify the DATM settings for this mode. However, if you had data at a different frequency than 3-hours you would need to modify the ``offset`` and possibly the ``taxmode``. The other two things that you might modify would be the path to the data or the domain file for the resolution (which is currently hardwired to f09). For data at a different input resolution you would need to change the domain file in the streams file to use a domain file to the resolution that the data comes in on.
+Normally you wouldn't modify the DATM settings for this mode. However, if you had data at a different frequencies you would need to modify the filenames and streams settings to accommodate that.

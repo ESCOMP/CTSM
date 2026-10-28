@@ -12,6 +12,7 @@ module CNVegStateType
   use landunit_varcon, only : istsoil, istcrop
   use LandunitType   , only : lun
   use ColumnType     , only : col
+  use GridcellType   , only : grc
   use PatchType      , only : patch
   use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_patch
   use dynSubgridControlMod, only : get_for_testing_allow_non_annual_changes
@@ -84,6 +85,7 @@ module CNVegStateType
      real(r8) , pointer :: fbac1_col                   (:)     ! col burned area out of conversion region due to land use fire (/sec)
      real(r8) , pointer :: wtlf_col                    (:)     ! col fractional coverage of non-crop Patches (0-1)
      real(r8) , pointer :: lfwt_col                    (:)     ! col fractional coverage of non-crop and non-bare-soil Patches (0-1)
+     real(r8) , pointer :: tgswt_grc                   (:)     ! gridcell fractional coverage of tree, grass, and shrub PFTs (0-1)
      real(r8) , pointer :: farea_burned_col            (:)     ! col fractional area burned (/sec)
 
      real(r8), pointer :: dormant_flag_patch           (:)     ! patch dormancy flag
@@ -164,15 +166,18 @@ contains
     ! !LOCAL VARIABLES:
     integer :: begp, endp
     integer :: begc, endc
+    integer :: begg, endg
     logical :: allows_non_annual_delta
     !------------------------------------------------------------------------
 
     if(alloc_full_veg)then
        begp = bounds%begp; endp= bounds%endp
        begc = bounds%begc; endc= bounds%endc
+       begg = bounds%begg; endg= bounds%endg
     else
        begp = 0;endp = 0
        begc = 0;endc = 0
+       begg = 0;endg = 0
     end if
        
        
@@ -268,6 +273,9 @@ contains
     allocate(this%fbac1_col           (begc:endc))                   ; this%fbac1_col           (:)   = nan
     allocate(this%wtlf_col            (begc:endc))                   ; this%wtlf_col            (:)   = nan
     allocate(this%lfwt_col            (begc:endc))                   ; this%lfwt_col            (:)   = nan
+
+    allocate(this%tgswt_grc           (begg:endg))                   ; this%tgswt_grc           (:)   = nan
+
     allocate(this%farea_burned_col    (begc:endc))                   ; this%farea_burned_col    (:)   = nan
 
     allocate(this%dormant_flag_patch          (begp:endp)) ;    this%dormant_flag_patch          (:) = nan

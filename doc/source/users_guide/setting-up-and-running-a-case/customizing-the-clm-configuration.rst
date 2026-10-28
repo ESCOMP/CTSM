@@ -33,6 +33,7 @@ Below we list each of the CESM configuration items that are specific to CLM. All
    CLM_CONFIG_OPTS
    CLM_CPPDEFS
    CLM_FORCE_COLDSTART
+   CLM_NDEP_FROM_CPL
    CLM_NAMELIST_OPTS
    CLM_NML_USE_CASE
    CLM_USRDAT_NAME
@@ -328,6 +329,9 @@ When ``-irrig on`` is used ``build-namelist`` will try to find surface datasets 
    > cd $CTSMROOT/doc
    > ../bld/build-namelist -sim_year list
 
+``CLM_NDEP_FROM_CPL``
+   when set to TRUE Nitrogen deposition comes from DATM, rather than from CTSM input datasets.TRUE Nitrogen deposition comes from DATM, rather than from CTSM input datasets.
+
 ``CLM_NAMELIST_OPTS``
   passes namelist items into one of the CLM namelists. (See :ref:`precedence-of-opts` for the precedence of this option relative to the others.)
 
@@ -508,8 +512,11 @@ For running "I" cases there are several other noteworthy configuration items tha
 
    CCSM_CO2_PPMV
    CCSM_BGC
+   DATM_CO2_TSERIES
    DATM_MODE
    DATM_PRESAERO
+   DATM_PRESNDEP
+   DATM_PRESO3
    DATM_YR_ALIGN
    DATM_YR_START
    DATM_YR_END
@@ -518,19 +525,40 @@ For running "I" cases there are several other noteworthy configuration items tha
 ``CCSM_CO2_PPMV``
    Sets the mixing ratio of CO2 in parts per million by volume for ALL CESM components to use. Note that most compsets already set this value to something reasonable. Also note that some compsets may tell the atmosphere model to override this value with either historic or ramped values. If the ``CCSM_BGC`` variable is set to something other than "none" the atmosphere model will determine CO2, and CLM will listen and use what the atmosphere sends it. On the CLM side the namelist item ``co2_type`` tells CLM to use the value sent from the atmosphere rather than a value set on it's own namelist.
 
+``DATM_CO2_TSERIES``
+   Sets the time series for CO2 concentrations for the DATM model. This is used to specify how CO2 values change over time. List of valid options include:
+
+  ``cmip7_20tr`` = transient 1850 to year 2000 conditions from CMIP7
+
+  ``cmip5_20tr`` = transient 1850 to year 2000 conditions from CMIP6
+
+  ``cplhist`` = from CPLHIST files from a previous CESM simulation
+
+  ``SSP1-1.9`` = transient conditions for the CMIP6 SSP1-1.9 future scenario
+
+  ``SSP2-4.5`` = transient conditions for the CMIP6 SSP2-4.5 future scenario
+
+  ``SSP3-7.0`` = transient conditions for the CMIP6 SSP3-7.0 future scenario
+
+  ``SSP5-8.5`` = transient conditions for the CMIP6 SSP5-8.5 future scenario
+
+  ``SSP1-2.6`` = transient conditions for the CMIP6 SSP1-2.6 future scenario
+
+  ``SSP4-6.0`` = transient conditions for the CMIP6 SSP4-6.0 future scenario
+
+  ``SSP5-3.4`` = transient conditions for the CMIP6 SSP3-3.4 future scenario
+
 ``DATM_MODE``
    Sets the mode that the DATM model should run in this determines how data is handled as well as what the source of the data will be. Many of the modes are setup specifically to be used for ocean and/or sea-ice modeling. The modes that are designed for use by CLM are (CLM_QIAN, CLMCRUNCEP, CLMCRUNCEPv7, CLMGSWP3v1 and CLM1PT):
    ::
 
-     CLMCRUNCEP
      CLMCRUNCEPv7
+     CLMCRUJRA2024b
+     CLMNLDAS2
      CLMGSWP3v1
      CLM_QIAN
      CLM1PT
-     CPLHISTForcing
-
-``CLMCRUNCEP``
-   The standard mode for CLM4.5 of using global atmospheric data that was developed by CRU using NCEP data from 1901 to 2010 (version 4 of this series). See :ref:`clmcruncep-and-its-datm` for more information.
+     CPLHIST-CESM3
 
 ``CLMCRUNCEPv7``
    Version 7 of the CRUNCEP data from 1901 to 2016. See :ref:`clmcruncep-and-its-datm` for more information.
@@ -538,13 +566,19 @@ For running "I" cases there are several other noteworthy configuration items tha
 ``CLMGSWP3v1``
    GSWP3 version 1 forcing data based on NCEP reanalysis with bias corrections by GSWP3 from 1901 to 2010.
 
+``CLMCRUJRA2024b``
+   CRUJRA forcing data based on CRU reanalysis with bias corrections by JRA for 2024
+
+``CLMNLDAS2``
+   NLDAS2 regional contential US forcing data
+
 ``CLM_QIAN``
    The standard mode for CLM4.0 of using global atmospheric data that was developed by Qian et. al. for CLM using NCEP data from 1948 to 2004. See :ref:`clmqian-and-its-datm` for more information. 
 
 ``CLM1PT``
    This is for the special cases where we have single-point tower data for particular sites. Right now we only have data for three urban locations: Mexico City Mexico, Vancouver Canada, and the urban-c alpha site. We also have data for the US-UMB AmeriFlux tower site for University of Michigan Biological Station. See :ref:`clm1pt-and-its-datm` for more information.
 
-``CPLHISTForcing``
+``CPLHIST-CESM3``
    This is for running with atmospheric forcing from a previous CESM simulation. See :ref:`cplhistforcing` for more information.
 
 ``DATM_PRESAERO``
@@ -554,39 +588,94 @@ For running "I" cases there are several other noteworthy configuration items tha
 
   ``clim_2000`` = constant year 2000 conditions
 
-  ``trans_1850-2000`` = transient 1850 to year 2000 conditions
+  ``hist`` = transient 1850 to year 2000 conditions
 
-  ``rcp2.6`` = transient conditions for the rcp=2.6 W/m2 future scenario
+  ``cplhist`` = from CPLHIST files from a previous CESM simulation
 
-  ``rcp4.5`` = transient conditions for the rcp=4.5 W/m2 future scenario
+  ``SSP1-1.9`` = transient conditions for the CMIP6 SSP1-1.9 future scenario
 
-  ``rcp6.0`` = transient conditions for the rcp=6.0 W/m2 future scenario
+  ``SSP2-4.5`` = transient conditions for the CMIP6 SSP2-4.5 future scenario
 
-  ``rcp8.5`` = transient conditions for the rcp=8.5 W/m2 future scenario
+  ``SSP3-7.0`` = transient conditions for the CMIP6 SSP3-7.0 future scenario
 
-  ``pt1_pt1`` = read in single-point or regional datasets
+  ``SSP5-8.5`` = transient conditions for the CMIP6 SSP5-8.5 future scenario
+
+  ``SSP1-2.6`` = transient conditions for the SSP1-2.6 future scenario
+
+  ``SSP4-6.0`` = transient conditions for the CMIP6 SSP4-6.0 future scenario
+
+  ``SSP5-3.4`` = transient conditions for the CMIP6 SSP3-3.4 future scenario
+
+``DATM_PRESNDEP``
+  sets the prescribed nitrogen deposition mode when it comes from the data atmosphere model (to do this set CLM_NDEP_FROM_CPL==TRUE) . The list of valid options include:
+
+  ``clim_1850_cmip7`` = constant year 1850 conditions from CMIP7
+
+  ``clim_2000_cmip7`` = constant year 2000 conditions from CMIP7
+
+  ``hist_cmip7`` = transient 1850 to year 2000 conditions from CMIP7
+
+  ``clim_1850_cesm3`` = constant year 1850 conditions from a CESM3 spinup simulation
+
+  ``clim_1850_cmip6`` = constant year 1850 conditions used for CMIP6, from a CESM2.0 WACCM simulation
+
+  ``clim_2000_cmip6`` = constant year 2000 conditions from CMIP6, from a CESM2.0 WACCM simulation
+
+  ``hist_cmip6`` = transient 1850 to year 2000 conditions from CMIP6, from a CESM2.0 WACCM simulation
+
+  ``cplhist`` = from CPLHIST files from a previous CESM simulation
+
+  ``SSP1-1.9`` = transient conditions for the CMIP6 SSP1-1.9 future scenario
+
+  ``SSP2-4.5`` = transient conditions for the CMIP6 SSP2-4.5 future scenario
+
+  ``SSP3-7.0`` = transient conditions for the CMIP6 SSP3-7.0 future scenario
+
+  ``SSP5-8.5`` = transient conditions for the CMIP6 SSP5-8.5 future scenario
+
+  ``SSP1-2.6`` = transient conditions for the CMIP6 SSP1-2.6 future scenario
+
+  ``SSP4-6.0`` = transient conditions for the CMIP6 SSP4-6.0 future scenario
+
+  ``SSP5-3.4`` = transient conditions for the CMIP6 SSP3-3.4 future scenario
+
+``DATM_PRESO3``
+  sets the prescribed surface Ozone concentrations from the data atmosphere model (only needed when o3_veg_stress_method is set to something besides unset in the CTSM namelist). The list of valid options include:
+
+  ``clim_1850`` = constant year 1850 conditions used for CMIP6, from a CESM2.0 WACCM simulation
+
+  ``clim_2000`` = constant year 2000 conditions from CMIP6, from a CESM2.0 WACCM simulation
+
+  ``hist`` = transient 1850 to year 2000 conditions from CMIP6, from a CESM2.0 WACCM simulation
+
+  ``SSP2-4.5`` = transient conditions for the CMIP6 SSP2-4.5 future scenario
+
+  ``SSP3-7.0`` = transient conditions for the CMIP6 SSP3-7.0 future scenario
+
+  ``SSP5-8.5`` = transient conditions for the CMIP6 SSP5-8.5 future scenario
+
+  ``SSP1-2.6`` = transient conditions for the CMIP6 SSP1-2.6 future scenario
 
 DATM_YR_START
-  ``DATM_YR_START`` sets the beginning year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` or ``CPLHISTForcing`` modes.
+  ``DATM_YR_START`` sets the beginning year to cycle the atmospheric data over
 
 DATM_YR_END
-  ``DATM_YR_END`` sets the ending year to cycle the atmospheric data over for ``CLM_QIAN`` or ``CLMCRUNCEP`` or ``CPLHISTForcing`` modes.
+  ``DATM_YR_END`` sets the ending year to cycle the atmospheric data over
 
 DATM_YR_ALIGN
   ``DATM_YR_START`` and ``DATM_YR_END`` determine the range of years to cycle the atmospheric data over, and ``DATM_YR_ALIGN`` determines which year in that range of years the simulation will start with.
 
 DATM_CPLHIST_CASE
-  ``DATM_CPLHIST_CASE`` sets the casename to use for the ``CPLHISTForcing`` mode.
+  ``DATM_CPLHIST_CASE`` sets the casename to use for the ``CPLHIST-CESM3`` mode.
 
 -----------------------------
 Downloading DATM Forcing Data
 -----------------------------
 
-In Chapter One of the `CESM User's Guide <link-to-CESM-UG>`_ there is a section on "Downloading input data". The normal process of setting up cases will use the "scripts/ccsm_utils/Tools/check_input_data" script to retrieve data from the CESM subversion inputdata repository. This is true for the standard `CLM_QIAN` forcing as well.
+In Chapter One of the `CESM User's Guide <link-to-CESM-UG>`_ there is a section on "Downloading input data". The normal process of setting up cases will use the "scripts/ccsm_utils/Tools/check_input_data" script to retrieve data from the CESM G-DEX inputdata repository. This is true for the standard `CLMCRUJRA2024b` forcing as well.
 
-The `CLMCRUNCEP` data is uploaded into the subversion inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). Because of its size you may also need to download it onto a separate disk space. We have done that on derecho for example where it resides in ``$ENV{CESMROOT}/lmwg`` while the rest of the input data resides in ``$ENV{CESMDATAROOT}/inputdata``. The data is also already available on: janus, franklin, and hopper. If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_YR_START`` and ``DATM_YR_END`` in say 20 year sections over 1901 to 2010, and then use ``check_input_data`` to export the data.
+The `CLMCRUJRA2024b` data is uploaded into the G-DEX inputdata repository as well -- but as it is 1.1 Terabytes of data downloading it is problematic (*IT WILL TAKE SEVERAL DAYS TO DOWNLOAD THE ENTIRE DATASET USING SUBVERSION*). If you download the data, we recommend that you break your download into several chunks, by setting up a case and setting the year range for ``DATM_YR_START`` and ``DATM_YR_END`` in say 20 year sections over 1901 to 2010, and then use ``check_input_data`` to export the data.
 
-The ``CPLHISTForcing`` DATM forcing data is unique -- because it is large compared to the rest of the input data, and we only have a disk copy on derecho. The DATM assumes the path for derecho of ``/glade/p/cesm/shared_outputdata/cases/ccsm4/$DATM_CPLHIST_CASE`` for the data. So you will need to change this path in order to run on any other machine.
 
 --------------------------------------
 Customizing via the build script files
