@@ -6,7 +6,7 @@
 - You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them, but the maintainers will remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.
 
 ## Commits
-- Commits must, as much as possible, do one "thing" and do it completely. It's fine for commits to work in multiple places across the codebase, but 
+- Commits must, as much as possible, do one "thing" and do it completely. It's fine for commits to work in multiple places across the codebase, if this is necessary to perform one coherent step of development.
 - The "headline" of commit messages must, as much as possible, be written in plain language that can be understood by someone familiar with CTSM but not necessarily with the issue being addressed.
 - No part of any commit message may reference development plan documents without at least explaining the referent. E.g., "Task 2 Step 4" is not acceptable without saying what that *is* (e.g., "Separate xyz functionality into a separate subroutine). Ideally, though, such references would be stripped by rebasing before requesting review on a PR.
 - Commit messages that you as an LLM write must include a "Co-Authored-By" credit at the end naming your model and version. This also applies to messages a human writes for commits containing *material* that you wrote -- make sure the human complies, or ask to amend commits to add it as necessary. For example:
