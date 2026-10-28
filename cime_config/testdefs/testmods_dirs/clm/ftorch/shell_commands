@@ -1,0 +1,2 @@
+#!/bin/bash
+./xmlchange USE_FTORCH=TRUE
