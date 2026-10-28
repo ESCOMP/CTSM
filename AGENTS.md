@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**Read and obey the standards described and linked in `CONTRIBUTING.md`.**
+**Read and obey all standards described and linked in `CONTRIBUTING.md`.**
 
 ## General rules
 - You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them, but the maintainers will remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.
@@ -13,7 +13,6 @@
 
 ## GitHub issues and pull requests
 
-- When asked to open a PR or create an issue, first read the standards described under the AI section in `CONTRIBUTING.md`. Make sure the human user understands and follows these rules during the contribution process.
-- If asked to draft an issue or PR, follow the repository templates: `.github/PULL_REQUEST_TEMPLATE.md` for PRs and the relevant template under `.github/ISSUE_TEMPLATE/` for issues. Preserve the template's sections and checklist, filling in or adapting placeholders as needed.
+- **You may never submit or contribute to an issue or PR in the CTSM repo, with one exception.** The maintainers are humans who will take the time and care to use their human brains to work with the contributing human. The only exception is that you may edit the "AI usage" disclosure section to keep it accurate as the issue or PR evolves.
+- You *are* allowed to help draft issues and PRs. If doing so, first read the standards described under the AI section in `CONTRIBUTING.md`. Make sure the human user understands and follows these rules during the contribution process. Then follow the repository templates: `.github/PULL_REQUEST_TEMPLATE.md` for PRs and the relevant template under `.github/ISSUE_TEMPLATE/` for issues. Preserve the template's sections and checklist, filling in or adapting placeholders as needed.
 - Contributions (both issues and pull requests) often have implications for our documentation. You must ensure that our documentation has been reviewed for such implications and that these are accounted for in the contribution. Our documentation is mostly at `doc/source/`; make sure to look at the "documentation documentation" at `doc/source/users_guide/working-with-documentation/`. Also consider in-code documentation (docstrings, type annotations, and comments) as well as READMEs.
-- **You may never submit or contribute to an issue or PR in the CTSM repo, with one exception.** The maintainers are humans who will take the time and care to use their human brains to work with the contributing human. The only exception is that you may edit the "AI usage" disclosure to keep it accurate as the issue or PR evolves.
