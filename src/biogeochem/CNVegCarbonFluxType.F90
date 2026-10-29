@@ -367,7 +367,7 @@ module CNVegCarbonFluxType
      real(r8), pointer :: er_col                                    (:)     ! (gC/m2/s) total ecosystem respiration, autotrophic + heterotrophic
      real(r8), pointer :: litfire_col                               (:)     ! (gC/m2/s) litter fire losses
      real(r8), pointer :: somfire_col                               (:)     ! (gC/m2/s) soil organic matter fire losses
-     real(r8), pointer :: totfire_col                               (:)     ! (gC/m2/s) total ecosystem fire losses
+     real(r8), pointer :: lit_and_somfire_col                       (:)     ! (gC/m2/s) fire losses from litter and soil organic matter
      real(r8), pointer :: hrv_xsmrpool_to_atm_col                   (:)     ! (gC/m2/s) excess MR pool harvest mortality (p2c)
 
      ! fire code
@@ -1132,7 +1132,7 @@ contains
     allocate(this%er_col                  (begc:endc)) ; this%er_col                  (:) = nan
     allocate(this%litfire_col             (begc:endc)) ; this%litfire_col             (:) = nan
     allocate(this%somfire_col             (begc:endc)) ; this%somfire_col             (:) = nan
-    allocate(this%totfire_col             (begc:endc)) ; this%totfire_col             (:) = nan
+    allocate(this%lit_and_somfire_col     (begc:endc)) ; this%lit_and_somfire_col     (:) = nan
     allocate(this%rr_col                  (begc:endc)) ; this%rr_col                  (:) = nan
     allocate(this%ar_col                  (begc:endc)) ; this%ar_col                  (:) = nan
     allocate(this%gpp_col                 (begc:endc)) ; this%gpp_col                 (:) = nan
@@ -3538,17 +3538,17 @@ contains
         this%litfire_col(begc:endc) = spval
         call hist_addfld1d (fname='LITFIRE', units='gC/m^2/s', &
              avgflag='A', long_name='litter fire losses', &
-             ptr_col=this%litfire_col, default='inactive')
+             ptr_col=this%litfire_col)
 
         this%somfire_col(begc:endc) = spval
         call hist_addfld1d (fname='SOMFIRE', units='gC/m^2/s', &
              avgflag='A', long_name='soil organic matter fire losses', &
-             ptr_col=this%somfire_col, default='inactive')
+             ptr_col=this%somfire_col)
 
-        this%totfire_col(begc:endc) = spval
-        call hist_addfld1d (fname='TOTFIRE', units='gC/m^2/s', &
-             avgflag='A', long_name='total ecosystem fire losses', &
-             ptr_col=this%totfire_col, default='inactive')
+        this%lit_and_somfire_col(begc:endc) = spval
+        call hist_addfld1d (fname='LITandSOMFIRE', units='gC/m^2/s', &
+             avgflag='A', long_name='fire losses from litter and soil org matter', &
+             ptr_col=this%lit_and_somfire_col, default='inactive')
 
         this%fire_closs_col(begc:endc) = spval
         call hist_addfld1d (fname='COL_FIRE_CLOSS', units='gC/m^2/s', &
@@ -3723,10 +3723,10 @@ contains
              avgflag='A', long_name='C13 soil organic matter fire losses', &
              ptr_col=this%somfire_col, default='inactive')
 
-        this%totfire_col(begc:endc) = spval
-        call hist_addfld1d (fname='C13_TOTFIRE', units='gC13/m^2/s', &
-             avgflag='A', long_name='C13 total ecosystem fire losses', &
-             ptr_col=this%totfire_col, default='inactive')
+        this%lit_and_somfire_col(begc:endc) = spval
+        call hist_addfld1d (fname='C13_LITandSOMFIRE', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 fire losses from litter and soil org matter', &
+             ptr_col=this%lit_and_somfire_col, default='inactive')
 
         this%fire_closs_col(begc:endc) = spval
         call hist_addfld1d (fname='C13_COL_FIRE_CLOSS', units='gC13/m^2/s', &
@@ -3883,10 +3883,10 @@ contains
              avgflag='A', long_name='C14 soil organic matter fire losses', &
              ptr_col=this%somfire_col, default='inactive')
 
-        this%totfire_col(begc:endc) = spval
-        call hist_addfld1d (fname='C14_TOTFIRE', units='gC14/m^2/s', &
-             avgflag='A', long_name='C14 total ecosystem fire losses', &
-             ptr_col=this%totfire_col, default='inactive')
+        this%lit_and_somfire_col(begc:endc) = spval
+        call hist_addfld1d (fname='C14_LITandSOMFIRE', units='gC14/m^2/s', &
+             avgflag='A', long_name='C14 fire losses from litter and soil org matter', &
+             ptr_col=this%lit_and_somfire_col, default='inactive')
 
         this%fire_closs_col(begc:endc) = spval
         call hist_addfld1d (fname='C14_COL_FIRE_CLOSS', units='gC14/m^2/s', &
@@ -4765,7 +4765,7 @@ contains
        this%er_col(i)                  = value_column
        this%litfire_col(i)             = value_column
        this%somfire_col(i)             = value_column
-       this%totfire_col(i)             = value_column
+       this%lit_and_somfire_col(i)     = value_column
 
        ! Zero p2c column fluxes
        this%rr_col(i)                  = value_column  
@@ -5408,8 +5408,8 @@ contains
        ! soil organic matter fire losses (SOMFIRE)
        this%somfire_col(c) = 0._r8
 
-       ! total ecosystem fire losses (TOTFIRE)
-       this%totfire_col(c) = &
+       ! total fire losses from litter and soil org matter (LITandSOMFIRE)
+       this%lit_and_somfire_col(c) = &
             this%litfire_col(c) + &
             this%somfire_col(c) 
 
