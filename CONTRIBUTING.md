@@ -1,7 +1,7 @@
 ## How to contribute:
 
-We appreciate that you want to contribute to making CTSM better! Before you submit a pull request, however, we require that you first open an issue (https://github.com/escomp/ctsm/issues/) to
-discuss the changes or additions that you propose. Through the issue discussion, you can
+We appreciate that you want to contribute to making CTSM better! Before you submit a pull request, however, we require that you first open a [GitHub issue](https://github.com/ESCOMP/CTSM/issues/new/choose) or [GitHub discussion](https://github.com/ESCOMP/CTSM/discussions/new/choose) to
+discuss the changes or additions that you propose. That way, you can
 work with other CTSM developers to think about the design and implementation of the changes
 as well as the planning and scheduling for the change to come into CTSM. Making
 contact early in your project will increase the likelihood that your developments can come
