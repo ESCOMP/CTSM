@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 (clm-coding-conventions-page)=
 
 # CLM coding conventions
@@ -411,7 +415,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 
 ### General Guidelines
 
-1. We support Fortran 2003 language features with a few exceptions. Information regarding compiler support for Fortran 2003 features may be found at the [fortran wiki](http://fortranwiki.org/fortran/show/Fortran+2003+status) . The three Fortran 2003 feature that we can't support due to lack of compiler implementation are:
+1. We support Fortran 2003 language features with a few exceptions. Information regarding compiler support for Fortran 2003 features may be found at the [fortran wiki](http://fortranwiki.org/fortran/show/Fortran+2003+status). The three Fortran 2003 feature that we can't support due to lack of compiler implementation are:
    1. finalization
    2. parameterized derived types
    3. derived type I/O
