@@ -424,7 +424,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 ### Performance, debugging and optimization
 
 1. Don't mix up C/C++ and Fortran memory access order; it will slow your code down drastically.
-2. Debug with a debugger (totalview, gdb, idb, pgdbg, etc...) it will save you a lot of time finding errors. For an example see this CISL [example](http://www2.cisl.ucar.edu/resources/yellowstone/code_dev/debugging)
+2. Debug with a debugger (totalview, gdb, idb, pgdbg, etc...) it will save you a lot of time finding errors.
    1. Adding Write statements to your code and dumping variable values also can work very well in finding problems.
 3. Be aware of the memory footprint of additional code. Try to keep increases in memory use low. Use [Valgrind](http://valgrind.org/) or similar tools often during your development process to track and monitor memory increases, changes, leaks, etc....
 4. Performance
