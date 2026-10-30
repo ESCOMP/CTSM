@@ -6,7 +6,7 @@
 
 ## CLM Coding Conventions
 
-This page is intended as a guide for CLM coding standards, practices and conventions. On this page, we focus on five items that we want all developers to concentrate on. Keep these in the back of your mind as you are programming and refer to them if you have a question. We are more than willing to work with you throughout the process (contact us at [CLM-CMT@cgd.ucar.edu](mailto:CLM-CMT@cgd.ucar.edu)). If code doesn't generally conform to these items then it will delay the tagging process and we will ask you to modify your code accordingly.
+This page is intended as a guide for CLM coding standards, practices and conventions. On this page, we focus on five items that we want all developers to concentrate on. Keep these in the back of your mind as you are programming and refer to them if you have a question. We are more than willing to work with you throughout the process as needed; please contact us at [ctsm-support@ucar.edu](mailto:ctsm-support@ucar.edu) or on your GitHub discussion, issue, or pull request. If code doesn't generally conform to these items then it will delay the tagging process and we will ask you to modify your code accordingly.
 
 Our past experiences have led us to document a more [Comprehensive list of standards](#comprehensive-list-of-standards) that we are striving for. You will find constructs that do not follow these guidelines and we are updating the legacy CLM code base as time and resources permit.
 
@@ -407,7 +407,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
 
 ## Comprehensive list of standards
 
-These conventions cover some of the more detailed aspects of CLM code design. It is intended to compliment and extend the information found on the [previous page](#clm-coding-conventions). If you have questions please contact us at [CLM-CMT@cgd.ucar.edu](mailto:CLM-CMT@cgd.ucar.edu).
+These conventions cover some of the more detailed aspects of CLM code design. It is intended to compliment and extend the information found on the [previous page](#clm-coding-conventions). If you have questions please contact us at [ctsm-support@ucar.edu](mailto:ctsm-support@ucar.edu) or on your GitHub discussion, issue, or pull request.
 
 ### General Guidelines
 
