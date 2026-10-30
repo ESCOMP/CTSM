@@ -14,7 +14,9 @@ Our past experiences have led us to document a more [Comprehensive list of stand
 
 1. Comment often and include explanations for algorithms and processes. Your code should be easily readable and understandable by anyone else who reads your work.
 
-#### Logical Branches
+```{rubric} Logical Branches
+:heading-level: 4
+```
 
 include a comment after an **else** or **endif** statement. Use something that makes sense for the type of logical branch you are using. This is particularly important when there are large numbers of nested blocks. Look at the second if statement below for an even nicer way to accomplish the same thing without comments.
 
@@ -35,7 +37,9 @@ fates_if: if (use_fates) then
 end if fates_if
 ```
 
-#### Pointer Intent
+```{rubric} Pointer Intent
+:heading-level: 4
+```
 
 If you pass information to a subroutine via a pointer in an associate block, include a comment as to the **intent** (OUT, IN, INOUT) of that pointer. This is in addition to a description of that pointer as well as the type and array dimensions. Also see [**Argument Passing**](#clm-conventions-argument-passing) on this page.
 
@@ -63,15 +67,21 @@ end associate
 1. The **intent** attribute of subroutine input/output variables is used. Argument lists should ***always*** use the **intent** attribute (try to have data be either IN or OUT and avoid INOUT if possible/reasonable).
 2. There are currently three ways in the current code with which you can pass information to subroutines. By interface (best choice), by pointer (second best choice) and by using a global data type (a bad option, but sometimes still necessary within the current CLM framework). We are in the process of refactoring the code so that all data will be passed through the subroutine interface. New code coming in should not pass via global data unless all other options do not work.
 
-#### Subroutine Interface
+```{rubric} Subroutine Interface
+:heading-level: 4
+```
 
 Use the intent keyword and keyword pairs if you have more than a few arguments. Try to consistently pass either all derived types or all FORTRAN types. Passing derived types can shorten the list of arguments and make it more understandable. Below are two examples from CLM, ([subsection i](#clm-conventions-clm-example), below) and RTM, ([subsection ii](#clm-conventions-rtm-example), below), respectively.
 
 (clm-conventions-clm-example)=
 
-##### CLM example from BandDiagonal::BandDiagonalMod.F90
+```{rubric} CLM example from BandDiagonal::BandDiagonalMod.F90
+:heading-level: 5
+```
 
-###### Subroutine definition
+```{rubric} Subroutine definition
+:heading-level: 6
+```
 
 ```{code-block} text
 :caption: Interfaces::CLM. Example from BandDiagonal, definition
@@ -121,7 +131,9 @@ The above code demonstrates a few stylistic points as well:
 - Put a space after each ':' for readability
 - Add comments about expected array sizes, as in \[col, nband, j\]
 
-###### Subroutine call
+```{rubric} Subroutine call
+:heading-level: 6
+```
 
 Follow this example in which BandDiagonal is called from SoilTemperatureMod.F90:
 
@@ -138,7 +150,9 @@ call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop(begc:endc), jbot(begc:endc), 
 
 (clm-conventions-rtm-example)=
 
-##### RTM example from RtmMod.F90
+```{rubric} RTM example from RtmMod.F90
+:heading-level: 5
+```
 
 ```{code-block} text
 :caption: Interfaces::RTM. Example from RtmMod.F90
@@ -179,7 +193,9 @@ subroutine RtmFloodInit(frivinp, begr, endr, nt_rtm, fthresh, evel, &
 ...
 ```
 
-#### Pointer
+```{rubric} Pointer
+:heading-level: 4
+```
 
 We are moving away from using pointers as a way pass information into routines. We still allow this but with the use of an associate statement.
 
@@ -195,7 +211,9 @@ associate(&
 end associate
 ```
 
-#### Global data
+```{rubric} Global data
+:heading-level: 4
+```
 
 We are moving away from using global data as a way pass information into routines. Unless you are extending existing functionality (e.g. using a namelist variable to control some execution) we will generally not allow any new use of a global variable. The other exception to this rule is that it is OK to you use global type declarations.
 
