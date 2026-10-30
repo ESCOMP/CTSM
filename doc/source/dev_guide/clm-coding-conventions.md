@@ -383,7 +383,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
 
 ### Preprocessor Macros (CPP Tokens)
 
-- We are in the process of removing CPP Tokens from all of CLM (see our refactoring page ) and will not accept code using them.
+- We are in the process of removing CPP Tokens from all of CLM (see [our refactoring page](https://wiki.ucar.edu/spaces/ccsm/pages/274339715/Recent+CLM4.5+Refactoring#RecentCLM4.5Refactoring-Preprocessormacroremovalmacro)) and will not accept code using them.
 
   ```{code-block} fortran
   :caption: Preprocessor Macros (CPP Tokens) - Do
