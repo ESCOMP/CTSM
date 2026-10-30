@@ -461,9 +461,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 ### Guidelines for working within the CLM codebase
 
 1. We no longer accept new code with preprocessor macros (CPP tokens).
-2. Namelist items should be defined in the XML files relevant to clm4_5 and clm4_0:
-   1. models/lnd/clm/bld/namelist_files/namelist_definition_clm4_5.xml
-   2. models/lnd/clm/bld/namelist_files/namelist_definition_clm4_0.xml
+2. Namelist items should be defined in the XML files in `bld/namelist_files/`.
 3. Type declarations make use of the shr_kinds_mod module.
 4. All write statements are to iulog from clm_varctl.F90 or to another appropriate logical unit.
 5. Write statements should be within "if ( masterproc )" if statement unless output by all tasks is really desired (such as for error statements).
@@ -480,7 +478,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 
 1. Input datasets or raw datasets used to create input datasets (such as those that require the mksurfdata tool) need to be imported into by one of the CLM maintainers, who have the necessary permissions to do this and can also stage data on DIN_LOC_ROOT for NCAR internal machines.
 2. Input datasets should have names that describe what they are, contain their resolution, and a have creation date at the end (i.e. \_cYYMMDD). Data should be in NetCDF format ending in a .nc extension.
-3. All input datasets will be entered into the CLM XML database in the models/lnd/clm/bld/namelist_files directory.
+3. All input datasets will be entered into the CLM XML database in the `bld/namelist_files/` directory.
 4. CF-metadata conventions should be followed for the files.
 5. The attributes of "units" and "long_name" should be set for all variables. Variables with missing data should have set the "missing_value" and "\_FillValue" attributes.
 6. The attributes "Conventions", "source" and/or "history" should be set as global attributes on the file (references, institution, title and date should be considered as well).
