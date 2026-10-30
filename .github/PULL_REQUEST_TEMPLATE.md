@@ -33,6 +33,7 @@ the list of common problems to watch out for
 - [ ] Was AI used in this contribution? **Yes or no**
 <!-- If the answer above is "no," delete the rest of this section.-->
 If yes:
+<!-- Example types of work: understanding relevant parts of the codebase; outlining implementation ideas; planning implementation; writing code; writing documentation; drafting PR text -->
 - [ ] Types of work:
 - Provider (optional):
 - Model (optional):

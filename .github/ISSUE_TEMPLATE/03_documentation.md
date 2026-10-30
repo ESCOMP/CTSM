@@ -28,6 +28,7 @@ Add any other context or screenshots about the issue here.
 - [ ] Was AI used in this contribution? **Yes/no**:
 <!-- If the answer above is "no," delete the rest of this section.-->
 If yes:
+<!-- Example types of work: understanding relevant parts of the codebase and/or documentation; drafting suggested documentation changes; drafting issue text -->
 - [ ] Types of work:
 - Provider (optional):
 - Model (optional):

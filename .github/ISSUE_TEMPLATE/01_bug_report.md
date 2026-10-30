@@ -21,6 +21,7 @@ about: Report a problem with the code
 - [ ] Was AI used in this contribution? **Yes/no**:
 <!-- If the answer above is "no," delete the rest of this section.-->
 If yes:
+<!-- Example types of work: identifying bug; searching for related issues/PRs; providing minimal working example; drafting issue text -->
 - [ ] Types of work:
 - Provider (optional):
 - Model (optional):
