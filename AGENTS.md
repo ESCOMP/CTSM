@@ -3,7 +3,7 @@
 **Read and obey all standards described in `CONTRIBUTING.md`, including the webpage linked under "Coding Practices and Style."**
 
 ## General rules
-- You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them, but the maintainers will remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.
+- You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them and even open pull requests with them present, but the maintainers will require that you remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.
 
 ## Commits
 - Commits must, as much as possible, do one "thing" and do it completely. It's fine for commits to work in multiple places across the codebase, if this is necessary to perform one coherent step of development.
@@ -22,3 +22,4 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 - You are also allowed to read issues and PRs in the CTSM repo, including ones your human submits. Prompt your human to keep the entire description up to date as the issue or PR evolves. Remember, you are not allowed to edit an issue or PR description except for the "AI disclosure" section.
 - Unless your user tells you otherwise, you are also allowed to push to branches in forks, including branches that have associated PRs in ESCOMP/CTSM.
 - Contributions (both issues and pull requests) often have implications for our documentation. You must ensure that our documentation has been reviewed for such implications and that these are accounted for in the contribution. Our documentation is mostly at `doc/source/`; make sure to look at the "documentation documentation" at `doc/source/users_guide/working-with-documentation/`. Also consider in-code documentation (docstrings, type annotations, and comments) as well as READMEs.
+<!-- Add instructions about how to remove planning documents: Rebase rather than just delete -->
