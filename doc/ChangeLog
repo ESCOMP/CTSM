@@ -1,4 +1,80 @@
 ===============================================================
+Tag name: ctsm5.4.068
+Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
+Date: Fri Oct 30 13:49:29 MDT 2026
+One-line Summary: Move CTSM tests from gx (POP) grids to tx (MOM) grids
+
+Purpose and description of changes
+----------------------------------
+
+ Recent PR #4223 moved CTSM tests from the t232 to the t233 grid. Now I'm moving CTSM, RTM, and MOSART tests from the gx grids (g16, g17, g37) to the tx grids (t233 and t201).
+
+ Includes submodule updates to
+ - rtm and mosart: updated grids in the tests
+ - ccs_config: 3 grids that got missed in an earlier ccs_config tag, plus grid alias clean-up for CISM/DGLC grids
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+ Resolves #2540
+
+Notes of particular relevance for users
+---------------------------------------
+Changes to documentation:
+ Minor updates to replace references to gx grids to the tx grids
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+ Kept a small set of tests (LII_* and PFS) with the gx grids until we generate final initial condition files for them. This is documented in issue #4245.
+
+Changes to tests or testing:
+ - Removed PCT_GLC_MEC from history in the LVG test because it showed a valid difference causing the test to fail in the COMPARE_base_more_virtual phase.
+ - Removed matrixcnOn from a I1850Clm60BgcNoAnthroRtm test as unnecessary because we use matrixcn in SASU mode when we prefer to keep rivers off. I documented the failure in an issue in case paleo users accidentally encounter it. I also opened an issue recommending the development of a specialized SSP matrixcn test that checks that cpl_hist works with NoAnthro with/without rtm.
+ - Removed from expected failures: passing Fates test (expected) and two mizuroute NLCOMP failures now passing (unexpected, see issue https://github.com/ESMCI/cime/issues/4966)
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK versus interim baseline aux_clm-ctsm5.4.067-ccs_config_cesm1.0.94 to confirm b4b
+    izumi ------- OK versus interim baseline aux_clm-ctsm5.4.067-ccs_config_cesm1.0.94 to confirm b4b
+
+Answer changes
+--------------
+Changes answers relative to baseline: Yes
+  Summarize any changes to answers, i.e.,
+    - what code configurations: Cases with grids that changed from a gx to a tx grid; also two tests that had already changed to t233 previously, but now find a t233 finidat and so do not require interpolation (previously did)
+    - what platforms/compilers: All
+    - nature of change: Only due to the grid updates, except due to new finidat for the two tests that had already changed to t233 previously
+
+Other details
+-------------
+List any git submodules updated (cime, rtm, mosart, cism, fates, etc.):
+ Updating from  - ccs_config_cesm1.0.92 to 97
+                - rtm1_0_89 to 90
+                - mosart1.1.13 to mosart1.1.14
+
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4234
+ https://github.com/ESMCI/ccs_config_cesm/pull/307
+ https://github.com/ESMCI/ccs_config_cesm/pull/313
+ https://github.com/ESCOMP/RTM/pull/69
+ https://github.com/ESCOMP/MOSART/pull/131
+
+===============================================================
+===============================================================
 Tag name: ctsm5.4.067
 Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 665 1310)
 Date: Fri Oct 30 10:29:41 AM MDT 2026

@@ -8,6 +8,8 @@ Verifies that adding virtual glacier columns doesn't change answers
 
 This will only pass if there are no column or patch-level outputs in CLM's
 history files.
+
+In PR #4234, which updated from gx (POP) to tx (MOM) grids, this test failed in COMPARE_base_more_virtual until we added the fexcl statement below for PCT_GLC_MEC in both case1 and case2. Bill Sacks posted in this PR that the MOM grid had a grid cell on the south tip of South America with 0% glacier that likely was newly present in the land mask, and with extra virtual glacier (case2) it was given non-zero percentages in each glacier column due to falling within the Antarctica mask. The PCT_GLC_MEC difference was valid and as such could be excluded from the test.
 """
 
 from CIME.SystemTests.system_tests_compare_two import SystemTestsCompareTwo
@@ -34,10 +36,20 @@ class LVG(SystemTestsCompareTwo):
             component="clm",
             contents="glacier_region_behavior = 'single_at_atm_topo', 'UNSET', 'virtual', 'multiple'",
         )
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="hist_fexcl1 = 'PCT_GLC_MEC'",
+        )
 
     def _case_two_setup(self):
         append_to_user_nl_files(
             caseroot=self._get_caseroot(),
             component="clm",
             contents="glacier_region_behavior = 'single_at_atm_topo', 'UNSET', 'virtual', 'virtual'",
+        )
+        append_to_user_nl_files(
+            caseroot=self._get_caseroot(),
+            component="clm",
+            contents="hist_fexcl1 = 'PCT_GLC_MEC'",
         )
