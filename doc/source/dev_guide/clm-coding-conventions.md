@@ -24,7 +24,7 @@ Our past experiences have led us to document a more [Comprehensive list of stand
 
 include a comment after an **else** or **endif** statement. Use something that makes sense for the type of logical branch you are using. This is particularly important when there are large numbers of nested blocks. Look at the second if statement below for an even nicer way to accomplish the same thing without comments.
 
-```{code-block} text
+```{code-block} fortran
 :caption: Comments and Logical Branches
 
 if ( someLogical ) then ! someLogical controls the assignment of x or y
@@ -47,7 +47,7 @@ end if fates_if
 
 If you pass information to a subroutine via a pointer in an associate block, include a comment as to the **intent** (OUT, IN, INOUT) of that pointer. This is in addition to a description of that pointer as well as the type and array dimensions. Also see [**Argument Passing**](#clm-conventions-argument-passing) on this page.
 
-```{code-block} text
+```{code-block} fortran
 :caption: Comments and Pointer Intent
 
 associate(&
@@ -141,7 +141,7 @@ The above code demonstrates a few stylistic points as well:
 
 Follow this example in which BandDiagonal is called from SoilTemperatureMod.F90:
 
-```{code-block} text
+```{code-block} fortran
 :caption: Interfaces::CLM. Example from BandDiagonal, call
 
 call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop(begc:endc), jbot(begc:endc), &
@@ -203,7 +203,7 @@ subroutine RtmFloodInit(frivinp, begr, endr, nt_rtm, fthresh, evel, &
 
 We are moving away from using pointers as a way pass information into routines. We still allow this but with the use of an associate statement.
 
-```{code-block} text
+```{code-block} fortran
 :caption: Comments and Pointer Intent
 
 associate(&
@@ -221,7 +221,7 @@ end associate
 
 We are moving away from using global data as a way pass information into routines. Unless you are extending existing functionality (e.g. using a namelist variable to control some execution) we will generally not allow any new use of a global variable. The other exception to this rule is that it is OK to you use global type declarations.
 
-```{code-block} text
+```{code-block} fortran
 :caption: Global Data. Global data in CanopyFluxesMod.F90
 
 use clm_varctl  , only: iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv
@@ -232,7 +232,7 @@ use clm_varctl  , only: iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv
 !
 ```
 
-```{code-block} text
+```{code-block} fortran
 :caption: Global Data. Using a global type declaration
 
 use decompMod   , only : bounds_type ! using a global type declaration
@@ -251,7 +251,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
    3. Indent of "associate" blocks: 0 spaces
    4. Indent of continuation lines: 5 (this can vary based on look and feel)
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Indentation
 
    ! a dash, '-', represents a space
@@ -284,7 +284,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
 
 1. Don't repeat yourself. If you are copying and pasting code, then write a subroutine or function to encapsulate functionality.
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Example of repeated code - Do
 
    !
@@ -311,7 +311,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
             dayl(p) = calcMaxDayFunc( lat , decl(c) )
    ```
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Example of repeated code - Don't do
 
    !
@@ -345,7 +345,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
    ```
 2. Fortran allows you to place multiple statements on one line. Don't do this.
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Multiple Statements - Do
 
    ! do this:
@@ -354,7 +354,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
    z = 0
    ```
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Multiple Statements - Don't do
 
    ! not this:
@@ -362,7 +362,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
    ```
 3. Use temporary variables often
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Temporary Variables - Do
 
    ! do this:
@@ -372,7 +372,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
    sumVal = additiveFluxes + subFluxes
    ```
 
-   ```{code-block} text
+   ```{code-block} fortran
    :caption: Temporary Variables - Don't do
 
    ! not this:
@@ -385,7 +385,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
 
 - We are in the process of removing CPP Tokens from all of CLM (see our refactoring page ) and will not accept code using them.
 
-  ```{code-block} text
+  ```{code-block} fortran
   :caption: Preprocessor Macros (CPP Tokens) - Do
 
   ! do this:
@@ -396,7 +396,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
   endif
   ```
 
-  ```{code-block} text
+  ```{code-block} fortran
   :caption: Preprocessor Macros (CPP Tokens) - Don't do
 
   ! not this:
