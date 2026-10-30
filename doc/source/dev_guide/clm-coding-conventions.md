@@ -297,7 +297,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
          ! maximum declination hardwired for present-day orbital parameters,
          ! ± 23.4667 degrees = ± 0.409571 radians, use negative value for S. Hem
          max_decl = 0.409571
-         if (grc%lat(g) .lt. 0._r8) max_decl = -max_decl
+         if (grc%lat(g) < 0._r8) max_decl = -max_decl
             max_dayl(c) = calcMaxDayFunc( grc%lat(g) , max_decl )
 
    ! From CanopyFluxesMod:
@@ -324,7 +324,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
          ! maximum declination hardwired for present-day orbital parameters,
          ! ± 23.4667 degrees = ± 0.409571 radians, use negative value for S. Hem
          max_decl = 0.409571
-         if (grc%lat(g) .lt. 0._r8) max_decl = -max_decl
+         if (grc%lat(g) < 0._r8) max_decl = -max_decl
             temp = -(sin(grc%lat(g))*sin(max_decl))/(cos(grc%lat(g)) * cos(max_decl))
             temp = min(1._r8,max(-1._r8,temp))
             max_dayl(c) = 2.0_r8 * 13750.9871_r8 * acos(temp)
