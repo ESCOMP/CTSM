@@ -415,10 +415,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 
 ### General Guidelines
 
-1. We support Fortran 2003 language features with a few exceptions. Information regarding compiler support for Fortran 2003 features may be found at the [fortran wiki](http://fortranwiki.org/fortran/show/Fortran+2003+status). The three Fortran 2003 feature that we can't support due to lack of compiler implementation are:
-   1. finalization
-   2. parameterized derived types
-   3. derived type I/O
+1. We support [Fortran 2003](http://fortranwiki.org/fortran/show/Fortran+2003+status) language features with a few exceptions, along with some [Fortran 2008](http://fortranwiki.org/fortran/show/Fortran+2008+status) features. The Fortran 2003 features that we don't implement are parameterized derived types and derived type I/O. The Fortran 2008 features that we do implement are `newunit=` in `open`, the `erf` and `gamma` intrinsics, and `storage_size`.
 2. Use **implicit none**. All variables must be explicitly typed.
 3. **Don't repeat yourself**. Duplicated code is difficult to maintain. If you find yourself using copy and paste more than once, create a new function or subroutine that encapsulates the desired functionality.
 4. Try to implement subroutine and function interface with argument lists of 9 or less. If you have lists longer than this, break up the functionality into multiple methods and/or use derived types for higher level interfaces. Try to have argument lists short enough that you can make unit-tests for them.
