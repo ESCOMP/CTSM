@@ -423,7 +423,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 
 ### Performance, debugging and optimization
 
-1. Don't mix up C/C++ and Fortran memory access order; it will slow your code down drastically. If you have question contact a CLM-CMT.
+1. Don't mix up C/C++ and Fortran memory access order; it will slow your code down drastically.
 2. Debug with a debugger (totalview, gdb, idb, pgdbg, etc...) it will save you a lot of time finding errors. For an example see this CISL [example](http://www2.cisl.ucar.edu/resources/yellowstone/code_dev/debugging)
    1. Adding Write statements to your code and dumping variable values also can work very well in finding problems.
 3. Be aware of the memory footprint of additional code. Try to keep increases in memory use low. Use [Valgrind](http://valgrind.org/) or similar tools often during your development process to track and monitor memory increases, changes, leaks, etc....
@@ -478,7 +478,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 
 ### Guidelines for adding new datasets
 
-1. Input datasets or raw datasets used to create input datasets (such as those that require the mksurfdata tool) need to be imported into the Subversion inputdata repository by one of the CLM-CMTs. CLM-CMTs have the necessary permissions to do this and can also stage data on DIN_LOC_ROOT for NCAR internal machines.
+1. Input datasets or raw datasets used to create input datasets (such as those that require the mksurfdata tool) need to be imported into by one of the CLM maintainers, who have the necessary permissions to do this and can also stage data on DIN_LOC_ROOT for NCAR internal machines.
 2. Input datasets should have names that describe what they are, contain their resolution, and a have creation date at the end (i.e. \_cYYMMDD). Data should be in NetCDF format ending in a .nc extension.
 3. All input datasets will be entered into the CLM XML database in the models/lnd/clm/bld/namelist_files directory.
 4. CF-metadata conventions should be followed for the files.
