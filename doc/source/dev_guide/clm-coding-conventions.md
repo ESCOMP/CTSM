@@ -389,7 +389,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
   :caption: Preprocessor Macros (CPP Tokens) - Do
 
   ! do this:
-  if (useNewPhysics == .true.) then
+  if (useNewPhysics) then
      ...
      ! do some new physics
      ...
