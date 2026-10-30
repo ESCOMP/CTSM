@@ -172,7 +172,6 @@ module CLMFatesInterfaceMod
    use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-   use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
    use FatesSoilBGCFluxMod    , only : UnPackNutrientAquisitionBCs
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
@@ -1506,11 +1505,6 @@ module CLMFatesInterfaceMod
        
        if ( .not. use_fates_sp ) then
 
-
-          call FluxIntoLitterPools(this%fates(ci)%sites(s), &
-                                   this%fates(ci)%bc_in(s), &
-                                   this%fates(ci)%bc_out(s))
-
           ! (gC/m3/timestep)
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
                cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
@@ -1939,7 +1933,9 @@ module CLMFatesInterfaceMod
          do nc = 1, nclumps
             if (this%fates(nc)%nsites>0) then
                call this%fates_restart%set_restart_vectors(nc,this%fates(nc)%nsites, &
-                                                           this%fates(nc)%sites,this%fates(nc)%bc_in)
+                    this%fates(nc)%sites, &
+                    this%fates(nc)%bc_in, &
+                    this%fates(nc)%bc_out)
             end if
          end do
          !$OMP END PARALLEL DO
@@ -2027,7 +2023,7 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_out)
 
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
-                    this%fates(nc)%sites,this%fates(nc)%bc_in )
+                    this%fates(nc)%sites,this%fates(nc)%bc_in,this%fates(nc)%bc_out)
 
                ! I think ed_update_site and update_hlmfates_dyn are doing some similar
                ! update type stuff, should consolidate (rgk 11-2016)

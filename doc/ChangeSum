@@ -1,5 +1,8 @@
 Tag                   Who      Date  Summary
 ============================================================================================================================
+       ctsm5.4.067   slevis 10/30/2026 Merge b4b-dev to master
+       ctsm5.4.066   rgknox 10/24/2026 Add bc_out to FATES restart and remove litter flux recalculations
+       ctsm5.4.065 samrabin 10/20/2026 Fix scheduled docs-update-ctsm_pylib workflow
        ctsm5.4.064 samrabin 10/16/2026 b4b-dev merge 2026-10-15
        ctsm5.4.063   slevis 10/06/2026 Move CTSM tests from t232 to t233
        ctsm5.4.062   slevis 10/02/2026 Merge b4b-dev to master
