@@ -1,6 +1,6 @@
 # AGENTS.md
 
-**Read and obey all standards described in `CONTRIBUTING.md`, including the webpage linked under "Coding Practices and Style."**
+**Read and obey all standards described in `CONTRIBUTING.md`, including the webpage linked under "Coding Practices and Style," which you can also find in this repo at `doc/source/dev_guide/clm-coding-conventions.md`.**
 
 ## General rules
 - You must assume that any development design or implementation plan documents will not be brought into the repository upon merge. It's fine to commit them and even open pull requests with them present, but the maintainers will require that you remove them before merge. Therefore, all work you do -- code comments, persistent documentation, commit messages -- must stand on their own without reference to those documents.

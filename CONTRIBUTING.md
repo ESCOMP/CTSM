@@ -69,7 +69,7 @@ https://github.com/ESCOMP/ctsm/wiki
 
 #### Coding Practices and Style:
 
-Code conventions: https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines
+Code conventions: https://escomp.github.io/CTSM/dev_guide/clm-coding-conventions.html
 
 #### Code of Conduct:
 
