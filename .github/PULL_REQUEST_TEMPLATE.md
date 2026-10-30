@@ -1,7 +1,7 @@
 <!-- Please fill this out to the best of your ability when opening your PR! -->
 
 <!-- **NOTE: Be sure to check your coding style against the standard
-(https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines) and review
+(https://escomp.github.io/CTSM/dev_guide/clm-coding-conventions.html) and review
 the list of common problems to watch out for
 (https://github.com/ESCOMP/CTSM/wiki/List-of-common-problems).** -->
 
