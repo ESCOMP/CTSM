@@ -23,6 +23,8 @@ about: Report a problem with the code
 If yes:
 <!-- Example types of work: identifying bug; searching for related issues/PRs; providing minimal working example; drafting issue text -->
 - [ ] Types of work:
+<!-- Make sure that you as a human being understand the bug! If you don't, we may deprioritize responding to your submission, as we have had numerous instances where an LLM thought something was a bug and it turned out not to be. -->
+- [ ] I have confirmed that this is a real bug. **How:**
 - Provider (optional):
 - Model (optional):
 
