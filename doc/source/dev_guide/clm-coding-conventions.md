@@ -150,7 +150,7 @@ call BandDiagonal(bounds, -nlevsno, nlevgrnd, jtop(begc:endc), jbot(begc:endc), 
 ```
 
 - The important point here is that the lower and upper bounds are explicitly specified for the gridcell / landunit / col / pft dimension of all array arguments. This is important for threading to work properly.
-- Even for local variables whose dimensions only go begc:endc, please explicitly specify the dimensions as above when passing the array to a subroutine. This will ensure that threading continues to work if the variable's dimensions change (e.g., if it is pulled into clmtype, and thus has dimensions that span the proc_bounds rather than the clump_bounds).
+- Even for local variables whose dimensions only go begc:endc, please explicitly specify the dimensions as above when passing the array to a subroutine. This will ensure that threading continues to work if the variable's dimensions change (e.g., if it is changed to have dimensions that span the proc_bounds rather than the clump_bounds).
 
 (clm-conventions-rtm-example)=
 
@@ -438,15 +438,13 @@ These conventions cover some of the more detailed aspects of CLM code design. It
    1. If a variable is only used in one subroutine it should be local to that subroutine
    2. If a variable is only local to one module then it is declared private to that module.
    3. Public data for modules should be used sparingly.
-3. Only data required for output to history files should be in clmtype.F90.
-4. A separate restart module/subroutine called from CLM restFileMod.F90 should be used to facilitate reading/writing of information to restart files.
-5. In general data initialized in clmtype should have a separate module/subroutine to do so.
-6. The number of variables added to clmtype needs to be limited.
+3. Model state and flux variables live in derived types defined in their own modules (e.g., `CropType.F90`). Add new variables to the relevant type rather than to shared global modules.
+4. Derived types provide their own `Init`, `InitHistory`, `InitCold`, and `Restart` procedures as necessary.
 
 ### Guidelines for Fortran statements
 
 1. Fortran2003 deprecated features will not be accepted in new code (equivalence, common blocks, block data, etc.).
-2. Use statements – should nearly always use the **only** construct to define what variables are being used from a given module. The only case when this is not to be done, is when the list of variables is so long to make this unmanageable taking up more than 6 continue lines (for example with use of the clmtype module).
+2. Use statements – should nearly always use the **only** construct to define what variables are being used from a given module. The only case when this is not to be done is when the list of variables is so long to make this unmanageable taking up more than 6 continue lines.
 3. The "intent" attribute of subroutine input/output variables is used. Argument lists should ALWAYS use the INTENT attribute (try to have data be either IN or OUT and avoid INOUT if possible/reasonable).
 4. Try to limit the use of the "use statement" to other modules to subroutines/functions and read-only parameters.
 5. Data that is read-only, or output from a subroutine/function should be passed down using argument lists.
