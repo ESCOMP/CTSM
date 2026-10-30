@@ -145,7 +145,7 @@ Biogeophysical and biogeochemical processes are simulated for each subgrid land 
 
 #. River routing and river flow (Chapter :numref:`rst_MOSART`)
 
-#. Urban energy balance and climate (Chapters :numref:`rst_Urban Model (CLMU) Overview`, :numref:`rst_Urban Model (CLMU)`)
+#. Urban energy balance and climate (Chapter :numref:`rst_Urban Model (CLMU)`)
 
 #. Vegetation carbon and nitrogen allocation (Chapter :numref:`rst_CN Allocation`)
 
