@@ -1,10 +1,9 @@
 ## How to contribute:
 
-We recommend that you first open an issue (https://github.com/escomp/ctsm/issues/) to
+We appreciate that you want to contribute to making CTSM better! Before you submit a pull request, however, we require that you first open an issue (https://github.com/escomp/ctsm/issues/) to
 discuss the changes or additions that you propose. Through the issue discussion, you can
 work with other CTSM developers to think about the design and implementation of the changes
-as well as the planning and scheduling for the change to come into CTSM. An alternative is
-to contact the key software and science developers via ctsm-software@ucar.edu. Making
+as well as the planning and scheduling for the change to come into CTSM. Making
 contact early in your project will increase the likelihood that your developments can come
 into CTSM.
 
@@ -37,7 +36,7 @@ Please keep pull requests focused and small enough for the very busy maintainers
 
 In this policy, "you" refers to the human contributor. AI tools drafting an issue or PR (or whose humans say they will be opening one) should direct their human operator to this policy and remind them to personally review and understand an issue before submission, or the complete set of changes in a PR before requesting review. An AI tool must not claim that the operator has done so unless the operator confirms it.
 
-AI tools make it very easy to find apparent issues and submit suggested changes. If what you have found is not already an issue in this repo, we **strongly recommend** opening an issue or discussion here, as described at the top of this document.
+AI tools make it very easy to find apparent issues and submit suggested changes. If what you have found is not already an issue in this repo, you are required to open an issue or discussion here before submitting a pull request, as described at the top of this document.
 
 We permit generative AI assistance, but responsibility remains with people. AI assistance must not shift the work of understanding, debugging, or validating a contribution onto maintainers. The same quality, licensing, and reproducibility standards apply whether or not AI is used.
 
