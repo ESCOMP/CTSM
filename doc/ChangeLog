@@ -1,7 +1,7 @@
 ===============================================================
-Tag name: ctsm5.4.067
+Tag name: ctsm5.4.068
 Originator(s): slevis (Samuel Levis,UCAR/TSS, slevis@ucar.edu)
-Date: Thu Oct 29 10:31:55 AM MDT 2026
+Date: Fri Oct 30 13:49:29 MDT 2026
 One-line Summary: Move CTSM tests from gx (POP) grids to tx (MOM) grids
 
 Purpose and description of changes
@@ -72,6 +72,88 @@ Pull Requests that document the changes (include PR ids):
  https://github.com/ESMCI/ccs_config_cesm/pull/313
  https://github.com/ESCOMP/RTM/pull/69
  https://github.com/ESCOMP/MOSART/pull/131
+
+===============================================================
+===============================================================
+Tag name: ctsm5.4.067
+Originator(s): slevis (Samuel Levis,UCAR/TSS,+1 303 665 1310)
+Date: Fri Oct 30 10:29:41 AM MDT 2026
+One-line Summary: Merge b4b-dev to master
+
+Purpose and description of changes
+----------------------------------
+
+Includes PRs
+#4270 Consolidate introductory urban chapters and figures in the technical note
+#4190 Update on demand notes
+#4247 Fix quoting in check-compset-aliases.sh and paths in check-testlists.yml
+#4257 Add a script to create Aerosol monthly climatology from CPLHIST daily data to use for CESM3/CMIP7 1850 simulations
+#4207 fix(python): resolve submodule paths and support nested CESM checkouts (resolves #2658, #3552)
+#4172 fix(biogeophys): Correct diagnostic array initialization for exact restarts
+#4278 add comments for frozen_q10
+
+Bugs fixed
+----------
+List of CTSM issues fixed (include CTSM Issue # and description) [one per line]:
+#4270 contributes to #3819
+#4190 resolves #4028
+#4247 resolves #4214
+#4257 resolves #4284 and #4285
+#4207 resolves #2658 and #3552
+#4172 resolves #4142 and #3661
+#4278 resolves #4277
+
+Notes of particular relevance for users
+---------------------------------------
+Caveats for users (e.g., need to interpolate initial conditions):
+#4207 enables our python tests to work in ctsm checkouts and in cesm checkouts. I interpret this to mean that the tools being tested should also work in either checkout.
+
+Changes to documentation: As needed
+
+Contributors:
+@olyson
+@ekluzek
+@Santoshkumarpuppala
+@johnpaulalex
+@wwieder
+
+Notes of particular relevance for developers:
+---------------------------------------------
+Caveats for developers (e.g., code that is duplicated that requires double maintenance):
+Developers who run python system tests need to update to the new ctsm_pylib coming in with this PR for all tests to pass.
+
+Changes to tests or testing:
+- #4207 enables our python tests to work in ctsm checkouts and in cesm checkouts.
+- Remove two tests from the expected failures.
+
+Testing summary:
+----------------
+
+ [PASS means all tests PASS; OK means tests PASS other than expected fails.]
+
+  build-namelist tests (if CLMBuildNamelist.pm has changed):
+
+    derecho - PASS
+
+  python testing (if python or CIME code has changed; see instructions in python/README.md; document testing done):
+
+    derecho - PASS
+
+  regular tests (aux_clm: https://github.com/ESCOMP/CTSM/wiki/System-Testing-Guide#pre-merge-system-testing):
+
+    derecho ----- OK
+    izumi ------- OK
+
+Answer changes
+--------------
+Changes answers relative to baseline: No
+ Field lists changed in a couple of tests.
+
+Other details
+-------------
+Pull Requests that document the changes (include PR ids):
+ https://github.com/ESCOMP/ctsm/pull/4290
+ and long list appearing in the description of changes.
 
 ===============================================================
 ===============================================================

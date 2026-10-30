@@ -13,7 +13,7 @@ module lnd_comp_nuopc
   use ESMF                   , only : ESMF_MethodRemove, ESMF_VM, ESMF_VMGet, ESMF_CALKIND_NOLEAP, ESMF_CALKIND_GREGORIAN
   use ESMF                   , only : ESMF_ALARMLIST_ALL, ESMF_ALARM, ESMF_ALARMISRINGING,  ESMF_ClockGetAlarm, ESMF_ClockGetAlarmList
   use ESMF                   , only : ESMF_AlarmSet, ESMF_ClockAdvance
-  use ESMF                   , only : operator(==), operator(+)
+  use ESMF                   , only : operator(==), operator(+), operator(-)
   use ESMF                   , only : ESMF_AlarmIsCreated, ESMF_LOGMSG_ERROR, ESMF_ClockSet
   use NUOPC                  , only : NUOPC_CompDerive, NUOPC_CompSetEntryPoint, NUOPC_CompSpecialize
   use NUOPC                  , only : NUOPC_CompFilterPhaseMap, NUOPC_CompAttributeGet, NUOPC_CompAttributeSet
@@ -34,7 +34,8 @@ module lnd_comp_nuopc
   use shr_cal_mod            , only : shr_cal_noleap, shr_cal_gregorian, shr_cal_ymd2date
   use spmdMod                , only : masterproc, mpicom, spmd_init
   use controlMod             , only : control_setNL, control_init, control_print, NLFilename
-  use clm_varorb             , only : eccen, obliqr, lambm0, mvelpp
+  use clm_varorb             , only : eccen, obliqr, lambm0, mvelpp, &
+                                      eccen_prev, obliqr_prev, lambm0_prev, mvelpp_prev
   use clm_varctl             , only : inst_index, inst_suffix, inst_name
   use clm_varctl             , only : single_column, clm_varctl_set, iulog
   use clm_varctl             , only : nsrStartup, nsrContinue, nsrBranch
@@ -568,6 +569,15 @@ contains
     call clm_orbital_init(gcomp, iulog, masterproc, rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     call clm_orbital_update(clock, iulog, masterproc, eccen, obliqr, lambm0, mvelpp, rc)
+    if (ChkErr(rc,__LINE__,u_FILE_u)) return
+
+    ! Orbital parameters for the previous time step. These only differ from the
+    ! current ones in variable_year mode when the run starts at a year boundary. They
+    ! are used to initialize the previous time step's daylength (prev_dayl) exactly as
+    ! a continuous run would have computed it, so that a restart at Jan 1 reproduces
+    ! the continuous run bit for bit (issue #3661).
+    call clm_orbital_update(clock, iulog, masterproc, eccen_prev, obliqr_prev, lambm0_prev, mvelpp_prev, rc, &
+         prev_step=.true.)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
 
     !----------------------
@@ -1236,7 +1246,7 @@ contains
   end subroutine clm_orbital_init
 
   !===============================================================================
-  subroutine clm_orbital_update(clock, logunit,  mastertask, eccen, obliqr, lambm0, mvelpp, rc)
+  subroutine clm_orbital_update(clock, logunit,  mastertask, eccen, obliqr, lambm0, mvelpp, rc, prev_step)
 
     !----------------------------------------------------------
     ! Update orbital settings
@@ -1251,9 +1261,12 @@ contains
     real(R8)         , intent(inout) :: lambm0 ! Mean long of perihelion at vernal equinox (radians)
     real(R8)         , intent(inout) :: mvelpp ! moving vernal equinox longitude of perihelion plus pi (radians)
     integer          , intent(out)   :: rc     ! output error
+    logical, optional, intent(in)    :: prev_step ! if true, compute for the previous time step (clock time minus one step)
 
     ! local variables
-    type(ESMF_Time)   :: CurrTime ! current time
+    type(ESMF_Time)   :: CurrTime ! current time (or one time step before that, if l_prev_step)
+    type(ESMF_TimeInterval) :: timeStep ! model time step
+    logical           :: l_prev_step
     integer           :: year     ! model year at current time
     integer           :: orb_year ! orbital year for current orbital computation
     character(len=CL) :: msgstr   ! temporary
@@ -1262,13 +1275,20 @@ contains
     character(len=*) , parameter :: subname = "(clm_orbital_update)"
     !-------------------------------------------
 
+    l_prev_step = .false.
+    if (present(prev_step)) l_prev_step = prev_step
+
     if (trim(orb_mode) == trim(orb_variable_year)) then
-       call ESMF_ClockGet(clock, CurrTime=CurrTime, rc=rc)
+       call ESMF_ClockGet(clock, CurrTime=CurrTime, timeStep=timeStep, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
+       if (l_prev_step) then
+          CurrTime = CurrTime - timeStep
+       end if
        call ESMF_TimeGet(CurrTime, yy=year, rc=rc)
        if (chkerr(rc,__LINE__,u_FILE_u)) return
        orb_year = orb_iyear + (year - orb_iyear_align)
-       lprint = mastertask
+       ! Only log orbital parameters once (for current timestamp)
+       lprint = mastertask .and. (.not. l_prev_step)
     else
        orb_year = orb_iyear
        if (first_time) then
