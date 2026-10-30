@@ -37,6 +37,14 @@ body:
     validations:
       required: false
 
+  - type: input
+    id: docs-version
+    attributes:
+      label: If in Technical Note and/or User's Guide, what version(s)?
+      description: See "Version:" menu in bottom left of documentation webpage
+    validations:
+      required: false
+
   - type: textarea
     id: describe-the-issue
     attributes:
