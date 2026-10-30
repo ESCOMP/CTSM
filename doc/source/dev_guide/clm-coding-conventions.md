@@ -411,7 +411,7 @@ type(bounds_type), intent(in) :: bounds  ! bounds
 
 ## Comprehensive list of standards
 
-These conventions cover some of the more detailed aspects of CLM code design. It is intended to compliment and extend the information found on the [previous page](#clm-coding-conventions). If you have questions please contact us at [ctsm-support@ucar.edu](mailto:ctsm-support@ucar.edu) or on your GitHub discussion, issue, or pull request.
+These conventions cover some of the more detailed aspects of CLM code design. It is intended to complement and extend the information found above. If you have questions please contact us at [ctsm-support@ucar.edu](mailto:ctsm-support@ucar.edu) or on your GitHub discussion, issue, or pull request.
 
 ### General Guidelines
 
