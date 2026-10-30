@@ -419,7 +419,7 @@ These conventions cover some of the more detailed aspects of CLM code design. It
 2. Use **implicit none**. All variables must be explicitly typed.
 3. **Don't repeat yourself**. Duplicated code is difficult to maintain. If you find yourself using copy and paste more than once, create a new function or subroutine that encapsulates the desired functionality.
 4. Try to implement subroutine and function interface with argument lists of 9 or less. If you have lists longer than this, break up the functionality into multiple methods and/or use derived types for higher level interfaces. Try to have argument lists short enough that you can make unit-tests for them.
-5. If you have argument lists greater than 8 -- you must call such routines using the keyword-pair form for all arguments (but see 3 above).
+5. If you have argument lists greater than 8 -- you must call such routines using the keyword-pair form for all arguments (but see 4 above).
 
 ### Performance, debugging and optimization
 
