@@ -1,7 +1,7 @@
 <!-- Please fill this out to the best of your ability when opening your PR! -->
 
 <!-- **NOTE: Be sure to check your coding style against the standard
-(https://github.com/ESCOMP/ctsm/wiki/CTSM-coding-guidelines) and review
+(https://escomp.github.io/CTSM/dev_guide/clm-coding-conventions.html) and review
 the list of common problems to watch out for
 (https://github.com/ESCOMP/CTSM/wiki/List-of-common-problems).** -->
 
@@ -27,6 +27,16 @@ the list of common problems to watch out for
 **Testing planned or performed, if any:**
 - [ ] (Replace this text and add more list items as needed)
 <!-- (List what testing you did to show your changes worked as expected) -->
+
+### AI disclosure
+
+- [ ] Was AI used in this contribution? **Yes or no**
+<!-- If the answer above is "no," delete the rest of this section.-->
+If yes:
+<!-- Example types of work: understanding relevant parts of the codebase; outlining implementation ideas; planning implementation; writing code; writing documentation; drafting PR text -->
+- [ ] Types of work:
+- Provider (optional):
+- Model (optional):
 
 
 
