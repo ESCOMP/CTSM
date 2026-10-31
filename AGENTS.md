@@ -13,9 +13,9 @@
 ```
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
-Or if you are, e.g., Gemini 3.8 Flash:
+Or if you are, e.g., Gemini 3.8 Flash (see [this gist section](https://gist.github.com/jyxjjj/290633474bee424050964f283f8b57a6#google-gemini) for email address options, but always specify your model version as the "user" name):
 ```
-Co-Authored-By: Gemini 3.8 Flash <noreply@google.com>
+Co-Authored-By: Gemini 3.8 Flash <200291788+gemini-code-assist@users.noreply.github.com>
 ```
 
 ## GitHub issues and pull requests
