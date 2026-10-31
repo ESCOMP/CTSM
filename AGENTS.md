@@ -13,6 +13,10 @@
 ```
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ```
+Or if you are, e.g., Gemini 3.8 Flash:
+```
+Co-Authored-By: Gemini 3.8 Flash <noreply@google.com>
+```
 
 ## GitHub issues and pull requests
 "The CTSM repo" in this section specifically refers to the GitHub repo ESCOMP/CTSM, not forks.
