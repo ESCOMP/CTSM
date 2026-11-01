@@ -150,6 +150,12 @@ specify spatially variable soil thickness. If not present, use bottom
 of soil column (nlevsoi).
 </entry>
 
+<entry id="use_ftorch_demo" type="logical" category="clm_physics"
+       group="clm_inparm" valid_values="" >
+If TRUE, run the demo FTorch test during initialization.
+Default: FALSE
+</entry>
+
 <entry id="snicar_numrad_snw" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="5,480" value="5" >
 number of wavelength bands used in SNICAR snow albedo calculation

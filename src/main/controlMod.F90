@@ -284,6 +284,7 @@ contains
     namelist /clm_inparm/ use_lai_streams
 
     namelist /clm_inparm/ use_bedrock
+    namelist /clm_inparm/ use_ftorch_demo
 
     namelist /clm_inparm/ use_biomass_heat_storage
 
@@ -888,6 +889,7 @@ contains
     call mpi_bcast (use_cropcal_streams, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_bedrock, 1, MPI_LOGICAL, 0, mpicom, ier)
+    call mpi_bcast (use_ftorch_demo, 1, MPI_LOGICAL, 0, mpicom, ier)
 
     call mpi_bcast (use_biomass_heat_storage, 1, MPI_LOGICAL, 0, mpicom, ier)
 

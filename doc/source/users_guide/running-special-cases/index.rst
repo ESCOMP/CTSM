@@ -25,3 +25,5 @@ Running Special Cases
    Running-with-MOAR-data-as-atmospheric-forcing-to-spinup-the-model.rst
    Running-with-your-own-previous-simulation-as-atmospheric-forcing-to-spinup-the-model.rst
    Running-with-anomaly-forcing.rst
+   Running-with-FTorch.rst
+
