@@ -61,11 +61,6 @@ buildnmlc
 /bld/unit_testers/user_nl_ctsm_real_parameters*
 /bld/unit_testers/env_run.xml
 
-# tools testing output
-td.*.status
-td.*.log
-td.*.status.xFail
-
 # mksurfdata output
 surfdata_*.log
 *.namelist
@@ -76,7 +71,6 @@ ctsm.input_data_list
 ctsm.input_data_list.previous
 *.stdout.txt.o*
 /tools/mksurfdata_esmf/PET*
-/tools/mksurfdata_esmf/job_name.o*
 /tools/mksurfdata_esmf/mksurfdata_in
 /tools/mksurfdata_esmf/surfdata_*.nc
 /tools/mksurfdata_esmf/landuse.timeseries_*.nc
@@ -115,6 +109,9 @@ core.*
 *.log !run.log
 *.pyc
 Depends
+
+# Batch output files (both Derecho and Izumi)
+*.o[0-9]+
 
 # Docs build and testing output
 _build*/

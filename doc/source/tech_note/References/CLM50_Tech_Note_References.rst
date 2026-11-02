@@ -1099,6 +1099,10 @@ Li, H., L. Leung, T. Tesfa, N. Voisin, M. Hejazi, L. Liu, Y. Liu, J. Rice, H. Wu
 
 Li, X. "C", Zhao, L., Oleson, K., Zhou, Y., Qin, Y., Zhang, K., and Fang, B. 2024. Enhancing urban climate‐energy modeling in the Community Earth System Model (CESM) through explicit representation of urban air‐conditioning adoption. JAMES, 16, e2023MS004107. https://doi.org/10.1029/2023MS004107.
 
+.. _Lietal2026:
+
+Li, X. "C", Zhao, L., Luo, Z., Oleson, K., Cheng, Y., Xie, X., Varquez, A.C.G., and Sekiya, M. 2026. Divergent humidity-driven growth in urban air-conditioning energy demand under climate change. Nature Cities, https://doi.org/10.1038/s44284-026-00474-4.
+
 .. _Liangetal1994:
 
 Liang, X., Lettenmaier, D.P., Wood, E.F., and Burges, S.J. 1994. A simple hydrologically based model of land surface water and energy fluxes for GSMs. J. Geophys. Res. 99(D7):14,415–14,428.
@@ -1826,6 +1830,10 @@ Subin, Z.M., Murphy, L.N., Li, F., Bonfils, C. and Riley, W.J., 2012b. Boreal la
 .. _Sunetal2012:
 
 Sun, Y., Gu, L., and Dickinson, R. E. 2012. A numerical issue in calculating the coupled carbon and water fluxes in a climate model, J. Geophys. Res., 117, D22103. DOI:10.1029/2012JD018059.
+
+.. _Sunetal2026:
+
+Sun, Y., Oleson, K. W., & Zheng, Z. 2026. Modeling urban traffic heat flux in the Community Earth System Model: Formulation and validation for two test sites. Journal of Advances in Modeling Earth Systems, 18, e2025MS005435. https://doi.org/10.1029/2025MS005435.
 
 .. _Suzukietal2001:
 

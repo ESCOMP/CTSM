@@ -17,6 +17,7 @@ dependencies:
   - black=25.1.0
   - cartopy=0.24.0
   - matplotlib=3.10.1
+  - compliance-checker=6.1.0
   - pip=25.0.1
 
   # For VS code

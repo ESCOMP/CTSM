@@ -36,6 +36,7 @@ To see the available options:
     ./run_tower.py --help
 -------------------------------------------------------------------
 """
+
 # TODO (NS)
 # - [ ] Case dependency and the ability to check case status
 # - [ ] If Case dependency works we don't need finidat given explicilty for post-ad and transient.
@@ -61,7 +62,7 @@ _CTSM_PYTHON = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..
 sys.path.insert(1, _CTSM_PYTHON)
 
 # pylint: disable=wrong-import-position
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 from ctsm.download_utils import download_file
 from ctsm.site_and_regional.tower_arg_parse import get_parser
 from ctsm.site_and_regional.neon_site import NeonSite
@@ -216,18 +217,19 @@ def main(description):
     Determine valid tower sites. Make an output directory if it does not exist.
     Loop through requested sites and run CTSM at that site.
     """
-    cesmroot = path_to_ctsm_root()
+    cesmroot = path_to_top_root()
+    ctsmroot = path_to_ctsm_root()
     # Get the list of supported neon sites from usermods
     # The [!Fd]* portion means that we won't retrieve cases that start with:
     # F (FATES) or d (default). We should be aware of adding cases that start with these.
     valid_neon_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!Fd]*")
+        os.path.join(ctsmroot, "cime_config", "usermods_dirs", "clm", "NEON", "[!Fd]*")
     )
     valid_neon_sites = sorted([v.split("/")[-1] for v in valid_neon_sites])
 
     # Get the list of supported plumber sites from usermods
     valid_plumber_sites = glob.glob(
-        os.path.join(cesmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
+        os.path.join(ctsmroot, "cime_config", "usermods_dirs", "clm", "PLUMBER2", "[!d]*")
     )
 
     valid_plumber_sites = sorted([v.split("/")[-1] for v in valid_plumber_sites])

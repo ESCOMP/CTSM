@@ -138,7 +138,8 @@ contains
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
-    use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr, &
+                                               eccen_prev, mvelpp_prev, lambm0_prev, obliqr_prev
     use clm_varctl                    , only : use_cropcal_streams
     use clm_varctl                    , only : use_noio
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
@@ -369,11 +370,12 @@ contains
     if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
+    ! (See clm_orbital_update in lnd_comp_nuopc for details on year-boundary orbital handling; issue #3661)
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
-    call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
+    call shr_orb_decl( caldaym1, eccen_prev, mvelpp_prev, lambm0_prev, obliqr_prev, declinm1, eccf )
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
     call t_startf('clm_init2_part3')
