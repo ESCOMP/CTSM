@@ -1,9 +1,31 @@
 #!/usr/bin/env bash
 set -e
 
-if [ ! -f doc-builder/build_docs ]; then
-    script_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-    ${script_dir}/../bin/git-fleximod update doc-builder
+# $scriptname will already be set if build_docs is getting called from build_docs_to_publish.
+# Otherwise, we need to set it to the basename of this script.
+if [[ -z "${scriptname}" ]]; then
+    scriptname="${0##*/}"
+fi
+
+if [ ! -e doc-builder ]; then
+    # We're in the doc-builder directory itself
+    script="./tools/${scriptname}.py"
+    files_to_copy_to_source="conf.py substitutions.py _templates _static"
+    cp -a ${files_to_copy_to_source} source/
+else
+    # We're in a repo that *includes* doc-builder
+    script="./doc-builder/tools/${scriptname}.py"
+
+    # Make sure the doc-builder submodule is checked out. If doc-builder isn't a submodule but is
+    # instead manually included, we will perform the `else`, which is safe because it's a no-op in
+    # that situation.
+    # (Assume that if the repo uses git-fleximod, doc-builder is handled with it.)
+    git_fleximod_path="$(git rev-parse --show-toplevel)/bin/git-fleximod"
+    if [[ -e "${git_fleximod_path}" ]]; then
+        "${git_fleximod_path}" update doc-builder
+    else
+        git submodule update --init -- doc-builder
+    fi
 fi
 
 # Check if --verbose or -V was passed
@@ -22,8 +44,18 @@ else
 fi
 
 if $verbose; then
-    echo "Running: ./doc-builder/build_docs $@"
+    echo "Running: ${script} $@"
 fi
-./doc-builder/build_docs "$@"
+set +e
+${script} "$@"
+exit_code=$?
+set -e
 
-exit 0
+if [ ! -e doc-builder ]; then
+    # Clean up these things we copied
+    for f in ${files_to_copy_to_source}; do
+        rm -r "source/$f"
+    done
+fi
+
+exit $exit_code
