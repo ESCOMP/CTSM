@@ -17,6 +17,11 @@ Or if you are, e.g., Gemini 3.8 Flash (see [this gist section](https://gist.gith
 ```
 Co-Authored-By: Gemini 3.8 Flash <200291788+gemini-code-assist@users.noreply.github.com>
 ```
+Or if you are, e.g., ChatGPT 5.6 Terra (see [this gist section](https://gist.github.com/jyxjjj/290633474bee424050964f283f8b57a6#openai-chatgpt--codex) for more ChatGPT email address options, but always specify your model version as the "user" name):
+```
+Co-Authored-By: ChatGPT 5.6 Terra <267193182+codex@users.noreply.github.com>
+```
+Make sure you customize the Co-Authored-By to match your model name and version, and always confirm the associated email address is real! That linked gist can be helpful, but use the email address given in your model docs if provided.
 
 ## GitHub issues and pull requests
 "The CTSM repo" in this section specifically refers to the GitHub repo ESCOMP/CTSM, not forks.
