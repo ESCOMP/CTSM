@@ -50,7 +50,7 @@ jobs:
       failure() &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     needs: [test-build-docs-ctsm_pylib, test-update-dependency]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       issues: write
