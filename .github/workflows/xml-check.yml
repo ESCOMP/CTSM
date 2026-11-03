@@ -6,7 +6,7 @@ on: [push, pull_request, workflow_dispatch] # Trigger on push or pull request, o
 
 jobs:
   check-xml:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1

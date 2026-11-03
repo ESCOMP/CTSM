@@ -22,7 +22,7 @@ on:
 
 jobs:
   python-unit-tests:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       # Checkout the code
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -52,7 +52,7 @@ jobs:
           conda run -n ctsm_pylib ./run_ctsm_py_tests -u
 
   python-lint-and-black:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       # Checkout the code
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1

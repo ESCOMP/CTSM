@@ -22,7 +22,7 @@ jobs:
   # This second job actually builds and publishes the container.
   push-and-attest:
     name: Publish and attest
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
 
     # Wait to run this job until after build-image-and-test-docs. If that job fails, something might be wrong with the container, so don't try this one. (It might also have failed because of something wrong with doc-builder or the documentation.)
     needs: build-image-and-test-docs
