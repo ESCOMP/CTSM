@@ -17,9 +17,9 @@ cd "${SCRIPT_DIR}"
 
 condadir="${SCRIPT_DIR}/python"
 default_new_env_name=ctsm_pylib
-default_old_env_name=ctsm_pylib_3_7_9
+default_old_env_name=ctsm_pylib_3_13_2
 default_condafile="${condadir}/conda_env_ctsm_py.yml"
-default_condafile_old="${condadir}/conda_env_ctsm_py_old_3.7.9.yml"
+default_condafile_old="${condadir}/conda_env_ctsm_py_old_3.13.2.yml"
 
 condafile="${default_condafile}"
 quiet=""
@@ -109,7 +109,7 @@ usage() {
   echo "[-o|--overwrite]  "
   echo "     Overwrite existing env with same name, if any. Incompatible with -r/--rename-existing."
   echo "[--old]  "
-  echo "     Install the previous version of ctsm_pylib (Python 3.7.9). Changes these to old-version defaults:"
+  echo "     Install the previous version of ctsm_pylib. Changes these to old-version defaults:"
   echo "        env name: ${default_old_env_name}"
   echo "        file: ${default_condafile_old}"
   echo "[-q|--quiet]  "
