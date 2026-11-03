@@ -17,6 +17,9 @@ on:
       - 'cime_config/testdefs/testlist_clm.xml'
       - '.github/workflows/check-testlists.yml'
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   testlist-supertestlists:
     runs-on: ubuntu-26.04
