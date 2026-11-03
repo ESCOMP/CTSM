@@ -40,7 +40,7 @@ jobs:
           python-version: '3.13.13'  # needs to be coordinated with version in python/conda_env_ctsm_py.yml
       - name: Cache pip
         if: ${{ ! inputs.use_conda }}
-        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f  # v3
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
