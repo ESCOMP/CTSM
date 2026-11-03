@@ -2,7 +2,7 @@
 # A base linux install + packages for building CTSM documentation #
 ###################################################################
 
-FROM python:3.13.2-alpine
+FROM python:3.13.13-alpine
 
 # Update the default packages and install some other necessary ones
 RUN apk update
