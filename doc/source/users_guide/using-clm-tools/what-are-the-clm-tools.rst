@@ -12,7 +12,9 @@ The tools produce files that can be used with |version|. If you need files for e
 
 The list of scripts and programs in ``$CTSMROOT/tools`` is as follows:
 
-1. ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
+1. ``CUPiD`` for postprocessing of cases (CESM Unified Postprocessing and Diagnostics)
+
+# ``mksurfdata_esmf`` to create surface datasets from gridded datasets that we refer to as raw datasets (ctsm5_2 and newer versions).
 
 #. ``crop_calendars`` to regrid and process GGCMI sowing and harvest date files for use in CTSM
 
