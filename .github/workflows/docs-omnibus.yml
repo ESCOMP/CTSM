@@ -36,7 +36,7 @@ jobs:
 
       # Set up conda
       - name: Set up conda environment
-        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4.1
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4.1.0
         with:
           activate-environment: ctsm_pylib
           environment-file: python/conda_env_ctsm_py.yml
