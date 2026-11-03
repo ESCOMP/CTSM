@@ -1,0 +1,60 @@
+<!--
+STOPGAP COPY of ccs_config/machines/container/config_machines.xml, plus ONE
+line: <CCSM_CPRNC>. Nothing else may differ; cirrus-testing.yml diffs this
+file against ccs_config's (with this comment and that line stripped) and fails
+on any other difference, so a ccs_config bump that touches the container
+machine is caught instead of silently masked.
+
+WHY A WHOLE COPY: CIME has no way to override one machine value. For a v3
+machine, set_machine() (cime/CIME/XML/machines.py) reads
+$HOME/.cime/<machine>/config_machines.xml INSTEAD OF ccs_config's file when it
+exists, so the override has to be the complete machine.
+
+WHY CCSM_CPRNC: without it, every case build compiles cprnc from cime's
+submodule, and cprnc v1.1.5 links a static netCDF without its HDF5/zlib
+dependencies (its find_library fallback runs before pkg-config). The image
+builds cprnc once, linked correctly, at the path below; build.py skips the
+per-case build when CCSM_CPRNC names an existing file. This is also how derecho
+works (ccs_config/machines/derecho/config_machines.xml, CCSM_CPRNC).
+
+The proper fix is this one line in ccs_config itself; delete this file when
+that lands.
+-->
+  <machine MACH="container">
+    <DESC>
+      Containerized development environment (Docker/Singularity) for CESM w/ GNU compilers
+    </DESC>
+    <OS>LINUX</OS>
+    <COMPILERS>gnu</COMPILERS>
+    <MPILIBS>mpich</MPILIBS>
+    <CIME_OUTPUT_ROOT>$ENV{HOME}/scratch</CIME_OUTPUT_ROOT>
+    <DIN_LOC_ROOT>$ENV{CESMDATAROOT}/inputdata</DIN_LOC_ROOT>
+    <DIN_LOC_ROOT_CLMFORC>$DIN_LOC_ROOT/atm/datm7</DIN_LOC_ROOT_CLMFORC>
+    <DOUT_S_ROOT>$ENV{HOME}/archive/$CASE</DOUT_S_ROOT>
+    <CCSM_CPRNC>/usr/local/bin/cprnc</CCSM_CPRNC>
+    <GMAKE>make</GMAKE>
+    <GMAKE_J>4</GMAKE_J>
+    <BATCH_SYSTEM>none</BATCH_SYSTEM>
+    <SUPPORTED_BY>cgd</SUPPORTED_BY>
+    <MAX_TASKS_PER_NODE>4</MAX_TASKS_PER_NODE>
+    <MAX_MPITASKS_PER_NODE>4</MAX_MPITASKS_PER_NODE>
+    <PROJECT_REQUIRED>FALSE</PROJECT_REQUIRED>
+    <mpirun mpilib="mpich">
+      <executable>mpiexec</executable>
+      <arguments>
+        <arg name="anum_tasks"> -n {{ total_tasks }}</arg>
+      </arguments>
+    </mpirun>
+    <module_system type="none">
+    </module_system>
+    <environment_variables>
+      <env name="NETCDF_PATH">/usr/local</env>
+      <env name="PNETCDF_PATH">/usr/local</env>
+      <env name="FPATH">/usr/lib64</env>
+      <env name="CPATH">/usr/lib64</env>
+    </environment_variables>
+    <resource_limits>
+      <resource name="RLIMIT_STACK">-1</resource>
+    </resource_limits>
+  </machine>
+
