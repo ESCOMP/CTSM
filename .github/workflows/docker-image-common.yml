@@ -22,7 +22,7 @@ env:
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
   build-image-and-test-docs:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     # Variables that might be needed by the calling workflow
     outputs:
       REGISTRY: ${{ env.REGISTRY }}

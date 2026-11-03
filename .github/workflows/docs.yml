@@ -51,7 +51,7 @@ jobs:
   test-build-docs-container:
     if: ${{ always() }}
     name: With container from registry
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
 
       - name: Checkout repository
@@ -90,7 +90,7 @@ jobs:
   check-docs-style:
     if: ${{ always() }}
     name: Check documentation against style guide
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
 
       - name: Checkout repository

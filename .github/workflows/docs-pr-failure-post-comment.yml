@@ -13,7 +13,7 @@ jobs:
     if: >-
       github.event.workflow_run.event == 'pull_request'
       && github.event.workflow_run.conclusion == 'failure'
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     permissions:
       pull-requests: write
       actions: read

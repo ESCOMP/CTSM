@@ -25,7 +25,7 @@ jobs:
     # may not have
     if: ${{ github.repository == 'ESCOMP/CTSM' }}
 
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
@@ -54,7 +54,7 @@ jobs:
           ./test_container_eq_ctsm_pylib.sh
 
   makefile-method:
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
