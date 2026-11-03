@@ -7,7 +7,8 @@ import logging
 
 from configparser import ConfigParser
 
-from CIME.buildnml import create_namelist_infile  # pylint: disable=import-error
+from ctsm import add_cime_to_path  # pylint: disable=unused-import,ungrouped-imports
+from CIME.buildnml import create_namelist_infile  # pylint: disable=import-error,wrong-import-order
 
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
@@ -49,6 +50,10 @@ _ENV_LILAC_TEMPLATE = """
   </group>
   <group id="run_cpl">
     <entry id="LND_SETS_DUST_EMIS_DRV_FLDS" value="TRUE">
+      <type>logical</type>
+      <valid_values>TRUE,FALSE</valid_values>
+    </entry>
+    <entry id="CLM_NDEP_FROM_CPL" value="FALSE">
       <type>logical</type>
       <valid_values>TRUE,FALSE</valid_values>
     </entry>
@@ -299,7 +304,7 @@ def buildnml(cime_path, rundir):
     ]
     # NOTE(wjs, 2020-06-16) Note that we do NOT use the -mask argument; it's possible that
     # we should be using it in some circumstances (I haven't looked into how it's used).
-    command.extend(["-res", "lilac", "-clm_usr_name", "lilac"])
+    command.extend(["-res", "CLM_USRDAT", "-clm_usr_name", "LILAC"])
     command.extend(bldnml_opts.split())
 
     subprocess.check_call(command, universal_newlines=True)

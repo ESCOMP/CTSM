@@ -9,7 +9,7 @@ module CNVegCarbonStateType
   use shr_infnan_mod , only : nan => shr_infnan_nan, assignment(=)
   use shr_const_mod  , only : SHR_CONST_PDB
   use shr_log_mod    , only : errMsg => shr_log_errMsg
-  use pftconMod      , only : noveg, is_prognostic_crop, pftcon, nc3crop, nc3irrig
+  use pftconMod      , only : noveg, is_prognostic_crop, pftcon, is_generic_crop
   use clm_varcon     , only : spval, c3_r2, c4_r2, c14ratio
   use clm_varctl     , only : iulog, use_cndv, use_crop
   use CNSharedParamsMod, only : use_matrixcn
@@ -2416,7 +2416,7 @@ contains
                    this%leafcmax_patch(i) = 0._r8
 
                    l = patch%landunit(i)
-                   if (lun%itype(l) == istsoil  .or. patch%itype(i) == nc3crop .or. patch%itype(i) == nc3irrig)then
+                   if (lun%itype(l) == istsoil  .or. is_generic_crop(patch%itype(i)))then
                       if ( present(num_reseed_patch) ) then
                          num_reseed_patch = num_reseed_patch + 1
                          filter_reseed_patch(num_reseed_patch) = i

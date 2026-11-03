@@ -2,3 +2,5 @@
 ./xmlchange LND_PAUSE_ACTIVE=TRUE
 # Set calendar, just because Gregorian is ussually used for DA
 ./xmlchange CALENDAR=GREGORIAN
+#Set DGLC coupling from once to four times a day so 12hour/6hour tests can work
+./xmlchange GLC_NCPL=4

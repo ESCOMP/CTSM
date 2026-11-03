@@ -76,7 +76,7 @@ class TestCreateMachine(unittest.TestCase):
         """Creates test-specific defaults so we don't tie the tests to changes in the real
         defaults"""
         defaults = {
-            "cheyenne": MachineDefaults(
+            "derecho": MachineDefaults(
                 job_launcher_type=default_job_launcher,
                 scratch_dir=os.path.join(os.path.sep, "glade", "scratch", get_user()),
                 baseline_dir=os.path.join(os.path.sep, "my", "baselines"),
@@ -157,10 +157,10 @@ class TestCreateMachine(unittest.TestCase):
     def test_knownMachine_defaults(self):
         """Tests a machine known in the defaults structure, with no overriding arguments"""
         defaults = self.create_defaults()
-        machine = create_machine("cheyenne", defaults, account="a123")
+        machine = create_machine("derecho", defaults, account="a123")
         self.assertMachineInfo(
             machine=machine,
-            name="cheyenne",
+            name="derecho",
             scratch_dir=os.path.join(os.path.sep, "glade", "scratch", get_user()),
             baseline_dir=os.path.join(os.path.sep, "my", "baselines"),
             account="a123",
@@ -180,7 +180,7 @@ class TestCreateMachine(unittest.TestCase):
         """Tests a machine known in the defaults structure, with explicit arguments"""
         defaults = self.create_defaults(default_job_launcher=JOB_LAUNCHER_NOBATCH)
         machine = create_machine(
-            "cheyenne",
+            "derecho",
             defaults,
             job_launcher_type=JOB_LAUNCHER_QSUB,
             scratch_dir="/custom/path/to/scratch",
@@ -191,7 +191,7 @@ class TestCreateMachine(unittest.TestCase):
         )
         self.assertMachineInfo(
             machine=machine,
-            name="cheyenne",
+            name="derecho",
             scratch_dir="/custom/path/to/scratch",
             baseline_dir=os.path.join(os.path.sep, "my", "baselines"),
             account="a123",
@@ -214,7 +214,7 @@ class TestCreateMachine(unittest.TestCase):
     def test_baselineDir_overridden(self):
         """Tests get_possibly_overridden_mach_value when baseline_dir is provided"""
         defaults = self.create_defaults()
-        machine = create_machine("cheyenne", defaults, account="a123")
+        machine = create_machine("derecho", defaults, account="a123")
         baseline_dir = get_possibly_overridden_mach_value(
             machine, varname="baseline_dir", value="mypath"
         )
@@ -223,7 +223,7 @@ class TestCreateMachine(unittest.TestCase):
     def test_baselineDir_default(self):
         """Tests get_possibly_overridden_mach_value when baseline_dir is not provided"""
         defaults = self.create_defaults()
-        machine = create_machine("cheyenne", defaults, account="a123")
+        machine = create_machine("derecho", defaults, account="a123")
         baseline_dir = get_possibly_overridden_mach_value(
             machine, varname="baseline_dir", value=None
         )

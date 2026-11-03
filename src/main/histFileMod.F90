@@ -496,7 +496,7 @@ contains
              allhistfldlist(nf)%field%type2d,  &
              allhistfldlist(nf)%field%long_name,  &
              allhistfldlist(nf)%field%units,  &
-             allhistfldlist(nf)%actflag(1,:)
+             allhistfldlist(nf)%actflag(1,max_split_files:1:-1)
        end do
 
        ! Table footer, same as header
@@ -2583,6 +2583,7 @@ contains
        call ncd_defdim(lnfid, 'fates_levclscpf', nclmax*nlevsclass*numpft_fates, dimid)
        call ncd_defdim(lnfid, 'fates_levlanduse', n_landuse_cats, dimid)
        call ncd_defdim(lnfid, 'fates_levlulu', n_landuse_cats * n_landuse_cats, dimid)
+       call ncd_defdim(lnfid, 'fates_levlupft', n_landuse_cats * numpft_fates, dimid)
     end if
 
     if ( .not. lhistrest )then
@@ -4880,7 +4881,8 @@ contains
           if (ntapes_onfile /= ntapes) then
              write(iulog,*) 'ntapes = ', ntapes, ' ntapes_onfile = ', ntapes_onfile
              call endrun(msg=' ERROR: number of ntapes differs from restart file. '// &
-                  'You can NOT change history options on restart.', &
+                  'You can NOT change history options on a continuation run. '// &
+                  'To change history options, use a branch run instead.', &
                   additional_msg=errMsg(sourcefile, __LINE__))
           end if
 
@@ -4907,7 +4909,8 @@ contains
                       write(iulog,*) 'but non-empty in the other. (history_tape_in_use .false.'
                       write(iulog,*) 'means that history tape is empty.)'
                       call endrun(msg=' ERROR: history_tape_in_use differs from restart file. '// &
-                           'You can NOT change history options on restart.', &
+                           'You can NOT change history options on a continuation run. '// &
+                           'To change history options, use a branch run instead.', &
                            additional_msg=errMsg(sourcefile, __LINE__))
                    end if
                 end do file_loop4
@@ -4966,8 +4969,9 @@ contains
                 call ncd_io('nflds',   nflds_onfile, 'read', ncid_hist(t,f) )
                 if ( nflds_onfile /= tape(t)%nflds(f) ) then
                    write(iulog,*) 'nflds = ', tape(t)%nflds(f), ' nflds_onfile = ', nflds_onfile
-                   call endrun(msg=' ERROR: number of fields different than on restart file!,'// &
-                        ' you can NOT change history options on restart!' //&
+                   call endrun(msg=' ERROR: number of fields differs from restart file. '// &
+                        'You can NOT change history options on a continuation run. '// &
+                        'To change history options, use a branch run instead. ' //&
                      errMsg(sourcefile, __LINE__))
                 end if
                 call ncd_io('ntimes',  tape(t)%ntimes(f), 'read', ncid_hist(t,f) )
@@ -5811,6 +5815,8 @@ contains
        num2d = n_landuse_cats
     case ('fates_levlulu')
        num2d = n_landuse_cats * n_landuse_cats
+    case ('fates_levlupft')
+       num2d = n_landuse_cats * numpft_fates
     case('cft')
        if (cft_size > 0) then
           num2d = cft_size

@@ -3,8 +3,8 @@ This test passes if mksurfdata_esmf generates an fsurdat (surface dataset)
 and the CTSM completes a simulation with this fsurdat file.
 
 We test res = '10x15' because it uses a lower-res topography file instead of
-the 1-km topography raw dataset. The 1-km file causes the test to run out of
-memory on cheyenne.
+the 1-km topography raw dataset. During development on previous machine
+cheyenne we found that the 1-km file caused the test to run out of memory.
 
 Currently casper complains that `git -C` is not a valid option.
 I added -C to the `git describe` in gen_mksurfdata_namelist for this

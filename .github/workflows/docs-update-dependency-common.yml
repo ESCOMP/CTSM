@@ -45,6 +45,9 @@ jobs:
           channels: conda-forge
           auto-activate-base: false
 
+      - name: Print installed Python packages
+        run: conda list
+
       - name: Compare docs built with container vs. ctsm_pylib
         run: |
           cd doc/test/

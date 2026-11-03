@@ -44,10 +44,6 @@ case $hostname in
       export MACH="izumi"
       pio_iotype=2
       ;;
-  hobart*)
-      export MACH="hobart"
-      pio_iotype=2
-      ;;
   ## Other machines
   ## Assumption: pnetcdf is off; therefore, pio_iotype = 2
   *)

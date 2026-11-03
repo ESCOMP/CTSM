@@ -12,6 +12,7 @@ module dynSubgridControlMod
   !
   ! !USES:
 #include "shr_assert.h"
+  use shr_kind_mod       , only : r8 => shr_kind_r8
   use shr_log_mod        , only : errMsg => shr_log_errMsg
   use abortutils         , only : endrun
   use clm_varctl         , only : fname_len
@@ -135,7 +136,7 @@ contains
     ! other local variables:
     integer :: nu_nml    ! unit for namelist file
     integer :: nml_error ! namelist i/o error flag
-    
+
     character(len=*), parameter :: subname = 'read_namelist'
     !-----------------------------------------------------------------------
     
@@ -222,7 +223,6 @@ contains
     ! Check consistency of namelist settings
     !
     ! !USES:
-    use shr_kind_mod, only: r8 => shr_kind_r8
     use clm_varctl, only : iulog, use_cndv, use_fates, use_cn, use_crop, &
                            n_dom_pfts, n_dom_landunits, collapse_urban, &
                            toosmall_soil, toosmall_crop, toosmall_glacier, &
@@ -291,8 +291,8 @@ contains
          dyn_subgrid_control_inst%do_transient_lakes .or. &
          dyn_subgrid_control_inst%do_transient_urban) then
        if (collapse_urban) then
-          write(iulog,*) 'ERROR: do_transient_pfts, do_transient_crops, do_transient_lakes and&
-                          do_transient_urban are incompatible with collapse_urban = .true.'
+          write(iulog,*) 'ERROR: do_transient_pfts, do_transient_crops, do_transient_lakes and ' // &
+                         'do_transient_urban are incompatible with collapse_urban = .true.'
           call endrun(msg=errMsg(sourcefile, __LINE__))
        end if
        if (n_dom_pfts > 0 .or. n_dom_landunits > 0 &

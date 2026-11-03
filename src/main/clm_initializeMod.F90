@@ -138,7 +138,8 @@ contains
     use clm_varctl                    , only : use_cn, use_fates, use_fates_luh
     use clm_varctl                    , only : use_crop, ndep_from_cpl, fates_spitfire_mode
     use clm_varctl                    , only : use_hillslope
-    use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr
+    use clm_varorb                    , only : eccen, mvelpp, lambm0, obliqr, &
+                                               eccen_prev, mvelpp_prev, lambm0_prev, obliqr_prev
     use clm_varctl                    , only : use_cropcal_streams
     use clm_varctl                    , only : use_noio
     use landunit_varcon               , only : landunit_varcon_init, max_lunit, numurbl
@@ -160,6 +161,7 @@ contains
     use CIsoAtmTimeseriesMod          , only : CIsoAtmReadNML
     use DaylengthMod                  , only : InitDaylength
     use dynSubgridDriverMod           , only : dynSubgrid_init
+    use dynConsBiogeophysMod          , only : dynConsBiogeophys_readnl
     use dynConsBiogeophysMod          , only : dyn_hwcontent_set_baselines
     use fileutils                     , only : getfil
     use initInterpMod                 , only : initInterp
@@ -222,8 +224,8 @@ contains
     !-----------------------------------------------------------------------
 
     call t_startf('clm_init2_part1')
-    ! Get processor bounds for gridcells
-    call get_proc_bounds(bounds_proc)
+    ! Get processor bounds for gridcells, just for gridcells
+    call get_proc_bounds(bounds_proc, only_gridcell=.true.)  ! Just get proc bounds for gridcells, other variables won't be set until after decompInit_clumps
     begg = bounds_proc%begg; endg = bounds_proc%endg
 
     ! Initialize glc behavior
@@ -283,7 +285,7 @@ contains
     call t_stopf('clm_decompInit_clumps')
 
     ! *** Get ALL processor bounds - for gridcells, landunit, columns and patches ***
-    call get_proc_bounds(bounds_proc)
+    call get_proc_bounds(bounds_proc)   ! This has to be done after decompInit_clumps is called
 
     ! Allocate memory for subgrid data structures
     ! This is needed here BEFORE the following call to initGridcells
@@ -368,17 +370,23 @@ contains
     if (use_fates) call CLMFatesTimesteps()
 
     ! Initialize daylength from the previous time step (needed so prev_dayl can be set correctly)
+    ! (See clm_orbital_update in lnd_comp_nuopc for details on year-boundary orbital handling; issue #3661)
     calday = get_curr_calday(reuse_day_365_for_day_366=.true.)
     call shr_orb_decl( calday, eccen, mvelpp, lambm0, obliqr, declin, eccf )
     dtime = get_step_size_real()
     caldaym1 = get_curr_calday(offset=-int(dtime), reuse_day_365_for_day_366=.true.)
-    call shr_orb_decl( caldaym1, eccen, mvelpp, lambm0, obliqr, declinm1, eccf )
+    call shr_orb_decl( caldaym1, eccen_prev, mvelpp_prev, lambm0_prev, obliqr_prev, declinm1, eccf )
     call InitDaylength(bounds_proc, declin=declin, declinm1=declinm1, obliquity=obliqr)
     call t_stopf('clm_init2_part2')
     call t_startf('clm_init2_part3')
 
     ! Initialize Balance checking (after time-manager)
     call BalanceCheckInit()
+
+    ! Read the dyn_cons_biogeophys_inparm namelist. This must be done after the time
+    ! manager is initialized, because converting dynbal_storage_residence_time to a
+    ! turnover rate depends on the model calendar.
+    call dynConsBiogeophys_readnl(NLFilename)
 
     ! History file variables
     if (use_cn .and. .not. use_noio ) then
@@ -424,7 +432,9 @@ contains
     call SnowAge_init( )    ! SNICAR aging   parameters:
 
     ! Print history field info to standard out
-    call hist_printflds()
+    if ( .not. use_noio )then
+       call hist_printflds()
+    end if
 
     ! Initializate dynamic subgrid weights (for prescribed transient Patches, CNDV
     ! and/or dynamic landunits); note that these will be overwritten in a restart run

@@ -3,7 +3,7 @@
 
 This guide describes the features and usage of the `query_paramfile` and `set_paramfile` tools, located in `tools/param_utils/`. These utilities help users inspect and modify CLM parameter files.
 
-Note that you need to have the `ctsm_pylib` conda environment activated to use these tools. See Sect. :numref:`using-ctsm-pylib` for more information.
+Note that you need to have the `ctsm_pylib` conda environment activated to use these tools. See Sect. {numref}`using-ctsm-pylib` for more information.
 
 ## `query_paramfile`
 **Purpose:** Print the values of one or more parameters from a CTSM parameter file (netCDF format).

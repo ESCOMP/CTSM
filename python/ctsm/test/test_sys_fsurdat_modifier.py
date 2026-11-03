@@ -73,28 +73,26 @@ class TestSysFsurdatModifier(unittest.TestCase):
         """
         Test that a short config file works
         """
-        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        self._create_config_file_short()
         sys.argv = ["fsurdat_modifier", self._cfg_file_path]
         parser = fsurdat_modifier_arg_process()
-        fsurdat_out = os.path.join(
-            self._testinputs_path, "surfdata_5x5_amazon_hist_16pfts_CMIP6_2000_c231031.out.nc"
-        )
-        if os.path.exists(fsurdat_out):
-            os.remove(fsurdat_out)
+        if os.path.exists(self._fsurdat_out):
+            os.remove(self._fsurdat_out)
         fsurdat_modifier(parser)
         # Run it again with the overwrite option so that it will overwrite the file just created
         sys.argv = ["fsurdat_modifier", self._cfg_file_path, "--overwrite"]
         parser = fsurdat_modifier_arg_process()
         fsurdat_modifier(parser)
         # Cleanup
-        os.remove(fsurdat_out)
+        if os.path.exists(self._fsurdat_out):
+            os.remove(self._fsurdat_out)
 
     def test_short_infile_both_cmdline_and_cfg(self):
         """
         Test that a graceful fail happens when the infile
         is given both in the command line and the config file
         """
-        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        self._create_config_file_short()
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
@@ -113,7 +111,7 @@ class TestSysFsurdatModifier(unittest.TestCase):
         Test that a graceful fail happens when the outfile is given
         both in the command line and the config file
         """
-        self._cfg_file_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        self._create_config_file_short()
         sys.argv = [
             "fsurdat_modifier",
             self._cfg_file_path,
@@ -443,6 +441,20 @@ class TestSysFsurdatModifier(unittest.TestCase):
                         line = f"fsurdat_in = {self._fsurdat_in}"
                     elif re.match(r" *fsurdat_out *=", line):
                         line = f"fsurdat_out = {self._fsurdat_out}"
+                    cfg_out.write(line)
+
+    def _create_config_file_short(self):
+        """
+        Open the short config file and write to _tempdir with absolute paths
+        """
+        src_path = os.path.join(self._testinputs_path, "modify_fsurdat_short.cfg")
+        with open(self._cfg_file_path, "w", encoding="utf-8") as cfg_out:
+            with open(src_path, "r", encoding="utf-8") as cfg_in:
+                for line in cfg_in:
+                    if re.match(r" *fsurdat_in *=", line):
+                        line = f"fsurdat_in = {self._fsurdat_in}\n"
+                    elif re.match(r" *fsurdat_out *=", line):
+                        line = f"fsurdat_out = {self._fsurdat_out}\n"
                     cfg_out.write(line)
 
     def _create_config_file_crop(self):

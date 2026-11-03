@@ -1,6 +1,24 @@
 module test_decompMod
 
   ! Tests of decompMod
+  !
+  ! IMPORTANT NOTES: Limitations of these tests
+  !       These tests assume a simple single processor decomposition with single gridcells with no ocean points.
+  !       So it really only tests the basic gridcell setup and not much in regard to subgrid levels.
+  !       It also doesn't test using the actual decomposition initialization from decompInitMod.
+  !       And not all interfaces are tested here, just the ones that were refactored.
+  !
+  !       How the above is covered:
+  !       Running with full grids with ocean masks is accomplished in the system tests.
+  !       System test suites to run: aux_clm, decomp_init, uhr_decomp_init
+  !       decompInitMod has several ASSERT statements to ensure correct setup of the decomposition.
+  !
+  !       WORK THAT COULD BE DONE:
+  !       - Add tests for all the interfaces
+  !       - Add tests for decompInitMod (there was difficulty in getting decompInitMod added to
+  !         PF unit testing, because of the need for MPI and additional dependencies)
+  !       - Add tests for grids with ocean points and subgrid levels (system tests cover this though)
+  !
 
   use funit
   use decompMod
@@ -16,8 +34,9 @@ module test_decompMod
      procedure :: create_simpleSingleDecomp
   end type TestDecompMod
 
+  ! Make sure sizes are different in order to catch certain type of errors
   integer, parameter :: ni = 2
-  integer, parameter :: nj = 2
+  integer, parameter :: nj = 3
 
 contains
 
@@ -28,7 +47,7 @@ contains
   subroutine setUp(this)
     class(TestDecompMod), intent(inout) :: this
 
-    call this%create_simpleSingleDecomp()
+    call this%create_simpleSingleDecomp( ni=ni, nj=nj )
   end subroutine setUp
 
   subroutine tearDown(this)
@@ -38,28 +57,27 @@ contains
 
   end subroutine tearDown
 
-  subroutine create_simpleSingleDecomp(this)
-    use spmdMod, only : iam
+  subroutine create_simpleSingleDecomp(this, ni, nj)
+    use unittestSubgridMod, only : set_decomp_info
     class(TestDecompMod), intent(inout) :: this
+    integer, intent(in) :: ni, nj
 
-    integer :: clump_pproc
-    ! TODO: When decompMod has it's own allocate method that could be used here
-    nclumps = 1
-    clump_pproc = nclumps
-    allocate(procinfo%cid(clump_pproc))
-    allocate(clumps(nclumps))
-    ! Set the procinfo and clumps values
-    ! TODO: Use initialization method when available (currently in decompInitMod)
-    procinfo%cid = 1
-    procinfo%ncells = ni*nj
-    procinfo%begg = 1
-    procinfo%endg = procinfo%ncells
-    procinfo%nclumps = nclumps
-    clumps(:)%owner = iam
-    clumps(:)%begg = 1
-    clumps(:)%endg = procinfo%ncells
+    integer :: g
+
+    call set_decomp_info( ni=ni, nj=nj )
+    call decompmod_allocate_gindex( ni*nj )
+    do g = 1, ni*nj
+      ! since no ocean points are masked out global and grc are identical
+      gindex_global(g) = g
+      gindex_grc(g) = g
+      ! Assume subgrid levels are all one per higher level, so everything is the same
+      gindex_lun(g) = g
+      gindex_col(g) = g
+      gindex_patch(g) = g
+    end do
 
   end subroutine create_simpleSingleDecomp
+
   ! ========================================================================
   ! Begin tests
   ! ========================================================================
@@ -102,5 +120,198 @@ contains
     @assertEqual(bounds_proc%begg, bounds_clump%begg)
     @assertEqual(bounds_proc%endg, bounds_clump%endg)
   end subroutine test_proc_clump_bounds_equal
+
+  @Test
+  subroutine test_get_global_index(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g, n
+
+    do g = procinfo%begg, procinfo%endg
+       n = get_global_index(g, subgrid_level_gridcell)
+       @assertEqual(n, g)
+       ! Will be the same for all subgrid levels since they are all one to one
+       n = get_global_index(g, subgrid_level_landunit)
+       @assertEqual(n, g)
+       n = get_global_index(g, subgrid_level_column)
+       @assertEqual(n, g)
+       n = get_global_index(g, subgrid_level_patch)
+       @assertEqual(n, g)
+    end do
+  end subroutine test_get_global_index
+
+  @Test
+  subroutine test_get_global_index_bad_values_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    integer :: idx
+
+    idx = get_global_index(0, subgrid_level_gridcell, donot_abort_on_badindex=.true. )
+    @assertEqual(idx, -1)
+
+  end subroutine test_get_global_index_bad_values_fails
+
+  @Test
+  subroutine test_get_global_index_bad_subgrid_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    character(len=:), allocatable :: expected_msg
+    integer :: idx
+
+    idx = get_global_index(1, subgrid_level_unspecified, donot_abort_on_badindex=.true. )
+    @assertEqual(idx, -1)
+
+  end subroutine test_get_global_index_bad_subgrid_fails
+
+
+  @Test
+  subroutine test_get_subgrid_level_gindex_for_lndgrid(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g, n
+    integer, pointer :: gindex(:) => NULL()
+
+    call get_subgrid_level_gindex(subgrid_level_lndgrid, gindex)
+    do g = procinfo%begg, procinfo%endg
+       n = gindex(g)
+       @assertEqual(n, g)
+    end do
+  end subroutine test_get_subgrid_level_gindex_for_lndgrid
+
+  @Test
+  subroutine test_calc_globalxy_indices(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    type(bounds_type) :: bounds
+    integer :: g
+    integer :: i, j
+    integer :: expect_i(ni*nj), expect_j(ni*nj)
+
+    ! Expected indices is just the pattern on the simple 2D grid with no mask
+    g = 0
+    do j = 1, nj
+      do i = 1, ni
+        g = g + 1
+        expect_i(g) = i
+        expect_j(g) = j
+      end do
+    end do
+    call get_proc_bounds(bounds)
+    ! Make sure begg is 1, as that is assumed here
+    @assertEqual(bounds%begg, 1)
+    @assertEqual(bounds%endg, ni*nj)
+    do g = bounds%begg, bounds%endg
+      call procinfo%calc_globalxy_indices( g, i, j )
+      @assertEqual(i, expect_i(g) )
+      @assertEqual(j, expect_j(g) )
+    end do
+
+  end subroutine test_calc_globalxy_indices
+
+  @Test
+  subroutine test_calc_globalxy_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    ! IF g is less than begg i and j should be undefined as -1
+    g = 0
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! IF g is greater than endg i and j should be undefined as -1
+    g = ni*nj + 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_x is not set
+    nglob_x = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+    ! If nglob_y is not set
+    nglob_y = -1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails
+
+  @Test
+  subroutine test_calc_globalxy_fails_when_not_allocated(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: g
+    integer :: i, j
+
+    call decompmod_clean()
+    g = 1
+    call procinfo%calc_globalxy_indices( g, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_globalxy_fails_when_not_allocated
+
+  @Test
+  subroutine test_calc_global_index_fromij(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: expect_g
+    integer :: i, j, g
+
+    ! Expected indices is just the pattern on the simple 2D grid with no mask
+    expect_g = 0
+    do j = 1, nj
+      do i = 1, ni
+        expect_g = expect_g + 1
+        g = procinfo%calc_global_index_fromij( i, j )
+        @assertEqual(g, expect_g)
+      end do
+    end do
+  end subroutine test_calc_global_index_fromij
+
+  @Test
+  subroutine test_calc_global_index_fromij_reversed(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: expect_g
+    integer :: i, j, g
+
+    ! Clean the decomp, and then create a new one with ni and nj reversed
+    call decompmod_clean()
+    call this%create_simpleSingleDecomp( ni=nj, nj=ni )
+    expect_g = 0
+    ! Remember ni/nj is reversed here
+    do j = 1, ni
+      do i = 1, nj
+        expect_g = expect_g + 1
+        g = procinfo%calc_global_index_fromij( i, j)
+        @assertEqual(g, expect_g)
+      end do
+    end do
+  end subroutine test_calc_global_index_fromij_reversed
+
+  @Test
+  subroutine test_calc_ijindices_from_full_global_index_fails(this)
+    class(TestDecompMod), intent(inout) :: this
+
+    integer :: gidx ! Global idnex
+    integer :: i, j
+
+    ! IF gidx is less than 1 i and j should be undefined as -1
+    gidx = 0
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+    ! IF gidx is greater than grid size  i and j should be undefined as -1
+    gidx = ni*nj + 1
+    call calc_ijindices_from_full_global_index( gidx, i, j )
+    @assertEqual(i, -1)
+    @assertEqual(j, -1)
+
+  end subroutine test_calc_ijindices_from_full_global_index_fails
 
 end module test_decompMod

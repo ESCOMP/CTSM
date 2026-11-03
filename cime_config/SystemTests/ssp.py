@@ -3,7 +3,7 @@ Implementation of the CIME SSP test.  This class inherits from SystemTestsCommon
 
 This is a CLM specific test:
 Verifies that spinup works correctly
-this test is only valid for CLM compsets with CLM45 or CLM50
+this test is only valid for CLM compsets with CLM50
 (1) do an initial spin test
     - set CLM_ACCELERATED_SPINUP to on
     - write restarts at the end of the run, turn on short term archiving

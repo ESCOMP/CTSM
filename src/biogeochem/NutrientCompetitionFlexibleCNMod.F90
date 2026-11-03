@@ -673,6 +673,8 @@ contains
                this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
                     / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
             end if
+         else
+            this%actual_storage_leafcn(p) = spval
          end if
 
          if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then

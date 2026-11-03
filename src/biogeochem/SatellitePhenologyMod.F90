@@ -4,8 +4,8 @@ module SatellitePhenologyMod
 
   !-----------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! CLM Satelitte Phenology model (SP) ecosystem dynamics (phenology, vegetation).
-  ! Allow some subroutines to be used by the CLM Carbon Nitrogen model (CLMCN)
+  ! CLM Satelitte Phenology model (ClmSp) ecosystem dynamics (phenology, vegetation).
+  ! Allow some subroutines to be used by the CLM Biogeochemistry model (ClmBgc)
   ! so that DryDeposition code can get estimates of LAI differences between months.
   !
   ! !USES:
@@ -202,7 +202,7 @@ contains
     end if 
     
     associate(                                                           &
-      frac_sno           => waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
+      frac_sno_albedo    => waterdiagnosticbulk_inst%frac_sno_albedo_col, & ! Input:  [real(r8) (:) ] fraction of ground covered by snow for albedo calculations (0 to 1)
       snow_depth         => waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
       tlai_driver        => canopystate_inst%tlai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided leaf area index, no burying by snow
       tsai_driver        => canopystate_inst%tsai_input_patch    ,    & ! Input: [real(r8) (:) ] SP driver data for one-sided stem area index, no burying by snow
@@ -245,8 +245,8 @@ contains
         fb = 1._r8 - (max(min(snow_depth(c),max(0.05,htop(p)*0.8_r8)),0._r8)/(max(0.05,htop(p)*0.8_r8)))
       endif
 
-      elai(p) = max(tlai(p)*(1.0_r8 - frac_sno(c)) + tlai(p)*fb*frac_sno(c), 0.0_r8)
-      esai(p) = max(tsai(p)*(1.0_r8 - frac_sno(c)) + tsai(p)*fb*frac_sno(c), 0.0_r8)
+      elai(p) = max(tlai(p)*(1.0_r8 - frac_sno_albedo(c)) + tlai(p)*fb*frac_sno_albedo(c), 0.0_r8)
+      esai(p) = max(tsai(p)*(1.0_r8 - frac_sno_albedo(c)) + tsai(p)*fb*frac_sno_albedo(c), 0.0_r8)
       if (elai(p) < 0.05_r8) elai(p) = 0._r8
       if (esai(p) < 0.05_r8) esai(p) = 0._r8
 
@@ -505,12 +505,28 @@ contains
                 do ft = surfpft_lb,surfpft_ub
                    p = ft + col%patchi(c)
                    g = patch%gridcell(p)
-                   mlai2t(p,k) = mlai(g,ft)
-                   msai2t(p,k) = msai(g,ft)
-                   mhvt2t(p,k) = mhgtt(g,ft)
-                   mhvb2t(p,k) = mhgtb(g,ft)
+                   if (patch%is_fates(p)) then
+                     mlai2t(p,k) = mlai(g,ft)
+                     msai2t(p,k) = msai(g,ft)
+                     mhvt2t(p,k) = mhgtt(g,ft)
+                     mhvb2t(p,k) = mhgtb(g,ft)
+                   else
+                      ! Just in case if somehow a non-fates patch is on a fates column
+                      mlai2t(p,k) = 0._r8
+                      msai2t(p,k) = 0._r8
+                      mhvt2t(p,k) = 0._r8
+                      mhvb2t(p,k) = 0._r8
+                   endif
                 end do
-             end if
+             else
+                ! There are non-fates columns when you run with fates
+                ! gnu does not catch nans as fpes, so this is needed
+                ! to make intel happy.
+                mlai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                msai2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvt2t(col%patchi(c):col%patchf(c),k) = 0._r8
+                mhvb2t(col%patchi(c):col%patchf(c),k) = 0._r8
+             endif
           end do
        else          
           do p = bounds%begp,bounds%endp

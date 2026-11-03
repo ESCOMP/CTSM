@@ -10,7 +10,7 @@ module CNCStateUpdate1Mod
   use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : i_litr_min, i_litr_max, i_cwd
   use clm_varpar                         , only : i_met_lit, i_str_lit, i_phys_som, i_chem_som
-  use pftconMod                          , only : is_prognostic_crop, nc3crop, pftcon
+  use pftconMod                          , only : is_prognostic_crop, pftcon
   use abortutils                         , only : endrun
   use decompMod                          , only : bounds_type
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type

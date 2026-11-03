@@ -120,6 +120,7 @@ contains
     use FATESFireFactoryMod   , only : scalar_lightning
     use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
     use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    use shr_log_mod, only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -536,7 +537,7 @@ contains
             filter(nc)%num_soilp  , filter(nc)%soilp,   &
             canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
-            energyflux_inst)
+            energyflux_inst, frictionvel_inst, soilstate_inst)
 
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icec, filter(nc)%icec, &
@@ -611,7 +612,7 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! update surface water fraction (this may modify frac_sno)
+       ! update surface water fraction (this may modify frac_sno_albedo and frac_sno_fluxes)
        call UpdateFracH2oSfc(bounds_clump, &
             filter(nc)%num_soilc, filter(nc)%soilc, &
             water_inst)
@@ -822,6 +823,12 @@ contains
 
        if (irrigate) then
 
+          if (use_fates) then
+             call endrun(msg=' ERROR: Can not have ' // &
+                             'use_fates = .true. and irrigate = .true. ' // &
+                             'Set one of them to .false. in your user_nl_clm. ' // &
+                             errMsg(sourcefile, __LINE__))
+          endif
           ! ============================================================================
           ! Determine irrigation needed for future time steps
           ! ============================================================================
@@ -1029,7 +1036,7 @@ contains
           l = col%landunit(c)
           if (lun%urbpoi(l)) then
              ! Urban landunit use Bonan 1996 (LSM Technical Note)
-             water_inst%waterdiagnosticbulk_inst%frac_sno_col(c) = &
+             water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(c) = &
                   min( water_inst%waterdiagnosticbulk_inst%snow_depth_col(c)/0.05_r8, 1._r8)
           end if
        end do
@@ -1182,7 +1189,8 @@ contains
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_carbonstate_inst)
+               soilbiogeochem_carbonstate_inst, &
+               solarabs_inst, energyflux_inst, temperature_inst)
 
 
           if( is_beg_curr_day() ) then
@@ -1555,7 +1563,8 @@ contains
        num_nolakep, filter_nolakep, &
        num_soilp  , filter_soilp, &
        canopystate_inst, waterstatebulk_inst, &
-       waterdiagnosticbulk_inst, energyflux_inst)
+       waterdiagnosticbulk_inst, energyflux_inst, &
+       frictionvel_inst, soilstate_inst)
     !
     ! !DESCRIPTION:
     ! Initialization of clm driver variables needed from previous timestep
@@ -1570,6 +1579,9 @@ contains
     use WaterFluxBulkType      , only : waterfluxbulk_type
     use WaterStateBulkType , only : waterstatebulk_type
     use EnergyFluxType     , only : energyflux_type
+    use FrictionVelocityMod, only : frictionvel_type
+    use SoilStateType      , only : soilstate_type
+    use CanopyFluxesMod    , only : CanopyFluxesResetDiagnostics
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
@@ -1583,10 +1595,15 @@ contains
     type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(energyflux_type) , intent(inout) :: energyflux_inst
+    type(frictionvel_type), intent(inout) :: frictionvel_inst
+    type(soilstate_type)  , intent(inout) :: soilstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, p, f, j              ! indices
     integer :: fp, fc                  ! filter indices
+    integer :: frac_veg_nosno_new      ! frac_veg_nosno for this time step
+    integer :: num_leaving_exposedveg  ! number of patches leaving the exposed-veg filter this step
+    integer :: filter_leaving_exposedveg(bounds%endp-bounds%begp+1) ! patches leaving the exposed-veg filter this step
     !-----------------------------------------------------------------------
 
     associate(                                                             &
@@ -1617,15 +1634,31 @@ contains
          eflx_bot(c)  = 0._r8
       end do
 
-      ! Initialize fraction of vegetation not covered by snow
+      ! Initialize fraction of vegetation not covered by snow.
+      !
+      ! Patches whose frac_veg_nosno goes from 1 to 0 leave filter_exposedvegp (set
+      ! later in setExposedvegpFilter), so CanopyFluxes will no longer compute their
+      ! diagnostics. Reset those diagnostics now so the last computed values do not
+      ! persist: they are not restart variables, so persisting values would differ
+      ! between a continuous and a restarted run (issue #3661).
 
+      num_leaving_exposedveg = 0
       do p = bounds%begp,bounds%endp
          if (patch%active(p)) then
-            frac_veg_nosno(p) = frac_veg_nosno_alb(p)
+            frac_veg_nosno_new = frac_veg_nosno_alb(p)
          else
-            frac_veg_nosno(p) = 0._r8
+            frac_veg_nosno_new = 0
          end if
+         if (frac_veg_nosno(p) == 1 .and. frac_veg_nosno_new == 0) then
+            num_leaving_exposedveg = num_leaving_exposedveg + 1
+            filter_leaving_exposedveg(num_leaving_exposedveg) = p
+         end if
+         frac_veg_nosno(p) = frac_veg_nosno_new
       end do
+
+      call CanopyFluxesResetDiagnostics(bounds, &
+           num_leaving_exposedveg, filter_leaving_exposedveg, &
+           frictionvel_inst, soilstate_inst, waterdiagnosticbulk_inst)
 
       ! Initialize set of previous time-step variables
       ! Ice fraction of snow at previous time step

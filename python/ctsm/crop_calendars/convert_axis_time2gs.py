@@ -48,13 +48,13 @@ def convert_axis_time2gs_setup(this_ds, verbose):
     Various setup steps for convert_axis_time2gs_setup()
     """
     # How many non-NaN patch-seasons do we expect to have once we're done organizing things?
-    n_patch = this_ds.dims["patch"]
+    n_patch = this_ds.sizes["patch"]
     # Because some patches will be planted in the last year but not complete, we have to ignore any
     # finalyear-planted seasons that do complete.
-    n_gs = this_ds.dims["time"] - 1
+    n_gs = this_ds.sizes["time"] - 1
     expected_valid = n_patch * n_gs
 
-    mxharvests = this_ds.dims["mxharvests"]
+    mxharvests = this_ds.sizes["mxharvests"]
 
     if verbose:
         print(
@@ -377,7 +377,7 @@ def ignore_harvests_planted_in_final_year(
     )
     is_valid = ~np.isnan(hdates_pg2)
     is_fake = np.isneginf(hdates_pg2)
-    is_fake = np.reshape(is_fake[is_valid], (this_ds.dims["patch"], n_gs))
+    is_fake = np.reshape(is_fake[is_valid], (this_ds.sizes["patch"], n_gs))
     discrepancy = np.sum(is_valid) - expected_valid
     unique_n_seasons = np.unique(np.sum(is_valid, axis=1))
     if verbose:
@@ -435,8 +435,8 @@ def create_dataset(
 
             # Remove the nans and reshape to patches*growingseasons
             da_pyh = da_yhp.transpose("patch", "time", "mxharvests")
-            ar_pg = np.reshape(da_pyh.values, (this_ds.dims["patch"], -1))
-            ar_valid_pg = np.reshape(ar_pg[is_valid], (this_ds.dims["patch"], n_gs))
+            ar_pg = np.reshape(da_pyh.values, (this_ds.sizes["patch"], -1))
+            ar_valid_pg = np.reshape(ar_pg[is_valid], (this_ds.sizes["patch"], n_gs))
             # Change -infs to nans
             ar_valid_pg[is_fake] = np.nan
             # Save as DataArray to new Dataset, stripping _PERHARV from variable name

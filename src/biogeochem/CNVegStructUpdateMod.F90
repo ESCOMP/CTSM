@@ -37,8 +37,8 @@ contains
     ! vegetation structure (LAI, SAI, height)
     !
     ! !USES:
-    use pftconMod        , only : noveg, nc3crop, nc3irrig, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
-    use pftconMod        , only : is_prognostic_crop
+    use pftconMod        , only : noveg, nbrdlf_evr_shrub, nbrdlf_dcd_brl_shrub
+    use pftconMod        , only : is_generic_crop, is_prognostic_crop
     use pftconMod        , only : ntmp_corn, nirrig_tmp_corn
     use pftconMod        , only : ntrp_corn, nirrig_trp_corn
     use pftconMod        , only : nsugarcane, nirrig_sugarcane
@@ -76,10 +76,10 @@ contains
     real(r8) :: tsai_min   ! PATCH derived minimum tsai
     real(r8) :: tsai_alpha ! monthly decay rate of tsai
     real(r8) :: dt         ! radiation time step (sec)
-    real(r8) :: frac_sno_adjusted ! frac_sno adjusted per frac_sno_threshold
+    real(r8) :: frac_sno_albedo_adjusted ! frac_sno_albedo adjusted per frac_sno_albedo_threshold
 
     real(r8), parameter :: dtsmonth = 2592000._r8 ! number of seconds in a 30 day month (60x60x24x30)
-    real(r8), parameter :: frac_sno_threshold = 0.999_r8  ! frac_sno values greater than this are treated as 1
+    real(r8), parameter :: frac_sno_albedo_threshold = 0.999_r8  ! frac_sno_albedo values greater than this are treated as 1
     !-----------------------------------------------------------------------
     ! tsai formula from Zeng et. al. 2002, Journal of Climate, p1835
     !
@@ -113,8 +113,8 @@ contains
          nind               =>  dgvs_inst%nind_patch                    , & ! Input:  [real(r8) (:) ] number of individuals (#/m**2)                    
          fpcgrid            =>  dgvs_inst%fpcgrid_patch                 , & ! Input:  [real(r8) (:) ] fractional area of patch (pft area/nat veg area)    
 
-         frac_sno           =>  waterdiagnosticbulk_inst%frac_sno_col   , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow (0 to 1)
-         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)                                   
+         frac_sno_albedo    =>  waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:) ] fraction of ground covered by snow for albedo calculations (0 to 1)
+         snow_depth         =>  waterdiagnosticbulk_inst%snow_depth_col , & ! Input:  [real(r8) (:) ] snow height (m)
 
          forc_hgt_u_patch   =>  frictionvel_inst%forc_hgt_u_patch       , & ! Input:  [real(r8) (:) ] observational height of wind at patch-level [m]     
 
@@ -171,7 +171,7 @@ contains
             ! alpha are set by PFT, and alpha is scaled to CLM time step by multiplying by
             ! dt and dividing by dtsmonth (seconds in average 30 day month)
             ! tsai_min scaled by 0.5 to match MODIS satellite derived values
-            if (ivt(p) == nc3crop .or. ivt(p) == nc3irrig) then ! generic crops
+            if (is_generic_crop(ivt(p))) then ! generic crops
 
                tsai_alpha = 1.0_r8-1.0_r8*dt/dtsmonth
                tsai_min = 0.1_r8
@@ -304,15 +304,15 @@ contains
             !depth of snow required for complete burial of grasses
          endif
 
-         if (frac_sno(c) <= frac_sno_threshold) then
-            frac_sno_adjusted = frac_sno(c)
+         if (frac_sno_albedo(c) <= frac_sno_albedo_threshold) then
+            frac_sno_albedo_adjusted = frac_sno_albedo(c)
          else
             ! avoid tiny but non-zero elai and esai that can cause radiation and/or photosynthesis code to blow up
-            frac_sno_adjusted = 1._r8
+            frac_sno_albedo_adjusted = 1._r8
          end if
 
-         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno_adjusted) + tlai(p)*fb*frac_sno_adjusted, 0.0_r8)
-         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno_adjusted) + tsai(p)*fb*frac_sno_adjusted, 0.0_r8)
+         elai(p) = max(tlai(p)*(1.0_r8 - frac_sno_albedo_adjusted) + tlai(p)*fb*frac_sno_albedo_adjusted, 0.0_r8)
+         esai(p) = max(tsai(p)*(1.0_r8 - frac_sno_albedo_adjusted) + tsai(p)*fb*frac_sno_albedo_adjusted, 0.0_r8)
 
          ! Fraction of vegetation free of snow
          if ((elai(p) + esai(p)) > 0._r8) then

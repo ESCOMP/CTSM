@@ -40,11 +40,13 @@ module dynConsBiogeophysMod
   use landunit_varcon         , only : istsoil, istice
   use dynSubgridControlMod    , only : get_for_testing_zero_dynbal_fluxes
   use filterColMod            , only : filter_col_type, col_filter_from_ltypes
+  use clm_time_manager        , only : get_step_size_real, get_average_days_per_year
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
   private
   !
+  public :: dynConsBiogeophys_readnl    ! read namelist variables
   public :: dyn_hwcontent_set_baselines ! set start-of-run baseline values for heat and water content in some columns
   public :: dyn_hwcontent_init          ! compute grid-level heat and water content, before land cover change
   public :: dyn_hwcontent_final         ! compute grid-level heat and water content and dynbal fluxes after land cover change
@@ -57,11 +59,97 @@ module dynConsBiogeophysMod
   private :: dyn_water_content            ! compute gridcell total liquid and ice water contents
   private :: dyn_heat_content             ! compute gridcell total heat contents
 
+  !
+  ! !PRIVATE DATA MEMBERS:
+
+  ! Turnover rate of the dynbal storage pools [1/s]. This is derived from the
+  ! dynbal_storage_residence_time namelist variable, which gives the residence time in
+  ! years.
+  real(r8), private :: dynbal_storage_turnover_rate
+
+  ! Whether the namelist has been read (and thus whether dynbal_storage_turnover_rate has
+  ! been set)
+  logical, private :: namelist_read = .false.
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
   !---------------------------------------------------------------------------
 
 contains
+
+  !-----------------------------------------------------------------------
+  subroutine dynConsBiogeophys_readnl(NLFilename)
+    !
+    ! !DESCRIPTION:
+    ! Read the dyn_cons_biogeophys_inparm namelist.
+    !
+    ! Note that this must be called AFTER the time manager has been initialized, because
+    ! converting dynbal_storage_residence_time to a turnover rate depends on the model
+    ! calendar.
+    !
+    ! !USES:
+    use shr_const_mod, only : SHR_CONST_CDAY
+    use shr_nl_mod   , only : shr_nl_find_group_name
+    use abortutils   , only : endrun
+    use clm_varctl   , only : iulog
+    use spmdMod      , only : masterproc, mpicom
+    use shr_mpi_mod  , only : shr_mpi_bcast
+
+    ! !ARGUMENTS:
+    character(len=*), intent(in) :: NLFilename ! Namelist filename to read
+
+    ! !LOCAL VARIABLES:
+    ! temporary variable corresponding to the namelist variable:
+    real(r8) :: dynbal_storage_residence_time ! residence time of the dynbal storage pools [years]
+    ! other local variables:
+    integer :: ierr  ! error code
+    integer :: unitn ! unit for namelist file
+    character(len=*), parameter :: nml_name = 'dyn_cons_biogeophys_inparm'    ! MUST agree with name in namelist and read
+    !-----------------------------------------------------------------------
+
+    namelist /dyn_cons_biogeophys_inparm/ &
+         dynbal_storage_residence_time
+
+    dynbal_storage_residence_time = 0._r8
+
+    ! Read in the namelist on the main task
+    if (masterproc) then
+       open( newunit=unitn, file=trim(NLFilename), status='old', iostat=ierr )
+       call shr_nl_find_group_name(unitn, nml_name, status=ierr)
+       if (ierr == 0) then
+          read(unitn, nml=dyn_cons_biogeophys_inparm, iostat=ierr)
+          if (ierr /= 0) then
+             call endrun(msg="ERROR reading "//nml_name//" namelist", file=sourcefile, line=__LINE__)
+          end if
+       else
+          call endrun(msg="ERROR could NOT find "//nml_name//" namelist", file=sourcefile, line=__LINE__)
+       end if
+       close( unitn )
+    end if
+
+    ! Broadcast namelist values to all tasks
+    call shr_mpi_bcast( dynbal_storage_residence_time, mpicom )
+
+    ! Convert the residence time to a turnover rate.
+    if (dynbal_storage_residence_time <= 0._r8) then
+       write(iulog,*) "ERROR: dynbal_storage_residence_time must be greater than 0"
+       write(iulog,*) "Value given: ", dynbal_storage_residence_time
+       call endrun(msg="ERROR: dynbal_storage_residence_time must be greater than 0", &
+            file=sourcefile, line=__LINE__)
+    end if
+    dynbal_storage_turnover_rate = 1._r8 / &
+         (dynbal_storage_residence_time * (get_average_days_per_year() * SHR_CONST_CDAY))
+
+    namelist_read = .true.
+
+    if (masterproc) then
+       write(iulog,*) " "
+       write(iulog,*) "dyn_cons_biogeophys_inparm settings:"
+       write(iulog,nml=dyn_cons_biogeophys_inparm)
+       write(iulog,*) " "
+    end if
+
+  end subroutine dynConsBiogeophys_readnl
 
   !-----------------------------------------------------------------------
   subroutine dyn_hwcontent_set_baselines(bounds, num_icec, filter_icec, &
@@ -91,6 +179,13 @@ contains
     ! the dynbal fluxes; however, it can break conservation. (So, for example, it can be
     ! done when transitioning from an offline spinup to a coupled run, but it should not
     ! be done when transitioning from a coupled historical run to a future scenario.)
+    !
+    ! Setting reset_all_baselines also resets the dynbal storage pools to zero. (These
+    ! pools hold the still-to-be-distributed water and energy from earlier dynamic
+    ! column/landunit area changes. So resetting these to zero means forgetting about
+    ! these earlier changes, which is somewhat analogous to the other resetting done by
+    ! this flag.)
+    !
     ! Other reset_* flags are described below.
     !
     ! !ARGUMENTS:
@@ -198,7 +293,9 @@ contains
 
     associate( &
          dynbal_baseline_liq => waterstate_inst%dynbal_baseline_liq_col, & ! Output: [real(r8) (:)   ]  baseline liquid water content subtracted from each column's total liquid water calculation (mm H2O)
-         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col  & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
+         dynbal_baseline_ice => waterstate_inst%dynbal_baseline_ice_col, & ! Output: [real(r8) (:)   ]  baseline ice content subtracted from each column's total ice calculation (mm H2O)
+         dynbal_liq_storage => waterstate_inst%dynbal_liq_storage_grc, &   ! Output: [real(r8) (:)   ]  liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
+         dynbal_ice_storage => waterstate_inst%dynbal_ice_storage_grc &    ! Output: [real(r8) (:)   ]  ice storage from dynbal adjustments, to be released gradually (mm H2O)
          )
 
     if (reset_all_baselines) then
@@ -224,6 +321,9 @@ contains
        call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_ice_mass_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_ice(bounds%begc:bounds%endc))
+
+       dynbal_liq_storage(bounds%begg:bounds%endg) = 0._r8
+       dynbal_ice_storage(bounds%begg:bounds%endg) = 0._r8
     end if
 
     if (reset_all_baselines .or. reset_lake_baselines) then
@@ -290,7 +390,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate( &
-         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         dynbal_baseline_heat => temperature_inst%dynbal_baseline_heat_col, & ! Output: [real(r8) (:)   ]  baseline heat content subtracted from each column's total heat calculation (J/m2)
+         dynbal_heat_storage => temperature_inst%dynbal_heat_storage_grc  &   ! Output: [real(r8) (:)   ]  heat storage from dynbal adjustments, to be released gradually (J/m^2)
          )
 
     if (reset_all_baselines) then
@@ -322,6 +423,8 @@ contains
        call set_glacier_baselines(bounds, num_icec, filter_icec, &
             vals_col = soil_heat_col(bounds%begc:bounds%endc), &
             baselines_col = dynbal_baseline_heat(bounds%begc:bounds%endc))
+
+       dynbal_heat_storage(bounds%begg:bounds%endg) = 0._r8
     end if
 
     if (reset_all_baselines .or. reset_lake_baselines) then
@@ -506,14 +609,20 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: i
     integer  :: g     ! grid cell index
+    real(r8) :: dtime ! model time step [s]
     real(r8) :: this_delta_liq(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk or one tracer
     real(r8) :: delta_liq_bulk(bounds%begg:bounds%endg)  ! change in gridcell h2o liq content for bulk water
     real(r8) :: delta_heat(bounds%begg:bounds%endg) ! change in gridcell heat content
     !---------------------------------------------------------------------------
 
+    SHR_ASSERT_FL(namelist_read, sourcefile, __LINE__)
+
     associate( &
          begg => bounds%begg, &
-         endg => bounds%endg)
+         endg => bounds%endg, &
+         dynbal_heat_storage => temperature_inst%dynbal_heat_storage_grc, & ! Output: [real(r8) (:)] heat storage from dynbal adjustments, to be released gradually (J/m^2)
+         eflx_dynbal => energyflux_inst%eflx_dynbal_grc  &                  ! Output: [real(r8) (:)] dynamic land cover change conversion energy flux (W/m^2)
+         )
 
     do i = water_inst%bulk_and_tracers_beg, water_inst%bulk_and_tracers_end
        associate(bulk_or_tracer => water_inst%bulk_and_tracers(i))
@@ -559,10 +668,15 @@ contains
          liquid_water_temp2 = temperature_inst%liquid_water_temp2_grc(begg:endg), &
          delta_heat = delta_heat(begg:endg))
 
-    call energyflux_inst%eflx_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_heat(begg:endg))
-    call energyflux_inst%eflx_dynbal_dribbler%get_curr_flux(bounds, &
-         energyflux_inst%eflx_dynbal_grc(begg:endg))
+    ! Add this time step's spurious heat gain to the storage pool (with a negative to use
+    ! the proper sign convention for this pool), then release a portion of the pool as
+    ! this time step's flux.
+    dtime = get_step_size_real()
+    do g = begg, endg
+       dynbal_heat_storage(g) = dynbal_heat_storage(g) - delta_heat(g)
+       eflx_dynbal(g) = dynbal_heat_storage(g) * dynbal_storage_turnover_rate
+       dynbal_heat_storage(g) = dynbal_heat_storage(g) - (eflx_dynbal(g) * dtime)
+    end do
 
     end associate
 
@@ -586,7 +700,7 @@ contains
     integer                     , intent(in)    :: filter_nolakec(:)
     integer                     , intent(in)    :: num_lakec
     integer                     , intent(in)    :: filter_lakec(:)
-    class(waterstate_type)      , intent(in)    :: waterstate_inst
+    class(waterstate_type)      , intent(inout) :: waterstate_inst
     class(waterdiagnostic_type) , intent(in)    :: waterdiagnostic_inst
     class(waterbalance_type)    , intent(inout) :: waterbalance_inst
     class(waterflux_type)       , intent(inout) :: waterflux_inst
@@ -595,6 +709,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     integer  :: g
+    real(r8) :: dtime ! model time step [s]
     real(r8) :: delta_ice(bounds%begg:bounds%endg)  ! change in gridcell h2o ice content
 
     character(len=*), parameter :: subname = 'dyn_water_content_final'
@@ -604,7 +719,12 @@ contains
 
     associate( &
          begg => bounds%begg, &
-         endg => bounds%endg)
+         endg => bounds%endg, &
+         dynbal_liq_storage => waterstate_inst%dynbal_liq_storage_grc, & ! Output: [real(r8) (:)] liquid water storage from dynbal adjustments, to be released gradually (mm H2O)
+         dynbal_ice_storage => waterstate_inst%dynbal_ice_storage_grc, & ! Output: [real(r8) (:)] ice storage from dynbal adjustments, to be released gradually (mm H2O)
+         qflx_liq_dynbal => waterflux_inst%qflx_liq_dynbal_grc, &        ! Output: [real(r8) (:)] liq dynamic land cover change conversion runoff flux (mm H2O/s)
+         qflx_ice_dynbal => waterflux_inst%qflx_ice_dynbal_grc  &        ! Output: [real(r8) (:)] ice dynamic land cover change conversion runoff flux (mm H2O/s)
+         )
 
     call dyn_water_content(bounds, &
          num_nolakec, filter_nolakec, &
@@ -625,15 +745,19 @@ contains
        end do
     end if
 
-    call waterflux_inst%qflx_liq_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_liq(begg:endg))
-    call waterflux_inst%qflx_liq_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_liq_dynbal_grc(begg:endg))
+    ! Add this time step's spurious water gain to the storage pools (with a negative to
+    ! use the proper sign convention for these pools), then release a portion of each pool
+    ! as this time step's flux.
+    dtime = get_step_size_real()
+    do g = begg, endg
+       dynbal_liq_storage(g) = dynbal_liq_storage(g) - delta_liq(g)
+       qflx_liq_dynbal(g) = dynbal_liq_storage(g) * dynbal_storage_turnover_rate
+       dynbal_liq_storage(g) = dynbal_liq_storage(g) - (qflx_liq_dynbal(g) * dtime)
 
-    call waterflux_inst%qflx_ice_dynbal_dribbler%set_curr_delta(bounds, &
-         delta_ice(begg:endg))
-    call waterflux_inst%qflx_ice_dynbal_dribbler%get_curr_flux(bounds, &
-         waterflux_inst%qflx_ice_dynbal_grc(begg:endg))
+       dynbal_ice_storage(g) = dynbal_ice_storage(g) - delta_ice(g)
+       qflx_ice_dynbal(g) = dynbal_ice_storage(g) * dynbal_storage_turnover_rate
+       dynbal_ice_storage(g) = dynbal_ice_storage(g) - (qflx_ice_dynbal(g) * dtime)
+    end do
 
     end associate
 
