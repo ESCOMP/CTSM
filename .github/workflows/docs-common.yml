@@ -54,7 +54,7 @@ jobs:
       # Do this if using conda
       - name: Set up conda environment
         if: ${{ inputs.use_conda }}
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4.1
         with:
           activate-environment: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
