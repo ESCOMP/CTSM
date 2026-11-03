@@ -59,7 +59,7 @@ jobs:
           activate-environment: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
           channels: conda-forge
-          auto-activate-base: false
+          auto-activate: false
 
       - name: Print installed Python packages
         if: ${{ ! inputs.use_conda }}

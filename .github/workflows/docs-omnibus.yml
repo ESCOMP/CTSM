@@ -41,7 +41,7 @@ jobs:
           activate-environment: ctsm_pylib
           environment-file: python/conda_env_ctsm_py.yml
           channels: conda-forge
-          auto-activate-base: false
+          auto-activate: false
 
       - name: Print installed Python packages
         run: conda list
