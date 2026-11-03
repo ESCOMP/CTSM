@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.13.2
+  - python=3.13.13
   - dask=2025.7.0
   - xarray=2025.1.2
   - tqdm=4.67.1
