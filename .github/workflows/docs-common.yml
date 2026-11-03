@@ -62,12 +62,7 @@ jobs:
           auto-activate: false
 
       - name: Print installed Python packages
-        if: ${{ ! inputs.use_conda }}
-        run: pip list
-
-      - name: Print installed Python packages (conda)
-        if: ${{ inputs.use_conda }}
-        run: conda list
+        run: ${{ inputs.use_conda && 'conda list' || 'pip list' }}
 
       - name: Build Sphinx docs with makefile
         run: |
