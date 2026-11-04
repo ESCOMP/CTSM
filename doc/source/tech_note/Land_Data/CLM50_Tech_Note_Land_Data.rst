@@ -1,194 +1,24 @@
-################################
-CLM5 Land Data Documentation
-################################
+.. _rst_Land Data:
 
-:Version: January 17, 2022 (revised May 2022)
-:Title: Technical Description of the Land Data of version 5.0 of the Community Land Model (CLM5)
-
-**Authors**
-
-Peter Lawrence, David Lawrence, Erik Kluzek, William Sacks, Keith Oleson, Johannes Feddema, George Hurtt, Louise Parsons Chini, Bette Otto-Bliesner, Esther Brady, Robert Tomas, Danica Lombardozzi, Katherine Dagon, Rosie Fisher, Jacquelyn Shuman, William Weider, Samuel Levis, Gordon Bonan, Sean Swenson, William Lipscomb, and Fang Li.
-
-The National Center for Atmospheric Research (NCAR) is operated by the nonprofit University Corporation for Atmospheric Research (UCAR) under the sponsorship of the National Science Foundation. Any opinions, findings, conclusions, or recommendations expressed in this publication are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
-
-National Center for Atmospheric Research, P. O. Box 3000, Boulder, Colorado 80307-300
-
-.. contents:: Contents
-   :depth: 3
-   :local:
-
-List of Figures
-===============
-
-* Figure :ref:`1.1 <fig-1-1>` – Land biogeophysical, biogeochemical, and landscape processes simulated by CLM5 from Lawrence et al. (2019).
-* Figure :ref:`1.2 <fig-1-2>` – Configuration of the CLM5 subgrid hierarchy. Box in upper right shows hypothetical subgrid distribution for a single grid cell. Note that the Crop land unit is only used when the model is run with the crop model active. Abbreviations: TBD – Tall Building District; HD – High Density; MD – Medium Density, G – Glacier, L – Lake, U – Urban, C – Crop, V – Vegetated, PFT – Plant Functional Type, Irr – Irrigated, UIrr – Unirrigated. Red arrows indicate allowed land unit transitions. Purple arrows indicate allowed patch-level transitions.
-* Figure :ref:`1.3 <fig-1-3>` – CLM5 subgrid hierarchy Land Use and Land Cover Change (LULCC) representations. Boxes on right show hypothetical subgrid transition from a Year N to a Year N + 1. Abbreviations as listed in Figure :ref:`1.2 <fig-1-2>`. Red arrows indicate allowed land unit transitions. Purple arrows indicate allowed patch-level transitions. Brown arrow indicates combined effective grid cell transitions. Wood harvest and crop model activities shown at bottom.
-* Figure :ref:`1.4 <fig-1-4>` – CLM5 Land Use and Land Cover Data Generation Tools. Data processing starts with the CMIP6 / LUMIP LUH2 formatted Land Use Time Series which is then combined with PFT and CFT descriptions for Land Units in the CLM5 Land Use Data Tool to generate CLM5 raw data files. These files are combined with other data in the CLM5 mksrfdata tool to generate the surface and land use time series files to be directly read into CLM5.
-* Figure :ref:`2.1 <fig-2-1>` – MODIS IGBP Land Cover Climatology Mapping 2001 – 2011 for: (a) Primary Land Cover Class; (b) Secondary Land Cover Class; and (c) Primary Land Cover Class Fraction.
-* Figure :ref:`2.2 <fig-2-2>` – MODIS MOD44B Vegetation Continuous Fields (VCF) Climatology for 2000 – 2015 for: (a) Percent Tree; (b) Percent Non-Tree; and (c) Non-Vegetated.
-* Figure :ref:`2.3 <fig-2-3>` – (a) Global area of MODIS IGBP Land Cover Mapping 2003 – 2008; and (b) Global average composition of IGBP classes in Tree, Non-Tree and Bare from MODIS Vegetation Continuous Fields 2003 – 2011.
-* Figure :ref:`2.4 <fig-2-4>` – Google Earth FLUXNET Images for forest types: (a) Needleleaf Evergreen CA-OBS; (b) Needleleaf Evergreen SE-NOR; (c) Evergreen Broadleaf BR-MA2; (d) Evergreen Broadleaf CN-DIN; (e) Deciduous Broadleaf US-UMB; and (f) Mixed CA-WP1.
-* Figure :ref:`2.5 <fig-2-5>` – Google Earth Estimated Tree Percent for Forest and Savanna Land Cover Types compared to: (a) MODIS VCF Tree Percent; and (b) Corrected VCF Tree Percent.
-* Figure :ref:`2.6 <fig-2-6>` – Global average composition of IGBP classes for: (a) Tree, Non-Tree and Bare from Corrected Vegetation Continuous Fields data; and (b) Needleleaf Evergreen Tree, Broadleaf Evergreen Tree, Needleleaf Deciduous Tree, Broadleaf Deciduous Tree, Non-Tree and Bare when combined with Land Cover Type and AVHRR Vegetation Continuous Fields data.
-* Figure :ref:`2.7 <fig-2-7>` – MODIS IGBP Land Cover x Corrected VCF x AVHRR Vegetation Mapping Part 1: (a) Needleleaf Evergreen Tree; (b) Broadleaf Evergreen Tree; and (c) Needleleaf Deciduous Tree.
-* Figure :ref:`2.8 <fig-2-8>` – MODIS IGBP Land Cover x Corrected VCF x AVHRR Vegetation Mapping Part 2: (a) Broadleaf Deciduous Tree; (b) Non Tree Vegetation; and (c) Non Vegetated (Bare).
-* Figure :ref:`2.9 <fig-2-9>` – CRU 3.24.01 2000 – 2015 Average Annual Climate: (a) Precipitation; (b) Surface Air Temperature; and (c) Whittaker (1970) Biomes from Annual Precipitation and Air Temperature.
-* Figure :ref:`2.10 <fig-2-10>` – MODIS MCD15A2 Monthly LAI climatology 2003 – 2015: (a) January LAI; and (b) July LAI.
-* Figure :ref:`2.11 <fig-2-11>` – MODIS MCD15A2 Monthly LAI climatology 2003 – 2015 and CRU 3.24.01 Monthly Temperature and Precipitation climatology 2000 – 2015: (a) Cumulative Monthly LAI C3 Growing Season; and (b) Cumulative Monthly LAI C4 Growing Season.
-* Figure :ref:`2.12 <fig-2-12>` – Global Current Day 1 km resolution CLM5 PFT mapping: (a) Total area; and (b) MODIS land cover type compositions.
-* Figure :ref:`2.13 <fig-2-13>` – Global Current Day 1 km resolution CLM5 Land Unit Mapping: (a) Percent Glacier; (b) Percent Lake; and (c) Percent Urban.
-* Figure :ref:`2.14 <fig-2-14>` – Global Current Day 1 km resolution CLM5 PFT Mapping: (a) Percent Bare Ground; (b) Percent Needleleaf Evergreen Temperate Tree; and (c) Percent Needleleaf Evergreen Boreal Tree.
-* Figure :ref:`2.15 <fig-2-15>` – Global Current Day 1 km resolution CLM5 PFT Mapping: (a) Percent Needleleaf Deciduous Boreal Tree; (b) Percent Broadleaf Evergreen Tropical Tree; and (c) Percent Broadleaf Evergreen Temperate Tree.
-* Figure :ref:`2.16 <fig-2-16>` – Global Current Day 1 km resolution CLM5 PFT Mapping: (a) Percent Broadleaf Deciduous Tropical Tree; (b) Percent Broadleaf Deciduous Temperate Tree; and (c) Percent Broadleaf Deciduous Boreal Tree.
-* Figure :ref:`2.17 <fig-2-17>` – Global Current Day 1 km resolution CLM5 PFT Mapping: (a) Percent Deciduous Temperate Shrub; (b) Percent Deciduous Boreal Shrub; and (c) Percent C3 Arctic Grass.
-* Figure :ref:`2.18 <fig-2-18>` – Global Current Day 1 km resolution CLM5 PFT Mapping: (a) Percent C3 Grass; (b) Percent C4 Grass; and (c) Percent Crop.
-* Figure :ref:`2.19 <fig-2-19>` – Global CLM5 Whittaker (1970) analysis: (a) Biomes; (b) Glacier; (c) Lake; (d) Urban; (e) Bare Ground; (f) NdlEvgTemp; (g) NdlEvgBorl; and (h) NdlDecBorl.
-* Figure :ref:`2.20 <fig-2-20>` – Global CLM5 Whittaker (1970) analysis: (a) BrdEvgTrop; (b) BrdEvgTemp; (c) BrdDecTrop; (d) BrdDecTemp; (e) BrdDecBorl; (f) ShrEvgTemp; (g) ShrDecTemp; and (h) ShrDecBorl.
-* Figure :ref:`2.21 <fig-2-21>` – Global CLM5 Whittaker (1970) analysis: (a) GrsC3Arc; (b) GrsC3; (c) GrsC4; and (d) Crop.
-* Figure :ref:`3.1 <fig-3-1>` – Global Crop Area from MIRCA 2000, EarthStat 2000 and FAOSTAT for the years 1961, 2000 and 2016.
-* Figure :ref:`3.2 <fig-3-2>` – Global CLM5 Crop Functional Type (CFT) Area for the year 2005 for: (a) Crops actively represented; and (b) Other crops not currently represented but simulated with substituted parameters or unmanaged.
-* Figure :ref:`3.3 <fig-3-3>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Temperate Corn; (b) Percent Tropical Corn; and (c) Percent Wheat.
-* Figure :ref:`3.4 <fig-3-4>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Temperate Soybean; (b) Percent Tropical Soybean; and (c) Percent Rice.
-* Figure :ref:`3.5 <fig-3-5>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Cotton; (b) Percent Sugarcane; and (c) Percent Irrigated Crops.
-* Figure :ref:`3.6 <fig-3-6>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Barley; (b) Percent Cassava; and (c) Percent Citrus.
-* Figure :ref:`3.7 <fig-3-7>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Cocoa; (b) Percent Coffee; and (c) Percent Datepalm.
-* Figure :ref:`3.8 <fig-3-8>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Fodder Grass; (b) Percent Grapes; and (c) Percent Groundnuts.
-* Figure :ref:`3.9 <fig-3-9>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Millet; (b) Percent Tropical Oil Palm; and (c) Percent Potatoes.
-* Figure :ref:`3.10 <fig-3-10>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Pulses; (b) Percent Rapeseed; and (c) Percent Rye.
-* Figure :ref:`3.11 <fig-3-11>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Sorghum; (b) Percent Sugarbeet; and (c) Percent Sunflower.
-* Figure :ref:`3.12 <fig-3-12>` – Global Current Day 1 km resolution CLM5 CFT Mapping: (a) Percent Remaining Unmanaged Crops
-* Figure :ref:`3.13 <fig-3-13>` – Global CLM5 Crop Functional Type (CFT) Composition of crops not currently represented in CLM5 that are coexisting with crops that are actively represented in the model.
-* Figure :ref:`4.1 <fig-4-1>` – Global Current Day CLM5 CISM2 Land Ice Model Surface Data for: (a) Glacier Extent; (b) Glacier Region; and (c) Glacier Mean Elevation Class (MEC).
-* Figure :ref:`4.2 <fig-4-2>` – Global Current Day CLM5 Lake Model Surface Data for: (a) Lake Extent; and (b) Lake Depth.
-* Figure :ref:`4.3 <fig-4-3>` – Global Current Day CLM5 Urban Model Surface Data for: (a) All Combined Urban Class Extent; and (b) Urban Class Regions.
-* Figure :ref:`4.4 <fig-4-4>` – Global Current Day CLM5 Soil Properties Data for: (a) Soil Depth to Bedrock; (b) Soil Organic Content for the top 0.09m; and (c) Soil Organic Content for the next 0.1 – 1.3m
-* Figure :ref:`4.5 <fig-4-5>` – Global Current Day CLM5 Soil Sand Content for: (a) the top 0.09m; (b) the next 0.1 – 1.3m; and (c) the bottom 0.1 – 1.3m.
-* Figure :ref:`4.6 <fig-4-6>` – Global Current Day CLM5 Soil Clay Content for: (a) the top 0.09m; (b) the next 0.1 – 1.3m; and (c) the bottom 0.1 – 1.3m.
-* Figure :ref:`4.7 <fig-4-7>` – Global Current Day CLM5 Hydrology Surface Data for: (a) Elevation; (b) Slope; and (c) Maximum Saturated Fraction (fmax)
-* Figure :ref:`4.8 <fig-4-8>` – Global Current Day CLM5 MOSART River Transport Model Data for: (a) River Network; (b) Channel Slope; and (c) Channel Roughness.
-* Figure :ref:`4.9 <fig-4-9>` – Global Current Day CLM5 MODIS January PFT LAI Data for: (a) All Vegetation Combined; (b) Evergreen Trees; and (c) Deciduous Trees.
-* Figure :ref:`4.10 <fig-4-10>` – Global Current Day CLM5 MODIS July PFT LAI Data for: (a) All Vegetation Combined; (b) Evergreen Trees; and (c) Deciduous Trees.
-* Figure :ref:`4.11 <fig-4-11>` – CLM5 MODIS Monthly PFT LAI and SAI for FLUXNET Sites of: (a) Canada White Pine 2 (CA-WP2); (b) US Duke 1 (US-Dk1); and (c) US Tonzi (US-Ton).
-* Figure :ref:`4.12 <fig-4-12>` – CLM5 MODIS Monthly PFT LAI and SAI for FLUXNET Sites of: (a) Brazil Santarem 1 (BR-Sa1); (b) Brazil Pandeiros (BR-Pan); and (c) Switzerland Chamau (CH-Cha).
-* Figure :ref:`4.13 <fig-4-13>` – Global Current Day CLM5 MODIS January PFT SAI Data for: (a) All Vegetation Combined; (b) Evergreen Trees; and (c) Deciduous Trees.
-* Figure :ref:`4.14 <fig-4-14>` – Global Current Day CLM5 MODIS July PFT SAI Data for: (a) All Vegetation Combined; (b) Evergreen Trees; and (c) Deciduous Trees.
-* Figure :ref:`4.15 <fig-4-15>` – Global Current Day CLM5 ICESAT Canopy Height Data for: (a) All Vegetation Combined; (b) Broadleaf Evergreen Trees; and (c) Broadleaf Deciduous Trees.
-* Figure :ref:`4.16 <fig-4-16>` – Global Current Day CLM5 ICESAT Canopy Height Data for: (a) Needleleaf Evergreen Trees; and (b) Needleleaf Deciduous Trees.
-* Figure :ref:`4.17 <fig-4-17>` – Global Current Day CLM5 MODIS Albedo and Soil Color for: (a) July Blacksky Shortwave Albedo; (b) July Snow Cover; and (c) CLM5 Soil Color Class.
-* Figure :ref:`4.18 <fig-4-18>` – Global CLM5 Fire Model Population Data for: (a) 1850; (b) 2014; and (c) 2100 for the CMIP6 SSP3 Scenario.
-* Figure :ref:`4.19 <fig-4-19>` – Global Current Day CLM5 Fire Model Surface Data for: (a) SRES 1995 Gross Domestic Product (GDP); (b) Peatland Fraction; and (c) Peak Month for Agricultural Burning.
-* Figure :ref:`4.20 <fig-4-20>` – Global Current Day CLM5 Volatile Organic Compound Model PFT Group Isoprene Emission Data for: (a) Broadleaf Trees; (b) Fineleaf Evergreen Trees; and (c) Fineleaf Deciduous Trees.
-* Figure :ref:`4.21 <fig-4-21>` – Global Current Day CLM5 Volatile Organic Compound Model PFT Group Isoprene Emission Data for: (a) Shrubs; (b) Grasses; and (c) Crops.
-* Figure :ref:`4.22 <fig-4-22>` – Global Current Day CLM5 Methane Model Surface Data for: (a) Maximum Inundation Fraction (F0); (b) Surface Runoff Factor (P3); and (c) Water Table Depth Factor (ZWT0).
-* Figure :ref:`4.23 <fig-4-23>` – Global IPCC 10 Regions from Assessment Report 6 for regional analysis.
-* Figure :ref:`5.1 <fig-5-1>` – Current Day 2014 LUH2 Aggregated Land Use States for: (a) All Forests; (b) All Non Forests; and (c) All Crop.
-* Figure :ref:`5.2 <fig-5-2>` – LUH2 Global Land Use States for: (a) Current Day 2014; and (b) Historical 850.
-* Figure :ref:`5.3 <fig-5-3>` – LUH2 Change in Global Land Use States for: (a) Difference between Current Day 2014 and Historical; and (b) Annual values from 850 to 2014.
-* Figure :ref:`5.4 <fig-5-4>` – Current Day 2014 LUH2 Land Use States for: (a) Primary Forest; (b) Secondary Forest; and (c) Primary Non Forest.
-* Figure :ref:`5.5 <fig-5-5>` – Current Day 2014 LUH2 Land Use States for: (a) Secondary Non Forest; (b) Rangeland; and (c) Pasture.
-* Figure :ref:`5.6 <fig-5-6>` – Current Day 2014 LUH2 Land Use States for: (a) C3 Annual Crop; (b) C4 Annual Crop; and (c) C3 Perennial Crop.
-* Figure :ref:`5.7 <fig-5-7>` – Current Day 2014 LUH2 Land Use States for: (a) C4 Perennial Crop; (b) C3 Nitrogen Fixing Crop; and (c) Urban.
-* Figure :ref:`5.8 <fig-5-8>` – LUH2 Change in Global Shifting Cultivation for Secondary Forest and Secondary Non Forest Land Use States as annual values from 850 to 2014.
-* Figure :ref:`5.9 <fig-5-9>` – Current Day 2014 LUH2 Shifting Cultivation for: (a) All Land Use States; (b) Forest Land Use States; and (c) Non Forest Land Use States.
-* Figure :ref:`5.10 <fig-5-10>` – LUH2 Global Agricultural Management for Crop Level Irrigation and Nitrogen Fertilizer for: (a) Current Day 2014; (b) Annual values of Irrigation from 850 to 2014; and (c) Annual values of Nitrogen Fertilizer from 850 to 2014.
-* Figure :ref:`5.11 <fig-5-11>` – Current Day 2014 LUH2 Agricultural Management for: (a) Irrigated Crops as percentage of grid cell; and (b) Average Crop Nitrogen Fertilizer in kgN/ha.
-* Figure :ref:`5.12 <fig-5-12>` – LUH2 Global Forest Management for Wood Harvest Area and Wood Harvest Biomass Amount for: (a) Current Day 2014; (b) Annual values of Wood Harvest Area from 850 to 2014; and (c) Annual values of Wood Harvest Biomass Amount from 850 to 2014.
-* Figure :ref:`5.13 <fig-5-13>` – Current Day 2014 LUH2 Wood Harvest Biomass Amount for: (a) All Land Use States; (b) Primary Forest; and (c) Primary Non Forest.
-* Figure :ref:`5.14 <fig-5-14>` – Current Day 2014 LUH2 Wood Harvest Biomass Amount for: (a) Mature Secondary Forest; (b) Young Secondary Forest; and (c) Secondary Non Forest.
-* Figure :ref:`5.15 <fig-5-15>` – All CMIP6 LUH2 Timeseries Global Annual Land Use States for: (a and b) All Forests; (c and d) All Non Forests; and (e and f) All Crops.
-* Figure :ref:`5.16 <fig-5-16>` – All CMIP6 LUH2 Timeseries Global Annual Land Use States for: (a and b) Pasture; (c and d) Rangeland; and (e and f) Urban.
-* Figure :ref:`5.17 <fig-5-17>` – All CMIP6 LUH2 Timeseries Global Annual Agricultural Management for: (a and b) Shifting Cultivation; (c and d) Irrigated Crop Area; and (e and f) Nitrogen Fertilizer Use.
-* Figure :ref:`5.18 <fig-5-18>` – All CMIP6 LUH2 Timeseries Global Annual Forest Management for: (a and b) Wood Harvest Area; and (c and d) Wood Harvest Biomass Amount.
-* Figure :ref:`6.1 <fig-6-1>` – CLM5 Global Land Use and Plant Functional Type Area for: (a) Current Day 2014; and (b) Historical 850
-* Figure :ref:`6.2 <fig-6-2>` – CLM5 Change in Global Land Use and Plant Functional Type Area for: (a) Difference between Current Day 2014 and 850; and (b) Annual values from 850 to 2014.
-* Figure :ref:`6.3 <fig-6-3>` – Global Current Day CLM5 PFT Mapping 2014: (a) Percent Bare Ground; (b) Percent Needleleaf Evergreen Temperate Tree; and (c) Percent Needleleaf Evergreen Boreal Tree.
-* Figure :ref:`6.4 <fig-6-4>` – Global Current Day CLM5 PFT Mapping 2014: (a) Percent Needleleaf Deciduous Boreal Tree; (b) Percent Broadleaf Evergreen Tropical Tree; and (c) Percent Broadleaf Evergreen Temperate Tree.
-* Figure :ref:`6.5 <fig-6-5>` – Global Current Day CLM5 PFT Mapping 2014: (a) Percent Broadleaf Deciduous Tropical Tree; (b) Percent Broadleaf Deciduous Temperate Tree; and (c) Percent Broadleaf Deciduous Boreal Tree.
-* Figure :ref:`6.6 <fig-6-6>` – Global Current Day CLM5 PFT Mapping 2014: (a) Percent Deciduous Temperate Shrub; (b) Percent Deciduous Boreal Shrub; and (c) Percent C3 Arctic Grass.
-* Figure :ref:`6.7 <fig-6-7>` – Global Current Day CLM5 PFT Mapping 2014: (a) Percent C3 Grass; (b) Percent C4 Grass; and (c) Percent Crop.
-* Figure :ref:`6.8 <fig-6-8>` – CLM5 Global Active and Other Crop Functional Type Area for: (a) Current Day 2014; and (b) Historical 850
-* Figure :ref:`6.9 <fig-6-9>` – CLM5 Change in Global Active and Other Crop Functional Type Area for: (a) Difference between Current Day 2014 and 850; and (b) Annual values from 850 to 2014.
-* Figure :ref:`6.10 <fig-6-10>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Temperate Corn; (b) Percent Tropical Corn; and (c) Percent Wheat.
-* Figure :ref:`6.11 <fig-6-11>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Temperate Soybean; (b) Percent Tropical Soybean; and (c) Percent Rice.
-* Figure :ref:`6.12 <fig-6-12>` – Global Current Day CLM5 CFT Mapping 2014: a) Percent Cotton; (b) Percent Sugarcane; and (c) Percent Other Crops.
-* Figure :ref:`6.13 <fig-6-13>` – CLM5 Global Not Yet Represented Crop Functional Type Area (Remapped in CLM5) for: (a) Current Day 2014; and (b) Historical 850
-* Figure :ref:`6.14 <fig-6-14>` – CLM5 Change in Not Yet Represented Crop Functional Type Area: (a) Difference between Current Day 2014 and 850; and (b) Annual values from 850 to 2014.
-* Figure :ref:`6.15 <fig-6-15>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Barley; (b) Percent Cassava; and (c) Percent Citrus.
-* Figure :ref:`6.16 <fig-6-16>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Cocoa; (b) Percent Coffee; and (c) Percent Datepalm.
-* Figure :ref:`6.17 <fig-6-17>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Fodder Grass; (b) Percent Grapes; and (c) Percent Groundnuts.
-* Figure :ref:`6.18 <fig-6-18>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Millet; (b) Percent Tropical Oil Palm; and (c) Percent Potatoes.
-* Figure :ref:`6.19 <fig-6-19>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Pulses; (b) Percent Rapeseed; and (c) Percent Rye.
-* Figure :ref:`6.20 <fig-6-20>` – Global Current Day CLM5 CFT Mapping 2014: (a) Percent Sorghum; (b) Percent Sugarbeet; and (c) Percent Sunflower.
-* Figure :ref:`6.21 <fig-6-21>` – CLM5 Global Shifting Cultivation for Plant Functional Types for: (a) Current Day 2014; and (b) Annual values from 850 to 2014.
-* Figure :ref:`6.22 <fig-6-22>` – Global Current Day CLM5 Shifting Cultivation Mapping 2014:
-* Figure :ref:`6.23 <fig-6-23>` – CLM5 Global Agricultural Management for Crop Functional Type Irrigation and Nitrogen Fertilizer for: (a) Current Day 2014; (b) Annual values of Irrigation from 850 to 2014; and (c) Annual values of Nitrogen Fertilizer from 850 to 2014.
-* Figure :ref:`6.24 <fig-6-24>` – Global Current Day CLM5 Crop Management Mapping 2014 for: (a) Irrigated Crops as percentage of grid cell; and (b) Average Crop Nitrogen Fertilizer in kgN/ha.
-* Figure :ref:`6.25 <fig-6-25>` – CLM5 Global Forest Management Wood Harvest Biomass Amount for: (a) Current Day 2014 for Tree Plant Functional Types; (b) Annual values of Wood Harvest Amount by for Tree Plant Functional Types from 850 to 2014; and (c) Annual values of Wood Harvest Biomass Amount from LUH2 Land Class for 850 to 2014.
-* Figure :ref:`6.26 <fig-6-26>` – Global Current Day CLM5 Wood Harvest Biomass Amount Mapping 2014 for: (a) All Tree PFTs; (b) Needleleaf Tree PFTs; and (c) Broadleaf Tree PFTs.
-
-List of Tables
-==============
-
-* Table :ref:`1.1 <tbl-1-1>` – Complete List of Source Data for all components of CLM5.
-* Table :ref:`2.1 <tbl-2-1>` – Plant Functional Types (PFTs) included in CLM5.
-* Table :ref:`2.2 <tbl-2-2>` – MODIS IGBP Primary Land Cover Global and IPCC Region Area in millions km\ :sup:`2`.
-* Table :ref:`2.3 <tbl-2-3>` – MODIS IGBP by Percentage Raw VCF, alpha and beta parameters for Tree scaling, and Corrected VCF with MODIS Land Cover and AVHRR Tree Morphology.
-* Table :ref:`2.4 <tbl-2-4>` – Plant Functional Type (PFT) Climate and Leaf Area Index (LAI) Rules.
-* Table :ref:`2.5 <tbl-2-5>` – Current Day CLM5 Land Unit and Plant Functional Types (PFTs) derived from MODIS Land Cover x VCF x LAI x AVHRR x FAOEarthStat x CRU Climate. Global and IPCC Region Areas in millions km\ :sup:`2`.
-* Table :ref:`2.6 <tbl-2-6>` – MODIS IGBP Land Cover Type by Percentage CLM5 PFT Composition.
-* Table :ref:`3.1 <tbl-3-1>` – Crop Functional Types (CFTs) included with the CLM5 BGC CROP option.
-* Table :ref:`3.2 <tbl-3-2>` – MIRCA, EarthStat and FAOSTAT Crop lists.
-* Table :ref:`3.3 <tbl-3-3>` – Global Crop Area from MIRCA 2000, EarthStat 2000 and UN FAOSTAT 1961, 2000 and 2016 in millions of km\ :sup:`2`.
-* Table :ref:`3.4 <tbl-3-4>` – Current Day CLM5 Crop Functional Type (CFT) area for the year 2005 derived from EarthStat and FAOSTAT data in the MIRCA crop classes. Global and IPCC Region Areas in millions km\ :sup:`2`.
-* Table :ref:`4.1 <tbl-4-1>` – Other Current Data Global and IPCC Region Area in millions km\ :sup:`2`.
-* Table :ref:`4.2 <tbl-4-2>` – CLM5 Global and IPCC Regional Average Soil Properties. Depth in meters, and soil properties for the top layers (0 – 0.09m), middle layers (0.1 – 1.3m) and bottom layers (1.3 – 3.4m). Organic Matter in kgOM/m\ :sup:`3`, and Sand and Clay as percentage of mineral soil.
-* Table :ref:`4.4 <tbl-4-4>` – CLM5 Plant Functional Type (PFT) Leaf and Stem Area Index (LAI and SAI), and Canopy Height Satellite Phenology Parameters.
-* Table :ref:`4.5 <tbl-4-5>` – MODIS CLM5 Global and IPCC Regional Plant Functional Type (PFT) Monthly Climatology Leaf Area Index (LAI) in m\ :sup:`2`/m\ :sup:`2`. MODIS data is generated as the monthly climatology from 2003 – 2015 from 8-day 1 km MCD15A2 version 5 data.
-* Table :ref:`4.6 <tbl-4-6>` – CLM5 Global and IPCC Regional Plant Functional Type (PFT) Monthly Climatology Stem Area Index (SAI) in m\ :sup:`2`/m\ :sup:`2`.
-* Table :ref:`4.7 <tbl-4-7>` – ICESAT CLM5 Global and IPCC Regional Plant Functional Type (PFT) Canopy Height in meters.
-* Table :ref:`4.8 <tbl-4-8>` – CLM5 Soil Color classes are from 1 – 20 with reflective properties for dry and saturated soils in the visible and near infrared spectrums as listed in the CLM5 Technote (Lawrence et al. 2018) and Lawrence and Chase (2008).
-* Table :ref:`4.9 <tbl-4-9>` – MODIS CLM5 Global and IPCC Regional Average Shortwave Blacksky Monthly Climatology Albedo as Reflected Fraction, Snow as Percentage Cover, and CLM5 Soil Color. MODIS data is generated as the monthly climatology from 2001 – 2015 from 8 day 1 km MCD43B2 and MCD43B3 version 5 data.
-* Table :ref:`4.10 <tbl-4-10>` – CLM5 Global and IPCC Regional Fire Model Properties. Average Population Density variables in People/km\ :sup:`2` are for 1850, 2014 and 2100 for all five CMIP6 SSPs. Other average variables are SRES Gross Domestic Product (GDP) in constant 1995 US $1000/Capita, Peat Area in millions of km\ :sup:`2`, and Agriculture Burning Month.
-* Table :ref:`4.11 <tbl-4-11>` – CLM5 Global and IPCC Regional Volatile Organic Compounds (VOCs) Properties through Emission Factors for Broadleaf Tree, Fineleaf Evergreen Tree, Fineleaf Deciduous Tree, Shrub, Grass and Crop PFT groups in µg isoprene/m\ :sup:`2`/hr.
-* Table :ref:`4.12 <tbl-4-12>` – CLM5 Global and IPCC Regional Methane Model Properties for Maximum Inundation Fraction (F0), Surface Runoff Factor (1000s) (P3), and Water Table Factor (ZWT0).
-* Table :ref:`4.13 <tbl-4-13>` – IPCC Assessment Report 6, 10 Region Definitions Abbreviations and Long Names.
-* Table :ref:`5.1 <tbl-5-1>` – LUH2 Annual Land Use States.
-* Table :ref:`5.2 <tbl-5-2>` – LUH2 Annual Land Use States and Transitions Matrix. Three possible cases: Excluded (Excl), Wood Harvest (Wood Harv) changes State, and Transition (Trans) changes State.
-* Table :ref:`5.3 <tbl-5-3>` – LUH2 Annual Land Use Management Actions used for CLM5 data.
-* Table :ref:`5.4 <tbl-5-4>` – Annual Global and Regional LUH2 Land Use States Area for 850 and 2014 in Millions of km\ :sup:`2`.
-* Table :ref:`5.5 <tbl-5-5>` – Annual Global and Regional LUH2 Shifting Cultivation Area for 850 and 2014 in Millions of km\ :sup:`2`.
-* Table :ref:`5.6 <tbl-5-6>` – Annual Global and Regional LUH2 Irrigation Area in Millions of km\ :sup:`2` for 850 and 2014.
-* Table :ref:`5.7 <tbl-5-7>` – Annual Global and Regional LUH2 Fertilizer Amount in TgN and Average Fertilizer Application Rate in kgN/ha for 2014.
-* Table :ref:`5.8 <tbl-5-8>` – Annual Global and Regional LUH2 Wood Harvest Area in Millions of km\ :sup:`2` for 850 and 2014.
-* Table :ref:`5.9 <tbl-5-9>` – Annual Global and Regional LUH2 Wood Harvest Biomass Amount in PgC for 850 and 2014.
-* Table :ref:`5.10 <tbl-5-10>` – Change in LUH2 States over All CMIP6 Time Series in Millions of km\ :sup:`2`.
-* Table :ref:`5.11 <tbl-5-11>` – Change in LUH2 Shifting Cultivation over All CMIP6 Time Series in Millions of km\ :sup:`2`.
-* Table :ref:`5.12 <tbl-5-12>` – Change in LUH2 Crop Management over All CMIP6 Time Series. Irrigation in Millions of km\ :sup:`2` and Fertilizer in TgN/yr.
-* Table :ref:`5.13 <tbl-5-13>` – Change in LUH2 Wood Harvest over All CMIP6 Time Series. Harvest Area in Millions of km\ :sup:`2`/yr and Biomass Harvest Amount in PgC/yr.
-* Table :ref:`6.1 <tbl-6-1>` – Annual Global and Regional CLM5 Land and Plant Functional Type (PFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
-* Table :ref:`6.2 <tbl-6-2>` – Annual Global and Regional CLM5 Active Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
-* Table :ref:`6.3 <tbl-6-3>` – Annual Global and Regional CLM5 Unrepresented Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask. Unrepresented CFTs are simulated using the functionally closest Active CFT parameters and phenology.
-* Table :ref:`6.4 <tbl-6-4>` – Annual Global and Regional CLM5 Shifting Cultivation Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
-* Table :ref:`6.5 <tbl-6-5>` – Annual Global and Regional CLM5 Irrigated Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
-* Table :ref:`6.6 <tbl-6-6>` – Annual Global and Regional CLM5 Nitrogen Fertilizer by Crop Functional Type (CFT) for 2014 in Amount in TgN/year and Rate in KgN/Ha, using the default CLM5 Domain File Land Mask.
-* Table :ref:`6.7 <tbl-6-7>` – Annual Global and Regional CLM5 Wood Harvest for 850 and 2014 in PgC/yr, using the default CLM5 Domain File Land Mask.
+Land Data
+=========
 
 .. _chap-1:
 
-Chapter 1: Introduction
-=======================
+Introduction
+------------
 
 The purpose of this document is to fully describe the data that supports version 5.0 of the Community Land Model (CLM5). This data is used to prescribe the nature of the land surface and how that nature changes through time under human land use land cover change (LULCC). The sources, scientific justification, generation methods and evaluation of these parameterizations can be found in the referenced scientific papers (:ref:`References <chap-9>`). This document along with the CLM5 Technote (Lawrence et al. 2018) and the CLM5 User’s Guide together provide the user with the scientific description and operating instructions for CLM.
 
 .. _sec-1-1:
 
-1.1 CLM Land Data History
--------------------------
+CLM Land Data History
+^^^^^^^^^^^^^^^^^^^^^
 
 .. _sec-1-1-1:
 
-1.1.1 Inception of CLM
-~~~~~~~~~~~~~~~~~~~~~~
+Inception of CLM
+""""""""""""""""
 
 The initial stages of the Community Land Model were the result of the merging of community-developed land modeling focusing on biogeophysics, with an ongoing effort to expand the NCAR Land Surface Model (NCAR LSM, Bonan 1996) to include the carbon cycle, vegetation dynamics, and river routing. The initial effort, known as the Common Land Model, brought together the best features of the three existing land models of: the NCAR LSM (Bonan 1996, 1998); the Institute of Atmospheric Physics, Chinese Academy of Sciences land model (IAP94) (Dai and Zeng 1997); and the Biosphere-Atmosphere Transfer Scheme (BATS) (Dickinson et al. 1993). Documentation for the Common Land Model can be found in Dai et al. (2001 and 2003). A more extensive description of the development history of all versions of CLM can be found in the CLM5 Technote.
 
@@ -198,8 +28,8 @@ The PFT leaf and stem area indices were specified from monthly values adapted fr
 
 .. _sec-1-1-2:
 
-1.1.2 CLM2
-~~~~~~~~~~
+CLM2
+""""
 
 Following a period of extensive evaluation and code development the Common Land Model was adopted in May 2002 as the Community Land Model (CLM2) for use with the Community Atmosphere Model (CAM2, the successor to CCM3) and version 2 of the Community Climate System Model (CCSM2). In the CLM2 model, grid cells were divided into five primary land cover types: glacier, lake, wetland, urban, and vegetation. As part of the redevelopment, the biome representation was replaced with explicit specification of PFTs and leaf area index (LAI) from satellite data (Oleson and Bonan 2000, Zeng et al. 2002, Bonan et al. 2002a, b). The change to CLM2 also required modifications to parameterizations for vegetation albedo, leaf physiology, and soil water limitations on photosynthesis.
 
@@ -211,15 +41,15 @@ Physiological parameters for the 16 PFTs were obtained from the 12 LSM PFTs (Bon
 
 .. _sec-1-1-3:
 
-1.1.3 CLM3
-~~~~~~~~~~
+CLM3
+""""
 
 Following further software developments, evaluation and improvements in biogeophysical parameterizations to correct deficiencies in the coupled model climate, the CLM3 model was released to the community in June 2004 as a component of the Community Climate System Model (CCSM3.0). The climate statistics of CLM3 when coupled to CCSM3.0, and an analysis of selected features of the land hydrological cycle are provided in Dickinson et al. (2006) and Hack et al. (2006). Beyond the updates to the biogeophysical parameterizations the land data of CLM3 remained the same as CLM2.
 
 .. _sec-1-1-4:
 
-1.1.4 CLM3.5
-~~~~~~~~~~~~
+CLM3.5
+""""""
 
 Investigations into the hydrologic biases in CLM3, lead to the initiation of a new project in 2004 to improve the hydrology of the model. The outcome of these investigations were a range of improvements that were realized as the development of CLM 3.5 (Oleson et al 2008). An important element of these improvements was the inclusion of new surface datasets based on Moderate Resolution Imaging Spectroradiometer (MODIS) products following the work of Lawrence and Chase (2007). Additional improvements included new parameterizations for canopy integration, canopy interception, frozen soil, soil water availability, soil evaporation and snow fraction (Niu and Yang 2006). The soil hydrology was updated with a new TOPMODEL-based groundwater model for determining water table depth, and surface and subsurface runoff from Niu et al. (2005, 2007). The CLM3.5 model also introduced a factor to simulate nitrogen limitation on plant productivity.
 
@@ -231,8 +61,8 @@ A new soil color map with 20 soil colors was developed to prescribe soil reflect
 
 .. _sec-1-1-5:
 
-1.1.5 CLM4
-~~~~~~~~~~
+CLM4
+""""
 
 The next version of the model, CLM4, was released in June 2010 as a component of the CCSM4.0. The motivation for the new model was to incorporate several recent scientific advances in the understanding and representation of land surface processes, expand model capabilities, and improve surface and atmospheric forcing datasets (Oleson et al. 2010a, Lawrence et al. 2011). For the land surface data a key component was the representation of the transient land use and land cover change (LULCC) of the Couple Model Intercomparison Project version 5 (CMIP5) historical and future Representative Concentration Pathway (RCP) time series (Hurtt et al. 2006, 2011) in the CLM4 land surface data framework as described in Lawrence et al. (2012). The CLM4 surface data update also included the refinement of the global PFT, wetland, and lake distributions.
 
@@ -250,8 +80,8 @@ New monthly PFT LAI maps were generated with updated 2001 – 2008 average month
 
 .. _sec-1-1-6:
 
-1.1.6 CLM4.5
-~~~~~~~~~~~~
+CLM4.5
+""""""
 
 The next version of the model CLM4.5, was released to the community in June 2013 along with the Community Earth System Model version 1.2 (CESM1.2) (Oleson et al. 2013). Specifically the new version of the model included revisions to several parameterizations to reflect new scientific understanding and attempt to reduce biases identified in CLM4 simulations including low soil carbon stocks especially in the Arctic, excessive tropical GPP and unrealistically low Arctic GPP, a dry soil bias in Arctic soils, unrealistically high LAI in the tropics, and a transient 20th century carbon response that was inconsistent with observational estimates.
 
@@ -273,15 +103,15 @@ The new fire model needed global maps of population density, gross domestic prod
 
 .. _sec-1-2:
 
-1.2 CLM5 Land Data Representation
----------------------------------
+CLM5 Land Data Representation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While the purpose of this document is to fully describe the data that supports version 5.0 of the Community Land Model (CLM5), the use of the data and how it is represented in the CLM5 model data structures, states, and fluxes is required to fully understand how the data represents the nature of the land surface and how that nature changes through time under human land use and land cover change (LULCC). A full scientific description of the parameterizations and processes that make up the CLM5 model is beyond the scope of the document and can be found in the CLM5 Technote. Here we provide the technical framework, data sources, tools, evaluation and background for the all of the CLM5 land data represented in the model.
 
 .. _sec-1-2-1:
 
-1.2.1 CLM5 Background
-~~~~~~~~~~~~~~~~~~~~~
+CLM5 Background
+"""""""""""""""
 
 The CLM5 version of the model builds on the progress made in CLM4.5 with most major components of the model having been updated from the previous version of the model (Lawrence et al. 2019). A schematic of the processes and systems represented in CLM5 is shown in Figure :ref:`1.1 <fig-1-1>`. From the land data perspective the most notable update is the explicit representation of land use and land cover change (LULCC) to simulate the CMIP6 Land Use Model Intercomparison (LUMIP) historical and projected time series data (Lawrence et al. 2016, Hurtt et al. 2020). The new LULCC data required new time series data generation tools, as well as the compilation and integration of new global vegetation and crop modeling data. Notable changes in the land surface data included new plant functional type (PFT) and crop functional type (CFT) time series mapping, along with new wood harvest, shifting cultivation (not currently implemented in CLM5), irrigation and fertilizer prescription. Other important changes include updates to soil and plant hydrology, snow density, river modeling, carbon and nitrogen cycling and coupling, and crop modeling.
 
@@ -310,8 +140,8 @@ Included with the release of CLM5 is a functionally supported version of the Fun
 
 .. _sec-1-2-2:
 
-1.2.2 CLM5 Surface Data Framework
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CLM5 Surface Data Framework
+"""""""""""""""""""""""""""
 
 The land surface in CLM5 is represented as a nested sub-grid hierarchy in which the land component of an Earth system grid cell is composed of a mosaic of land units that represent glaciers, lakes, urban areas, natural vegetation and crops (when the crop model option is turned on) (Figure :ref:`1.2 <fig-1-2>`). Below the land units, the hierarchy further divides into columns that represent different elements for each corresponding land unit. For the natural vegetation and crop land units the soil columns have a further division to patches that represent plant and crop function types (PFTs and CFTs) that occur on those land units. A single surface data file is used to prescribe the time invariant data describing the land fraction, the distribution and character of land units, along with the glacier elevation classes, lake properties, building properties, soil texture and color, and monthly climatological PFT leaf area index (LAI), stem area index (SAI) and canopy height values. Additionally, the surface data prescribes the initial land unit, PFT, and CFT distributions for a time series describing time evolving land use and land cover change, which is further described in the next section and shown in Figure :ref:`1.3 <fig-1-3>`. The complete list of data used for generating both the surface data file and the land use time series data files is shown in Table :ref:`1.1 <tbl-1-1>`.
 
@@ -460,8 +290,8 @@ The fire model data was prescribed at the grid cell level from the same data as 
 
 .. _sec-1-2-3:
 
-1.2.3 CLM5 Land Use Land Cover Change Data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CLM5 Land Use Land Cover Change Data
+""""""""""""""""""""""""""""""""""""
 
 The CLM5 introduction of the capability to dynamically adjust land unit weights during a simulation allows for changes in the grid cell area allocated to naturally vegetated and crop land units as well as to changes between PFTs and CFTs within the land units. This capability allows the CLM5 crop model to be run coincidentally with prescribed land use and land cover change as shown in Figure :ref:`1.3 <fig-1-3>`. This along with the requirement that CESM and CLM5 be able to represent the new CMIP6 LUMIP LUH2 land use time series data (Lawrence et al. 2016, Hurtt et al. 2020) for all CMIP6 simulations led to a full redevelopment of land use and land cover change in the model. The CMIP LUMIP LUH2 land use data is described in detail in Chapter 5.
 
@@ -471,31 +301,31 @@ The time series file is generated from current day satellite and other current d
 
 .. _sec-1-3:
 
-1.3 CLM5 Land Data Generation
------------------------------
+CLM5 Land Data Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To support the consistent systematic generation of the CLM5 surface and land use time series data files, a workflow process along with a supporting tools has been developed by NCAR for use with CESM2. This technote details the sources of data and the generation methods used for all components of these files and provides guidance for their applications in modeling the land surface. This section provides an overview of the workflow and tools shown in Figure :ref:`1.4 <fig-1-4>`. The tools and workflow are further explored through the detailed descriptions found in Chapter 8.
 
 .. _sec-1-3-1:
 
-1.3.1 CLM5 Land Use Data Preparation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CLM5 Land Use Data Preparation
+""""""""""""""""""""""""""""""
 
 The first element in the workflow for generating the surface and land use time series files is compiling the best available global current day data descriptions of natural vegetation PFTs, and crop CFTs from satellite and other census products. Collating other representations for glaciers, lakes, soils, drainage, river transport and urban.
 
 .. _sec-1-3-2:
 
-1.3.2 CLM5 Land Use Data Tool
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CLM5 Land Use Data Tool
+"""""""""""""""""""""""
 
 CLM5 Land Use Data Tool takes a CMIP6 LUMIP LUH2 formatted time series data set and processes it with the corresponding descriptions of the LUH2 land use to generate the CLM5 raw data files for each year. Both the LUH2 land use data and the descriptions generated in the data preparation stage can change through the time period. In this manner the amount of c3ann crop, along with the irrigation and fertilizer treatment of the crop can change for a grid cell year to year, but also the CLM5 CFTs that the c3ann crop translates to can change reflecting a hypothetical shift from wheat to cotton. This can also occur with the natural vegetation land unit and PFTs, where a secondary forest can replace pasture, or there can be change in the forest composition from broadleaf deciduous temperate trees to needleleaf evergreen temperate trees.
 
 .. _sec-1-3-3:
 
-1.3.3 CLM5 MkSurfData Tool
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+CLM5 MkSurfData Tool
+""""""""""""""""""""
 
-Combines the CLM5 raw data files with the glacier, lake and urban data to generate the surface and land use time series files.
+DEPRECATED
 
 .. figure:: figures/figure_1_4.png
    :name: fig-1-4
@@ -506,13 +336,13 @@ Combines the CLM5 raw data files with the glacier, lake and urban data to genera
 
 .. _chap-2:
 
-Chapter 2: Current Day Land Cover Data
-======================================
+Current Day Land Cover Data
+---------------------------
 
 .. _sec-2-1:
 
-2.1 Current Day CLM5 Land Cover Data Overview
----------------------------------------------
+Current Day CLM5 Land Cover Data Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Previous versions of CLM developed current day descriptions of the land surface from a range of global satellite, historical cropping and climate products. The methods developed for CLM3.5 by Lawrence and Chase (2007), were updated for CLM4, with new MODIS and climate products, and land cover rules enforced to prevent low tree fractions from the MODIS VCF data in forests after initial low carbon amounts were found in the CLM4CN model. Here we further update the methods of Lawrence and Chase (2007) based on these previous experiences and newly available data products, to produce 1km resolution global CLM5 natural vegetation land unit and plant functional type (PFT) distributions. Updated versions of the CLM5 PFT LAI, canopy height, and soil color data generated in Lawrence and Chase (2007) are detailed in Chapter 4.
 
@@ -546,8 +376,8 @@ The CLM5 plant types play an important role in describing the land surface as th
 
 .. _sec-2-2:
 
-2.2 MODIS Land Cover Data
--------------------------
+MODIS Land Cover Data
+^^^^^^^^^^^^^^^^^^^^^
 
 The first stage in the current day land surface mapping of Lawrence and Chase (2007) is to generate the MODIS IGBP global 1km map. The IGBP map determines the common land mask as well as the basis for integrating the other land surface and climate products. Following from the methods of Broxton et al. (2015) we developed the IGBP map as the climatology of the MCD12Q1 Version 5.1 maps for the years 2001 – 2011. The data was compiled from tiles downloaded from the NASA and USGS Land data Products Distributed Active Archive Center (LP DAAC) website (lpdaac.usgs.gov), mosaicked into global geographic 1km resolution grids. To differentiate between inland and ocean water bodies we used the quality product to identify deep, shallow and coastal ocean water.
 
@@ -614,8 +444,8 @@ Globally forests are dominated by Evergreen Broadleaf Forests with 13.2 million 
 
 .. _sec-2-3:
 
-2.3 MODIS Vegetation Continuous Fields Data
--------------------------------------------
+MODIS Vegetation Continuous Fields Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next stage in the current day land surface mapping of Lawrence and Chase (2007) is to generate the global 1km percentages of trees, non-tree (herbaceous), and bare ground maps. In Lawrence and Chase (2007) this is done directly from the MODIS Vegetation Continuous Fields global 1km map. As previously noted from CLM4, new land cover rules were required to prevent low tree fractions from the MODIS VCF data in forests for use in CLM PFT mapping. For CLM5 these rules have been further developed through tree percentage corrections developed from Google Earth inspections of 290 FLUXNET sites. This process identified a systematic biases between the site investigation and the MODIS VCF product that varied by land cover type as described in the next section.
 
@@ -653,8 +483,8 @@ The low tree values in forests are accompanied by high bare ground and non-tree 
 
 .. _sec-2-4:
 
-2.4 MODIS VCF Google Earth Correction
--------------------------------------
+MODIS VCF Google Earth Correction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Given the limited resources available for correcting the MODIS VCF product we used the Google Earth product to interactively investigate 290 FLUXNET sites based on their latitude and longitude. The MODIS land cover type and VCF fields were extracted from the 1km global maps for each site. This was compared with the highest resolution Google Earth satellite imagery available for the site as well as the street view images at the nearest available location. The percentage tree, non-tree and bare ground percentages along with land cover class were estimated and recorded in a site level database. The imagery along with the satellite and estimated tree cover is shown for selected sites in Figure :ref:`2.4 <fig-2-4>`. A comparison between the satellite data and the estimated tree percentages separated by land cover class is shown in Figure :ref:`2.5a <fig-2-5>`.
 
@@ -693,8 +523,8 @@ The largest changes in average tree composition were in Deciduous Needleleaf For
 
 .. _sec-2-5:
 
-2.5 AVHRR Tree Morphology Data
-------------------------------
+AVHRR Tree Morphology Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The third stage in the current day land surface mapping of Lawrence and Chase (2007) is to combine the MODIS VCF percentages of trees, non-tree, and bare ground mapping with tree morphology from the AVHRR Continuous Fields Tree Cover Project data of Defries et al. (2000b). The tree morphology data is used to specify the tree percentage into Needleleaf and Broadleaf types, as well as the Evergreen and Deciduous components. For the CLM5 current day land cover mapping we used the corrected VCF data in the place of the MODIS VCF product, and only used the AVHRR morphology data where the tree morphology was not explicit prescribed in the MODIS IGBP land cover class. In this manner, all trees in Evergreen Needleleaf Forest, Evergreen Broadleaf Forest, Deciduous Needleleaf Forest, and Deciduous Broadleaf Forest were allocated the corresponding tree morphology of the land cover class. Only land cover classes outside of these classes were allocated the AVHRR components.
 
@@ -704,8 +534,8 @@ The Needleleaf Evergreen Tree mapping (Figure :ref:`2.7a <fig-2-7>`) corresponds
 
 .. _sec-2-6:
 
-2.6 Non Tree Vegetation Data
-----------------------------
+Non Tree Vegetation Data
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 The remaining Non Tree Vegetation (Figure :ref:`2.8b <fig-2-8>`) corresponds with the MODIS land cover classes of Cropland, Shrubland, Grassland, and Savannas. Following Lawrence and Chase (2007), the Non Tree Vegetation area is mapped to crop, shrub, and grass depending on the IGBP land cover map and the annual crop area from an independent cropping data set. For CLM3.5 the current day cropping came from the year 1992 of the historical cropping data of Ramankutty and Foley (1999). For CLM4.0 and 4.5 the cropping data set was updated annually from the CMIP5 historical and future RCP time series of Hurtt et al. (2006, 2011).
 
@@ -729,8 +559,8 @@ The current day CLM5 Crop PFT mapping was from the total area of crops from the 
 
 .. _sec-2-7:
 
-2.7 CRU Temperature and Precipitation Data
-------------------------------------------
+CRU Temperature and Precipitation Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Having generated the tree percentage maps for Needleleaf, Broadleaf, Evergreen and Deciduous components along with the, Crop, Shrub, Grass and Bare Ground maps the next stage from Lawrence and Chase (2007) is to develop the bioclimatic PFT mapping. The PFT physiology and climate rules of Bonan et al (2002b), developed from Nemani and Running (1996), are used to split the tree, shrub and grass PFTs into tropical, temperate and boreal climate groupings. The climate rules for each PFT are listed in Table :ref:`2.4 <tbl-2-4>`. For previous versions of CLM these climate rules were calculated using the climatological monthly surface air temperature and precipitation surfaces from Willmott and Matsuura (2000).
 
@@ -792,8 +622,8 @@ The 2000 – 2015 climate period used for generating the CRU 3.24.01 climate dat
 
 .. _sec-2-8:
 
-2.8 MODIS Leaf Area Index (LAI) Data
-------------------------------------
+MODIS Leaf Area Index (LAI) Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The current day land surface mapping of Lawrence and Chase (2007) uses the methods of Still et al. (2003) to determine the fractional C3 and C4 grass mapping using average monthly MODIS LAI combined with monthly precipitation and surface air temperature to describe seasonal variations in vegetation cover as indicator for the C3 and C4 growing season. For CLM5, the use of minimum and maximum average monthly MODIS LAI has been extended to provide additional constraints on the specification of bare ground and tree PFT deciduousness. The MODIS LAI rules used in the PFT mapping are detailed in Table :ref:`2.4 <tbl-2-4>`.
 
@@ -823,8 +653,8 @@ The final use of MODIS monthly for the CLM5 current day PFT mapping is to separa
 
 .. _sec-2-9:
 
-2.9 CLM5 Current Day Land Unit and Plant Function Types (PFTs)
---------------------------------------------------------------
+CLM5 Current Day Land Unit and Plant Function Types (PFTs)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The final step in the current day land cover mapping of Lawrence and Chase (2007) is to generate the CLM Land Unit and PFT maps. For the CLM5 1 km resolution current day data this process involve combining the Ocean, Land, Glacier, Lake, and Urban base maps, with the tree percentage maps for Needleleaf, Broadleaf, Evergreen and Deciduous, along with the, Crop, Shrub, Grass and Bare Ground maps, and the precipitation, temperature and LAI maps combined with the rules of Table :ref:`2.4 <tbl-2-4>`. The global area for each of the generated CLM5 components is shown in Figure :ref:`2.12a <fig-2-12>` with the MODIS IGBP land cover PFT composition shown in Figure :ref:`2.12b <fig-2-12>` for each land cover class. The global and IPCC regional area for each component are listed in Table :ref:`2.5 <tbl-2-5>`, with the MODIS IGBP land cover composition listed in Table :ref:`2.6 <tbl-2-6>`. The global maps for each of the CLM5 components are shown in Figures :ref:`2.13 <fig-2-13>`, :ref:`2.14 <fig-2-14>`, :ref:`2.15 <fig-2-15>`, :ref:`2.16 <fig-2-16>`, :ref:`2.17 <fig-2-17>`, and :ref:`2.18 <fig-2-18>`. Whittaker bioclimatic analysis for each of the CLM5 components is shown in Figure :ref:`2.19 <fig-2-19>`, :ref:`2.20 <fig-2-20>`, and :ref:`2.21 <fig-2-21>`.
 
@@ -992,13 +822,13 @@ The 1 km high resolution CLM5 PFT data can be directly used for generating curre
 
 .. _chap-3:
 
-Chapter 3: Current Day Agriculture Data
-=======================================
+Current Day Agriculture Data
+----------------------------
 
 .. _sec-3-1:
 
-3.1 Current Day CLM5 Agriculture Overview
------------------------------------------
+Current Day CLM5 Agriculture Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 model has the option to represent agricultural land use explicitly through the CLM5 Crop model. A full description of the Crop model is provided in the CLM5 Technote of Lawrence et al. (2018), with operationally details in Lombardozzi et al. (2019), and more background and details in Levis et al (2016). As introduced in Chapter :ref:`1 <chap-1>`, CLM5 with the Crop model on explicitly simulates crops on a managed Crop land unit that coexists with the natural vegetation of a grid cell. The managed crops are represented through the 32 Crop Functional Types (CFTs) listed in Table :ref:`3.1 <tbl-3-1>`, with each CFT represented in both Rainfed and Irrigated forms. The original CFT list was derived from the crops of the MIRCA 2000 crop mapping of Portmann et al (2010). In CLM5 the individual CFTs of the managed Crop land unit each have a separate soil column, unlike the default shared soil column of the Naturally Vegetated land unit. The individual soil columns permit different annual land management practices on the CFTs including the application of irrigation and nitrogen fertilizer.
 
@@ -1082,8 +912,8 @@ To support the use of the CLM5 Crop model global 1 km data sets have been develo
 
 .. _sec-3-2:
 
-3.2 MIRCA 2000 Current Crop Mapping
------------------------------------
+MIRCA 2000 Current Crop Mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The MIRCA 2000 present-day irrigated and rainfed crop areas dataset of Portmann et al. (2010) consist of global area mapping for all major food crops of the world, as well as fodder grass and other perennial, annual and fibre crops. The MIRCA 2000 data set consists of global maps for the 27 crop types listed in Table :ref:`3.2 <tbl-3-2>` on a five-arc-minute (~10 km) grid. The MIRCA 2000 maps are generated from the 175 crop type global mapping of Monfreida et al. (2008).
 
@@ -1154,8 +984,8 @@ For CLM 4.5 the MIRCA crop data was used to directly prescribe the Crop model cr
 
 .. _sec-3-3:
 
-3.3 EarthStat 2000 Current Crop Mapping
----------------------------------------
+EarthStat 2000 Current Crop Mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To allow for a more comprehensive cropping data set with extended and updated global agricultural data including yield and production data, the EarthStat 2000 Harvested Area and Yield maps for 175 crops from from the EarthStat website are included in the CLM5 CFT mapping. The EarthStat data are generated for the year 2000, based on the work of Monfreida et al. (2008) and Ray et al. (2012). The EarthStat project is a is a collaboration between the Global Landscapes Initiative (GLI) at the University of Minnesota’s Institute on the Environment and the Land Use and Global Environment (LUGE) lab at the University of British Columbia.
 
@@ -1202,8 +1032,8 @@ Like the MIRCA 2000 data the 10 km data sets were spatially interpolated to the 
 
 .. _sec-3-4:
 
-3.4 UN FAOSTAT Annual Harvested Crop Areas
-------------------------------------------
+UN FAOSTAT Annual Harvested Crop Areas
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To provide time series descriptions that capture recent changing agricultural practice, the MIRCA 2000 and EarthStat 2000 spatial mapping were combined with the annual country level cropping area and yield data from the FAOSTAT (2016) database for the years 1961 through 2016, to support the generation of annual CLM5 CFT mapping. The annual country level crop harvest, yield and irrigation data was used to scale up or down the EarthStat 2000 1 km data to achieve the FAOSTAT target values for each country, while maintaining the relative spatial distributions of each value. Like the EarthStat 2000 data, the crop and yield data for the 178 crop classes of the FAOSTAT database were aggregated into the MIRCA crop types using the relationships listed in Table :ref:`3.2 <tbl-3-2>`.
 
@@ -1226,8 +1056,8 @@ Other Annual and Other Perennial crops also had large contributions collectively
 
 .. _sec-3-5:
 
-3.5 CLM5 Annual Crop Functional Type (CFT) Generation
------------------------------------------------------
+CLM5 Annual Crop Functional Type (CFT) Generation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The global irrigated and rainfed crop mapping from the FAOEarthStat data was used to generate CLM5 annual 1 km resolution Crop Functional Type (CFT) mapping for each years in the time series 1961 to 2016. The MIRCA crop types were mapped to the CLM5 CFT based on the rules listed in Table :ref:`3.1 <tbl-3-1>`. These rules also included the re-classification to temperate and tropical varieties of Corn and Soybeans based on latitude relative to 30N and 30S, with temperate varieties poleward and tropical varieties equatorward.
 
@@ -1285,8 +1115,8 @@ The current day 1961 to 2016 CLM5 1 km CFT data can be directly combined with th
 
 .. _sec-3-6:
 
-3.6 CLM5 Active Crop Functional Types (CFTs)
---------------------------------------------
+CLM5 Active Crop Functional Types (CFTs)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The largest active CLM5 CFT area was Wheat at 2.2 million km\ :sup:`2`, reflecting the 2.3 million km\ :sup:`2` in the FAOEarthStat data for the year 2005. The largest areas of Wheat were in Europe followed by Eurasia and Southern Asia, with smaller areas in North America and East Asia. The global distribution of Wheat is shown in Figure :ref:`3.3c <fig-3-3>`. The map shows the large areas of Wheat in the Indus and Ganges river plains, eastern China, the Steppes of Russia, across Europe, the Great Plains of North America, and south west and south east of Australia.
 
@@ -1321,8 +1151,8 @@ The last two areas of active crops were Cotton and Sugarcane, which had just und
 
 .. _sec-3-7:
 
-3.7 CLM5 Other Crop Functional Types (CFTs)
--------------------------------------------
+CLM5 Other Crop Functional Types (CFTs)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The largest area of the other crop CFTs was the Unmanaged Crop at 1.9 million km\ :sup:`2` for the year 2005. This was composed of the Other Perennial, Other Annual, and Other Fibre in the MIRCA crop types, which were themselves combined from over a hundred individual crops in the FAOSTAT and EarthStat 2000 data. The Unmanaged Crop CFT accounted for 15% of all crop area from the FAOEarthStat data for 2005. The Unmanaged Crop CFT had the largest areas in East Asia, Africa, Southeast Asia, Southern Asia, and Europe, with other regions having substantially smaller contributions from the residual crop type.
 
@@ -1422,8 +1252,8 @@ The smallest CFT area was Datepalm which had 0.01 million km\ :sup:`2` in both t
 
 .. _sec-3-8:
 
-3.8 CLM5 Other to Active Crop Mapping
--------------------------------------
+CLM5 Other to Active Crop Mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For CLM5, the 23 inactive crop CFTs that have not yet had the parameters and physiology required for active management developed are assigned the parameters and physiology of the spatially closest associated active crop CFT that corresponds to their functional type (e.g., C3 or C4). The intention is to allow the crops to be simulated in the CLM5 Crop model with parameters that are appropriate for the climates and agricultural practices in which they are found. While this substitution leaves the representation of these CFTs with varying degrees of accuracy, it does allow the use of the Crop model over all of the agricultural areas of the planet which results in major improvements in carbon cycle and surface climate simulation compared with representing crops as grasses, as done without the Crop model, see Lombardozzi et al. (2019).
 
@@ -1431,13 +1261,13 @@ The substitution rules from inactive CFTs to active CFT parameters are listed in
 
 .. _chap-4:
 
-Chapter 4: Other Current Day Data
-=================================
+Other Current Day Data
+----------------------
 
 .. _sec-4-1:
 
-4.1 Other Current Day CLM5 Data Overview
-----------------------------------------
+Other Current Day CLM5 Data Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To represent the complexity of the Current Day land surface, CLM5 prescribes a range of other global surface data, in addition to the Current Day Land Cover and Agriculture data of Chapter :ref:`2 <chap-2>` and Chapter 3. Many of the data products facilitate sub-models within CLM5 such as the Lake, Urban, Fire, Volatile Organic Compounds, or Methane models. Other data products support external models coupled to CLM5, such as the CISM2 Ice Sheet model, or the MOSART river routing model.
 
@@ -1447,8 +1277,8 @@ The final component of the other global surface data is the Satellite Phenology 
 
 .. _sec-4-2:
 
-4.2 Glaciers CISM2
-------------------
+Glaciers CISM2
+^^^^^^^^^^^^^^
 
 When coupled to the CISM2 land ice model, CLM5 has dynamically adjusting Glacier land units allowing the Glacier area to initiate, grow, shrink, or disappear during a simulation, representing active ice evolution, as detailed in Lipscomb and Sacks (2012). Beyond the simple prescription of the Glacier land unit CLM5 describes the distribution of ice caps, ice sheets, ice shelves and mountain glaciers, with multiple elevation classes (10 elevation classes by default) for each ice type. The elevation classes simulate the associated temperature, rain/snow partitioning, and downwelling longwave downscaling to account for the strong topographic elevation heterogeneity over glaciers and ice sheets.
 
@@ -1487,8 +1317,8 @@ The glacier land unit extent is prescribed by the initial or default total exten
 
 .. _sec-4-3:
 
-4.3 Lakes
----------
+Lakes
+^^^^^
 
 The CLM5 Lake sub model, described in Subin et al. (2012a), uses both spatial lake extent and lake depth to simulate lake water temperature, vertical mixing, ice, snow, and energy and moisture fluxes to the atmosphere for the Lake land unit. Like the Glacier land unit, the CLM5 Lake land unit mapping from the MODIS land cover product described in Chapter :ref:`2 <chap-2>`, is only a placeholder for the land use and land cover data generation process. The MODIS land cover data generated lake extent is replaced with the more detailed representation of the CLM5 Lake model.
 
@@ -1505,8 +1335,8 @@ The CLM5 mean lake depth for each grid cell is calculated based on the global gr
 
 .. _sec-4-4:
 
-4.4 Urban CLMU
---------------
+Urban CLMU
+^^^^^^^^^^
 
 The CLM5 Urban sub model (CLMU) allows the simulation of urban environments within CESM, with a particularly focus on investigating the urban climate where people live as described in Oleson et al. (2010b). As such, the CLMU model allows scientific study of how climate change affects the urban heat island and possible urban planning and design strategies. Urban areas in CLM5 are represented by up to three urban landunits per gridcell according to density class. The urban landunit is based on the “urban canyon” concept of Oke (1987) in which the canyon geometry consists of roofs, walls, and canyon floor. The canyon floor is divided into pervious (e.g., to represent residential lawns, parks) and impervious (e.g., to represent roads, parking lots, sidewalks) fractions.
 
@@ -1527,8 +1357,8 @@ The regional density classes combine with the global mapping to provide urban pr
 
 .. _sec-4-5:
 
-4.5 Soil Depth, Texture, and Organic Content
---------------------------------------------
+Soil Depth, Texture, and Organic Content
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 soil thermal and hydrological properties are prescribed globally for all land units through soil depth, organic content, and sand and clay content as described in Lawrence et al. (2018). The new representation of variable soil thickness in CLM5 is prescribed through soil depth to bedrock globally as described in Brunke et al. (2016) and Swenson and Lawrence, (2015), with values derived from the spatially explicit soil thickness data product of Pelletier et al., (2016). The soil organic matter data is produced for the majority of the globe from the ISRIC-WISE (Batjes, 2006) mapping, while the high latitudes mapping comes from the 0.25 degree version of the Northern Circumpolar Soil Carbon Database (Hugelius et al. 2012). Both datasets report soil carbon down to 1m depth. The soil mineral sand and clay texture in CLM5 are prescribed from the International Geosphere-Biosphere Programme (IGBP) soil dataset (Global Soil Data Task 2000) with the 4931 soil classes mapped to depth varying soil profiles of sand and clay in the model.
 
@@ -1580,8 +1410,8 @@ The CLM5 clay percentage mapping is shown globally for the top 0.09 meters in Fi
 
 .. _sec-4-6:
 
-4.6 Topography, Runoff and Drainage
------------------------------------
+Topography, Runoff and Drainage
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Soil water in CLM5 is predicted from a multi-layer model, in which the vertical soil moisture transport is governed by infiltration, surface and sub-surface runoff, gradient diffusion, gravity, and canopy transpiration through root extraction. The moisture input at the grid cell surface is the sum of liquid precipitation reaching the ground and melt water from snow. The moisture flux is partitioned between surface runoff, surface water storage, and infiltration into the soil. The simple TOPMODEL-based (Beven and Kirkby 1979) runoff model (SIMTOP) described by Niu et al. (2005) is implemented to parameterize surface and sub-surface runoff.
 
@@ -1607,15 +1437,15 @@ The maximum saturated fraction (fmax) that describes topographic characteristics
 
 .. _sec-4-7:
 
-4.7 River Transport MOSART
---------------------------
+River Transport MOSART
+^^^^^^^^^^^^^^^^^^^^^^
 
 CLM5 uses the Model for Scale Adaptive River Transport (MOSART) (Li et al. 2013b) to transport surface runoff is routed across hillslopes and then discharged along with subsurface runoff into a tributary subnetwork before entering the main channel. The MOSART model is supported by a comprehensive, global hydrography dataset at 0.5 degree resolution. The topographic parameters (such as flow direction, channel length, topographic and channel slopes, etc.) were derived using the Dominant River Tracing (DRT) algorithm from Wu et al. (2011) and Wu et al. (2012) using the baseline high-resolution hydrography dataset is the 1 km resolution HydroSHEDS data of Lehner and Doll (2004) and Lehner et al. (2008). The CLM5 MOSART River Network, Channel Slope, and Channel Roughness are mapped globally in Figure :ref:`4.8 <fig-4-8>`.
 
 .. _sec-4-8:
 
-4.8 MODIS Satellite Phenology Leaf and Stem Area Index
-------------------------------------------------------
+MODIS Satellite Phenology Leaf and Stem Area Index
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CLM5 updates the Satellite Phenology (SP) representations of Plant Functional Type (PFT) monthly Leaf Area Index (LAI) and Stem Area Index (SAI) data from CLM4.5. The new PFT LAI values are derived from MODIS MCD15A2 version 5 8-day data from 2003 to 2015, combined with the current day PFT distributions from Chapter :ref:`2 <chap-2>`, and CRU monthly climatology surface temperature data. The new PFT LAI and SAI values are generated following updated methods from Lawrence and Chase (2007). The new PFT LAI and SAI data are combined with the ICESAT derived PFT Canopy Height, described in section 4.10, to provide CLM5 prescribed monthly vegetation phenology and morphology.
 
@@ -1870,8 +1700,8 @@ For the final CLM5 PFT LAI and SAI input data files the values for each PFT are 
 
 .. _sec-4-9:
 
-4.9 ICESAT Satellite Canopy Height
-----------------------------------
+ICESAT Satellite Canopy Height
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CLM5 Satellite Phenology (SP) configuration also prescribes canopy height top and bottom for all PFTs. For Tree PFTs the canopy height is derived from the ICESAT canopy height mapping of Simard et al. (2011) using Equations :ref:`4.9 <eq-4-9>`, 4.10 and 4.11. with PFT parameters from Table :ref:`4.4 <tbl-4-4>`. For other PFTs and CFTs Canopy Height remains the same as those originally derived for CLM3 as listed in Oleson et al. (2004) and listed in Table :ref:`4.4 <tbl-4-4>`.
 
@@ -1937,8 +1767,8 @@ The average ICESAT and CLM5 PFT canopy heights are calculated globally and for t
 
 .. _sec-4-10:
 
-4.10 MODIS Albedo and Soil Color
---------------------------------
+MODIS Albedo and Soil Color
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CLM5 calculates the instantaneous soil surface reflective properties (*α*\ ~*s**o\ *i,Λ~) using Equation 4.12 with new global soil color maps and the instantaneous soil moisture from the top soil layer (*\ θ\ *1). The reflectance properties are calculated for the visible and near infrared spectrums (*\ Λ\*), along with the soil color properties from Table :ref:`4.8 <tbl-4-8>`. The soil reflectance combines with the new PFT mapping, instantaneous PFT LAI and SAI values, leaf and stem optical properties, snow reflective properties, and the downwelling solar radiation in the direct and diffuse beams for the visible and near infrared spectrums, to calculate the instantaneous surface albedo with associated radiation absorption for all soil and vegetated surface elements. The surface radiation calculation in CLM5 uses the two-stream radiation model as fully described in the CLM5 Technote (Lawrence et al. 2018).
 
@@ -1996,8 +1826,8 @@ For the very bright deserts of the Sahara and the Arabian Peninsula soil color a
 
 .. _sec-4-11:
 
-4.11 Fire Model Population, GDP, Peatland, and Ag Burning Month
----------------------------------------------------------------
+Fire Model Population, GDP, Peatland, and Ag Burning Month
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 Fire Model has new representations of fire that include triggers and suppression of wildfire from natural and anthropogenic sources, as well as new representations for agricultural, deforestation, and peat fires (Li et al. 2012a, b, Li et al. 2013a). To support this functionality CLM5 prescribes global maps of annual population density, gross domestic production, peatland area fraction, and peak month of agricultural burning, to represent the human influence on fire from ignition and suppression (Figure :ref:`4.16 <fig-4-16>` and Figure :ref:`4.17 <fig-4-17>`).
 
@@ -2051,8 +1881,8 @@ From the global map the subregional agricultural fire regimes can be determined.
 
 .. _sec-4-12:
 
-4.12 Volatile Organic Compounds
--------------------------------
+Volatile Organic Compounds
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The MEGAN 2.1 Volatile Organic Compounds (VOCs) model implemented in CLM5 uses emission factors to calculate the production of speciated monoterpenes, sesquiterpenes, oxygenated VOCs as well as isoprene. A flexible scheme has been implemented in the CLM5 to specify a subset of these emissions. The CLM5 implementation allows for additional flexibility in grouping chemical compounds to form the lumped species frequently used in atmospheric chemistry.
 
@@ -2094,8 +1924,8 @@ The spatial variation shown in the global mapping of emission factors for each o
 
 .. _sec-4-13:
 
-4.13 Methane
-------------
+Methane
+^^^^^^^
 
 The representation of methane production in CLM5 follows previous versions of the CLM Methane model as documented in Riley et al. (2011). The Methane model represents the CH4 mass balance, CH4 production, ebullition, aerenchyma transport, CH4 Oxidation, reactive transport solution, including boundary conditions, numerical solution, water table interface, seasonal inundation effects, and impact of seasonal inundation on CH4 production. One of the key determinants of CH4 production is the inundation fraction of the CLM5 land units.
 
@@ -2127,8 +1957,8 @@ The Water Table Depth Factor (ZWT0) mediates the influence of the model calculat
 
 .. _sec-4-14:
 
-4.14 IPCC Assessment Report 6 Global Regions
---------------------------------------------
+IPCC Assessment Report 6 Global Regions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 While not an input variable to CLM5, the IPCC Assessment Report 6, 10 global regions have been used as a consistent regional analysis framework throughout this technote. The 10 global regions have been compiled from the country listings provided in the report. The 10 global regions are shown in Figure :ref:`4.23 <fig-4-23>`, with the region abbreviations and long names shown in Table :ref:`4.13 <tbl-4-13>`.
 
@@ -2150,13 +1980,13 @@ While not an input variable to CLM5, the IPCC Assessment Report 6, 10 global reg
 
 .. _chap-5:
 
-Chapter 5: CMIP6 – LUMIP – LUH2 Land Use
-========================================
+CMIP6 – LUMIP – LUH2 Land Use
+-----------------------------
 
 .. _sec-5-1:
 
-5.1 CMIP6 – LUMIP Overview
---------------------------
+CMIP6 – LUMIP Overview
+^^^^^^^^^^^^^^^^^^^^^^
 
 The Coupled Model Intercomparison Project (CMIP), under the auspices of the World Climate Research Programme’s (WCRP) Working Group on Coupled Modelling (WGCM), has become one of the foundational elements of climate science, coordinating the design and dissemination of global climate model simulations for the past, current and future climate periods (Eyring et al. 2016). The CMIP Phase 6 (CMIP6) project includes 34 climate models from 27 climate and Earth system modeling institutions that have performed both the Historical (DECK) simulations from 1850 to 2014, and the future Shared Socioeconomic Pathways (SSPs) simulations from 2015 to 2100 (Tebaldi et al. 2021). NCAR has supplied two climate models for these simulations through the Community Earth System Model (CESM2), with the default (CAM6) and the Whole Atmosphere (WACCM6) configurations.
 
@@ -2201,8 +2031,8 @@ Chapter :ref:`8 <chap-8>` provides a detailed description of the CLM5 Land Data 
 
 .. _sec-5-2:
 
-5.2 The Land Use Harmonization 2 (LUH2) Project
------------------------------------------------
+The Land Use Harmonization 2 (LUH2) Project
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Land Use Harmonization 2 (LUH2) project was developed to generate a new harmonized set of land use scenarios that smoothly connect historical reconstructions of land use with eight future projections in the format required for ESMs. The data produced estimates the fractional land use patterns, underlying annual land use transitions, and key agricultural, forestry and biofuel management for the time period 850 – 2100 at the 0.25\ :sup:`O` x 0.25\ :sup:`O` resolution. The LUH2 project follows the LUH1 project that provided a considerably smaller set of data for 1500 – 2100 at the 0.5 x 0.5 resolution for the ESM simulations of CMIP5 (Hurtt et al. 2011). The LUH1 data set formed the basis of land use and land cover change in CLM4 and CLM4.5 (Lawrence et al. 2012, 2018).
 
@@ -2282,8 +2112,8 @@ Given the extremely large amount of data produced in LUH2 only the historical CL
 
 .. _sec-5-3:
 
-5.3 Historical Land Use States Timeseries
------------------------------------------
+Historical Land Use States Timeseries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The LUH2 historical land use states for 2014 and 850 are calculated globally and for the 10 IPCC regions for each land use state, as well as for the grouped land use states of forests, non-forests, grazing and crops in Table :ref:`5.4 <tbl-5-4>`. The current day 2014 distributions of grouped land use states of forests, non-forests and crops are mapped in Figure :ref:`5.1 <fig-5-1>`, with the individual current day land use distributions mapped in Figures :ref:`5.4 <fig-5-4>`, :ref:`5.5 <fig-5-5>`, :ref:`5.6 <fig-5-6>` and :ref:`5.7 <fig-5-7>`. The individual land use states are plotted for 2014 and 850 in Figure :ref:`5.2 <fig-5-2>` with differences between 2014 and 850, and the annual timeseries plotted in Figure :ref:`5.3 <fig-5-3>`.
 
@@ -2414,8 +2244,8 @@ The final component of the LUH2 states data is the Urban mapping. The current da
 
 .. _sec-5-4:
 
-5.4 Historical Shifting Cultivation
------------------------------------
+Historical Shifting Cultivation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The LUH2 land use timeseries considers Shifting Cultivation to be a specific land use involving the sequence of clearing, agricultural use for one to several years, and then subsequent abandonment to forest or other natural vegetation for a period of regeneration which may take up to several decades to renew the fertility of the land (Hurtt et al. 2020). The annual Shifting Cultivation areas and rates are generated in LUH2 from the expert-opinion based rates of Heinimann et al. (2017), consistent with the other annual land use states and transitions of the GLM2 model. The Shifting Cultivation land use is represented in the LUH2 data as the difference between the transitions between crop land use states, and the Secondary Forest and Secondary Non Forest states that do not result in changes to the absolute area of those states.
 
@@ -2461,8 +2291,8 @@ The current day 2014 LUH2 All Shifting Cultivation mapping of Figure :ref:`5.9a 
 
 .. _sec-5-5:
 
-5.5 Historical Irrigation and Fertilizer
-----------------------------------------
+Historical Irrigation and Fertilizer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The LUH2 land use time series includes historical crop management activities through information on irrigation, flooded agriculture, and industrial nitrogen fertilizer application. The irrigation data and the area of flooded rice are prescribed from HYDE 3.2, which is proportionally allocated to the LUH2 crop types. The C3 Annual Crop which associated with rice is the only flooded crop considered. Industrial fertilizer application for 1961 – 2011 was based on Zhang et al. (2015), which is originally derived from FAOSTAT country level fertilizer data (FAO 2020b). The industrial nitrogen fertilizer application from 1915 to 1960 was hindcast using the 1961 distributions scaled by the global annual fertilizer data from Smil (2001). For the 2012 to 2015 period, the same process was applied using the 2011 distribution scaled by the global annual fertilizer data from the International Fertilizer Association (IFA 2014). The scaling rates in both cases are applied equally to all crops in all regions relative to the base country level crop specific nitrogen fertilizer rates of the reference year.
 
@@ -2540,8 +2370,8 @@ The global map of current day average LUH2 nitrogen fertilizer application in Fi
 
 .. _sec-5-6:
 
-5.6 Historical Wood Harvest
----------------------------
+Historical Wood Harvest
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The historical wood harvest in LUH2 is based on national statistics for 199 countries based on data from HYDE 3.2 of Klein Goldewijk et al. (2017), combined with the country level FAO national wood harvest volume data for 1961 to 2015 from FAO (2020c), adjusted to biomass carbon amounts using the methods of Houghton and Hackler (2000). For years from 1920 to 1960 harvest rates are hindcast using HYDE 3.2 population data combined with the 1920 national wood harvest totals from Zon and Sparhawk (1923) and early 1960s country level data from the FAO wood harvest database. Prior to 1920 LUH2 provides three alternative wood harvest pathways. For this technote we only investigate the baseline historical wood harvest pathway. The baseline pathway uses nationally scaled values of the wood harvest data of Kaplan et al. (2017) from 850 to 1800, with the annual wood harvest from 1800 to 1920 time interpolated between the Kaplan et al. (2017) 1800 wood harvest values and the Zon and Sparhawk (1923) 1920 wood harvest values.
 
@@ -2628,8 +2458,8 @@ The next obvious area is central Africa which is a combination of Secondary Youn
 
 .. _sec-5-7:
 
-5.7 All CMIP6 LUH2 Time Series
-------------------------------
+All CMIP6 LUH2 Time Series
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Beyond the CMIP6 Historical period of 1850 to 2014, additional climate modeling simulations have been developed for the Transient (mid) Holocene from 6000bce to 850ce, and the Last Millennium from 850 to 1850 under the PMIP4 project. The Last Millennium simulations overlap with the LUH2 historical reconstruction and so are directly used for CLM5 land use data for that period. The Transient (mid) Holocene however covers the period before the LUH2 data. To address this for CLM5, an annual land use time series is generated using the first 10 years of the LUH2 historical time series (850 – 859 CE) combined with the HYDE 3.2 population data for the same period. The population data for the Holocene prior to the LUH2 data is then used to scale land use for each grid based on the population of that year relative to the beginning of the LUH2 time period. The population and land use data are highly consistent with LUH2 given that the HYDE 3.2 time series is a primary component of the historical reconstruction for this time (Hurtt et al. 2020).
 
@@ -2784,13 +2614,13 @@ The SSP5-8.5 Shifting Cultivation decreased by -0.32 million km\ :sup:`2`, resul
 
 .. _chap-6:
 
-Chapter 6: CLM5 Historical Time Series
-======================================
+CLM5 Historical Time Series
+---------------------------
 
 .. _sec-6-1:
 
-6.1 CLM5 Historical Time Series Overview
-----------------------------------------
+CLM5 Historical Time Series Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Annual CLM5 Land Unit, Plant Functional Type (PFT), Crop Functional Type (CFT), PFT Shifting Cultivation, CFT Irrigation and Fertilizer, and PFT Wood Harvest were generated using the CLM5 Land Use Data Tool as described in Chapter 8. The CLM5 Land Use Data Tool combines the LUH2 annual land cover and land use data described in Chapter :ref:`5 <chap-5>`, with the current day distributions of Land Units and PFTs described in Chapters 2. The tool also combines the current day 1961 – 2015 annual distributions of CFTs developed from EarthSTAT and FAOSTAT data in Chapter 3. The MksurfData tool described in Chapter :ref:`8 <chap-8>`, combines the annual PFT and CFT distributions along with other current day data described in Chapter :ref:`4 <chap-4>` to produce final CLM5 surface data and land use time series data for each LUH2 time series at a specified model resolution and domain extent.
 
@@ -2798,8 +2628,8 @@ This chapter describes in detail the CLM5 Historical period from 850 – 2014ce 
 
 .. _sec-6-2:
 
-6.2 CLM5 Land Unit and Plant Functional Type (PFT) Historical Data
-------------------------------------------------------------------
+CLM5 Land Unit and Plant Functional Type (PFT) Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The global area for each of the annual Land Unit and PFT distributions generated by the CLM5 Land Use Data Tool is shown for 850 and 2014 in Figure :ref:`6.1 <fig-6-1>`. The difference in PFT and Crop Land Unit area, as well as the annual PFT and Crop component areas over the 850 to 2014 time period are shown in Figure :ref:`6.2 <fig-6-2>`. The global and IPCC regional area for each Land Unit and PFT for 850 and 2014 are listed in Table :ref:`6.1 <tbl-6-1>`. The surface data area for Glaciers, Lakes, and Urban are kept constant for all time series at their current day values as there is no capacity to have these values prescribed transiently in CLM5. The current day 2014 global raw maps for each of the CLM5 PFT and Crop Land Unit components are shown at 0.25 degrees resolution in Figures :ref:`6.3 <fig-6-3>`, :ref:`6.4 <fig-6-4>`, :ref:`6.5 <fig-6-5>`, :ref:`6.6 <fig-6-6>`, and :ref:`6.7 <fig-6-7>`.
 
@@ -2908,8 +2738,8 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _sec-6-3:
 
-6.3 CLM5 Active Crop Functional Type (CFT) Historical Data
-----------------------------------------------------------
+CLM5 Active Crop Functional Type (CFT) Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table:: Table 6.2: Annual Global and Regional CLM5 Active Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
    :name: tbl-6-2
@@ -2978,8 +2808,8 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _sec-6-4:
 
-6.4 CLM5 Other Crop Functional Type (CFT) Historical Data
----------------------------------------------------------
+CLM5 Other Crop Functional Type (CFT) Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table:: Table 6.3: Annual Global and Regional CLM5 Unrepresented Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask. Unrepresented CFTs are simulated using the functionally closest Active CFT parameters and phenology.
    :name: tbl-6-3
@@ -3085,8 +2915,8 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _sec-6-5:
 
-6.5 CLM5 Shifting Cultivation Historical Data
----------------------------------------------
+CLM5 Shifting Cultivation Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table:: Table 6.4: Annual Global and Regional CLM5 Shifting Cultivation Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
    :name: tbl-6-4
@@ -3152,8 +2982,8 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _sec-6-6:
 
-6.6 CLM5 Irrigation and Fertilizer Historical Data
---------------------------------------------------
+CLM5 Irrigation and Fertilizer Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table:: Table 6.5: Annual Global and Regional CLM5 Irrigated Crop Functional Type (CFT) Area for 850 and 2014 in Millions of km\ :sup:`2`, using the default CLM5 Domain File Land Mask.
    :name: tbl-6-5
@@ -3231,8 +3061,8 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _sec-6-7:
 
-6.7 CLM5 Wood Harvest Historical Data
--------------------------------------
+CLM5 Wood Harvest Historical Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. table:: Table 6.7: Annual Global and Regional CLM5 Wood Harvest for 850 and 2014 in PgC/yr, using the default CLM5 Domain File Land Mask.
    :name: tbl-6-7
@@ -3278,13 +3108,13 @@ The total global land area for the CLM5 land surface data with the finite volume
 
 .. _chap-7:
 
-Chapter 7: CLM5 All CMIP6 Time Series
-=====================================
+CLM5 All CMIP6 Time Series
+--------------------------
 
 .. _sec-7-1:
 
-7.1 CLM5 All CMIP6 Time Series Overview
----------------------------------------
+CLM5 All CMIP6 Time Series Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CLM5 provides a consistent framework for Land Cover along with annual Land Use and Land Cover Change (LULCC) time series data from 6000 BCE through to the current day, with a range of baseline and mitigation Shared Socioeconomic Pathway (SSP) future scenarios to 2100. There are three additional extensions to 2300 without LULCC provided for key SSPs. The CLM5 LULCC prescription for each of these time series are developed from data in LUH2 format as described in Chapter :ref:`5 <chap-5>` combined with CLM5 Land Data Tool and mksurf tools described in Chapter 6. This Chapter describes the nature and details of each of these periods in the CLM5 LULCC time series starting from prehuman disturbance.
 
@@ -3296,66 +3126,66 @@ The detailed prescription of the CMIP6 SSP climate forcings is derived through I
 
 .. _sec-7-2:
 
-7.2 CLM5 No Anthro
-------------------
+CLM5 No Anthro
+^^^^^^^^^^^^^^
 
 The CLM5 No-Anthro Land Cover is generated from the CLM5 Land Data Tool with the first year (850 CE) of the LUH2 historical time series used as a template with the 850 Land Use removed and replaced by the most consistent LUH2 Primary Forest and Non-Forest land cover classes based on coexisting classes and nearest neighbors in the absence of coexistence. The vegetation distributions and bioclimatic rules are taken from current day which is highly consistent with the climate of the Mid Holocene that 6000 BCE represents.
 
 .. _sec-7-3:
 
-7.3 CLM5 Transient Holocene
----------------------------
+CLM5 Transient Holocene
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 Transient Holocene annual LULCC time series is generated from the CLM5 Land Data Tool with all years reconstructed for the period 6000 BCE – 850 CE with a version of the LUH2 time series generated for the PMIP transient Holocene project \**\* PMIP Reference \**\*. As no CMIP6 LUH2 data existed for this period from LUMIP the underlying LUH2 time series data is generated from first 10 years of the LUH2 historical time series (850 – 859 CE) combined with the HYDE 3.2 Holocene land use time series data from Klein Goldewijk et al. (2017). These data are highly consistent given that HYDE is a primary component of the historical reconstruction at this time (Hurtt et al. 2020).
 
 .. _sec-7-4:
 
-7.4 CLM5 Last Millennium
-------------------------
+CLM5 Last Millennium
+^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 Last Millennium LULCC data is generated directly from the annual LUH2 LULCC time series data for 850 – 1850 period as described in Lawrence et al. (2017) and Hurtt et al. (2020). The LUH2 data is combined with the CLM5 Land Data Tool.
 
 .. _sec-7-5:
 
-7.5 CLM5 Historical
--------------------
+CLM5 Historical
+^^^^^^^^^^^^^^^
 
 The CLM5 Historical period is generated directly from the annual LUH LULCC time series data for 1850 – 2014 as described in Lawrence et al. (2017) and Hurtt et al. (2020). The Historical LUH2 time series data is combined with CLM5 Land Data Tool.
 
 .. _sec-7-6:
 
-7.6 CLM5 SSP 1-2.6
-------------------
+CLM5 SSP 1-2.6
+^^^^^^^^^^^^^^
 
 .. _sec-7-7:
 
-7.7 CLM5 SSP 2-4.5
-------------------
+CLM5 SSP 2-4.5
+^^^^^^^^^^^^^^
 
 .. _sec-7-8:
 
-7.8 CLM5 SSP 3-7.0
-------------------
+CLM5 SSP 3-7.0
+^^^^^^^^^^^^^^
 
 .. _sec-7-9:
 
-7.9 CLM5 SSP 4-6.0
-------------------
+CLM5 SSP 4-6.0
+^^^^^^^^^^^^^^
 
 .. _sec-7-10:
 
-7.10 CLM5 SSP 5-8.5
--------------------
+CLM5 SSP 5-8.5
+^^^^^^^^^^^^^^
 
 .. _chap-8:
 
-Chapter 8: CLM5 Land Data Tools
-===============================
+CLM5 Land Data Tools
+--------------------
 
 .. _sec-8-1:
 
-8.1 CLM5 Land Data Tools Overview
----------------------------------
+CLM5 Land Data Tools Overview
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The CLM5 model provides
 
@@ -3369,8 +3199,8 @@ High level description of the process of generating the raw data
 
 .. _sec-8-2:
 
-8.2 CLM5 – LUH2 Land Use Data Preparation
------------------------------------------
+CLM5 – LUH2 Land Use Data Preparation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Combining the LUH2 current day state distribution for PFTs and CFTs to describe LUH2 Forests, Non Forests, Pastures, Rangelands, and each Crop Type.
 
@@ -3380,8 +3210,8 @@ Redo This Graph with updated Secondary Forest and Non Forest!!
 
 .. _sec-8-3:
 
-8.3 CLM5 Land Use Data Tool
----------------------------
+CLM5 Land Use Data Tool
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Generating forest state data for a year from the current forest data and the change in annual LUH2 forest cover for that year relative to the reference current day.
 
@@ -3397,8 +3227,8 @@ Generating irrigation and fertilizer data
 
 .. _sec-8-4:
 
-8.4 CLM5 Other Land Cover Data
-------------------------------
+CLM5 Other Land Cover Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Generating the LAI, SAI, Canopy Height and Soil Color
 
@@ -3406,23 +3236,16 @@ Generating the LAI, SAI, Canopy Height and Soil Color
 
 .. _sec-8-5:
 
-8.5 CLM5 MkSurfData Tool
-------------------------
+CLM5 MkSurfData Tool
+^^^^^^^^^^^^^^^^^^^^
 
-Building mksurfdata_map and using mksurfdata.pl files
+DEPRECATED
 
-Time slice versus land use time series files.
-
-Creating surface data namelist file
-
-Creating land use time series text file
-
-Running
 
 .. _chap-9:
 
-Chapter 9: References
-=====================
+References
+----------
 
 Ali, A.A., Xu, C., Rogers, A., Fisher, R.A., Wullschleger, S.D., Massoud, E., Vrugt, J.A ., Muss, J.D., McDowell, N., and Fisher, J. 2016. A global scale mechanistic model of photosynthetic capacity (LUNA V1. 0). Geosci. Mod. Dev. 9:587-606. DOI: 10.5194/gmd-9-587-2016.
 
