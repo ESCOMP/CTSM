@@ -1,4 +1,4 @@
-name: Docs tests to run when ctsm_pylib is updated
+name: Docs tests to run when ctsm_pylib is (or might be) updated
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     branches: ['*']
     paths:
       - 'python/conda_env_ctsm_py.yml'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
       - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
@@ -14,6 +15,7 @@ on:
     # Run on pull requests that change the listed files
     paths:
       - 'python/conda_env_ctsm_py.yml'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
       - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
