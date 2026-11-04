@@ -24,7 +24,9 @@ dependencies:
   # fortls used in FORTRAN-IntelliSense extension, add path to fortls below to the VS setting fort-ls.executablePath
   - fortls=3.2.2
 
-  # For building docs
+  # For building docs.
+  # NOTE: When this YML file is deprecated, the versions from this file should be copied in here instead of relying on the requirements.txt file staying the same forever!
+  # NOTE: This YML file should be deprecated whenever the requirements.txt file changes!
   - pip:
     - -r ../doc/doc-builder/doc-build-container/requirements.txt
 
