@@ -65,3 +65,9 @@ tex = {
 ###############################
 ### Purely custom variables ###
 ###############################
+
+cesmrelease = "CESM2.2 beta"
+
+ctsm_gh = "https://github.com/ESCOMP/ctsm"
+
+cesm_gh = "https://github.com/ESCOMP/cesm"

@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _introduction:
 
 **User's Guide to version |version| of the Community Land Model (CLM)**

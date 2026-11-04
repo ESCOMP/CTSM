@@ -1,5 +1,3 @@
-
-.. include:: ../substitutions.rst
 .. _using-ctsm-pylib:
 
 Installing the CTSM Python environment

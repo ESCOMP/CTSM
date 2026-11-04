@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _how-to-make-mesh:
 
 ===============================================
