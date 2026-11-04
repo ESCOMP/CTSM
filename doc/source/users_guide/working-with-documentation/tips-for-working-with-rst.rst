@@ -217,3 +217,18 @@ reStructuredText: Common error messages and how to handle them
 --------------------------------------------------------------
 
 See :ref:`common-rst-errors`.
+
+
+reStructuredText: Using substitutions
+-------------------------------------
+
+Substitutions allow us to associate a text string with a variable name, then to use that variable name throughout our documentation. This has the advantage of only needing to update the text string in one place but getting that propagated everywhere.
+
+Our global substitutions are defined in ``doc/substitutions.py``. For example, including ``|version|`` in a reStructuredText documentation file will render as "|version|" (no quotes) because of this in ``doc/substitutions.py``:
+
+.. literalinclude:: ../../../substitutions.py
+   :language: python
+   :linenos:
+   :start-at: version =
+   :end-at: version =
+   :lineno-match:
