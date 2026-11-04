@@ -6,23 +6,17 @@ on:
     branches: ['*']
     paths:
       - 'doc/doc-builder'
-      - '.github/workflows/docs-update-dependency-common.yml'
 
   pull_request:
     # Run on pull requests that change the listed files
     paths:
       - 'doc/doc-builder'
-      - '.github/workflows/docs-update-dependency-common.yml'
 
   workflow_dispatch:
 
 permissions:
   contents: read
 jobs:
-  test-update-dependency:
-
-    name: Tests to run when either docs dependency is updated
-    uses: ./.github/workflows/docs-update-dependency-common.yml
 
   test-rv-setup:
 
