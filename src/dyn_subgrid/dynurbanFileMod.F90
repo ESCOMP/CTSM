@@ -77,11 +77,7 @@ contains
 
     ! read data PCT_URBAN
     !
-    ! Note: if you want to change transient urban landunits so that they are interpolated, rather
-    ! than jumping to each year's value on Jan 1 of that year, simply change wturban
-    ! to be of type dyn_var_time_interp_type (rather than
-    ! dyn_var_time_uninterp_type), and change the following constructors to construct
-    ! variables of dyn_var_time_interp_type. That's all you need to do.
+    ! Note: the use of dyn_var_time_uninterp_type means that urban areas jump to each year's value on Jan 1 of that year.
     num_points = (bounds%endg - bounds%begg + 1)
     wturb_shape = [num_points, numurbl]
     wturban = dyn_var_time_uninterp_type( &
@@ -101,10 +97,7 @@ contains
     !
     ! Sets lun%wtgcell for urban landunits.
     !
-    ! Note that urban cover currently jumps to its new value at the start of the year.
-    ! However, as mentioned above, this behavior can be changed to time interpolation
-    ! simply by making wturban and wtcft dyn_var_time_interp_type variables rather than
-    ! dyn_var_time_uninterp_type. 
+    ! Note that urban cover jumps to its new value at the start of the year.
     !
     ! !USES:
     use landunit_varcon   , only : isturb_tbd, isturb_hd, isturb_md

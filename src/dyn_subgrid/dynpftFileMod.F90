@@ -83,12 +83,8 @@ contains
 
     ! read data PCT_NAT_PFT corresponding to correct year
     !
-    ! Note: if you want to change PCT_NAT_PFT so that it is interpolated, rather than
-    ! jumping to each year's value on Jan 1 of that year, simply change wtpatch to be of type
-    ! dyn_var_time_interp_type (rather than dyn_var_time_uninterp_type), and change the
-    ! following constructor to construct a variable of dyn_var_time_interp_type. That's
-    ! all you need to do.
-
+    ! Note: the use of dyn_var_time_uninterp_type means that PCT_NAT_PFT jumps to each
+    ! year's value on Jan 1 of that year.
     wtpatch_shape = [(bounds%endg-bounds%begg+1), natpft_size]
     wtpatch = dyn_var_time_uninterp_type( &
          dyn_file=dynpft_file, varname=varname, &
@@ -235,10 +231,7 @@ contains
     !
     ! Sets pft%wtcol
     !
-    ! Note that PFT weights currently jump to their new value at the start of the year.
-    ! However, as mentioned above, this behavior can be changed to time interpolation
-    ! simply by making wtpatch a dyn_var_time_interp_type variable rather than
-    ! dyn_var_time_uninterp_type.
+    ! Note that PFT weights jump to their new value at the start of the year.
     !
     ! !USES:
     use landunit_varcon , only : istsoil
