@@ -10,7 +10,6 @@ cd "${SCRIPT_DIR}/"
 ./test_container_eq_ctsm_pylib.sh
 
 # Check that -r -v works (Docker)
-# Also do a custom --conf-py-path and other stuff
 cd "${SCRIPT_DIR}/"
 rm -rf _build
 ./test_build_docs_-r-v.sh docker

@@ -14,7 +14,6 @@ rm -rf _publish*
 
 # Build all docs using container
 echo "~~~~~ Build all docs using container"
-# Also do a custom --conf-py-path
 rm -rf _build _publish
 d1="$PWD/_publish_container"
 ./build_docs_to_publish -r _build -d --site-root "$PWD/_publish"
@@ -25,7 +24,7 @@ cp -a _publish "${d1}"
 echo "~~~~~ Build all docs using ctsm_pylib"
 rm -rf _build _publish
 d2="$PWD/_publish_nocontainer"
-conda run -n ctsm_pylib --no-capture-output ./build_docs_to_publish -r _build --site-root "$PWD/_publish"  --conf-py-path doc-builder/conf.py --static-path _static --templates-path _templates
+conda run -n ctsm_pylib --no-capture-output ./build_docs_to_publish -r _build --site-root "$PWD/_publish"
 # VERSION LINKS WILL NOT RESOLVE IN _publish_nocontainer
 cp -a _publish "${d2}"
 
