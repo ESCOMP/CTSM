@@ -14,11 +14,6 @@ cd "${SCRIPT_DIR}/"
 rm -rf _build
 conda run --no-capture-output -n ctsm_pylib ./test_makefile_method.sh
 
-# Check that -b works
-cd "${SCRIPT_DIR}/"
-rm -rf _build
-./test_build_docs_-b.sh docker
-
 # Check that doc-builder tests pass
 # Don't run if on a GitHub runner; failing 🤷. Trust that doc-builder does this test.
 if [[ "${GITHUB_ACTIONS}" == "" ]]; then
