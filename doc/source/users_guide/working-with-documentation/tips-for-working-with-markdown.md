@@ -191,6 +191,7 @@ Our global substitutions are defined in `doc/substitutions.py`. For example, inc
 You can also, using "front matter," define substitutions that will apply in just one file. For example, the beginning of this file contains
 
 ```{literalinclude} tips-for-working-with-markdown.md
+:language: yaml
 :linenos:
 :lines: 1-5
 ```
