@@ -440,7 +440,7 @@ Globally forests are dominated by Evergreen Broadleaf Forests with 13.2 million 
    :alt: (a) Global area of MODIS IGBP Land Cover Mapping 2003 – 2008; and (b) Global average composition of IGBP classes in Tree, Non-Tree and Bare from MODIS Vegetation Continuous Fields 2003 – 2011.
    :width: 100%
 
-   (a) Global area of MODIS IGBP Land Cover Mapping 2003 – 2008; and (b) Global average composition of IGBP classes in Tree, Non-Tree and Bare from MODIS Vegetation Continuous Fields 2003 – 2011.
+   Global (a) area of MODIS IGBP Land Cover Mapping 2003 – 2008; and (b) average composition of IGBP classes in Tree, Non-Tree and Bare from MODIS Vegetation Continuous Fields 2003 – 2011.
 
 .. _sec-2-3:
 
