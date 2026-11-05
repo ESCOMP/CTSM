@@ -11,6 +11,7 @@ pip show myst-parser
 
 If you see `WARNING: Package(s) not found: myst-parser`, you'll need to install the doc-building Python modules. With your conda environment activated (or in whatever other environment you want to use), from the top level of a CTSM checkout, do:
 ```shell
+bin/git-fleximod update doc-builder
 pip install -r doc/doc-builder/doc-build-container/requirements.txt
 ```
 
