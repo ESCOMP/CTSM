@@ -38,7 +38,15 @@ There are a few different ways to do this.
 This will be somewhat easier if your CTSM checkout is in (or symlinked to) your home directory (`$HOME`).
 ```
 
-The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then open the `index.html` file. (If your checkout isn't in your home directory, you'll need to click on `Devices > /` in the sidebar of the window that opens, then navigate all the way to your checkout.) That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
+The simplest way to preview your built documentation on Casper is to use [NCAR's OnDemand service](https://ondemand.hpc.ucar.edu/pun/sys/dashboard); see its documentation [here](https://ncar-hpc-docs.readthedocs.io/en/latest/compute-systems/ood/). After you [open a new Casper Login VNC Desktop session](https://ondemand.hpc.ucar.edu/pun/sys/dashboard/batch_connect/sys/login_desktop_ncar/session_contexts/new), wait for it to start, then click the "Launch Casper Login VNC Desktop" button. This will open a Linux desktop in your browser. Click on the "Home" icon and navigate to your CTSM checkout, then the `doc/_build/html` directory, then double-click to open the `index.html` file. (If your checkout isn't in your home directory, you'll need to click on `Devices > /` in the sidebar of the window that opens, then navigate all the way to your checkout.) That should open it in the Linux desktop's Firefox, at which point you can browse around as usual.
+
+```{hint}
+Note that if you wait too long after opening your Casper Login VNC Desktop session to click the "Launch Casper Login VNC Desktop" button, it goes away and the session completes.
+```
+
+```{hint}
+Make sure you click the "Launch Casper Login VNC Desktop" button as instructed above. The page with that button also has a link next to "Session ID:", but that only opens a file browser that will not render the HTML.
+```
 
 If you rebuild the documentation but don't see your changes updated in the webpage, and the reload button doesn't work, you may need to navigate to a different page and then come back.
 
