@@ -1,9 +1,9 @@
 .. _tips-for-working-with-rst:
 
-.. |key1| replace:: I'm a **substitution**
-
 Tips for working with reStructuredText
 ========================================
+
+.. |key1| replace:: I'm a **substitution**
 
 If you've never used reStructuredText before, you should be aware that its syntax is pretty different from anything you've ever used before. We recommend the following resources as references for the syntax:
 
