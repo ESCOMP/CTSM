@@ -23,17 +23,17 @@ Changes for all physics versions
   * Update irrigated rice grnfill and lfemerg
   * Fix C-balance error for partly emerged crops
 
-Heads up
+### Heads up
 * PLACEHOLDER
 
-Features now deprecated and made unsupported
+### Features now deprecated and made unsupported
 * clm4_5 physics
 * VIC-hydro
 
-Additional detail
+## Additional detail
 * PLACEHOLDER
 
-Changes to FATES and the FATES parameter file
+### Changes to FATES and the FATES parameter file
 * See HLM-FATES compatibility table in the FATES user's guide for all FATES tags associated with CTSM tag updates
 * FATES parameter files updated from NetCDF to JSON text format. Allowing easier manipulation within the case workflow
 * Option for Carbon-Nitrogen nutrient coupling
@@ -42,6 +42,6 @@ Changes to FATES and the FATES parameter file
 * FATES Parameter File Updates 
   * PLACEHOLDER
 
-Simulations supporting this release by providing initial conditions
+## Simulations supporting this release by providing initial conditions
 * PLACEHOLDER
 
