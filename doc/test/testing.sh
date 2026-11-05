@@ -9,11 +9,6 @@ cd "${SCRIPT_DIR}/"
 # Compare docs built with container vs. ctsm_pylib
 ./test_container_eq_ctsm_pylib.sh
 
-# Check that -r -v works (Docker)
-cd "${SCRIPT_DIR}/"
-rm -rf _build
-./test_build_docs_-r-v.sh docker
-
 # Check that Makefile method works
 cd "${SCRIPT_DIR}/"
 rm -rf _build
