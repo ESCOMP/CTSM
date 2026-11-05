@@ -1,0 +1,4 @@
+This usermod turns on running CUPiD to get plots and diagnostics as part of a case. It sets the most common settings
+for a CTSM case.
+
+To run with CUPiD you'll need to activate the cupid-infrastructure conda environment

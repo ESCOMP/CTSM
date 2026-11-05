@@ -1,0 +1,4 @@
+#!/bin/bash
+./xmlchange CUPID_RUN_ROF=TRUE
+./xmlchange CUPID_RUN_LND=FALSE
+
