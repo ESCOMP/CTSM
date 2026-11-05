@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _choosing-a-compset:
 
 ====================

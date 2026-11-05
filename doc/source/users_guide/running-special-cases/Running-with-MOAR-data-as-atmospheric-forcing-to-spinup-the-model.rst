@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _running-with-moar-data:
 
 ========================

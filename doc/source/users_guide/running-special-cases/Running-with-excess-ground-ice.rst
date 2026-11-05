@@ -1,7 +1,5 @@
 .. _running-with-excess-ground-ice:
 
-.. include:: ../substitutions.rst
-
 ===================================
  Running with excess ground ice
 ===================================

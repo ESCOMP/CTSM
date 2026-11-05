@@ -29,7 +29,11 @@ dependencies:
 
   # For building docs
   - pip:
-    - -r ../doc/ctsm-docs_container/requirements.txt
+    - rst2pdf == 0.103.1
+    - sphinx == 8.2.3
+    - sphinxcontrib_programoutput == 0.18
+    - myst-parser == 5.0.0
+    - sphinx_rtd_theme == 3.0.2
 
   # Used in ctsm_postprocessing repo
   - pytest=8.3.5

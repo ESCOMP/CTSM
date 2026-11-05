@@ -17,6 +17,9 @@ on:
         default: ""
     secrets: {}
 
+env:
+  DOCS_REQUIREMENTS_FILE: doc/doc-builder/doc-build-container/requirements.txt
+
 jobs:
   build-docs:
     runs-on: ubuntu-latest
@@ -27,6 +30,7 @@ jobs:
           lfs: true
 
       # Check out all submodules because we might :literalinclude: something from one
+      # Also, we need doc-builder for its requirements.txt
       - name: Checkout all submodules
         run: |
           bin/git-fleximod update -o
@@ -43,13 +47,13 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles(env.DOCS_REQUIREMENTS_FILE) }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install Python requirements
         if: ${{ ! inputs.use_conda }}
         run: |
-          pip install -r doc/ctsm-docs_container/requirements.txt
+          pip install -r "$DOCS_REQUIREMENTS_FILE"
 
       # Do this if using conda
       - name: Set up conda environment

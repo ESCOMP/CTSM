@@ -5,7 +5,6 @@
 
 .. _users-guide:
 
-.. include:: substitutions.rst
 
 ######################
 |version| User's Guide
