@@ -1,5 +1,7 @@
 .. _tips-for-working-with-rst:
 
+.. |key1| replace:: I'm a **substitution**
+
 Tips for working with reStructuredText
 ========================================
 
@@ -232,3 +234,14 @@ Our global substitutions are defined in ``doc/substitutions.py``. For example, i
    :start-at: version =
    :end-at: version =
    :lineno-match:
+
+You can also define substitutions that will apply in just one file. For example, this file contains this line:
+
+.. literalinclude:: tips-for-working-with-rst.rst
+   :language: reStructuredText
+   :linenos:
+   :start-at: key1
+   :end-at: key1
+   :lineno-match:
+
+Thus, ``|key1|`` gets rendered as "|key1|" (no quotes), but this wouldn't work on any other page.
