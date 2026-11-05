@@ -237,8 +237,11 @@ if [[ ${dry_run} -ne 0 ]]; then
    exit 0
 fi
 
-# Check out doc-builder to ensure we have the latest version of its requirements.txt
-bin/git-fleximod update doc-builder
+# Check out doc-builder to ensure we have the latest version of its requirements.txt.
+# Don't use git-fleximod, because it won't work in CESM checkouts. Regular git submodule command
+# should be safe to use here, at least on sanctioned CTSM branches, because we have a GitHub
+# Workflow ensuring the git submodule version matches the .gitmodules entry.
+git submodule update --init -- doc/doc-builder
 
 # Rename or overwrite existing
 if [[ ${conda_env_does_exist} -gt 0 ]]; then
