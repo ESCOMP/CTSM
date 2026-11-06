@@ -2149,8 +2149,8 @@ contains
              ptr_patch=this%bgnpp_patch)
 
         this%litfall_patch(begp:endp) = spval
-        call hist_addfld1d (fname='LITFALL', units='gC/m^2/s', &
-             avgflag='A', long_name='litterfall (leaves and fine roots)', &
+        call hist_addfld1d (fname='LITFALLC', units='gC/m^2/s', &
+             avgflag='A', long_name='total C litterfall (all vegetation C fluxes to litter)', &
              ptr_patch=this%litfall_patch)
 
         this%veg_litter_mort_c_patch(begp:endp) = spval
@@ -2329,8 +2329,8 @@ contains
              ptr_patch=this%bgnpp_patch, default='inactive')
 
         this%litfall_patch(begp:endp) = spval
-        call hist_addfld1d (fname='C13_LITFALL', units='gC13/m^2/s', &
-             avgflag='A', long_name='C13 litterfall (leaves and fine roots)', &
+        call hist_addfld1d (fname='C13_LITFALLC', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 total litterfall (all vegetation C13 fluxes to litter)', &
              ptr_patch=this%litfall_patch, default='inactive')
 
         this%veg_litter_mort_c_patch(begp:endp) = spval
@@ -3392,8 +3392,8 @@ contains
             ptr_patch=this%bgnpp_patch, default='inactive')
 
        this%litfall_patch(begp:endp) = spval
-       call hist_addfld1d (fname='C14_LITFALL', units='gC14/m^2/s', &
-            avgflag='A', long_name='C14 litterfall (leaves and fine roots)', &
+       call hist_addfld1d (fname='C14_LITFALLC', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 total litterfall (all vegetation C14 fluxes to litter)', &
             ptr_patch=this%litfall_patch, default='inactive')
 
        this%veg_litter_mort_c_patch(begp:endp) = spval
@@ -5151,7 +5151,7 @@ contains
             this%m_gresp_storage_to_litter_fire_patch(p)      + &
             this%m_gresp_xfer_to_litter_fire_patch(p)
 
-       ! litterfall (LITFALL)
+       ! litterfall (LITFALLC)
 
        this%litfall_patch(p) = &
             this%leafc_to_litter_patch(p)                     + &
