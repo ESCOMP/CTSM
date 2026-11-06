@@ -1,0 +1,59 @@
+name: Other
+description: Other issues (enhancement, cleanup, etc.)
+body:
+
+  - type: textarea
+    id: brief-summary
+    attributes:
+      label: Brief summary
+      description: Give a one or two sentence summary. This could be the same as the issue title if you feel that is a sufficient summary.
+    validations:
+      required: true
+
+  - type: textarea
+    id: further-details
+    attributes:
+      label: Further details
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### AI disclosure
+
+  - type: dropdown
+    id: was-ai-used
+    attributes:
+      label: Was AI used in this contribution?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-usage-details
+    attributes:
+      label: If you used AI, what did you use it for? (If not, put n/a.)
+      description: "For example: understanding relevant parts of the codebase; outlining possible implementation; drafting issue text"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-provider
+    attributes:
+      label: AI provider
+      placeholder: "E.g., Anthropic"
+      description: Optional
+    validations:
+      required: false
+
+  - type: input
+    id: ai-model
+    attributes:
+      label: AI model
+      placeholder: "E.g., Opus 5.5 high effort"
+      description: Optional
+    validations:
+      required: false

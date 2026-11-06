@@ -1,0 +1,126 @@
+name: Bug report
+description: Report a problem with the code
+labels: ["bug"]
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: brief-summary
+    attributes:
+      label: Brief summary of bug
+      description: Give a one or two sentence summary. This could be the same as the issue title if you feel that is a sufficient summary. There will be room to give additional details below.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### General bug information
+
+  - type: input
+    id: version
+    attributes:
+      label: CTSM version you are using
+      description: Output of `git describe`
+      placeholder: "ctsmX.Y.ZZZ..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: significant-incorrect-science
+    attributes:
+      label: Does this bug cause significantly incorrect results in the model's science?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: textarea
+    id: configs-affected
+    attributes:
+      label: Configurations affected
+      placeholder: Fill this in if known
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### AI disclosure
+
+  - type: dropdown
+    id: was-ai-used
+    attributes:
+      label: Was AI used in this contribution?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-usage-details
+    attributes:
+      label: If you used AI, what did you use it for? (If not, put n/a.)
+      description: "For example: identifying bug; searching for related issues/PRs; providing minimal working example; drafting issue text"
+    validations:
+      required: true
+
+  - type: textarea
+    id: how-confirmed-ai-bug
+    attributes:
+      label: If AI discovered this bug, how have you confirmed that it's real? (If not, put n/a.)
+      description: "Make sure that you as a human being understand the bug! If you don't, we may deprioritize responding to your submission, as we have had numerous instances where an LLM thought something was a bug and it turned out not to be."
+    validations:
+      required: true
+
+  - type: input
+    id: ai-provider
+    attributes:
+      label: AI provider
+      placeholder: "E.g., Anthropic"
+      description: Optional
+    validations:
+      required: false
+
+  - type: input
+    id: ai-model
+    attributes:
+      label: AI model
+      placeholder: "E.g., Opus 5.5 high effort"
+      description: Optional
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Details of bug
+
+  - type: textarea
+    id: additional-detail
+    attributes:
+      label: Additional details
+    validations:
+      required: false
+
+  - type: textarea
+    id: setup-details
+    attributes:
+      label: Important details of your setup / configuration so we can reproduce the bug
+      description: "Specify anything relevant: the compset, resolution, machine, compiler, any xml or namelist changes, etc. You don't have to repeat anything that you have already noted above."
+    validations:
+      required: false
+
+  - type: textarea
+    id: output-or-errors
+    attributes:
+      label: Important output or errors that show the problem
+      description: Fill this in with anything relevant that you haven't already noted.
+    validations:
+      required: false
