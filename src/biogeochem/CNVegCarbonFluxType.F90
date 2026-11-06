@@ -358,6 +358,8 @@ module CNVegCarbonFluxType
      real(r8), pointer :: agnpp_patch                               (:)     ! (gC/m2/s) aboveground NPP
      real(r8), pointer :: bgnpp_patch                               (:)     ! (gC/m2/s) belowground NPP
      real(r8), pointer :: litfall_patch                             (:)     ! (gC/m2/s) patch litterfall (leaves and fine roots)
+     real(r8), pointer :: veg_litter_mort_c_patch                   (:)     ! (gC/m2/s) patch vegetation C to litter from non-fire mortality
+     real(r8), pointer :: veg_litter_fire_c_patch                   (:)     ! (gC/m2/s) patch vegetation C to litter from fire mortality
      real(r8), pointer :: wood_harvestc_patch                       (:)     ! (gC/m2/s) patch-level wood harvest (to product pools)
      real(r8), pointer :: wood_harvestc_col                         (:)     ! (gC/m2/s) column-level wood harvest (to product pools) (p2c)
      real(r8), pointer :: slash_harvestc_patch                      (:)     ! (gC/m2/s) patch-level slash from harvest (to litter)
@@ -1122,6 +1124,8 @@ contains
     allocate(this%agnpp_patch             (begp:endp)) ; this%agnpp_patch             (:) = nan
     allocate(this%bgnpp_patch             (begp:endp)) ; this%bgnpp_patch             (:) = nan
     allocate(this%litfall_patch           (begp:endp)) ; this%litfall_patch           (:) = nan
+    allocate(this%veg_litter_mort_c_patch (begp:endp)) ; this%veg_litter_mort_c_patch (:) = nan
+    allocate(this%veg_litter_fire_c_patch (begp:endp)) ; this%veg_litter_fire_c_patch (:) = nan
     allocate(this%wood_harvestc_patch     (begp:endp)) ; this%wood_harvestc_patch     (:) = nan
     allocate(this%slash_harvestc_patch    (begp:endp)) ; this%slash_harvestc_patch    (:) = nan
     allocate(this%cinputs_patch           (begp:endp)) ; this%cinputs_patch           (:) = nan
@@ -2149,6 +2153,16 @@ contains
              avgflag='A', long_name='litterfall (leaves and fine roots)', &
              ptr_patch=this%litfall_patch)
 
+        this%veg_litter_mort_c_patch(begp:endp) = spval
+        call hist_addfld1d (fname='VEG_LITTER_MORT_C', units='gC/m^2/s', &
+             avgflag='A', long_name='vegetation carbon to litter from non-fire mortality', &
+             ptr_patch=this%veg_litter_mort_c_patch)
+
+        this%veg_litter_fire_c_patch(begp:endp) = spval
+        call hist_addfld1d (fname='VEG_LITTER_FIRE_C', units='gC/m^2/s', &
+             avgflag='A', long_name='vegetation carbon to litter from fire mortality', &
+             ptr_patch=this%veg_litter_fire_c_patch)
+
         this%wood_harvestc_patch(begp:endp) = spval
         call hist_addfld1d (fname='WOOD_HARVESTC', units='gC/m^2/s', &
              avgflag='A', long_name='wood harvest carbon (to product pools)', &
@@ -2318,6 +2332,16 @@ contains
         call hist_addfld1d (fname='C13_LITFALL', units='gC13/m^2/s', &
              avgflag='A', long_name='C13 litterfall (leaves and fine roots)', &
              ptr_patch=this%litfall_patch, default='inactive')
+
+        this%veg_litter_mort_c_patch(begp:endp) = spval
+        call hist_addfld1d (fname='C13_VEG_LITTER_MORT_C', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 vegetation carbon to litter from non-fire mortality', &
+             ptr_patch=this%veg_litter_mort_c_patch, default='inactive')
+
+        this%veg_litter_fire_c_patch(begp:endp) = spval
+        call hist_addfld1d (fname='C13_VEG_LITTER_FIRE_C', units='gC13/m^2/s', &
+             avgflag='A', long_name='C13 vegetation carbon to litter from fire mortality', &
+             ptr_patch=this%veg_litter_fire_c_patch, default='inactive')
 
         this%fire_closs_patch(begp:endp) = spval
         call hist_addfld1d (fname='C13_PFT_FIRE_CLOSS', units='gC13/m^2/s', &
@@ -3371,6 +3395,16 @@ contains
        call hist_addfld1d (fname='C14_LITFALL', units='gC14/m^2/s', &
             avgflag='A', long_name='C14 litterfall (leaves and fine roots)', &
             ptr_patch=this%litfall_patch, default='inactive')
+
+       this%veg_litter_mort_c_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C14_VEG_LITTER_MORT_C', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 vegetation carbon to litter from non-fire mortality', &
+            ptr_patch=this%veg_litter_mort_c_patch, default='inactive')
+
+       this%veg_litter_fire_c_patch(begp:endp) = spval
+       call hist_addfld1d (fname='C14_VEG_LITTER_FIRE_C', units='gC14/m^2/s', &
+            avgflag='A', long_name='C14 vegetation carbon to litter from fire mortality', &
+            ptr_patch=this%veg_litter_fire_c_patch, default='inactive')
 
        this%fire_closs_patch(begp:endp) = spval
        call hist_addfld1d (fname='C14_PFT_FIRE_CLOSS', units='gC14/m^2/s', &
@@ -4732,6 +4766,8 @@ contains
        this%agnpp_patch(i)         = value_patch
        this%bgnpp_patch(i)         = value_patch
        this%litfall_patch(i)       = value_patch
+       this%veg_litter_mort_c_patch(i) = value_patch
+       this%veg_litter_fire_c_patch(i) = value_patch
        this%wood_harvestc_patch(i) = value_patch
        this%slash_harvestc_patch(i) = value_patch
        this%cinputs_patch(i)       = value_patch
@@ -5066,6 +5102,54 @@ contains
             this%livecrootc_xfer_to_livecrootc_patch(p)     + &
             this%cpool_to_deadcrootc_patch(p)               + &
             this%deadcrootc_xfer_to_deadcrootc_patch(p)
+
+       ! vegetation carbon to litter from non-fire mortality (VEG_LITTER_MORT_C)
+
+       this%veg_litter_mort_c_patch(p) = &
+            this%m_leafc_to_litter_patch(p)                   + &
+            this%m_leafc_storage_to_litter_patch(p)           + &
+            this%m_leafc_xfer_to_litter_patch(p)              + &
+            this%m_frootc_to_litter_patch(p)                  + &
+            this%m_frootc_storage_to_litter_patch(p)          + &
+            this%m_frootc_xfer_to_litter_patch(p)             + &
+            this%m_livestemc_to_litter_patch(p)               + &
+            this%m_livestemc_storage_to_litter_patch(p)       + &
+            this%m_livestemc_xfer_to_litter_patch(p)          + &
+            this%m_deadstemc_to_litter_patch(p)               + &
+            this%m_deadstemc_storage_to_litter_patch(p)       + &
+            this%m_deadstemc_xfer_to_litter_patch(p)          + &
+            this%m_livecrootc_to_litter_patch(p)              + &
+            this%m_livecrootc_storage_to_litter_patch(p)      + &
+            this%m_livecrootc_xfer_to_litter_patch(p)         + &
+            this%m_deadcrootc_to_litter_patch(p)              + &
+            this%m_deadcrootc_storage_to_litter_patch(p)      + &
+            this%m_deadcrootc_xfer_to_litter_patch(p)         + &
+            this%m_gresp_storage_to_litter_patch(p)           + &
+            this%m_gresp_xfer_to_litter_patch(p)
+
+       ! vegetation carbon to litter from fire mortality (VEG_LITTER_FIRE_C)
+
+       this%veg_litter_fire_c_patch(p) = &
+            this%m_leafc_to_litter_fire_patch(p)              + &
+            this%m_leafc_storage_to_litter_fire_patch(p)      + &
+            this%m_leafc_xfer_to_litter_fire_patch(p)         + &
+            this%m_livestemc_to_litter_fire_patch(p)          + &
+            this%m_livestemc_storage_to_litter_fire_patch(p)  + &
+            this%m_livestemc_xfer_to_litter_fire_patch(p)     + &
+            this%m_deadstemc_to_litter_fire_patch(p)          + &
+            this%m_deadstemc_storage_to_litter_fire_patch(p)  + &
+            this%m_deadstemc_xfer_to_litter_fire_patch(p)     + &
+            this%m_frootc_to_litter_fire_patch(p)             + &
+            this%m_frootc_storage_to_litter_fire_patch(p)     + &
+            this%m_frootc_xfer_to_litter_fire_patch(p)        + &
+            this%m_livecrootc_to_litter_fire_patch(p)         + &
+            this%m_livecrootc_storage_to_litter_fire_patch(p) + &
+            this%m_livecrootc_xfer_to_litter_fire_patch(p)    + &
+            this%m_deadcrootc_to_litter_fire_patch(p)         + &
+            this%m_deadcrootc_storage_to_litter_fire_patch(p) + &
+            this%m_deadcrootc_xfer_to_litter_fire_patch(p)    + &
+            this%m_gresp_storage_to_litter_fire_patch(p)      + &
+            this%m_gresp_xfer_to_litter_fire_patch(p)
 
        ! litterfall (LITFALL)
 
