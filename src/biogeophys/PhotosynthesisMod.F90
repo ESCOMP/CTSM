@@ -173,6 +173,7 @@ module PhotosynthesisMod
 
      real(r8), pointer, public  :: rc14_canair_patch (:)   ! patch C14O2/C12O2 in canopy air
 
+     real(r8), pointer, public  :: psnsun_ln_patch  (:)    ! patch sunlit leaf photosynthesis at local noon (umol co2 /m**2/ s)
      real(r8), pointer, public  :: psnsun_patch      (:)   ! patch sunlit leaf photosynthesis     (umol CO2/m**2/s)
      real(r8), pointer, public  :: psnsha_patch      (:)   ! patch shaded leaf photosynthesis     (umol CO2/m**2/s)
      real(r8), pointer, public  :: c13_psnsun_patch  (:)   ! patch c13 sunlit leaf photosynthesis (umol 13CO2/m**2/s)
@@ -315,6 +316,7 @@ contains
     allocate(this%gb_mol_patch      (begp:endp))           ; this%gb_mol_patch      (:)   = nan
     allocate(this%rh_leaf_patch     (begp:endp))           ; this%rh_leaf_patch     (:)   = nan
     allocate(this%vpd_can_patch     (begp:endp))           ; this%vpd_can_patch     (:)   = nan
+    allocate(this%psnsun_ln_patch   (begp:endp))           ; this%psnsun_ln_patch   (:)   = nan
     allocate(this%psnsun_patch      (begp:endp))           ; this%psnsun_patch      (:)   = nan
     allocate(this%psnsha_patch      (begp:endp))           ; this%psnsha_patch      (:)   = nan
     allocate(this%c13_psnsun_patch  (begp:endp))           ; this%c13_psnsun_patch  (:)   = nan
@@ -419,6 +421,7 @@ contains
     deallocate(this%gb_mol_patch      )
     deallocate(this%rh_leaf_patch     )
     deallocate(this%vpd_can_patch     )
+    deallocate(this%psnsun_ln_patch   )
     deallocate(this%psnsun_patch      )
     deallocate(this%psnsha_patch      )
     deallocate(this%c13_psnsun_patch  )
@@ -481,6 +484,7 @@ contains
     !
     ! !USES:
     use histFileMod   , only: hist_addfld1d, hist_addfld2d
+    use clm_time_manager, only: is_near_local_noon
     !
     ! !ARGUMENTS:
     class(photosyns_type) :: this
@@ -488,10 +492,11 @@ contains
     real(r8), pointer  :: ptr_1d(:)  ! pointer to 1d patch array
     !
     ! !LOCAL VARIABLES:
-    integer :: begp, endp
+    integer :: begp, endp, begg
     !---------------------------------------------------------------------
 
     begp = bounds%begp; endp= bounds%endp
+    begg = bounds%begg
 
     this%rh_leaf_patch(begp:endp) = spval
     call hist_addfld1d (fname='RH_LEAF', units='fraction', &
@@ -547,6 +552,15 @@ contains
        call hist_addfld1d (fname='PSNSUN', units='umolCO2/m^2/s', &
             avgflag='A', long_name='sunlit leaf photosynthesis', &
             ptr_patch=this%psnsun_patch)
+
+       this%psnsun_ln_patch(begp:endp) = spval
+       ! write out local noon psn_sun (within +/- 1hr)
+       if ( is_near_local_noon( grc%londeg(begg), deltasec=3600 ) ) then
+          this%psnsun_ln_patch(begp:endp) = this%psnsun_patch(begp:endp)
+       end if
+       call hist_addfld1d (fname='PSNSUNLN', units='umolCO2/m^2/s', &
+            avgflag='A', long_name='sunlit leaf photosynthesis at local noon', &
+            ptr_patch=this%psnsun_ln_patch)
 
        this%psnsha_patch(begp:endp) = spval
        call hist_addfld1d (fname='PSNSHA', units='umolCO2/m^2/s', &
@@ -740,6 +754,7 @@ contains
        this%alphapsnsha_patch(p) = spval
 
        if (lun%ifspecial(l)) then
+          this%psnsun_ln_patch(p) = 0._r8
           this%psnsun_patch(p) = 0._r8
           this%psnsha_patch(p) = 0._r8
           if ( use_c13 ) then
@@ -1158,6 +1173,7 @@ contains
     do p = bounds%begp, bounds%endp
        l = patch%landunit(p)
        if (.not. lun%lakpoi(l)) then
+          this%psnsun_ln_patch(p) = 0._r8
           this%psnsun_patch(p)    = 0._r8
           this%psnsun_wc_patch(p) = 0._r8
           this%psnsun_wj_patch(p) = 0._r8
@@ -1224,6 +1240,7 @@ contains
        this%rc14_canair_patch(p) = spval
     end if
 
+    this%psnsun_ln_patch(p) = 0._r8
     this%psnsun_patch(p) = 0._r8
     this%psnsha_patch(p) = 0._r8
 
