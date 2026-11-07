@@ -3,101 +3,124 @@
 .. _spinning-up-clm-bgc:
 
 =============================
- Spinup of |version|-BGC-Crop
+ Spinup of CLM-BGC-Crop
 =============================
 
-To get the |version|-BGC model to a steady state, you first run it from arbitrary initial conditions using the "accelerated decomposition spinup" (``-bgc_spinup on`` in CLM ``configure``, see example below) mode for about 200 simulation years. :numref:`Figure BGC AD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC accelerated decomposition (AD) case using GSWP3 atmospheric forcing. Generally, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
+To get the CLM-BGC-Crop model to a steady state, you start it from arbitrary initial conditions using the "accelerated decomposition spinup" (``CLM_ACCELERATED_SPINUP on`` in CLM `env_run.xml`, see example below) mode for 300-400 simulation years. :numref:`Figure BGC-Crop AD spinup plot for 1850` shows spinup behavior for an 1850 BGC-Crop accelerated decomposition (AD) case using CRUJRA atmospheric forcing. Generally, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy due to slow soil carbon (TOTSOMC) turnover times in the Arctic.
 
-.. _Figure BGC AD spinup plot for 1850 GSWP3:
+.. _Figure BGC-Crop AD spinup plot for 1850:
 
-.. figure:: image3.png
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_AD_Spinup-0.png
 
- BGC AD spinup plot for a year 1850 case with GSWP3 atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC-Crop AD spinup plot for a year 1850 case with CRUJRA atmospheric forcing. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-After this you branch from this mode in the "final spinup" (``-bgc_spinup off`` in CLM ``configure``, see example below), and run for several hundred simulation years. :numref:`Figure BGC pAD spinup plot for 1850 GSWP3` shows spinup behavior for an 1850 BGC post accelerated decomposition (pAD) case using GSWP3 atmospheric forcing. As before, the criteria that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy. It can be difficult to meet this strict criteria in less than 1000 years and users may want to relax this criteria depending on their application.
+After this you continue in "SASU" mode (``CLM_ACCELERATED_SPINUP sasu`` in CLM `env_run.xml`, see example below), and run for 300-350 simulation years. :numref:`Figure BGC-Crop SASU spinup plot for 1850` shows spinup behavior for an 1850 BGC-Crop SASU case using CRUJRA atmospheric forcing. The criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy and need not be met for this step.
 
-.. _Figure BGC pAD spinup plot for 1850 GSWP3:
+.. _Figure BGC-Crop SASU spinup plot for 1850:
 
-.. figure:: image4.png
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_SASU_Spinup-0.png
 
- BGC pAD spinup plot for a year 1850 case with GSWP3 atmospheric forcing and initialization from the end of the BGC AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC-Crop SASU spinup plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop AD spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-You can also start from a default initial file that is setup as part of the selected compset. :numref:`Figure BGC initialized spinup plot for 1850` shows spinup behavior for an 1850 pAD BGC case that loops over one year of coupler history output for atmospheric forcing (generated from the fully coupled model), initialized with a BGC initial file generated from a GSWP3 atmospheric forcing case. Note that it takes about 10 years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a specified equilibrium state (denoted by the dotted lines) due to the different atmospheric forcing.
+After this you continue in standard mode for 200 years. We refer to this phase as post-SASU, pSASU, or normal mode (``CLM_ACCELERATED_SPINUP off`` in CLM `env_run.xml`, see example below). :numref:`Figure BGC-Crop normal mode plot for 1850` shows spinup behavior for an 1850 BGC-Crop normal mode case using CRUJRA atmospheric forcing. As before, the criterion that less than 3% of the land surface be in total ecosystem carbon disequilibrium takes the longest to satisfy.
 
-.. _Figure BGC initialized spinup plot for 1850:
+.. _Figure BGC-Crop normal mode plot for 1850:
 
-.. figure:: image5.png
+.. figure:: ctsm5.4.CMIP7_ciso_ctsm5.3.075_f09_124_pSASU_Spinup-0.png
 
- BGC initialized spinup plot for year 1850. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
+ BGC-Crop normal mode plot for a year 1850 case with CRUJRA atmospheric forcing and initialization from the end of the BGC-Crop SASU spinup case. Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability_BGC_v11.ncl.
 
-:numref:`Figure BGC initialized spinup plot for 2000 CO2` shows spinup behavior for the same case but also changes CO2 to present-day conditions (379ppmv). Again, it takes about 10 years to reach equilibrium for TLAI, GPP, and TWS.
+As an alternative to spinning up, one may start from a default initial file that is setup as part of the selected compset. When the simulation's spatial resolution is identical to the initial file's resolution, it may still take 10 or more years for variables such as TLAI (total leaf area index), GPP (gross primary production), and TWS (total water storage) to reach a new equilibrium state due to the different atmospheric forcing. Similarly, it may take 10 or more years for these variables to reach a new equilibrium when switching atmospheric CO2 from 1850 to a present-day value.
 
-.. _Figure BGC initialized spinup plot for 2000 CO2:
-
-.. figure:: image6.png
-
- BGC initialized spinup plot for year 2000 CO2.  Variables examined are TOTECOSYSC (total ecosystem carbon), TOTSOMC (total soil organic matter carbon), TOTVEGC (total vegetation carbon), TLAI (total leaf area index), GPP (gross primary production) and TWS (total water storage). Generated using .../tools/contrib/SpinupStability.ncl.
-
-If you use the default initial file and you signficantly change model behavior or atmospheric forcing, and you are concerned about the carbon equilibrium (e.g., TOTECOSYSC, TOTSOMC, TOTVEGC), particularly at high latitudes, then we recommend you put the model back into AD mode to reach a new equilibrium. In this configuration, this will also automatically reseed "dead" plant functional types in the initial file with a bit of leaf carbon to give those plant functional types another chance to grow under the new atmospheric forcing or model conditions.
-
-**1. |version| accelerated-decomposition (AD) spinup**
-     For the first step of running 200+ years in ``-bgc_spinup on`` mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. So do the following:
-
-Example: AD_SPINUP Simulation for |version|-BGC
+Example: AD_spinup Simulation for CLM-BGC-Crop
 --------------------------------------------------------
+For the first step of running in ``CLM_ACCELERATED_SPINUP on`` mode, you will setup a case, and then edit the values in env_build.xml and env_run.xml so that the right configuration is turned on and the simulation is setup to run for the required length of simulation time. Try the following:
+
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case BGC_spinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
-   > cd BGC_spinup
+   > ./create_newcase -case AD_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > cd AD_spinup
    # Change accelerated spinup mode
    > ./xmlchange CLM_ACCELERATED_SPINUP="on"
    # Now setup
-   > ./case.setup -case
+   > ./case.setup
+   # The following makes sure we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
    # Now build
    > ./case.build
-   # The following sets RESUBMIT to 3 times in env_run.xml (you could also use an editor)
-   # The following sets STOP_DATE,STOP_N and STOP_OPTION to Jan/1/0201, 20, "nyears" in env_run.xml (you could also use an editor)
-   > ./xmlchange RESUBMIT=3,STOP_N=50,STOP_OPTION=nyears,STOP_DATE=02010101
-   # Now run normally
+   # The following sets RESUBMIT to 7 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   > ./xmlchange RESUBMIT=7,STOP_N=50,STOP_OPTION=nyears
+   # Now run
    > ./case.submit
 
-.. note:: This same procedure works for |version|-CN as well.
+While this simulation progresses, use SpinupStability_BGC_v11.ncl to assess whether the simulation is approaching equilibrium. When the simulation ends, save the last restart file for use in the SASU_spinup step.
 
-Afterwards save the last restart file from this simulation to use in the next step.
+Using the SpinupStability.ncl scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**2. Final spinup for |version|-BGC**
-     Next save the last restart file from this step and use it as the ``finidat`` file to use for one more spinup for at least 400+ years in normal mode. So do the following:
+In CLM's /tools/contrib directory there are three versions of this .ncl script:
 
-.. _eg-final-clmbgc-spinup:
+- SpinupStability_BGC_v11.ncl for Bgc and BgcCrop compsets run on 2D lat/lon grids.
+- SpinupStability_BGC_v12_SE.ncl for Bgc, BgcCrop, or Fates compsets run on certain spectral element grids (currently ne120, ne30, ne16).
+- SpinupStability_SP_v10.ncl for Sp compsets run on 2D lat/lon grids. See section :numref:`spinning-up-sp` for helpful pointers about this script that may also apply to the BGC-Crop versions.
 
-Example: Final CLMBGC Spinup Simulation for |version|-BGC
+To run one of these scripts on derecho, one loads ncl (``module load ncl``) and submits with ``ncl SpinupStability_BGC_v11.ncl``, for example. Before running one needs to confirm a few easy settings appearing near the top of each script.
+
+One of the settings that may not be intuitive at first glance is ``annual_hist``. By default the phases AD_spinup and SASU_spinup generate annual history, so set this to "True", while normal mode generates monthly history, so set this to "False".
+
+.. _eg-sasu-spinup:
+
+Example: SASU_spinup Simulation for CLM-BGC-Crop
 ------------------------------------------------------------------
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case BGC_finalspinup -res f19_g17_gl4 -compset I1850Clm50BgcCropCru
-   > cd BGC_finalspinup
-   # Now, Copy the last CLM restart file from the earlier case into your run directory
-   > cp /ptmp/$LOGIN/archive/BGC_spinup/rest/BGC_spinup.clm*.r*.0201-01-01-00000.nc \
-   /glade/scratch/$LOGIN/CN_finalspinup/run
-   # Set the runtype to startup
-   > ./xmlchange RUN_TYPE=startup
-   # And copy the rpointer files for datm and drv from the earlier case
-   > cp /glade/scratch/$LOGIN/archive/BGC_spinup/rest/rpointer.atm /glade/scratch/$LOGIN/CN_finalspinup/run
-   # Set the finidat file to the last restart file saved in previous step
-   > echo ' finidat = "BGC_spinup.clm2.r.0201-01-01-00000.nc"' > user_nl_clm
+   > ./create_newcase -case SASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > cd SASU_spinup
+   # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
+   > ./xmlchange CLM_ACCELERATED_SPINUP="sasu",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
    # Now setup
    > ./case.setup
-   > Now build
+   # Copy the last restart files from the AD_spinup case into your run directory
+   # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
+   > cp archive/AD_spinup/rest/0401-01-01-00000/* SASU_spinup/run
+   # Set finidat to the restart file copied in the previous step
+   > echo ' finidat = "AD_spinup.clm2.r.0401-01-01-00000.nc"' > user_nl_clm
+   # The following makes sure we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
+   # Now build
    > ./case.build
-   # The following sets RESUBMIT to 7 times in env_run.xml (you could also use an editor)
-   # The following sets STOP_N and STOP_OPTION to 50 and "nyears" in env_run.xml (you could also use an editor)
-   > ./xmlchange RESUBMIT=7,STOP_OPTION=nyears,STOP_N=50
-   > Now run as normal
+   # The following sets RESUBMIT to 6 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   > ./xmlchange RESUBMIT=6,STOP_OPTION=nyears,STOP_N=50
+   # Now run
    > ./case.submit
 
-To assess if the model is spunup, plot trends for CLMBGC variables of interest using .../tools/contrib/SpinupStability.ncl. If you don't meet the equilibrium criteria, you may need to run the simulation longer. Finally save the restart file from the end of this simulation to use as an "finidat" file for future simulations.
+Save the last restart file from this step and use it as the ``finidat`` file for the normal mode simulation. Save the restart file from the end of the normal mode simulation to use as a "finidat" file for future simulations.
 
-.. note:: This same final spinup procedure works for |version|-CN as well.
+
+Example: Normal mode simulation for CLM-BGC-Crop
+--------------------------------------------------
+::
+
+   > cd cime/scripts
+   > ./create_newcase -case pSASU_spinup -res f19_g17 -compset I1850Clm60BgcCrop --run-unsupported
+   > cd pSASU_spinup
+   # Change accelerated spinup mode, turn off coldstart, and change runtype to hybrid to allow use of a finidat
+   > ./xmlchange CLM_ACCELERATED_SPINUP="off",CLM_FORCE_COLDSTART=off,RUN_TYPE=hybrid
+   # Now setup
+   > ./case.setup
+   # Copy the last restart files from the SASU_spinup case into your run directory
+   # On NSF-NCAR's derecho computer, cd to /glade/derecho/scratch/$USER
+   > cp archive/SASU_spinup/rest/0351-01-01-00000/* pSASU_spinup/run
+   # Set finidat to the restart file copied in the previous step
+   > echo ' finidat = "SASU_spinup.clm2.r.0351-01-01-00000.nc"' > user_nl_clm
+   # The following makes sure we run with MOSART off
+   > ./xmlchange MOSART_MODE=NULL
+   # Now build
+   > ./case.build
+   # The following sets RESUBMIT to 3 times, STOP_N to 50, and STOP_OPTION to "nyears" in env_run.xml (you could also modify these with an editor)
+   > ./xmlchange RESUBMIT=3,STOP_OPTION=nyears,STOP_N=50
+   # Now run
+   > ./case.submit
 

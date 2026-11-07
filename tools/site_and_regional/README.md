@@ -51,14 +51,3 @@ neon_gcs_upload
     Script to rename and upload NEON site finidat files to NEON server
     for use in transient startup cases
 
-## DEPRECATED SCRIPTS:
-
-mknoocnmap.pl 
-        Script to create unity mapping dataset for single-point
-        or regional studies over land-only (no ocean).
-
-NCL Scripts available:
-
-mkunitymap.ncl
-        NCL script to create a unity map -- ran by above script (mknoocnmap.pl)
-

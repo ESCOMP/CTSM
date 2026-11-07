@@ -1,14 +1,13 @@
 # Important Notes on Experimental Features of CTSM
+---
 
-Namelist items that are not regularly tested or used. Some aren't even implemented.
+## Namelist items not regularly tested or used (some aren't even implemented)
 
-    See
+See '../bld/namelist_files/namelist_definition_ctsm.xml' -- for definitions of all namelist variables
 
-    '../bld/namelist_files/namelist_definition_ctsm.xml' -- for definitions of all namelist variables
+### CTSM experimental namelist items
 
-## CTSM experimental namelist items
-
-    The following are tested but not on by default (for any physics)
+The following are tested but not on by default (for any physics):
 
     - all_active
     - allow_invalid_gdd20_season_inputs
@@ -16,7 +15,7 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     - use_nvmovement
     - use_soil_moisture_streams
 
-   The following are NOT currently tested nor turned on by default:
+The following are NOT currently tested nor turned on by default:
 
     - allowlakeprod
     - allow_invalid_swindow_inputs
@@ -54,15 +53,14 @@ Namelist items that are not regularly tested or used. Some aren't even implement
     - use_vichydro (deprecated)
     - vcmax_opt = 4
 
-## FATES experimental namelist items
+### FATES experimental namelist items
 
-    FATES is a relatively new subcomponent of CTSM
-    Almost all FATES options include "fates" in the name
+FATES is a relatively new subcomponent of CTSM. Almost all FATES options include "fates" in the name.
 
-    The following are tested, but not turned on by default:
+The following are tested, but not turned on by default:
 
    - fates_seeddisp_cadence > 0
-   - fates_parteh_mode > 1
+   - fates_parteh_mode == carbon_nitrogen
    - use_fates_planthydro
    - use_fates_managed_fire
    - use_fates_tree_damage
@@ -71,7 +69,7 @@ Namelist items that are not regularly tested or used. Some aren't even implement
    - use_fates_potentialveg
    - use_fates_ed_st3
 
-   The following are NOT currently tested nor turned on by default:
+The following are NOT currently tested nor turned on by default:
 
    - fates_spitfire_mode == 2
    - fates_spitfire_mode == 5
@@ -84,4 +82,3 @@ Namelist items that are not regularly tested or used. Some aren't even implement
    - use_fates_potentialveg
    - use_fates_daylength_factor == FALSE
    - fates_history_dimlevel == 0
-

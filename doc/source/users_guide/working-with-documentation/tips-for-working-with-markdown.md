@@ -104,3 +104,68 @@ Here's a hint. Synonyms you can put in the `{}` instead of `hint` include `impor
 ```{hint}
 Here's a hint. Synonyms you can put in the `{}` instead of `hint` include `important` and `tip`.
 ```
+
+## Markdown: Embedding a different Markdown file
+It can be useful to embed one Markdown file within another. This is done in this documentation documentation, for instance, to embed `doc/source/users_guide/working-with-documentation/embed-build-cmd.md` on three different pages.
+
+As an example, here's what an embedding looks like:
+~~~
+That becomes:
+```{include} embed-example-markdown.md
+```
+~~~
+
+That becomes:
+```{include} embed-example-markdown.md
+```
+
+See [the MyST Markdown documentation for the "include" directive](https://mystmd.org/guide/directives#directive-include) for more information.
+
+You can also embed literal contents of any file without the rendering:
+~~~
+That becomes the literal contents:
+```{literalinclude} embed-example-markdown.md
+```
+~~~
+
+That becomes the literal contents:
+```{literalinclude} embed-example-markdown.md
+```
+
+(The first three lines are to indicate to Sphinx that it's okay for that file to not be included in any Table of Contents; i.e., to suppress the `WARNING: document isn't included in any toctree [toc.not_included]` build message.)
+
+You can also get fancy:
+~~~
+```{literalinclude} embed-example-python.py
+:language: python
+:linenos:
+```
+~~~
+
+Becomes (note syntax highlighting):
+
+```{literalinclude} embed-example-python.py
+:language: python
+:linenos:
+```
+
+And
+~~~
+```{literalinclude} embed-example-python.py
+:language: python
+:linenos:
+:start-at: print
+:lineno-match:
+```
+~~~
+
+Becomes:
+
+```{literalinclude} embed-example-python.py
+:language: python
+:linenos:
+:start-at: print
+:lineno-match:
+```
+
+See [the MyST Markdown documentation for the `include` directive](https://mystmd.org/guide/directives#directive-include) for more information (all options apply to `literalinclude` as well).

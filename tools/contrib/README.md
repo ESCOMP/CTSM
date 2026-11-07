@@ -21,8 +21,6 @@ abm_raw.ncl
 add_tillage_to_paramsfile.py
         Add tillage data to the parameter file
         Can this be deleted since we have modify paramfile scripts? EBK 3/12/2026
-create_scrip_file.ncl
-        Create a SCRIP grid file needed for running with WRF
 CRUJRA_antarctica.ipynb
         Jupyter notebook to add forcing data over Antarctica for the CRUJRA forcing
 CRUJRA_greenland.ipynb

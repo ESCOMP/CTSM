@@ -27,7 +27,7 @@ https://github.com/ESCOMP/ctsm/wiki/CTSM-development-workflow
    3c -- make sure you understand any changes to the baselines -- to document in ChangeLog
    3d -- Check the log file for run_sys_tests (`../run_sys_test.log`, to make sure that
          submodules are correct (see 2c above)
-   3e -- When Izumi’s baseline is ready, manually open read permissions to all.
+   3e -- When Izumi's baseline is ready, manually open read permissions to all.
 > [!TIP]
 > Always test on your fork with a feature-branch so that we can change tag order if needed. Put
 > baselines in the next tag name, as we can easily change afterwards if needed.
