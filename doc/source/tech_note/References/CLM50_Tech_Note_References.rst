@@ -1152,6 +1152,10 @@ Rastetter, E.B., Ryan, M.G., Shaver, G.R., Melillo, J.M., Nadelhoffer, K.J., Hob
 
 Rastner, P., Bolch, T., Mölg, N., Machguth, H., and Paul, F., 2012. The first complete glacier inventory for the whole of Greenland, The Cryosphere Discuss., 6, 2399-2436, 10.5194/tcd-6-2399-2012.
 
+.. _RGIConsortium2017:
+
+RGI Consortium, 2017. Randolph Glacier Inventory - A Dataset of Global Glacier Outlines, Version 6. Boulder, Colorado USA. NSIDC: National Snow and Ice Data Center. doi: https://doi.org/10.7265/4m1f-gd79.
+
 .. _Rileyetal2011a:
 
 Riley, W. J., Z. M. Subin, D. M. Lawrence, S. C. Swenson, M. S. Torn, L. Meng, N. Mahowald, and P. Hess, 2011a. Barriers to predicting global terrestrial methane fluxes: Analyses using a methane biogeochemistry model integrated in CESM. Biogeosciences, 8, 1925–1953. DOI:10.5194/bg-8-1925-2011.
