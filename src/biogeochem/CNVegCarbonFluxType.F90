@@ -5156,47 +5156,9 @@ contains
        this%litfall_patch(p) = &
             this%leafc_to_litter_patch(p)                     + &
             this%frootc_to_litter_patch(p)                    + &
-            this%m_leafc_to_litter_patch(p)                   + &
-            this%m_leafc_storage_to_litter_patch(p)           + &
-            this%m_leafc_xfer_to_litter_patch(p)              + &
-            this%m_frootc_to_litter_patch(p)                  + &
-            this%m_frootc_storage_to_litter_patch(p)          + &
-            this%m_frootc_xfer_to_litter_patch(p)             + &
-            this%m_livestemc_to_litter_patch(p)               + &
-            this%m_livestemc_storage_to_litter_patch(p)       + &
-            this%m_livestemc_xfer_to_litter_patch(p)          + &
-            this%m_deadstemc_to_litter_patch(p)               + &
-            this%m_deadstemc_storage_to_litter_patch(p)       + &
-            this%m_deadstemc_xfer_to_litter_patch(p)          + &
-            this%m_livecrootc_to_litter_patch(p)              + &
-            this%m_livecrootc_storage_to_litter_patch(p)      + &
-            this%m_livecrootc_xfer_to_litter_patch(p)         + &
-            this%m_deadcrootc_to_litter_patch(p)              + &
-            this%m_deadcrootc_storage_to_litter_patch(p)      + &
-            this%m_deadcrootc_xfer_to_litter_patch(p)         + &
-            this%m_gresp_storage_to_litter_patch(p)           + &
-            this%m_gresp_xfer_to_litter_patch(p)              + &
-            
-            this%m_leafc_to_litter_fire_patch(p)              + &
-            this%m_leafc_storage_to_litter_fire_patch(p)      + &
-            this%m_leafc_xfer_to_litter_fire_patch(p)         + &
-            this%m_livestemc_to_litter_fire_patch(p)          + &
-            this%m_livestemc_storage_to_litter_fire_patch(p)  + &
-            this%m_livestemc_xfer_to_litter_fire_patch(p)     + &
-            this%m_deadstemc_to_litter_fire_patch(p)          + &
-            this%m_deadstemc_storage_to_litter_fire_patch(p)  + &
-            this%m_deadstemc_xfer_to_litter_fire_patch(p)     + &
-            this%m_frootc_to_litter_fire_patch(p)             + &
-            this%m_frootc_storage_to_litter_fire_patch(p)     + &
-            this%m_frootc_xfer_to_litter_fire_patch(p)        + &
-            this%m_livecrootc_to_litter_fire_patch(p)         + &
-            this%m_livecrootc_storage_to_litter_fire_patch(p) + &
-            this%m_livecrootc_xfer_to_litter_fire_patch(p)    + &
-            this%m_deadcrootc_to_litter_fire_patch(p)         + &
-            this%m_deadcrootc_storage_to_litter_fire_patch(p) + &
-            this%m_deadcrootc_xfer_to_litter_fire_patch(p)    + &
-            this%m_gresp_storage_to_litter_fire_patch(p)      + &
-            this%m_gresp_xfer_to_litter_fire_patch(p)         + &
+
+            this%veg_litter_mort_c_patch(p)                   + &
+            this%veg_litter_fire_c_patch(p)                   + &
             
             this%hrv_leafc_to_litter_patch(p)                 + &
             this%hrv_leafc_storage_to_litter_patch(p)         + &
