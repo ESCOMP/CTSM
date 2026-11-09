@@ -1,0 +1,21 @@
+name: Check for end-of-line whitespace in added lines
+# Fails a pull request if any line it adds ends in whitespace (see issue #2313).
+# Python files are skipped because black already handles them.
+# The -space-before-tab and -blank-at-eof options turn off git's other default
+# whitespace checks, so only end-of-line whitespace is reported.
+
+on: [pull_request]
+
+jobs:
+  check-whitespace:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Check added lines for end-of-line whitespace
+        run: |
+          git -c core.whitespace=-space-before-tab,-blank-at-eof diff --check \
+            "origin/${{ github.base_ref }}...HEAD" -- . ':(exclude)*.py'
