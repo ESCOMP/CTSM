@@ -24,7 +24,7 @@ module CNSoilMatrixMod
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_cwd
-  use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday,c3_r2,c14ratio
+  use clm_varcon                         , only : dzsoi_decomp,zsoi,secspday,c3_r2
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use CNVegNitrogenFluxType              , only : cnveg_nitrogenflux_type
@@ -42,6 +42,7 @@ module CNSoilMatrixMod
   use perf_mod                           , only : t_startf, t_stopf
   use SparseMatrixMultiplyMod            , only : sparse_matrix_type, diag_matrix_type, vector_type
   use MatrixMod                          , only : inverse
+  use CIsoAtmTimeseriesMod, only : C14BombSpike, nsectors_c14
 !
   implicit none
   private
@@ -140,6 +141,8 @@ contains
     logical,save :: init_readyAsoilc = .False.
     logical,save :: init_readyAsoiln = .False.
     logical isbegofyear
+    real(r8) :: rc14_atm_sectors(nsectors_c14)
+    real(r8) :: rc14_atm
 
     !-----------------------------------------------------------------------
     begc = bounds%begc; endc = bounds%endc
@@ -223,6 +226,9 @@ contains
     list_AK_AKV      => decomp_cascade_con%list_AK_AKV      ,&!In/Output:[Integer(:)] Saves mapping indices from A*K to (A*K+V) in the addition subroutine SPMP_AB
     list_V_AKV       => decomp_cascade_con%list_V_AKV        &!In/Output:[Integer(:)] Saves mapping indices from V to (A*K+V) in the addition subroutine SPMP_AB 
     )
+
+     if ( use_c14 ) call C14BombSpike( rc14_atm_sectors )
+     rc14_atm = sum(rc14_atm_sectors(:)) / real(nsectors_c14,r8)
 
      ! set time steps
       call t_startf('CN Soil matrix-init. matrix')
@@ -362,13 +368,14 @@ contains
                cs_soil%decomp0_cpools_vr_col = epsi
             end where
             if(use_c13)then
+               ! Does the c3_r2 here need to change?
                where(cs13_soil%decomp0_cpools_vr_col .lt. epsi*c3_r2)
                   cs13_soil%decomp0_cpools_vr_col = epsi*c3_r2
                end where
             end if
             if(use_c14)then
-               where(cs14_soil%decomp0_cpools_vr_col .lt. epsi*c14ratio) 
-                  cs14_soil%decomp0_cpools_vr_col = epsi*c14ratio
+               where(cs14_soil%decomp0_cpools_vr_col .lt. epsi*rc14_atm) 
+                  cs14_soil%decomp0_cpools_vr_col = epsi*rc14_atm
                end where
             end if
             where(ns_soil%decomp0_npools_vr_col .lt. epsi)
