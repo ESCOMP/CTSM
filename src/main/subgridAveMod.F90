@@ -574,9 +574,10 @@ contains
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,p,c,l,g,index                     ! indices
+    integer  :: j,p,c,l,g,index,k,nact                  ! indices
     logical  :: found                                  ! temporary for error check
-    real(r8) :: scale_p2c(bounds%begp:bounds%endp)     ! scale factor
+    integer  :: act_p(bounds%endp - bounds%begp + 1)    ! active patch indices
+    real(r8) :: act_scale(bounds%endp - bounds%begp + 1) ! combined c2l*l2g scale factor
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
     real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
@@ -591,28 +592,35 @@ contains
 
     call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)    
 
-    if (p2c_scale_type == 'unity') then
-       do p = bounds%begp,bounds%endp
-          scale_p2c(p) = 1.0_r8
-       end do
-    else
+    if (p2c_scale_type /= 'unity') then
        write(iulog,*)'p2g_2d error: scale type ',c2l_scale_type,' not supported'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
 
+    ! Pack points that can contribute at any level so the level loop skips level-independent tests.
+    nact = 0
+    do p = bounds%begp,bounds%endp
+       if (patch%active(p) .and. patch%wtgcell(p) /= 0._r8) then
+          c = patch%column(p)
+          l = patch%landunit(p)
+          if (scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
+             nact = nact + 1
+             act_p(nact) = p
+             act_scale(nact) = scale_c2l(c) * scale_l2g(l)
+          end if
+       end if
+    end do
+
     garr(bounds%begg : bounds%endg, :) = spval
     do j = 1,num2d
        sumwt(bounds%begg : bounds%endg) = 0._r8
-       do p = bounds%begp,bounds%endp 
-          if (patch%active(p) .and. patch%wtgcell(p) /= 0._r8) then
-             c = patch%column(p)
-             l = patch%landunit(p)
-             if (parr(p,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-                g = patch%gridcell(p)
-                if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
-                garr(g,j) = garr(g,j) + parr(p,j) * scale_p2c(p) * scale_c2l(c) * scale_l2g(l) * patch%wtgcell(p)
-                sumwt(g) = sumwt(g) + patch%wtgcell(p)
-             end if
+       do k = 1,nact
+          p = act_p(k)
+          if (parr(p,j) /= spval) then
+             g = patch%gridcell(p)
+             if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
+             garr(g,j) = garr(g,j) + parr(p,j) * act_scale(k) * patch%wtgcell(p)
+             sumwt(g) = sumwt(g) + patch%wtgcell(p)
           end if
        end do
        found = .false.
@@ -833,8 +841,10 @@ contains
     character(len=*), intent(in) :: l2g_scale_type     ! scale factor type for averaging
     !
     ! !LOCAL VARIABLES:
-    integer  :: j,c,g,l,index                       ! indices
+    integer  :: j,c,g,l,index,k,nact                ! indices
     logical  :: found                                  ! temporary for error check
+    integer  :: act_c(bounds%endc - bounds%begc + 1)    ! active column indices
+    real(r8) :: act_scale(bounds%endc - bounds%begc + 1) ! combined c2l*l2g scale factor
     real(r8) :: scale_c2l(bounds%begc:bounds%endc)     ! scale factor
     real(r8) :: scale_l2g(bounds%begl:bounds%endl)     ! scale factor
     real(r8) :: sumwt(bounds%begg:bounds%endg)         ! sum of weights
@@ -849,18 +859,29 @@ contains
 
     call set_c2l_scale (bounds, c2l_scale_type, scale_c2l)
 
+    ! Pack points that can contribute at any level so the level loop skips level-independent tests.
+    nact = 0
+    do c = bounds%begc,bounds%endc
+       if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
+          l = col%landunit(c)
+          if (scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
+             nact = nact + 1
+             act_c(nact) = c
+             act_scale(nact) = scale_c2l(c) * scale_l2g(l)
+          end if
+       end if
+    end do
+
     garr(bounds%begg : bounds%endg,:) = spval
     do j = 1,num2d
        sumwt(bounds%begg : bounds%endg) = 0._r8
-       do c = bounds%begc,bounds%endc 
-          if (col%active(c) .and. col%wtgcell(c) /= 0._r8) then
-             l = col%landunit(c)
-             if (carr(c,j) /= spval .and. scale_c2l(c) /= spval .and. scale_l2g(l) /= spval) then
-                g = col%gridcell(c)
-                if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
-                garr(g,j) = garr(g,j) + carr(c,j) * scale_c2l(c) * scale_l2g(l) * col%wtgcell(c)
-                sumwt(g) = sumwt(g) + col%wtgcell(c)
-             end if
+       do k = 1,nact
+          c = act_c(k)
+          if (carr(c,j) /= spval) then
+             g = col%gridcell(c)
+             if (sumwt(g) == 0._r8) garr(g,j) = 0._r8
+             garr(g,j) = garr(g,j) + carr(c,j) * act_scale(k) * col%wtgcell(c)
+             sumwt(g) = sumwt(g) + col%wtgcell(c)
           end if
        end do
        found = .false.
