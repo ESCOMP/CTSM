@@ -19,7 +19,7 @@ Some glacier processes and model infrastructure are shared between these glacier
 Glacier regions and their behaviors
 -----------------------------------
 
-Within CLM, the world's glaciers and ice sheets are divided into three default glacier regions, each with distinct behaviors related to elevation classes, glacial meltwater treatment, and runoff generation. These default configurations are summarized in Table :numref:`Table Glacier region behaviors`.
+Within CLM, the world's glaciers and ice sheets are divided into three default glacier regions, each with distinct behaviors related to elevation classes, glacial meltwater treatment, and runoff generation. These default configurations are summarized in :numref:`Table Glacier region behaviors`.
 
 .. _Table Glacier region behaviors:
 
