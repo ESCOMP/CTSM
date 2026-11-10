@@ -245,14 +245,18 @@ contains
             end do
 
          end if fates_if
+      end do fc_loop
 
-         do j = 1,nlevdecomp
-            !
-            ! State update without the matrix solution
-            !
-            if (.not. use_soil_matrixcn) then
-               ! litter and SOM HR fluxes
-               do k = 1, ndecomp_cascade_transitions
+      !
+      ! State update without the matrix solution
+      !
+      if (.not. use_soil_matrixcn) then
+         ! litter and SOM HR fluxes
+         ! Outside fc_loop so column c is stride-1 innermost; keep k ascending per (c,j) for bit-for-bit sums.
+         do k = 1, ndecomp_cascade_transitions
+            do j = 1,nlevdecomp
+               do fc = 1,num_soilc
+                  c = filter_soilc(fc)
                   cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) = &
                        cf_soil%decomp_cpools_sourcesink_col(c,j,cascade_donor_pool(k)) &
                        - ( cf_soil%decomp_cascade_hr_vr_col(c,j,k) + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k)) * dt
@@ -262,10 +266,9 @@ contains
                           + cf_soil%decomp_cascade_ctransfer_vr_col(c,j,k) * dt
                   end if
                end do
-            end if
+            end do
          end do
-            
-      end do fc_loop
+      end if
 
       soilpatch_loop: do fp = 1,num_soilp
          p = filter_soilp(fp)
