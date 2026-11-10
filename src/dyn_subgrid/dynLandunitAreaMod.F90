@@ -116,8 +116,9 @@ contains
     integer, parameter :: decrease_order(7) = &
          (/istsoil, istcrop, isturb_md, isturb_hd, isturb_tbd, istwet, istdlak/)
 
-    real(r8), parameter :: tol = 1.e-14  ! tolerance for making sure sum of landunit weights equals 1
-    
+    real(r8), parameter :: tol = 1.e-14_r8  ! tolerance for making sure sum of landunit weights equals 1
+    real(r8), parameter :: tol_one_landunit = 0.1_r8 * tol  ! tolerance for setting a landunit's weight to 0 (must be smaller than tol)
+
     character(len=*), parameter :: subname = 'update_landunit_weights_one_gcell'
     !-----------------------------------------------------------------------
 
@@ -141,7 +142,16 @@ contains
           ! Decrease weight of the next landunit, but not below 0
           cur_landunit = decrease_order(decrease_index)
           landunit_weights(cur_landunit) = landunit_weights(cur_landunit) - excess
-          if (landunit_weights(cur_landunit) < 0._r8) then
+
+          ! The following conditional handles two situations:
+          !
+          ! (1) landunit_weights(cur_landunit) < 0 by more than roundoff: the excess can't
+          !     be handled by this landunit alone; so set this landunit's area to 0 and
+          !     we'll need to remove more of the excess from another landunit
+          !
+          ! (2) landunit_weights(cur_landunit) ends up within roundoff of 0, presumably
+          !     due to rounding error: set it to exactly 0 in this case
+          if (landunit_weights(cur_landunit) < tol_one_landunit) then
              landunit_weights(cur_landunit) = 0._r8
           end if
 
