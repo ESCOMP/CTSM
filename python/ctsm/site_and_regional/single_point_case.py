@@ -16,7 +16,7 @@ import xarray as xr
 from ctsm.site_and_regional.base_case import BaseCase, USRDAT_DIR, DatmFiles
 from ctsm.utils import add_tag_to_filename, ensure_iterable
 from ctsm.longitude import detect_lon_type
-from ctsm.pft_utils import MAX_NAT_PFT, MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
+from ctsm.pft_utils import MIN_PFT, MAX_NAT_PFT, MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,8 @@ class SinglePointCase(BaseCase):
     cbh : list
         canopy bottom height (m)
     num_pft : list
-        total number of pfts for surface dataset (if crop 78 pft, else 16 pft)
+        total number of pfts for surface dataset
+        (MAX_PFT_MANAGEDCROPS if crop, else MAX_PFT_GENERICCROPS)
     uni_snow : bool
         flag for creating datasets using uniform snowpack
     saturation_excess : bool
@@ -220,7 +221,9 @@ class SinglePointCase(BaseCase):
 
             # -- check dom_pft values should be between 0-MAX_PFT_MANAGEDCROPS
             if min_dom_pft < 0 or max_dom_pft > MAX_PFT_MANAGEDCROPS:
-                err_msg = f"values for --dompft should be between 1 and {MAX_PFT_MANAGEDCROPS}."
+                err_msg = (
+                    f"values for --dompft should be between {MIN_PFT} and {MAX_PFT_MANAGEDCROPS}."
+                )
                 raise argparse.ArgumentTypeError(err_msg)
 
             # -- check dom_pft vs num_pft
