@@ -1,0 +1,103 @@
+name: Documentation
+description: Something should be added to or fixed in the documentation
+labels: ["documentation"]
+type: Documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this issue! If you're planning to eventually contribute a change, please see our [contribution guidelines for documentation](https://escomp.github.io/CTSM/users_guide/working-with-documentation/docs-intro.html#contribution-guidelines).
+
+  - type: checkboxes
+    id: docs-issue-type
+    attributes:
+      label: What sort(s) of documentation issue is this?
+      description: You may select more than one.
+      options:
+        - label: Something is missing.
+        - label: Something is (or might be) incorrect or outdated.
+        - label: Something is confusing.
+        - label: Something is broken.
+
+  - type: checkboxes
+    id: docs-location
+    attributes:
+      label: What part(s) of the documentation does this concern?
+      description: You may select more than one.
+      options:
+        - label: '[Technical Note](https://escomp.github.io/CTSM/tech_note/index.html) (science and design of the model)'
+        - label: "[User's Guide](https://escomp.github.io/CTSM/users_guide/index.html) (using the model and related tools)"
+        - label: "Somewhere else (e.g., README file, tool help text, or code comment)"
+        - label: "I don't know"
+
+  - type: input
+    id: somewhere-else
+    attributes:
+      label: If "somewhere else," where?
+    validations:
+      required: false
+
+  - type: input
+    id: docs-version
+    attributes:
+      label: If in Technical Note and/or User's Guide, what version(s)?
+      description: See "Version:" menu in bottom left of documentation webpage
+    validations:
+      required: false
+
+  - type: textarea
+    id: describe-the-issue
+    attributes:
+      label: Describe the issue
+      description: A clear and concise description of what is missing or wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the issue here.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### AI disclosure
+
+  - type: dropdown
+    id: was-ai-used
+    attributes:
+      label: Was AI used in this contribution?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-usage-details
+    attributes:
+      label: If you used AI, what did you use it for? (If not, put n/a.)
+      description: "For example: understanding relevant parts of the codebase and/or documentation; drafting suggested documentation changes; drafting issue text"
+    validations:
+      required: true
+
+  - type: input
+    id: ai-provider
+    attributes:
+      label: AI provider
+      placeholder: "E.g., Anthropic"
+      description: Optional
+    validations:
+      required: false
+
+  - type: input
+    id: ai-model
+    attributes:
+      label: AI model
+      placeholder: "E.g., Opus 5.5 high effort"
+      description: Optional
+    validations:
+      required: false
