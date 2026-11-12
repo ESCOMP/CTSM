@@ -166,8 +166,9 @@ module CLMFatesInterfaceMod
    use EDInitMod             , only : set_site_properties
    use EDPftVarcon           , only : EDpftvarcon_inst
    use FatesRadiationDriveMod, only : FatesSunShadeFracs, FatesNormalizedCanopyRadiation
-   use EDBtranMod            , only : btran_ed, &
-                                      get_active_suction_layers
+   use EDBtranMod            , only : FatesInternalBtran, &
+                                      get_active_suction_layers, &
+                                      RootUptakeFractions
    use EDCanopyStructureMod  , only : canopy_summarization, update_hlm_dynamics
    use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
@@ -2505,11 +2506,8 @@ module CLMFatesInterfaceMod
          bsw         => soilstate_inst%bsw_col              , & ! Input:  [real(r8) (:,:) ]  Clapp and Hornberger "b"
          eff_porosity => soilstate_inst%eff_porosity_col    , & ! Input:  [real(r8) (:,:) ]  effective porosity = porosity - vol_ice
          t_soisno    => temperature_inst%t_soisno_col       , & ! Input:  [real(r8) (:,:) ]  soil temperature (Kelvin)
-         h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col , & ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
-         btran       => energyflux_inst%btran_patch         , & ! Output: [real(r8) (:)   ]  transpiration wetness factor (0 to 1)
-         rresis      => energyflux_inst%rresis_patch        , & ! Output: [real(r8) (:,:) ]  root resistance by layer (0-1)  (nlevgrnd)
-         rootr       => soilstate_inst%rootr_patch          & ! Output: [real(r8) (:,:) ]  Fraction of water uptake in each layer
-         )
+         h2osoi_liqvol => waterdiagnosticbulk_inst%h2osoi_liqvol_col)  ! Input: [real(r8) (:,:) ]  liquid volumetric moisture, will be used for BeTR
+
 
         ! -------------------------------------------------------------------------------
         ! Convert input BC's
@@ -2589,46 +2587,16 @@ module CLMFatesInterfaceMod
         ! This will calculate internals, as well as output boundary conditions:
         ! btran, rootr
         ! -------------------------------------------------------------------------------
-
-        call btran_ed(this%fates(nc)%nsites, &
+        
+        call FatesInternalBtran(this%fates(nc)%nsites, &
              this%fates(nc)%sites,  &
              this%fates(nc)%bc_in,  &
              this%fates(nc)%bc_out)
 
-        ! -------------------------------------------------------------------------------
-        ! Convert output BC's
-        ! For CLM/ALM this wrapper provides return variables that should
-        ! be similar to that of calc_root_moist_stress().  However,
-        ! CLM/ALM-FATES simulations will no make use of rresis or btran
-        ! outside of FATES. We do not have code in place to calculate or
-        ! rresis right now, so we force to bad.  We have btran calculated so we
-        ! pass it in case people want diagnostics.  rootr is actually the only
-        ! variable that will be used, as it is needed to help distribute the
-        ! the transpiration sink to the appropriate layers. (RGK)
-        ! -------------------------------------------------------------------------------
-
-        do s = 1, this%fates(nc)%nsites
-           nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
-           c = this%f2hmap(nc)%fcolumn(s)
-           do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
-
-              p = ifp+col%patchi(c)
-
-              do j = 1,nlevsoil
-
-                 rresis(p,j) = -999.9  ! We do not calculate this correctly
-                 ! it should not thought of as valid output until we decide to.
-                 rootr(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
-                 btran(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
-
-              end do
-           end do
-        end do
       end associate
-
-     call t_stopf('fates_wrapbtran')
-
-   end subroutine wrap_btran
+      call t_stopf('fates_wrapbtran')
+      return
+    end subroutine wrap_btran
 
    ! ====================================================================================
 
@@ -3669,6 +3637,43 @@ module CLMFatesInterfaceMod
    integer :: icp
    real(r8) :: dtime
 
+   ! This evaluates the relative uptake of water at different
+   ! depths so the transpiration model knows where to draw from
+   ! key output here is: bc_out(s)%rootr_pasl(:,:)
+   ! and a diagnostic output: bc_out(s)%btran_pa(ifp)
+
+   call RootUptakeFractions(this%fates(nc)%nsites, &
+        this%fates(nc)%sites, &
+        this%fates(nc)%bc_in, &
+        this%fates(nc)%bc_out)
+
+   ! -------------------------------------------------------------------------------
+   ! Convert output BC's
+   ! For CLM/ALM this wrapper provides return variables that should
+   ! be similar to that of calc_root_moist_stress().  However,
+   ! CLM/ALM-FATES simulations will no make use of rresis or btran
+   ! outside of FATES. We do not have code in place to calculate or
+   ! rresis right now, so we force to bad.  We have btran calculated so we
+   ! pass it in case people want diagnostics.  rootr is actually the only
+   ! variable that will be used, as it is needed to help distribute the
+   ! the transpiration sink to the appropriate layers. (RGK)
+   ! -------------------------------------------------------------------------------
+
+   do s = 1, this%fates(nc)%nsites
+      nlevsoil = this%fates(nc)%bc_in(s)%nlevsoil
+      c = this%f2hmap(nc)%fcolumn(s)
+      do ifp = 1, this%fates(nc)%sites(s)%youngest_patch%patchno
+         p = ifp+col%patchi(c)
+         do j = 1,nlevsoil
+            energyflux_inst%rresis_patch(p,j) = -999.9  ! We do not calculate this correctly
+            ! it should not thought of as valid output until we decide to.
+            soilstate_inst%rootr_patch(p,j)  = this%fates(nc)%bc_out(s)%rootr_pasl(ifp,j)
+            energyflux_inst%btran_patch(p)    = this%fates(nc)%bc_out(s)%btran_pa(ifp)
+         end do
+      end do
+   end do
+   
+   
    if ( .not.use_fates_planthydro ) return
 
    call t_startf('fates_wraphydrodriv')
