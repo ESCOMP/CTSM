@@ -2082,6 +2082,7 @@ contains
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
      real(r8) :: ice_imped_col(bounds%begc:bounds%endc)  ! column average hydraulic conductivity reduction due to presence of soil ice (-)
      real(r8) :: ice_imped(bounds%begc:bounds%endc,1:nlevsoi) ! hydraulic conductivity reduction due to presence of soil ice (-)
+     real(r8) :: ice_imped_stream(bounds%begc:bounds%endc)    ! stream channel hydraulic conductivity reduction due to presence of soil ice (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
      real(r8) :: h2osoi_vol                              ! volumetric water content (mm3/mm3)
      real(r8) :: drainage_tot                            ! total drainage to be removed from column (mm)
@@ -2184,23 +2185,6 @@ contains
                exit
             end if
          enddo
-         ! identify soil layer containing bottom of stream channel
-         if (col%is_hillslope_column(c) .and. col%active(c)) then
-            l = col%landunit(c)
-            g = col%gridcell(c)
-            if (use_hillslope_routing) then
-               stream_channel_depth = lun%stream_channel_depth(l)
-            else
-               stream_channel_depth = tdepth_bankfull(g)
-            endif
-            jsc(c) = nlevsoi
-            do j = 1,nlevsoi
-               if(stream_channel_depth <= zi(c,j)) then
-                  jsc(c) = j
-                  exit
-               end if
-            enddo
-         endif
       end do
 
       ! Calculate ice impedance factor (after jwt calculated)
@@ -2259,6 +2243,16 @@ contains
                      head_gradient = head_gradient - 1._r8/k_anisotropic
                   endif
                endif
+               ! locate stream channel bottom
+               jsc(c) = nlevsoi
+               do j = 1,nlevsoi
+                  if(stream_channel_depth <= zi(c,j)) then
+                     jsc(c) = j
+                     exit
+                  end if
+               enddo
+               ! select minimum value of ice impedance
+               ice_imped_stream(c) = minval(ice_imped(c,1:jsc(c)))
             else
                call endrun(msg="head_gradient_method must be kinematic or darcy"//errmsg(sourcefile, __LINE__))  
             end if
@@ -2313,7 +2307,7 @@ contains
                endif
             else
                ! transmissivity of losing stream (c_src == ispval)
-               transmis = (1.e-3_r8*minval(ice_imped(c,1:jsc(c)))*hksat(c,jsc(c)))*stream_water_depth
+               transmis = (1.e-3_r8*ice_imped_stream(c)*hksat(c,jsc(c)))*stream_water_depth
             endif
             ! adjust transmissivity by 'anisotropy factor'
             transmis = k_anisotropic*transmis
