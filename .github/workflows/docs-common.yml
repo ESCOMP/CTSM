@@ -17,16 +17,20 @@ on:
         default: ""
     secrets: {}
 
+env:
+  DOCS_REQUIREMENTS_FILE: doc/doc-builder/doc-build-container/requirements.txt
+
 jobs:
   build-docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
           lfs: true
 
       # Check out all submodules because we might :literalinclude: something from one
+      # Also, we need doc-builder for its requirements.txt
       - name: Checkout all submodules
         run: |
           bin/git-fleximod update -o
@@ -35,34 +39,34 @@ jobs:
       # Based on  https://github.com/actions/cache/blob/main/examples.md#python---pip
       - name: Install python
         if: ${{ ! inputs.use_conda }}
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
-          python-version: '3.13.2'  # needs to be coordinated with version in python/conda_env_ctsm_py.yml
+          python-version: '3.13.13'  # needs to be coordinated with version in python/conda_env_ctsm_py.yml
       - name: Cache pip
         if: ${{ ! inputs.use_conda }}
-        uses: actions/cache@2f8e54208210a422b2efd51efaa6bd6d7ca8920f  # v3
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('doc/ctsm-docs_container/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles(env.DOCS_REQUIREMENTS_FILE) }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install Python requirements
         if: ${{ ! inputs.use_conda }}
         run: |
-          pip install -r doc/ctsm-docs_container/requirements.txt
+          pip install -r "$DOCS_REQUIREMENTS_FILE"
 
       # Do this if using conda
       - name: Set up conda environment
         if: ${{ inputs.use_conda }}
-        uses: conda-incubator/setup-miniconda@2defc80cc6f4028b1780c50faf08dd505d698976  # v3
+        uses: conda-incubator/setup-miniconda@be893c923ea9cf1cf7cd510fbdde27c7e18cbdcb  # v4.1.0
         with:
           activate-environment: ${{ inputs.conda_env_name }}
           environment-file: ${{ inputs.conda_env_file }}
           channels: conda-forge
-          auto-activate-base: false
+          auto-activate: false
 
       - name: Print installed Python packages
-        run: conda list
+        run: ${{ inputs.use_conda && 'conda list' || 'pip list' }}
 
       - name: Build Sphinx docs with makefile
         run: |

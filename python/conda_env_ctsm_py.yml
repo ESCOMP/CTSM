@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.13.2
+  - python=3.13.13
   - dask=2025.7.0
   - xarray=2025.1.2
   - tqdm=4.67.1
@@ -24,9 +24,11 @@ dependencies:
   # fortls used in FORTRAN-IntelliSense extension, add path to fortls below to the VS setting fort-ls.executablePath
   - fortls=3.2.2
 
-  # For building docs
+  # For building docs.
+  # NOTE: When this YML file is deprecated, the versions from this file should be copied in here instead of relying on the requirements.txt file staying the same forever!
+  # NOTE: This YML file should be deprecated whenever the requirements.txt file changes!
   - pip:
-    - -r ../doc/ctsm-docs_container/requirements.txt
+    - -r ../doc/doc-builder/doc-build-container/requirements.txt
 
   # Used in ctsm_postprocessing repo
   - pytest=8.3.5

@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _observational-sites-datasets:
 
 *******************************

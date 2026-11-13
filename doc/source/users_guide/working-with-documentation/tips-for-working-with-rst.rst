@@ -3,6 +3,8 @@
 Tips for working with reStructuredText
 ========================================
 
+.. |key1| replace:: I'm a **substitution**
+
 If you've never used reStructuredText before, you should be aware that its syntax is pretty different from anything you've ever used before. We recommend the following resources as references for the syntax:
 
 - `Sphinx's reStructuredText Primer <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html>`_
@@ -217,3 +219,29 @@ reStructuredText: Common error messages and how to handle them
 --------------------------------------------------------------
 
 See :ref:`common-rst-errors`.
+
+
+reStructuredText: Using substitutions
+-------------------------------------
+
+Substitutions allow us to associate a text string with a variable name, then to use that variable name throughout our documentation. This has the advantage of only needing to update the text string in one place but getting that propagated everywhere.
+
+Our global substitutions are defined in ``doc/substitutions.py``. For example, including ``|version|`` in a reStructuredText documentation file will render as "|version|" (no quotes) because of this in ``doc/substitutions.py``:
+
+.. literalinclude:: ../../../substitutions.py
+   :language: python
+   :linenos:
+   :start-at: version =
+   :end-at: version =
+   :lineno-match:
+
+You can also define substitutions that will apply in just one file. For example, this file contains this line:
+
+.. literalinclude:: tips-for-working-with-rst.rst
+   :language: reStructuredText
+   :linenos:
+   :start-at: key1
+   :end-at: key1
+   :lineno-match:
+
+Thus, ``|key1|`` gets rendered as "|key1|" (no quotes), but this wouldn't work on any other page.

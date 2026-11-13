@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _modifying-surface-datasets:
 
 ===========================
