@@ -146,6 +146,8 @@ contains
     real(r8) :: dtime                                                              ! land model time step (sec)
     integer  :: zerolev_diffus
     real(r8) :: spinup_term                                                        ! spinup accelerated decomposition factor, used to accelerate transport as well
+    real(r8) :: cur_spinup_factor                                                  ! pool spinup factor for current solve
+    real(r8) :: prev_spinup_factor                                                 ! spinup factor of cached Patankar matrix
     real(r8) :: epsilon                                                            ! small number
     real(r8), pointer :: conc_ptr(:,:,:)                                           ! pointer, concentration state variable being transported
     real(r8), pointer :: source(:,:,:)                                             ! pointer, source term
@@ -235,6 +237,7 @@ contains
       enddo
 
       !------ loop over litter/som types
+      prev_spinup_factor = -1._r8
       do i_type = 1, ntype
 
          select case (i_type)
@@ -274,17 +277,21 @@ contains
 
          do s = 1, ndecomp_pools
             if ( .not. is_cwd(s) ) then
-               if(.not. use_soil_matrixcn .or. s .eq. 1)then
+               ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
+               if ( spinup_state >= 1 ) then
+                  cur_spinup_factor = spinup_factor(s)
+               else
+                  cur_spinup_factor = 1._r8
+               endif
+
+               ! Outside matrix mode, matrix entries depend on pool s only via spinup_factor(s);
+               ! under use_soil_matrixcn, tri_ma_vr is populated once on (s == 1, i_type == 1).
+               if ((.not. use_soil_matrixcn .and. cur_spinup_factor /= prev_spinup_factor) .or. &
+                   (use_soil_matrixcn .and. s == 1 .and. i_type == 1)) then
                   do j = 1,nlevdecomp+1
                      do fc = 1, num_bgc_soilc
                      c = filter_bgc_soilc (fc)
-                     !
-                     if ( spinup_state >= 1 ) then
-                        ! increase transport (both advection and diffusion) by the same factor as accelerated decomposition for a given pool
-                        spinup_term = spinup_factor(s)
-                     else
-                        spinup_term = 1._r8
-                     endif
+                     spinup_term = cur_spinup_factor
 
                      if (abs(spinup_term - 1._r8) > .000001_r8 ) then
                         spinup_term = spinup_term * get_spinup_latitude_term(grc%latdeg(col%gridcell(c)))
@@ -307,18 +314,9 @@ contains
 
                   ! Set Pe (Peclet #) and D/dz throughout column
 
-                  do fc = 1, num_bgc_soilc ! dummy terms here
-                     c = filter_bgc_soilc (fc)
-                     conc_trcr(c,0) = 0._r8
-                     conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
-                  end do
-
-
                   do j = 1,nlevdecomp+1
                      do fc = 1, num_bgc_soilc
                      c = filter_bgc_soilc (fc)
-
-                     conc_trcr(c,j) = conc_ptr(c,j,s)
                
                      ! dz_tracer below is the difference between gridcell edges  (dzsoi_decomp)
                      ! dz_node_tracer is difference between cell centers 
@@ -375,8 +373,6 @@ contains
                      end if
                      enddo ! fc
                   enddo ! j; nlevdecomp
-               end if
-
 
                ! Calculate the tridiagonal coefficients
                do j = 0,nlevdecomp +1
@@ -392,12 +388,10 @@ contains
                         a_tri(c,j) = 0._r8
                         b_tri(c,j) = 1._r8
                         c_tri(c,j) = -1._r8
-                        r_tri(c,j) = 0._r8
                      elseif (j == 1) then
                         a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                         c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                         b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
-                        r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + (a_p_0 - adv_flux(c,j)) * conc_trcr(c,j)
                         if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn )then !vertical matrix are the same for all pools
                            do i = 1,ndecomp_pools-1 !excluding cwd
                               tri_ma_vr(c,1+(i-1)*(nlevdecomp*3-2)) = (b_tri(c,j) - a_p_0) / dzsoi_decomp(j) * (-dtime)
@@ -408,7 +402,6 @@ contains
                         a_tri(c,j) = -(d_m1_zm1(c,j) * aaa(pe_m1(c,j)) + max( f_m1(c,j), 0._r8)) ! Eqn 5.47 Patankar
                         c_tri(c,j) = -(d_p1_zp1(c,j) * aaa(pe_p1(c,j)) + max(-f_p1(c,j), 0._r8))
                         b_tri(c,j) = - a_tri(c,j) - c_tri(c,j) + a_p_0
-                        r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
                         if(s .eq. 1 .and. i_type .eq. 1 .and. use_soil_matrixcn )then                   
                            if(j .le. col%nbedrock(c))then
                               do i = 1,ndecomp_pools-1
@@ -431,7 +424,6 @@ contains
                         a_tri(c,j) = -1._r8
                         b_tri(c,j) = 1._r8
                         c_tri(c,j) = 0._r8 
-                        r_tri(c,j) = 0._r8
                      endif
                   enddo ! fc; column
                enddo ! j; nlevdecomp
@@ -440,6 +432,22 @@ contains
                   c = filter_bgc_soilc (fc)
                   jtop(c) = 0
                enddo
+               prev_spinup_factor = cur_spinup_factor
+               end if ! matrix rebuild
+
+               if (.not. use_soil_matrixcn) then
+                  do fc = 1, num_bgc_soilc ! dummy terms here
+                     c = filter_bgc_soilc(fc)
+                     conc_trcr(c,0) = 0._r8
+                     conc_trcr(c,col%nbedrock(c)+1:nlevdecomp+1) = 0._r8
+                  end do
+                  do j = 1, nlevdecomp+1
+                     do fc = 1, num_bgc_soilc
+                        c = filter_bgc_soilc(fc)
+                        conc_trcr(c,j) = conc_ptr(c,j,s)
+                     end do
+                  end do
+               end if
 
                ! subtract initial concentration and source terms for tendency calculation
                do fc = 1, num_bgc_soilc
@@ -454,6 +462,21 @@ contains
                end do
 
                if (.not. use_soil_matrixcn) then
+                  ! Right-hand side is pool-specific (source and concentration); matrix above is not
+                  a_p_0 = dzsoi_decomp(1) / dtime
+                  do fc = 1, num_bgc_soilc
+                     c = filter_bgc_soilc(fc)
+                     r_tri(c,0) = 0._r8
+                     r_tri(c,1) = source(c,1,s) * dzsoi_decomp(1) /dtime + (a_p_0 - adv_flux(c,1)) * conc_trcr(c,1)
+                     r_tri(c,nlevdecomp+1) = 0._r8
+                  end do
+                  do j = 2, nlevdecomp
+                     a_p_0 = dzsoi_decomp(j) / dtime
+                     do fc = 1, num_bgc_soilc
+                        c = filter_bgc_soilc(fc)
+                        r_tri(c,j) = source(c,j,s) * dzsoi_decomp(j) /dtime + a_p_0 * conc_trcr(c,j)
+                     end do
+                  end do
                   ! Solve for the concentration profile for this time step
                   call Tridiagonal(bounds, 0, nlevdecomp+1, &
                     jtop(bounds%begc:bounds%endc), &
