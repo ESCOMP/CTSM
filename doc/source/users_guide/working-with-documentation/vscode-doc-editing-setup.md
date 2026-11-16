@@ -3,7 +3,7 @@
 # Recommended setup for editing docs in VS Code
 
 ## Set up Python
-The Python packages needed for this setup are listed at `doc/ctsm-docs_container/requirements.txt`. If you recently installed [the `ctsm_pylib` conda environment](https://escomp.github.io/CTSM/users_guide/using-clm-tools/using-ctsm-pylib.html), they will already be included there. Check like so:
+The Python packages needed for this setup are listed at `doc/doc-builder/doc-build-container/requirements.txt`. If you recently installed [the `ctsm_pylib` conda environment](https://escomp.github.io/CTSM/users_guide/using-clm-tools/using-ctsm-pylib.html), they will already be included there. Check like so:
 ```shell
 conda activate ctsm_pylib
 pip show myst-parser
@@ -11,7 +11,8 @@ pip show myst-parser
 
 If you see `WARNING: Package(s) not found: myst-parser`, you'll need to install the doc-building Python modules. With your conda environment activated (or in whatever other environment you want to use), from the top level of a CTSM checkout, do:
 ```shell
-pip install -r doc/ctsm-docs_container/requirements.txt
+bin/git-fleximod update doc-builder
+pip install -r doc/doc-builder/doc-build-container/requirements.txt
 ```
 
 You will need to provide the path to your Python binary in various VS Code settings detailed below. You can get that with `which python` (after loading the relevant conda environment, if needed).
