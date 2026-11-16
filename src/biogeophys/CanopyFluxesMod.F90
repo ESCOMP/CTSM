@@ -1138,7 +1138,8 @@ bioms:   do f = 1, fn
                     cnveg_nitrogenstate_inst, &
                     atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, surfalb_inst, solarabs_inst, &
                     canopystate_inst, ozone_inst, photosyns_inst, waterfluxbulk_inst, &
-                    froot_carbon(begp:endp), croot_carbon(begp:endp))
+                    froot_carbon(begp:endp), croot_carbon(begp:endp), &
+                    calc_root_cond=(itlef == 0))
             else
                call Photosynthesis (bounds, fn, filterp, &
                     svpts(begp:endp), eah(begp:endp), o2(begp:endp), co2(begp:endp), rb(begp:endp), btran(begp:endp), &
