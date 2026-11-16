@@ -48,6 +48,7 @@ module dynSubgridDriverMod
   use CropType                     , only : crop_type
   use glc2lndMod                   , only : glc2lnd_type
   use filterMod                    , only : filter, filter_inactive_and_active
+  use clm_time_manager             , only : is_beg_curr_year
   !
   ! !PUBLIC MEMBER FUNCTIONS:
   implicit none
@@ -271,30 +272,54 @@ contains
     ! Do land cover change that requires I/O, and thus must be outside a threaded region
     ! ==========================================================================
 
-    if (get_do_transient_pfts()) then
-       call dynpft_interp(bounds_proc)
+    if (is_beg_curr_year()) then
+       ! The land cover changes in this block are implemented in such a way that, once a
+       ! run gets underway, area changes will only happen at the year boundary. So the
+       ! is_beg_curr_year check of this block is mostly redundant. However, it serves the
+       ! following purposes:
+       !
+       ! (1) Avoiding unnecessary work
+       !
+       ! (2) For a startup / hybrid run that starts mid-year, in some situations we can
+       !     get area changes in the first time step of the run without this
+       !     is_beg_curr_year check. This causes an error in annual flux dribblers that
+       !     are told to only expect fluxes at the year boundary. This is_beg_curr_year
+       !     suppresses any area changes until the first year boundary of the run.
+
+       if (get_do_transient_pfts()) then
+          call dynpft_interp(bounds_proc)
+       end if
+
+       if (get_do_transient_crops()) then
+          call dyncrop_interp(bounds_proc,crop_inst)
+       end if
+
+       if (get_do_transient_lakes()) then
+          call dynlake_interp(bounds_proc)
+       end if
+
+       if (get_do_transient_urban()) then
+          call dynurban_interp(bounds_proc)
+       end if
     end if
 
-    if (get_do_transient_crops()) then
-       call dyncrop_interp(bounds_proc,crop_inst)
-    end if
-
+    ! NOTE(wjs, 2026-10-23) It may be possible to put dynHarvest_interp and
+    ! dynGrossUnrep_interp in the is_beg_curr_year block. This would avoid unnecessary
+    ! work, but unlike the other calls in that block, dynHarvest_interp and
+    ! dynGrossUnrep_interp don't change areas, so we don't need them in that block to
+    ! avoid mid-year area changes in a run that starts mid-year. If we put them in the
+    ! above block, we'd need to add calls to these interp routines in dynSubgrid_init to
+    ! ensure that we have filled the necessary data in a run that starts mid-year.
     if (get_do_harvest() .and. .not. use_fates) then
        call dynHarvest_interp(bounds_proc)
     end if
-
     if (get_do_grossunrep()) then
        call dynGrossUnrep_interp(bounds_proc)
     end if
 
-    if (get_do_transient_lakes()) then
-       call dynlake_interp(bounds_proc)
-    end if
-
-    if (get_do_transient_urban()) then
-       call dynurban_interp(bounds_proc)
-    end if
-
+    ! NOTE(wjs, 2026-10-23) This call to dynFatesLandUseInterp is deliberately outside of
+    ! the is_beg_curr_year block: it looks like this currently operates at the *end* of
+    ! the year (due to the use of YEAR_POSITION_END_OF_TIMESTEP).
     if (use_fates_luh .and. .not. use_fates_potentialveg) then
        call dynFatesLandUseInterp(bounds_proc)
     end if
