@@ -511,6 +511,12 @@ contains
     character(len=16)                  :: mech_name
     type(shr_megan_megcomp_t), pointer :: meg_cmp
     real(r8)                           :: cp, alpha,  Eopt, topt  ! for history output
+    real(r8)                           :: gamma_p_ldf          ! light-dependent PPFD activity factor for patch
+    logical , allocatable              :: class_cached(:)      ! true once class activity factors cached for patch
+    real(r8), allocatable              :: gamma_t_cache(:)     ! per-class temperature activity factor cache
+    real(r8), allocatable              :: gamma_a_cache(:)     ! per-class leaf-age activity factor cache
+    real(r8), allocatable              :: Eopt_cache(:)        ! per-class optimal Eopt cache for history output
+    real(r8), allocatable              :: topt_cache(:)        ! per-class optimal topt cache for history output
     real(r8)                           :: co2_ppmv
 
     real(r8)                           :: vocflx_meg(shr_megan_megcomps_n)
@@ -537,6 +543,10 @@ contains
     if ( nlevcan /= 1 )then
        call endrun( subname//' error: can NOT work without nlevcan == 1' )
     end if
+
+    ! Allocate after early return: LDF may be unallocated when MEGAN is off.
+    allocate(class_cached(size(LDF)), gamma_t_cache(size(LDF)), gamma_a_cache(size(LDF)), &
+         Eopt_cache(size(LDF)), topt_cache(size(LDF)))
 
     associate(                                                    &
          btran         => energyflux_inst%btran_patch           , & ! Input:  [real(r8) (:)   ]  transpiration wetness factor (0 to 1)
@@ -632,6 +642,12 @@ contains
              gamma_sm = 1._r8
           end if
 
+          ! The light-dependent PPFD term does not depend on the compound, so compute it
+          ! once per patch; gamma_t and gamma_a depend only on patch and MEGAN class.
+          gamma_p_ldf = get_gamma_P(par_sun, par24_sun, par240_sun, par_sha, par24_sha, par240_sha, &
+               fsun(p), fsun240(p), forc_solad240(p), forc_solai240(p), cp, alpha)
+          class_cached(:) = .false.
+
           ! Loop through VOCs for light, temperature and leaf age activity factor & apply
           ! all final activity factors to baseline emission factors
           !_______________________________________________________________________________
@@ -652,15 +668,20 @@ contains
              class_num = meg_cmp%class_number
 
              ! Activity factor for PPFD
-             gamma_p = get_gamma_P(par_sun, par24_sun, par240_sun, par_sha, par24_sha, par240_sha, &
-                  fsun(p), fsun240(p), forc_solad240(p),forc_solai240(p), LDF(class_num), cp, alpha)
+             gamma_p = (1._r8 - LDF(class_num)) + LDF(class_num) * gamma_p_ldf
 
-             ! Activity factor for T
-             gamma_t = get_gamma_T(t_veg240(p), t_veg24(p),t_veg(p), ct1(class_num), ct2(class_num),&
-                                   betaT(class_num),LDF(class_num), Ceo(class_num), Eopt, topt, patch%itype(p))
-
-             ! Activity factor for Leaf Age
-             gamma_a = get_gamma_A(patch%itype(p), elai240(p),elai(p),class_num)
+             ! Activity factors for T and Leaf Age (cached per MEGAN class)
+             if (.not. class_cached(class_num)) then
+                gamma_t_cache(class_num) = get_gamma_T(t_veg240(p), t_veg24(p), t_veg(p), &
+                     ct1(class_num), ct2(class_num), betaT(class_num), LDF(class_num), &
+                     Ceo(class_num), Eopt_cache(class_num), topt_cache(class_num), patch%itype(p))
+                gamma_a_cache(class_num) = get_gamma_A(patch%itype(p), elai240(p), elai(p), class_num)
+                class_cached(class_num)  = .true.
+             end if
+             gamma_t = gamma_t_cache(class_num)
+             gamma_a = gamma_a_cache(class_num)
+             Eopt    = Eopt_cache(class_num)
+             topt    = topt_cache(class_num)
 
              ! Activity factor for CO2 (only for isoprene)
              if (trim(meg_cmp%name) == 'isoprene') then
@@ -764,6 +785,7 @@ contains
 
 
   end associate
+  deallocate(class_cached, gamma_t_cache, gamma_a_cache, Eopt_cache, topt_cache)
   end subroutine VOCEmission
 
   !-----------------------------------------------------------------------
@@ -809,9 +831,10 @@ contains
 
   !-----------------------------------------------------------------------
   function get_gamma_P(par_sun_in, par24_sun_in, par240_sun_in, par_sha_in, par24_sha_in, par240_sha_in, &
-       fsun_in, fsun240_in, forc_solad240_in,forc_solai240_in, LDF_in, cp, alpha)
+       fsun_in, fsun240_in, forc_solad240_in,forc_solai240_in, cp, alpha)
     !
     ! Activity factor for PPFD (Guenther et al., 2006): all light dependent species
+    ! Returns light-dependent PPFD term; caller blends with LDF(class_num).
     !-------------------------
     ! With distinction between sunlit and shaded leafs, weight scalings by
     ! fsun and fshade
@@ -836,7 +859,6 @@ contains
     real(r8),intent(in) :: fsun240_in
     real(r8),intent(in) :: forc_solad240_in
     real(r8),intent(in) :: forc_solai240_in
-    real(r8),intent(in) :: LDF_in
     real(r8),intent(out):: cp                      ! temporary
     real(r8),intent(out):: alpha                   ! temporary
     !
@@ -874,8 +896,7 @@ contains
        gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
     end if
 
-    ! Calculate total activity factor for PPFD accounting for light-dependent fraction
-    get_gamma_P = (1._r8 - LDF_in) + LDF_in * gamma_p_LDF
+    get_gamma_P = gamma_p_LDF
 
   end function get_gamma_P
 
