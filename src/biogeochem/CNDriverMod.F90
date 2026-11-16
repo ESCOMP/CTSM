@@ -744,88 +744,90 @@ contains
        !--------------------------------------------------------------------------
 
        ! Set harvest mortality routine
+       ! Update2h fluxes stay 0 from CNZero SetValues when get_do_harvest() is false.
        if (get_do_harvest()) then
           call CNHarvest(num_bgc_vegp, filter_bgc_vegp, &
                soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-       end if
 
-       if ( use_c13 ) then
-          call CIsoFlux2h(num_bgc_vegp, filter_bgc_vegp,                      &
-               soilbiogeochem_state_inst,                                     &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
-               isotope='c13')
-       end if
-       if ( use_c14 ) then
-          call CIsoFlux2h(num_bgc_vegp, filter_bgc_vegp,                      &
-               soilbiogeochem_state_inst,                                     &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
-               isotope='c14')
-       end if
+          if ( use_c13 ) then
+             call CIsoFlux2h(num_bgc_vegp, filter_bgc_vegp,                      &
+                  soilbiogeochem_state_inst,                                     &
+                  cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+                  c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &
+                  isotope='c13')
+          end if
+          if ( use_c14 ) then
+             call CIsoFlux2h(num_bgc_vegp, filter_bgc_vegp,                      &
+                  soilbiogeochem_state_inst,                                     &
+                  cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+                  c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &
+                  isotope='c14')
+          end if
 
-       call CStateUpdate2h( num_bgc_soilc, filter_bgc_soilc,  num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
-            soilbiogeochem_carbonflux_inst)
-       if ( use_c13 ) then
-          call CStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-            c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
-            c13_soilbiogeochem_carbonflux_inst)
-       end if
-       if ( use_c14 ) then
-          call CStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
-               c14_soilbiogeochem_carbonflux_inst)
-       end if
+          call CStateUpdate2h( num_bgc_soilc, filter_bgc_soilc,  num_bgc_vegp, filter_bgc_vegp, &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
+               soilbiogeochem_carbonflux_inst)
+          if ( use_c13 ) then
+             call CStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
+               c13_soilbiogeochem_carbonflux_inst)
+          end if
+          if ( use_c14 ) then
+             call CStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+                  c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
+                  c14_soilbiogeochem_carbonflux_inst)
+          end if
 
-       call NStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
-            soilbiogeochem_nitrogenflux_inst)
+          call NStateUpdate2h(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+               cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, soilbiogeochem_nitrogenstate_inst, &
+               soilbiogeochem_nitrogenflux_inst)
+       end if
 
        !--------------------------------------------
        ! Update2g (gross unrepresented landcover change)
        !--------------------------------------------
 
        ! Set gross unrepresented landcover change mortality routine 
+       ! Update2g fluxes stay 0 from CNZero SetValues when get_do_grossunrep() is false.
        if (get_do_grossunrep()) then
           call CNGrossUnrep(num_bgc_vegp, filter_bgc_vegp, &
                soilbiogeochem_state_inst, cnveg_carbonstate_inst, cnveg_nitrogenstate_inst, &
                cnveg_carbonflux_inst, cnveg_nitrogenflux_inst)
-       end if
 
-       if ( use_c13 ) then
-          call CIsoFlux2g(num_bgc_vegp, filter_bgc_vegp,                      &
-               soilbiogeochem_state_inst,                                     &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &                         
-               isotope='c13')
-       end if
-       if ( use_c14 ) then
-          call CIsoFlux2g(num_bgc_vegp, filter_bgc_vegp,                      &
-               soilbiogeochem_state_inst,                                     &
-               cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &                         
-               isotope='c14')
-       end if
+          if ( use_c13 ) then
+             call CIsoFlux2g(num_bgc_vegp, filter_bgc_vegp,                      &
+                  soilbiogeochem_state_inst,                                     &
+                  cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+                  c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,         &
+                  isotope='c13')
+          end if
+          if ( use_c14 ) then
+             call CIsoFlux2g(num_bgc_vegp, filter_bgc_vegp,                      &
+                  soilbiogeochem_state_inst,                                     &
+                  cnveg_carbonflux_inst, cnveg_carbonstate_inst,                 &
+                  c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,         &
+                  isotope='c14')
+          end if
 
-       call CStateUpdate2g( num_bgc_soilc, filter_bgc_soilc,  num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
-            soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
-       if ( use_c13 ) then
-          call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-               c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
-               c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst)
-       end if
-       if ( use_c14 ) then
-          call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-               c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
-               c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst)
-       end if
+          call CStateUpdate2g( num_bgc_soilc, filter_bgc_soilc,  num_bgc_vegp, filter_bgc_vegp, &
+               cnveg_carbonflux_inst, cnveg_carbonstate_inst, &
+               soilbiogeochem_carbonstate_inst, soilbiogeochem_carbonflux_inst)
+          if ( use_c13 ) then
+             call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+                  c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, &
+                  c13_soilbiogeochem_carbonstate_inst, c13_soilbiogeochem_carbonflux_inst)
+          end if
+          if ( use_c14 ) then
+             call CStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+                  c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, &
+                  c14_soilbiogeochem_carbonstate_inst, c14_soilbiogeochem_carbonflux_inst)
+          end if
 
-       call NStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
-            cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
-            soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+          call NStateUpdate2g(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+               cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
+               soilbiogeochem_nitrogenstate_inst, soilbiogeochem_nitrogenflux_inst)
+       end if
 
        call t_stopf('CNUpdate2')
 
@@ -966,18 +968,19 @@ contains
                isotope='c14')
        end if
 
-       call CStateUpdate3( num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+       ! Fire fluxes outside filter_actfirec/filter_actfirep stay 0 from CNZero SetValues.
+       call CStateUpdate3( num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
             cnveg_carbonflux_inst, cnveg_carbonstate_inst, soilbiogeochem_carbonstate_inst, &
             soilbiogeochem_carbonflux_inst)
 
        if ( use_c13 ) then
-          call CStateUpdate3( num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+          call CStateUpdate3( num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
                c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst, c13_soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst)
        end if
 
        if ( use_c14 ) then
-          call CStateUpdate3( num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+          call CStateUpdate3( num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
                c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst, c14_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst)
 
@@ -1088,7 +1091,8 @@ contains
     ! Nitrogen state variable update, mortality fluxes.
     if(num_bgc_vegp>0)then
        call t_startf('NUpdate3')
-       call NStateUpdate3(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp, &
+       ! Fire fluxes outside filter_actfirec/filter_actfirep stay 0 from CNZero SetValues.
+       call NStateUpdate3(num_actfirec, filter_actfirec, num_actfirep, filter_actfirep, &
             cnveg_nitrogenflux_inst, cnveg_nitrogenstate_inst, &
             soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
        call t_stopf('NUpdate3')
