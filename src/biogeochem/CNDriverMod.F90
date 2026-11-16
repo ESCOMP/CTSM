@@ -950,7 +950,7 @@ contains
 
        call t_startf('CNUpdate3')
        if ( use_c13 ) then
-          call CIsoFlux3(num_bgc_vegp, filter_bgc_vegp,                                   &
+          call CIsoFlux3(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp,  &
                soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
                cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
                c13_cnveg_carbonflux_inst, c13_cnveg_carbonstate_inst,               &
@@ -958,7 +958,7 @@ contains
                isotope='c13')
        end if
        if ( use_c14 ) then
-          call CIsoFlux3(num_bgc_vegp, filter_bgc_vegp,                                   &
+          call CIsoFlux3(num_bgc_soilc, filter_bgc_soilc, num_bgc_vegp, filter_bgc_vegp,  &
                soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
                cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
                c14_cnveg_carbonflux_inst, c14_cnveg_carbonstate_inst,               &
