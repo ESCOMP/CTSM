@@ -369,10 +369,7 @@ module CNFUNMod
   real(r8)  :: npp_remaining(bounds%begp:bounds%endp,1:nstp)         ! A temporary variable for npp_remaining(gC/m2) 
   real(r8)  :: n_passive_step(bounds%begp:bounds%endp,1:nstp)        ! N taken up by transpiration at substep(gN/m2)
   real(r8)  :: n_passive_acc(bounds%begp:bounds%endp)                ! N acquired by passive uptake          (gN/m2)
-  real(r8)  :: cost_retran(bounds%begp:bounds%endp,1:nlevdecomp)     ! cost of retran                        (gC/gN)
   real(r8)  :: cost_fix(bounds%begp:bounds%endp,1:nlevdecomp)        ! cost of fixation                      (gC/gN)
-  real(r8)  :: cost_resis(bounds%begp:bounds%endp,1:nlevdecomp)      ! cost of resis                         (gC/gN)
-  real(r8)  :: cost_res_resis(bounds%begp:bounds%endp,1:nlevdecomp)  ! The cost of resis                     (gN/gC)
   real(r8)  :: n_fix_acc(bounds%begp:bounds%endp,1:nstp)             ! N acquired by fixation                (gN/m2)
   real(r8)  :: n_fix_acc_total(bounds%begp:bounds%endp)              ! N acquired by fixation                (gN/m2)
   real(r8)  :: npp_fix_acc(bounds%begp:bounds%endp,1:nstp)           ! Amount of NPP used by fixation        (gC/m2)
@@ -396,16 +393,8 @@ module CNFUNMod
   real(r8)  :: cost_nonmyc_no3(bounds%begp:bounds%endp,1:nlevdecomp) ! cost of nonmyc                                  (gC/gN)
   real(r8)  :: cost_nonmyc_nh4(bounds%begp:bounds%endp,1:nlevdecomp) ! cost of nonmyc                                  (gC/gN)
 
-  real(r8)  :: sminn_no3_conc(bounds%begc:bounds%endc,1:nlevdecomp)             ! Concentration of no3 in soil water (gN/gH2O)
-  real(r8)  :: sminn_no3_conc_step(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp) ! A temporary variable for soil mineral N (gN/gH2O)
   real(r8)  :: sminn_no3_layer(bounds%begc:bounds%endc,1:nlevdecomp)            ! Available no3 in each soil layer (gN/m2)
-  real(r8)  :: sminn_no3_layer_step(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp)! A temporary variable for soil no3 (gN/m2) 
-  real(r8)  :: sminn_no3_uptake(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp)    ! A temporary variable for soil mineral N (gN/m2/s)
-  real(r8)  :: sminn_nh4_conc(bounds%begc:bounds%endc,1:nlevdecomp)             ! Concentration of nh4 in soil water (gN/gH2O)
-  real(r8)  :: sminn_nh4_conc_step(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp) ! A temporary variable for soil mineral N (gN/gH2O)
   real(r8)  :: sminn_nh4_layer(bounds%begc:bounds%endc,1:nlevdecomp)            ! Available nh4 in each soil layer (gN/m2)
-  real(r8)  :: sminn_nh4_layer_step(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp)! A temporary variable for soil mineral N (gN/m2)
-  real(r8)  :: sminn_nh4_uptake(bounds%begp:bounds%endp,1:nlevdecomp,1:nstp)    ! A temporary variable for soil mineral N (gN/m2/s)
 
   real(r8)  :: active_no3_uptake1(bounds%begp:bounds%endp,1:nlevdecomp)         ! no3 mycorrhizal uptake (gN/m2)
   real(r8)  :: active_nh4_uptake1(bounds%begp:bounds%endp,1:nlevdecomp)         ! nh4 mycorrhizal uptake (gN/m2) 
@@ -568,6 +557,10 @@ module CNFUNMod
   integer   :: FIX                               ! for loop. 1 for
   !  fixers, 2 for non fixers. This will become redundant with the
   !   'fixer' parameter if it works. 
+  logical   :: cost_fix_done                     ! true once cost_fix(p,:) is computed for patch p
+  logical   :: do_retrans_base                   ! true when patch has non-crop leaf C eligible for retranslocation
+  logical   :: do_retrans_fix                    ! true when retranslocation runs for current FIX fraction
+  logical   :: do_uptake                         ! true when step has unmet plant N demand
   
   character(len=100) :: errCode
   !--------------------------------------------------------------------
@@ -810,18 +803,13 @@ module CNFUNMod
         p = filter_soilp(fp)
         c = patch%column(p)
         rootc_dens(p,j)                 = 0._r8 
-        cost_retran(p,j)                = 0._r8
         cost_fix(p,j)                   = 0._r8
-        cost_resis(p,j)                 = 0._r8
-        cost_res_resis(p,j)             = 0._r8
         cost_active_no3(p,j)            = 0._r8
         cost_active_nh4(p,j)            = 0._r8
         cost_nonmyc_no3(p,j)            = 0._r8
         cost_nonmyc_nh4(p,j)            = 0._r8
    
-        sminn_no3_conc(c,j)             = 0._r8
         sminn_no3_layer(c,j)            = 0._r8
-        sminn_nh4_conc(c,j)             = 0._r8
         sminn_nh4_layer(c,j)            = 0._r8
      end do
   end do
@@ -838,17 +826,6 @@ module CNFUNMod
         leafn_retrans_step(p,istp)      = 0._r8
         litterfall_n_step(p,istp)       = 0._r8
         litterfall_c_step(p,istp)       = 0._r8
-     end do
-     do j = 1, nlevdecomp
-        do fp = 1,num_soilp        ! PFT Starts
-           p = filter_soilp(fp)
-           sminn_no3_conc_step(p,j,istp)      = 0._r8
-           sminn_no3_layer_step(p,j,istp)     = 0._r8
-           sminn_no3_uptake(p,j,istp)         = 0._r8
-           sminn_nh4_conc_step(p,j,istp)      = 0._r8
-           sminn_nh4_layer_step(p,j,istp)     = 0._r8
-           sminn_nh4_uptake(p,j,istp)         = 0._r8
-        end do
      end do
   end do
 
@@ -923,29 +900,6 @@ module CNFUNMod
        end if
        sminn_no3_layer(c,j)    = max(sminn_no3_layer(c,j),0._r8)
        sminn_nh4_layer(c,j)    = max(sminn_nh4_layer(c,j),0._r8)
-       if (h2osoi_liq(c,j) > smallValue) then
-          sminn_no3_conc(c,j)  = sminn_no3_layer(c,j) / (h2osoi_liq(c,j) * 1000._r8) ! (gN/m2)/(gH2O/m2) (coverted from
-          !  kg2g)
-          sminn_nh4_conc(c,j)  = sminn_nh4_layer(c,j) / (h2osoi_liq(c,j) * 1000._r8) ! (gN/m2)/(gH2O/m2) (coverted from
-          !  kg2g)
-       else
-          sminn_no3_conc(c,j)  = 0._r8
-          sminn_nh4_conc(c,j)  = 0._r8
-       end if
-     end do
-  end do
-
-  do istp = 1, nstp
-     do j = 1, nlevdecomp
-        do fp = 1,num_soilp        ! PFT Starts
-           p = filter_soilp(fp)
-           c = patch%column(p)
-
-           sminn_no3_layer_step(p,j,istp)  =   sminn_no3_layer(c,j) * permyc(p,istp)
-           sminn_nh4_layer_step(p,j,istp)  =   sminn_nh4_layer(c,j) * permyc(p,istp)
-           sminn_no3_conc_step(p,j,istp)   =   sminn_no3_conc(c,j)  * permyc(p,istp)
-           sminn_nh4_conc_step(p,j,istp)   =   sminn_nh4_conc(c,j)  * permyc(p,istp)
-        end do
      end do
   end do
   call t_stopf('CNFUNcalcs1')
@@ -1073,6 +1027,8 @@ pft:do fp = 1,num_soilp        ! PFT Starts
       plant_ndemand_pool(p)     =  plant_ndemand(p) *  dt
       plant_ndemand_pool(p)     =  max(plant_ndemand_pool(p),0._r8)
       plant_ndemand_retrans(p)  =  storage_ndemand(p)
+      cost_fix_done             =  .false.
+      do_retrans_base           =  (leafc(p) > 0.0_r8 .and. (.not. is_prognostic_crop(ivt(p))))
 
       !--------------------------------------------------------------------
       !----------
@@ -1124,7 +1080,13 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
   
          ! if (plant_ndemand_pool_step(p,istp) .gt. 0._r8) then   !
             !  plant_ndemand_pool_step > 0.0
-         
+            ! Unlike the disabled guard above, steps with leaf N to retranslocate still run.
+            ! A skipped step would only add zeros at the end of stp and leave n_ecm_*/n_am_*
+            ! at zero from CNFUNzeroarrays2; any non-zero tail work must go above cycle stp.
+            do_uptake = (plant_ndemand_pool_step(p,istp) > 0._r8)
+            if (.not. do_uptake .and. (.not. do_retrans_base .or. litterfall_n_step(p,istp) <= 0.0_r8)) cycle stp
+
+            if (.not. cost_fix_done) then
             do j = 1, nlevdecomp
                tc_soisno(c,j)          = t_soisno(c,j)  -   tfrz
 
@@ -1150,6 +1112,8 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
 
             end do
             cost_fix(p,1:nlevdecomp)      = costNit(:,icostFix)
+            cost_fix_done = .true.
+            end if ! .not. cost_fix_done
             
              
             !--------------------------------------------------------------------
@@ -1163,9 +1127,9 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
             !------Mycorrhizal Uptake Cost-----------------!
             do j = 1,nlevdecomp
                rootc_dens_step            = rootc_dens(p,j) *  permyc(p,istp)
-               costNit(j,icostActiveNO3)  = fun_cost_active(sminn_no3_layer_step(p,j,istp) &
+               costNit(j,icostActiveNO3)  = fun_cost_active(sminn_no3_layer(c,j) * permyc(p,istp) &
                ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
-               costNit(j,icostActiveNH4)  = fun_cost_active(sminn_nh4_layer_step(p,j,istp) &
+               costNit(j,icostActiveNH4)  = fun_cost_active(sminn_nh4_layer(c,j) * permyc(p,istp) &
                ,big_cost,kc_active(p,istp),kn_active(p,istp) ,rootc_dens_step,crootfr(p,j),smallValue)
             end do
             cost_active_no3(p,1:nlevdecomp)  = costNit(:,icostActiveNO3) 
@@ -1175,9 +1139,9 @@ stp:  do istp = ecm_step, am_step        ! TWO STEPS
             !------Non-mycorrhizal Uptake Cost-------------!
             do j = 1,nlevdecomp
                rootc_dens_step             = rootc_dens(p,j)  *  permyc(p,istp)
-               costNit(j,icostnonmyc_no3)   = fun_cost_nonmyc(sminn_no3_layer_step(p,j,istp) &
+               costNit(j,icostnonmyc_no3)   = fun_cost_nonmyc(sminn_no3_layer(c,j) * permyc(p,istp) &
                ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,crootfr(p,j),smallValue)
-               costNit(j,icostnonmyc_nh4)   = fun_cost_nonmyc(sminn_nh4_layer_step(p,j,istp) &
+               costNit(j,icostnonmyc_nh4)   = fun_cost_nonmyc(sminn_nh4_layer(c,j) * permyc(p,istp) &
                ,big_cost,kc_nonmyc(ivt(p)),kn_nonmyc(ivt(p)) ,rootc_dens_step,crootfr(p,j),smallValue)
             end do
             cost_nonmyc_no3(p,1:nlevdecomp)   = costNit(:,icostnonmyc_no3)
@@ -1198,6 +1162,8 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                  fixerfrac = 1.0_r8 - FUN_fracfixers(ivt(p))
                endif 
                npp_to_spend = npp_remaining(p,istp)  * fixerfrac !put parameter here.
+               do_retrans_fix = (do_retrans_base .and. (litterfall_n_step(p,istp) * fixerfrac) > 0.0_r8)
+               if (.not. do_retrans_fix .and. (.not. do_uptake .or. npp_to_spend == 0.0_r8)) cycle fix_loop
 
 
 
@@ -1271,7 +1237,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !           Calculate appropriate degree of retranslocation
                !-------------------------------------------------------------------------------
       
-               if (leafc(p) > 0.0_r8 .and. (litterfall_n_step(p,istp) * fixerfrac) > 0.0_r8 .and. (.not. is_prognostic_crop(ivt(p)))) then
+               if (do_retrans_fix) then
                   call fun_retranslocation(p,dt,npp_to_spend,&
                                 litterfall_c_step(p,istp)* fixerfrac,&
                                 litterfall_n_step(p,istp)* fixerfrac,&
@@ -1301,7 +1267,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                !-------------------------------------------------------------------------------
                !           Spend C on extracting N.
                !-------------------------------------------------------------------------------
-               if (plant_ndemand_pool_step(p,istp) .gt. 0._r8) then    ! unmet demand
+               if (do_uptake) then    ! unmet demand
   
                  if(local_use_flexiblecn)then   
                      if (leafn(p) == 0.0_r8) then   ! to avoid division by zero
@@ -1384,7 +1350,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                  do j = 1,nlevdecomp    
                   
                        ! --------------------ACTIVE UPTAKE NO3 UPTAKE LIMIT------------------------!  
-                       active_no3_limit1          = sminn_no3_layer_step(p,j,istp) * fixerfrac 
+                       active_no3_limit1          = (sminn_no3_layer(c,j) * permyc(p,istp)) * fixerfrac
                   
                         ! trying to remove too much nh4 from soil. 
                         if (n_from_active_no3(j) + n_from_nonmyc_no3(j).gt.active_no3_limit1) then 
@@ -1401,7 +1367,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
                        end if
                   
                        ! --------------------ACTIVE UPTAKE NH4 UPTAKE LIMIT------------------------!  
-                       active_nh4_limit1          = sminn_nh4_layer_step(p,j,istp) *fixerfrac
+                       active_nh4_limit1          = (sminn_nh4_layer(c,j) * permyc(p,istp)) *fixerfrac
                   
                       
                        ! trying to remove too much nh4 from soil. 
