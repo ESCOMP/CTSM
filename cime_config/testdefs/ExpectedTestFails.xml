@@ -263,6 +263,13 @@
     </phase>
   </test>
 
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesRsGs.derecho_intel.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>fates#1634</issue>
+    </phase>
+  </test>
+
   <!-- Other submodule test list failures (MOSART, RTM, etc. -->
 
   <test name="SMS_Lh3.f10_f10_mt201.I2000Clm60Sp.derecho_intel.mosart-clmAccelSpinupIgnoreWarn">
