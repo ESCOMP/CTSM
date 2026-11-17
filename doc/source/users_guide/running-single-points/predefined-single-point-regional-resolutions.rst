@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _pre-defined-single-pt-regional-resolutions:
 
 ****************************************************

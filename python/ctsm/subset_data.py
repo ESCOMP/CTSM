@@ -66,7 +66,7 @@ from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plat_type, plon_type
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
 from ctsm.longitude import Longitude, detect_lon_type
@@ -378,8 +378,7 @@ def get_parser():
             dest="out_surface",
             type=str,
         )
-        cesmroot = path_to_ctsm_root()
-        defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        defaults_file = os.path.join(path_to_ctsm_root(), DEFAULTS_CONFIG)
         subparser.add_argument(
             "--cfg-file",
             help="Default configure file to use for default filenames.",
@@ -572,15 +571,19 @@ def setup_user_mods(user_mods_dir, cesmroot):
     if not os.path.isdir(user_mods_dir):
         os.mkdir(user_mods_dir)
 
-    nl_clm_base = os.path.join(cesmroot, "cime_config/user_nl_clm")
+    nl_clm_base = os.path.join(path_to_ctsm_root(), "cime_config", "user_nl_clm")
     nl_clm = os.path.join(user_mods_dir, "user_nl_clm")
-    with open(nl_clm_base, "r") as basefile, open(nl_clm, "w") as user_file:
+    with open(nl_clm_base, "r", encoding="utf-8") as basefile, open(
+        nl_clm, "w", encoding="utf-8"
+    ) as user_file:
         for line in basefile:
             user_file.write(line)
 
     nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
-    with open(nl_datm_base, "r") as base_file, open(nl_datm, "w") as user_file:
+    with open(nl_datm_base, "r", encoding="utf-8") as base_file, open(
+        nl_datm, "w", encoding="utf-8"
+    ) as user_file:
         for line in base_file:
             user_file.write(line)
 
@@ -877,7 +880,7 @@ def main():
 
     # --------------------------------- #
     # parse defaults file
-    cesmroot = path_to_ctsm_root()
+    cesmroot = path_to_top_root()
     defaults = configparser.ConfigParser()
     defaults.read(args.config_file)
 

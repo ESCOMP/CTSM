@@ -1,4 +1,4 @@
-name: Docs tests to run when ctsm_pylib is updated
+name: Docs tests to run when ctsm_pylib is (or might be) updated
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
     branches: ['*']
     paths:
       - 'python/conda_env_ctsm_py.yml'
-      - 'doc/ctsm-docs_container/requirements.txt'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
+      - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
 
@@ -14,7 +15,8 @@ on:
     # Run on pull requests that change the listed files
     paths:
       - 'python/conda_env_ctsm_py.yml'
-      - 'doc/ctsm-docs_container/requirements.txt'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
+      - 'doc/doc-builder'
       - '.github/workflows/docs-common.yml'
       - '.github/workflows/docs-update-dependency-common.yml'
 
@@ -55,10 +57,10 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Create issue
-        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5
+        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2.9.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

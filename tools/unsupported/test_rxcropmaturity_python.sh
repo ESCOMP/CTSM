@@ -16,15 +16,15 @@ set -e
 #
 # Output will look something like this (✅ for success, 🔴 for failure):
 #     ctsm_pylib
-#        RXCROPMATURITYINST_Lm61.f10_f10_mg37.IHist check_rxboth_run ✅
-#        RXCROPMATURITY_Lm61.f10_f10_mg37.IHist generate_gdds 🔴
-#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
-#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHist check_rxboth_run 🔴
+#        RXCROPMATURITYINST_Lm61.f10_f10_mt201.IHist check_rxboth_run ✅
+#        RXCROPMATURITY_Lm61.f10_f10_mt201.IHist generate_gdds 🔴
+#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mt201.IHist check_rxboth_run ✅
+#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mt201.IHist check_rxboth_run 🔴
 #     npl
-#        RXCROPMATURITYINST_Lm61.f10_f10_mg37.IHist check_rxboth_run ✅
-#        RXCROPMATURITY_Lm61.f10_f10_mg37.IHist generate_gdds ✅
-#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
-#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mg37.IHist check_rxboth_run ✅
+#        RXCROPMATURITYINST_Lm61.f10_f10_mt201.IHist check_rxboth_run ✅
+#        RXCROPMATURITY_Lm61.f10_f10_mt201.IHist generate_gdds ✅
+#        RXCROPMATURITYSKIPGENINST_Ld1097.f10_f10_mt201.IHist check_rxboth_run ✅
+#        RXCROPMATURITYSKIPGEN_Ld1097.f10_f10_mt201.IHist check_rxboth_run ✅
 #
 # Log files for each will be saved as TEST_SHORTNAME.CONDA_ENV.log.
 

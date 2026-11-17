@@ -31,7 +31,6 @@ CLM Technical Note
    Glacier/CLM50_Tech_Note_Glacier.rst
    MOSART/CLM50_Tech_Note_MOSART.rst
    mizuRoute/Tech_Note_mizuRoute.rst
-   Urban/CLM50_Tech_Note_Urban.rst
    Urban/CLMU_Tech_Note.rst
    CN_Pools/CLM50_Tech_Note_CN_Pools.rst
    Plant_Respiration/CLM50_Tech_Note_Plant_Respiration.rst

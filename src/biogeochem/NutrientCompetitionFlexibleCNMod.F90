@@ -138,10 +138,9 @@ contains
          avgflag='A', long_name='Leaf CN ratio used for flexible CN', &
          ptr_patch=this%actual_leafcn )
     this%actual_storage_leafcn(begp:endp) = spval
-!   Commented out failing fields (see https://github.com/ESCOMP/CTSM/issues/3661) to allow all_outputs test to catch new problems as they arise
-!   call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
-!        avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
-!        ptr_patch=this%actual_storage_leafcn, default='inactive')
+    call hist_addfld1d (fname='LEAFCN_STORAGE', units='gC/gN', &
+         avgflag='A', long_name='Storage Leaf CN ratio used for flexible CN', &
+         ptr_patch=this%actual_storage_leafcn, default='inactive')
 
   end subroutine InitHistory
 
@@ -674,6 +673,8 @@ contains
                this%actual_storage_leafcn(p) = cnveg_carbonstate_inst%leafc_storage_patch(p)  &
                     / cnveg_nitrogenstate_inst%leafn_storage_patch(p)
             end if
+         else
+            this%actual_storage_leafcn(p) = spval
          end if
 
          if (carbon_resp_opt == 1 .AND. laisun(p)+laisha(p) > 0.0_r8) then

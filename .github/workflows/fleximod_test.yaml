@@ -9,17 +9,29 @@ on:
     branches: ['*']
   pull_request:
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   fleximod-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # oldest supported and latest supported
-        python-version: ["3.7", "3.x"]
+        include:
+          # setup-python has no 3.7 builds for Ubuntu newer than 22.04
+          - python-version: "3.7"
+            os: ubuntu-22.04
+          - python-version: "3.x"
+            os: ubuntu-latest
     steps:
       - id: checkout-CTSM
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - id: setup-python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: ${{matrix.python-version}}
       - id: run-fleximod
         run: |
           $GITHUB_WORKSPACE/bin/git-fleximod update -o
