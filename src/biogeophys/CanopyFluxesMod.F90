@@ -56,6 +56,7 @@ module CanopyFluxesMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
+  public :: CanopyFluxesResetDiagnostics ! Reset CanopyFluxes-only diagnostics for patches leaving the exposed-veg filter
   public :: readParams
 
   type, private :: params_type
@@ -563,7 +564,7 @@ contains
          frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterdiagnosticbulk_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
          fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
-         frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
+         frac_sno_fluxes        => waterdiagnosticbulk_inst%frac_sno_fluxes_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)                           
          snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
          qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
          qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
@@ -640,7 +641,6 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
-      
       ! Determine step size
 
       dtime = get_step_size_real()
@@ -1298,8 +1298,8 @@ bioms:   do f = 1, fn
                erre = efe(p) - efeold
             end if
             ! fractionate ground emitted longwave
-            lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-                 +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
+            lw_grnd=(frac_sno_fluxes(c)*t_soisno(c,snl(c)+1)**4 &
+                 +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
             dt_veg(p) = ((1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
@@ -1468,8 +1468,8 @@ bioms:   do f = 1, fn
 
          ! Energy balance check in canopy
 
-         lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-              +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
+         lw_grnd=(frac_sno_fluxes(c)*t_soisno(c,snl(c)+1)**4 &
+              +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
               +frac_h2osfc(c)*t_h2osfc(c)**4)
 
          err(p) = (1.0_r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
@@ -1763,6 +1763,56 @@ bioms:   do f = 1, fn
 
 
   end subroutine CanopyFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine CanopyFluxesResetDiagnostics(bounds, num_reset, filter_reset, &
+       frictionvel_inst, soilstate_inst, waterdiagnosticbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set to spval the diagnostic outputs that are computed only in CanopyFluxes
+    ! (i.e., only for patches in filter_exposedvegp), for the patches in filter_reset.
+    !
+    ! This is called when a patch leaves the exposed-vegetation filter (frac_veg_nosno
+    ! goes from 1 to 0, e.g., vegetation buried by snow, leaf-off, harvest, or patch
+    ! deactivation). Without this, such a patch keeps the values from the last time
+    ! step in which CanopyFluxes processed it. Those stale values are not on the
+    ! restart file, so a restarted run holds spval where a continuous run holds the
+    ! stale value, and history output differs between the two (see issue #3661).
+    !
+    ! The column-level effective porosity is also written here for all levels
+    ! (including bedrock, j > nlevsoi) via calc_effective_soilporosity, for the
+    ! columns of exposed-veg patches. Levels 1:nlevsoi are recomputed every step in
+    ! SetSoilWaterFractions; the bedrock levels are not, so they are reset here. If
+    ! the column still has other exposed-veg patches, CanopyFluxes recomputes them
+    ! later in the same time step.
+    !
+    ! !USES:
+    use clm_varcon, only : spval
+    use clm_varpar, only : nlevsoi, nlevgrnd
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)              , intent(in)    :: bounds
+    integer                        , intent(in)    :: num_reset       ! number of patches in filter_reset
+    integer                        , intent(in)    :: filter_reset(:) ! patches leaving the exposed-veg filter
+    type(frictionvel_type)         , intent(inout) :: frictionvel_inst
+    type(soilstate_type)           , intent(inout) :: soilstate_inst
+    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: f, p, c
+    !-----------------------------------------------------------------------
+
+    do f = 1, num_reset
+       p = filter_reset(f)
+       c = patch%column(p)
+
+       call frictionvel_inst%SetValues(bounds, spval, p=p)
+       call soilstate_inst%SetValues(bounds, spval, p=p)
+       waterdiagnosticbulk_inst%rh_af_patch(p) = spval
+       soilstate_inst%eff_porosity_col(c, nlevsoi+1:nlevgrnd) = spval
+    end do
+
+  end subroutine CanopyFluxesResetDiagnostics
 
 end module CanopyFluxesMod
 

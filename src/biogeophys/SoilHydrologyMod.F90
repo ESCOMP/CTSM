@@ -33,6 +33,7 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch
+  use UrbanParamsType   , only : IsACDehumidificationEnabled
 
   !
   ! !PUBLIC TYPES:
@@ -310,9 +311,9 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
-     real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno
-
+     real(r8) :: qflx_evap            ! evaporation for this column
+     real(r8) :: frac_sno_fluxes_copy ! copy of frac_sno_fluxes (fraction of ground covered by snow for heat flux calculations)
+ 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
 
@@ -330,7 +331,7 @@ contains
           qflx_ev_h2osfc          =>    waterfluxbulk_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
           qflx_sat_excess_surf    =>    waterfluxbulk_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
-          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_fluxes         =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
           frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )
 
@@ -344,11 +345,11 @@ contains
         ! ------------------------------------------------------------------------
 
         if (snl(c) >= 0) then
-           fsno=0._r8
+           frac_sno_fluxes_copy=0._r8
            ! if no snow layers, sublimation is removed from h2osoi_ice in drainage
            qflx_evap=qflx_liqevap_from_top_layer(c)
         else
-           fsno=frac_sno(c)
+           frac_sno_fluxes_copy=frac_sno_fluxes(c)
            qflx_evap=qflx_ev_soil(c)
         endif
 
@@ -356,7 +357,7 @@ contains
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
         ! remove evaporation (snow treated in SnowHydrology)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap
+        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - frac_sno_fluxes_copy - frac_h2osfc(c))*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do
@@ -497,6 +498,7 @@ contains
           qflx_liqevap_from_top_layer => waterfluxbulk_inst%qflx_liqevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]    
           qflx_floodc      =>    waterfluxbulk_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
           qflx_sat_excess_surf => waterfluxbulk_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+          qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col, & ! Input: [real(r8) (:)   ] condensate from air-conditioning (mm H2O /s)
 
           xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
 
@@ -538,8 +540,14 @@ contains
                    pondmx_urban/dtime)
               qflx_surf(c) = xs_urban(c)
            end if
-           ! send flood water flux to runoff for all urban columns
-           qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
+           ! Send flood water flux and air-conditioning condensate (the latter exists only
+           ! when prognosed indoor humidity and AC dehumidification are enabled) 
+           ! to runoff for all urban columns
+           if (IsACDehumidificationEnabled()) then
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c) + qflx_condensate_from_ac(c)
+           else
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c)
+           end if
         else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
            qflx_surf(c) = 0._r8
         end if

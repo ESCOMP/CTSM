@@ -1,7 +1,5 @@
 .. running-with-custom-crop-calendars:
 
-.. include:: ../substitutions.rst
-
 =======================================
  Running with custom crop calendars
 =======================================
@@ -93,4 +91,4 @@ The entire process can be illustrated with the RXCROPMATURITY system test. E.g.:
 
 ::
 
-   run_sys_tests -t RXCROPMATURITY_Lm61.f10_f10_mg37.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput --skip-generate --skip-compare
+   run_sys_tests -t RXCROPMATURITY_Lm61.f10_f10_mt201.IHistClm60BgcCrop.derecho_intel.clm-cropMonthOutput --skip-generate --skip-compare

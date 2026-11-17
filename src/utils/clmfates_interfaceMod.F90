@@ -172,7 +172,6 @@ module CLMFatesInterfaceMod
    use EDCanopyStructureMod  , only : UpdateFatesAvgSnowDepth
    use FatesPlantRespPhotosynthMod, only : FatesPlantRespPhotosynthDrive
    use EDAccumulateFluxesMod , only : AccumulateFluxes_ED
-   use FatesSoilBGCFluxMod    , only : FluxIntoLitterPools
    use FatesSoilBGCFluxMod    , only : UnPackNutrientAquisitionBCs
    use FatesPlantHydraulicsMod, only : hydraulics_drive
    use FatesPlantHydraulicsMod, only : HydrSiteColdStart
@@ -588,7 +587,7 @@ module CLMFatesInterfaceMod
 
         if (trim(fates_cstarvation_model) == 'linear') then
            pass_cstarvation_model = 1
-        else if (trim(fates_cstarvation_model) == 'expontential') then
+        else if (trim(fates_cstarvation_model) == 'exponential') then
            pass_cstarvation_model = 2
         end if
         call set_fates_ctrlparms('mort_cstarvation_model',ival=pass_cstarvation_model)
@@ -1506,11 +1505,6 @@ module CLMFatesInterfaceMod
        
        if ( .not. use_fates_sp ) then
 
-
-          call FluxIntoLitterPools(this%fates(ci)%sites(s), &
-                                   this%fates(ci)%bc_in(s), &
-                                   this%fates(ci)%bc_out(s))
-
           ! (gC/m3/timestep)
           cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) = &
                cf_soil%decomp_cpools_sourcesink_col(c,1:nlevdecomp,i_met_lit) + &
@@ -1603,7 +1597,7 @@ module CLMFatesInterfaceMod
          displa => canopystate_inst%displa_patch, &
          dleaf_patch => canopystate_inst%dleaf_patch, &
          snow_depth => waterdiagnosticbulk_inst%snow_depth_col, &
-         frac_sno_eff => waterdiagnosticbulk_inst%frac_sno_eff_col, &
+         frac_sno_fluxes => waterdiagnosticbulk_inst%frac_sno_fluxes_col, &
          frac_veg_nosno_alb => canopystate_inst%frac_veg_nosno_alb_patch)
 
 
@@ -1612,7 +1606,7 @@ module CLMFatesInterfaceMod
        do s=1,this%fates(nc)%nsites
           c = this%f2hmap(nc)%fcolumn(s)
           this%fates(nc)%bc_in(s)%snow_depth_si   = snow_depth(c)
-          this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_eff(c)
+          this%fates(nc)%bc_in(s)%frac_sno_eff_si = frac_sno_fluxes(c)
        end do
 
        ! Only update the fates internal snow burial if this is not a restart
@@ -1939,7 +1933,9 @@ module CLMFatesInterfaceMod
          do nc = 1, nclumps
             if (this%fates(nc)%nsites>0) then
                call this%fates_restart%set_restart_vectors(nc,this%fates(nc)%nsites, &
-                                                           this%fates(nc)%sites,this%fates(nc)%bc_in)
+                    this%fates(nc)%sites, &
+                    this%fates(nc)%bc_in, &
+                    this%fates(nc)%bc_out)
             end if
          end do
          !$OMP END PARALLEL DO
@@ -2027,7 +2023,7 @@ module CLMFatesInterfaceMod
                     this%fates(nc)%bc_out)
 
                call this%fates_restart%get_restart_vectors(nc, this%fates(nc)%nsites, &
-                    this%fates(nc)%sites,this%fates(nc)%bc_in )
+                    this%fates(nc)%sites,this%fates(nc)%bc_in,this%fates(nc)%bc_out)
 
                ! I think ed_update_site and update_hlmfates_dyn are doing some similar
                ! update type stuff, should consolidate (rgk 11-2016)
@@ -2646,7 +2642,6 @@ module CLMFatesInterfaceMod
     use clm_varcon        , only : tfrz, namep
     use clm_varctl        , only : iulog
     use PatchType         , only : patch
-    use quadraticMod      , only : quadratic
     use EDtypesMod        , only : ed_site_type
     use FatesPatchMod,      only : fates_patch_type
     use FatesCohortMod    , only : fates_cohort_type

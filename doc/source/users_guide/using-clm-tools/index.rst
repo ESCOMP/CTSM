@@ -3,8 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. include:: ../substitutions.rst
-
 .. _using-clm-tools-section:
 
 #####################################
@@ -18,6 +16,7 @@ Using CLM tools
    using-ctsm-pylib.rst
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
+   modifying-surface-datasets.rst
    observational-sites-datasets.rst
    cprnc.rst
    paramfile-tools.md

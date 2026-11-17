@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _pre-defined-single-pt-regional-resolutions:
 
 ****************************************************
@@ -15,7 +13,7 @@ To setup a ``PTS_MODE`` simulation you use the ``-pts_lat`` and ``-pts_lon`` arg
 ::
 
    > cd cime/scripts
-   > ./create_newcase -case testPTS_MODE -res f19_g17_gl4 -compset I1850Clm50BgcCropCru -pts_lat 40.0 -pts_lon -105
+   > ./create_newcase --case testPTS_MODE --res f19_f19_mt233 --compset I1850Clm60BgcCrop --pts_lat 40.0 --pts_lon -105
    > cd testPTS_MODE
 
    # We make sure the model will start up cold rather than using initial conditions

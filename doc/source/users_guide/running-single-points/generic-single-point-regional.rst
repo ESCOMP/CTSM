@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _generic_single_point_runs:
 
 ****************************************

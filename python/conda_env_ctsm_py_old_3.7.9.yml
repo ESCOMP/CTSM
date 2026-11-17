@@ -1,6 +1,6 @@
-# This file is used by py_env_create to install the previous version of the ctsm_pylib environment,
+# This file is used by py_env_create to install a previous version of the ctsm_pylib environment,
 # which used Python 3.7.9. Doing so is only useful for running CTSM python tools in repos from
-# before the new ctsm_pylib version (with Python 3.13.2) was introduced.
+# before the subsequent ctsm_pylib version (with Python 3.13.2) was introduced.
 #
 name: ctsm_pylib_3_7_9
 channels:

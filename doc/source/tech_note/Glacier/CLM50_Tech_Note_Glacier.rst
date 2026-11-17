@@ -15,11 +15,13 @@ Some glacier processes and model infrastructure are shared between these glacier
 
 
 .. _Glacier regions:
+- CLM can now keep its glacier areas and elevations in sync with CISM as the ice sheet is evolving. (However, in typical configurations, the ice sheet geometry still remains fixed throughout the run, since the data glacier model is used [DGLC as part of CDEPS].)
 
 Glacier regions and their behaviors
 -----------------------------------
 
 Within CLM, the world's glaciers and ice sheets are divided into three default glacier regions, each with distinct behaviors related to elevation classes, glacial meltwater treatment, and runoff generation. These default configurations are summarized in :numref:`Table Glacier region behaviors`.
+- Other land units within the GLC domain undergo the same downscaling as the glacier land unit, and surface mass balance is computed for the natural vegetated land unit. This allows CLM to produce glacial inception when running with the CISM evolving ice sheet model.
 
 .. _Table Glacier region behaviors:
 
@@ -39,6 +41,7 @@ Within CLM, the world's glaciers and ice sheets are divided into three default g
  | glaciers      |               | place         |               |
  +---------------+---------------+---------------+---------------+
 
+CLM is responsible for computing two quantities that are passed to the ice sheet model (either CISM, DGLC or SGLC):
 
 The glacier regions differ in three primary respects: 
 
@@ -47,6 +50,7 @@ The glacier regions differ in three primary respects:
    a. Multiple elevation classes (section :numref:`Multiple elevation class scheme`)
    b. Multiple elevation classes plus virtual elevation classes 
    c. A single elevation class whose elevation matches the atmospheric grid-cell topography, such that no atmospheric downscaling is applied
+There are several reasons for computing the SMB in CLM rather than in CISM/DGLC:
 
 #. Treatment of glacial melt water
 
@@ -54,6 +58,9 @@ The glacier regions differ in three primary respects:
    b. Remains in place: Regions using this approach cannot compute surface mass balance (SMB), because negative SMB would be physically inconsistent in the presence of retained liquid water on top of the ice column. Although this treatment is less realistic physically, it avoids the persistent negative ice runoff required by the "replaced by ice" formulation to conserve mass and energy. This behavior is particularly useful for mountain glaciers, where atmospheric topographic smoothing can produce unrealistically warm conditions. In such cases, avoiding unrealistic negative runoff is often preferable to representing more realistic glacier physics. Section  :numref:`Mountain Glaciers` provides an overview of ongoing/future work to address these limitations with mountain glaciers.
 
 #. Treatment of runoff from snow capping 
+#. We can use the sophisticated snow physics parameterization already in CLM instead of implementing a separate scheme for CISM/DGLC. Any improvements to CLM are applied to ice sheets automatically.
+
+#. The atmosphere model can respond during runtime to ice-sheet surface changes (even in the absence of evolving two-way feedbacks when DGLC is used rather than CISM). As shown by :ref:`Pritchard et al. (2008)<Pritchardetal2008>`, runtime albedo feedback from the ice sheet is critical for simulating ice-sheet retreat on paleoclimate time scales. Without this feedback the atmosphere warms much less, and the retreat is delayed.
 
    a. Ice runoff from snow capping remains ice. This serves as a crude parameterization of iceberg calving, and is most appropriate for regions with substantial real-world calving.
    b. Ice runoff from snow capping is melted, generating a negative sensible heat flux, and then routed as liquid runoff. This behavior matches that of non-glacier land units and is more appropriate in regions with little iceberg calving. It can also help avoid unrealistic ocean cooling and runaway sea ice growth.
@@ -66,6 +73,17 @@ Further detail on snow capping is provided in section :numref:`Runoff from glaci
 
 .. note::
     Note that the CLM Greenland region extends only to the Greenland Ice Sheet boundary defined by CISM. As a result, SMB is not computed by default for grid cells that lie within the broader CISM domain but outside the Greenland Ice Sheet itself (i.e., the peripheral glaciers). Presently, these non-Greenland portions of the CISM domain are treated using the same configuration as the mountain glacier regions, rather than using the Greenland ice-sheet configuration. This choice helps avoid unrealistic runoff fluxes from the Canadian Arctic Archipelago that could otherwise contribute to excessive sea ice growth in the surrounding ocean.
+In typical runs, DGLC is used and the ice sheet is not evolving; CLM computes the SMB and sends it to DGLC, but DGLC's ice sheet geometry remains fixed over the course of the run. In these runs, DGLC serves two roles in the system:
+
+#. Over the DGLC domain (typically Greenland in CESM), DGLC dictates glacier areas and topographic elevations, overriding the values on CLM's surface dataset. DGLC also dictates the elevation of non-glacier land units in its domain, and only in this domain are atmospheric fields downscaled to non-glacier land units. (So if you run with a stub glacier model - SGLC - then glacier areas and elevations will be taken entirely from CLM's surface dataset, and no downscaling will be done over non-glacier land units.)
+
+#. DGLC provides the grid onto which SMB is downscaled. (If you run with SGLC then SMB will still be computed in CLM, but it won't be downscaled to a high-resolution ice sheet grid.)
+
+It is also possible to run CESM with an evolving ice sheet (CISM). In this case, CLM responds to CISM's evolution by adjusting the areas of the glacier land unit and each elevation class within this land unit, as well as the mean topographic heights of each elevation class. Thus, CLM's glacier areas and elevations remain in sync with CISM's. Conservation of mass and energy is done as for other landcover change (see Chapter :numref:`rst_Transient Landcover Change`).
+
+:: note::
+
+   When the env variable GLC_TWO_WAY_COUPLING is TRUE (which can be true for either DGLC or CISM but not for SGLC) the GLC model will determine the glacier mask and glacier topographic heights (as talked about above). However, when it is FALSE CLM uses the values on the surface dataset as explained above for SGLC.
 
 .. note::
     Non-virtual, non-SMB-computing glacier regions can exist within the CISM domain, as is the case for portions of the Greenland CISM domain outside the Greenland Ice Sheet itself. However, these regions always provide zero SMB and cannot respond to CISM-driven changes in glacier extent. For this reason, it is generally preferable for as much of the CISM domain as possible to use virtual, SMB-computing glacier regions.
@@ -93,6 +111,7 @@ In typical simulations, CISM is run in a non-evolving configuration. In this mod
 
 #. Providing the target grid for SMB downscaling: CISM provides the high-resolution grid onto which SMB fields are downscaled. When using SGLC, SMB is still computed in CLM, but it is not interpolated to a separate high-resolution ice sheet grid.
 
+The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM/DGLC. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM/DGLC domain. (This treatment of the non-Greenland portion of the CISM/DGLC domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
 
 **Evolving ice sheet configuration**
 
@@ -120,6 +139,7 @@ Surface mass balance
 Computing SMB in CLM rather than directly within CISM provides several advantages:
 
 #. Computational efficiency: SMB can be computed much more efficiently in CLM using a limited number of elevation classes than on the full high-resolution CISM grid. For example, consider a simulation with CLM at 50 km resolution and CISM at 5 km resolution. The Greenland Ice Sheet spans roughly 1000 x 2000 km, corresponding to approximately:
+Within the CISM/DGLC domain, this same downscaling procedure is also applied to all non-urban land units. The elevation of non-glacier land units is taken from the mean elevation of ice-free grid cells in CISM/DGLC. This is done in order to keep the glaciated and non-glaciated portions of the CISM/DGLC domain as consistent as possible.
 
     - 20 x 40 x 10 (elevation classes) = 8,000 glacier elevation-class columns in CLM
     - 200 x 400 = 80,000 grid cells in CISM
@@ -140,6 +160,9 @@ The SMB of a glacier or ice sheet is defined as the net annual mass gain or loss
 CLM computes SMB using a surface energy balance (SEB) approach, in which melt depends on the combined radiative, turbulent, and conductive energy fluxes at the surface. In glaciology, SMB is typically defined as the net balance of both snow and ice accumulation and ablation. However, the SMB flux passed from CLM to CISM represents the mass balance of the underlying ice only, excluding transient changes in snow storage. Conceptually, CLM can be viewed as owning the snowpack, while CISM owns the underlying glacier ice. As a result, fluctuations in snow depth between 0 and 10 m water equivalent are not reflected in the SMB passed to CISM. In transient simulations, this treatment can delay the onset of accumulation or ablation signals in a glacier column by several decades.
 
 SMB is computed and sent to the CESM coupler regardless of whether and where CISM is operating. However, the effect of SMB terms on runoff fluxes differs depending on whether and where CISM is evolving in two-way-coupled mode. This is described by the variable *glc\_dyn\_runoff\_routing*, which is set from the CISM coupling information and is not a user-settable namelist option. In the code it is real-valued (between 0 and 1) to handle grid cells that only partially overlap the CISM domain, however, for simplicity we describe it here as logical. In typical cases where CISM is not evolving, *glc\_dyn\_runoff\_routing* will be false everywhere; in these cases, CISM's mass is not considered to be part of the coupled system. In cases where CISM is evolving and sending its own calving flux to the coupler, *glc\_dyn\_runoff\_routing* will be true over the CISM domain and false elsewhere.
+Note that the SMB typically is defined as the total accumulation of ice and snow, minus the total ablation. The SMB flux passed to CISM/DGLC is the mass balance for ice alone, not snow. We can think of CLM as owning the snow, whereas CISM/DGLC owns the underlying ice. Fluctuations in snow depth between 0 and 10 m water equivalent are not reflected in the SMB passed to CISM/DGLC. In transient runs, this can lead to delays of a few decades in the onset of accumulation or ablation in a given glacier column.
+
+SMB is computed and sent to the CESM coupler regardless of whether and where CISM/DGLC is operating. However, the effect of SMB terms on runoff fluxes differs depending on whether CISM/DGLC is used and the ice sheet is evolving in a two-way-coupled mode. This is described by the variable *glc\_dyn\_runoff\_routing*. (This is real-valued in the code to handle the edge case where a CLM grid cell partially overlaps with the CISM grid, but we describe it as a logical variable here for simplicity.) In cases where SGLC is used (ice sheet not evolving), *glc\_dyn\_runoff\_routing* will be false everywhere; in these cases, SGLC's mass is not considered to be part of the coupled system. In cases where CISM is used (evolving ice sheet) and sending its own calving flux to the coupler, *glc\_dyn\_runoff\_routing* will be true over the CISM domain and false elsewhere.
 
 Any snow capping (section :numref:`Runoff from glaciers and snow-capped surfaces`) is added to :math:`q_{ice,frz}`. Any liquid water (i.e., melted ice) below the snow pack in the glacier column is added to :math:`q_{ice,melt}`, then is converted back to ice to maintain a pure-ice column. Then the total SMB is given by :math:`q_{ice,tot}`:
 
