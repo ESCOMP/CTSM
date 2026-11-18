@@ -3403,7 +3403,7 @@ This boundary condition yields, for :math:`i = N_{levgrnd}`,
 .. math::
    :label: eq-0306
 
-   r_{i} = T_{i}^{n} + \alpha\frac{\Delta t}{c_{i}\Delta z_{i}}\left( F_{i} - \alpha F_{i - 1} \right)
+   r_{i} = T_{i}^{n} + \frac{\Delta t}{c_{i}\Delta z_{i}}\left( F_{i} - \alpha F_{i - 1} \right)
 
 where
 
