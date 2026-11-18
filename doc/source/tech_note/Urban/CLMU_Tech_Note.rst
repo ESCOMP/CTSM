@@ -619,7 +619,7 @@ Incident direct solar radiation
 
 Unlike the horizontal roof surface, the direct beam solar radiation received by the walls and the road must be adjusted for orientation and shadowing. The analytical solution given below follows :ref:`Masson (2000) <masson2000>`. First, let :math:`\theta` be the angle between the sun direction and the along-canyon axis and consider the case where the along-canyon axis is perpendicular to the sun direction (:math:`\theta = \frac{\pi}{2}`). In this case, as shown in :numref:`fig-solar-elevation-view`, if the solar zenith angle :math:`\mu` is greater than the critical solar zenith angle :math:`\mu_{0}` (:math:`\mu_{0} = \tan^{- 1}\left( \frac{W}{H} \right)`), the road is in full shade, and the sunlit wall is in partial sun. Conversely, if :math:`\mu` is less than :math:`{\overrightarrow{L}}_{uc} - \left( L_{uc} \uparrow - L_{atm} \downarrow \right) = 0`, the road is in partial sun and the sunlit wall is in full sun. Note that, radiatively, the pervious and impervious road are treated the same, although their albedos are specified separately and may differ (:numref:`table-input-data`).
 
-.. figure:: image4.jpeg
+.. figure:: solar_radiation.png
    :width: 5.08274in
    :height: 6.78125in
    :name: fig-solar-elevation-view
