@@ -44,6 +44,7 @@ CLM Technical Note
    Methane/CLM50_Tech_Note_Methane.rst
    Crop_Irrigation/CLM50_Tech_Note_Crop_Irrigation.rst
    Transient_Landcover/CLM50_Tech_Note_Transient_Landcover.rst
+   Land_Data/CLM50_Tech_Note_Land_Data.rst
    FATES/CLM50_Tech_Note_FATES.rst
    BVOCs/CLM50_Tech_Note_BVOCs.rst
    Dust/CLM50_Tech_Note_Dust.rst
