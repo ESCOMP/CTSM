@@ -2707,42 +2707,42 @@ The partial derivatives of the urban surface fluxes with respect to surface temp
 .. math::
    :label: eq-0251
 
-   \frac{\partial H_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}} \right)\frac{c_{roof}}{W_{roof}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
+   \frac{\partial H_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall} \right)\frac{c_{roof}}{W_{roof}}}{c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall}}
 
 .. math::
    :label: eq-0252
 
-   \frac{\partial H_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
+   \frac{\partial H_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + c_{roof} + c_{imprvrd} + c_{sunwall} + c_{shdwall} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall}}
 
 .. math::
    :label: eq-0253
 
-   \frac{\partial H_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}} \right)\frac{c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
+   \frac{\partial H_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + c_{roof} + c_{prvrd} + c_{sunwall} + c_{shdwall} \right)\frac{c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall}}
 
 .. math::
    :label: eq-0254
 
-   \frac{\partial H_{sunwall}}{\partial T_{g,sunwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{shdwall}}{W_{shdwall}} \right)\frac{c_{sunwall}}{W_{sunwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
+   \frac{\partial H_{sunwall}}{\partial T_{g,sunwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{shdwall} \right)\frac{c_{sunwall}}{W_{sunwall}}}{c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall}}
 
 .. math::
    :label: delH_shdwall_delTg_shdwall
 
-   \frac{\partial H_{shdwall}}{\partial T_{g,shdwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} \right)\frac{c_{shdwall}}{W_{shdwall}}}{c_{a}^{h} + \frac{c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{c_{imprvrd}}{W_{imprvrd}} + \frac{c_{sunwall}}{W_{sunwall}} + \frac{c_{shdwall}}{W_{shdwall}}}
+   \frac{\partial H_{shdwall}}{\partial T_{g,shdwall}} = \frac{\rho_{atm}C_{p}\left( c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} \right)\frac{c_{shdwall}}{W_{shdwall}}}{c_{a}^{h} + c_{roof} + c_{prvrd} + c_{imprvrd} + c_{sunwall} + c_{shdwall}}
 
 .. math::
    :label: eq-0534
 
-   \frac{\partial E_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{f_{wet,roof}c_{roof}}{W_{roof}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,roof}}{dT_{g,roof}}
+   \frac{\partial E_{roof}}{\partial T_{g,roof}} = \frac{\rho_{atm}\left( c_{a}^{w} + c_{prvrd} + f_{wet,imprvrd}c_{imprvrd} \right)\frac{f_{wet,roof}c_{roof}}{W_{roof}}}{c_{a}^{w} + f_{wet,roof}c_{roof} + c_{prvrd} + f_{wet,imprvrd}c_{imprvrd}}\frac{dq_{g,roof}}{dT_{g,roof}}
 
 .. math::
    :label: eq-0535
 
-   \frac{\partial E_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,prvrd}}{dT_{g,prvrd}}
+   \frac{\partial E_{prvrd}}{\partial T_{g,prvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + f_{wet,roof}c_{roof} + f_{wet,imprvrd}c_{imprvrd} \right)\frac{c_{prvrd}}{W_{prvrd}}}{c_{a}^{w} + f_{wet,roof}c_{roof} + c_{prvrd} + f_{wet,imprvrd}c_{imprvrd}}\frac{dq_{g,prvrd}}{dT_{g,prvrd}}
 
 .. math::
    :label: eq-0536
 
-   \frac{\partial E_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + \frac{f_{wet,\mspace{6mu} roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} \right)\frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{w} + \frac{f_{wet,roof}c_{roof}}{W_{roof}} + \frac{c_{prvrd}}{W_{prvrd}} + \frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}\frac{dq_{g,imprvrd}}{dT_{g,imprvrd}}
+   \frac{\partial E_{imprvrd}}{\partial T_{g,imprvrd}} = \frac{\rho_{atm}\left( c_{a}^{w} + f_{wet,roof}c_{roof} + c_{prvrd} \right)\frac{f_{wet,imprvrd}c_{imprvrd}}{W_{imprvrd}}}{c_{a}^{w} + f_{wet,roof}c_{roof} + c_{prvrd} + f_{wet,imprvrd}c_{imprvrd}}\frac{dq_{g,imprvrd}}{dT_{g,imprvrd}}
 
 .. math::
    :label: eq-0537
@@ -2754,7 +2754,7 @@ The partial derivatives of the urban surface fluxes with respect to surface temp
 
    \frac{\partial E_{shdwall}}{\partial T_{g,shdwall}} = 0
 
-The 2-m air temperature diagnostic is set equal to the UCL air temperature :math:`T_{ac}`\ and the 2-m specific humidity diagnostic is set equal to the UCL specific humidity :math:`q_{ac}`. Relative humidity of the UCL air is
+The 2-m air temperature diagnostic is set equal to the UCL air temperature :math:`T_{ac}` and the 2-m specific humidity diagnostic is set equal to the UCL specific humidity :math:`q_{ac}`. Relative humidity of the UCL air is
 
 .. math::
    :label: eq-0256
