@@ -3454,10 +3454,10 @@ The heating or cooling flux applied to the roof, and sunlit and shaded wall is
 .. math::
    :label: eq-0071
 
-   F_{heat} = \left\{ \begin{aligned}
-   & \left| \alpha F_{i = N_{levgrnd}}^{n} + (1 - \alpha)F_{i = N_{levgrnd}}^{n + 1} \right| T_{iB} < T_{\min} \\
-   & 0  T_{iB} \geq T_{\min}\{\}
-   \end{aligned} \middle| \right\}
+   F_{heat} = \left\{\begin{array}{lr}
+   | \alpha F_{i = N_{levgrnd}}^{n} + (1 - \alpha)F_{i = N_{levgrnd}}^{n + 1} | & T_{iB} < T_{\min} \\
+   0  & T_{iB} \geq T_{\min}
+   \end{array} \right\}
 
 
 
@@ -3466,10 +3466,10 @@ The heating or cooling flux applied to the roof, and sunlit and shaded wall is
 .. math::
    :label: eq-0072
 
-   F_{cool} = \left\{ \begin{aligned}
-   & \left| \alpha F_{i = N_{levgrnd}}^{n} + (1 - \alpha)F_{i = N_{levgrnd}}^{n + 1} \right| T_{iB} > T_{\min} \\
-   & 0 T_{iB} \leq T_{\min}\{\}
-   \end{aligned} \right\}
+   F_{cool} = \left\{\begin{array}{lr}
+   | \alpha F_{i = N_{levgrnd}}^{n} + (1 - \alpha)F_{i = N_{levgrnd}}^{n + 1} | & T_{iB} > T_{\max} \\
+   0 & T_{iB} \leq T_{\max}
+   \end{array} \right\}
 
 
 
