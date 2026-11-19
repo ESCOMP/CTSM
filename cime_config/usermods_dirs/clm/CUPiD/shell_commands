@@ -1,0 +1,60 @@
+#!/bin/bash
+# Make sure DOUT_S is turned on, as CUPiD only runs after st_archive
+./xmlchange DOUT_S=TRUE
+
+# Enable postprocessing which is what turns on running CUPiD for a case
+./xmlchange RUN_POSTPROCESSING=TRUE
+
+
+LND_ROOT=`./xmlquery --value COMP_ROOT_DIR_LND`
+
+CUPID_ROOT=`./xmlquery --value CUPID_ROOT`
+# When I first tried this I thought I needed the following...
+if [ -z "$CUPID_ROOT" ]; then
+   echo "CUPID settings aren't done yet"
+   exit 5
+fi
+
+#
+# Set CUPiD parameters for what a CTSM case needs to do
+#
+
+# Set the standard CUPiD baseline case to compare to
+./xmlchange CUPID_BASELINE_CASE='CESM_output_for_testing/ctsm5.4.002_clm6_BGCcrop_crujra_4x5_HIST'
+# NOTE: This is currently only valid on Derecho
+# TODO: Look into having this available under GDEX and available anywhere via download
+./xmlchange CUPID_BASELINE_ROOT='/glade/campaign/cesm/development/cross-wg/diagnostic_framework'
+./xmlchange CUPID_BASE_STARTDATE='1850-01-01'
+./xmlchange CUPID_BASE_CLIMO_END_YEAR=2023
+./xmlchange CUPID_BASE_CLIMO_N_YEAR=25
+./xmlchange CUPID_BASE_STOP_N=172
+./xmlchange CUPID_BASE_STOP_OPTION='nyears'
+
+#
+# General setup based on the start and length of the case being run
+#
+# TODO: Have this set based on what CLM_BLDNML_OPTS has
+#./xmlchange CUPID_RUN_TYPE=SP
+./xmlchange CUPID_STARTDATE='$RUN_STARTDATE'
+./xmlchange CUPID_STOP_N='$STOP_N'
+# TODO: Check that STOP_OPTION is nyears
+./xmlchange CUPID_STOP_OPTION='$STOP_OPTION'
+
+#
+# Setting for specific CUPiD diagnostics to run
+#
+./xmlchange CUPID_GEN_HTML=FALSE
+# TODO: Test with running more tasks
+#./xmlchange CUPID_NTASKS=1
+# TODO: Trigger these to be FALSE only when it is an I compset
+./xmlchange CUPID_RUN_ADF=FALSE
+./xmlchange CUPID_RUN_ALL=FALSE
+# Use the land_only example
+./xmlchange CUPID_EXAMPLE=land_only
+./xmlchange CUPID_RUN_LDF=FALSE
+./xmlchange CUPID_RUN_ILAMB=FALSE
+# NOTE: CUPID_RUN_LND must be set to TRUE for either LDF or ILAMB
+#       and you should pick one or the other as LND needs key-metrics from one or the other
+./xmlchange CUPID_RUN_LND=TRUE
+# TODO: Test if ROF can be run
+./xmlchange CUPID_RUN_ROF=FALSE

@@ -1,0 +1,5 @@
+#!/bin/bash
+# Setup for a IHist case to start in 2000 and run for 5 years
+./xmlchange RUN_STARTDATE=2000-01-01
+./xmlchange STOP_OPTION=nyears
+./xmlchange STOP_N=5
