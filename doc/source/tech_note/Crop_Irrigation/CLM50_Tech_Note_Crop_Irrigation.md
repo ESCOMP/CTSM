@@ -956,7 +956,7 @@ Note that $w_{target}$ is truly supposed to give the target soil moisture value 
 
 $N_{irr}$ is the index of the soil layer corresponding to a specified depth $z_{irrig}$ ({numref}`Table Irrigation parameters`) and $\Delta z_{j}$ is the thickness of the soil layer in layer $j$ (section {numref}`Vertical Discretization`). $\theta_{j}$ is the volumetric soil moisture in layer $j$ (section {numref}`Soil Water`). $\theta_{target}$ and $\theta_{wilt}$ are the target and wilting point volumetric soil moisture values, respectively, and are determined by inverting {eq}`7.94` using soil matric potential parameters $\Psi_{target}$ and $\Psi_{wilt}$ ({numref}`Table Irrigation parameters`). After the soil moisture deficit $D_{irrig}$ is calculated, irrigation in an amount equal to $\frac{D_{irrig}}{T_{irrig}}$ (mm/s) is applied uniformly over the irrigation period $T_{irrig}$ (s). Irrigation water is applied directly to the ground surface, bypassing canopy interception (i.e., added to ${q}_{grnd,liq}$: section {numref}`Canopy Water`).
 
-To conserve mass, irrigation is removed from river water storage (Chapter {numref}`rst_MOSART`). When river water storage is inadequate to meet irrigation demand, there are two options: 1) the additional water can be removed from the ocean model, or 2) the irrigation demand can be reduced such that river water storage is maintained above a specified threshold.
+To conserve mass, irrigation is removed from river water storage (Chapter {numref}`rst_MOSART`). When river water storage is inadequate to meet irrigation demand, there are two options. The default is to simply ignore the deficit, taking water from the ocean as needed to avoid non-conservation of mass. Optionally, the irrigation demand can be reduced such that river water storage is maintained above a specified threshold. This is accomplished by setting `limit_irrigation_if_rof_enabled = .true.` in `user_nl_clm`. With the latter method, you can set a custom value for `irrig_river_volume_threshold`, which is the minimum fraction of original river volume that must remain after irrigation withdrawal (see {numref}`Table Irrigation parameters`). Under the default unlimited irrigation, `irrig_river_volume_threshold` is ignored, and the model is allowed to take 100% of the river volume for irrigation.
 
 (table irrigation parameters)=
 
@@ -979,6 +979,14 @@ To conserve mass, irrigation is removed from river water storage (Chapter {numre
   - `irrig_target_smp`
   - mm
   - -3400
+* - (none)
+  - `limit_irrigation_if_rof_enabled`
+  - boolean
+  - `.false.`
+* - (none)
+  - `irrig_river_volume_threshold`
+  - unitless [0-1]
+  - 0.1
 * - $\Psi_{wilt}$
   - (Hard-coded)
   - mm
