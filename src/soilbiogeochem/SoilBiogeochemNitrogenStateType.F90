@@ -66,6 +66,8 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: totn_col                            (:) ! (gN/m2) total column nitrogen, incl veg
      real(r8), pointer :: totecosysn_col                      (:) ! (gN/m2) total ecosystem nitrogen, incl veg  
      real(r8), pointer :: totn_grc                            (:) ! (gN/m2) total gridcell nitrogen
+
+
      
      ! Matrix-cn
      real(r8), pointer :: matrix_cap_decomp_npools_col    (:,:)   ! col (gN/m2) N capacity in decomposing (litter, cwd, soil) N pools in dimension (col,npools)
@@ -79,6 +81,10 @@ module SoilBiogeochemNitrogenStateType
      real(r8), pointer :: hori_tran_nacc                  (:,:,:) ! col (gN/m3/yr) accumulated N transport between pools at the same level in dimension(col,nlev,ntransfers)
      type(sparse_matrix_type) :: AKXnacc                          ! col (gN/m3/yr) accumulated N transfers from j to i (col,i,j) per year in dimension(col,nlev*npools,nlev*npools) in sparse matrix type
      type(vector_type) :: matrix_Ninter                           ! col (gN/m3) vertically-resolved decomposing (litter, cwd, soil) N pools in dimension(col,nlev*npools) in vector type
+
+     ! rain pulse for soil NOx 
+     real(r8), pointer :: ldry_vr_col                              (:,:)   ! dry period for rain pulses for NOx from nitrification [hours]
+     real(r8), pointer :: pfactor_vr_col                              (:,:)   ! pulsing factor [unitless]
 
    contains
 
@@ -190,7 +196,10 @@ contains
     allocate(this%totn_col                               (begc:endc)) ; this%totn_col                            (:) = nan
     allocate(this%totecosysn_col                         (begc:endc)) ; this%totecosysn_col                      (:) = nan
     allocate(this%totn_grc                 (bounds%begg:bounds%endg)) ; this%totn_grc                            (:) = nan
-    
+ !soil nox-rain pulse
+    allocate(this%ldry_vr_col          (begc:endc,1:nlevdecomp_full)) ; this%ldry_vr_col                       (:,:) = nan
+    allocate(this%pfactor_vr_col      (begc:endc,1:nlevdecomp_full))  ; this%pfactor_vr_col                    (:,:) = nan 
+
   end subroutine InitAllocate
 
   !------------------------------------------------------------------------
@@ -505,6 +514,10 @@ contains
              do j = 1, nlevdecomp_full
                 this%smin_nh4_vr_col(c,j) = 0._r8
                 this%smin_no3_vr_col(c,j) = 0._r8
+                !soil nox-rail pulse
+                this%ldry_vr_col(c,j) = 0._r8 
+                this%pfactor_vr_col(c,j) = 0._r8
+
              end do
              this%smin_nh4_col(c) = 0._r8
              this%smin_no3_col(c) = 0._r8
@@ -956,6 +969,9 @@ contains
           if (use_nitrif_denitrif) then
              this%smin_no3_vr_col(i,j) = value_column
              this%smin_nh4_vr_col(i,j) = value_column
+             !soilnox-rain pulse
+             this%ldry_vr_col(i,j)     = value_column 
+             this%pfactor_vr_col(i,j)  = value_column
           end if
        end do
     end do

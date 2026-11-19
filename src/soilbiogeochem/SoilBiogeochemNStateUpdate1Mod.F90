@@ -8,7 +8,7 @@ module SoilBiogeochemNStateUpdate1Mod
   use shr_kind_mod                       , only: r8 => shr_kind_r8
   use clm_time_manager                   , only : get_step_size_real
   use clm_varpar                         , only : nlevdecomp, ndecomp_cascade_transitions
-  use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : iulog, use_nitrif_denitrif, use_crop, use_soil_nox
   use SoilBiogeochemDecompCascadeConType , only : use_soil_matrixcn
   use clm_varcon                         , only : nitrif_n2o_loss_frac
   use SoilBiogeochemStateType            , only : soilbiogeochem_state_type
@@ -243,17 +243,37 @@ contains
 
                   ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) -  nf%sminn_to_plant_fun_no3_vr_col(c,j)*dt
                end if
-             
 
+               if (use_soil_nox) then
                ! Account for nitrification fluxes
-               ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%f_nit_vr_col(c,j) * dt
+                  ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%f_nit_vr_col(c,j) * dt
 
-               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt &
-                    * (1._r8 - nitrif_n2o_loss_frac)
+               ! Adding nitrified NH4 to NO3
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt
+
+               !Deducting N2O leakage from nitrification
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2o_nit_vr_col(c,j) * dt
+               ! Deducting NOx leakage from nitrification. Only NOx_nit not trapped in the canopy leaves the system
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_nox_nit_atmos_vr_col(c,j) * dt
 
                ! Account for denitrification fluxes
-               ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_denit_vr_col(c,j) * dt
+               ! Deducting denitrification fluxes (denit accounts for N2O denit, N2 and NOx denit)
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2o_denit_vr_col(c,j) * dt
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_n2_denit_vr_col(c,j) * dt
+               ! Not all NOx denit leaves the system, only f_nox_denit_atmos         
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_nox_denit_atmos_vr_col(c,j)* dt
+               else             
+                  !ORIGINAL CODE 
+                  ! Account for nitrification fluxes
+                  ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) - nf%f_nit_vr_col(c,j) * dt
 
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) + nf%f_nit_vr_col(c,j) * dt &
+                       * (1._r8 - nitrif_n2o_loss_frac)
+
+               ! Account for denitrification fluxes
+                  ns%smin_no3_vr_col(c,j) = ns%smin_no3_vr_col(c,j) - nf%f_denit_vr_col(c,j) * dt
+               endif
+               
                ! flux that prevents N limitation (when Carbon_only is set; put all into NH4)
                ns%smin_nh4_vr_col(c,j) = ns%smin_nh4_vr_col(c,j) + nf%supplement_to_sminn_vr_col(c,j)*dt
 
