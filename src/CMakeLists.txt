@@ -44,14 +44,6 @@ link_libraries(${ESMF_INTERFACE_LINK_LIBRARIES})
 add_subdirectory(${SRCROOT}/share/src csm_share)
 add_subdirectory(${SRCROOT}/share/unit_test_stubs/util csm_share_stubs)
 
-# Add files needed from CMEPS
-list(APPEND drv_sources_needed
-  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/glc_elevclass_mod.F90
-  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_dust_emis_mod.F90
-  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_expr_parser_mod.F90
-  ${SRCROOT}/components/cmeps/cesm/nuopc_cap_share/shr_fire_emis_mod.F90
-)
-
 # Add CLM source directories
 add_subdirectory(${CLM_ROOT}/src/utils clm_utils)
 add_subdirectory(${CLM_ROOT}/src/biogeochem clm_biogeochem)
@@ -91,7 +83,7 @@ remove_source_file("shr_pio_mod.F90" share_sources)
 
 # Build libraries containing stuff needed for the unit tests.
 # Eventually, these add_library calls should probably be distributed into the correct location, rather than being in this top-level CMakeLists.txt file.
-add_library(csm_share ${share_sources} ${drv_sources_needed})
+add_library(csm_share ${share_sources})
 declare_generated_dependencies(csm_share "${share_genf90_sources}")
 add_library(clm ${clm_sources})
 declare_generated_dependencies(clm "${clm_genf90_sources}")
