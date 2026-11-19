@@ -595,8 +595,8 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
      Mountain glaciers: 0 (no temporal buffering)
      Currently-unused region 1: -1 (unset)
      Greenland: 0 (no temporal buffering)
-     Antarctica: 0 (no temporal buffering) -->
-<glacier_region_ice_runoff_residence_time>0.d00,-1.d00,0.d00,0.d00</glacier_region_ice_runoff_residence_time>
+     Antarctica: 10 years -->
+<glacier_region_ice_runoff_residence_time>0.d00,-1.d00,0.d00,10.d00</glacier_region_ice_runoff_residence_time>
 
 <!-- This parameter is tied (in a scientific sense) to h2osno_max: For large
      values of h2osno_max, glc_snow_persistence_max_days should be 0; for small

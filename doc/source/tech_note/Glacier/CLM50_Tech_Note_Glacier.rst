@@ -103,8 +103,9 @@ The default behaviors for the world's glacier and ice sheet regions are describe
  | Greenland     | Virtual       | Replaced by   | Remains ice   | None          |
  |               |               | ice           |               |               |
  +---------------+---------------+---------------+---------------+---------------+
- | Antarctica    | Multiple      | Replaced by   | Remains ice   | None          |
- |               |               | ice           |               |               |
+ | Antarctica    | Multiple      | Replaced by   | Remains ice   | 10-year       |
+ |               |               | ice           |               | residence     |
+ |               |               |               |               | time          |
  +---------------+---------------+---------------+---------------+---------------+
  | All others    | Single        | Remains in    | Melted        | None          |
  |               |               | place         |               |               |
