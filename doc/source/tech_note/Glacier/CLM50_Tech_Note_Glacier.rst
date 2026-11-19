@@ -84,7 +84,7 @@ The world's glaciers and ice sheets are broken down into a number of different r
 
    b. Ice runoff from snow capping is melted (generating a negative sensible heat flux) and runs off as liquid. This matches the behavior for non-glacier columns. This is appropriate in regions that have little iceberg calving in reality. This can be important to avoid unrealistic cooling of the ocean and consequent runaway sea ice growth.
 
-#. Temporal buffering of ice runoff that is sent to the river model as ice (i.e., ice runoff that is not melted as described above). Note that this ice runoff primarily comes from snow capping, but there may be other small contributing terms as well:
+#. Temporal buffering of ice runoff that is sent to the river model as ice (i.e., ice runoff that is not melted as described above). This includes both positive ice runoff (which primarily comes from snow capping, but there may be other small contributing terms as well) and negative ice runoff (which can arise during glacial melt as discussed elsewhere in this section, and possibly other sources); it does **not** include the ice runoff generated from the conservation corrections for dynamic landunits:
 
    a. No temporal buffering: the gridcell's ice runoff is sent to the river model instantaneously.
 
