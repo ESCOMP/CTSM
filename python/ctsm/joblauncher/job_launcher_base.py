@@ -116,6 +116,29 @@ class JobLauncherBase(object):
         """
         raise NotImplementedError
 
+    def supports_waiting(self):
+        """Returns whether this launcher can wait for a launched process to complete
+
+        Only launchers that run jobs synchronously under this process can support this.
+        For launchers whose job outlives us (e.g. qsub) there is nothing to wait for.
+        """
+        return False
+
+    def wait_for_processes_to_complete(self):
+        """Wait for all processes started by run_command to complete
+
+        Returns the first nonzero return code encountered, in launch order, or 0 if all
+        of them succeeded (or if none was launched, e.g. after a dry run).
+
+        Only launchers that run jobs synchronously under this process can
+        support this. For launchers whose job outlives us (e.g. qsub) there is
+        nothing to wait for, so this raises.
+        """
+        raise RuntimeError(
+            "Waiting for the launched job(s) is only supported with the no-batch "
+            "job launcher; this is a {}".format(type(self).__name__)
+        )
+
     def __repr__(self):
         return (
             type(self).__name__ + "(queue='{queue}', "
