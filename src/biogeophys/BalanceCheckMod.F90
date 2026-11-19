@@ -284,10 +284,14 @@ contains
     ! added to the gridcell's total water content in order for that total to be conserved
     ! across dynamic landunit adjustments; this water is released gradually to the dynbal
     ! fluxes.
+    !
+    ! Similarly, add the ice runoff storage pool, which holds ice runoff that will be
+    ! released gradually to the ice runoff sent to the coupler (qflx_rofice_grc).
     do g = begg, endg
        wb_grc(g) = wb_grc(g) &
             + waterstate_inst%dynbal_liq_storage_grc(g) &
-            + waterstate_inst%dynbal_ice_storage_grc(g)
+            + waterstate_inst%dynbal_ice_storage_grc(g) &
+            + waterstate_inst%ice_runoff_storage_grc(g)
     end do
 
     ! Map wb_grc to beginning/ending water balance according to flag
@@ -531,7 +535,7 @@ contains
           qflx_drain_grc          =>    waterlnd2atm_inst%qflx_rofliq_qsub_grc  , & ! Input:  [real(r8) (:)   ]  grid cell-level drainage (mm H20 /s)
           qflx_streamflow_grc     =>    waterlnd2atm_inst%qflx_rofliq_stream_grc, & ! Input: [real(r8) (:)   ] streamflow [mm H2O/s]
           qflx_ice_runoff_col     =>    waterlnd2atm_inst%qflx_ice_runoff_col   , & ! Input:  [real(r8) (:)   ] column level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
-          qflx_ice_runoff_grc     =>    waterlnd2atm_inst%qflx_rofice_grc       , & ! Input:  [real(r8) (:)   ] grid cell-level solid runoff from snow capping and from excess ice in soil (mm H2O /s)
+          qflx_rofice_grc         =>    waterlnd2atm_inst%qflx_rofice_grc       , & ! Input:  [real(r8) (:)   ] grid cell-level ice runoff sent to the coupler, after any temporal buffering and including dynbal ice runoff (mm H2O /s)
           qflx_sl_top_soil        =>    waterflux_inst%qflx_sl_top_soil_col     , & ! Input:  [real(r8) (:)   ]  liquid water + ice from layer above soil to top soil layer or sent to qflx_qrgwl (mm H2O/s)
 
           qflx_sfc_irrig_col      =>    waterflux_inst%qflx_sfc_irrig_col       , & ! Input:  [real(r8) (:)   ]  column level irrigation flux (mm H2O /s)
@@ -680,7 +684,7 @@ contains
                - qflx_qrgwl_grc(g)  &
                - qflx_drain_grc(g)  &
                - qflx_drain_perched_grc(g)  &
-               - qflx_ice_runoff_grc(g)  &
+               - qflx_rofice_grc(g)  &
                - qflx_snwcp_discarded_liq_grc(g)  &
                - qflx_snwcp_discarded_ice_grc(g)) * dtime
 
@@ -726,7 +730,7 @@ contains
              write(iulog,*)'qflx_surf                 = ',qflx_surf_grc(indexg)*dtime
              write(iulog,*)'qflx_qrgwl                = ',qflx_qrgwl_grc(indexg)*dtime
              write(iulog,*)'qflx_drain                = ',qflx_drain_grc(indexg)*dtime
-             write(iulog,*)'qflx_ice_runoff           = ',qflx_ice_runoff_grc(indexg)*dtime
+             write(iulog,*)'qflx_rofice               = ',qflx_rofice_grc(indexg)*dtime
              write(iulog,*)'qflx_snwcp_discarded_ice  = ',qflx_snwcp_discarded_ice_grc(indexg)*dtime
              write(iulog,*)'qflx_snwcp_discarded_liq  = ',qflx_snwcp_discarded_liq_grc(indexg)*dtime
              write(iulog,*)'deltawb                   = ',endwb_grc(indexg)-begwb_grc(indexg)
