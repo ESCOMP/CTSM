@@ -62,7 +62,7 @@ It is also possible to run CESM with an evolving ice sheet (CISM). In this case,
 Glacier regions and their behaviors
 -----------------------------------
 
-The world's glaciers and ice sheets are broken down into a number of different regions (three by default) that differ in three respects:
+The world's glaciers and ice sheets are broken down into a number of different regions (three by default) that differ in four respects:
 
 #. Whether the gridcell's glacier land unit contains:
 
@@ -84,25 +84,31 @@ The world's glaciers and ice sheets are broken down into a number of different r
 
    b. Ice runoff from snow capping is melted (generating a negative sensible heat flux) and runs off as liquid. This matches the behavior for non-glacier columns. This is appropriate in regions that have little iceberg calving in reality. This can be important to avoid unrealistic cooling of the ocean and consequent runaway sea ice growth.
 
+#. Temporal buffering of ice runoff that is sent to the river model as ice (i.e., ice runoff that is not melted as described above). Note that this ice runoff primarily comes from snow capping, but there may be other small contributing terms as well:
+
+   a. No temporal buffering: the gridcell's ice runoff is sent to the river model instantaneously.
+
+   b. Ice runoff is temporally buffered: the gridcell's ice runoff first goes into a storage pool, which is drained to the river model at a rate equal to the pool's current storage divided by a specified residence time (set in years via the ``glacier_region_ice_runoff_residence_time`` namelist parameter). This smooths out large pulses of ice runoff (such as those that can arise from snow capping) while still conserving mass over time. This behavior cannot be combined with the ``Ice runoff = Melted`` behavior, since there is little or no ice runoff to buffer in regions with that behavior.
+
 The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM/DGLC. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM/DGLC domain. (This treatment of the non-Greenland portion of the CISM/DGLC domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
 
 .. _Table Glacier region behaviors:
 
 .. table:: Glacier region behaviors
 
- +---------------+---------------+---------------+---------------+
- | Region        | Elevation     | Glacial melt  | Ice runoff    |
- |               | classes       |               |               |
- +===============+===============+===============+===============+
- | Greenland     | Virtual       | Replaced by   | Remains ice   |
- |               |               | ice           |               |
- +---------------+---------------+---------------+---------------+
- | Antarctica    | Multiple      | Replaced by   | Remains ice   |
- |               |               | ice           |               |
- +---------------+---------------+---------------+---------------+
- | All others    | Single        | Remains in    | Melted        |
- |               |               | place         |               |
- +---------------+---------------+---------------+---------------+
+ +---------------+---------------+---------------+---------------+---------------+
+ | Region        | Elevation     | Glacial melt  | Ice runoff    | Ice runoff    |
+ |               | classes       |               |               | buffering     |
+ +===============+===============+===============+===============+===============+
+ | Greenland     | Virtual       | Replaced by   | Remains ice   | None          |
+ |               |               | ice           |               |               |
+ +---------------+---------------+---------------+---------------+---------------+
+ | Antarctica    | Multiple      | Replaced by   | Remains ice   | None          |
+ |               |               | ice           |               |               |
+ +---------------+---------------+---------------+---------------+---------------+
+ | All others    | Single        | Remains in    | Melted        | None          |
+ |               |               | place         |               |               |
+ +---------------+---------------+---------------+---------------+---------------+
 
 .. note::
 

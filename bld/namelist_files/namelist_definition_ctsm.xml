@@ -635,6 +635,29 @@ Allowed values are:
 Only applies when melt_non_icesheet_ice_runoff is .true.
 </entry>
 
+<entry id="glacier_region_ice_runoff_residence_time" type="real(10)" category="clm_physics"
+       group="clm_glacier_behavior" >
+Residence time (years) of the ice runoff storage pool for each glacier region (GLACIER_REGION
+in surface dataset). First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
+second to GLACIER_REGION with ID 1, etc.
+
+A value of 0 means that ice runoff is not temporally buffered in this region: ice runoff is
+sent to the river model instantaneously. A value greater than 0 means that ice runoff is
+temporally buffered: it first goes into a storage pool, which is drained to the river model
+with a turnover rate of 1 / glacier_region_ice_runoff_residence_time. This can be used to
+smooth out large pulses of ice runoff (e.g., from snow capping).
+
+A value of -1 is a place-holder for non-existent regions (analogous to 'UNSET' for
+glacier_region_behavior and similar variables). Values must be >= 0 for all regions present in
+the surface dataset; it is an error if any such region has a negative (e.g., unset) value.
+
+A non-zero value cannot be combined with glacier_region_ice_runoff_behavior='melted', because
+in regions where ice runoff is melted, there is little or no ice runoff that could be
+temporally buffered. (Note that this rationale does not hold if melt_non_icesheet_ice_runoff is
+.false., because then the 'melted' behavior is ignored; however, this combination is still
+disallowed.)
+</entry>
+
 <entry id="glc_snow_persistence_max_days" type="integer" category="clm_physics"
        group="clm_inparm" valid_values="" >
 Number of days before one considers the perennially snow-covered point 'land ice'

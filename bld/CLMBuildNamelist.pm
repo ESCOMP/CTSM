@@ -2284,6 +2284,7 @@ sub setup_logic_glacier {
               'glc_use_antarctica'=>$opts->{'glc_use_antarctica'});
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_melt_behavior');
   add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_behavior');
+  add_default($opts,  $nl_flags->{'inputdata_rootdir'}, $definition, $defaults, $nl, 'glacier_region_ice_runoff_residence_time');
 }
 
 #-------------------------------------------------------------------------------

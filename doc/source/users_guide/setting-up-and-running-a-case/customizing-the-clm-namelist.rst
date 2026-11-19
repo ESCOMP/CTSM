@@ -286,6 +286,7 @@ Example 1-2. Default CLM Namelist
     &clm_glacier_behavior
      glacier_region_behavior = 'single_at_atm_topo','UNSET','virtual','multiple'
      glacier_region_ice_runoff_behavior = 'melted','UNSET','remains_ice','remains_ice'
+     glacier_region_ice_runoff_residence_time = 0.d00,-1.d00,0.d00,0.d00
      glacier_region_melt_behavior = 'remains_in_place','UNSET','replaced_by_ice','replaced_by_ice'
     /
     &crop_inparm

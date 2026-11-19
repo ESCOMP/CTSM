@@ -13,6 +13,9 @@ module test_glcBehavior
   use glcBehaviorMod, only : glc_behavior_type
   use ColumnType, only : col
   use unittestGlcMec
+  use unittestTimeManagerMod, only : unittest_timemgr_setup, unittest_timemgr_teardown
+  use unittestUtils, only : endrun_msg
+  use shr_const_mod, only : SHR_CONST_CDAY
 
   implicit none
 
@@ -36,6 +39,8 @@ contains
 
     call unittest_subgrid_teardown()
     call teardown_elevation_classes()
+    ! Safe to call even if the time manager wasn't set up in this test
+    call unittest_timemgr_teardown()
   end subroutine tearDown
 
   function create_glc_behavior_all_collapse() result(glc_behavior)
@@ -63,7 +68,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['multiple'], &
          glacier_region_melt_behavior_str = ['replaced_by_ice'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -82,7 +88,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['virtual'], &
          glacier_region_melt_behavior_str = ['replaced_by_ice'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertFalse(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -101,7 +108,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['replaced_by_ice'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertTrue(glc_behavior%get_collapse_to_atm_topo(bounds%begg))
@@ -120,7 +128,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['replaced_by_ice'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertTrue(glc_behavior%melt_replaced_by_ice_grc(bounds%begg))
   end subroutine init_replaced_behaviorIsCorrect
@@ -137,7 +146,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['remains_in_place'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertFalse(glc_behavior%melt_replaced_by_ice_grc(bounds%begg))
   end subroutine init_remains_behaviorIsCorrect
@@ -154,7 +164,8 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['replaced_by_ice'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg))
   end subroutine init_remainsIce_behaviorIsCorrect
@@ -171,23 +182,77 @@ contains
          glacier_region_map = [0], &
          glacier_region_behavior_str = ['single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['remains_in_place'], &
-         glacier_region_ice_runoff_behavior_str = ['melted'])
+         glacier_region_ice_runoff_behavior_str = ['melted'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
 
     @assertTrue(glc_behavior%ice_runoff_melted_grc(bounds%begg))
   end subroutine init_melted_behaviorIsCorrect
 
   @Test
-  subroutine init_multipleGridCells(this)
+  subroutine init_iceRunoffResidenceTimeZero_notBuffered(this)
+    ! With a residence time of 0, ice runoff should not be buffered
     class(TestGlcBehavior), intent(inout) :: this
     type(glc_behavior_type) :: glc_behavior
 
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8])
+
+    @assertFalse(glc_behavior%ice_runoff_buffered_grc(bounds%begg))
+    ! ice_runoff_turnover_rate_grc doesn't matter here
+  end subroutine init_iceRunoffResidenceTimeZero_notBuffered
+
+  @Test
+  subroutine init_iceRunoffResidenceTimePositive_rateIsCorrect(this)
+    ! With a residence time > 0, ice runoff should be buffered with correct turnover rate
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    real(r8), parameter :: residence_time = 2._r8  ! years
+    real(r8) :: expected_rate
+
+    call setup_single_veg_patch(0)
+    ! Default unit test calendar is noleap
+    call unittest_timemgr_setup()
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [residence_time])
+    call glc_behavior%InitIceRunoffTurnoverRate()
+
+    expected_rate = 1._r8 / (residence_time * 365._r8 * SHR_CONST_CDAY)
+
+    @assertTrue(glc_behavior%ice_runoff_buffered_grc(bounds%begg))
+    @assertEqual(expected_rate, glc_behavior%ice_runoff_turnover_rate_grc(bounds%begg), tolerance=tol)
+  end subroutine init_iceRunoffResidenceTimePositive_rateIsCorrect
+
+  @Test
+  subroutine init_multipleGridCells(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    real(r8), parameter :: residence_time = 2._r8  ! years
+    real(r8) :: expected_rate
+
     call setup_ncells_single_veg_patch(ncells = 3, pft_type = 0)
+    ! Default unit test calendar is noleap
+    call unittest_timemgr_setup()
 
     call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
          glacier_region_map = [0, 1, 0], &
          glacier_region_behavior_str = ['multiple', 'virtual '], &
          glacier_region_melt_behavior_str = ['replaced_by_ice ', 'remains_in_place'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'melted     '])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'melted     '], &
+         glacier_region_ice_runoff_residence_time = [residence_time, 0._r8])
+    call glc_behavior%InitIceRunoffTurnoverRate()
+
+    expected_rate = 1._r8 / (residence_time * 365._r8 * SHR_CONST_CDAY)
 
     @assertFalse(glc_behavior%has_virtual_columns_grc(bounds%begg))
     @assertTrue(glc_behavior%has_virtual_columns_grc(bounds%begg + 1))
@@ -200,7 +265,76 @@ contains
     @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg))
     @assertTrue(glc_behavior%ice_runoff_melted_grc(bounds%begg + 1))
     @assertFalse(glc_behavior%ice_runoff_melted_grc(bounds%begg + 2))
+
+    @assertTrue(glc_behavior%ice_runoff_buffered_grc(bounds%begg))
+    @assertFalse(glc_behavior%ice_runoff_buffered_grc(bounds%begg + 1))
+    @assertTrue(glc_behavior%ice_runoff_buffered_grc(bounds%begg + 2))
+
+    ! ice_runoff_turnover_rate only matters for grid cells where ice_runoff_buffered_grc
+    ! is true
+    @assertEqual(expected_rate, glc_behavior%ice_runoff_turnover_rate_grc(bounds%begg), tolerance=tol)
+    @assertEqual(expected_rate, glc_behavior%ice_runoff_turnover_rate_grc(bounds%begg + 2), tolerance=tol)
   end subroutine init_multipleGridCells
+
+  @Test
+  subroutine init_unsetIceRunoffResidenceTime_aborts(this)
+    ! An unset residence time for a region present in the map should abort
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    character(len=:), allocatable :: expected_msg
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [-1._r8])
+
+    expected_msg = endrun_msg('ERROR: glacier_region_ice_runoff_residence_time not specified or negative')
+    @assertExceptionRaised(expected_msg)
+  end subroutine init_unsetIceRunoffResidenceTime_aborts
+
+  @Test
+  subroutine init_unsetIceRunoffResidenceTimeForAbsentRegion_ok(this)
+    ! An unset residence time is allowed for a region that is not present in the map
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple', 'UNSET   '], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice', 'UNSET          '], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'UNSET      '], &
+         glacier_region_ice_runoff_residence_time = [2._r8, -1._r8])
+
+    ! The main point of this test is that the above call doesn't abort; we also make sure
+    ! that region 0's behavior was set correctly
+    @assertTrue(glc_behavior%ice_runoff_buffered_grc(bounds%begg))
+  end subroutine init_unsetIceRunoffResidenceTimeForAbsentRegion_ok
+
+  @Test
+  subroutine init_meltedWithNonzeroIceRunoffResidenceTime_aborts(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    character(len=:), allocatable :: expected_msg
+
+    call setup_single_veg_patch(0)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['remains_in_place'], &
+         glacier_region_ice_runoff_behavior_str = ['melted'], &
+         glacier_region_ice_runoff_residence_time = [1._r8])
+
+    expected_msg = endrun_msg('ERROR: Cannot combine glacier_region_ice_runoff_behavior = "melted"'// &
+         ' with non-zero glacier_region_ice_runoff_residence_time')
+    @assertExceptionRaised(expected_msg)
+  end subroutine init_meltedWithNonzeroIceRunoffResidenceTime_aborts
 
   ! ------------------------------------------------------------------------
   ! Tests of update_glc_classes
@@ -287,7 +421,8 @@ contains
          glacier_region_map = [0, 1, 0], &
          glacier_region_behavior_str = ['multiple          ', 'single_at_atm_topo'], &
          glacier_region_melt_behavior_str = ['remains_in_place', 'remains_in_place'], &
-         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'remains_ice'])
+         glacier_region_ice_runoff_behavior_str = ['remains_ice', 'remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [0._r8, 0._r8])
 
     ! Exercise
 
