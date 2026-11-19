@@ -167,6 +167,38 @@ class TestSinglePointCase(unittest.TestCase):
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "values for --dompft should*"):
             single_point.check_dom_pft()
 
+    def test_check_dom_pft_message_lower_bound(self):
+        """
+        Test check_dom_pft
+        The error for an out-of-range dom_pft should give 0 (bare ground) as the lower bound
+        """
+        single_point = SinglePointCase(
+            plat=self.plat,
+            plon=self.plon,
+            site_name=self.site_name,
+            create_domain=self.create_domain,
+            create_surfdata=self.create_surfdata,
+            create_landuse=self.create_landuse,
+            create_datm=self.create_datm,
+            create_user_mods=self.create_user_mods,
+            dom_pft=self.dom_pft,
+            evenly_split_cropland=self.evenly_split_cropland,
+            pct_pft=self.pct_pft,
+            num_pft=self.num_pft,
+            cth=self.cth,
+            cbh=self.cbh,
+            include_nonveg=self.include_nonveg,
+            uni_snow=self.uni_snow,
+            cap_saturation=self.cap_saturation,
+            out_dir=self.out_dir,
+            overwrite=self.overwrite,
+        )
+        single_point.dom_pft = [MAX_PFT_GENERICCROPS, 36, -1]
+        with self.assertRaisesRegex(
+            argparse.ArgumentTypeError, "values for --dompft should be between 0 and"
+        ):
+            single_point.check_dom_pft()
+
     def test_check_dom_pft_numpft(self):
         """
         Test check_dom_pft

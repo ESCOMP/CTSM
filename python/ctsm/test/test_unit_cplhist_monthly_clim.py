@@ -22,6 +22,7 @@ import numpy as np
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm import unit_testing
+from ctsm.constants import MONTHS_PER_YEAR
 from ctsm.cplhist import cplhist_monthly_clim as mclim
 
 # Allow names that pylint doesn't like, because otherwise I find it hard
@@ -116,6 +117,11 @@ class TestYearMonths(unittest.TestCase):
                 self.assertEqual(
                     mclim.year_months(year, year), [(year, month) for month in range(1, 13)]
                 )
+
+    def test_noleapDaysMatchMonthsPerYear(self):
+        """NOLEAP_DAYS has one entry per month, so it agrees with MONTHS_PER_YEAR"""
+        self.assertEqual(len(mclim.NOLEAP_DAYS), MONTHS_PER_YEAR)
+        self.assertEqual(len(mclim.year_months(2001, 2001)), MONTHS_PER_YEAR)
 
 
 #

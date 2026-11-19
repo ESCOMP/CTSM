@@ -41,6 +41,7 @@ import sys
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 
 from ctsm.args_utils import comma_separated_list
+from ctsm.constants import MONTHS_PER_YEAR
 from ctsm.ctsm_logging import (
     setup_logging_pre_config,
     add_logging_args,
@@ -127,7 +128,9 @@ def year_months(begyr, endyr):
     """
     List of (year, month) to process, from BEGYEAR-01 to ENDYEAR-12
     """
-    return [(year, month) for year in range(begyr, endyr + 1) for month in range(1, 13)]
+    return [
+        (year, month) for year in range(begyr, endyr + 1) for month in range(1, MONTHS_PER_YEAR + 1)
+    ]
 
 
 def index_daily_files(indir, case):
@@ -748,7 +751,7 @@ class CplhistMonthlyClim:  # pylint: disable=too-many-instance-attributes
                 [mon_file(self.mondir, year, month) for year in range(begyr, endyr + 1)],
                 clim_file(self.mondir, month),
             )
-            for month in range(1, 13)
+            for month in range(1, MONTHS_PER_YEAR + 1)
         ]
         run_jobs(commands, self.njobs)
 
@@ -830,7 +833,7 @@ class CplhistMonthlyClim:  # pylint: disable=too-many-instance-attributes
         attributes
         """
         log(logger, "Putting the climatology into one file and finalizing its metadata")
-        clim_files = [clim_file(self.mondir, month) for month in range(1, 13)]
+        clim_files = [clim_file(self.mondir, month) for month in range(1, MONTHS_PER_YEAR + 1)]
         # -O so ncrcat never stops to ask about overwriting (check_args already made sure the
         # output file didn't exist when the run started)
         run_cmd_output_on_error(
