@@ -565,7 +565,7 @@ If TRUE, dynamically change areas and topographic heights over glacier points.
 Only works when running with a non-stub glacier model.
 </entry>
 
-<entry id="glacier_region_behavior" type="char*32(10)" category="clm_physics"
+<entry id="glacier_region_behavior" type="char*32(11)" category="clm_physics"
        group="clm_glacier_behavior"
        valid_values="multiple,virtual,single_at_atm_topo,UNSET" >
 Behavior of each glacier region (GLACIER_REGION in surface dataset).
@@ -592,7 +592,7 @@ have glacier_region_melt_behavior='replaced_by_ice': within the icemask, you're 
 allowed to have non-virtual behavior in places where you are not computing SMB).
 </entry>
 
-<entry id="glacier_region_melt_behavior" type="char*32(10)" category="clm_physics"
+<entry id="glacier_region_melt_behavior" type="char*32(11)" category="clm_physics"
        group="clm_glacier_behavior"
        valid_values="replaced_by_ice,remains_in_place,UNSET" >
 Treatment of ice melt for each glacier region (GLACIER_REGION in surface dataset).
@@ -612,7 +612,7 @@ behavior; the SMB sent to the GLC model will be 0 in any gridcells with the
 Regions with the 'replaced_by_ice' behavior also compute SMB for the vegetated column.
 </entry>
 
-<entry id="glacier_region_ice_runoff_behavior" type="char*32(10)" category="clm_physics"
+<entry id="glacier_region_ice_runoff_behavior" type="char*32(11)" category="clm_physics"
        group="clm_glacier_behavior"
        valid_values="remains_ice,melted,UNSET" >
 Treatment of ice runoff for each glacier region (GLACIER_REGION in surface dataset).
@@ -635,7 +635,7 @@ Allowed values are:
 Only applies when melt_non_icesheet_ice_runoff is .true.
 </entry>
 
-<entry id="glacier_region_ice_runoff_residence_time" type="real(10)" category="clm_physics"
+<entry id="glacier_region_ice_runoff_residence_time" type="real(11)" category="clm_physics"
        group="clm_glacier_behavior" >
 Residence time (years) of the ice runoff storage pool for each glacier region (GLACIER_REGION
 in surface dataset). First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
