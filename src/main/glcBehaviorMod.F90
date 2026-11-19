@@ -662,11 +662,12 @@ contains
     !
     ! This must be called after Init (or InitFromInputs or InitSetDirectly). It must also
     ! be called after the time manager has been initialized, because converting the
-    ! residence time to a turnover rate depends on the model calendar.
+    ! residence time to a turnover rate depends on the model calendar, and checking the
+    ! turnover rate depends on the model time step.
     !
     ! !USES:
     use shr_const_mod    , only : SHR_CONST_CDAY
-    use clm_time_manager , only : get_average_days_per_year
+    use clm_time_manager , only : get_average_days_per_year, get_step_size_real
     !
     ! !ARGUMENTS:
     class(glc_behavior_type), intent(inout) :: this
@@ -675,6 +676,7 @@ contains
     integer  :: g
     integer  :: begg, endg
     real(r8) :: secs_per_year
+    real(r8) :: dtime  ! model time step (s)
 
     character(len=*), parameter :: subname = 'InitIceRunoffTurnoverRate'
     !-----------------------------------------------------------------------
@@ -690,10 +692,25 @@ contains
     allocate(this%ice_runoff_turnover_rate_grc(begg:endg))
 
     secs_per_year = get_average_days_per_year() * SHR_CONST_CDAY
+    dtime = get_step_size_real()
     do g = begg, endg
        if (this%ice_runoff_buffered_grc(g)) then
           this%ice_runoff_turnover_rate_grc(g) = 1._r8 / &
                (this%ice_runoff_residence_time_grc(g) * secs_per_year)
+
+          ! The explicit update of the ice runoff storage pool releases a fraction
+          ! (turnover_rate * dtime) of the pool each time step. If this fraction exceeds
+          ! 1 (i.e., the residence time is shorter than the time step), the pool would
+          ! go negative, and (for a fraction exceeding 2) oscillate with growing
+          ! amplitude, so we disallow this.
+          if (this%ice_runoff_turnover_rate_grc(g) * dtime > 1._r8) then
+             write(iulog,*) subname//' ERROR: glacier_region_ice_runoff_residence_time'
+             write(iulog,*) 'is shorter than the model time step.'
+             write(iulog,*) 'g, residence time (years), time step (s) = ', &
+                  g, this%ice_runoff_residence_time_grc(g), dtime
+             call endrun(msg='ERROR: glacier_region_ice_runoff_residence_time is shorter'// &
+                  ' than the model time step', file=sourcefile, line=__LINE__)
+          end if
        else
           ! See notes in the declaration of ice_runoff_turnover_rate_grc for why we set
           ! this to 0 here

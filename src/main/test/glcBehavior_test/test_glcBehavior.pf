@@ -336,6 +336,59 @@ contains
     @assertExceptionRaised(expected_msg)
   end subroutine init_meltedWithNonzeroIceRunoffResidenceTime_aborts
 
+  @Test
+  subroutine initTurnoverRate_residenceTimeShorterThanTimeStep_aborts(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    integer, parameter :: dtime = 1800  ! s
+    real(r8) :: residence_time  ! years
+    character(len=:), allocatable :: expected_msg
+
+    call setup_single_veg_patch(0)
+    ! Default unit test calendar is noleap
+    call unittest_timemgr_setup(dtime = dtime)
+    ! Half a time step
+    residence_time = 0.5_r8 * dtime / (365._r8 * SHR_CONST_CDAY)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [residence_time])
+    call glc_behavior%InitIceRunoffTurnoverRate()
+
+    expected_msg = endrun_msg('ERROR: glacier_region_ice_runoff_residence_time is shorter'// &
+         ' than the model time step')
+    @assertExceptionRaised(expected_msg)
+  end subroutine initTurnoverRate_residenceTimeShorterThanTimeStep_aborts
+
+  @Test
+  subroutine initTurnoverRate_residenceTimeSlightlyLongerThanTimeStep_ok(this)
+    class(TestGlcBehavior), intent(inout) :: this
+    type(glc_behavior_type) :: glc_behavior
+    integer, parameter :: dtime = 1800  ! s
+    real(r8) :: residence_time  ! years
+
+    call setup_single_veg_patch(0)
+    ! Default unit test calendar is noleap
+    call unittest_timemgr_setup(dtime = dtime)
+    ! Two time steps
+    residence_time = 2._r8 * dtime / (365._r8 * SHR_CONST_CDAY)
+
+    call glc_behavior%InitFromInputs(bounds%begg, bounds%endg, &
+         glacier_region_map = [0], &
+         glacier_region_behavior_str = ['multiple'], &
+         glacier_region_melt_behavior_str = ['replaced_by_ice'], &
+         glacier_region_ice_runoff_behavior_str = ['remains_ice'], &
+         glacier_region_ice_runoff_residence_time = [residence_time])
+    call glc_behavior%InitIceRunoffTurnoverRate()
+
+    ! The main point of this test is that the above call doesn't abort; we also make sure
+    ! that the turnover rate was set correctly
+    @assertEqual(0.5_r8 / dtime, glc_behavior%ice_runoff_turnover_rate_grc(bounds%begg), tolerance=tol)
+  end subroutine initTurnoverRate_residenceTimeSlightlyLongerThanTimeStep_ok
+
   ! ------------------------------------------------------------------------
   ! Tests of update_glc_classes
   ! ------------------------------------------------------------------------

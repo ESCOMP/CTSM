@@ -641,11 +641,14 @@ Residence time (years) of the ice runoff storage pool for each glacier region (G
 in surface dataset). First item corresponds to GLACIER_REGION with ID 0 in the surface dataset,
 second to GLACIER_REGION with ID 1, etc.
 
-A value of 0 means that ice runoff is not temporally buffered in this region: ice runoff is
-sent to the river model instantaneously. A value greater than 0 means that ice runoff is
-temporally buffered: it first goes into a storage pool, which is drained to the river model
-with a turnover rate of 1 / glacier_region_ice_runoff_residence_time. This can be used to
-smooth out large pulses of ice runoff (e.g., from snow capping).
+A value of 0 means that ice runoff is not temporally buffered in this region: ice runoff
+is sent to the river model instantaneously. A value greater than 0 means that ice runoff
+(both positive and negative) is temporally buffered: it first goes into a storage pool,
+which is drained to the river model with a turnover rate of 1 /
+glacier_region_ice_runoff_residence_time. This can be used to smooth out large pulses of
+ice runoff (e.g., from snow capping). Positive values must be at least as long as the
+model time step; this is meant for residence times much longer than the time step (e.g.,
+years).
 
 A value of -1 is a place-holder for non-existent regions (analogous to 'UNSET' for
 glacier_region_behavior and similar variables). Values must be >= 0 for all regions present in
