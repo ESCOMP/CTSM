@@ -20,6 +20,10 @@ dependencies:
   - compliance-checker=6.1.0
   - pip=25.0.1
 
+  # For running pre-commit hooks
+  - pre-commit=4.2.0
+
+  # For using fortls (Fortran Language Server) with VS Code
   # For VS code
   # fortls used in FORTRAN-IntelliSense extension, add path to fortls below to the VS setting fort-ls.executablePath
   - fortls=3.2.2
