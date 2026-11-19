@@ -946,7 +946,7 @@ $$
 w_{wilt} = \sum_{j=1}^{N_{irr}} \theta_{wilt} \Delta z_{j} \ ,
 $$ (25.64)
 
-and $f_{thresh}$ is a tuning parameter. The available moisture in the soil (mm) is
+and $f_{thresh}$ is the tuning parameter `irrig_threshold_fraction` (see {numref}`Table Irrigation parameters`). The available moisture in the soil (mm) is
 
 $$
 w_{avail} = \sum_{j=1}^{N_{irr}} \theta_{j} \Delta z_{j} \ ,
