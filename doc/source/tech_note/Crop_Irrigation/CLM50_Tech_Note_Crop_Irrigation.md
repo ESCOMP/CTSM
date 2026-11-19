@@ -588,7 +588,11 @@ $$
 \norgan - \frac{\corgan}{\paramforgancn}
 $$ (n-from-organ-to-retrans-pool)
 
-where $\corgan$ and $\norgan$ are the carbon and nitrogen in the organ, respectively, and $\paramforgancn$ is the C:N ratio of the organ ({numref}`Table Crop allocation parameters`). Since C:N measurements are often taken from mature crops, pre-grain development C:N ratios for leaves, stems, and roots in the model are optimized to allow maximum nitrogen accumulation for later use during organ development, and post-grain fill C:N ratios are assigned the same as crop residue. After nitrogen is moved into the retranslocated pool, the nitrogen in this pool is used to meet plant nitrogen demand by assigning the available nitrogen from the retranslocated pool equal to the plant nitrogen demand for each organ ($\paramforgancn$ in {numref}`Table Crop allocation parameters`). Once the retranslocation pool is depleted, soil mineral nitrogen pool is used to fulfill plant nitrogen demands.
+where $\corgan$ and $\norgan$ are the carbon and nitrogen in the organ, respectively, and $\paramforgancn$ is the C:N ratio of the organ ({numref}`Table Crop allocation parameters`).
+
+Since C:N measurements are often taken from mature crops, pre-grain development C:N ratios for leaves, stems, and roots in the original crop implementation were not necessarily optimized to match those; instead, they were optimized to allow maximum nitrogen accumulation for later use during organ development. Grain fill C:N ratio targets were assigned separately with the aim of reflecting real-world values. Note, however, that C:N ratio target parameters may have changed since the original CLM crop implementation (described in {ref}`Drewniak et al., 2013<Drewniaketal2013>`).
+
+After nitrogen is moved into the retranslocated pool, the nitrogen in this pool is used to meet plant nitrogen demand by assigning the available nitrogen from the retranslocated pool equal to the plant nitrogen demand for each organ ($\paramforgancn$ in {numref}`Table Crop allocation parameters`). Once the retranslocation pool is depleted, soil mineral nitrogen pool is used to fulfill plant nitrogen demands.
 
 (harvest to food and seed)=
 
