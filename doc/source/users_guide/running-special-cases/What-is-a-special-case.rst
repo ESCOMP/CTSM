@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _what is a special case:
 
 =========================

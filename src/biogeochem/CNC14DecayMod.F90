@@ -11,7 +11,7 @@ module CNC14DecayMod
   use clm_varctl                         , only : spinup_state
   use CNSharedParamsMod                  , only : use_matrixcn
   use decompMod                          , only : bounds_type
-  use pftconMod                          , only : npcropmin
+  use pftconMod                          , only : is_prognostic_crop
   use CNVegCarbonStateType               , only : cnveg_carbonstate_type
   use CNVegCarbonFluxType                , only : cnveg_carbonflux_type
   use SoilBiogeochemDecompCascadeConType , only : decomp_cascade_con, use_soil_matrixcn
@@ -205,12 +205,7 @@ contains
          gresp_xfer(p)         = gresp_xfer(p)          * (1._r8 - decay_const * dt)
          pft_ctrunc(p)         = pft_ctrunc(p)          * (1._r8 - decay_const * dt)
 
-         ! NOTE(wjs, 2017-02-02) This isn't a completely robust way to check if this is a
-         ! prognostic crop patch (at the very least it should also check if <= npcropmax;
-         ! ideally it should use a prognostic_crop flag that doesn't seem to exist
-         ! currently). But I'm just being consistent with what's done elsewhere (e.g., in
-         ! CStateUpdate1).
-         if (patch%itype(p) >= npcropmin) then ! skip 2 generic crops
+         if (is_prognostic_crop(patch%itype(p))) then ! skip 2 generic crops
             cropseedc_deficit(p)  = cropseedc_deficit(p)   * (1._r8 - decay_const * dt)
          end if
       end do

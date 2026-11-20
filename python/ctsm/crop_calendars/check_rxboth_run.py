@@ -78,7 +78,7 @@ def main(argv):
 
     any_bad = False
 
-    annual_outfiles = glob.glob(os.path.join(args.directory, "*.clm2.h1.*.nc"))
+    annual_outfiles = glob.glob(os.path.join(args.directory, "*.clm2.h1i.*.nc"))
 
     # These should be constant in a Prescribed Calendars (rxboth) run, as long as the inputs were
     # static.

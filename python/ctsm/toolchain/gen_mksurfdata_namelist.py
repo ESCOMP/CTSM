@@ -13,8 +13,9 @@ import subprocess
 from datetime import datetime
 import netCDF4
 
-from ctsm.path_utils import path_to_ctsm_root, path_to_cime
+from ctsm.path_utils import path_to_ctsm_root, path_to_ccs_config
 from ctsm.ctsm_logging import setup_logging_pre_config, add_logging_args, process_logging_args
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 logger = logging.getLogger(__name__)
 
@@ -306,9 +307,9 @@ def main():
 
     # Determine num_pft
     if nocrop_flag:
-        num_pft = "16"
+        num_pft = str(MAX_PFT_GENERICCROPS)
     else:
-        num_pft = "78"
+        num_pft = str(MAX_PFT_MANAGEDCROPS)
     logger.info("num_pft is %s", num_pft)
 
     # Write out if surface dataset will be created
@@ -719,7 +720,7 @@ def determine_output_mesh(res, force_model_mesh_file, input_path, rawdata_files)
     """
     determine output mesh
     """
-    xml_path = os.path.join(path_to_cime(), "../ccs_config/component_grids_nuopc.xml")
+    xml_path = os.path.join(path_to_ccs_config(), "component_grids_nuopc.xml")
     tree2 = ET.parse(xml_path)
     root = tree2.getroot()
     model_mesh = ""

@@ -109,22 +109,7 @@ def _parse_args():
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Input file not found: {filename}")
 
-    # Process time slice
-    # Assumes CESM behavior where data for e.g. 1987 is saved as 1988-01-01.
-    # It would be more robust, accounting for upcoming behavior (where timestamp for a year is the
-    # middle of that year), to do slice("YEAR1-01-03", "YEARN-01-02"), but that's not compatible
-    # with ctsm_pylib as of the version using python 3.7.9. See safer_timeslice() in cropcal_utils.
-    if args.first_year is not None:
-        date_1 = f"{args.first_year+1}-01-01"
-    else:
-        date_1 = "0000-01-01"
-    if args.last_year is not None:
-        date_n = f"{args.last_year+1}-01-01"
-    else:
-        date_n = "9999-12-31"
-    time_slice = slice(date_1, date_n)
-
-    return args, time_slice
+    return args
 
 
 def _get_cft_list(crop_list):
@@ -182,7 +167,7 @@ def _get_gddn_for_cft(cft_str, variable):
 
 
 def _get_output_varname(cft_str):
-    cft_int = utils.vegtype_str2int(cft_str)[0]
+    cft_int = utils.vegtype_str2int(cft_str)
     return f"gdd20bl_{cft_int}"
 
 
@@ -232,7 +217,23 @@ def setup_output_dataset(input_files, author, variable, year_args, ds_in):
     return ds_out
 
 
-def generate_gdd20_baseline(input_files, output_file, author, time_slice, variable, year_args):
+def _get_time_slice(year_args):
+    """
+    Based on years from input arguments, return a time slice for selecting from dataset
+    """
+    first_year = year_args[0]
+    last_year = year_args[1]
+    date_1 = f"{first_year}-01-01"
+    date_n = f"{last_year}-12-31"
+    if first_year is None:
+        date_1 = "0000-01-01"
+    if last_year is None:
+        date_n = "9999-12-31"
+    time_slice = slice(date_1, date_n)
+    return time_slice
+
+
+def generate_gdd20_baseline(input_files, output_file, author, variable, year_args):
     """
     Generate stream_fldFileName_gdd20_baseline file from CTSM outputs
     """
@@ -251,6 +252,9 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     # Get unique values and sort
     input_files = list(set(input_files))
     input_files.sort()
+
+    # Process time slice
+    time_slice = _get_time_slice(year_args)
 
     # Import history files and ensure they have lat/lon dims
     ds_in = import_ds(input_files, my_vars=var_list_in + GRIDDING_VAR_LIST, time_slice=time_slice)
@@ -275,7 +279,7 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
     # Process all crops
     encoding_dict = {}
     for cft_str in MGDCROP_LIST:
-        cft_int = utils.vegtype_str2int(cft_str)[0]
+        cft_int = utils.vegtype_str2int(cft_str)
         print(f"{cft_str} ({cft_int})")
 
         # Which GDDN history variable does this crop use? E.g., GDD0, GDD10
@@ -314,7 +318,9 @@ def generate_gdd20_baseline(input_files, output_file, author, time_slice, variab
             ds_out[var_out] = grid_one_variable(ds_out, var_out)
 
     # Save
-    ds_out.to_netcdf(output_file, format="NETCDF3_CLASSIC", encoding=encoding_dict)
+    output_dir = os.path.dirname(output_file)
+    os.makedirs(output_dir, exist_ok=True)
+    ds_out.to_netcdf(output_file, format="NETCDF4_CLASSIC", encoding=encoding_dict)
 
     print("Done!")
 
@@ -323,12 +329,11 @@ def main():
     """
     main() function for calling generate_gdd20_baseline.py from command line.
     """
-    args, time_slice = _parse_args()
+    args = _parse_args()
     generate_gdd20_baseline(
         args.input_files,
         args.output_file,
         args.author,
-        time_slice,
         args.variable,
         [args.first_year, args.last_year],
     )

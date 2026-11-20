@@ -1,0 +1,4 @@
+#!/bin/bash
+
+./xmlchange REST_OPTION='$STOP_OPTION'
+

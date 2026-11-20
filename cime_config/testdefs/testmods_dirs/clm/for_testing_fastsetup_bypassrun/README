@@ -1,0 +1,8 @@
+The purpose of this testmod directory is to setup for running fast testing
+of initialization. So it bypasses the run phase and exits early.
+
+We use cold start so that we can get through initialization faster,
+
+I/O is turned off as much as possible.
+
+And physics options that make the model run faster are used.

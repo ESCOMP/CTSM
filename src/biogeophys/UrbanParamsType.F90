@@ -9,9 +9,9 @@ module UrbanParamsType
   use shr_log_mod  , only : errMsg => shr_log_errMsg
   use abortutils   , only : endrun
   use decompMod    , only : bounds_type, subgrid_level_gridcell, subgrid_level_landunit
-  use clm_varctl   , only : iulog, fsurdat
+  use clm_varctl   , only : iulog, fsurdat, single_column
   use clm_varcon   , only : grlnd, spval
-  use LandunitType , only : lun                
+  use LandunitType , only : lun
   !
   implicit none
   save
@@ -23,24 +23,26 @@ module UrbanParamsType
   public  :: CheckUrban        ! Check validity of urban points
   public  :: IsSimpleBuildTemp ! If using the simple building temperature method
   public  :: IsProgBuildTemp   ! If using the prognostic building temperature method
+  public  :: IsBuildingHumidityEnabled    ! If indoor building humidity is prognosed
+  public  :: IsACDehumidificationEnabled  ! If air-conditioning dehumidification is enabled
   !
   ! !PRIVATE TYPE
   type urbinp_type
-     real(r8), pointer :: canyon_hwr      (:,:)  
-     real(r8), pointer :: wtlunit_roof    (:,:)  
-     real(r8), pointer :: wtroad_perv     (:,:)  
-     real(r8), pointer :: em_roof         (:,:)   
-     real(r8), pointer :: em_improad      (:,:)  
-     real(r8), pointer :: em_perroad      (:,:)  
-     real(r8), pointer :: em_wall         (:,:)  
-     real(r8), pointer :: alb_roof_dir    (:,:,:)  
-     real(r8), pointer :: alb_roof_dif    (:,:,:)  
-     real(r8), pointer :: alb_improad_dir (:,:,:)  
-     real(r8), pointer :: alb_improad_dif (:,:,:)  
-     real(r8), pointer :: alb_perroad_dir (:,:,:)  
-     real(r8), pointer :: alb_perroad_dif (:,:,:)  
-     real(r8), pointer :: alb_wall_dir    (:,:,:)  
-     real(r8), pointer :: alb_wall_dif    (:,:,:)  
+     real(r8), pointer :: canyon_hwr      (:,:)
+     real(r8), pointer :: wtlunit_roof    (:,:)
+     real(r8), pointer :: wtroad_perv     (:,:)
+     real(r8), pointer :: em_roof         (:,:)
+     real(r8), pointer :: em_improad      (:,:)
+     real(r8), pointer :: em_perroad      (:,:)
+     real(r8), pointer :: em_wall         (:,:)
+     real(r8), pointer :: alb_roof_dir    (:,:,:)
+     real(r8), pointer :: alb_roof_dif    (:,:,:)
+     real(r8), pointer :: alb_improad_dir (:,:,:)
+     real(r8), pointer :: alb_improad_dif (:,:,:)
+     real(r8), pointer :: alb_perroad_dir (:,:,:)
+     real(r8), pointer :: alb_perroad_dif (:,:,:)
+     real(r8), pointer :: alb_wall_dir    (:,:,:)
+     real(r8), pointer :: alb_wall_dif    (:,:,:)
      real(r8), pointer :: ht_roof         (:,:)
      real(r8), pointer :: wind_hgt_canyon (:,:)
      real(r8), pointer :: tk_wall         (:,:,:)
@@ -92,15 +94,20 @@ module UrbanParamsType
      real(r8), pointer     :: eflx_traffic_factor (:)   ! lun multiplicative traffic factor for sensible heat flux from urban traffic (-)
    contains
 
-     procedure, public :: Init 
-     
+     procedure, public :: Init
+     procedure, public :: InitForTesting
+
   end type urbanparams_type
   !
   ! !Urban control variables
-  character(len= *), parameter, public :: urban_hac_off = 'OFF'                
-  character(len= *), parameter, public :: urban_hac_on =  'ON'                 
-  character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'  
+  character(len= *), parameter, public :: urban_hac_off = 'OFF'
+  character(len= *), parameter, public :: urban_hac_on =  'ON'
+  character(len= *), parameter, public :: urban_wasteheat_on = 'ON_WASTEHEAT'
   character(len= 16), public           :: urban_hac = urban_hac_off
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_OFF = 0
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_ON = 1
+  integer, parameter, public           :: BUILDING_HUMIDITY_MODE_DEHUMIDIFY = 2
+  integer, public                      :: building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
   logical, public                      :: urban_explicit_ac = .true.  ! whether to use explicit, time-varying AC adoption rate
   logical, public                      :: urban_traffic = .false.     ! urban traffic fluxes
 
@@ -112,7 +119,7 @@ module UrbanParamsType
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
-  !----------------------------------------------------------------------- 
+  !-----------------------------------------------------------------------
 
 contains
 
@@ -132,11 +139,11 @@ contains
     !
     ! !ARGUMENTS:
     class(urbanparams_type) :: this
-    type(bounds_type)      , intent(in)    :: bounds  
+    type(bounds_type)      , intent(in)    :: bounds
     !
     ! !LOCAL VARIABLES:
     integer             :: j,l,c,p,g       ! indices
-    integer             :: nc,fl,ib        ! indices 
+    integer             :: nc,fl,ib        ! indices
     integer             :: dindx           ! urban density type index
     integer             :: ier             ! error status
     real(r8)            :: sumvf           ! sum of view factors for wall or road
@@ -182,12 +189,12 @@ contains
     allocate(this%em_perroad          (begl:endl))          ; this%em_perroad          (:)   = nan
     allocate(this%em_wall             (begl:endl))          ; this%em_wall             (:)   = nan
     allocate(this%alb_roof_dir        (begl:endl,numrad))   ; this%alb_roof_dir        (:,:) = nan
-    allocate(this%alb_roof_dif        (begl:endl,numrad))   ; this%alb_roof_dif        (:,:) = nan    
-    allocate(this%alb_improad_dir     (begl:endl,numrad))   ; this%alb_improad_dir     (:,:) = nan       
-    allocate(this%alb_perroad_dir     (begl:endl,numrad))   ; this%alb_perroad_dir     (:,:) = nan       
-    allocate(this%alb_improad_dif     (begl:endl,numrad))   ; this%alb_improad_dif     (:,:) = nan       
-    allocate(this%alb_perroad_dif     (begl:endl,numrad))   ; this%alb_perroad_dif     (:,:) = nan       
-    allocate(this%alb_wall_dir        (begl:endl,numrad))   ; this%alb_wall_dir        (:,:) = nan    
+    allocate(this%alb_roof_dif        (begl:endl,numrad))   ; this%alb_roof_dif        (:,:) = nan
+    allocate(this%alb_improad_dir     (begl:endl,numrad))   ; this%alb_improad_dir     (:,:) = nan
+    allocate(this%alb_perroad_dir     (begl:endl,numrad))   ; this%alb_perroad_dir     (:,:) = nan
+    allocate(this%alb_improad_dif     (begl:endl,numrad))   ; this%alb_improad_dif     (:,:) = nan
+    allocate(this%alb_perroad_dif     (begl:endl,numrad))   ; this%alb_perroad_dif     (:,:) = nan
+    allocate(this%alb_wall_dir        (begl:endl,numrad))   ; this%alb_wall_dir        (:,:) = nan
     allocate(this%alb_wall_dif        (begl:endl,numrad))   ; this%alb_wall_dif        (:,:) = nan
     allocate(this%eflx_traffic_factor (begl:endl))          ; this%eflx_traffic_factor (:)   = nan
 
@@ -261,7 +268,7 @@ contains
           !              | \  vsr   / |       |         r   |  | \  vww   /   s
           !              |  \      /  |       h         o   w  |  \      /    k
           !        wall  |   \    /   | wall  |         a   |  |   \    /     y
-          !              |vwr \  / vwr|       |         d   |  |vrw \  / vsw 
+          !              |vwr \  / vwr|       |         d   |  |vrw \  / vsw
           !              ------\/------       -             -  |-----\/-----
           !                   road                                  wall   |
           !              <----- w ---->                                    |
@@ -272,20 +279,20 @@ contains
           !                                               vsw = view factor of sky for wall
           !    vsr + vwr + vwr = 1                        vrw + vww + vsw = 1
           !
-          ! Source: Masson, V. (2000) A physically-based scheme for the urban energy budget in 
+          ! Source: Masson, V. (2000) A physically-based scheme for the urban energy budget in
           ! atmospheric models. Boundary-Layer Meteorology 94:357-397
           !
           ! - Calculate urban land unit aerodynamic constants using Macdonald (1998) as used in
           ! Grimmond and Oke (1999)
           ! ---------------------------------------------------------------------------------------
-          
-          ! road -- sky view factor -> 1 as building height -> 0 
+
+          ! road -- sky view factor -> 1 as building height -> 0
           ! and -> 0 as building height -> infinity
 
           this%vf_sr(l) = sqrt(lun%canyon_hwr(l)**2 + 1._r8) - lun%canyon_hwr(l)
           this%vf_wr(l) = 0.5_r8 * (1._r8 - this%vf_sr(l))
 
-          ! one wall -- sky view factor -> 0.5 as building height -> 0 
+          ! one wall -- sky view factor -> 0.5 as building height -> 0
           ! and -> 0 as building height -> infinity
 
           this%vf_sw(l) = 0.5_r8 * (lun%canyon_hwr(l) + 1._r8 - sqrt(lun%canyon_hwr(l)**2+1._r8)) / lun%canyon_hwr(l)
@@ -311,7 +318,7 @@ contains
           ! Grimmond and Oke (1999)
           !----------------------------------------------------------------------------------
 
-          ! Calculate plan area index 
+          ! Calculate plan area index
           plan_ai = lun%canyon_hwr(l)/(lun%canyon_hwr(l) + 1._r8)
 
           ! Building shape shortside/longside ratio (e.g. 1 = square )
@@ -344,7 +351,7 @@ contains
                   (1 - lun%z_d_town(l) / lun%ht_roof(l)) * frontal_ai)**(-0.5_r8))
           end if
 
-       else ! Not urban point 
+       else ! Not urban point
 
           this%eflx_traffic_factor(l) = spval
           this%t_building_min(l) = spval
@@ -364,9 +371,37 @@ contains
   end subroutine Init
 
   !-----------------------------------------------------------------------
+  subroutine InitForTesting(this, bounds)
+    !
+    ! !DESCRIPTION:
+    ! Version of Init routine just for unit tests
+    !
+    ! This version sets building_humidity_mode and then calls Init
+    !
+    ! !ARGUMENTS:
+    class(urbanparams_type) , intent(inout) :: this
+    type(bounds_type)       , intent(in)    :: bounds
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'InitForTesting'
+    !-----------------------------------------------------------------------
+
+    ! Default setting (prognostic indoor humidity and dehumidification off)
+    building_humidity_mode = BUILDING_HUMIDITY_MODE_OFF
+
+    ! We set this to .true. to enable the IsBuildingHumidityEnabled and 
+    ! IsACDehumidificationEnabled functions to be used for unit testing
+    ReadNamelist = .true.
+
+    call Init(this, bounds = bounds)
+
+  end subroutine InitForTesting
+
+  !-----------------------------------------------------------------------
   subroutine UrbanInput(begg, endg, mode)
     !
-    ! !DESCRIPTION: 
+    ! !DESCRIPTION:
     ! Allocate memory and read in urban input data
     !
     ! !USES:
@@ -375,7 +410,7 @@ contains
     use fileutils       , only : getavu, relavu, getfil, opnfil
     use spmdMod         , only : masterproc
     use domainMod       , only : ldomain
-    use ncdio_pio       , only : file_desc_t, ncd_io, ncd_inqvdlen, ncd_inqfdims 
+    use ncdio_pio       , only : file_desc_t, ncd_io, ncd_inqvdlen, ncd_inqfdims
     use ncdio_pio       , only : ncd_pio_openfile, ncd_pio_closefile, ncd_inqdid, ncd_inqdlen
     !
     ! !ARGUMENTS:
@@ -392,7 +427,7 @@ contains
     integer :: numrad_i              ! input grid: number of solar bands (VIS/NIR)
     integer :: numurbl_i             ! input grid: number of urban landunits
     integer :: ier,ret               ! error status
-    logical :: isgrid2d              ! true => file is 2d 
+    logical :: isgrid2d              ! true => file is 2d
     logical :: readvar               ! true => variable is on dataset
     logical :: has_numurbl           ! true => numurbl dimension is on dataset
     character(len=32) :: subname = 'UrbanInput' ! subroutine name
@@ -403,11 +438,11 @@ contains
     if (mode == 'initialize') then
 
        ! Read urban data
-       
+
        if (masterproc) then
           write(iulog,*)' Reading in urban input data from fsurdat file ...'
        end if
-       
+
        call getfil (fsurdat, locfn, 0)
        call ncd_pio_openfile (ncid, locfn, 0)
 
@@ -425,23 +460,26 @@ contains
          if (masterproc) write(iulog,*)'PCT_URBAN is not multi-density, nlevurb set to 0'
        end if
 
-       if ( nlevurb == 0 ) return
+       if ( nlevurb == 0 ) then
+          call ncd_pio_closefile(ncid)
+          return
+       end if
 
        ! Allocate dynamic memory
-       allocate(urbinp%canyon_hwr(begg:endg, numurbl), &  
-                urbinp%wtlunit_roof(begg:endg, numurbl), &  
+       allocate(urbinp%canyon_hwr(begg:endg, numurbl), &
+                urbinp%wtlunit_roof(begg:endg, numurbl), &
                 urbinp%wtroad_perv(begg:endg, numurbl), &
-                urbinp%em_roof(begg:endg, numurbl), &     
-                urbinp%em_improad(begg:endg, numurbl), &    
-                urbinp%em_perroad(begg:endg, numurbl), &    
-                urbinp%em_wall(begg:endg, numurbl), &    
-                urbinp%alb_roof_dir(begg:endg, numurbl, numrad), &    
-                urbinp%alb_roof_dif(begg:endg, numurbl, numrad), &    
-                urbinp%alb_improad_dir(begg:endg, numurbl, numrad), &    
-                urbinp%alb_perroad_dir(begg:endg, numurbl, numrad), &    
-                urbinp%alb_improad_dif(begg:endg, numurbl, numrad), &    
-                urbinp%alb_perroad_dif(begg:endg, numurbl, numrad), &    
-                urbinp%alb_wall_dir(begg:endg, numurbl, numrad), &    
+                urbinp%em_roof(begg:endg, numurbl), &
+                urbinp%em_improad(begg:endg, numurbl), &
+                urbinp%em_perroad(begg:endg, numurbl), &
+                urbinp%em_wall(begg:endg, numurbl), &
+                urbinp%alb_roof_dir(begg:endg, numurbl, numrad), &
+                urbinp%alb_roof_dif(begg:endg, numurbl, numrad), &
+                urbinp%alb_improad_dir(begg:endg, numurbl, numrad), &
+                urbinp%alb_perroad_dir(begg:endg, numurbl, numrad), &
+                urbinp%alb_improad_dif(begg:endg, numurbl, numrad), &
+                urbinp%alb_perroad_dif(begg:endg, numurbl, numrad), &
+                urbinp%alb_wall_dir(begg:endg, numurbl, numrad), &
                 urbinp%alb_wall_dif(begg:endg, numurbl, numrad), &
                 urbinp%ht_roof(begg:endg, numurbl), &
                 urbinp%wind_hgt_canyon(begg:endg, numurbl), &
@@ -461,7 +499,7 @@ contains
        endif
 
        call ncd_inqfdims (ncid, isgrid2d, ni, nj, ns)
-       if (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj) then
+       if (.not. single_column .and. (ldomain%ns /= ns .or. ldomain%ni /= ni .or. ldomain%nj /= nj)) then
           write(iulog,*)trim(subname), 'ldomain and input file do not match dims '
           write(iulog,*)trim(subname), 'ldomain%ni,ni,= ',ldomain%ni,ni
           write(iulog,*)trim(subname), 'ldomain%nj,nj,= ',ldomain%nj,nj
@@ -655,7 +693,7 @@ contains
 
        call ncd_pio_closefile(ncid)
        if (masterproc) then
-          write(iulog,*)' Sucessfully read urban input data' 
+          write(iulog,*)' Sucessfully read urban input data'
           write(iulog,*)
        end if
 
@@ -848,7 +886,7 @@ contains
     integer :: unitn                ! unit for namelist file
     character(len=32) :: subname = 'UrbanReadNML'  ! subroutine name
 
-    namelist / clmu_inparm / urban_hac, urban_explicit_ac, urban_traffic, building_temp_method
+    namelist / clmu_inparm / urban_hac, building_humidity_mode, urban_explicit_ac, urban_traffic, building_temp_method
     !EOP
     !-----------------------------------------------------------------------
 
@@ -876,6 +914,7 @@ contains
 
     ! Broadcast namelist variables read in
     call shr_mpi_bcast(urban_hac,             mpicom)
+    call shr_mpi_bcast(building_humidity_mode, mpicom)
     call shr_mpi_bcast(urban_explicit_ac,     mpicom)
     call shr_mpi_bcast(urban_traffic,         mpicom)
     call shr_mpi_bcast(building_temp_method,  mpicom)
@@ -885,9 +924,28 @@ contains
        write(iulog,*)'Urban traffic fluxes are not implemented currently'
        call endrun(msg=errMsg(sourcefile, __LINE__))
     end if
+    if (building_humidity_mode < BUILDING_HUMIDITY_MODE_OFF .or. &
+         building_humidity_mode > BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
+       call endrun(msg='building_humidity_mode must be 0, 1, or 2'//errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON .and. &
+         building_temp_method /= BUILDING_TEMP_METHOD_PROG) then
+       call endrun(msg='building_humidity_mode=1 or 2 requires the prognostic building temperature method'// &
+            errmsg(sourcefile, __LINE__))
+    end if
+    if (building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY) then
+       if (trim(urban_hac) /= urban_hac_on .and. trim(urban_hac) /= urban_wasteheat_on) then
+          call endrun(msg='building_humidity_mode=2 requires urban_hac to be ON or ON_WASTEHEAT'// &
+               errmsg(sourcefile, __LINE__))
+       end if
+       if (.not. urban_explicit_ac) then
+          call endrun(msg='building_humidity_mode=2 requires urban_explicit_ac=.true.'//errmsg(sourcefile, __LINE__))
+       end if
+    end if
     !
     if ( masterproc )then
        write(iulog,*) '   urban air conditioning/heating and wasteheat   = ', urban_hac
+       write(iulog,*) '   urban building humidity mode                   = ', building_humidity_mode
        write(iulog,*) '   urban explicit air-conditioning adoption rate   = ', urban_explicit_ac
        write(iulog,*) '   urban traffic flux   = ', urban_traffic
     end if
@@ -954,8 +1012,60 @@ contains
 
   !-----------------------------------------------------------------------
 
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsBuildingHumidityEnabled
+  !
+  ! !INTERFACE:
+  !
+  logical function IsBuildingHumidityEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If indoor building humidity is being simulated
+    !
+    ! !USES:
+    implicit none
+    !EOP
+    !-----------------------------------------------------------------------
+
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'IsBuildingHumidityEnabled called before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsBuildingHumidityEnabled = building_humidity_mode >= BUILDING_HUMIDITY_MODE_ON
+
+  end function IsBuildingHumidityEnabled
+
+  !-----------------------------------------------------------------------
+
+  !-----------------------------------------------------------------------
+  !BOP
+  !
+  ! !IROUTINE: IsACDehumidificationEnabled
+  !
+  ! !INTERFACE:
+  !
+  logical function IsACDehumidificationEnabled( )
+    !
+    ! !DESCRIPTION:
+    !
+    ! If air-conditioning dehumidification is enabled
+    !
+    ! !USES:
+    implicit none
+    !EOP
+    !-----------------------------------------------------------------------
+
+    if ( .not. ReadNamelist )then
+       write(iulog,*)'IsACDehumidificationEnabled called before urban namelist was read in'
+       call endrun(msg=errMsg(sourcefile, __LINE__))
+    end if
+    IsACDehumidificationEnabled = building_humidity_mode == BUILDING_HUMIDITY_MODE_DEHUMIDIFY
+
+  end function IsACDehumidificationEnabled
+
+  !-----------------------------------------------------------------------
+
 end module UrbanParamsType
-
-
-
-

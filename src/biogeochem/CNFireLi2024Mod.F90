@@ -7,11 +7,8 @@ module CNFireLi2024Mod
   ! module for fire dynamics
   ! created in Nov, 2012  and revised in Apr, 2013 by F. Li and S. Levis
   ! based on Li et al. (2012a,b; 2013)
-  ! revised in Apr, 2014 according to Li et al.(2014)
-  ! revised in May, 2015, according to Li et al. (2015, in prep.)
-  ! Fire-related parameters were calibrated or tuned in May, 2015 based on the
-  ! 20th Century transient simulations at f19_g16 with a CLM4.5 version
-  ! (clm50fire), CRUNCEPv5, and climatological lightning data.
+  ! revised in Apr, 2014 according to Li and Lawrance (2017)
+  ! revised in Jun, 2024 and modified in May, 2025, according to Li et al. (2025, in prep.)
   !
   ! !USES:
   use shr_kind_mod                       , only : r8 => shr_kind_r8
@@ -98,8 +95,9 @@ contains
     use clm_time_manager     , only: get_step_size_real, get_curr_days_per_year, get_curr_date, get_nstep
     use clm_varcon           , only: secspday, secsphr
     use clm_varctl           , only: spinup_state, use_crop
-    use pftconMod            , only: nc4_grass, nc3crop, ndllf_evr_tmp_tree
+    use pftconMod            , only: nc4_grass, ndllf_evr_tmp_tree
     use pftconMod            , only: nbrdlf_evr_trp_tree, nbrdlf_dcd_trp_tree, nbrdlf_evr_shrub
+    use pftconMod            , only: is_crop
     use dynSubgridControlMod , only : run_has_transient_landcover
     use CropType             , only: crop_type
     !
@@ -147,6 +145,10 @@ contains
     real(r8) :: fs       ! hd-dependent fires suppression (0-1)
     real(r8) :: ig       ! total ignitions (count/km2/hr)
     real(r8) :: hdmlf    ! human density
+    real(r8) :: topoi    ! influence of topography on fires (0-1), where 1 indicates no impact.
+                         ! can be removed if CLM consider Arctic C3 grass in plateau-> 
+                         ! intense light-> much more C allocated to fine roots than leaf, 
+                         ! and roots decreasing infiltration 
     real(r8) :: arh, arh30 !combustability of fuel related to RH and RH30
     real(r8) :: afuel    !weight for arh and arh30
     real(r8) :: btran_col(bounds%begc:bounds%endc)
@@ -180,13 +182,12 @@ contains
          defo_fire_precip_thresh_bdt  => cnfire_const%defo_fire_precip_thresh_bdt, & ! Input:  [real(r8)         ]  (mm/day) Max running mean daily precip allowing deforestation fire for broadleaf deciduous trees
          borpeat_fire_soilmoist_denom  => cnfire_const%borpeat_fire_soilmoist_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of exponential in soil moisture term of equation relating that and temperature to boreal peat fire (unitless)
          nonborpeat_fire_precip_denom  => cnfire_const%nonborpeat_fire_precip_denom, & ! Input:  [real(r8)         ]  (unitless) Denominator of precipitation in equation relating that to non-boreal peat fire (unitless)
-
+         forc_topo_g  => atm2lnd_inst%forc_topo_grc                            , & ! Input:  [real(r8) (:)      ]  atmospheric surface height, a.k.a. elevation (m)
          fsr_pft            => pftcon%fsr_pft                                  , & ! Input:
          fd_pft             => pftcon%fd_pft                                   , & ! Input:
          rswf_min           => pftcon%rswf_min                                 , & ! Input:
          rswf_max           => pftcon%rswf_max                                 , & ! Input:
          btran2             => this%cnfire_base_type%btran2_patch              , & ! Input:  [real(r8) (:)     ]  root zone soil wetness
-         fsat               => saturated_excess_runoff_inst%fsat_col           , & ! Input:  [real(r8) (:)     ]  fractional area with water table at surface
          wf2                => waterdiagnosticbulk_inst%wf2_col                , & ! Input:  [real(r8) (:)     ]  soil water as frac. of whc for top 0.17 m
 
          is_cwd             => decomp_cascade_con%is_cwd                       , & ! Input:  [logical  (:)     ]  TRUE => pool is a cwd pool
@@ -197,8 +198,8 @@ contains
          forc_t             => atm2lnd_inst%forc_t_downscaled_col              , & ! Input:  [real(r8) (:)     ]  downscaled atmospheric temperature (Kelvin)
          forc_rain          => wateratm2lndbulk_inst%forc_rain_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled rain
          forc_snow          => wateratm2lndbulk_inst%forc_snow_downscaled_col  , & ! Input:  [real(r8) (:)     ]  downscaled snow
-         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. precipitation
-         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  10-day running mean of tot. relative humidity
+         prec30             => wateratm2lndbulk_inst%prec30_patch              , & ! Input:  [real(r8) (:)     ]  30-day running mean of tot. precipitation
+         rh30               => wateratm2lndbulk_inst%rh30_patch                , & ! Input:  [real(r8) (:)     ]  30-day running mean of tot. relative humidity
          dwt_smoothed       => cnveg_state_inst%dwt_smoothed_patch             , & ! Input:  [real(r8) (:)     ]  change in patch weight (-1 to 1) on the gridcell, smoothed over the year
          cropf_col          => cnveg_state_inst%cropf_col                      , & ! Input:  [real(r8) (:)     ]  cropland fraction in veg column
          gdp_lf             => this%gdp_lf_col                                 , & ! Input:  [real(r8) (:)     ]  gdp data
@@ -216,7 +217,7 @@ contains
          lgdp_col           => cnveg_state_inst%lgdp_col                       , & ! Output: [real(r8) (:)     ]  gdp limitation factor for nfire
          lgdp1_col          => cnveg_state_inst%lgdp1_col                      , & ! Output: [real(r8) (:)     ]  gdp limitation factor for baf per fire
          lpop_col           => cnveg_state_inst%lpop_col                       , & ! Output: [real(r8) (:)     ]  pop limitation factor for baf per fire
-         lfwt               => cnveg_state_inst%lfwt_col                       , & ! Output: [real(r8) (:)     ]  fractional coverage of non-crop and non-bare-soil Patches
+         tgswt              => cnveg_state_inst%tgswt_grc                      , & ! Output: [real(r8) (:)     ]  gridcell fractional coverage of tree, grass and shrub PFTs (0-1)
          trotr1_col         => cnveg_state_inst%trotr1_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BET on the column (0-1)
          trotr2_col         => cnveg_state_inst%trotr2_col                     , & ! Output: [real(r8) (:)     ]  patch weight of BDT on the column (0-1)
          dtrotr_col         => cnveg_state_inst%dtrotr_col                     , & ! Output: [real(r8) (:)     ]  decreased frac. coverage of BET+BDT on grid for dt
@@ -287,24 +288,26 @@ contains
         return
      end if
      !
-     ! Calculate fraction of crop (cropf_col) and non-crop and non-bare-soil
-     ! vegetation (lfwt) in vegetated column
+     ! Calculate fraction of crop in vegetation column (cropf_col)
+     ! and fraction of tree, grass, and shrub in grid cell (tgswt)
      !
      do fc = 1,num_soilc
         c = filter_soilc(fc)
+        g = col%gridcell(c)
         cropf_col(c) = 0._r8
-        lfwt(c)      = 0._r8
+        tgswt(g)     = 0._r8
      end do
      do fp = 1, num_soilp
         p = filter_soilp(fp)
         c = patch%column(p)
+        g = col%gridcell(c)
         ! For crop veg types
         if( patch%itype(p) > nc4_grass )then
            cropf_col(c) = cropf_col(c) + patch%wtcol(p)
         end if
-        ! For natural vegetation
-        if (patch%itype(p) <= nc4_grass ) then
-           lfwt(c) = lfwt(c) + patch%wtgcell(p)
+        ! For tree, grass, and shrub
+        if (patch%itype(p) <= nc4_grass .and. patch%itype(p) >= ndllf_evr_tmp_tree) then
+           tgswt(g) = tgswt(g) + patch%wtgcell(p)
         end if
      end do
      !
@@ -355,7 +358,7 @@ contains
         p = filter_exposedvegp(fp)
         c = patch%column(p)
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
            btran_col(c) = btran_col(c)+max(0._r8, min(1._r8, &
                 (btran2(p)-rswf_min(patch%itype(p)))/(rswf_max(patch%itype(p)) &
                 -rswf_min(patch%itype(p)))))*patch%wtcol(p)
@@ -369,7 +372,7 @@ contains
         g = col%gridcell(c)
 
         ! For non-crop -- natural vegetation and bare-soil
-        if( patch%itype(p)  <  nc3crop .and. cropf_col(c)  <  1.0_r8 )then
+        if( .not. is_crop(patch%itype(p)) .and. cropf_col(c)  <  1.0_r8 )then
 
            ! NOTE(wjs, 2016-12-15) These calculations of the fraction of evergreen
            ! and deciduous tropical trees (used to determine if a column is
@@ -542,8 +545,9 @@ contains
      do fc = 1, num_soilc
         c = filter_soilc(fc)
         g= col%gridcell(c)
+        tgswt(g) = max(0._r8, min(1._r8, tgswt(g)))
         if(grc%latdeg(g) < cnfire_const%borealat )then
-            if ((trotr1_col(c)+trotr2_col(c))*col%wtgcell(c)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
+            if ((trotr1_col(c)+trotr2_col(c))*tgswt(g)<=0.8_r8.and.trotr1_col(c)+trotr2_col(c)>0.0_r8) then
                baf_peatf(c) = non_boreal_peatfire_c/secsphr*max(0._r8, &
                      min(1._r8,(1._r8-prec30_col(c)*secspday/nonborpeat_fire_precip_denom)))*peatf_lf(c)
             else
@@ -551,8 +555,7 @@ contains
             end if
         else
            baf_peatf(c) = boreal_peatfire_c/secsphr*exp(-SHR_CONST_PI*(max(wf2(c),0._r8)/borpeat_fire_soilmoist_denom))* &
-                max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)* &
-                (1._r8-fsat(c))
+                max(0._r8,min(1._r8,(tsoi17(c)-SHR_CONST_TKFRZ)/10._r8))*peatf_lf(c)
         end if
      end do
      !
@@ -609,17 +612,25 @@ contains
               ig = (lh+this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
                    cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
                    cnfire_params%ignition_efficiency)*(1._r8-fs)* &
-                   (lfwt(c)**0.5)
+                   (tgswt(g)**0.5)
            else
               ig = this%forc_lnfm(g)/(5.16_r8+2.16_r8* &
                    cos(SHR_CONST_PI/180._r8*3*min(60._r8,abs(grc%latdeg(g)))))* &
                    cnfire_params%ignition_efficiency*(1._r8-fs)*  &
-                   (lfwt(c)**0.5)
+                   (tgswt(g)**0.5)
            end if
-           nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) !fire counts/km2/sec
+
+           ! Reduce burnability at high elevations
+           if(forc_topo_g(g) <= 2500._r8)then  !influence of topography on fires
+              topoi = 1._r8
+           else
+              topoi = 0.004_r8
+           end if
+
+           nfire(c) = ig/secsphr*fb*fire_m*lgdp_col(c) * topoi  !fire counts/km2/sec
            Lb_lf    = 1._r8+10._r8*(1._r8-EXP(-0.06_r8*forc_wind(g)))
            spread_m = fire_m**0.5_r8
-           fd_col(c) = (lfwt(c)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
+           fd_col(c) = (tgswt(g)*lgdp1_col(c)*lpop_col(c))**0.5_r8 * fd_col(c)
            farea_burned(c) = min(1._r8,(cnfire_const%g0*spread_m*fsr_col(c)* &
                 fd_col(c)/1000._r8)**2*nfire(c)*SHR_CONST_PI*Lb_lf+ &
                 baf_crop(c)+baf_peatf(c))  ! fraction (0-1) per sec
@@ -639,7 +650,7 @@ contains
                          / (trotr1_col(c) + trotr2_col(c))
 
                     cli = max(0._r8,min(1._r8,1._r8-prec30_col(c)*secspday/cri))* &
-                         (15._r8*min(0.0016_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.009_r8)* &
+                         (0.67_r8*min(0.01_r8,dtrotr_col(c)/dt*dayspyr*secspday)+0.001_r8) * &
                          max(0._r8,min(1._r8,(0.25_r8-(forc_rain(c)+forc_snow(c))*secsphr)/0.25_r8))
 
                     farea_burned(c) = farea_burned(c)+fb*cli*(cli_scale/secspday)

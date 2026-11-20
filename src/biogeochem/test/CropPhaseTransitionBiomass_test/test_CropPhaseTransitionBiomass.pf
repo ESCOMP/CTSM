@@ -1,0 +1,538 @@
+module test_CropPhaseTransitionBiomass
+
+  ! Tests of CropType
+
+  use funit
+  use landunit_varcon, only : istcrop
+  use unittestSubgridMod, only : unittest_subgrid_setup_start, unittest_subgrid_setup_end
+  use unittestSubgridMod, only : unittest_subgrid_teardown
+  use unittestSubgridMod, only : unittest_add_gridcell, unittest_add_landunit
+  use unittestSubgridMod, only : unittest_add_column, unittest_add_patch
+  use unittestSubgridMod, only : bounds, gi, li, ci, pi
+  use CropType, only : crop_type
+  use CropType, only : cphase_not_planted, cphase_planted, cphase_leafemerge
+  use CropType, only : cphase_grainfill, cphase_harvest
+  use decompMod, only : bounds_type
+  use shr_kind_mod , only : r8 => shr_kind_r8
+  use CNVegCarbonStateType, only : cnveg_carbonstate_type
+  use CropReprPoolsMod, only : nrepr
+  use CNPhenologyMod, only : CropPhaseTransitionBiomass, CropPhase_OnePatch
+
+  implicit none
+
+  @TestCase
+  type, extends(TestCase) :: TestCropType
+     type(crop_type) :: crop_inst
+     type(cnveg_carbonstate_type) :: cnveg_carbonstate_inst
+   contains
+     procedure :: setUp
+     procedure :: tearDown
+     procedure :: increase_biomass_pools
+  end type TestCropType
+
+  real(r8), parameter :: tol = 1.e-13_r8
+
+contains
+
+  subroutine setUp(this)
+    class(TestCropType), intent(inout) :: this
+    integer :: cft    ! crop functional type
+    integer :: ctype  ! column type
+
+    ! Based on set_landunit_crop_noncompete()
+    cft = 17
+    ctype = istcrop*100 + cft
+
+    ! Create a gridcell with just a crop landunit and one patch.
+    call unittest_subgrid_setup_start()
+    call unittest_add_gridcell()
+    call unittest_add_landunit(my_gi=gi, ltype=istcrop, wtgcell=1._r8)
+    call unittest_add_column(my_li=li, ctype=ctype, wtlunit=1._r8)
+    call unittest_add_patch(my_ci=ci, ptype=cft, wtcol=1._r8)
+    call unittest_subgrid_setup_end()
+
+    call this%crop_inst%Init(bounds)
+    call this%crop_inst%InitPlantCrop(pi)
+    this%crop_inst%croplive_patch(pi) = .true.
+
+    call this%cnveg_carbonstate_inst%InitAllocate(bounds, .true.)
+    this%cnveg_carbonstate_inst%frootc_patch(pi) = 1._r8
+    this%cnveg_carbonstate_inst%livecrootc_patch(pi) = 2._r8
+    this%cnveg_carbonstate_inst%livestemc_patch(pi) = 3._r8
+    this%cnveg_carbonstate_inst%leafc_patch(pi) = 4._r8
+    this%cnveg_carbonstate_inst%reproductivec_patch(pi, :) = 5._r8
+
+  end subroutine setUp
+
+  subroutine tearDown(this)
+    ! clean up stuff set up in setup()
+    class(TestCropType), intent(inout) :: this
+
+    call unittest_subgrid_teardown()
+
+  end subroutine tearDown
+
+  subroutine increase_biomass_pools(this, increment)
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: increment
+
+    associate( &
+      frootc => this%cnveg_carbonstate_inst%frootc_patch, &
+      livecrootc => this%cnveg_carbonstate_inst%livecrootc_patch, &
+      livestemc => this%cnveg_carbonstate_inst%livestemc_patch, &
+      leafc => this%cnveg_carbonstate_inst%leafc_patch, &
+      reproductivec => this%cnveg_carbonstate_inst%reproductivec_patch &
+    )
+
+    frootc(pi) = frootc(pi) + increment
+    livecrootc(pi) = livecrootc(pi) + increment
+    livestemc(pi) = livestemc(pi) + increment
+    leafc(pi) = leafc(pi) + increment
+    reproductivec(pi,:) = reproductivec(pi,:) + increment
+
+    end associate
+  end subroutine increase_biomass_pools
+
+  @Test
+  subroutine test_not_planted(this)
+    ! If called at not_planted, nothing should be set (i.e., everything should be negative)
+    class(TestCropType), intent(inout) :: this
+
+    this%crop_inst%cphase_patch(pi) = cphase_not_planted
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_emergence_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_harvest_patch(pi), 0._r8)
+
+  end subroutine test_not_planted
+
+  @Test
+  subroutine test_planted(this)
+    ! If called at planted (i.e., before emergence), nothing should be set
+    class(TestCropType), intent(inout) :: this
+
+    this%crop_inst%cphase_patch(pi) = cphase_planted
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_emergence_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_harvest_patch(pi), 0._r8)
+
+  end subroutine test_planted
+
+  @Test
+  subroutine test_leafemerge(this)
+    ! If called at leafemerge (i.e., after emergence), only emergence variables should be set
+    class(TestCropType), intent(inout) :: this
+
+    this%crop_inst%cphase_patch(pi) = cphase_leafemerge
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_harvest_patch(pi), 0._r8)
+
+  end subroutine test_leafemerge
+
+  @Test
+  subroutine test_grainfill(this)
+    ! If called during grainfill, only emergence and anthesis variables should be set
+    class(TestCropType), intent(inout) :: this
+
+    ! Before reaching grainfill, the crop should have gone through leafemerge
+    this%crop_inst%cphase_patch(pi) = cphase_leafemerge
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    ! Increase biomass pools before moving to next phase
+    call this%increase_biomass_pools(5._r8)
+
+    ! Now save status at anthesis
+    this%crop_inst%cphase_patch(pi) = cphase_grainfill
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertEqual(6._r8, this%crop_inst%frootc_anthesis_patch(pi))
+    @assertEqual(7._r8, this%crop_inst%livecrootc_anthesis_patch(pi))
+    @assertEqual(8._r8, this%crop_inst%livestemc_anthesis_patch(pi))
+    @assertEqual(9._r8, this%crop_inst%leafc_anthesis_patch(pi))
+    @assertEqual(10._r8 * nrepr, this%crop_inst%reprc_anthesis_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_harvest_patch(pi), 0._r8)
+
+  end subroutine test_grainfill
+
+  @Test
+  subroutine test_harvest_never_mature(this)
+    ! If called at harvest before maturity, _maturity_ variables should be unset
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
+
+    ! Before reaching grainfill, the crop should have gone through leafemerge
+    this%crop_inst%cphase_patch(pi) = cphase_leafemerge
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    ! Increase biomass pools before moving to next phase
+    call this%increase_biomass_pools(5._r8)
+
+    ! Now save status at anthesis
+    this%crop_inst%cphase_patch(pi) = cphase_grainfill
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    ! Increase biomass pools before moving to next phase
+    call this%increase_biomass_pools(5._r8)
+
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
+    ! Now save status at harvest
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertEqual(6._r8, this%crop_inst%frootc_anthesis_patch(pi))
+    @assertEqual(7._r8, this%crop_inst%livecrootc_anthesis_patch(pi))
+    @assertEqual(8._r8, this%crop_inst%livestemc_anthesis_patch(pi))
+    @assertEqual(9._r8, this%crop_inst%leafc_anthesis_patch(pi))
+    @assertEqual(10._r8 * nrepr, this%crop_inst%reprc_anthesis_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertEqual(11._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(12._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(13._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(14._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(15._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_harvest_never_mature
+
+  @Test
+  subroutine test_direct_to_harvest_never_grainfill(this)
+    ! If calling during harvest that was reached without entering grain filling period, both
+    ! _anthesis_ and _maturity_ variables should be unset
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
+
+    ! We need "actual" crop phase to be cphase_leafemerge
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.6_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_leafemerge)
+
+    ! Now save status at harvest
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_direct_to_harvest_never_grainfill
+
+  @Test
+  subroutine test_direct_to_harvest_never_leafemerge(this)
+    ! If calling during harvest that was reached before leaf emergence, only _harvest_ variables
+    ! should be set
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
+
+    ! We need "actual" crop phase to be cphase_planted
+    this%crop_inst%gddtsoi_patch(pi) = 0.0_r8
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.0_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_planted)
+
+    ! Now save status at harvest
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.false., huileaf=huileaf, huigrain=huigrain)
+
+    @assertLessThan(this%crop_inst%frootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_emergence_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_emergence_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_anthesis_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_anthesis_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_direct_to_harvest_never_leafemerge
+
+  @Test
+  subroutine test_harvest_mature(this)
+    ! If called at harvest after maturity, all variables should be set
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
+
+    ! Before reaching grainfill, the crop should have gone through leafemerge
+    this%crop_inst%cphase_patch(pi) = cphase_leafemerge
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    ! Increase biomass pools before moving to next phase
+    call this%increase_biomass_pools(5._r8)
+
+    ! Now save status at anthesis
+    this%crop_inst%cphase_patch(pi) = cphase_grainfill
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    ! Increase biomass pools before moving to next phase
+    call this%increase_biomass_pools(5._r8)
+
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
+    ! Now save status at harvest.
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.true., huileaf=huileaf, huigrain=huigrain)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertEqual(6._r8, this%crop_inst%frootc_anthesis_patch(pi))
+    @assertEqual(7._r8, this%crop_inst%livecrootc_anthesis_patch(pi))
+    @assertEqual(8._r8, this%crop_inst%livestemc_anthesis_patch(pi))
+    @assertEqual(9._r8, this%crop_inst%leafc_anthesis_patch(pi))
+    @assertEqual(10._r8 * nrepr, this%crop_inst%reprc_anthesis_patch(pi))
+
+    @assertEqual(11._r8, this%crop_inst%frootc_maturity_patch(pi))
+    @assertEqual(12._r8, this%crop_inst%livecrootc_maturity_patch(pi))
+    @assertEqual(13._r8, this%crop_inst%livestemc_maturity_patch(pi))
+    @assertEqual(14._r8, this%crop_inst%leafc_maturity_patch(pi))
+    @assertEqual(15._r8 * nrepr, this%crop_inst%reprc_maturity_patch(pi))
+
+    @assertEqual(11._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(12._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(13._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(14._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(15._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_harvest_mature
+
+  @Test
+  subroutine test_direct_to_grainfill(this)
+    ! If calling during grainfill that was reached without a timestep in leafemerge, both leafemerge
+    ! and grainfill variables should be filled (and no others).
+    class(TestCropType), intent(inout) :: this
+
+    ! Save status at anthesis
+    this%crop_inst%cphase_patch(pi) = cphase_grainfill
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertEqual(1._r8, this%crop_inst%frootc_anthesis_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_anthesis_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_anthesis_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_anthesis_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_anthesis_patch(pi))
+
+    @assertLessThan(this%crop_inst%frootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_maturity_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_maturity_patch(pi), 0._r8)
+
+    @assertLessThan(this%crop_inst%frootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livecrootc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%livestemc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%leafc_harvest_patch(pi), 0._r8)
+    @assertLessThan(this%crop_inst%reprc_harvest_patch(pi), 0._r8)
+
+  end subroutine test_direct_to_grainfill
+
+  @Test
+  subroutine test_direct_to_harvest_mature(this)
+    ! If calling during mature harvest that was reached without a timestep in leafemerge or
+    ! grainfill, all variables should be filled.
+    class(TestCropType), intent(inout) :: this
+    real(r8) :: huileaf, huigrain, actual_cphase
+
+    ! We need "actual" crop phase to be cphase_grainfill
+    this%crop_inst%gddtsoi_patch(pi) = 0.5_r8
+    huileaf = 0.2_r8
+    this%crop_inst%hui_patch(pi) = 0.8_r8
+    huigrain = 0.7_r8
+    call CropPhase_OnePatch(actual_cphase, this%crop_inst%croplive_patch(pi), &
+      this%crop_inst%gddtsoi_patch(pi), this%crop_inst%hui_patch(pi), huileaf, huigrain)
+    @assertEqual(actual_cphase, cphase_grainfill)
+
+    ! Now save status at harvest
+    this%crop_inst%cphase_patch(pi) = cphase_harvest
+    call CropPhaseTransitionBiomass(this%crop_inst, pi, this%cnveg_carbonstate_inst, &
+      is_mature=.true., huileaf=huileaf, huigrain=huigrain)
+
+    @assertEqual(1._r8, this%crop_inst%frootc_emergence_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_emergence_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_emergence_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_emergence_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_emergence_patch(pi))
+
+    @assertEqual(1._r8, this%crop_inst%frootc_anthesis_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_anthesis_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_anthesis_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_anthesis_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_anthesis_patch(pi))
+
+    @assertEqual(1._r8, this%crop_inst%frootc_maturity_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_maturity_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_maturity_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_maturity_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_maturity_patch(pi))
+
+    @assertEqual(1._r8, this%crop_inst%frootc_harvest_patch(pi))
+    @assertEqual(2._r8, this%crop_inst%livecrootc_harvest_patch(pi))
+    @assertEqual(3._r8, this%crop_inst%livestemc_harvest_patch(pi))
+    @assertEqual(4._r8, this%crop_inst%leafc_harvest_patch(pi))
+    @assertEqual(5._r8 * nrepr, this%crop_inst%reprc_harvest_patch(pi))
+
+  end subroutine test_direct_to_harvest_mature
+
+
+end module test_CropPhaseTransitionBiomass

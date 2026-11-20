@@ -239,17 +239,14 @@ contains
             if(col%is_fates(c))then
                s = clm_fates%f2hmap(clump_index)%hsites(c)
                ! %ema_npp is Smoothed [gc/m2/yr]
-               !npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp/(dayspyr*secspday)
-               ! FATES N cycling is not yet active, so runs are supplemented anyway
-               ! this will be added when FATES N cycling is completed.
-               npp = 0._r8
+               npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp
             else
-               npp = col_lag_npp(c)
+               ! need to put npp in units of gC/m^2/year here first
+               npp = col_lag_npp(c) * secspday * dayspyr
             end if
             
             if (npp /= spval) then
-               ! need to put npp in units of gC/m^2/year here first
-               t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * npp *(secspday * dayspyr))))/(secspday * dayspyr)  
+               t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * npp))) / (secspday * dayspyr)
                nfix_to_sminn(c) = max(0._r8,t)
             else
                nfix_to_sminn(c) = 0._r8
@@ -262,14 +259,13 @@ contains
 
             if(col%is_fates(c))then
                s = clm_fates%f2hmap(clump_index)%hsites(c)
-               !npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp 
-               ! See above regarding FATES and N fixation
-               npp = 0._r8
+               ! %ema_npp is Smoothed [gc/m2/yr]
+               npp = clm_fates%fates(clump_index)%bc_out(s)%ema_npp
             else 
                npp = cannsum_npp(c)
             end if
 
-            t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * npp)))/(secspday * dayspyr)
+            t = (1.8_r8 * (1._r8 - exp(-0.003_r8 * npp))) / (secspday * dayspyr)
             nfix_to_sminn(c) = max(0._r8,t)
          end do
       endif

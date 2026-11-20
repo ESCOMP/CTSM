@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _comparing-history-files:
 
 =========================
@@ -20,5 +18,5 @@ Options:
 
 -kpr
 
-See the ``cprnc`` `README <https://github.com/ESMCI/cime/blob/master/CIME/non_py/cprnc/README>`_ file for more details.
+See the ``cprnc`` `README <https://github.com/ESMCI/cprnc/blob/19bbb1ebb787103bb1047c2ac05516f6b1da3ac1/README.md>`_ file for more details.
 

@@ -148,7 +148,7 @@ contains
     real(r8) :: zldis(bounds%begl:bounds%endl)                       ! reference height "minus" zero displacement height (m)
     real(r8) :: zeta_lunit(bounds%begl:bounds%endl)                  ! landunit-level dimensionless stability parameter
     real(r8) :: um(bounds%begl:bounds%endl)                          ! wind speed including the stablity effect (m/s)
-    real(r8) :: obu(bounds%begl:bounds%endl)                         ! Monin-Obukhov length (m)
+    real(r8) :: obu(bounds%begl:bounds%endl)                         ! Obukhov length scale (m)
     real(r8) :: taf_numer(bounds%begl:bounds%endl)                   ! numerator of taf equation (K m/s)
     real(r8) :: taf_denom(bounds%begl:bounds%endl)                   ! denominator of taf equation (m/s)
     real(r8) :: qaf_numer(bounds%begl:bounds%endl)                   ! numerator of qaf equation (kg m/kg s)
@@ -279,7 +279,7 @@ contains
          swmp80_ref2m        => humanindex_inst%swmp80_ref2m_patch          , & ! Output: [real(r8) (:)   ]  2 m Swamp Cooler temperature 80% effi (C)
          swmp80_ref2m_u      => humanindex_inst%swmp80_ref2m_u_patch        , & ! Output: [real(r8) (:)   ]  Urban 2 m Swamp Cooler temperature 80% effi (C)
 
-         frac_sno            =>   waterdiagnosticbulk_inst%frac_sno_col              , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)       
+         frac_sno_albedo     =>   waterdiagnosticbulk_inst%frac_sno_albedo_col       , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for albedo calculations (0 to 1)       
          snow_depth          =>   waterdiagnosticbulk_inst%snow_depth_col            , & ! Input:  [real(r8) (:)   ]  snow height (m)                                   
          dqgdT               =>   waterdiagnosticbulk_inst%dqgdT_col                 , & ! Input:  [real(r8) (:)   ]  temperature derivative of "qg"                    
          qg                  =>   waterdiagnosticbulk_inst%qg_col                    , & ! Input:  [real(r8) (:)   ]  specific humidity at ground surface (kg/kg)       
@@ -409,7 +409,7 @@ contains
          dthv     = dth(l)*(1._r8+0.61_r8*forc_q(g))+0.61_r8*forc_th(g)*dqh(l)
          zldis(l) = forc_hgt_u_patch(lun%patchi(l)) - z_d_town(l)
 
-         ! Initialize Monin-Obukhov length and wind speed including convective velocity
+         ! Initialize Obukhov length scale and wind speed including convective velocity
 
          call frictionvel_inst%MoninObukIni(ur(l), thv_g(l), dthv, zldis(l), z_0_town(l), um(l), obu(l))
 
@@ -773,7 +773,7 @@ contains
          else if (ctype(c) == icol_road_perv) then
             ! Evaporation assigned to soil term if dew or snow
             ! or if no liquid water available in soil column
-            if (dqh(l) > 0._r8 .or. frac_sno(c) > 0._r8 .or. soilalpha_u(c) <= 0._r8) then
+            if (dqh(l) > 0._r8 .or. frac_sno_albedo(c) > 0._r8 .or. soilalpha_u(c) <= 0._r8) then
                qflx_evap_soi(p) = -forc_rho(g)*wtuq_road_perv_unscl(l)*dqh(l)
                qflx_tran_veg(p) = 0._r8
                ! Otherwise, evaporation assigned to transpiration term

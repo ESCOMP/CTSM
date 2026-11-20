@@ -19,12 +19,20 @@ module initInterpMindistTestUtils
        subgrid_special_indices_type( &
        ipft_not_vegetated = 0, &
        icol_vegetated_or_bare_soil = 10, &
+       icol_urban_roof = 71, &
+       icol_urban_sunwall = 72, &
+       icol_urban_shadewall = 73, &
+       icol_urban_impervious_road = 74, &
+       icol_urban_pervious_road = 75, &
        ilun_vegetated_or_bare_soil = 3, &
        ilun_crop = 4, &
-       ilun_landice = 5)
+       ilun_landice = 5, &
+       ilun_urban_TBD = 7, &
+       ilun_urban_HD = 8, &
+       ilun_urban_MD = 9)
 
-  ! value we can use for a special landunit; note that this just needs to differ from
-  ! ilun_vegetated_or_bare_soil and from ilun_crop
+  ! value we can use for a special landunit; note that this needs to differ from
+  ! ilun_vegetated_or_bare_soil, ilun_crop, ilun_urban_TBD, ilun_urban_HD, ilun_urban_MD
   integer, parameter, public :: ilun_special = 6
 
 contains

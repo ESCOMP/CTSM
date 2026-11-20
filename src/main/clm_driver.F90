@@ -13,8 +13,8 @@ module clm_driver
   use clm_varctl             , only : use_cn, use_lch4, use_noio, use_c13, use_c14
   use CNSharedParamsMod      , only : use_matrixcn
   use clm_varctl             , only : use_crop, irrigate, ndep_from_cpl
-  use clm_varctl             , only : use_soil_moisture_streams
-  use clm_varctl             , only : use_cropcal_streams
+  use clm_varctl             , only : use_soil_moisture_streams, fates_radiation_model
+  use clm_varctl             , only : use_cropcal_streams, is_cold_start, nsrest, nsrStartup
   use clm_time_manager       , only : get_nstep, is_beg_curr_day, is_beg_curr_year
   use clm_time_manager       , only : get_prev_date, is_first_step
   use clm_varpar             , only : nlevsno, nlevgrnd
@@ -30,6 +30,7 @@ module clm_driver
   !
   use dynSubgridDriverMod    , only : dynSubgrid_driver, dynSubgrid_wrapup_weight_changes
   use BalanceCheckMod        , only : WaterGridcellBalance, BeginWaterColumnBalance, BalanceCheck
+  use BalanceCheckMod        , only : EnergyBalanceCheck
   !
   use BiogeophysPreFluxCalcsMod  , only : BiogeophysPreFluxCalcs
   use SurfaceHumidityMod     , only : CalculateSurfaceHumidity
@@ -118,6 +119,8 @@ contains
     use laiStreamMod          , only : lai_advance
     use FATESFireFactoryMod   , only : scalar_lightning
     use FatesInterfaceTypesMod, only : fates_dispersal_cadence_none
+    use CIsoAtmTimeseriesMod, only : C14BombSpike, C13TimeSeries
+    use shr_log_mod, only : errMsg => shr_log_errMsg
     !
     ! !ARGUMENTS:
     implicit none
@@ -408,6 +411,14 @@ contains
        call PrescribedSoilMoistureAdvance( bounds_proc )
        call t_stopf('prescribed_sm')
     endif
+    if ( use_cn )then
+       ! Get the current C13/C14 ratio in the atmosphere from timeseries data or the fixed values
+       ! These calls fill the data: rc13_atm_grc and rc14_atm_grc
+       ! NOTE: These calls need to happen outside loops over nclumps (as streams are not threadsafe).
+       ! TODO: This should probably be moved to CNVegetationFacade in the InterpFileInputs subroutine
+       if ( use_c14 ) call C14BombSpike(bounds_proc)
+       if ( use_c13 ) call C13TimeSeries(bounds_proc, atm2lnd_inst)
+    end if
     ! ============================================================================
     ! Initialize the column-level mass balance checks for water, carbon & nitrogen.
     !
@@ -526,7 +537,7 @@ contains
             filter(nc)%num_soilp  , filter(nc)%soilp,   &
             canopystate_inst, water_inst%waterstatebulk_inst, &
             water_inst%waterdiagnosticbulk_inst, &
-            energyflux_inst)
+            energyflux_inst, frictionvel_inst, soilstate_inst)
 
        call topo_inst%UpdateTopo(bounds_clump, &
             filter(nc)%num_icec, filter(nc)%icec, &
@@ -601,7 +612,7 @@ contains
             atm2lnd_inst, temperature_inst, &
             aerosol_inst, water_inst)
 
-       ! update surface water fraction (this may modify frac_sno)
+       ! update surface water fraction (this may modify frac_sno_albedo and frac_sno_fluxes)
        call UpdateFracH2oSfc(bounds_clump, &
             filter(nc)%num_soilc, filter(nc)%soilc, &
             water_inst)
@@ -812,6 +823,12 @@ contains
 
        if (irrigate) then
 
+          if (use_fates) then
+             call endrun(msg=' ERROR: Can not have ' // &
+                             'use_fates = .true. and irrigate = .true. ' // &
+                             'Set one of them to .false. in your user_nl_clm. ' // &
+                             errMsg(sourcefile, __LINE__))
+          endif
           ! ============================================================================
           ! Determine irrigation needed for future time steps
           ! ============================================================================
@@ -1019,7 +1036,7 @@ contains
           l = col%landunit(c)
           if (lun%urbpoi(l)) then
              ! Urban landunit use Bonan 1996 (LSM Technical Note)
-             water_inst%waterdiagnosticbulk_inst%frac_sno_col(c) = &
+             water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(c) = &
                   min( water_inst%waterdiagnosticbulk_inst%snow_depth_col(c)/0.05_r8, 1._r8)
           end if
        end do
@@ -1157,7 +1174,7 @@ contains
                soilbiogeochem_carbonflux_inst, soilbiogeochem_carbonstate_inst, &
                c13_soilbiogeochem_carbonflux_inst, c13_soilbiogeochem_carbonstate_inst, &
                c14_soilbiogeochem_carbonflux_inst, c14_soilbiogeochem_carbonstate_inst, &
-               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst)
+               soilbiogeochem_nitrogenflux_inst, soilbiogeochem_nitrogenstate_inst, soilhydrology_inst)
           call t_stopf('EcosysDynPostDrainage')
        end if
 
@@ -1172,7 +1189,8 @@ contains
 
           call clm_fates%wrap_update_hifrq_hist(bounds_clump, &
                soilbiogeochem_carbonflux_inst, &
-               soilbiogeochem_carbonstate_inst)
+               soilbiogeochem_carbonstate_inst, &
+               solarabs_inst, energyflux_inst, temperature_inst)
 
 
           if( is_beg_curr_day() ) then
@@ -1261,26 +1279,29 @@ contains
           call t_stopf('ch4')
        end if
 
+       call EnergyBalanceCheck(bounds_clump, atm2lnd_inst, solarabs_inst, surfalb_inst, &
+            energyflux_inst, canopystate_inst, water_inst%waterdiagnosticbulk_inst)
+
        ! ============================================================================
        ! Determine albedos for next time step
        ! ============================================================================
+
+       ! This is only relevant to  fates two stream to not break sun fraction calculations
+       ! on the second timestep after start from finidat or for hybrid run.
+       ! The first clause is to maintain b4b with base, but is not necessary.
        
-       if (.not.doalb) then
-
-
-          if(use_fates) then
-             ! During branch runs and non continue_run restarts, the doalb flag
-             ! does not trigger correctly for fates runs (and non-fates?), and thus
-             ! the zenith angles are not calculated and ready when radiation scattering
-             ! needs to occur.
+       if (use_fates .and. .not.doalb ) then
+          if ( (is_cold_start .and. get_nstep() == 1) .or. & 
+              ((fates_radiation_model == 'twostream') .and. (get_nstep()== 1) .and. (.not.use_fates_sp) &
+                .and. (.not.is_cold_start) .and. (nsrest == nsrStartup)) ) then
              call UpdateZenithAngles(bounds_clump, surfalb_inst, nextsw_cday, declinp1)
              call clm_fates%wrap_canopy_radiation(bounds_clump, nc, &
                   water_inst%waterdiagnosticbulk_inst%fcansno_patch(bounds_clump%begp:bounds_clump%endp), &
                   surfalb_inst)
-          end if
-          
-       else
+          endif
+       endif
 
+       if (doalb) then
           ! Albedos for non-urban columns
           call t_startf('surfalb')
           call SurfaceAlbedo(bounds_clump,                      &
@@ -1542,7 +1563,8 @@ contains
        num_nolakep, filter_nolakep, &
        num_soilp  , filter_soilp, &
        canopystate_inst, waterstatebulk_inst, &
-       waterdiagnosticbulk_inst, energyflux_inst)
+       waterdiagnosticbulk_inst, energyflux_inst, &
+       frictionvel_inst, soilstate_inst)
     !
     ! !DESCRIPTION:
     ! Initialization of clm driver variables needed from previous timestep
@@ -1557,6 +1579,9 @@ contains
     use WaterFluxBulkType      , only : waterfluxbulk_type
     use WaterStateBulkType , only : waterstatebulk_type
     use EnergyFluxType     , only : energyflux_type
+    use FrictionVelocityMod, only : frictionvel_type
+    use SoilStateType      , only : soilstate_type
+    use CanopyFluxesMod    , only : CanopyFluxesResetDiagnostics
     !
     ! !ARGUMENTS:
     type(bounds_type)     , intent(in)    :: bounds
@@ -1570,10 +1595,15 @@ contains
     type(waterstatebulk_type) , intent(inout) :: waterstatebulk_inst
     type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
     type(energyflux_type) , intent(inout) :: energyflux_inst
+    type(frictionvel_type), intent(inout) :: frictionvel_inst
+    type(soilstate_type)  , intent(inout) :: soilstate_inst
     !
     ! !LOCAL VARIABLES:
     integer :: c, p, f, j              ! indices
     integer :: fp, fc                  ! filter indices
+    integer :: frac_veg_nosno_new      ! frac_veg_nosno for this time step
+    integer :: num_leaving_exposedveg  ! number of patches leaving the exposed-veg filter this step
+    integer :: filter_leaving_exposedveg(bounds%endp-bounds%begp+1) ! patches leaving the exposed-veg filter this step
     !-----------------------------------------------------------------------
 
     associate(                                                             &
@@ -1604,15 +1634,31 @@ contains
          eflx_bot(c)  = 0._r8
       end do
 
-      ! Initialize fraction of vegetation not covered by snow
+      ! Initialize fraction of vegetation not covered by snow.
+      !
+      ! Patches whose frac_veg_nosno goes from 1 to 0 leave filter_exposedvegp (set
+      ! later in setExposedvegpFilter), so CanopyFluxes will no longer compute their
+      ! diagnostics. Reset those diagnostics now so the last computed values do not
+      ! persist: they are not restart variables, so persisting values would differ
+      ! between a continuous and a restarted run (issue #3661).
 
+      num_leaving_exposedveg = 0
       do p = bounds%begp,bounds%endp
          if (patch%active(p)) then
-            frac_veg_nosno(p) = frac_veg_nosno_alb(p)
+            frac_veg_nosno_new = frac_veg_nosno_alb(p)
          else
-            frac_veg_nosno(p) = 0._r8
+            frac_veg_nosno_new = 0
          end if
+         if (frac_veg_nosno(p) == 1 .and. frac_veg_nosno_new == 0) then
+            num_leaving_exposedveg = num_leaving_exposedveg + 1
+            filter_leaving_exposedveg(num_leaving_exposedveg) = p
+         end if
+         frac_veg_nosno(p) = frac_veg_nosno_new
       end do
+
+      call CanopyFluxesResetDiagnostics(bounds, &
+           num_leaving_exposedveg, filter_leaving_exposedveg, &
+           frictionvel_inst, soilstate_inst, waterdiagnosticbulk_inst)
 
       ! Initialize set of previous time-step variables
       ! Ice fraction of snow at previous time step

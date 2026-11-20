@@ -60,9 +60,11 @@ class TestSysPyEnvCreate(unittest.TestCase):
         self.py_env_create = os.path.join(path_to_ctsm_root(), "py_env_create")
         assert os.path.exists(self.py_env_create)
 
-        # Get path to testing condafile
+        # Get path to testing conda/mambafile:
+        # conda needs a completely empty file (# comments okay) as of 25.5.1, but mamba as of 2.3.1
+        # needs at least some YML structure.
         self.empty_condafile = os.path.join(path_to_ctsm_root(), "python", "empty.txt")
-        assert os.path.exists(self.empty_condafile)
+        self.empty_mambafile = os.path.join(path_to_ctsm_root(), "python", "empty.yml")
 
         # Set up other variables
         self.env_names = []
@@ -89,7 +91,12 @@ class TestSysPyEnvCreate(unittest.TestCase):
             self.env_names.append(get_unique_env_name(5))
 
         # Form and run command
-        cmd = [self.py_env_create, "-n", self.env_names[-1], "-f", self.empty_condafile, "--yes"]
+        if extra_args is not None and ("-m" in extra_args or "--mamba" in extra_args):
+            empty_file = self.empty_mambafile
+        else:
+            empty_file = self.empty_condafile
+        assert os.path.exists(empty_file)
+        cmd = [self.py_env_create, "-n", self.env_names[-1], "-f", empty_file, "--yes"]
         if extra_args:
             cmd += extra_args
         out = subprocess.run(cmd, capture_output=True, text=True, check=False)
@@ -327,7 +334,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
             raise e
         env_list = get_conda_envs()
         for env_name in self.env_names:
-            assert does_env_exist(env_name, env_list)
+            if not does_env_exist(env_name, env_list):
+                raise AssertionError(f"environment not found: {env_name}")
 
     def test_complete_py_env_create_mamba(self):
         """
@@ -358,7 +366,8 @@ class TestSysPyEnvCreate(unittest.TestCase):
             raise e
         env_list = get_conda_envs()
         for env_name in self.env_names:
-            assert does_env_exist(env_name, env_list)
+            if not does_env_exist(env_name, env_list):
+                raise AssertionError(f"environment not found: {env_name}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,71 @@
+name: Docs tests to run when ctsm_pylib is (or might be) updated
+
+on:
+  push:
+    # Run when a change to these files is pushed to any branch. Without the "branches:" line, for some reason this will be run whenever a tag is pushed, even if the listed files aren't changed.
+    branches: ['*']
+    paths:
+      - 'python/conda_env_ctsm_py.yml'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
+      - 'doc/doc-builder'
+      - '.github/workflows/docs-common.yml'
+      - '.github/workflows/docs-update-dependency-common.yml'
+
+  pull_request:
+    # Run on pull requests that change the listed files
+    paths:
+      - 'python/conda_env_ctsm_py.yml'
+      # Include all of doc-builder due to dependence of ctsm_pylib on doc-builder's requirements.txt. Since doc-builder is a submodule, we can't point to that file specifically.
+      - 'doc/doc-builder'
+      - '.github/workflows/docs-common.yml'
+      - '.github/workflows/docs-update-dependency-common.yml'
+
+  schedule:
+    # 8:01 am every Monday UTC
+    - cron: '1 8 * * 1'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  test-build-docs-ctsm_pylib:
+    if: ${{ always() }}
+    name: Build with ctsm_pylib
+    uses: ./.github/workflows/docs-common.yml
+    with:
+      use_conda: true
+      conda_env_file: python/conda_env_ctsm_py.yml
+      conda_env_name: ctsm_pylib
+
+  test-update-dependency:
+    if: ${{ always() }}
+    name: Docs dependency update tests
+    uses: ./.github/workflows/docs-update-dependency-common.yml
+
+  # File an issue if any docs test failed during a scheduled or manual run.
+  # The main thing we're concerned about in that case is something having
+  # changed outside the repository that's causing the ctsm_pylib setup to
+  # fail.
+  file-issue-on-failure:
+    if: |
+      failure() &&
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    needs: [test-build-docs-ctsm_pylib, test-update-dependency]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - name: Create issue
+        uses: JasonEtco/create-an-issue@1b14a70e4d8dc185e5cc76d3bec9eab20257b2c5  # v2.9.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          filename: .github/workflows/docs-ctsm_pylib.issue_template.md
+          update_existing: true
+          search_existing: open
+
+

@@ -13,7 +13,7 @@ module CanopyFluxesMod
   use shr_kind_mod          , only : r8 => shr_kind_r8
   use shr_log_mod           , only : errMsg => shr_log_errMsg
   use abortutils            , only : endrun
-  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_c14, use_cndv, use_fates, &
+  use clm_varctl            , only : iulog, use_cn, use_lch4, use_c13, use_cndv, use_fates, &
                                      use_luna, use_hydrstress, use_biomass_heat_storage, z0param_method
   use clm_varpar            , only : nlevgrnd, nlevsno, nlevcan, mxpft
   use pftconMod             , only : pftcon
@@ -56,6 +56,7 @@ module CanopyFluxesMod
   ! !PUBLIC MEMBER FUNCTIONS:
   public :: CanopyFluxesReadNML     ! Read in namelist settings
   public :: CanopyFluxes            ! Calculate canopy fluxes
+  public :: CanopyFluxesResetDiagnostics ! Reset CanopyFluxes-only diagnostics for patches leaving the exposed-veg filter
   public :: readParams
 
   type, private :: params_type
@@ -229,7 +230,7 @@ contains
     use clm_time_manager   , only : get_step_size_real, get_prev_date, is_near_local_noon
     use clm_varcon         , only : sb, cpair, hvap, vkc, grav, denice, c_to_b
     use clm_varcon         , only : denh2o, tfrz, tlsai_crit, alpha_aero
-    use clm_varcon         , only : c14ratio, spval
+    use clm_varcon         , only : spval
     use clm_varcon         , only : c_water, c_dry_biomass, c_to_b
     use clm_varcon         , only : nu_param, cd1_param
     use perf_mod           , only : t_startf, t_stopf
@@ -346,7 +347,7 @@ contains
     real(r8) :: efpot                                ! potential latent energy flux [kg/m2/s]
     real(r8) :: efe(bounds%begp:bounds%endp)         ! water flux from leaf [mm/s]
     real(r8) :: efsh                                 ! sensible heat from leaf [mm/s]
-    real(r8) :: obuold(bounds%begp:bounds%endp)      ! monin-obukhov length from previous iteration
+    real(r8) :: obuold(bounds%begp:bounds%endp)      ! Obukhov length scale from previous iteration
     real(r8) :: tlbef(bounds%begp:bounds%endp)       ! leaf temperature from previous iteration [K]
     real(r8) :: tl_ini(bounds%begp:bounds%endp)      ! leaf temperature from beginning of time step [K]
     real(r8) :: ts_ini(bounds%begp:bounds%endp)      ! stem temperature from beginning of time step [K]
@@ -354,7 +355,6 @@ contains
     real(r8) :: err(bounds%begp:bounds%endp)         ! balance error
     real(r8) :: erre                                 ! balance error
     real(r8) :: co2(bounds%begp:bounds%endp)         ! atmospheric co2 partial pressure (pa)
-    real(r8) :: c13o2(bounds%begp:bounds%endp)       ! atmospheric c13o2 partial pressure (pa)
     real(r8) :: o2(bounds%begp:bounds%endp)          ! atmospheric o2 partial pressure (pa)
     real(r8) :: svpts(bounds%begp:bounds%endp)       ! saturation vapor pressure at t_veg (pa)
     real(r8) :: eah(bounds%begp:bounds%endp)         ! canopy air vapor pressure (pa)
@@ -438,6 +438,8 @@ contains
     real(r8), parameter :: k_cyl_area = 1.0_r8         !departure from cylindrical area
     real(r8), parameter :: k_internal = 0.0_r8         !self-absorbtion of leaf/stem longwave
     real(r8), parameter :: min_stem_diameter = 0.05_r8 !minimum stem diameter for which to calculate stem interactions
+    real(r8), parameter :: min_lai    = 0.1_r8         !minimum elai threshold to add esai to sa_leaf calculation
+                                                       !value is arbitrary but has been effective in avoiding RRTMGP errors in CESM3 development simulations
 
     integer :: dummy_to_make_pgi_happy
     !------------------------------------------------------------------------------
@@ -479,7 +481,6 @@ contains
          forc_u                 => atm2lnd_inst%forc_u_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in east direction (m/s)                        
          forc_v                 => atm2lnd_inst%forc_v_grc                      , & ! Input:  [real(r8) (:)   ]  atmospheric wind speed in north direction (m/s)                       
          forc_pco2              => atm2lnd_inst%forc_pco2_grc                   , & ! Input:  [real(r8) (:)   ]  partial pressure co2 (Pa)                                             
-         forc_pc13o2            => atm2lnd_inst%forc_pc13o2_grc                 , & ! Input:  [real(r8) (:)   ]  partial pressure c13o2 (Pa)                                           
          forc_po2               => atm2lnd_inst%forc_po2_grc                    , & ! Input:  [real(r8) (:)   ]  partial pressure o2 (Pa)                                              
 
          tc_ref2m               => humanindex_inst%tc_ref2m_patch               , & ! Output: [real(r8) (:)   ]  2 m height surface air temperature (C)
@@ -563,7 +564,7 @@ contains
          frac_h2osfc            => waterdiagnosticbulk_inst%frac_h2osfc_col              , & ! Input:  [real(r8) (:)   ]  fraction of surface water                                             
          fwet                   => waterdiagnosticbulk_inst%fwet_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of canopy that is wet (0 to 1)                               
          fdry                   => waterdiagnosticbulk_inst%fdry_patch                   , & ! Input:  [real(r8) (:)   ]  fraction of foliage that is green and dry [-]                         
-         frac_sno               => waterdiagnosticbulk_inst%frac_sno_eff_col             , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)                           
+         frac_sno_fluxes        => waterdiagnosticbulk_inst%frac_sno_fluxes_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)                           
          snow_depth             => waterdiagnosticbulk_inst%snow_depth_col               , & ! Input:  [real(r8) (:)   ]  snow height (m)                                                       
          qg_snow                => waterdiagnosticbulk_inst%qg_snow_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at snow surface [kg/kg]                             
          qg_soil                => waterdiagnosticbulk_inst%qg_soil_col                  , & ! Input:  [real(r8) (:)   ]  specific humidity at soil surface [kg/kg]                             
@@ -625,9 +626,9 @@ contains
          uaf                    => frictionvel_inst%uaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air speed [m/s]
          taf                    => frictionvel_inst%taf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air temperature [K]
          qaf                    => frictionvel_inst%qaf_patch                   , & ! Output: [real(r8) (:)   ]  canopy air humidity [kg/kg]
-         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Monin-Obukhov length [m]
+         obu                    => frictionvel_inst%obu_patch                   , & ! Output: [real(r8) (:)   ]  Obukhov length scale [m]
          zeta                   => frictionvel_inst%zeta_patch                  , & ! Output: [real(r8) (:)   ]  dimensionless stability parameter 
-         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [Pa]
+         vpd                    => frictionvel_inst%vpd_patch                   , & ! Output: [real(r8) (:)   ]  vapor pressure deficit [kPa]
          num_iter               => frictionvel_inst%num_iter_patch              , & ! Output: [real(r8) (:)   ]  number of iterations
 
          begp                   => bounds%begp                                  , &
@@ -640,7 +641,6 @@ contains
         bsha                    => energyflux_inst%bsha_patch                       ! Output: [real(r8) (:)   ]  sunlit canopy transpiration wetness factor (0 to 1)
       end if
 
-      
       ! Determine step size
 
       dtime = get_step_size_real()
@@ -747,15 +747,26 @@ bioms:   do f = 1, fn
             ! adjust for departure of cylindrical stem model
             sa_stem(p) = k_cyl_area * sa_stem(p)
 
-            !
             ! only calculate separate leaf/stem heat capacity for trees
-            ! and shrubs if dbh is greater than some minimum value
-            ! (set surface area for stem, and fraction absorbed by stem to zero)
+            ! and shrubs if dbh is greater than some minimum value.
+            ! otherwise, set surface area for stem and fraction absorbed by stem to zero,
+            ! and add esai to sa_leaf.
             if(.not.(is_tree(patch%itype(p)) .or. is_shrub(patch%itype(p))) &
                  .or. dbh(p) < min_stem_diameter) then
                frac_rad_abs_by_stem(p) = 0.0_r8
                sa_stem(p) = 0.0_r8
                sa_leaf(p) = sa_leaf(p) + esai(p)
+            else
+               ! Add esai to sa_leaf if elai is less than threshold.
+               ! Intended to avoid small sa_leaf which leads to small leaf conductance
+               ! and high leaf temperature. This in turn can lead to unrealistically
+               ! high surface temperatures passed to the atmospheric model (The RRTMGP
+               ! component in particular, which returns an error and stops the model
+               ! if the surface temperature is greater than 355K).
+               ! See https://github.com/ESCOMP/CTSM/issues/3589 for more info.
+               if(elai(p) < min_lai) then
+                  sa_leaf(p) = sa_leaf(p) + esai(p)
+               endif
             endif
 
             ! if using Satellite Phenology mode, calculate leaf and stem biomass
@@ -961,10 +972,6 @@ bioms:   do f = 1, fn
          co2(p) = forc_pco2(g)
          o2(p)  = forc_po2(g)
 
-         if ( use_c13 ) then
-            c13o2(p) = forc_pc13o2(g)
-         end if
-
          ! Initialize flux profile
 
          nmozsgn(p) = 0
@@ -998,7 +1005,7 @@ bioms:   do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
 
-         ! Initialize Monin-Obukhov length and wind speed
+         ! Initialize Obukhov length scale and wind speed
 
          call frictionvel_inst%MoninObukIni(ur(p), thv(c), dthv(p), zldis(p), z0mv(p), um(p), obu(p))
          num_iter(p) = 0
@@ -1102,15 +1109,15 @@ bioms:   do f = 1, fn
             ! Stomatal resistances for sunlit and shaded fractions of canopy.
             ! Done each iteration to account for differences in eah, tv.
 
-            svpts(p) = el(p)                         ! pa
-            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! pa
+            svpts(p) = el(p)                         ! Pa
+            eah(p) = forc_pbot(c) * qaf(p) / 0.622_r8   ! Pa
             rhaf(p) = eah(p)/svpts(p)
             ! variables for history fields
             rah1(p)  = rah(p,above_canopy)
             raw1(p)  = raw(p,above_canopy)
             rah2(p)  = rah(p,below_canopy)
             raw2(p)  = raw(p,below_canopy)
-            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8
+            vpd(p)  = max((svpts(p) - eah(p)), 50._r8) * 0.001_r8 ! kPa
 
          end do
 
@@ -1291,8 +1298,8 @@ bioms:   do f = 1, fn
                erre = efe(p) - efeold
             end if
             ! fractionate ground emitted longwave
-            lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-                 +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
+            lw_grnd=(frac_sno_fluxes(c)*t_soisno(c,snl(c)+1)**4 &
+                 +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
                  +frac_h2osfc(c)*t_h2osfc(c)**4)
 
             dt_veg(p) = ((1._r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) &
@@ -1380,7 +1387,7 @@ bioms:   do f = 1, fn
             taf(p) = wtg0*t_grnd(c) + wta0(p)*thm(p) + wtl0(p)*t_veg(p) + wtstem0(p)*t_stem(p)
             qaf(p) = wtlq0(p)*qsatl(p) + wtgq0*qg(c) + forc_q(c)*wtaq0(p)
 
-            ! Update Monin-Obukhov length and wind speed including the
+            ! Update Obukhov length scale and wind speed including the
             ! stability effect
 
             dth(p) = thm(p)-taf(p)
@@ -1461,8 +1468,8 @@ bioms:   do f = 1, fn
 
          ! Energy balance check in canopy
 
-         lw_grnd=(frac_sno(c)*t_soisno(c,snl(c)+1)**4 &
-              +(1._r8-frac_sno(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
+         lw_grnd=(frac_sno_fluxes(c)*t_soisno(c,snl(c)+1)**4 &
+              +(1._r8-frac_sno_fluxes(c)-frac_h2osfc(c))*t_soisno(c,1)**4 &
               +frac_h2osfc(c)*t_h2osfc(c)**4)
 
          err(p) = (1.0_r8-frac_rad_abs_by_stem(p))*(sabv(p) + air(p) + bir(p)*tlbef(p)**3 &
@@ -1645,7 +1652,7 @@ bioms:   do f = 1, fn
 
          ! Determine total photosynthesis
          
-         call PhotosynthesisTotal(fn, filterp, &
+         call PhotosynthesisTotal(bounds, fn, filterp, &
               atm2lnd_inst, canopystate_inst, photosyns_inst)
          
          ! Calculate water use efficiency
@@ -1756,6 +1763,56 @@ bioms:   do f = 1, fn
 
 
   end subroutine CanopyFluxes
+
+  !-----------------------------------------------------------------------
+  subroutine CanopyFluxesResetDiagnostics(bounds, num_reset, filter_reset, &
+       frictionvel_inst, soilstate_inst, waterdiagnosticbulk_inst)
+    !
+    ! !DESCRIPTION:
+    ! Set to spval the diagnostic outputs that are computed only in CanopyFluxes
+    ! (i.e., only for patches in filter_exposedvegp), for the patches in filter_reset.
+    !
+    ! This is called when a patch leaves the exposed-vegetation filter (frac_veg_nosno
+    ! goes from 1 to 0, e.g., vegetation buried by snow, leaf-off, harvest, or patch
+    ! deactivation). Without this, such a patch keeps the values from the last time
+    ! step in which CanopyFluxes processed it. Those stale values are not on the
+    ! restart file, so a restarted run holds spval where a continuous run holds the
+    ! stale value, and history output differs between the two (see issue #3661).
+    !
+    ! The column-level effective porosity is also written here for all levels
+    ! (including bedrock, j > nlevsoi) via calc_effective_soilporosity, for the
+    ! columns of exposed-veg patches. Levels 1:nlevsoi are recomputed every step in
+    ! SetSoilWaterFractions; the bedrock levels are not, so they are reset here. If
+    ! the column still has other exposed-veg patches, CanopyFluxes recomputes them
+    ! later in the same time step.
+    !
+    ! !USES:
+    use clm_varcon, only : spval
+    use clm_varpar, only : nlevsoi, nlevgrnd
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)              , intent(in)    :: bounds
+    integer                        , intent(in)    :: num_reset       ! number of patches in filter_reset
+    integer                        , intent(in)    :: filter_reset(:) ! patches leaving the exposed-veg filter
+    type(frictionvel_type)         , intent(inout) :: frictionvel_inst
+    type(soilstate_type)           , intent(inout) :: soilstate_inst
+    type(waterdiagnosticbulk_type) , intent(inout) :: waterdiagnosticbulk_inst
+    !
+    ! !LOCAL VARIABLES:
+    integer :: f, p, c
+    !-----------------------------------------------------------------------
+
+    do f = 1, num_reset
+       p = filter_reset(f)
+       c = patch%column(p)
+
+       call frictionvel_inst%SetValues(bounds, spval, p=p)
+       call soilstate_inst%SetValues(bounds, spval, p=p)
+       waterdiagnosticbulk_inst%rh_af_patch(p) = spval
+       soilstate_inst%eff_porosity_col(c, nlevsoi+1:nlevgrnd) = spval
+    end do
+
+  end subroutine CanopyFluxesResetDiagnostics
 
 end module CanopyFluxesMod
 

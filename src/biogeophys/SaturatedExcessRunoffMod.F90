@@ -267,14 +267,17 @@ contains
     endif
 
     ! ------------------------------------------------------------------------
-    ! Set fsat to zero for upland hillslope columns
+    ! Set fsat to zero for hillslope columns
+    !
+    ! hillslope explicitly represents lateral water movement and
+    ! convergence, so the implicit topmodel approach is unnecessary
+    !
     ! ------------------------------------------------------------------------
     if (hillslope_fsat_equals_zero) then
        do fc = 1, num_hydrologyc
           c = filter_hydrologyc(fc)
           if(col%is_hillslope_column(c) .and. col%active(c)) then
-             ! Set fsat to zero for upland columns
-             if (col%cold(c) /= ispval) fsat(c) = 0._r8
+             fsat(c) = 0._r8
           endif
        end do
     endif

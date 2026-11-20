@@ -97,10 +97,6 @@ def buildnml(case, caseroot, compname):
     # Warnings for land tuning modes
     #
     closest_tuning = {
-        "clm4_5_1PT": "clm4_5_CRUv7",
-        "clm4_5_QIAN": "clm4_5_CRUv7",
-        "clm4_5_NLDAS2": "clm4_5_CRUv7",
-        "clm4_5_ERA5": "clm4_5_CRUv7",
         "clm5_0_1PT": "clm5_0_GSWP3v1",
         "clm5_0_QIAN": "clm5_0_GSWP3v1",
         "clm5_0_NLDAS2": "clm5_0_GSWP3v1",
@@ -137,9 +133,6 @@ def buildnml(case, caseroot, compname):
         "clm6_0_cam4.0": "clm5_0_cam6.0",
         "clm5_0_cam5.0": "clm5_0_cam6.0",
         "clm5_0_cam4.0": "clm5_0_cam6.0",
-        "clm4_5_cam6.0": "clm5_0_cam6.0",
-        "clm4_5_cam5.0": "clm5_0_cam6.0",
-        "clm4_5_cam4.0": "clm5_0_cam6.0",
     }
     for mode, based_on in tuning_based_on.items():
         if lnd_tuning_mode == mode:
@@ -386,7 +379,7 @@ def buildnml(case, caseroot, compname):
         cmd = os.path.join(lnd_root, "bld", "build-namelist")
 
         command = (
-            '%s -cimeroot %s -infile %s -csmdata %s -inputdata %s %s -namelist "&clm_inparm  start_ymd=%s %s/ " '
+            '%s -cimeroot %s -landroot %s -infile %s -csmdata %s -inputdata %s %s -namelist "&clm_inparm  start_ymd=%s %s/ " '
             "%s %s -res %s %s -clm_start_type %s -envxml_dir %s "
             "-configuration %s -structure %s "
             "%s -glc_nec %s %s -co2_ppmv %s -co2_type %s -config %s -driver %s "
@@ -394,6 +387,7 @@ def buildnml(case, caseroot, compname):
             % (
                 cmd,
                 _CIMEROOT,
+                lnd_root,
                 infile,
                 din_loc_root,
                 inputdata_file,

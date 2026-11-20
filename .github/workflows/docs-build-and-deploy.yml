@@ -6,13 +6,17 @@ on:
     branches: ['master', 'release-clm5.0']
     paths:
       - 'doc/**'
+      - '!doc/test/*'
       - '!doc/*ChangeLog*'
       - '!doc/*ChangeSum*'
       - '!doc/UpdateChangelog.pl'
       # Include all include::ed files outside doc/ directory!
-      - 'src/README.unit_testing'
-      - 'tools/README'
+      - 'src/README.unit_testing.md'
+      - 'tools/README.md'
+      - 'tools/mksurfdata_esmf/README.md'
+      - 'tools/unsupported/README.md'
       - 'tools/external/representative-hillslopes/shell_scripts/README.md'
+      - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -32,6 +36,10 @@ concurrency:
 jobs:
 
   build-and-deploy:
+
+    # Only run on upstream repository
+    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -39,27 +47,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           # Get all history, ensuring all branches are available for checkout
           fetch-depth: 0
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+
+      # Check out all submodules because we might :literalinclude: something from one
+      - name: Checkout all submodules
+        run: |
+          bin/git-fleximod update -o
 
       - name: Build docs using container
         id: build-docs
         run: |
-          bin/git-fleximod update -o
           cd doc
           ./build_docs_to_publish -d --site-root https://escomp.github.io/CTSM
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:
           # Upload publish dir
           path: 'doc/_publish'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1

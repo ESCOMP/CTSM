@@ -274,7 +274,7 @@ def find_soil_structure(args, surf_file):
         soil_bot : array of soil layers top depths
         soil_top : array of soil layers bottom depths
     """
-    # TODO: What if not cheyenne? Self-contained depth info.
+    # TODO: What if not derecho? Self-contained depth info.
 
     print("------------")
     print("surf_file : ", surf_file)
@@ -707,6 +707,6 @@ def main():
     f_2 = update_metadata(f_2, surf_file, neon_file, zb_flag)
 
     print(f_2.attrs)
-    f_2.to_netcdf(path=wfile, mode="w", format="NETCDF3_64BIT")
+    f_2.to_netcdf(path=wfile, mode="w", format="NETCDF4_CLASSIC")
 
     print("Successfully updated surface data file for neon site(" + site_name + "):\n - " + wfile)

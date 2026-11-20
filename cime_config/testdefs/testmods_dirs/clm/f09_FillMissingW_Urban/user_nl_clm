@@ -1,0 +1,6 @@
+! NOTE: Using an initial file that does NOT have TBD on it and 5.4 landuse timeseries dataset that has TBD on it
+fsurdat = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.4.0/surfdata_0.9x1.25_hist_1850_78pfts_c250428.nc'
+flanduse_timeseries = '$DIN_LOC_ROOT/lnd/clm2/surfdata_esmf/ctsm5.4.0/landuse.timeseries_0.9x1.25_hist_1850-2023_78pfts_c250428.nc'
+finidat = '$DIN_LOC_ROOT/lnd/clm2/initdata_esmf/ctsm5.4/ctsm53041_54surfdata_snowTherm_100_pSASU.clm2.r.0161-01-01-00000.nc'
+init_interp_fill_missing_urban_with_HD = .true.
+use_init_interp = .true.

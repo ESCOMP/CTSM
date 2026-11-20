@@ -147,7 +147,6 @@ contains
 
     allocate(this%dleaf_patch              (begp:endp))           ; this%dleaf_patch              (:)   = nan
     allocate(this%rscanopy_patch           (begp:endp))           ; this%rscanopy_patch           (:)   = nan
-!    allocate(this%gccanopy_patch           (begp:endp))           ; this%gccanopy_patch           (:)   = 0.0_r8
     allocate(this%vegwp_patch              (begp:endp,1:nvegwcs)) ; this%vegwp_patch              (:,:) = nan
     allocate(this%vegwp_ln_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_ln_patch           (:,:) = nan
     allocate(this%vegwp_pd_patch           (begp:endp,1:nvegwcs)) ; this%vegwp_pd_patch           (:,:) = nan
@@ -284,10 +283,6 @@ contains
             ptr_patch=this%rscanopy_patch, set_lake=0._r8, set_urb=0._r8)
     end if
 
-!    call hist_addfld1d (fname='GCCANOPY', units='none',  &
-!         avgflag='A', long_name='Canopy Conductance: mmol m-2 s-1', &
-!         ptr_patch=this%GCcanopy_patch, set_lake=0._r8, set_urb=0._r8)
-
     if ( use_hydrstress ) then
        this%vegwp_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWP',  units='mm', type2d='nvegwcs', &
@@ -296,11 +291,11 @@ contains
        this%vegwp_ln_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPLN',  units='mm', type2d='nvegwcs', &
             avgflag='A', long_name='vegetation water matric potential for sun/sha canopy,xyl,root at local noon', &
-            ptr_patch=this%vegwp_ln_patch, default='active')
+            ptr_patch=this%vegwp_ln_patch, default='inactive')
        this%vegwp_pd_patch(begp:endp,:) = spval
        call hist_addfld2d (fname='VEGWPPD',  units='mm', type2d='nvegwcs', avgflag='A', &
             long_name='predawn vegetation water matric potential for sun/sha canopy,xyl,root', &
-            ptr_patch=this%vegwp_pd_patch, default='active')
+            ptr_patch=this%vegwp_pd_patch, default='inactive')
     end if
 
   end subroutine InitHistory

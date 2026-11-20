@@ -127,7 +127,7 @@ if you are using a machine that has been ported to CIME_; the second works if yo
 using a machine that has *not* been ported to CIME_. Both workflows are described
 below. If you are using a machine that has not been ported to CIME, it is possible to do a
 complete CIME port and then use the first workflow (by following the `CIME porting guide
-<http://esmci.github.io/cime/versions/master/html/users_guide/porting-cime.html>`_), but
+<https://esmci.github.io/cime/versions/master/html/ccs/model-configuration/support-a-new-machine.html>`_), but
 unless you need to do so for other reasons (such as running CESM, or running CTSM in a
 land-only configuration forced by a data atmosphere, using the CIME_ scripting
 infrastructure), it is generally simpler to use the second workflow below: A full CIME

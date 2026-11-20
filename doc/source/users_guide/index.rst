@@ -5,7 +5,6 @@
 
 .. _users-guide:
 
-.. include:: substitutions.rst
 
 ######################
 |version| User's Guide
@@ -13,7 +12,7 @@
 
 .. important::
 
-   **You are viewing the documentation for** |version_label_bold|. **There are separate versions of this documentation for each maintained CTSM release (e.g., CLM5.0) and for the latest development code. Use the menu at the top left to select the version of CTSM you are using.**
+   **You are viewing the documentation for** |version_label_bold|. **There are separate versions of this documentation for each maintained CTSM release (e.g., CLM5.0) and for the latest development code. Use the menu at bottom left to select the version of CTSM you are using.**
 
 .. toctree::
    :maxdepth: 2

@@ -1,4 +1,4 @@
-module  PhotosynthesisMod
+module PhotosynthesisMod
 
 #include "shr_assert.h"
 
@@ -19,9 +19,8 @@ module  PhotosynthesisMod
   use clm_varpar          , only : nlevcan, nvegwcs, mxpft
   use clm_varcon          , only : c14ratio, spval, isecspday
   use decompMod           , only : bounds_type, subgrid_level_patch
-  use QuadraticMod        , only : quadratic
+  use QuadraticMod        , only : quadratic_roots
   use pftconMod           , only : pftcon
-  use CIsoAtmTimeseriesMod, only : C14BombSpike, use_c14_bombspike, C13TimeSeries, use_c13_timeseries, nsectors_c14
   use atm2lndType         , only : atm2lnd_type
   use CanopyStateType     , only : canopystate_type
   use CNVegnitrogenstateType, only : cnveg_nitrogenstate_type
@@ -171,6 +170,8 @@ module  PhotosynthesisMod
      real(r8), pointer, public  :: rc13_canair_patch (:)   ! patch C13O2/C12O2 in canopy air
      real(r8), pointer, public  :: rc13_psnsun_patch (:)   ! patch C13O2/C12O2 in sunlit canopy psn flux
      real(r8), pointer, public  :: rc13_psnsha_patch (:)   ! patch C13O2/C12O2 in shaded canopy psn flux
+
+     real(r8), pointer, public  :: rc14_canair_patch (:)   ! patch C14O2/C12O2 in canopy air
 
      real(r8), pointer, public  :: psnsun_patch      (:)   ! patch sunlit leaf photosynthesis     (umol CO2/m**2/s)
      real(r8), pointer, public  :: psnsha_patch      (:)   ! patch shaded leaf photosynthesis     (umol CO2/m**2/s)
@@ -346,6 +347,7 @@ contains
     allocate(this%rc13_canair_patch (begp:endp))           ; this%rc13_canair_patch (:)   = nan
     allocate(this%rc13_psnsun_patch (begp:endp))           ; this%rc13_psnsun_patch (:)   = nan
     allocate(this%rc13_psnsha_patch (begp:endp))           ; this%rc13_psnsha_patch (:)   = nan
+    allocate(this%rc14_canair_patch (begp:endp))           ; this%rc14_canair_patch (:)   = nan
 
     allocate(this%cisun_z_patch     (begp:endp,1:nlevcan)) ; this%cisun_z_patch     (:,:) = nan
     allocate(this%cisha_z_patch     (begp:endp,1:nlevcan)) ; this%cisha_z_patch     (:,:) = nan
@@ -449,6 +451,7 @@ contains
     deallocate(this%rc13_canair_patch )
     deallocate(this%rc13_psnsun_patch )
     deallocate(this%rc13_psnsha_patch )
+    deallocate(this%rc14_canair_patch )
 
     deallocate(this%cisun_z_patch     )
     deallocate(this%cisha_z_patch     )
@@ -579,7 +582,7 @@ contains
        this%rc13_canair_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_CANAIR', units='proportion', &
             avgflag='A', long_name='C13/C(12+13) for canopy air', &
-            ptr_patch=this%rc13_canair_patch, default='inactive')
+            ptr_patch=this%rc13_canair_patch, set_spec=spval, default='inactive')
 
        this%rc13_psnsun_patch(begp:endp) = spval
        call hist_addfld1d (fname='RC13_PSNSUN', units='proportion', &
@@ -591,6 +594,13 @@ contains
             avgflag='A', long_name='C13/C(12+13) for shaded photosynthesis', &
             ptr_patch=this%rc13_psnsha_patch, default='inactive')
     endif
+
+    if ( use_c14 ) then
+       this%rc14_canair_patch(begp:endp) = spval
+       call hist_addfld1d (fname='RC14_CANAIR', units='proportion', &
+            avgflag='A', long_name='C14/C(12+13) for canopy air', &
+            ptr_patch=this%rc14_canair_patch, set_spec=spval, default='inactive')
+    end if
 
     ! Canopy physiology
 
@@ -1034,6 +1044,11 @@ contains
             dim1name='pft', long_name='', units='', &
             interpinic_flag='interp', readvar=readvar, data=this%rc13_psnsha_patch)
     endif
+    if ( use_c14 ) then
+       call restartvar(ncid=ncid, flag=flag, varname='rc14_canair', xtype=ncd_double,  &
+            dim1name='pft', long_name='', units='', &
+            interpinic_flag='interp', readvar=readvar, data=this%rc14_canair_patch)
+    end if
 
     call restartvar(ncid=ncid, flag=flag, varname='GSSUN', xtype=ncd_double,  &
          dim1name='pft', dim2name='levcan', switchdim=.true., &
@@ -1173,9 +1188,12 @@ contains
             .or. lun%itype(l) == istice &
             .or. lun%itype(l) == istwet) then
           if (use_c13) then
-             this%rc13_canair_patch(p) = 0._r8
+             this%rc13_canair_patch(p) = spval
              this%rc13_psnsun_patch(p) = 0._r8
              this%rc13_psnsha_patch(p) = 0._r8
+          end if
+          if (use_c14) then
+             this%rc14_canair_patch(p) = spval
           end if
        end if
     end do
@@ -1186,7 +1204,7 @@ contains
   subroutine NewPatchInit (this, p)
     !
     ! For new run-time pft, modify state and flux variables to maintain
-    ! carbon and nitrogen balance with dynamic pft-weights.
+    ! carbon and nitrogen balance with changing pft-weights.
     ! Called from dyn_cnbal_patch
     !
     ! !ARGUMENTS:
@@ -1197,10 +1215,14 @@ contains
     if ( use_c13 ) then
        this%alphapsnsun_patch(p) = 0._r8
        this%alphapsnsha_patch(p) = 0._r8
-       this%rc13_canair_patch(p) = 0._r8
+       this%rc13_canair_patch(p) = spval
        this%rc13_psnsun_patch(p) = 0._r8
        this%rc13_psnsha_patch(p) = 0._r8
     endif
+
+    if ( use_c14 ) then
+       this%rc14_canair_patch(p) = spval
+    end if
 
     this%psnsun_patch(p) = 0._r8
     this%psnsha_patch(p) = 0._r8
@@ -1234,9 +1256,9 @@ contains
     use clm_varcon        , only : rgas, tfrz, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl     , only : cnallocate_carbon_only
+    use clm_varctl     , only : allocate_carbon_only
     use clm_varctl     , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
-    use pftconMod      , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use pftconMod      , only : nbrdlf_dcd_tmp_shrub
 
     !
     ! !ARGUMENTS:
@@ -1619,7 +1641,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then                                                                   
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)  
@@ -1876,7 +1898,8 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,iv))
                cquad = qabs * jmax_z(p,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
                je = min(r1,r2)
 
                ! Iterative loop for ci beginning with initial guess
@@ -2040,12 +2063,14 @@ contains
   end subroutine Photosynthesis
 
   !------------------------------------------------------------------------------
-  subroutine PhotosynthesisTotal (fn, filterp, &
+  subroutine PhotosynthesisTotal (bounds, fn, filterp, &
        atm2lnd_inst, canopystate_inst, photosyns_inst)
     !
     ! Determine total photosynthesis
     !
+    use CIsoAtmTimeseriesMod, only : rc13_atm_grc, rc14_atm_grc  ! Atmospheric Carbon isotope timeseries data
     ! !ARGUMENTS:
+    type(bounds_type)      , intent(in)    :: bounds
     integer                , intent(in)    :: fn                             ! size of pft filter
     integer                , intent(in)    :: filterp(fn)                    ! patch filter
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -2055,13 +2080,10 @@ contains
     ! !LOCAL VARIABLES:
     integer :: f,fp,p,l,g               ! indices
 
-    real(r8) :: rc14_atm(nsectors_c14), rc13_atm
-    integer :: sector_c14
     !-----------------------------------------------------------------------
 
     associate(                                             &
          forc_pco2   => atm2lnd_inst%forc_pco2_grc       , & ! Input:  [real(r8) (:) ]  partial pressure co2 (Pa)
-         forc_pc13o2 => atm2lnd_inst%forc_pc13o2_grc     , & ! Input:  [real(r8) (:) ]  partial pressure c13o2 (Pa)
          forc_po2    => atm2lnd_inst%forc_po2_grc        , & ! Input:  [real(r8) (:) ]  partial pressure o2 (Pa)
 
          laisun      => canopystate_inst%laisun_patch    , & ! Input:  [real(r8) (:) ]  sunlit leaf area
@@ -2072,6 +2094,7 @@ contains
          rc13_canair => photosyns_inst%rc13_canair_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in canopy air
          rc13_psnsun => photosyns_inst%rc13_psnsun_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in sunlit canopy psn flux
          rc13_psnsha => photosyns_inst%rc13_psnsha_patch , & ! Output: [real(r8) (:) ]  C13O2/C12O2 in shaded canopy psn flux
+         rc14_canair => photosyns_inst%rc14_canair_patch , & ! Output: [real(r8) (:) ]  C1342/C12O2 in canopy air
          alphapsnsun => photosyns_inst%alphapsnsun_patch , & ! Output: [real(r8) (:) ]  fractionation factor in sunlit canopy psn flux
          alphapsnsha => photosyns_inst%alphapsnsha_patch , & ! Output: [real(r8) (:) ]  fractionation factor in shaded canopy psn flux
          psnsun_wc   => photosyns_inst%psnsun_wc_patch   , & ! Output: [real(r8) (:) ]  Rubsico-limited sunlit leaf photosynthesis (umol CO2 /m**2/ s)
@@ -2090,20 +2113,6 @@ contains
          fpsn_wp     => photosyns_inst%fpsn_wp_patch       & ! Output: [real(r8) (:) ]  product-limited photosynthesis (umol CO2 /m**2 /s)
          )
 
-      if ( use_c14 ) then
-         if (use_c14_bombspike) then
-            call C14BombSpike(rc14_atm)
-         else
-            rc14_atm(:) = c14ratio
-         end if
-      end if
-
-      if ( use_c13 ) then
-         if (use_c13_timeseries) then
-            call C13TimeSeries(rc13_atm)
-         end if
-      end if
-
       do f = 1, fn
          p = filterp(f)
          g = patch%gridcell(p)
@@ -2117,11 +2126,7 @@ contains
 
          if (use_cn) then
             if ( use_c13 ) then
-               if (use_c13_timeseries) then
-                  rc13_canair(p) = rc13_atm
-               else
-                  rc13_canair(p) = forc_pc13o2(g)/(forc_pco2(g) - forc_pc13o2(g))
-               endif
+               rc13_canair(p) = rc13_atm_grc(g)
                rc13_psnsun(p) = rc13_canair(p)/alphapsnsun(p)
                rc13_psnsha(p) = rc13_canair(p)/alphapsnsha(p)
                c13_psnsun(p)  = psnsun(p) * (rc13_psnsun(p)/(1._r8+rc13_psnsun(p)))
@@ -2133,17 +2138,10 @@ contains
             endif
             if ( use_c14 ) then
 
-               ! determine latitute sector for radiocarbon bomb spike inputs
-               if ( grc%latdeg(g) .ge. 30._r8 ) then
-                  sector_c14 = 1
-               else if ( grc%latdeg(g) .ge. -30._r8 ) then            
-                  sector_c14 = 2
-               else
-                  sector_c14 = 3
-               endif
+               rc14_canair(p) = rc14_atm_grc(g)
 
-               c14_psnsun(p) = rc14_atm(sector_c14) * psnsun(p)
-               c14_psnsha(p) = rc14_atm(sector_c14) * psnsha(p)
+               c14_psnsun(p) = rc14_atm_grc(g) * psnsun(p)
+               c14_psnsha(p) = rc14_atm_grc(g) * psnsha(p)
             endif
          end if
 
@@ -2378,8 +2376,9 @@ contains
     !!DESCRIPTION:
     !Use Brent's method to find the root of a single variable function ci_func, which is known to exist between x1 and x2.
     !The found root will be updated until its accuracy is tol.
-
+    !
     !!REVISION HISTORY:
+    !
     !Dec 14/2012: Jinyun Tang, modified from numerical recipes in F90 by press et al. 1188-1189
     !
     !!ARGUMENTS:
@@ -2653,13 +2652,15 @@ contains
       aquad = params_inst%theta_cj(ivt(p))
       bquad = -(ac(p,iv) + aj(p,iv))
       cquad = ac(p,iv) * aj(p,iv)
-      call quadratic (aquad, bquad, cquad, r1, r2)
+      call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
       ai = min(r1,r2)
 
       aquad = params_inst%theta_ip
       bquad = -(ai + ap(p,iv))
       cquad = ai * ap(p,iv)
-      call quadratic (aquad, bquad, cquad, r1, r2)
+      call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
       ag(p,iv) = max(0._r8,min(r1,r2))
 
       ! Net photosynthesis. Exit iteration if an < 0
@@ -2682,13 +2683,15 @@ contains
                (2.0*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
           gs_mol = max(r1,r2) * 1.e06_r8
        else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
           aquad = cs
           bquad = cs*(gb_mol - bbb(p)) - mbb(p)*an(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs*bbb(p) + mbb(p)*an(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
           gs_mol = max(r1,r2)
        end if
 
@@ -2724,10 +2727,10 @@ contains
     use clm_varcon        , only : rgas, tfrz, rpi, spval
     use GridcellType      , only : grc
     use clm_time_manager  , only : get_step_size_real, is_near_local_noon
-    use clm_varctl        , only : cnallocate_carbon_only
+    use clm_varctl        , only : allocate_carbon_only
     use clm_varctl        , only : lnc_opt, reduce_dayl_factor, vcmax_opt    
     use clm_varpar        , only : nlevsoi
-    use pftconMod         , only : nbrdlf_dcd_tmp_shrub, npcropmin
+    use pftconMod         , only : nbrdlf_dcd_tmp_shrub
     use ColumnType        , only : col
 
     !
@@ -3241,7 +3244,7 @@ contains
             if (.not. use_cn) then
                vcmax25top = vcmax25top * fnitr(patch%itype(p))
             else
-               if ( CNAllocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
+               if ( Allocate_Carbon_only() ) vcmax25top = vcmax25top * fnitr(patch%itype(p))
             end if
          else if (vcmax_opt == 3) then
             vcmax25top = ( i_vcad(patch%itype(p)) + s_vcad(patch%itype(p)) * lnc(p) ) * dayl_factor(p)
@@ -3569,7 +3572,8 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,sun,iv))
                cquad = qabs * jmax_z(p,sun,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                     file=sourcefile, line=__LINE__)
                je_sun = min(r1,r2)
 
                ! sha
@@ -3577,7 +3581,8 @@ contains
                aquad = params_inst%theta_psii
                bquad = -(qabs + jmax_z(p,sha,iv))
                cquad = qabs * jmax_z(p,sha,iv)
-               call quadratic (aquad, bquad, cquad, r1, r2)
+               call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                     file=sourcefile, line=__LINE__)
                je_sha = min(r1,r2)
 
                ! Iterative loop for ci beginning with initial guess
@@ -4347,26 +4352,30 @@ contains
     aquad = params_inst%theta_cj(ivt(p))
     bquad = -(ac(p,sun,iv) + aj(p,sun,iv))
     cquad = ac(p,sun,iv) * aj(p,sun,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
     ai = min(r1,r2)
     
     aquad = params_inst%theta_ip
     bquad = -(ai + ap(p,sun,iv))
     cquad = ai * ap(p,sun,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
     ag(p,sun,iv) = max(0._r8,min(r1,r2))
     
     ! Shaded
     aquad = params_inst%theta_cj(ivt(p))
     bquad = -(ac(p,sha,iv) + aj(p,sha,iv))
     cquad = ac(p,sha,iv) * aj(p,sha,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
     ai = min(r1,r2)
     
     aquad = params_inst%theta_ip
     bquad = -(ai + ap(p,sha,iv))
     cquad = ai * ap(p,sha,iv)
-    call quadratic (aquad, bquad, cquad, r1, r2)
+    call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                         file=sourcefile, line=__LINE__)
     ag(p,sha,iv) = max(0._r8,min(r1,r2))
     
     ! Net photosynthesis. Exit iteration if an < 0
@@ -4424,7 +4433,8 @@ contains
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * &
                (1.0_r8 - medlynslope(patch%itype(p))* medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                file=sourcefile, line=__LINE__)
           gs_mol_sun = max(r1,r2) * 1.e06_r8
        end if
 
@@ -4441,7 +4451,8 @@ contains
                (2.0_r8*medlynintercept(patch%itype(p))*1.e-06_r8 + term * (1.0 - medlynslope(patch%itype(p))* &
                medlynslope(patch%itype(p)) / rh_can)) * term
 
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                file=sourcefile, line=__LINE__)
           gs_mol_sha = max(r1,r2)* 1.e06_r8
        end if
     else if ( stomatalcond_mtd == stomatalcond_mtd_bb1987 )then
@@ -4453,7 +4464,8 @@ contains
           aquad = cs_sun
           bquad = cs_sun*(gb_mol - max(bsun*bbb(p),1._r8)) - mbb(p)*an_sun(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs_sun*max(bsun*bbb(p),1._r8) + mbb(p)*an_sun(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                file=sourcefile, line=__LINE__)
           gs_mol_sun = max(r1,r2)
        end if
 
@@ -4465,7 +4477,8 @@ contains
           aquad = cs_sha
           bquad = cs_sha*(gb_mol - max(bsha*bbb(p),1._r8)) - mbb(p)*an_sha(p,iv)*forc_pbot(c)
           cquad = -gb_mol*(cs_sha*max(bsha*bbb(p),1._r8) + mbb(p)*an_sha(p,iv)*forc_pbot(c)*rh_can)
-          call quadratic (aquad, bquad, cquad, r1, r2)
+          call quadratic_roots (aquad, bquad, cquad, r1, r2, &
+                                file=sourcefile, line=__LINE__)
           gs_mol_sha = max(r1,r2)
        end if
     end if

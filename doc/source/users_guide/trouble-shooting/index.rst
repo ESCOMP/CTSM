@@ -3,8 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. include:: ../substitutions.rst
-
 .. _troubleshooting-index:
 
 #####################################
@@ -12,6 +10,6 @@ Troubleshooting
 #####################################
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
    trouble-shooting.rst

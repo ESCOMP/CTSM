@@ -41,7 +41,7 @@ To run the script for a single point:
 To run the script for a region:
     ./subset_data.py region
 
-To remove NPL from your environment on Cheyenne/Casper:
+To remove NPL from your environment on derecho/casper:
     deactivate
 -------------------------------------------------------------------
 """
@@ -66,10 +66,11 @@ from ctsm.site_and_regional.base_case import DatmFiles
 from ctsm.site_and_regional.single_point_case import SinglePointCase
 from ctsm.site_and_regional.regional_case import RegionalCase
 from ctsm.args_utils import plat_type, plon_type
-from ctsm.path_utils import path_to_ctsm_root
+from ctsm.path_utils import path_to_ctsm_root, path_to_top_root
 from ctsm.utils import abort
 from ctsm.config_utils import check_lon1_lt_lon2
-from ctsm.longitude import Longitude, _detect_lon_type
+from ctsm.longitude import Longitude, detect_lon_type
+from ctsm.pft_utils import MAX_PFT_GENERICCROPS, MAX_PFT_MANAGEDCROPS
 
 # -- import ctsm logging flags
 from ctsm.ctsm_logging import (
@@ -377,8 +378,7 @@ def get_parser():
             dest="out_surface",
             type=str,
         )
-        cesmroot = path_to_ctsm_root()
-        defaults_file = os.path.join(cesmroot, DEFAULTS_CONFIG)
+        defaults_file = os.path.join(path_to_ctsm_root(), DEFAULTS_CONFIG)
         subparser.add_argument(
             "--cfg-file",
             help="Default configure file to use for default filenames.",
@@ -571,15 +571,19 @@ def setup_user_mods(user_mods_dir, cesmroot):
     if not os.path.isdir(user_mods_dir):
         os.mkdir(user_mods_dir)
 
-    nl_clm_base = os.path.join(cesmroot, "cime_config/user_nl_clm")
+    nl_clm_base = os.path.join(path_to_ctsm_root(), "cime_config", "user_nl_clm")
     nl_clm = os.path.join(user_mods_dir, "user_nl_clm")
-    with open(nl_clm_base, "r") as basefile, open(nl_clm, "w") as user_file:
+    with open(nl_clm_base, "r", encoding="utf-8") as basefile, open(
+        nl_clm, "w", encoding="utf-8"
+    ) as user_file:
         for line in basefile:
             user_file.write(line)
 
     nl_datm_base = os.path.join(cesmroot, "components/cdeps/datm/cime_config/user_nl_datm_streams")
     nl_datm = os.path.join(user_mods_dir, "user_nl_datm_streams")
-    with open(nl_datm_base, "r") as base_file, open(nl_datm, "w") as user_file:
+    with open(nl_datm_base, "r", encoding="utf-8") as base_file, open(
+        nl_datm, "w", encoding="utf-8"
+    ) as user_file:
         for line in base_file:
             user_file.write(line)
 
@@ -597,14 +601,14 @@ def determine_num_pft(crop):
         num_pft (int) : number of pfts for surface dataset
     """
     if crop:
-        num_pft = "78"
+        num_pft = str(MAX_PFT_MANAGEDCROPS)
     else:
-        num_pft = "16"
+        num_pft = str(MAX_PFT_GENERICCROPS)
     logger.debug("crop_flag = %s => num_pft = %s", str(crop), num_pft)
     return num_pft
 
 
-def setup_files(args, defaults, cesmroot):
+def setup_files(args, defaults, cesmroot, testing=False):
     """
     Sets up the files and folders needed for this program
     """
@@ -622,22 +626,31 @@ def setup_files(args, defaults, cesmroot):
     else:
         clmforcingindir = args.inputdatadir
 
-    if not os.path.isdir(clmforcingindir):
+    if not testing and not os.path.isdir(clmforcingindir):
         logger.info("clmforcingindir does not exist: %s", clmforcingindir)
-        abort("inputdata directory does not exist")
+        abort(f"inputdata directory does not exist: {clmforcingindir}")
 
     file_dict = {"main_dir": clmforcingindir}
 
     # DATM data
-    # TODO Issue #2960: Make datm_type a user option at the command
-    # line. For reference, this option affects three .cfg files:
-    #      tools/site_and_regional/default_data_1850.cfg
-    #      tools/site_and_regional/default_data_2000.cfg
-    #      python/ctsm/test/testinputs/default_data.cfg
+    # To find the affected files, from the top level of ctsm, do:
+    #     grep "\[datm\]" $(find . -type f -name "*cfg")
     if args.create_datm:
-        datm_type = "datm_crujra"  # also available: datm_type = "datm_gswp3"
+        datm_cfg_section = "datm"
+
+        # Issue #3269: Changes in PR #3259 mean that --create-datm won't work with GSWP3
+        settings_to_check_for_gswp3 = ["solartag", "prectag", "tpqwtag"]
+        for setting in settings_to_check_for_gswp3:
+            value = defaults.get(datm_cfg_section, setting)
+            if "gswp3" in value.lower():
+                msg = (
+                    "--create-datm is no longer supported for GSWP3 data; "
+                    "see https://github.com/ESCOMP/CTSM/issues/3269"
+                )
+                raise NotImplementedError(msg)
+
         dir_output_datm = "datmdata"
-        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_type, "dir"))
+        dir_input_datm = os.path.join(clmforcingindir, defaults.get(datm_cfg_section, "dir"))
         if not os.path.isdir(os.path.join(args.out_dir, dir_output_datm)):
             os.mkdir(os.path.join(args.out_dir, dir_output_datm))
         logger.info("dir_input_datm : %s", dir_input_datm)
@@ -645,16 +658,16 @@ def setup_files(args, defaults, cesmroot):
         file_dict["datm_tuple"] = DatmFiles(
             dir_input_datm,
             dir_output_datm,
-            defaults.get(datm_type, "domain"),
-            defaults.get(datm_type, "solardir"),
-            defaults.get(datm_type, "precdir"),
-            defaults.get(datm_type, "tpqwdir"),
-            defaults.get(datm_type, "solartag"),
-            defaults.get(datm_type, "prectag"),
-            defaults.get(datm_type, "tpqwtag"),
-            defaults.get(datm_type, "solarname"),
-            defaults.get(datm_type, "precname"),
-            defaults.get(datm_type, "tpqwname"),
+            defaults.get(datm_cfg_section, "domain"),
+            defaults.get(datm_cfg_section, "solardir"),
+            defaults.get(datm_cfg_section, "precdir"),
+            defaults.get(datm_cfg_section, "tpqwdir"),
+            defaults.get(datm_cfg_section, "solartag"),
+            defaults.get(datm_cfg_section, "prectag"),
+            defaults.get(datm_cfg_section, "tpqwtag"),
+            defaults.get(datm_cfg_section, "solarname"),
+            defaults.get(datm_cfg_section, "precname"),
+            defaults.get(datm_cfg_section, "tpqwname"),
         )
 
     # if the crop flag is on - we need to use a different land use and surface data file
@@ -812,7 +825,7 @@ def subset_region(args, file_dict: dict):
         print("\nFor running this regional case with the created user_mods : ")
         print(
             "./create_newcase --case case --res CLM_USRDAT --compset I2000Clm60BgcCrop",
-            "--run-unsupported --user-mods-dirs ",
+            "--run-unsupported --user-mods-dir ",
             args.user_mods_dir,
             "\n\n",
         )
@@ -833,10 +846,10 @@ def process_args(args):
     if any(lon_arg_values):
         if args.lon_type is None:
             if hasattr(args, "plon"):
-                args.lon_type = _detect_lon_type(args.plon)
+                args.lon_type = detect_lon_type(args.plon)
             else:
-                lon1_type = _detect_lon_type(args.lon1)
-                lon2_type = _detect_lon_type(args.lon2)
+                lon1_type = detect_lon_type(args.lon1)
+                lon2_type = detect_lon_type(args.lon2)
                 if lon1_type != lon2_type:
                     raise argparse.ArgumentTypeError(
                         "--lon1 and --lon2 seem to be of different types"
@@ -867,7 +880,7 @@ def main():
 
     # --------------------------------- #
     # parse defaults file
-    cesmroot = path_to_ctsm_root()
+    cesmroot = path_to_top_root()
     defaults = configparser.ConfigParser()
     defaults.read(args.config_file)
 

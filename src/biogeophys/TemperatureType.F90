@@ -106,6 +106,7 @@ module TemperatureType
      real(r8), pointer :: heat2_grc                (:)   ! grc post land cover change total heat content
      real(r8), pointer :: liquid_water_temp1_grc   (:)   ! grc initial weighted average liquid water temperature (K)
      real(r8), pointer :: liquid_water_temp2_grc   (:)   ! grc post land cover change weighted average liquid water temperature (K)
+     real(r8), pointer :: dynbal_heat_storage_grc  (:)   ! grc heat storage from dynbal adjustments, to be released gradually; positive means heat that still needs to be released to the atmosphere [J/m^2]
 
      ! Flags
      integer , pointer :: imelt_col                (:,:) ! flag for melting (=1), freezing (=2), Not=0 (-nlevsno+1:nlevgrnd)
@@ -288,6 +289,7 @@ contains
     allocate(this%heat2_grc                (begg:endg))                      ; this%heat2_grc                (:)   = nan
     allocate(this%liquid_water_temp1_grc   (begg:endg))                      ; this%liquid_water_temp1_grc   (:)   = nan
     allocate(this%liquid_water_temp2_grc   (begg:endg))                      ; this%liquid_water_temp2_grc   (:)   = nan
+    allocate(this%dynbal_heat_storage_grc  (begg:endg))                      ; this%dynbal_heat_storage_grc  (:)   = nan
 
     ! flags
     allocate(this%imelt_col                (begc:endc,-nlevsno+1:nlevmaxurbgrnd))  ; this%imelt_col                (:,:) = huge(1)
@@ -343,7 +345,7 @@ contains
     this%t_grnd_u_col(begc:endc) = spval
     call hist_addfld1d (fname='TG_U', units='K',  &
          avgflag='A', long_name='Urban ground temperature', &
-         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans', default='inactive')
+         ptr_col=this%t_grnd_u_col, set_nourb=spval, c2l_scale_type='urbans')
 
     this%t_lake_col(begc:endc,:) = spval
     call hist_addfld2d (fname='TLAKE',  units='K', type2d='levlak', &
@@ -373,7 +375,7 @@ contains
     this%t_ref2m_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_R', units='K',  &
          avgflag='A', long_name='Rural 2m air temperature', &
-         ptr_patch=this%t_ref2m_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_r_patch, set_spec=spval)
 
     this%t_ref2m_min_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV', units='K',  &
@@ -388,27 +390,27 @@ contains
     this%t_ref2m_min_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_R', units='K',  &
          avgflag='A', long_name='Rural daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_r_patch, set_spec=spval)
 
     this%t_ref2m_max_r_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_R', units='K',  &
          avgflag='A', long_name='Rural daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_r_patch, set_spec=spval)
 
     this%t_ref2m_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TSA_U', units='K',  &
          avgflag='A', long_name='Urban 2m air temperature', &
-         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_u_patch, set_nourb=spval)
 
     this%t_ref2m_min_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMNAV_U', units='K',  &
          avgflag='A', long_name='Urban daily minimum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_min_u_patch, set_nourb=spval)
 
     this%t_ref2m_max_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='TREFMXAV_U', units='K',  &
          avgflag='A', long_name='Urban daily maximum of average 2-m temperature', &
-         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval, default='inactive')
+         ptr_patch=this%t_ref2m_max_u_patch, set_nourb=spval)
 
     if (use_biomass_heat_storage) then 
        this%t_stem_patch(begp:endp) = spval
@@ -554,6 +556,11 @@ contains
     call hist_addfld1d (fname='LIQUID_WATER_TEMP1', units='K', &
          avgflag='A', long_name='initial gridcell weighted average liquid water temperature', &
          ptr_lnd=this%liquid_water_temp1_grc, default='inactive')
+
+    this%dynbal_heat_storage_grc(begg:endg) = spval
+    call hist_addfld1d (fname='DYNBAL_HEAT_STORAGE', units='J/m^2', &
+         avgflag='A', long_name='gridcell heat storage from dynamic landunit adjustments', &
+         ptr_lnd=this%dynbal_heat_storage_grc, default='inactive')
 
     this%snot_top_col(begc:endc) = spval
     call hist_addfld1d (fname='SNOTTOPL', units='K', &
@@ -919,6 +926,9 @@ contains
     ! set.
     this%dynbal_baseline_heat_col(bounds%begc:bounds%endc) = 0._r8
 
+    ! The dynbal storage pools start out empty
+    this%dynbal_heat_storage_grc(bounds%begg:bounds%endg) = 0._r8
+
   end subroutine InitCold
 
   !------------------------------------------------------------------------
@@ -1074,6 +1084,12 @@ contains
          long_name="baseline heat content subtracted from each column's total heat calculation", &
          units='J/m2', &
          interpinic_flag='interp', readvar=readvar, data=this%dynbal_baseline_heat_col)
+
+    call restartvar(ncid=ncid, flag=flag, varname='DYNBAL_HEAT_STORAGE', xtype=ncd_double, &
+         dim1name='gridcell', &
+         long_name="heat storage from dynbal adjustments", &
+         units='J/m2', &
+         interpinic_flag='interp', readvar=readvar, data=this%dynbal_heat_storage_grc)
 
     if (use_crop) then
        call restartvar(ncid=ncid, flag=flag,  varname='gdd1020', xtype=ncd_double,  &
@@ -1414,7 +1430,7 @@ contains
     use shr_const_mod    , only : SHR_CONST_CDAY, SHR_CONST_TKFRZ
     use accumulMod       , only : update_accum_field, extract_accum_field, markreset_accum_field
     use clm_time_manager , only : is_doy_in_interval, get_curr_calday
-    use pftconMod        , only : npcropmin
+    use pftconMod        , only : is_prognostic_crop
     use CropType, only : crop_type
     !
     ! !ARGUMENTS
@@ -1485,7 +1501,7 @@ contains
           ((month > 9 .or.  month < 4)  .and. lat <  0._r8)
        ! Replace with read-in gdd20 accumulation season, if needed and valid
        ! (If these aren't being read in or they're invalid, they'll be -1)
-       if (stream_gdd20_seasons_tt .and. patch%itype(p) >= npcropmin) then
+       if (stream_gdd20_seasons_tt .and. is_prognostic_crop(patch%itype(p))) then
           gdd20_season_start = int(gdd20_season_starts(p))
           gdd20_season_end = int(gdd20_season_ends(p))
           if (gdd20_season_start >= 1 .and. gdd20_season_end >= 1) then

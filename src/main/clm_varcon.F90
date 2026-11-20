@@ -13,7 +13,8 @@ module clm_varcon
                            SHR_CONST_RHOICE,SHR_CONST_TKFRZ,SHR_CONST_REARTH, &
                            SHR_CONST_PDB, SHR_CONST_PI, SHR_CONST_CDAY,       &
                            SHR_CONST_RGAS, SHR_CONST_PSTD,                    &
-                           SHR_CONST_MWDAIR, SHR_CONST_MWWV, SHR_CONST_CPFW
+                           SHR_CONST_MWDAIR, SHR_CONST_MWWV, SHR_CONST_CPFW,  &
+                           SHR_CONST_CPWV
   use clm_varpar   , only: numrad, nlevgrnd, nlevlak, nlevdecomp_full
   use clm_varpar   , only: ngases
   use clm_varpar   , only: nlayer
@@ -56,6 +57,7 @@ module clm_varcon
   real(r8), public :: cpliq  = SHR_CONST_CPFW                       ! Specific heat of water [J/kg-K]
   real(r8), public :: cpice  = SHR_CONST_CPICE                      ! Specific heat of ice [J/kg-K]
   real(r8), public :: cpair  = SHR_CONST_CPDAIR                     ! specific heat of dry air [J/kg/K]
+  real(r8), public :: cpwvap = SHR_CONST_CPWV                       ! specific heat of water vapor [J/kg/K]
   real(r8), public :: hvap   = SHR_CONST_LATVAP                     ! Latent heat of evap for water [J/kg]
   real(r8), public :: hsub   = SHR_CONST_LATSUB                     ! Latent heat of sublimation    [J/kg]
   real(r8), public :: hfus   = SHR_CONST_LATICE                     ! Latent heat of fusion for ice [J/kg]
@@ -127,26 +129,27 @@ module clm_varcon
   real(r8), public, parameter :: g_to_mg = 1.0e3_r8  ! coefficient to convert g to mg
   real(r8), public, parameter :: cm3_to_m3 = 1.0e-6_r8  ! coefficient to convert cm3 to m3
   real(r8), public, parameter :: pct_to_frac = 1.0e-2_r8  ! coefficient to convert % to fraction
+  real(r8), public, parameter :: mmh2o_to_m3h2o_per_m2 = 1.0e-3_r8  ! coefficient to convert mm H2O to m3 H2O/m2
   
   !!! C13
   real(r8), public, parameter :: preind_atm_del13c = -6.0_r8   ! preindustrial value for atmospheric del13C
-  real(r8), public, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0_r8  ! 13C/12C
+  real(r8), private, parameter :: preind_atm_ratio = SHR_CONST_PDB + (preind_atm_del13c * SHR_CONST_PDB)/1000.0_r8  ! 13C/12C
   real(r8), public :: c13ratio = preind_atm_ratio/(1.0_r8+preind_atm_ratio) ! 13C/(12+13)C preind atmosphere
 
    ! typical del13C for C3 photosynthesis (permil, relative to PDB)
-  real(r8), public, parameter :: c3_del13c = -28._r8
+  real(r8), private, parameter :: c3_del13c = -28._r8
 
   ! typical del13C for C4 photosynthesis (permil, relative to PDB)
-  real(r8), public, parameter :: c4_del13c = -13._r8
+  real(r8), private, parameter :: c4_del13c = -13._r8
 
   ! isotope ratio (13c/12c) for C3 photosynthesis
-  real(r8), public, parameter :: c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
+  real(r8), private, parameter :: c3_r1 = SHR_CONST_PDB + ((c3_del13c*SHR_CONST_PDB)/1000._r8)
 
   ! isotope ratio (13c/[12c+13c]) for C3 photosynthesis
   real(r8), public, parameter :: c3_r2 = c3_r1/(1._r8 + c3_r1)
 
   ! isotope ratio (13c/12c) for C4 photosynthesis  
-  real(r8), public, parameter :: c4_r1 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
+  real(r8), private, parameter :: c4_r1 = SHR_CONST_PDB + ((c4_del13c*SHR_CONST_PDB)/1000._r8)
 
   ! isotope ratio (13c/[12c+13c]) for C4 photosynthesis
   real(r8), public, parameter :: c4_r2 = c4_r1/(1._r8 + c4_r1)
@@ -187,6 +190,7 @@ module clm_varcon
   real(r8), public, parameter :: sh_floor = 880._r8     ! specific heat of floor - concrete (Salmanca et al. 2010, TAC) (J kg-1 K-1)
   real(r8), public :: cp_floor = dens_floor*sh_floor    ! volumetric heat capacity of floor - concrete (Salmanca et al. 2010, TAC) (J m-3 K-1)
   real(r8), public :: vent_ach = 0.3_r8                    ! ventilation rate (air exchanges per hour)
+  real(r8), public :: rh_building_max = 65._r8          ! maximum internal building air relative humidity (Li et al. 2026, Nat Cities, which follows ASHRAE Standards 62.1-2022 and 62.1-2013) (%)
 
   real(r8), public :: wasteheat_limit = 100._r8         ! limit on wasteheat (W/m2)
 

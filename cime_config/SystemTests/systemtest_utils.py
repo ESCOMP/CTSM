@@ -15,7 +15,6 @@ def cmds_to_setup_conda(caseroot):
     # a shell with a conda environment activated
     conda_setup_commands += "CONDA_PREFIX=; "
     # Execute the module unload/load when "which conda" fails
-    # eg on cheyenne
     try:
         subprocess.run("which conda", shell=True, check=True)
     except subprocess.CalledProcessError:

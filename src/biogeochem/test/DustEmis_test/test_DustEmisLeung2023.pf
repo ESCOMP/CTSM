@@ -155,7 +155,7 @@ contains
    real(r8) :: flx_mss_vrt_dst_tot
 
    call this%input%create_atm2lnd()
-   this%input%water_inst%waterdiagnosticbulk_inst%frac_sno_col(:) = 1.0_r8
+   this%input%water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(:) = 1.0_r8
    call this%input%create_fv( )
    call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                       this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
@@ -208,7 +208,7 @@ contains
     call this%input%create_atm2lnd()
     call this%input%create_fv( )
     ! Dust should abort with an error on dust mobility when snow fraction greater than 1
-    this%input%water_inst%waterdiagnosticbulk_inst%frac_sno_col(:) = 1.0_r8 + 1.e-15_r8
+    this%input%water_inst%waterdiagnosticbulk_inst%frac_sno_albedo_col(:) = 1.0_r8 + 1.e-15_r8
     call this%dust_emis%DustEmission(bounds, this%input%num_nolakep, this%input%filter_nolakep, this%input%atm2lnd_inst, &
                          this%input%soilstate_inst, this%input%canopystate_inst, this%input%water_inst%waterstatebulk_inst, &
                          this%input%water_inst%waterdiagnosticbulk_inst, this%input%frictionvel_inst)

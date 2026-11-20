@@ -13,7 +13,7 @@ module EnergyFluxType
   use LandunitType   , only : lun                
   use ColumnType     , only : col                
   use PatchType      , only : patch                
-  use AnnualFluxDribbler, only : annual_flux_dribbler_type, annual_flux_dribbler_gridcell
+  use UrbanParamsType, only : IsACDehumidificationEnabled
   !
   implicit none
   save
@@ -53,7 +53,7 @@ module EnergyFluxType
      real(r8), pointer :: eflx_snomelt_u_col      (:)   ! col urban snow melt heat flux (W/m**2)
      real(r8), pointer :: eflx_gnet_patch         (:)   ! patch net heat flux into ground  (W/m**2)
      real(r8), pointer :: eflx_grnd_lake_patch    (:)   ! patch net heat flux into lake / snow surface, excluding light transmission (W/m**2)
-     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2)
+     real(r8), pointer :: eflx_dynbal_grc         (:)   ! grc dynamic land cover change conversion energy flux (W/m**2) [+ to atm]
      real(r8), pointer :: eflx_bot_col            (:)   ! col heat flux from beneath the soil or ice column (W/m**2)
      real(r8), pointer :: eflx_fgr12_col          (:)   ! col ground heat flux between soil layers 1 and 2 (W/m**2)
      real(r8), pointer :: eflx_fgr_col            (:,:) ! col (rural) soil downward heat flux (W/m2) (1:nlevgrnd)  (pos upward; usually eflx_bot >= 0)
@@ -63,14 +63,15 @@ module EnergyFluxType
      real(r8), pointer :: eflx_anthro_patch       (:)   ! patch total anthropogenic heat flux (W/m**2)
      real(r8), pointer :: eflx_traffic_patch      (:)   ! patch traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_patch    (:)   ! patch sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible heat flux from building ventilation (W/m**2)
+     real(r8), pointer :: eflx_ventilation_patch  (:)   ! patch sensible and latent heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_patch (:)   ! patch sensible heat flux put back into canyon due to removal by AC (W/m**2)
      real(r8), pointer :: eflx_traffic_lun        (:)   ! lun traffic sensible heat flux (W/m**2)
      real(r8), pointer :: eflx_wasteheat_lun      (:)   ! lun sensible heat flux from domestic heating/cooling sources of waste heat (W/m**2)
-     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible heat flux from building ventilation (W/m**2)
+     real(r8), pointer :: eflx_ventilation_lun    (:)   ! lun sensible and latent heat flux from building ventilation (W/m**2)
      real(r8), pointer :: eflx_heat_from_ac_lun   (:)   ! lun sensible heat flux to be put back into canyon due to removal by AC (W/m**2)
-     real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (W/m**2)
+     real(r8), pointer :: eflx_building_lun       (:)   ! lun building heat flux from change in interior building air temperature (and humidity, if prognosed indoor humidity) (W/m**2)
      real(r8), pointer :: eflx_urban_ac_lun       (:)   ! lun urban air conditioning flux (W/m**2)
+     real(r8), pointer :: eflx_urban_ac_sen_lun   (:)   ! lun sensible heat component of air conditioning flux (W/m**2)
      real(r8), pointer :: eflx_urban_heat_lun     (:)   ! lun urban heating flux (W/m**2)
 
      ! Derivatives of energy fluxes
@@ -116,10 +117,6 @@ module EnergyFluxType
      real(r8), pointer :: errsol_col              (:)   ! solar radiation conservation error    (W/m**2)
      real(r8), pointer :: errlon_patch            (:)   ! longwave radiation conservation error (W/m**2)
      real(r8), pointer :: errlon_col              (:)   ! longwave radiation conservation error (W/m**2)
-
-     ! Objects that help convert once-per-year dynamic land cover changes into fluxes
-     ! that are dribbled throughout the year
-     type(annual_flux_dribbler_type) :: eflx_dynbal_dribbler
 
    contains
 
@@ -234,6 +231,7 @@ contains
     allocate( this%eflx_heat_from_ac_lun   (begl:endl))             ; this%eflx_heat_from_ac_lun   (:)   = nan
     allocate( this%eflx_building_lun       (begl:endl))             ; this%eflx_building_lun       (:)   = nan
     allocate( this%eflx_urban_ac_lun       (begl:endl))             ; this%eflx_urban_ac_lun       (:)   = nan
+    allocate( this%eflx_urban_ac_sen_lun   (begl:endl))             ; this%eflx_urban_ac_sen_lun   (:)   = nan
     allocate( this%eflx_urban_heat_lun     (begl:endl))             ; this%eflx_urban_heat_lun     (:)   = nan
     allocate( this%eflx_traffic_lun        (begl:endl))             ; this%eflx_traffic_lun        (:)   = nan
     allocate( this%eflx_wasteheat_lun      (begl:endl))             ; this%eflx_wasteheat_lun      (:)   = nan
@@ -271,11 +269,6 @@ contains
     allocate( this%errsol_col              (begc:endc))             ; this%errsol_col              (:)   = nan
     allocate( this%errlon_patch            (begp:endp))             ; this%errlon_patch            (:)   = nan
     allocate( this%errlon_col              (begc:endc))             ; this%errlon_col              (:)   = nan
-
-    this%eflx_dynbal_dribbler = annual_flux_dribbler_gridcell( &
-         bounds = bounds, &
-         name = 'eflx_dynbal', &
-         units = 'J/m**2')
 
   end subroutine InitAllocate
     
@@ -319,7 +312,7 @@ contains
 
     this%eflx_dynbal_grc(begg:endg) = spval 
     call hist_addfld1d (fname='EFLX_DYNBAL',  units='W/m^2',  &
-         avgflag='A', long_name='dynamic land cover change conversion energy flux', &
+         avgflag='A', long_name='dynamic land cover change conversion energy flux [+ to atm]', &
          ptr_lnd=this%eflx_dynbal_grc)
 
     this%eflx_snomelt_col(begc:endc) = spval
@@ -340,7 +333,7 @@ contains
     this%eflx_snomelt_u_col(begc:endc) = spval
     call hist_addfld1d (fname='FSM_U',  units='W/m^2',  &
          avgflag='A', long_name='Urban snow melt heat flux', &
-         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_col=this%eflx_snomelt_u_col, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_lwrad_net_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA', units='W/m^2',  &
@@ -480,7 +473,7 @@ contains
     this%eflx_lwrad_net_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRA_U', units='W/m^2',  &
          avgflag='A', long_name='Urban net infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_net_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_SOIL_GRND', units='W/m^2', &
@@ -490,12 +483,12 @@ contains
     this%eflx_lwrad_out_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FIRE_U', units='W/m^2',  &
          avgflag='A', long_name='Urban emitted infrared (longwave) radiation', &
-         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lwrad_out_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_sh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FSH_U', units='W/m^2',  &
          avgflag='A', long_name='Urban sensible heat', &
-         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_sh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_sh_precip_conversion_col(begc:endc) = spval
     call hist_addfld1d (fname = 'FSH_PRECIP_CONVERSION', units='W/m^2', &
@@ -505,12 +498,12 @@ contains
     this%eflx_lh_tot_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='EFLX_LH_TOT_U', units='W/m^2',  &
          avgflag='A', long_name='Urban total evaporation', &
-         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_lh_tot_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%eflx_soil_grnd_u_patch(begp:endp) = spval
     call hist_addfld1d (fname='FGR_U', units='W/m^2',  &
          avgflag='A', long_name='Urban heat flux into soil/snow including snow melt', &
-         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval, default='inactive')
+         ptr_patch=this%eflx_soil_grnd_u_patch, c2l_scale_type='urbanf', set_nourb=spval)
 
     this%netrad_patch(begp:endp) = spval
     call hist_addfld1d (fname='Rnet', units='W/m^2',  &
@@ -581,13 +574,20 @@ contains
     else
        this%eflx_building_lun(begl:endl) = spval
        call hist_addfld1d (fname='EFLXBUILD', units='W/m^2',  &
-            avgflag='A', long_name='building heat flux from change in interior building air temperature', &
+            avgflag='A', long_name='building heat flux from change in interior building air temperature (and humidity, if prognosed indoor humidity)', &
             ptr_lunit=this%eflx_building_lun, set_nourb=0._r8, l2g_scale_type='unity')
 
        this%eflx_urban_ac_lun(begl:endl) = spval
        call hist_addfld1d (fname='URBAN_AC', units='W/m^2',  &
             avgflag='A', long_name='urban air conditioning flux', &
             ptr_lunit=this%eflx_urban_ac_lun, set_nourb=0._r8, l2g_scale_type='unity')
+
+       if (IsACDehumidificationEnabled()) then
+          this%eflx_urban_ac_sen_lun(begl:endl) = spval
+          call hist_addfld1d (fname='URBAN_AC_SEN', units='W/m^2',  &
+               avgflag='A', long_name='sensible heat component of urban air conditioning flux', &
+               ptr_lunit=this%eflx_urban_ac_sen_lun, set_nourb=0._r8, l2g_scale_type='unity')
+       end if
 
        this%eflx_urban_heat_lun(begl:endl) = spval
        call hist_addfld1d (fname='URBAN_HEAT', units='W/m^2',  &
@@ -625,7 +625,7 @@ contains
     if ( is_prog_buildtemp )then
        this%eflx_ventilation_patch(begp:endp) = spval
        call hist_addfld1d (fname='VENTILATION', units='W/m^2',  &
-            avgflag='A', long_name='sensible heat flux from building ventilation', &
+            avgflag='A', long_name='sensible (and latent, if prognosed indoor humidity) heat flux from building ventilation', &
             ptr_patch=this%eflx_ventilation_patch, set_nourb=0._r8, c2l_scale_type='urbanf')
     end if
 
@@ -762,6 +762,7 @@ contains
           if ( is_prog_buildtemp )then
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
+             this%eflx_urban_ac_sen_lun(l)= 0._r8
              this%eflx_urban_heat_lun(l) = 0._r8
           end if
 
@@ -775,6 +776,7 @@ contains
           if ( is_prog_buildtemp )then
              this%eflx_building_lun(l)   = 0._r8
              this%eflx_urban_ac_lun(l)   = 0._r8
+             this%eflx_urban_ac_sen_lun(l)= 0._r8
              this%eflx_urban_heat_lun(l) = 0._r8
              this%eflx_ventilation_lun(l)= 0._r8
           end if
@@ -873,7 +875,7 @@ contains
        end if
        call restartvar(ncid=ncid, flag=flag, varname='EFLX_VENTILATION', xtype=ncd_double, &
            dim1name='landunit', &
-           long_name='sensible heat flux from building ventilation', units='watt/m^2', &
+           long_name='sensible (and latent, if prognosed indoor humidity) heat flux from building ventilation', units='watt/m^2', &
            interpinic_flag='interp', readvar=readvar, data=this%eflx_ventilation_lun)
        if (flag=='read' .and. .not. readvar) then
           if (masterproc) write(iulog,*) "can't find EFLX_VENTILATION in initial file..."
@@ -901,8 +903,6 @@ contains
          dim1name='pft', &
          long_name='instantaneous daily minimum of transpiration wetness factor', units='', &
          interpinic_flag='interp', readvar=readvar, data=this%btran_min_inst_patch) 
-
-    call this%eflx_dynbal_dribbler%Restart(bounds, ncid, flag)
 
   end subroutine Restart
   !-----------------------------------------------------------------------

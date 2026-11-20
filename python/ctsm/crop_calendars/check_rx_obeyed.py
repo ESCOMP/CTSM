@@ -144,7 +144,7 @@ def check_rx_obeyed(
             continue
         ds_thisveg = dates_ds.isel(patch=thisveg_patches)
 
-        vegtype_int = utils.vegtype_str2int(vegtype_str)[0]
+        vegtype_int = utils.vegtype_str2int(vegtype_str)
         rx_da = rx_ds[f"gs1_{vegtype_int}"]
         rx_array = rx_da.values[
             ds_thisveg.patches1d_jxy.values.astype(int) - 1,

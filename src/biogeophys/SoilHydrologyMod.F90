@@ -33,6 +33,7 @@ module SoilHydrologyMod
   use LandunitType      , only : lun                
   use ColumnType        , only : column_type, col
   use PatchType         , only : patch
+  use UrbanParamsType   , only : IsACDehumidificationEnabled
 
   !
   ! !PUBLIC TYPES:
@@ -40,7 +41,6 @@ module SoilHydrologyMod
   save
   !
   ! !PUBLIC MEMBER FUNCTIONS:
-  public :: SoilHydReadNML       ! Read in the Soil hydrology namelist
   public :: SetSoilWaterFractions ! Set diagnostic variables related to the fraction of water and ice in each layer
   public :: SetFloodc            ! Apply gridcell flood water flux to non-lake columns
   public :: SetQflxInputs        ! Set the flux of water into the soil from the top
@@ -62,13 +62,13 @@ module SoilHydrologyMod
   type, private :: params_type
      real(r8) :: aq_sp_yield_min         ! Minimum aquifer specific yield (unitless)
      real(r8) :: n_baseflow              ! Drainage power law exponent (unitless)
+     real(r8) :: baseflow_scalar         ! Scalar multiplier for base flow rate ()
      real(r8) :: perched_baseflow_scalar ! Scalar multiplier for perched base flow rate (kg/m2/s)
      real(r8) :: e_ice                   ! Soil ice impedance factor (unitless)
   end type params_type
   type(params_type), public ::  params_inst
   
   !-----------------------------------------------------------------------
-  real(r8), private   :: baseflow_scalar = 1.e-2_r8
   real(r8), parameter :: tolerance = 1.e-12_r8                   ! tolerance for checking whether sublimation is greater than ice in top soil layer
 
   integer, private :: head_gradient_method    ! Method for calculating hillslope saturated head gradient
@@ -190,71 +190,14 @@ contains
     call readNcdioScalar(ncid, 'aq_sp_yield_min', subname, params_inst%aq_sp_yield_min)
     ! Drainage power law exponent (unitless)
     call readNcdioScalar(ncid, 'n_baseflow', subname, params_inst%n_baseflow)
+    ! Scalar multiplier for base flow rate ()
+    call readNcdioScalar(ncid, 'baseflow_scalar', subname, params_inst%baseflow_scalar)
     ! Scalar multiplier for perched base flow rate (kg/m2/s)
     call readNcdioScalar(ncid, 'perched_baseflow_scalar', subname, params_inst%perched_baseflow_scalar)
     ! Soil ice impedance factor (unitless)
     call readNcdioScalar(ncid, 'e_ice', subname, params_inst%e_ice)
 
   end subroutine readParams
-
-  !-----------------------------------------------------------------------
-  subroutine soilHydReadNML( NLFilename )
-    !
-    ! !DESCRIPTION:
-    ! Read the namelist for soil hydrology
-    !
-    ! !USES:
-    use fileutils      , only : getavu, relavu, opnfil
-    use shr_nl_mod     , only : shr_nl_find_group_name
-    use spmdMod        , only : masterproc, mpicom
-    use shr_mpi_mod    , only : shr_mpi_bcast
-    use clm_varctl     , only : iulog
-    use shr_log_mod    , only : errMsg => shr_log_errMsg
-    !
-    ! !ARGUMENTS:
-    character(len=*), intent(in) :: NLFilename ! Namelist filename
-    !
-    ! !LOCAL VARIABLES:
-    integer :: ierr                 ! error code
-    integer :: unitn                ! unit for namelist file
-
-    character(len=*), parameter :: subname = 'soilHydReadNML'
-    character(len=*), parameter :: nmlname = 'soilhydrology_inparm'
-    !-----------------------------------------------------------------------
-    namelist /soilhydrology_inparm/ baseflow_scalar
-
-    ! Initialize options to default values, in case they are not specified in
-    ! the namelist
-
-
-    if (masterproc) then
-       unitn = getavu()
-       write(iulog,*) 'Read in '//nmlname//'  namelist'
-       call opnfil (NLFilename, unitn, 'F')
-       call shr_nl_find_group_name(unitn, nmlname, status=ierr)
-       if (ierr == 0) then
-          read(unitn, nml=soilhydrology_inparm, iostat=ierr)
-          if (ierr /= 0) then
-             call endrun(msg="ERROR reading "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-          end if
-       else
-          call endrun(msg="ERROR could NOT find "//nmlname//"namelist"//errmsg(sourcefile, __LINE__))
-       end if
-       call relavu( unitn )
-    end if
-
-    call shr_mpi_bcast (baseflow_scalar, mpicom)
-
-    if (masterproc) then
-       write(iulog,*) ' '
-       write(iulog,*) nmlname//' settings:'
-       write(iulog,nml=soilhydrology_inparm)
-       write(iulog,*) ' '
-    end if
-
-  end subroutine soilhydReadNML
-
-
   
   !-----------------------------------------------------------------------
   subroutine SetSoilWaterFractions(bounds, num_hydrologyc, filter_hydrologyc, &
@@ -368,9 +311,9 @@ contains
      !
      ! !LOCAL VARIABLES:
      integer :: fc, c
-     real(r8) :: qflx_evap ! evaporation for this column
-     real(r8) :: fsno      ! copy of frac_sno
-
+     real(r8) :: qflx_evap            ! evaporation for this column
+     real(r8) :: frac_sno_fluxes_copy ! copy of frac_sno_fluxes (fraction of ground covered by snow for heat flux calculations)
+ 
      character(len=*), parameter :: subname = 'SetQflxInputs'
      !-----------------------------------------------------------------------
 
@@ -388,7 +331,7 @@ contains
           qflx_ev_h2osfc          =>    waterfluxbulk_inst%qflx_ev_h2osfc_col         , & ! Input:  [real(r8) (:)]  evaporation flux from h2osfc (W/m**2) [+ to atm]
           qflx_sat_excess_surf    =>    waterfluxbulk_inst%qflx_sat_excess_surf_col   , & ! Input:  [real(r8) (:)]  surface runoff due to saturated surface (mm H2O /s)
 
-          frac_sno                =>    waterdiagnosticbulk_inst%frac_sno_eff_col          , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow (0 to 1)
+          frac_sno_fluxes         =>    waterdiagnosticbulk_inst%frac_sno_fluxes_col    , & ! Input:  [real(r8) (:)   ]  fraction of ground covered by snow for heat flux calculations (0 to 1)
           frac_h2osfc             =>    waterdiagnosticbulk_inst%frac_h2osfc_col          & ! Input:  [real(r8) (:)   ]  fraction of ground covered by surface water (0 to 1)
           )
 
@@ -402,11 +345,11 @@ contains
         ! ------------------------------------------------------------------------
 
         if (snl(c) >= 0) then
-           fsno=0._r8
+           frac_sno_fluxes_copy=0._r8
            ! if no snow layers, sublimation is removed from h2osoi_ice in drainage
            qflx_evap=qflx_liqevap_from_top_layer(c)
         else
-           fsno=frac_sno(c)
+           frac_sno_fluxes_copy=frac_sno_fluxes(c)
            qflx_evap=qflx_ev_soil(c)
         endif
 
@@ -414,7 +357,7 @@ contains
         qflx_top_soil_to_h2osfc(c) = frac_h2osfc(c) * (qflx_top_soil(c)  - qflx_sat_excess_surf(c))
 
         ! remove evaporation (snow treated in SnowHydrology)
-        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - fsno - frac_h2osfc(c))*qflx_evap
+        qflx_in_soil(c) = qflx_in_soil(c) - (1.0_r8 - frac_sno_fluxes_copy - frac_h2osfc(c))*qflx_evap
         qflx_top_soil_to_h2osfc(c) =  qflx_top_soil_to_h2osfc(c)  - frac_h2osfc(c) * qflx_ev_h2osfc(c)
 
      end do
@@ -555,6 +498,7 @@ contains
           qflx_liqevap_from_top_layer => waterfluxbulk_inst%qflx_liqevap_from_top_layer_col, & ! Input:  [real(r8) (:)   ]  rate of liquid water evaporated from top soil or snow layer (mm H2O/s) [+]    
           qflx_floodc      =>    waterfluxbulk_inst%qflx_floodc_col      , & ! Input:  [real(r8) (:)   ]  column flux of flood water from RTM               
           qflx_sat_excess_surf => waterfluxbulk_inst%qflx_sat_excess_surf_col , & ! Input:  [real(r8) (:)   ]  surface runoff due to saturated surface (mm H2O /s)
+          qflx_condensate_from_ac => waterfluxbulk_inst%qflx_condensate_from_ac_col, & ! Input: [real(r8) (:)   ] condensate from air-conditioning (mm H2O /s)
 
           xs_urban         =>    soilhydrology_inst%xs_urban_col     , & ! Output: [real(r8) (:)   ]  excess soil water above urban ponding limit
 
@@ -596,8 +540,14 @@ contains
                    pondmx_urban/dtime)
               qflx_surf(c) = xs_urban(c)
            end if
-           ! send flood water flux to runoff for all urban columns
-           qflx_surf(c) = qflx_surf(c)  + qflx_floodc(c)
+           ! Send flood water flux and air-conditioning condensate (the latter exists only
+           ! when prognosed indoor humidity and AC dehumidification are enabled) 
+           ! to runoff for all urban columns
+           if (IsACDehumidificationEnabled()) then
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c) + qflx_condensate_from_ac(c)
+           else
+              qflx_surf(c) = qflx_surf(c) + qflx_floodc(c)
+           end if
         else if (col%itype(c) == icol_sunwall .or. col%itype(c) == icol_shadewall) then
            qflx_surf(c) = 0._r8
         end if
@@ -2391,7 +2341,7 @@ contains
             ! Non-hillslope columns
             ! baseflow is power law expression relative to bedrock layer
             if(zwt(c) <= zi(c,nbedrock(c))) then
-               qflx_latflow_out(c) = ice_imped_col(c) * baseflow_scalar &
+               qflx_latflow_out(c) = ice_imped_col(c) * params_inst%baseflow_scalar &
                     * tan(rpi/180._r8*col%topo_slope(c))* &
                     (zi(c,nbedrock(c)) - zwt(c))**(params_inst%n_baseflow)
             endif

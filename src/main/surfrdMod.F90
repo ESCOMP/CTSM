@@ -15,6 +15,7 @@ module surfrdMod
   use clm_varcon      , only : grlnd
   use clm_varctl      , only : iulog
   use clm_varctl      , only : use_cndv, use_crop, use_fates
+  use clm_varctl      , only : fname_len
   use surfrdUtilsMod  , only : check_sums_equal_1, apply_convert_ocean_to_land, collapse_crop_types
   use surfrdUtilsMod  , only : collapse_to_dominant, collapse_crop_var, collapse_individual_lunits
   use ncdio_pio       , only : file_desc_t, var_desc_t, ncd_pio_openfile, ncd_pio_closefile
@@ -233,7 +234,7 @@ contains
     character(len=*), intent(in) :: lhillslope_file ! hillslope dataset filename
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len)  :: locfn        ! local file name
     integer, parameter :: n_dom_urban = 1     ! # of dominant urban landunits
     type(file_desc_t) :: ncid                 ! netcdf id for lfsurdat
     type(file_desc_t) :: ncid_hillslope       ! netcdf id for lhillslope_file
@@ -359,12 +360,14 @@ contains
     
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len) :: locfn         ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     logical :: cft_dim_exists                 ! dimension exists on dataset
+    logical :: natpft_dim_exists              ! dimension exists on dataset
     integer :: check_numpft                   ! Surface dataset count of numpft, should
                                               ! match maxsoil_patches - actual_numcft
+    integer :: actual_numnatpft               ! natpft value from sfc dataset
     character(len=32) :: subname = 'surfrd_get_num_patches'  ! subroutine name
     !-----------------------------------------------------------------------
 
@@ -396,9 +399,20 @@ contains
     call ncd_inqdlen(ncid, dimid, actual_maxsoil_patches, 'lsmpft')
     actual_numpft = actual_maxsoil_patches - actual_numcft
 
-    call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+    ! Read numpft
+    call ncd_inqdid(ncid, 'natpft', dimid, natpft_dim_exists)
+    if ( natpft_dim_exists ) then
+       call ncd_inqdlen(ncid, dimid, actual_numnatpft, 'natpft')
+       call ncd_inqdlen(ncid, dimid, check_numpft, 'natpft')
+    else
+       actual_numnatpft = 0
+    end if
 
-    if(check_numpft.ne.actual_numpft)then
+    ! Close surface dataset - no longer needed after reading dimensions
+    call ncd_pio_closefile(ncid)
+
+!jt    if(check_numpft.ne.actual_numpft)then
+    if(actual_numcft+actual_numnatpft.ne.actual_maxsoil_patches)then
        write(iulog,*)'the sum of the cftdim and the natpft dim should match the lsmpft dim in the surface file'
        write(iulog,*)'natpft: ',check_numpft
        write(iulog,*)'lsmpft: ',actual_maxsoil_patches
@@ -427,7 +441,7 @@ contains
     integer, intent(out) :: actual_nlevurb    ! nlevurb from surface dataset
     !
     ! !LOCAL VARIABLES:
-    character(len=256):: locfn                ! local file name
+    character(len=fname_len)  :: locfn        ! local file name
     type(file_desc_t) :: ncid                 ! netcdf file id
     integer :: dimid                          ! netCDF dimension id
     character(len=32) :: subname = 'surfrd_get_nlevurb'  ! subroutine name
@@ -447,6 +461,9 @@ contains
 
     ! Read nlevurb
     call ncd_inqdlen(ncid, dimid, actual_nlevurb, 'nlevurb')
+
+    ! Close surface dataset - no longer needed after reading nlevurb
+    call ncd_pio_closefile(ncid)
 
     if ( masterproc )then
        write(iulog,*) 'Successfully read nlevurb from the surface data'
@@ -871,7 +888,6 @@ contains
     use clm_varpar      , only : surfpft_lb, surfpft_ub
     use clm_instur      , only : wt_lunit, wt_nat_patch, wt_cft, fert_cft
     use landunit_varcon , only : istsoil, istcrop
-    use surfrdUtilsMod  , only : convert_cft_to_pft
 
     !
     ! !ARGUMENTS:
@@ -976,7 +992,6 @@ contains
     ! Check sum of vegetation adds to 1
     call check_sums_equal_1(wt_nat_patch, begg, 'wt_nat_patch', subname)
 
-    ! if ( use_fates ) wt_cft = 0 because called convert_cft_to_pft, else...
     if ( .not. use_fates ) then
        ! Check sum of vegetation adds to 1
        call check_sums_equal_1(wt_cft, begg, 'wt_cft', subname)
@@ -1153,7 +1168,6 @@ contains
     ! !USES:
      use clm_instur           , only : pct_lake_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
-     use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
     !
     ! !ARGUMENTS:
@@ -1162,7 +1176,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
-    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: locfn                ! local file name
     character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
     logical                   :: readvar
     !
@@ -1208,7 +1222,6 @@ contains
     ! !USES:
      use clm_instur           , only : pct_urban_max
      use dynSubgridControlMod , only : get_flanduse_timeseries
-     use clm_varctl           , only : fname_len
      use fileutils            , only : getfil
     !
     ! !ARGUMENTS:
@@ -1217,7 +1230,7 @@ contains
     !
     ! !LOCAL VARIABLES:
     type(file_desc_t)         :: ncid_dynuse          ! netcdf id for landuse timeseries file
-    character(len=256)        :: locfn                ! local file name
+    character(len=fname_len)  :: locfn                ! local file name
     character(len=fname_len)  :: fdynuse              ! landuse.timeseries filename
     logical                   :: readvar
     !

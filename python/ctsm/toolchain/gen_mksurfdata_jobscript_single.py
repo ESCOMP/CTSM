@@ -37,7 +37,7 @@ def base_get_parser(default_js_name="mksurfdata_jobscript_single.sh"):
 
     default_account = os.environ.get("ACCOUNT")
     if default_account is None:
-        default_account = "P93300641"
+        default_account = "P93300041"
     parser.add_argument(
         "--account",
         help="""account number (default: %(default)s)""",
@@ -152,9 +152,12 @@ def write_runscript_part1(
     runfile,
     descrip="input namelist",
     name="mksurfdata",
+    comment=None,
 ):
     """
     Write run script (part 1) Batch headers
+
+    comment: if given, replaces the default description line written after the batch headers
     """
     runfile.write("#!/bin/bash\n")
     runfile.write("# Edit the batch directives for your batch system\n")
@@ -196,9 +199,11 @@ def write_runscript_part1(
         runfile.write(f"cd {tool_path}\n")
 
     runfile.write("\n")
-    runfile.write(
-        f"# This is a batch script to run a set of resolutions for mksurfdata_esmf {descrip}\n"
-    )
+    if comment is None:
+        comment = (
+            f"This is a batch script to run a set of resolutions for mksurfdata_esmf {descrip}"
+        )
+    runfile.write(f"# {comment}\n")
     runfile.write(
         "# NOTE: THIS SCRIPT IS AUTOMATICALLY GENERATED "
         + "SO IN GENERAL YOU SHOULD NOT EDIT it!!\n\n"
@@ -266,7 +271,7 @@ def write_runscript_part2(namelist_file, runfile, executable, mksurfdata_path, e
 
     check = f'if [ $? != 0 ]; then echo "Error running for namelist  {namelist_file}"; exit -4; fi'
     runfile.write(f"{check} \n")
-    runfile.write("echo Successfully ran resolution\n")
+    runfile.write("echo Confirm completion of fsurdat/landuse generation in the .log file\n")
 
 
 def main():

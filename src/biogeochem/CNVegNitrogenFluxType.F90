@@ -15,7 +15,8 @@ module CNVegNitrogenFluxType
                                                   igrain,igrain_st,igrain_xf,iretransn,ioutn
   use clm_varpar                         , only : mxharvests
   use clm_varcon                         , only : spval, ispval, dzsoi_decomp
-  use clm_varctl                         , only : use_nitrif_denitrif, use_crop
+  use clm_varctl                         , only : use_nitrif_denitrif, use_crop, use_grainproduct
+  use pftconMod                          , only : is_prognostic_crop
   use CNSharedParamsMod                  , only : use_fun, use_matrixcn
   use decompMod                          , only : bounds_type
   use abortutils                         , only : endrun
@@ -124,6 +125,7 @@ module CNVegNitrogenFluxType
      real(r8), pointer :: m_deadcrootn_xfer_to_litter_fire_patch    (:)     ! patch (gN/m2/s) from deadcrootn_xfer to deadcrootn due to fire                                                         
      real(r8), pointer :: m_retransn_to_litter_fire_patch           (:)     ! patch (gN/m2/s) from retransn to deadcrootn due to fire                                                         
      real(r8), pointer :: fire_nloss_patch                          (:)     ! patch total patch-level fire N loss (gN/m2/s) 
+     real(r8), pointer :: litfalln_patch                            (:)     ! patch total N litterfall, all veg N fluxes to litter (gN/m2/s)
      real(r8), pointer :: fire_nloss_col                            (:)     ! col total column-level fire N loss (gN/m2/s)
      real(r8), pointer :: fire_nloss_p2c_col                        (:)     ! col patch2col column-level fire N loss (gN/m2/s) (p2c)
      real(r8), pointer :: fire_mortality_n_to_cwdn_col              (:,:)   ! col N fluxes associated with fire mortality to CWD pool (gN/m3/s)
@@ -921,6 +923,7 @@ contains
     allocate(this%ndeploy_patch                             (begp:endp)) ; this%ndeploy_patch                             (:) = nan
     allocate(this%wood_harvestn_patch                       (begp:endp)) ; this%wood_harvestn_patch                       (:) = nan
     allocate(this%fire_nloss_patch                          (begp:endp)) ; this%fire_nloss_patch                          (:) = nan
+    allocate(this%litfalln_patch                            (begp:endp)) ; this%litfalln_patch                            (:) = nan
     allocate(this%npool_to_reproductiven_patch       (begp:endp, nrepr)) ; this%npool_to_reproductiven_patch            (:,:) = nan
     allocate(this%npool_to_reproductiven_storage_patch(begp:endp, nrepr)); this%npool_to_reproductiven_storage_patch    (:,:) = nan
     allocate(this%livestemn_to_litter_patch                 (begp:endp)) ; this%livestemn_to_litter_patch                 (:) = nan
@@ -1531,6 +1534,11 @@ contains
     call hist_addfld1d (fname='PFT_FIRE_NLOSS', units='gN/m^2/s', &
          avgflag='A', long_name='total patch-level fire N loss', &
          ptr_patch=this%fire_nloss_patch)
+
+    this%litfalln_patch(begp:endp) = spval
+    call hist_addfld1d (fname='LITFALLN', units='gN/m^2/s', &
+         avgflag='A', long_name='total N litterfall (all vegetation N fluxes to litter)', &
+         ptr_patch=this%litfalln_patch)
 
     if (use_crop) then
        this%fert_patch(begp:endp) = spval
@@ -2448,6 +2456,7 @@ contains
        this%ndeploy_patch(i)                             = value_patch
        this%wood_harvestn_patch(i)                       = value_patch
        this%fire_nloss_patch(i)                          = value_patch
+       this%litfalln_patch(i)                            = value_patch
 
        this%crop_seedn_to_leaf_patch(i)                  = value_patch
        this%crop_harvestn_to_cropprodn_patch(i)                 = value_patch
@@ -2700,6 +2709,98 @@ contains
             this%gru_deadstemn_xfer_to_atm_patch(p)     + &
             this%gru_livecrootn_xfer_to_atm_patch(p)    + &
             this%gru_deadcrootn_xfer_to_atm_patch(p)
+
+       ! total N litterfall (LITFALLN); analogous to LITFALLC for carbon, plus
+       ! the retranslocated N pool terms that have no carbon equivalent
+       this%litfalln_patch(p) = &
+            ! phenology
+            this%leafn_to_litter_patch(p)                     + &
+            this%frootn_to_litter_patch(p)                    + &
+            ! gap mortality
+            this%m_leafn_to_litter_patch(p)                   + &
+            this%m_leafn_storage_to_litter_patch(p)           + &
+            this%m_leafn_xfer_to_litter_patch(p)              + &
+            this%m_frootn_to_litter_patch(p)                  + &
+            this%m_frootn_storage_to_litter_patch(p)          + &
+            this%m_frootn_xfer_to_litter_patch(p)             + &
+            this%m_livestemn_to_litter_patch(p)               + &
+            this%m_livestemn_storage_to_litter_patch(p)       + &
+            this%m_livestemn_xfer_to_litter_patch(p)          + &
+            this%m_deadstemn_to_litter_patch(p)               + &
+            this%m_deadstemn_storage_to_litter_patch(p)       + &
+            this%m_deadstemn_xfer_to_litter_patch(p)          + &
+            this%m_livecrootn_to_litter_patch(p)              + &
+            this%m_livecrootn_storage_to_litter_patch(p)      + &
+            this%m_livecrootn_xfer_to_litter_patch(p)         + &
+            this%m_deadcrootn_to_litter_patch(p)              + &
+            this%m_deadcrootn_storage_to_litter_patch(p)      + &
+            this%m_deadcrootn_xfer_to_litter_patch(p)         + &
+            this%m_retransn_to_litter_patch(p)                + &
+            ! fire mortality
+            this%m_leafn_to_litter_fire_patch(p)              + &
+            this%m_leafn_storage_to_litter_fire_patch(p)      + &
+            this%m_leafn_xfer_to_litter_fire_patch(p)         + &
+            this%m_livestemn_to_litter_fire_patch(p)          + &
+            this%m_livestemn_storage_to_litter_fire_patch(p)  + &
+            this%m_livestemn_xfer_to_litter_fire_patch(p)     + &
+            this%m_deadstemn_to_litter_fire_patch(p)          + &
+            this%m_deadstemn_storage_to_litter_fire_patch(p)  + &
+            this%m_deadstemn_xfer_to_litter_fire_patch(p)     + &
+            this%m_frootn_to_litter_fire_patch(p)             + &
+            this%m_frootn_storage_to_litter_fire_patch(p)     + &
+            this%m_frootn_xfer_to_litter_fire_patch(p)        + &
+            this%m_livecrootn_to_litter_fire_patch(p)         + &
+            this%m_livecrootn_storage_to_litter_fire_patch(p) + &
+            this%m_livecrootn_xfer_to_litter_fire_patch(p)    + &
+            this%m_deadcrootn_to_litter_fire_patch(p)         + &
+            this%m_deadcrootn_storage_to_litter_fire_patch(p) + &
+            this%m_deadcrootn_xfer_to_litter_fire_patch(p)    + &
+            this%m_retransn_to_litter_fire_patch(p)           + &
+            ! harvest
+            this%hrv_leafn_to_litter_patch(p)                 + &
+            this%hrv_leafn_storage_to_litter_patch(p)         + &
+            this%hrv_leafn_xfer_to_litter_patch(p)            + &
+            this%hrv_frootn_to_litter_patch(p)                + &
+            this%hrv_frootn_storage_to_litter_patch(p)        + &
+            this%hrv_frootn_xfer_to_litter_patch(p)           + &
+            this%hrv_livestemn_to_litter_patch(p)             + &
+            this%hrv_livestemn_storage_to_litter_patch(p)     + &
+            this%hrv_livestemn_xfer_to_litter_patch(p)        + &
+            this%hrv_deadstemn_storage_to_litter_patch(p)     + &
+            this%hrv_deadstemn_xfer_to_litter_patch(p)        + &
+            this%hrv_livecrootn_to_litter_patch(p)            + &
+            this%hrv_livecrootn_storage_to_litter_patch(p)    + &
+            this%hrv_livecrootn_xfer_to_litter_patch(p)       + &
+            this%hrv_deadcrootn_to_litter_patch(p)            + &
+            this%hrv_deadcrootn_storage_to_litter_patch(p)    + &
+            this%hrv_deadcrootn_xfer_to_litter_patch(p)       + &
+            this%hrv_retransn_to_litter_patch(p)              + &
+            ! gross unrepresented landcover change
+            this%gru_leafn_to_litter_patch(p)                 + &
+            this%gru_frootn_to_litter_patch(p)                + &
+            this%gru_livecrootn_to_litter_patch(p)            + &
+            this%gru_deadcrootn_to_litter_patch(p)            + &
+            this%gru_retransn_to_litter_patch(p)
+
+       if ( use_crop .and. is_prognostic_crop(patch%itype(p)) ) then
+          this%litfalln_patch(p) = &
+               this%litfalln_patch(p) + &
+               this%livestemn_to_litter_patch(p)
+
+          if (.not. use_grainproduct) then
+             do k = repr_grain_min, repr_grain_max
+                this%litfalln_patch(p) = &
+                     this%litfalln_patch(p) + &
+                     this%repr_grainn_to_food_patch(p,k)
+             end do
+          end if
+
+          do k = repr_structure_min, repr_structure_max
+             this%litfalln_patch(p) = &
+                  this%litfalln_patch(p) + &
+                  this%repr_structuren_to_litter_patch(p,k)
+          end do
+       end if
 
     end do
 

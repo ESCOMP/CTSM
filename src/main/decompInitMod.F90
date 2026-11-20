@@ -1,9 +1,11 @@
 module decompInitMod
 
+#include "shr_assert.h"
+
   !------------------------------------------------------------------------------
   ! !DESCRIPTION:
-  ! Module provides a descomposition into a clumped data structure which can
-  ! be mapped back to atmosphere physics chunks.
+  ! Module provides a decomposition into a clumped data structure for the land
+  ! model with gridcells assigned to clumps in a round-robin fashion to processors.
   !
   ! !USES:
   use shr_kind_mod , only : r8 => shr_kind_r8
@@ -12,6 +14,7 @@ module decompInitMod
   use spmdMod      , only : masterproc, iam, npes, mpicom
   use abortutils   , only : endrun
   use clm_varctl   , only : iulog
+  use perf_mod     , only : t_startf, t_stopf
   !
   implicit none
   private
@@ -29,8 +32,7 @@ module decompInitMod
   integer, public :: clump_pproc ! number of clumps per MPI process
   !
   ! !PRIVATE TYPES:
-  integer, pointer   :: lcid(:)          ! temporary for setting decomposition
-  integer            :: nglob_x, nglob_y ! global sizes
+  integer, pointer   :: lcid(:)          ! temporary for setting decomposition, allocated set and used in decompInit_lnd, and used and deallocated in decompInit_clumps  (Can make it allocatable)
   integer, parameter :: dbug=0           ! 0 = min, 1=normal, 2=much, 3=max
   character(len=*), parameter :: sourcefile = &
        __FILE__
@@ -52,6 +54,7 @@ contains
     use clm_varctl , only : nsegspc
     use decompMod  , only : gindex_global, nclumps, clumps
     use decompMod  , only : bounds_type, get_proc_bounds, procinfo
+    use decompMod  , only : nglob_x, nglob_y
     !
     ! !ARGUMENTS:
     integer , intent(in) :: amask(:)
@@ -69,111 +72,47 @@ contains
     integer :: n,m,ng                 ! indices
     integer :: ier                    ! error code
     integer :: begg, endg             ! beg and end gridcells
-    integer, pointer  :: clumpcnt(:)  ! clump index counter
-    integer, allocatable :: gdc2glo(:)! used to create gindex_global
+    !---------------------------------------------------------------------
     type(bounds_type) :: bounds       ! contains subgrid bounds data
+    !---------------------------------------------------------------------
+    integer :: i, j, g, lc, cid_previous    ! Indices
+    integer :: cell_id_offset               ! The offset for the starting gridcell number for this processor
+    integer :: begcid, endcid               ! Beginning and ending cid's for this processor
     !------------------------------------------------------------------------------
+    ! Set some global scalars: nclumps, numg and lns
+    call decompInit_lnd_set_nclumps_numg_lns( )
 
-    lns = lni * lnj
+    ! Do some error checking
+    call decompInit_lnd_check_errors( ier )
+    if (ier /= 0) return
 
-    !--- set and verify nclumps ---
-    if (clump_pproc > 0) then
-       nclumps = clump_pproc * npes
-       if (nclumps < npes) then
-          write(iulog,*) 'decompInit_lnd(): Number of gridcell clumps= ',nclumps, &
-               ' is less than the number of processes = ', npes
-          call endrun(msg=errMsg(sourcefile, __LINE__))
-       end if
-    else
-       write(iulog,*)'clump_pproc= ',clump_pproc,'  must be greater than 0'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
+    call decompInit_lnd_allocate( ier )
+    if (ier /= 0) return
 
-    ! allocate and initialize procinfo and clumps
-    ! beg and end indices initialized for simple addition of cells later
+    ! Initialize clumps
 
-    allocate(procinfo%cid(clump_pproc), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error for procinfo%cid'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    endif
-    procinfo%nclumps   = clump_pproc
-    procinfo%cid(:)    = -1
-    procinfo%ncells    = 0
-    procinfo%nlunits   = 0
-    procinfo%ncols     = 0
-    procinfo%npatches  = 0
-    procinfo%nCohorts  = 0
-    procinfo%begg      = 1
-    procinfo%begl      = 1
-    procinfo%begc      = 1
-    procinfo%begp      = 1
-    procinfo%begCohort = 1
-    procinfo%endg      = 0
-    procinfo%endl      = 0
-    procinfo%endc      = 0
-    procinfo%endp      = 0
-    procinfo%endCohort = 0
-
-    allocate(clumps(nclumps), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error for clumps'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-    clumps(:)%owner     = -1
-    clumps(:)%ncells    = 0
-    clumps(:)%nlunits   = 0
-    clumps(:)%ncols     = 0
-    clumps(:)%npatches  = 0
-    clumps(:)%nCohorts  = 0
-    clumps(:)%begg      = 1
-    clumps(:)%begl      = 1
-    clumps(:)%begc      = 1
-    clumps(:)%begp      = 1
-    clumps(:)%begCohort = 1
-    clumps(:)%endg      = 0
-    clumps(:)%endl      = 0
-    clumps(:)%endc      = 0
-    clumps(:)%endp      = 0
-    clumps(:)%endCohort = 0
+    call clumps(:)%Init()
 
     ! assign clumps to proc round robin
     cid = 0
     do n = 1,nclumps
        pid = mod(n-1,npes)
        if (pid < 0 .or. pid > npes-1) then
-          write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+          write(iulog,*) 'Round robin pid error: n, pid, npes = ',n,pid,npes
+          call endrun(msg="Round robin pid error", file=sourcefile, line=__LINE__)
+          return
        endif
-       clumps(n)%owner = pid
        if (iam == pid) then
+          clumps(n)%owner = pid
           cid = cid + 1
           if (cid < 1 .or. cid > clump_pproc) then
-             write(iulog,*) 'decompInit_lnd(): round robin pid error ',n,pid,npes
-             call endrun(msg=errMsg(sourcefile, __LINE__))
+             write(iulog,*) 'round robin pid error ',n,pid,npes
+             call endrun(msg="round robin pid error", file=sourcefile, line=__LINE__)
+             return
           endif
           procinfo%cid(cid) = n
        endif
     enddo
-
-    ! count total land gridcells
-    numg = 0
-    do ln = 1,lns
-       if (amask(ln) == 1) then
-          numg = numg + 1
-       endif
-    enddo
-
-    if (npes > numg) then
-       write(iulog,*) 'decompInit_lnd(): Number of processes exceeds number ', &
-            'of land grid cells',npes,numg
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-    if (nclumps > numg) then
-       write(iulog,*) 'decompInit_lnd(): Number of clumps exceeds number ', &
-            'of land grid cells',nclumps,numg
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
 
     if (float(numg)/float(nclumps) < float(nsegspc)) then
        seglen1 = .true.
@@ -191,7 +130,6 @@ contains
 
     ! Assign gridcells to clumps (and thus pes) ---
 
-    allocate(lcid(lns))
     lcid(:) = 0
     ng = 0
     do ln = 1,lns
@@ -207,92 +145,109 @@ contains
           endif
           lcid(ln) = cid
 
-          !--- give gridcell cell to pe that owns cid ---
-          !--- this needs to be done to subsequently use function
-          !--- get_proc_bounds(begg,endg)
+          ! Get the total number of gridcells for the local processor
           if (iam == clumps(cid)%owner) then
              procinfo%ncells  = procinfo%ncells  + 1
           endif
-          if (iam >  clumps(cid)%owner) then
-             procinfo%begg = procinfo%begg + 1
-          endif
-          if (iam >= clumps(cid)%owner) then
-             procinfo%endg = procinfo%endg + 1
-          endif
 
-          !--- give gridcell to cid ---
-          !--- increment the beg and end indices ---
-          clumps(cid)%ncells  = clumps(cid)%ncells  + 1
-          do m = 1,nclumps
-             if ((clumps(m)%owner >  clumps(cid)%owner) .or. &
-                 (clumps(m)%owner == clumps(cid)%owner .and. m > cid)) then
-                clumps(m)%begg = clumps(m)%begg + 1
-             endif
-
-             if ((clumps(m)%owner >  clumps(cid)%owner) .or. &
-                 (clumps(m)%owner == clumps(cid)%owner .and. m >= cid)) then
-                clumps(m)%endg = clumps(m)%endg + 1
-             endif
-          enddo
+          !--- give gridcell to cid for local processor ---
+          if (iam == clumps(cid)%owner) then
+             clumps(cid)%ncells  = clumps(cid)%ncells  + 1
+          end if
 
        end if
     enddo
 
-    ! Set gindex_global
-
-    allocate(gdc2glo(numg), stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error1 for gdc2glo , etc'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
+    !---------------------------------------------------------------------
+    !
+    ! Do an MPI_SCAN to get the starting index for each processor ----
+    ! [Doing this both simplifies the code, reduces non-scalaable memory
+    ! and reduces execution time for loops that run over all gridcells
+    ! for each processor.]
+    ! (Doing the following few lines of code removed about 50 lines of complex code
+    !  as well as loops of size: ni*nj*nclumps, npes*nclumps, and ni*nj
+    !  that was being done on each processor)
+    !
+    !---------------------------------------------------------------------
+    ! NOTE: Co-pilot pointed out that some MPI libraries have trouble with MPI_SCAN
+    !       for cases where the PE layout isn't a power of 2. So strange layouts
+    !       may have problems. However, the decomp_init test suite covers cases like this.
+    !---------------------------------------------------------------------
+    call MPI_SCAN(procinfo%ncells, cell_id_offset, 1, MPI_INTEGER, &
+                  MPI_SUM, mpicom, ier)
+    if ( ier /= 0 )then
+        call endrun(msg='Error from MPI_SCAN', file=sourcefile, line=__LINE__)
     end if
-    gdc2glo(:) = 0
-    allocate(clumpcnt(nclumps),stat=ier)
-    if (ier /= 0) then
-       write(iulog,*) 'decompInit_lnd(): allocation error1 for clumpcnt'
-       call endrun(msg=errMsg(sourcefile, __LINE__))
-    end if
-
-    ! clumpcnt is the start gdc index of each clump
-
-    ag = 0
-    clumpcnt = 0
-    ag = 1
-    do pid = 0,npes-1
-    do cid = 1,nclumps
-       if (clumps(cid)%owner == pid) then
-         clumpcnt(cid) = ag
-         ag = ag + clumps(cid)%ncells
-       endif
-    enddo
-    enddo
-
-    ! now go through gridcells one at a time and increment clumpcnt
-    ! in order to set gdc2glo
-
-    do aj = 1,lnj
-    do ai = 1,lni
-       an = (aj-1)*lni + ai
-       cid = lcid(an)
-       if (cid > 0) then
-          ag = clumpcnt(cid)
-          gdc2glo(ag) = an
-          clumpcnt(cid) = clumpcnt(cid) + 1
+    cell_id_offset = cell_id_offset + 1
+    procinfo%begg = cell_id_offset - procinfo%ncells
+    procinfo%endg = cell_id_offset - 1
+    ! ---- Set begg and endg each clump on this processor ----
+    do lc = 1, clump_pproc
+       cid = procinfo%cid(lc)
+       if ( lc == 1 )then
+          clumps(cid)%begg = procinfo%begg
+       else
+          cid_previous = procinfo%cid(lc-1)
+          clumps(cid)%begg = clumps(cid_previous)%endg + 1
        end if
-    end do
+       clumps(cid)%endg = clumps(cid)%begg + clumps(cid)%ncells - 1
+       cid_previous = cid
     end do
 
     ! Initialize global gindex (non-compressed, includes ocean points)
     ! Note that gindex_global goes from (1:endg)
+    call get_proc_bounds(bounds, only_gridcell=.true.)    ! This has to be done after procinfo is finalized
+    call decompInit_lnd_gindex_global_allocate( bounds, ier ) ! This HAS to be done after procinfo is finalized
+    if (ier /= 0) return
+
     nglob_x = lni !  decompMod module variables
     nglob_y = lnj !  decompMod module variables
-    call get_proc_bounds(bounds)
-    allocate(gindex_global(1:bounds%endg))
-    do n = procinfo%begg,procinfo%endg
-       gindex_global(n-procinfo%begg+1) = gdc2glo(n)
-    enddo
 
-    deallocate(clumpcnt)
-    deallocate(gdc2glo)
+    !---------------------------------------------------------------------
+
+    ! Get the global vector index on the full grid for each local processors gridcell
+    g = procinfo%begg
+    do lc = 1, clump_pproc
+    do ln = 1,lns
+       if (amask(ln) == 1) then
+          cid = lcid(ln)
+          if ( cid > 0 )then
+          if (clumps(cid)%owner == iam) then
+          if ( procinfo%cid(lc) == cid ) then
+             if ( (g < procinfo%begg) .or. (g > procinfo%endg) )then
+                write(iulog,*) ' iam, g = ', iam, g
+                call endrun(msg='g out of bounds for MPI_SCAN', file=sourcefile, line=__LINE__)
+             end if
+             gindex_global(g-procinfo%begg+1) = ln
+             g = g + 1
+          end if
+          end if
+          end if
+       end if
+    end do
+    end do
+
+    !---------------------------------------------------------------------
+    ! General error checking that the decomposition data is setup correctly
+    !---------------------------------------------------------------------
+    begcid = procinfo%cid(1)
+    endcid = procinfo%cid(clump_pproc)
+    call shr_assert(clumps(begcid)%begg == procinfo%begg, &
+                      msg='decompInit_lnd(): clumps(begcid) begg does not match procinfo begg')
+    call shr_assert(clumps(endcid)%endg == procinfo%endg, &
+                      msg='decompInit_lnd(): clumps(endcid) endg does not match procinfo endg')
+    call shr_assert(sum(clumps(procinfo%cid)%ncells) == procinfo%ncells, &
+                      msg='decompInit_lnd(): sum of clumps ncells does not match procinfo ncells')
+
+    do lc = 1, clump_pproc
+       cid = procinfo%cid(lc)
+       call shr_assert( (clumps(cid)%endg-clumps(cid)%begg+1) == clumps(cid)%ncells, &
+                         msg='decompInit_lnd(): clumps(cid) endg-begg+1 does not match clumps ncells')
+    end do
+    call shr_assert( (procinfo%endg-procinfo%begg+1) == procinfo%ncells, &
+                      msg='decompInit_lnd(): procinfo endg-begg+1 does not match procinfo ncells')
+
+    call decompInit_lnd_clean()
 
     ! Diagnostic output
     if (masterproc) then
@@ -305,6 +260,146 @@ contains
        write(iulog,*)
     end if
     call shr_sys_flush(iulog)
+
+  !------------------------------------------------------------------------------
+  ! Internal subroutines for this subroutine
+  contains
+  !------------------------------------------------------------------------------
+
+      !------------------------------------------------------------------------------
+      subroutine decompInit_lnd_allocate( ier )
+         use decompMod, only : decompmod_allocate_clumps
+         ! Allocate the temporary and long term variables set and used in decompInit_lnd
+         integer, intent(out) :: ier ! error code
+         !------------------------------------------------------------------------------
+         !
+         ! Long-term allocation:
+         ! Arrays from decompMod are allocated here
+         !
+         ! Temporary allocation:
+         ! Allocate some temporaries used only in decompInit_lnd
+         !
+         ! NOTE: nclumps, numg, and lns must be set before calling this routine!
+         ! So decompInit_lnd_set_nclumps_numg_lns must be called first
+         !------------------------------------------------------------------------------
+
+         !------------------------------------------------------------------------------
+         ! Allocate the longer term decompMod data
+         !------------------------------------------------------------------------------
+         call procinfo%InitAllocate( clump_pproc )
+
+         call decompmod_allocate_clumps( )
+
+         !-------------------------------------------------------------
+         ! Temporary arrays that are just used in decompInit_lnd
+         !-------------------------------------------------------------
+         if ( numg < 1 )then
+            call endrun(msg="numg is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
+         if ( lns < 1 )then
+            call endrun(msg="lns is NOT set before allocation", file=sourcefile, line=__LINE__)
+            return
+         end if
+         allocate(lcid(lns), stat=ier)
+         if (ier /= 0) then
+            call endrun(msg="allocation error for lcid", file=sourcefile, line=__LINE__)
+            return
+         end if
+
+      end subroutine decompInit_lnd_allocate
+
+      !------------------------------------------------------------------------------
+
+      subroutine decompInit_lnd_gindex_global_allocate( bounds, ier )
+         use decompMod, only : decompmod_allocate_gindex
+         ! Allocate gindex_global which requires that bounds gridcell begg to endg be set first
+         integer, intent(out) :: ier ! error code
+         type(bounds_type), intent(in) :: bounds ! contains subgrid bounds data
+
+         ier = 0
+         call decompmod_allocate_gindex( bounds%endg )
+      end subroutine decompInit_lnd_gindex_global_allocate
+
+      !------------------------------------------------------------------------------
+
+      subroutine decompInit_lnd_clean()
+         ! Currently there isn't any memory to clean up here
+         !--- NOTE: Can only deallocate lcid after decompInit_clumps ----
+         ! TODO: Move the deallocate for lcid to here, after decompInit_clumps only calculates the local taskj
+      end subroutine decompInit_lnd_clean
+
+      !------------------------------------------------------------------------------
+
+      subroutine decompInit_lnd_set_nclumps_numg_lns( )
+         ! Set nclumps, numg, and lns
+         ! Because of this -- it HAS to be called before decompInit_lnd_allocate
+
+         ! Set total clumps and total cells over grid
+         nclumps = clump_pproc * npes
+
+         lns = lni * lnj
+
+         ! count total land gridcells
+         numg = 0
+         do ln = 1,lns
+            if (amask(ln) == 1) then
+               numg = numg + 1
+            endif
+         enddo
+
+      end subroutine decompInit_lnd_set_nclumps_numg_lns
+
+      !------------------------------------------------------------------------------
+
+      subroutine decompInit_lnd_check_errors( ier )
+         ! Do some general error checking on input options
+         integer, intent(out) :: ier ! error code
+
+         ier = 0
+         if (nsegspc < 1) then
+            ier = 1
+            write(iulog,*) 'nsegspc bad = ',  nsegspc
+            call endrun(msg="Number of segments per clump (nsegspc) is less than 1 and can NOT be", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+
+         !--- set and verify nclumps ---
+         if (clump_pproc > 0) then
+            if (nclumps < npes) then
+               ier = 1
+               write(iulog,*) 'Number of gridcell clumps= ',nclumps, &
+                     ' is less than the number of processes = ', npes
+               call endrun(msg="Number of clumps exceeds number of processes", &
+                           file=sourcefile, line=__LINE__)
+               return
+            end if
+         else
+            ier = 1
+            write(iulog,*) 'ERROR: Bad clump_pproc=', clump_pproc
+            call endrun(msg='clump_pproc must be greater than 0', file=sourcefile, line=__LINE__)
+            return
+         end if
+
+         if (npes > numg) then
+            ier = 1
+            write(iulog,*) 'Number of processes > gridcells: npes=',npes,' num gridcells = ', numg
+            call endrun(msg="Number of processes exceeds number of land grid cells", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+         if (nclumps > numg) then
+            ier = 1
+            write(iulog,*) 'Number of clumps > gridcells nclumps = ', &
+                           nclumps, ' num gridcells = ', numg
+            call endrun(msg="Number of clumps exceeds number of land grid cells", &
+                        file=sourcefile, line=__LINE__)
+            return
+         end if
+      end subroutine decompInit_lnd_check_errors
+
+      !------------------------------------------------------------------------------
 
   end subroutine decompInit_lnd
 
@@ -349,8 +444,9 @@ contains
     character(len=32), parameter :: subname = 'decompInit_clumps'
     !------------------------------------------------------------------------------
 
+    call t_startf('decompInit_clumps')
     !--- assign gridcells to clumps (and thus pes) ---
-    call get_proc_bounds(bounds)
+    call get_proc_bounds(bounds, only_gridcell=.true.)
     begg = bounds%begg; endg = bounds%endg
 
     allocate(allvecl(nclumps,5))   ! local  clumps [gcells,lunit,cols,patches,coh]
@@ -455,24 +551,52 @@ contains
     enddo
 
     do n = 1,nclumps
+       ! Only do the error checking over the local processor
+       if (clumps(n)%owner == iam) then
        if (clumps(n)%ncells   /= allvecg(n,1) .or. &
            clumps(n)%nlunits  /= allvecg(n,2) .or. &
            clumps(n)%ncols    /= allvecg(n,3) .or. &
            clumps(n)%npatches /= allvecg(n,4) .or. &
            clumps(n)%nCohorts /= allvecg(n,5)) then
 
-          write(iulog ,*) 'decompInit_glcp(): allvecg error ncells ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error lunits ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error ncols  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error patches',iam,n,clumps(n)%npatches ,allvecg(n,4)
-          write(iulog ,*) 'decompInit_glcp(): allvecg error cohorts',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
+          write(iulog ,*) 'allvecg error: iam,n ',iam,n
+          write(iulog ,*) 'allvecg error ncells,allvecg ',iam,n,clumps(n)%ncells   ,allvecg(n,1)
+          write(iulog ,*) 'allvecg error lunits,allvecg ',iam,n,clumps(n)%nlunits  ,allvecg(n,2)
+          write(iulog ,*) 'allvecg error ncols,allvecg  ',iam,n,clumps(n)%ncols    ,allvecg(n,3)
+          write(iulog ,*) 'allvecg error patches,allvecg',iam,n,clumps(n)%npatches ,allvecg(n,4)
+          write(iulog ,*) 'allvecg error cohorts,allvecg',iam,n,clumps(n)%nCohorts ,allvecg(n,5)
 
-          call endrun(msg=errMsg(sourcefile, __LINE__))
+          call endrun(msg="allvecg error cohorts", file=sourcefile, line=__LINE__)
+          return
+       endif
        endif
     enddo
 
     deallocate(allvecg,allvecl)
     deallocate(lcid)
+
+    ! ------ Reset the clump type array for all non-local cid's to -1 to show it can be made smaller
+    ! TODO: Remove this when https://github.com/ESCOMP/CTSM/issues/3466 is done
+    do cid = 1, nclumps
+         if (clumps(cid)%owner /= iam) then
+            clumps(cid)%owner     = -1
+            clumps(cid)%ncells    = -1
+            clumps(cid)%nlunits   = -1
+            clumps(cid)%ncols     = -1
+            clumps(cid)%npatches  = -1
+            clumps(cid)%nCohorts  = -1
+            clumps(cid)%begg      = -1
+            clumps(cid)%begl      = -1
+            clumps(cid)%begc      = -1
+            clumps(cid)%begp      = -1
+            clumps(cid)%begCohort = -1
+            clumps(cid)%endg      = -1
+            clumps(cid)%endl      = -1
+            clumps(cid)%endc      = -1
+            clumps(cid)%endp      = -1
+            clumps(cid)%endCohort = -1
+         end if
+    end do
 
     ! Diagnostic output
 
@@ -566,6 +690,7 @@ contains
        call shr_sys_flush(iulog)
        call mpi_barrier(mpicom,ier)
     end do
+    call t_stopf('decompInit_clumps')
 
   end subroutine decompInit_clumps
 
@@ -579,7 +704,7 @@ contains
     use clm_varctl             , only : use_fates
     use subgridMod             , only : subgrid_get_gcellinfo
     use decompMod              , only : bounds_type, get_proc_global, get_proc_bounds
-    use decompMod              , only : gindex_global
+    use decompMod              , only : gindex_global, nglob_x, nglob_y
     use decompMod              , only : gindex_grc, gindex_lun, gindex_col, gindex_patch, gindex_Cohort
     use decompMod              , only : procinfo, clump_type, clumps, get_proc_global
     use LandunitType           , only : lun
@@ -625,6 +750,7 @@ contains
     integer              :: gsize
     Character(len=32), parameter :: subname = 'decompInit_glcp'
     !------------------------------------------------------------------------------
+    call t_startf('decompInit_glcp')
 
     ! Get processor bounds
 
@@ -850,6 +976,8 @@ contains
     deallocate(start)
     deallocate(start_global)
     if (allocated(index_lndgridcells)) deallocate(index_lndgridcells)
+
+    call t_stopf('decompInit_glcp')
 
   end subroutine decompInit_glcp
 
