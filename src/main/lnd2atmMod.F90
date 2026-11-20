@@ -184,6 +184,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c, l, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
+    real(r8) :: qflx_ice_runoff_grc(bounds%begg:bounds%endg)    ! qflx_ice_runoff_col averaged to gridcell, before any temporal buffering (mm H2O /s)
     real(r8), allocatable :: qflx_surf_col_to_rof(:)          ! surface runoff that is sent directly to rof
     real(r8), allocatable :: qflx_drain_col_to_rof(:)         ! drainagec that is sent directly to rof
     real(r8), allocatable :: qflx_drain_perched_col_to_rof(:) ! perched drainage that is sent directly to rof
@@ -461,10 +462,10 @@ contains
 
     call c2g( bounds, &
          water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
-         water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_grc(bounds%begg:bounds%endg),  &
+         qflx_ice_runoff_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
     call buffer_ice_runoff(bounds, glc_behavior, &
-         qflx_ice_runoff_grc = water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_grc(bounds%begg:bounds%endg), &
+         qflx_ice_runoff_grc = qflx_ice_runoff_grc(bounds%begg:bounds%endg), &
          ice_runoff_storage_grc = water_inst%waterstatebulk_inst%ice_runoff_storage_grc(bounds%begg:bounds%endg), &
          qflx_rofice_grc = water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg))
     ! Note that the dynbal ice flux is added after (rather than being routed through)

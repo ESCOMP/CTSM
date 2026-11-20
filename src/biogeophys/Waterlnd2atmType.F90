@@ -34,7 +34,6 @@ module Waterlnd2atmType
      real(r8), pointer :: qflx_rofliq_drain_perched_grc    (:)   ! rof liq -- perched water table runoff component
      real(r8), pointer :: qflx_rofliq_stream_grc  (:)   ! rof liq -- stream channel runoff component
      real(r8), pointer :: qflx_ice_runoff_col(:)   ! rof ice forcing, col level
-     real(r8), pointer :: qflx_ice_runoff_grc(:)   ! qflx_ice_runoff_col averaged to grc level, before any temporal buffering
      real(r8), pointer :: qflx_rofice_grc    (:)   ! rof ice forcing, grc level
      real(r8), pointer :: qflx_liq_from_ice_col(:) ! liquid runoff from converted ice runoff
      real(r8), pointer :: qirrig_grc         (:)   ! irrigation flux
@@ -130,10 +129,6 @@ contains
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_column, &
          ival=ival)
-    call AllocateVar1d(var = this%qflx_ice_runoff_grc, name = 'qflx_ice_runoff_grc', &
-         container = tracer_vars, &
-         bounds = bounds, subgrid_level = subgrid_level_gridcell, &
-         ival=ival)
     call AllocateVar1d(var = this%qflx_rofice_grc, name = 'qflx_rofice_grc', &
          container = tracer_vars, &
          bounds = bounds, subgrid_level = subgrid_level_gridcell, &
@@ -183,12 +178,12 @@ contains
          long_name=this%info%lname('total ice runoff sent to coupler (includes corrections for land use change)'), &
          ptr_lnd=this%qflx_rofice_grc)
 
-    this%qflx_ice_runoff_grc(begg:endg) = 0._r8
+    this%qflx_ice_runoff_col(begc:endc) = 0._r8
     call hist_addfld1d (fname=this%info%fname('QRUNOFF_ICE_BEFORE_STORAGE'),  units='mm/s',  &
          avgflag='A', &
          long_name=this%info%lname('ice runoff before temporal buffering in the ice runoff storage pool '// &
          '(excludes corrections for land use change)'), &
-         ptr_lnd=this%qflx_ice_runoff_grc, default='inactive')
+         ptr_col=this%qflx_ice_runoff_col, c2l_scale_type='urbanf', default='inactive')
 
     this%qflx_liq_from_ice_col(begc:endc) = 0._r8
     call hist_addfld1d (fname=this%info%fname('QRUNOFF_ICE_TO_LIQ'), units='mm/s', &
