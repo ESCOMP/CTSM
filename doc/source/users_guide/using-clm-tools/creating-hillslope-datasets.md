@@ -6,7 +6,7 @@
 
 Creating hillslope datasets for use in CTSM is a multi-step process:
 
-1. Perform the Height Above Nearest Drainage (HAND) analysis, which processes the DEM data for each gridcell, breaking the work into a number of "chunks."
+1. Perform the Height Above Nearest Drainage (HAND) analysis, which processes the digital elevation model (DEM) data for each gridcell, breaking the work into a number of "chunks."
 1. Combine the per-gridcell files from the HAND analysis into one file per chunk.
 1. Combine the per-chunk files into a `hillslope_file` for use in CTSM.
 
