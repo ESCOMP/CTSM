@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-For description and instructions, please see README.
+Used to generate synthetic hillslope files for testing purposes
 """
 
 import os

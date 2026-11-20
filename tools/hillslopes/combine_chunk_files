@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-For description and instructions, please see README.
+Used in the hillslope dataset creation workflow; combines chunk files into hillslope file.
 """
 
 import os
