@@ -2074,7 +2074,6 @@ contains
      real(r8) :: xs(bounds%begc:bounds%endc)             ! water needed to bring soil moisture to watmin (mm)
      real(r8) :: dzmm(bounds%begc:bounds%endc,1:nlevsoi) ! layer thickness (mm)
      integer  :: jwt(bounds%begc:bounds%endc)            ! index of the soil layer right above the water table (-)
-     integer  :: jsc(bounds%begc:bounds%endc)            ! index of the soil layer containing the stream channel bottom (-)
      real(r8) :: drainage(bounds%begc:bounds%endc)       ! subsurface drainage (mm/s)
      real(r8) :: xsi(bounds%begc:bounds%endc)            ! excess soil water above saturation at layer i (mm)
      real(r8) :: xs1(bounds%begc:bounds%endc)            ! excess soil water above saturation at layer 1 (mm)
@@ -2082,7 +2081,6 @@ contains
      real(r8) :: icefracsum                              ! summation of icefrac*dzmm of layers below water table (-)
      real(r8) :: ice_imped_col(bounds%begc:bounds%endc)  ! column average hydraulic conductivity reduction due to presence of soil ice (-)
      real(r8) :: ice_imped(bounds%begc:bounds%endc,1:nlevsoi) ! hydraulic conductivity reduction due to presence of soil ice (-)
-     real(r8) :: ice_imped_stream(bounds%begc:bounds%endc)    ! stream channel hydraulic conductivity reduction due to presence of soil ice (-)
      real(r8) :: available_h2osoi_liq                    ! available soil liquid water in a layer
      real(r8) :: h2osoi_vol                              ! volumetric water content (mm3/mm3)
      real(r8) :: drainage_tot                            ! total drainage to be removed from column (mm)
@@ -2144,22 +2142,7 @@ contains
 
        dtime = get_step_size_real()
 
-       ! Initialize
-
-       do fc = 1, num_hydrologyc
-          c = filter_hydrologyc(fc)
-          qflx_drain(c)    = 0._r8 
-          qflx_rsub_sat(c) = 0._r8
-          drainage(c)      = 0._r8
-          qflx_latflow_in(c) = 0._r8
-          qflx_latflow_out(c) = 0._r8
-          qflx_net_latflow(c) = 0._r8
-          volumetric_discharge(c) = 0._r8
-          qflx_latflow_out_vol(c) = 0._r8
-      end do
-
-      ! Convert layer thicknesses from m to mm and
-      ! calculate ice impedance factor
+       ! Convert layer thicknesses from m to mm
 
        do j = 1,nlevsoi
           do fc = 1, num_hydrologyc
@@ -2171,6 +2154,20 @@ contains
              ice_imped(c,j)=10._r8**(-params_inst%e_ice*icefrac(c,j))
           end do
        end do
+
+       ! Initial set
+
+       do fc = 1, num_hydrologyc
+          c = filter_hydrologyc(fc)
+          qflx_drain(c)    = 0._r8 
+          qflx_rsub_sat(c) = 0._r8
+          drainage(c)      = 0._r8
+          qflx_latflow_in(c) = 0._r8
+          qflx_latflow_out(c) = 0._r8
+          qflx_net_latflow(c) = 0._r8
+          volumetric_discharge(c)       = 0._r8
+          qflx_latflow_out_vol(c) = 0._r8
+      end do
 
       ! The layer index of the first unsaturated layer, 
       ! i.e., the layer right above the water table
@@ -2243,16 +2240,6 @@ contains
                      head_gradient = head_gradient - 1._r8/k_anisotropic
                   endif
                endif
-               ! locate stream channel bottom
-               jsc(c) = nlevsoi
-               do j = 1,nlevsoi
-                  if(stream_channel_depth <= zi(c,j)) then
-                     jsc(c) = j
-                     exit
-                  end if
-               enddo
-               ! select minimum value of ice impedance
-               ice_imped_stream(c) = minval(ice_imped(c,1:jsc(c)))
             else
                call endrun(msg="head_gradient_method must be kinematic or darcy"//errmsg(sourcefile, __LINE__))  
             end if
@@ -2307,7 +2294,7 @@ contains
                endif
             else
                ! transmissivity of losing stream (c_src == ispval)
-               transmis = (1.e-3_r8*ice_imped_stream(c)*hksat(c,jsc(c)))*stream_water_depth
+               transmis = (1.e-3_r8*ice_imped(c,jwt(c)+1)*hksat(c,jwt(c)+1))*stream_water_depth
             endif
             ! adjust transmissivity by 'anisotropy factor'
             transmis = k_anisotropic*transmis
