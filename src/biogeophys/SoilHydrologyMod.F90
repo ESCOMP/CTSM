@@ -2189,7 +2189,7 @@ contains
          c = filter_hydrologyc(fc)
          dzsum = 0._r8
          icefracsum = 0._r8
-         do j = max(jwt(c),1), nlevsoi
+         do j = max(jwt(c),1), nbedrock(c)
             dzsum  = dzsum + dzmm(c,j)
             icefracsum = icefracsum + icefrac(c,j) * dzmm(c,j)
          end do
