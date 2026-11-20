@@ -167,7 +167,7 @@ contains
     integer :: fc      ! soil filter column index
     real(r8):: br      ! base rate (gC/gN/s)
     real(r8):: br_root ! root base rate (gC/gN/s)
-    real(r8):: q10     ! temperature dependence
+    real(r8):: Q10mr   ! temperature dependence
 
     real(r8):: tc      ! temperature correction, 2m air temp (unitless)
     real(r8):: tcsoi(bounds%begc:bounds%endc,nlevgrnd) ! temperature correction by soil layer (unitless)
@@ -219,7 +219,7 @@ contains
       ! Q10 was originally set to 2.0, an arbitrary choice, but reduced to 1.5 as part of the tuning
       ! to improve seasonal cycle of atmospheric CO2 concentration in global
       ! simulatoins
-      Q10 = CNParamsShareInst%Q10
+      Q10mr = CNParamsShareInst%Q10mr
 
       ! column loop to calculate temperature factors in each soil layer
       do j=1,nlevgrnd
@@ -228,7 +228,7 @@ contains
 
             ! calculate temperature corrections for each soil layer, for use in
             ! estimating fine root maintenance respiration with depth
-            tcsoi(c,j) = Q10**((t_soisno(c,j)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
+            tcsoi(c,j) = Q10mr**((t_soisno(c,j)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
          end do
       end do
 
@@ -240,7 +240,7 @@ contains
          ! gC/m2/s for each of the live plant tissues.
          ! Leaf and live wood MR
 
-         tc = Q10**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
+         tc = Q10mr**((t_ref2m(p)-SHR_CONST_TKFRZ - 20.0_r8)/10.0_r8)
          
          !RF: acclimation of root and stem respiration fluxes
          ! n.b. we do not yet know if this is defensible scientifically (awaiting data analysis)

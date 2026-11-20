@@ -16,7 +16,7 @@ the CRUJRA atm data between 1950 to 2010 and you want to run at
 ``` shell
    cd cime/scripts
 
-   ./create_newcase --case <testcase> --mach derecho --res f09_t232 -compset I2000Clm60BgcCrop
+   ./create_newcase --case <testcase> --mach derecho --res f09_t233 -compset I2000Clm60BgcCrop
    # (./create_newcase -help -- to get help on the script)
 
    # Setup the case

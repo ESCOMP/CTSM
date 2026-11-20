@@ -85,3 +85,9 @@ paramfile_disclaimer_rst = (
     " If you want to check the values for your version, use"
     " :ref:`query-paramfile` on the ``paramfile`` for your case."
 )
+
+cesmrelease = "CESM2.2 beta"
+
+ctsm_gh = "https://github.com/ESCOMP/ctsm"
+
+cesm_gh = "https://github.com/ESCOMP/cesm"

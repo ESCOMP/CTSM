@@ -87,6 +87,7 @@ module FrictionVelocityMod
      procedure, public :: SetRoughnessLengthsAndForcHeightsNonLake  ! Set roughness lengths and forcing heights for non-lake points
      procedure, public :: SetActualRoughnessLengths ! Set roughness lengths actually used in flux calculations
      procedure, public :: FrictionVelocity       ! Calculate friction velocity
+     procedure, public :: SetValues              ! Set diagnostic arrays to setval (e.g. spval)
      procedure, public :: MoninObukIni           ! Initialization of the Obukhov length scale
 
      procedure, public  :: InitForTesting        ! version of Init meant for unit testing
@@ -402,7 +403,46 @@ contains
        end if
     end do
    
+    call this%SetValues(bounds, spval)
+
   end subroutine InitCold
+
+  !------------------------------------------------------------------------------
+  subroutine SetValues(this, bounds, setval, p)
+    ! Set to setval the diagnostic arrays that are written only by CanopyFluxes
+    ! (i.e., only for patches in filter_exposedvegp), either over all of bounds or
+    ! for a single patch p. Used at initialization and when a patch leaves that
+    ! filter, so that stale values from the last time it was computed do not persist.
+    !
+    ! Deliberately NOT included: obu (restart variable, read by the dust model for
+    ! bare-ground patches, and BareGroundFluxes keeps its own local copy), and
+    ! zeta, u10, u10_clm, ram1, rb1, fv, which FrictionVelocity or BareGroundFluxes
+    ! recompute every step for all non-lake, non-urban patches.
+    
+    class(frictionvel_type), intent(inout) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8), intent(in)          :: setval
+    integer, intent(in), optional :: p      ! if present, set values for this patch only
+    integer :: begp, endp
+    
+    if (present(p)) then
+       begp = p; endp = p
+    else
+       begp = bounds%begp; endp = bounds%endp
+    end if
+    
+    this%rah1_patch(begp:endp) = setval
+    this%rah2_patch(begp:endp) = setval
+    this%raw1_patch(begp:endp) = setval
+    this%raw2_patch(begp:endp) = setval
+    this%ustar_patch(begp:endp) = setval
+    this%um_patch(begp:endp) = setval
+    this%uaf_patch(begp:endp) = setval
+    this%taf_patch(begp:endp) = setval
+    this%qaf_patch(begp:endp) = setval
+    this%vpd_patch(begp:endp) = setval
+    
+  end subroutine SetValues
 
   !------------------------------------------------------------------------------
   subroutine ReadParams( this, params_ncid )
@@ -575,9 +615,8 @@ contains
          forc_hgt_u_patch =>    this%forc_hgt_u_patch                 , & ! Output: [real(r8) (:)   ] observational height of wind at patch level [m]
          z0m              =>    canopystate_inst%z0m_patch            , & ! Input: [real(r8) (:)   ] momentum roughness length (m)
          displa           =>    canopystate_inst%displa_patch         , & ! Input: [real(r8) (:)   ] displacement height (m)
-
          frac_veg_nosno   =>    canopystate_inst%frac_veg_nosno_patch , & ! Input:  [integer  (:)   ] fraction of vegetation not covered by snow (0 OR 1) [-]
-         frac_sno         =>    waterdiagnosticbulk_inst%frac_sno_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow (0 to 1)
+         frac_sno_albedo  =>    waterdiagnosticbulk_inst%frac_sno_albedo_col , & ! Input:  [real(r8) (:)   ] fraction of ground covered by snow for albedo calculations (0 to 1)
          snomelt_accum    =>    waterdiagnosticbulk_inst%snomelt_accum_col , & ! Input:  [real(r8) (:)   ] accumulated col snow melt for z0m calculation (m H2O)
          urbpoi           =>    lun%urbpoi                            , & ! Input:  [logical  (:)   ] true => landunit is an urban point
          z_0_town         =>    lun%z_0_town                          , & ! Input:  [real(r8) (:)   ] momentum roughness length of urban landunit (m)
@@ -596,14 +635,14 @@ contains
 
        select case (z0param_method)
        case ('ZengWang2007')
-          if (frac_sno(c) > 0._r8) then
+          if (frac_sno_albedo(c) > 0._r8) then
              z0mg(c) = this%zsno
           else
              z0mg(c) = this%zlnd
           end if
        case ('Meier2022')           ! Bare ground and ice have a different value
           l = col%landunit(c)
-          if (frac_sno(c) > 0._r8) then ! Do snow first because ice could be snow-covered
+          if (frac_sno_albedo(c) > 0._r8) then ! Do snow first because ice could be snow-covered
              if(use_z0m_snowmelt) then
                 if ( snomelt_accum(c) < 1.e-5_r8 )then
                     z0mg(c) = exp(-b1_param * rpi * 0.5_r8 + b4_param) * 1.e-3_r8

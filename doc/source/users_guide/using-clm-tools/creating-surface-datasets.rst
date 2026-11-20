@@ -1,5 +1,3 @@
-.. include:: ../substitutions.rst
-
 .. _creating-surface-datasets:
 
 Creating Surface Datasets
@@ -63,10 +61,7 @@ https://github.com/ESCOMP/CTSM/issues/2341
 The complete process
 --------------------
 
-If you have read the previous section, you are ready to proceed. The ``$CTSMROOT/tools/README.md`` goes through the complete process for creating input files needed to run CLM. The ``$CTSMROOT/tools/mksurfdata_esmf/README.md`` specifically goes through the complete process of generating surface and landuse datasets. We repeat those files here:
-
-.. include:: ../../../../tools/README.md
-   :code: markdown
+If you have read the previous section, you are ready to proceed. The ``$CTSMROOT/tools/mksurfdata_esmf/README.md`` goes through the complete process of generating surface and landuse datasets:
 
 .. include:: ../../../../tools/mksurfdata_esmf/README.md
    :code: markdown

@@ -74,7 +74,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_fates=".true."
->'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS','H2OSNO'</hist_fincl1>
+>'TOTSOMC','TOTSOMN','FATES_LAI','FATES_GPP','FATES_NPP','FATES_VEGC','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="on" use_cn=".false."
 >'TLAI','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true." use_cndv=".true."
@@ -82,7 +82,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <hist_fincl1 clm_accelerated_spinup="sasu" use_cn=".true."
 >'TOTECOSYSC','TOTECOSYSN','TOTSOMC','TOTSOMN','TOTVEGC','TOTVEGN','TLAI','GPP','CPOOL','NPP','TWS','H2OSNO'</hist_fincl1>
 <hist_fincl1 clm_accelerated_spinup="sasu" use_fates=".true."
->'TOTSOMC','TOTSOMN','TLAI','GPP','NPP','TWS','H2OSNO'</hist_fincl1>
+>'TOTSOMC','TOTSOMN','FATES_LAI','FATES_GPP','FATES_NPP','FATES_VEGC','TWS','H2OSNO'</hist_fincl1>
 <hist_nhtfrq clm_accelerated_spinup="on"  >-8760</hist_nhtfrq>
 <hist_nhtfrq clm_accelerated_spinup="sasu">-8760</hist_nhtfrq>
 <hist_mfilt  clm_accelerated_spinup="on"  >20</hist_mfilt>
@@ -234,6 +234,9 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <calc_human_stress_indices               >FAST</calc_human_stress_indices>
 <calc_human_stress_indices phys="clm4_5" >NONE</calc_human_stress_indices>
+
+<!-- Urban building humidity and air-conditioning dehumidification -->
+<building_humidity_mode>0</building_humidity_mode>
 
 <!-- Explicit, time-varying urban air conditioning adoption rate scheme -->
 <urban_explicit_ac>.false.</urban_explicit_ac>
@@ -981,7 +984,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
 			hgrid="1.9x2.5"
->mask=tx2_3v2 use_cn=.true. do_transient_pfts=.false. use_excess_ice=.true. use_crop=.false. irrigate=.false.
+>mask=gx1v7 use_cn=.true. do_transient_pfts=.false. use_excess_ice=.true. use_crop=.false. irrigate=.false.
 </init_interp_attributes>
 <init_interp_attributes sim_year="1850" use_cndv=".false." use_fates=".false." phys="clm6_0"
 			hgrid="ne30np4.pg3"
@@ -1198,6 +1201,11 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
 			hgrid="1.9x2.5"
 >hgrid=0.9x1.25 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. irrigate=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.false.
+</init_interp_attributes>
+
+<init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." phys="clm6_0"
+			hgrid="1.9x2.5"
+>hgrid=1.9x2.5 maxpft=79 mask=gx1v7 use_cn=.true. use_crop=.true. glc_nec=10 do_transient_pfts=.false. use_excess_ice=.true.
 </init_interp_attributes>
 
 <init_interp_attributes sim_year="2000" use_cndv=".false." use_fates=".false." lnd_tuning_mode="clm5_0_cam6.0"
@@ -1486,7 +1494,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_esmf/ctsm5.4/ctsm5.4.015_BGCcrop_ne30_144_pSASU.clm2.r.0181-01-01-00000.nc
 </finidat>
 <!-- Corresponding f19 -->
-<finidat hgrid="1.9x2.5" mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
+<finidat hgrid="1.9x2.5" mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          sim_year="1850" do_transient_pfts=".false." use_excess_ice=".true."
          use_crop=".false."
          phys="clm6_0"
@@ -1522,7 +1530,7 @@ attributes from the config_cache.xml file (with keys converted to upper-case).
 >lnd/clm2/initdata_esmf/ctsm5.4/clmi.f19_twiceinterp_from.I1850Clm50BgcCrop-ciso.1366-01-01.0.9x1.25_gx1v7_simyr1850_c251030.nc
 </finidat>
 <!-- NB: This f19 2000 finidat comes from a spin-up with use_crop=".false." -->
-<finidat hgrid="1.9x2.5"    maxpft="79"  mask="tx2_3v2" use_cn=".true." use_cndv=".false." use_fates=".false."
+<finidat hgrid="1.9x2.5"    maxpft="79"  mask="gx1v7" use_cn=".true." use_cndv=".false." use_fates=".false."
          ic_ymd="20000101" sim_year="2000" do_transient_pfts=".false." use_excess_ice=".true."
          ic_tod="0" glc_nec="10" use_crop=".true."
          phys="clm6_0" use_init_interp=".true."
@@ -2008,7 +2016,7 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_${NEONSITE}_hist_2000_78
 lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c251023.nc</fsurdat>
 -->
 
-<!-- Dynamic PFT surface datasets (relative to {csmdata}) -->
+<!-- Transient PFT surface datasets (relative to {csmdata}) -->
 
 <!-- When NEON landuse datasets are available uncomment the following for something like this...
      Also change the setting for clm_demand in the namelist_defaults_overall.xml file
@@ -2750,6 +2758,27 @@ lnd/clm2/surfdata_esmf/NEON/ctsm5.4.0/surfdata_1x1_NEON_TOOL_hist_2000_78pfts_c2
 <do_transient_lakes>.false.</do_transient_lakes>
 <do_transient_urban>.false.</do_transient_urban>
 <reset_dynbal_baselines>.false.</reset_dynbal_baselines>
+
+<!-- Notes regarding the default values for dynbal_storage_residence_time:
+
+     The choice of 20 years is pretty arbitrary. It feels like this is on the longer side
+     of what's reasonable, and this choice of a relatively long residence time was made to
+     prioritize reducing annual fluxes, especially in the oscillatory case (where a given
+     grid cell flips back and forth between two states, as commonly happens at the margin
+     of the ice sheet).
+
+     Regarding the CLM5 default: There is no way to exactly recover the old CLM5 behavior,
+     which used an annual dribbler to evenly spread the fluxes throughout the following
+     year. But this CLM5 behavior can be approximated by setting
+     dynbal_storage_residence_time to something between about 0.5 and 1.0, depending on
+     the behaviors you want to recover - peak fluxes, effective residence time, etc. The
+     choice of 0.75 here is a compromise that keeps fluxes not much larger than in CLM5
+     immediately following landcover change, while still releasing a large fraction of the
+     conservation correction within the first year after landcover change.
+-->
+<dynbal_storage_residence_time >20.d00</dynbal_storage_residence_time>
+<dynbal_storage_residence_time phys="clm5_0">0.75d00</dynbal_storage_residence_time>
+
 <vars_1dwt_w_time do_transient_pfts=".true.">.true.</vars_1dwt_w_time>
 <vars_1dwt_w_time do_transient_crops=".true.">.true.</vars_1dwt_w_time>
 <vars_1dwt_w_time do_transient_lakes=".true.">.true.</vars_1dwt_w_time>

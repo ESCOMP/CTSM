@@ -328,6 +328,11 @@ contains
        ! is at least *mostly* true, but there may be some subtleties, like resetting of
        ! some variables, that are needed even in (some) time steps where we haven't
        ! changed weights.
+       !
+       ! NOTE(wjs, 2026-08-28) Actually, the above statement is NOT true for the call to
+       ! dyn_hwcontent_final: that needs to be called every time step to properly do the
+       ! outflux from the dynbal storage pools. I haven't gone back and checked other
+       ! pieces to see what else may need to be done every time step.
        ! ========================================================================
 
        call dynSubgrid_wrapup_weight_changes(bounds_clump, glc_behavior)

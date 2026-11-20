@@ -262,8 +262,6 @@ contains
          sminn_vr                     => soilbiogeochem_nitrogenstate_inst%sminn_vr_col                , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral N                
          smin_nh4_vr                  => soilbiogeochem_nitrogenstate_inst%smin_nh4_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NH4              
          smin_no3_vr                  => soilbiogeochem_nitrogenstate_inst%smin_no3_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3) soil mineral NO3              
-
-         c_overflow_vr                => soilbiogeochem_carbonflux_inst%c_overflow_vr                  , & ! Output: [real(r8) (:,:,:)] (gC/m3/s) vertically-resolved C rejected by microbes that cannot process it
          cascade_receiver_pool        => decomp_cascade_con%cascade_receiver_pool                      , & ! Input:  [integer (:)     ]  which pool is C added to for a given decomposition step
 
          pot_f_nit_vr                 => soilbiogeochem_nitrogenflux_inst%pot_f_nit_vr_col             , & ! Input:  [real(r8) (:,:) ]  (gN/m3/s) potential soil nitrification flux
@@ -920,6 +918,7 @@ contains
                          cascade_receiver_pool(k) == i_oli_mic) then
                         sum_ndemand_vr(c,j) = sum_no3_demand_scaled(c,j) + &
                                               sum_nh4_demand_scaled(c,j)
+                        ! WW effectively turn this off now, since pmnf_decomp_cascade < 0 for mineralization
                         if (pmnf_decomp_cascade(c,j,k) > 0.0_r8 .and. &
                             sum_ndemand_vr(c,j) > 0.0_r8) then
                            amnf_immob_vr = (sminn_vr(c,j) / dt) * &
@@ -927,19 +926,11 @@ contains
                                             sum_ndemand_vr(c,j))
                            n_deficit_vr = pmnf_decomp_cascade(c,j,k) - &
                                           amnf_immob_vr
-                           c_overflow_vr(c,j,k) = &
-                              n_deficit_vr * p_decomp_cn_gain(c,j,cascade_receiver_pool(k))
-                        else  ! not pmnf and sum_ndemand > 0
-                           c_overflow_vr(c,j,k) = 0.0_r8
                         end if
-                     else  ! not microbes receiving
-                        c_overflow_vr(c,j,k) = 0.0_r8
                      end if
                   end do
                end do
             end do
-         else  ! not mimics_decomp
-            c_overflow_vr(:,:,:) = 0.0_r8
          end if
 
          if(.not.local_use_fun)then

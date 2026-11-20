@@ -1,4 +1,3 @@
-
 module clm_varorb
 
   use shr_kind_mod , only: r8 => shr_kind_r8
@@ -13,5 +12,11 @@ module clm_varorb
   real(r8) :: obliqr  ! Earth's obliquity in radians
   real(r8) :: lambm0  ! Mean longitude of perihelion at the vernal equinox (radians)
   real(r8) :: mvelpp  ! Earth's moving vernal equinox longitude of perihelion plus pi (radians)
+
+  ! Orbital information for the previous time step (used to initialize prev_dayl at year boundaries)
+  real(r8) :: eccen_prev  ! Earth's eccentricity factor for previous time step
+  real(r8) :: obliqr_prev ! Earth's obliquity for previous time step (radians)
+  real(r8) :: lambm0_prev ! Mean longitude of perihelion for previous time step (radians)
+  real(r8) :: mvelpp_prev ! Earth's moving vernal equinox longitude for previous time step (radians)
 
 end module clm_varorb

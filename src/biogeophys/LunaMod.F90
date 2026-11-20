@@ -68,7 +68,6 @@ module LunaMod
   private :: VcmxTKattge                                   !Calculate the temperature response for Vcmax, based on Kattge and Knorr  2007
   private :: RespTBernacchi                                !Calculate the temperature response for respiration, following Bernacchi PCE 2001
   private :: Photosynthesis_luna                           !calculate the photosynthetic rate for nitrogen allocation
-  private :: Quadratic                                     !Calculate the soultion using the quadratic formula
 
   !------------------------------------------------------------------------------ 
   !Constants  
@@ -214,7 +213,6 @@ module LunaMod
     use clm_varpar            , only : nlevsoi
     use perf_mod              , only : t_startf, t_stopf
     use clm_varctl            , only : use_cn
-    use quadraticMod          , only : quadratic
     use CNSharedParamsMod     , only : CNParamsShareInst
     use shr_infnan_mod, only : isnan => shr_infnan_isnan
     use OzoneBaseMod,  only : ozone_base_type
@@ -1091,6 +1089,7 @@ end subroutine Nitrogen_investments
 ! two phases. First phase is where Rubisco is limiting (Wc <= Wj) and second phase is where light is limiting (Wj > Wc).    
 
 subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, JmeanL, ci, Kc, Kj, A)
+  use quadraticMod, only : quadratic_roots
   implicit none 
   real(r8), intent (in) :: forc_pbot                  !air presure (Pa)  
   real(r8), intent (in) :: tleafd                     !daytime leaf temperature (oC) 
@@ -1165,7 +1164,8 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
         phi = forc_pbot * (1.37_r8 * gs_mol + 1.6_r8 * gb_mol) / (gb_mol * gs_mol)
         bquad = awc - CO2c + phi * Vcmax
         cquad = -(c_p * phi * Vcmax + awc * CO2c)
-        call Quadratic(aquad, bquad, cquad, r1, r2)
+        call quadratic_roots(aquad, bquad, cquad, r1, r2, &
+                             file=sourcefile, line=__LINE__)
         ci = max(r1, r2)
         if (ci < 0.0_r8) ci = c_p + 0.5_r8 * ciold
   end do
@@ -1183,7 +1183,8 @@ subroutine Photosynthesis_luna(forc_pbot, tleafd, relh, CO2a,O2a, rb, Vcmax, Jme
          phi = forc_pbot * (1.37_r8 * gs_mol + 1.6_r8 * gb_mol) / (gb_mol * gs_mol)
          bquad = 2.0_r8 * c_p - CO2c + phi * JmeanL / 4.0_r8
          cquad = -(c_p * phi * JmeanL / 4.0_r8 + 2.0_r8 * c_p * CO2c)
-         call Quadratic(aquad, bquad, cquad, r1, r2)
+         call quadratic_roots(aquad, bquad, cquad, r1, r2, &
+                              file=sourcefile, line=__LINE__)
          ci = max(r1, r2)
          if (ci < 0.0_r8) ci = c_p + 0.5_r8 * ciold
          Kj = max(ci - c_p, 0.0_r8) / (4.0_r8 * ci + 8.0_r8 * c_p)
@@ -1371,39 +1372,6 @@ real(r8) function  RespTBernacchi(tleaf)
         
 end function RespTBernacchi
 
-
-!******************************************************************************************************************** 
-!Calculate the soultion using the quadratic formula
-
-subroutine  Quadratic(a,b,c,r1,r2) 
-  implicit none
-  real(r8), intent(in)  :: a   !coefficient a
-  real(r8), intent(in)  :: b   !coefficient b
-  real(r8), intent(in)  :: c   !coefficient c
-  real(r8), intent(out) :: r1  !root one
-  real(r8), intent(out) :: r2  !root one
-  real(r8)  :: q               ! temporary term for quadratic solution
-  
-  r1 = 1.0e36_r8
-  r2 = 1.0e36_r8
-  
-  if (a == 0.0_r8) return 
-
-  if (b .GE. 0.0_r8) then 
-      q = -0.5_r8 * (b + sqrt(b*b - 4.0_r8*a*c))
-  else
-      q = -0.5_r8 * (b - sqrt(b*b - 4.0_r8*a*c))
-  end if 
-  
-  r1 = q / a
-  
-  if (q .NE. 0.0_r8)then
-      r2 = c / q
-  else 
-      r2 = 1.0e36_r8
-  end if
-        
-end subroutine Quadratic
 
 end module LunaMod
 
