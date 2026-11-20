@@ -1,7 +1,5 @@
 .. running-with-custom-crop-calendars:
 
-.. include:: ../substitutions.rst
-
 =======================================
  Running with custom crop calendars
 =======================================

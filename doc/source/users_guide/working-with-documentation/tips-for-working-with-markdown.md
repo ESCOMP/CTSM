@@ -1,3 +1,9 @@
+---
+myst:
+  substitutions:
+    key1: "I'm a **substitution**"
+---
+
 (tips-for-working-with-markdown)=
 
 # Tips for working with Markdown
@@ -169,3 +175,25 @@ Becomes:
 ```
 
 See [the MyST Markdown documentation for the `include` directive](https://mystmd.org/guide/directives#directive-include) for more information (all options apply to `literalinclude` as well).
+
+## Markdown: Using substitutions
+Substitutions allow us to associate a text string with a variable name, then to use that variable name throughout our documentation. This has the advantage of only needing to update the text string in one place but getting that propagated everywhere.
+
+Our global substitutions are defined in `doc/substitutions.py`. For example, including `{{ version }}` in a Markdown documentation file will render as "{{ version }}" (no quotes) because of this in `doc/substitutions.py`:
+```{literalinclude} ../../../substitutions.py
+:language: python
+:linenos:
+:start-at: version =
+:end-at: version =
+:lineno-match:
+```
+
+You can also, using "front matter," define substitutions that will apply in just one file. For example, the beginning of this file contains
+
+```{literalinclude} tips-for-working-with-markdown.md
+:language: yaml
+:linenos:
+:lines: 1-5
+```
+
+Thus, `{{ key1 }}` gets rendered as "{{ key1 }}" (no quotes), but this wouldn't work on any other page.

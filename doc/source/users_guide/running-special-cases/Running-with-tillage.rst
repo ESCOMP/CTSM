@@ -1,7 +1,5 @@
 .. _running-with-tillage:
 
-.. include:: ../substitutions.rst
-
 =====================
  Running with tillage
 =====================
