@@ -18,7 +18,6 @@ Using CLM tools
    creating-surface-datasets.rst
    modifying-surface-datasets.rst
    creating-hillslope-datasets.rst
-   creating-domain-files.rst
    observational-sites-datasets.rst
    cprnc.rst
    paramfile-tools.md
