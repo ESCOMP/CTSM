@@ -15,6 +15,7 @@ on:
       - 'tools/README.md'
       - 'tools/mksurfdata_esmf/README.md'
       - 'tools/unsupported/README.md'
+      - 'tools/external/representative-hillslopes/shell_scripts/README.md'
       - 'doc/test/test_container_eq_ctsm_pylib.sh'
 
   # Allows you to run this workflow manually from the Actions tab

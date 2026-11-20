@@ -17,6 +17,7 @@ Using CLM tools
    creating-input-for-surface-dataset-generation.rst
    creating-surface-datasets.rst
    modifying-surface-datasets.rst
+   creating-hillslope-datasets.rst
    observational-sites-datasets.rst
    cprnc.rst
    paramfile-tools.md
