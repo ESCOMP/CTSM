@@ -357,6 +357,7 @@ module CNFUNMod
   real(r8)  :: kc_active(bounds%begp:bounds%endp,1:nstp)             ! the kc_active parameter               (gC/m2)
   real(r8)  :: kn_active(bounds%begp:bounds%endp,1:nstp)             ! the kn_active parameter               (gC/m2)
   real(r8)  :: availc_pool(bounds%begp:bounds%endp)                  ! The avaible C pool for allocation     (gC/m2)
+  real(r8)  :: crop_retransn_pool(bounds%begp:bounds%endp)           ! Crop grain-fill retranslocated N deployed this step (gN/m2)
   real(r8)  :: plantN(bounds%begp:bounds%endp)                       ! Plant N                               (gN/m2)
   real(r8)  :: plant_ndemand_pool(bounds%begp:bounds%endp)           ! The N demand pool                     (gN/m2)
   real(r8)  :: plant_ndemand_pool_step(bounds%begp:bounds%endp,1:nstp)   ! the N demand pool                     (gN/m2)
@@ -799,6 +800,7 @@ module CNFUNMod
   do fp = 1,num_soilp        ! PFT Starts
      p = filter_soilp(fp)
      availc_pool(p)                  = 0._r8
+     crop_retransn_pool(p)           = 0._r8
      rootC(p)                        = 0._r8
      litterfall_n(p)                 = 0._r8
      burnedoff_carbon(p)             = 0._r8
@@ -1072,6 +1074,21 @@ pft:do fp = 1,num_soilp        ! PFT Starts
 
       plant_ndemand_pool(p)     =  plant_ndemand(p) *  dt
       plant_ndemand_pool(p)     =  max(plant_ndemand_pool(p),0._r8)
+
+      ! Prognostic crops skip fun_retranslocation. Instead, at grain fill,
+      ! calc_plant_nitrogen_demand moves excess leaf/stem/froot N into retransn and
+      ! sets retransn_to_npool (limited by plant_ndemand and retransn). Deploy that N
+      ! here, pairing it with growth C so FUN does not spend that C again; otherwise
+      ! retransn_to_npool is overwritten below and the crop retransn pool is stranded.
+      if (is_prognostic_crop(ivt(p)) .and. plantCN(p) > 0._r8) then
+         crop_retransn_pool(p) = max(retransn_to_npool(p), 0._r8) * dt
+         crop_retransn_pool(p) = min(crop_retransn_pool(p), &
+              max(availc_pool(p), 0._r8) / (plantCN(p) * (1._r8 + grperc(ivt(p)))))
+         availc_pool(p)        = availc_pool(p) - crop_retransn_pool(p) * plantCN(p) * (1._r8 + grperc(ivt(p)))
+         plant_ndemand_pool(p) = max(plant_ndemand_pool(p) - crop_retransn_pool(p), 0._r8)
+      else
+         crop_retransn_pool(p) = 0._r8
+      end if
       plant_ndemand_retrans(p)  =  storage_ndemand(p)
 
       !--------------------------------------------------------------------
@@ -1527,7 +1544,7 @@ fix_loop:   do FIX =plants_are_fixing, plants_not_fixing !loop around percentage
       !---------------------------N fluxes--------------------!
       Npassive(p)               = n_passive_acc(p)/dt
       Nfix(p)                   = n_fix_acc_total(p)/dt                   
-      retransn_to_npool(p)      = n_retrans_acc_total(p)/dt
+      retransn_to_npool(p)      = (n_retrans_acc_total(p) + crop_retransn_pool(p))/dt
       if(.not. use_matrixcn)then
          free_retransn_to_npool(p) = free_nretrans(p)/dt
       else
