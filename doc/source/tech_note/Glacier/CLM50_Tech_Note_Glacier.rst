@@ -119,6 +119,10 @@ The default behaviors for the world's glacier and ice sheet regions are describe
 
    The combination of the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors results in particularly non-physical behavior: During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). The net result is zero runoff but a positive sensible heat flux generated from glacial melt. Because of how physically unrealistic this is, CLM does not allow this combination of behaviors.
 
+.. note::
+
+   The absence of ice runoff buffering over Greenland is for the sake of avoiding late-stage answer changes in this region in CESM3 runs. If it weren't for that, it would probably make sense to use the same buffering over Greenland as over Antarctica. However, note that, in most CESM3 runs, this is much less relevant over Greenland than over Antarctica because most ice runoff is handled by DGLC or CISM over Greenland.
+
 .. _Multiple elevation class scheme:
 
 Multiple elevation class scheme
