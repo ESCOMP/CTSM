@@ -170,6 +170,7 @@ contains
     real(r8) :: t
     real(r8) :: pH(bounds%begc:bounds%endc)
     real(r8) :: D0  ! temperature dependence of gaseous diffusion coefficients
+    real(r8) :: t_soisno_c  ! soil temperature (degrees Celsius)
     !debug-- put these type structure for outing to hist files
     real(r8) :: co2diff_con(2)                      ! diffusion constants for CO2
     real(r8) :: fc_air_frac                         ! Air-filled fraction of soil volume at field capacity
@@ -304,8 +305,10 @@ contains
                r_min(c,j) = 2 * surface_tension_water / (rho_w * grav * abs(soilpsi(c,j)))
                r_max = 2 * surface_tension_water / (rho_w * grav * 0.1_r8)
                r_psi(c,j) = sqrt(r_min(c,j) * r_max)
-               ratio_diffusivity_water_gas(c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j) ) * 1.e-4_r8 / &
-                    ((d_con_w(2,1) + d_con_w(2,2)*t_soisno(c,j) + d_con_w(2,3)*t_soisno(c,j)**2) * 1.e-9_r8)
+               ! The d_con_g / d_con_w polynomials are in degrees Celsius (as in ch4Mod)
+               t_soisno_c = t_soisno(c,j) - SHR_CONST_TKFRZ
+               ratio_diffusivity_water_gas(c,j) = (d_con_g(2,1) + d_con_g(2,2)*t_soisno_c ) * 1.e-4_r8 / &
+                    ((d_con_w(2,1) + d_con_w(2,2)*t_soisno_c + d_con_w(2,3)*t_soisno_c**2) * 1.e-9_r8)
 
                if (o2_decomp_depth_unsat(c,j) > 0._r8) then
                   anaerobic_frac(c,j) = exp(-rij_kro_a * r_psi(c,j)**(-rij_kro_alpha) * &
@@ -398,7 +401,7 @@ contains
             ! to convert to m2/s: We multiply by the temperature-dependent free-air diffusion rate.
             ! NOTE that the coefficients for oxygen are used here; it may be more appropriate to use
             ! coefficients for the gases being dealt with in this subroutine.
-            D0 = (d_con_g(2,1) + d_con_g(2,2)*t_soisno(c,j)) * 1.e-4_r8
+            D0 = (d_con_g(2,1) + d_con_g(2,2)*(t_soisno(c,j) - SHR_CONST_TKFRZ)) * 1.e-4_r8
             diffus(c,j) = diffus(c,j) * D0
 
             ! ratio function (figure 7c)
