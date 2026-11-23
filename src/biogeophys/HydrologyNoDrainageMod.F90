@@ -672,6 +672,15 @@ contains
             wf(c) = tsw/stsw
          end do
 
+         ! Re-zero the accumulators so that the 0-0.17 m sum does not include
+         ! the 0-0.05 m layers twice
+         do fc = 1, num_hydrologyc
+            c = filter_hydrologyc(fc)
+            rwat(c) = 0._r8
+            swat(c) = 0._r8
+            rz(c)   = 0._r8
+         end do
+
          do j = 1, nlevgrnd
             do fc = 1, num_hydrologyc
                c = filter_hydrologyc(fc)
