@@ -135,6 +135,7 @@ contains
     real(r8) :: cli      ! effect of climate on deforestation fires (0-1)
     real(r8) :: cri      ! thresholds used for cli, (mm/d), see Eq.(7) in Li et al.(2013)
     real(r8) :: fb       ! availability of fuel for regs A and C
+    real(r8) :: farea_nodefo ! burned area fraction excluding deforestation fire (/sec)
     real(r8) :: fhd      ! impact of hd on agricultural fire
     real(r8) :: fgdp     ! impact of gdp on agricultural fire
     real(r8) :: fire_m   ! combustability of fuel for fire occurrence
@@ -640,6 +641,8 @@ contains
            !
            if (transient_landcover) then
               if( trotr1_col(c)+trotr2_col(c) > 0.6_r8 )then
+                 ! Burned area from natural, crop and peat fires (before adding deforestation fire)
+                 farea_nodefo = farea_burned(c)
                  if(( kmo == 1 .and. kda == 1 .and. mcsec == 0) .or. &
                       dtrotr_col(c) <=0._r8 )then
                     fbac1(c)        = 0._r8
@@ -657,8 +660,10 @@ contains
                     ! burned area out of conversion region due to land use fire
                     fbac1(c) = max(0._r8,fb*cli*(cli_scale/secspday) - 2.0_r8*lfc(c)/dt)
                  end if
-                 ! total burned area out of conversion
-                 fbac(c) = farea_burned(c) + fbac1(c)
+                 ! total burned area out of conversion: non-deforestation burned area plus
+                 ! the deforestation fire that escapes the conversion region (fbac1). Do not
+                 ! use farea_burned here, which already includes the full deforestation fire.
+                 fbac(c) = farea_nodefo + fbac1(c)
               else
                  fbac(c) = farea_burned(c)
               end if
