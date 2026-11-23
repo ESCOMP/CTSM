@@ -1601,7 +1601,10 @@ contains
                     / (dz(c_idx,i)+dz(c_idx,i+1))
             endif
 
-            dTdz(c_idx,i) = abs((t_snotop - t_snobtm) / cdz(i))
+            ! The interface temperatures are separated by the physical layer
+            ! thickness dz (over the snow-covered area), not the column-average
+            ! thickness cdz = frac_sno_fluxes*dz, which is only used for density
+            dTdz(c_idx,i) = abs((t_snotop - t_snobtm) / dz(c_idx,i))
 
             ! snow density
             rhos = (h2osoi_liq(c_idx,i)+h2osoi_ice(c_idx,i)) / cdz(i)
