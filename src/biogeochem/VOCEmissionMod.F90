@@ -862,7 +862,7 @@ contains
        gamma_p_LDF = fsun_in * ( cp * alpha * par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
        ! SHADE:
        alpha = ca1 - ca2 * log(par240_sha_in)
-       cp = ca3 * exp(ca2 * (par_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
+       cp = ca3 * exp(ca2 * (par24_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
        gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
     else
        ! With fixed alpha and cp (from MEGAN User's Guide):
