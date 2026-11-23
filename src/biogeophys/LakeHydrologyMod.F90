@@ -594,8 +594,9 @@ contains
              snow_depth(c) = 0._r8
              snl(c) = 0
              ! The rest of the bookkeeping for the removed snow will be done below.
-             if (heatrem > 0._r8) then ! simply subtract the heat from the layer
-                t_lake(c,1) = t_lake(c,1) - heatrem/(cpliq*denh2o*dz_lake(c,1))
+             if (heatrem > 0._r8) then ! simply subtract the heat used to warm and melt the snow from the layer
+                ! equivalently: t_lake(c,1) = tfrz + heatrem/(cpliq*denh2o*dz_lake(c,1))
+                t_lake(c,1) = t_lake(c,1) - heatsum(c)/(cpliq*denh2o*dz_lake(c,1))
              else !freeze part of the layer
                 t_lake(c,1) = tfrz
                 lake_icefrac(c,1) = -heatrem/(denh2o*dz_lake(c,1)*hfus)
