@@ -72,7 +72,7 @@ module SnowHydrologyMod
   type, private :: params_type
       real(r8) :: wimp                  ! Water impremeable if porosity less than wimp (unitless)
       real(r8) :: ssi                   ! Irreducible water saturation of snow (unitless)
-      real(r8) :: drift_gs              ! Wind drift compaction / grain size (fixed value for now) (unitless)
+      real(r8) :: drift_gs              ! Wind drift compaction / grain size (fixed value for now) (m)
       real(r8) :: eta0_anderson         ! Viscosity coefficent from Anderson1976 (kg*s/m2)
       real(r8) :: eta0_vionnet          ! Viscosity coefficent from Vionnet2012 (kg*s/m2)
       real(r8) :: wind_snowcompact_fact ! Reference wind above which fresh snow density is (substantially) increased (m/s)
@@ -301,7 +301,7 @@ contains
     call readNcdioScalar(ncid, 'wimp', subname, params_inst%wimp)
     ! Irreducible water saturation of snow (unitless)
     call readNcdioScalar(ncid, 'ssi', subname, params_inst%ssi)
-    ! Wind drift compaction / grain size (fixed value for now) (unitless)
+    ! Wind drift compaction / grain size (fixed value for now) (m)
     call readNcdioScalar(ncid, 'drift_gs', subname, params_inst%drift_gs)
     ! Viscosity coefficent from Anderson1976 (kg*s/m2)
     call readNcdioScalar(ncid, 'eta0_anderson', subname, params_inst%eta0_anderson)
@@ -3863,6 +3863,7 @@ contains
 
     real(r8), parameter :: rho_min = 50._r8      ! wind drift compaction / minimum density [kg/m3]
     real(r8), parameter :: drift_sph = 1.0_r8    ! wind drift compaction / sphericity
+    real(r8), parameter :: mm_per_m = 1000._r8   ! grain size in the mobility index (Vionnet et al. 2012) is in mm
 
     character(len=*), parameter :: subname = 'WindDriftCompaction'
     !-----------------------------------------------------------------------
@@ -3870,7 +3871,8 @@ contains
     if (mobile) then
        Frho = 1.25_r8 - 0.0042_r8*(max(rho_min, bi)-rho_min)
        ! assuming dendricity = 0, sphericity = 1, grain size = 0.35 mm Non-dendritic snow
-       MO = 0.34_r8 * (-0.583_r8*params_inst%drift_gs - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
+       ! drift_gs is given in m on the parameter file, but the formula needs mm
+       MO = 0.34_r8 * (-0.583_r8*params_inst%drift_gs*mm_per_m - 0.833_r8*drift_sph + 0.833_r8) + 0.66_r8*Frho
        SI = -2.868_r8 * exp(-0.085_r8*forc_wind) + 1._r8 + MO
 
        if (SI > 0.0_r8) then
