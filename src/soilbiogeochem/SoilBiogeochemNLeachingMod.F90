@@ -234,9 +234,12 @@ contains
                   smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
                        h2osoi_liq(c,j) / ( surface_water(c) * col%dz(c,j) )
                elseif ( zisoi(j-1) < depth_runoff_Nloss )  then
+                  ! Only the fraction (depth_runoff_Nloss - zisoi(j-1))/dz of this layer's water
+                  ! is in the mixing zone (consistent with surface_water above). The flux is
+                  ! per unit volume of the whole layer, so divide by the full layer thickness.
                   smin_no3_runoff_vr(c,j) = disn_conc * qflx_surf(c) * &
                        h2osoi_liq(c,j) * ((depth_runoff_Nloss - zisoi(j-1)) / &
-                       col%dz(c,j)) / ( surface_water(c) * (depth_runoff_Nloss-zisoi(j-1) ))
+                       col%dz(c,j)) / ( surface_water(c) * col%dz(c,j) )
                else
                   smin_no3_runoff_vr(c,j) = 0._r8
                endif
