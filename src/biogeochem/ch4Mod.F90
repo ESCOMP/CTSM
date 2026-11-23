@@ -4738,8 +4738,14 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
       do fc = 1, num_methc
          c = filter_methc (fc)
 
-         ! For history make sure that grnd_ch4_cond includes snow, for methane diffusivity
-         grnd_ch4_cond(c) = spec_grnd_cond(c,1)
+         ! For history make sure that grnd_ch4_cond includes snow, for methane diffusivity.
+         ! Only do this on the last (saturated / lake) call of the timestep: ch4_tran is
+         ! called for sat=0 and then sat=1 with the same grnd_ch4_cond, so overwriting it
+         ! during the sat=0 call would add the snow and pond resistances a second time
+         ! in the sat=1 call.
+         if (sat == 1) then
+            grnd_ch4_cond(c) = spec_grnd_cond(c,1)
+         end if
          
          errch4(c) = errch4(c) + (ch4_surf_aere(c) + ch4_surf_ebul(c) + ch4_surf_diff(c))*dtime
 
