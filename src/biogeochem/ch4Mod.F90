@@ -3226,7 +3226,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     real(r8), intent(in) :: annavg_agnpp  ! (gC/m2/s) annual average aboveground NPP   
     real(r8), intent(in) :: annavg_bgnpp  ! (gC/m2/s) annual average belowground NPP   
     real(r8), intent(in) :: elai          ! one-sided leaf area index with burying by snow 
-    real(r8)             :: poros_tiller
+    real(r8), intent(in) :: poros_tiller  ! tiller porosity before unsaturated / minimum adjustments (-)
     real(r8), intent(in) :: rootfr(:)     ! fraction of roots in each soil layer
     real(r8), intent(in) :: grnd_ch4_cond ! tracer conductance for boundary layer [m/s] 
     real(r8), intent(in) :: conc_o2(:)    ! O2 conc in each soil layer (mol/m3)
@@ -3251,6 +3251,7 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
     real(r8) :: anpp, nppratio
     real(r8) :: conc_ch4_wat
     real(r8) :: aerecond    ! aerenchyma conductance (m/s)
+    real(r8) :: poros_tiller_eff ! tiller porosity after unsaturated / minimum adjustments (-)
     real(r8), parameter :: smallnumber = 1.e-12_r8
 
     ! This parameter is poorly constrained and should be done on a patch-specific basis...
@@ -3303,13 +3304,16 @@ surface_layer_volume_unsat_new_col(begc:endc) = &
 
           n_tiller = m_tiller / 0.22_r8
 
+          ! Use a local copy so that the unsaturated reduction is applied only once,
+          ! not compounded over each layer below the water table
+          poros_tiller_eff = poros_tiller
           if (sat == 0) then
-             poros_tiller = poros_tiller * params_inst%unsat_aere_ratio
+             poros_tiller_eff = poros_tiller_eff * params_inst%unsat_aere_ratio
           end if
 
-          poros_tiller = max(poros_tiller, params_inst%porosmin)
+          poros_tiller_eff = max(poros_tiller_eff, params_inst%porosmin)
 
-          area_tiller = params_inst%scale_factor_aere * n_tiller * poros_tiller * rpi * 2.9e-3_r8**2._r8 ! (m2/m2)
+          area_tiller = params_inst%scale_factor_aere * n_tiller * poros_tiller_eff * rpi * 2.9e-3_r8**2._r8 ! (m2/m2)
 
           k_h_inv = exp(-c_h_inv(1) * (1._r8 / t_soisno(j) - 1._r8 / kh_tbase) + log (kh_theta(1))) ! (4.12) Wania (L atm/mol)
           k_h_cc = t_soisno(j) / k_h_inv * rgasLatm ! (4.21) Wania [(mol/m3w) / (mol/m3g)]
