@@ -178,6 +178,13 @@ contains
          long_name=this%info%lname('total ice runoff sent to coupler (includes corrections for land use change)'), &
          ptr_lnd=this%qflx_rofice_grc)
 
+    this%qflx_ice_runoff_col(begc:endc) = 0._r8
+    call hist_addfld1d (fname=this%info%fname('QRUNOFF_ICE_BEFORE_STORAGE'),  units='mm/s',  &
+         avgflag='A', &
+         long_name=this%info%lname('ice runoff before temporal buffering in the ice runoff storage pool '// &
+         '(excludes corrections for land use change)'), &
+         ptr_col=this%qflx_ice_runoff_col, c2l_scale_type='urbanf', default='inactive')
+
     this%qflx_liq_from_ice_col(begc:endc) = 0._r8
     call hist_addfld1d (fname=this%info%fname('QRUNOFF_ICE_TO_LIQ'), units='mm/s', &
          avgflag='A', &

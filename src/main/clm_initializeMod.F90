@@ -388,6 +388,11 @@ contains
     ! turnover rate depends on the model calendar.
     call dynConsBiogeophys_readnl(NLFilename)
 
+    ! Convert glacier region ice runoff residence times to turnover rates. Like the
+    ! above, this must be done after the time manager is initialized, because this
+    ! conversion depends on the model calendar.
+    call glc_behavior%InitIceRunoffTurnoverRate()
+
     ! History file variables
     if (use_cn .and. .not. use_noio ) then
        call hist_addfld1d (fname='DAYL',  units='s', &

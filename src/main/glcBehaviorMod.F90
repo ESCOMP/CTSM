@@ -84,9 +84,28 @@ module glcBehaviorMod
      ! sent to the river model as ice (a crude parameterization of iceberg calving).
      logical, allocatable, public :: ice_runoff_melted_grc(:)
 
+     ! If ice_runoff_buffered_grc(g) is true, then ice runoff in gridcell g is temporally
+     ! buffered via a storage pool, with a turnover rate given by
+     ! ice_runoff_turnover_rate_grc(g). If it is false, then ice runoff is passed on
+     ! instantaneously, with no temporal buffering.
+     logical, allocatable, public :: ice_runoff_buffered_grc(:)
+
+     ! Turnover rate of the ice runoff storage pool in gridcell g [1/s]. This is only
+     ! meaningful where ice_runoff_buffered_grc(g) is true. Where ice_runoff_buffered_grc(g)
+     ! is false, this is set to 0, even though conceptually the turnover rate in that case
+     ! is infinite; so code using this should always check ice_runoff_buffered_grc first.
+     !
+     ! This is not allocated or set until InitIceRunoffTurnoverRate is called.
+     real(r8), allocatable, public :: ice_runoff_turnover_rate_grc(:)
+
      ! ------------------------------------------------------------------------
      ! Private data
      ! ------------------------------------------------------------------------
+
+     ! Residence time of the ice runoff storage pool in gridcell g [years]; 0 indicates
+     ! no temporal buffering. This is only stored temporarily: it is converted to
+     ! ice_runoff_turnover_rate_grc and then deallocated in InitIceRunoffTurnoverRate.
+     real(r8), allocatable :: ice_runoff_residence_time_grc(:)
 
      ! If collapse_to_atm_topo_grc(g) is true, then grid cell g has at most one glacier
      ! column, whose topographic height exactly matches the atmosphere's topographic
@@ -106,6 +125,10 @@ module glcBehaviorMod
      procedure, public  :: Init            ! version of Init meant for production use
      procedure, public  :: InitFromInputs  ! version of Init meant for unit testing (and called by other code in this class)
      procedure, public  :: InitSetDirectly ! version of Init meant for unit testing
+
+     ! Convert ice runoff residence times to turnover rates; must be called after Init
+     ! (or InitFromInputs or InitSetDirectly), once the time manager has been initialized
+     procedure, public  :: InitIceRunoffTurnoverRate
 
      ! get number of subgrid units in glc landunit on one grid cell
      procedure, public  :: get_num_glc_subgrid
@@ -175,6 +198,9 @@ module glcBehaviorMod
   ! Value indicating that a namelist item has not been set
   character(len=*), parameter :: behavior_str_unset = 'UNSET'
 
+  ! Value indicating that glacier_region_ice_runoff_residence_time has not been set
+  real(r8), parameter :: residence_time_unset = -1._r8
+
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
 
@@ -202,6 +228,7 @@ contains
     character(len=max_behavior_name_len) :: glacier_region_behavior(min_glacier_region_id:max_glacier_region_id)
     character(len=max_behavior_name_len) :: glacier_region_melt_behavior(min_glacier_region_id:max_glacier_region_id)
     character(len=max_behavior_name_len) :: glacier_region_ice_runoff_behavior(min_glacier_region_id:max_glacier_region_id)
+    real(r8) :: glacier_region_ice_runoff_residence_time(min_glacier_region_id:max_glacier_region_id)
 
     character(len=*), parameter :: subname = 'Init'
     !-----------------------------------------------------------------------
@@ -209,18 +236,20 @@ contains
     allocate(glacier_region_map(begg:endg))
     call this%read_surface_dataset(begg, endg, glacier_region_map(begg:endg))
     call this%read_namelist(NLFilename, glacier_region_behavior, &
-         glacier_region_melt_behavior, glacier_region_ice_runoff_behavior)
+         glacier_region_melt_behavior, glacier_region_ice_runoff_behavior, &
+         glacier_region_ice_runoff_residence_time)
 
     call this%InitFromInputs(begg, endg, &
          glacier_region_map(begg:endg), glacier_region_behavior, &
-         glacier_region_melt_behavior, glacier_region_ice_runoff_behavior)
+         glacier_region_melt_behavior, glacier_region_ice_runoff_behavior, &
+         glacier_region_ice_runoff_residence_time)
 
   end subroutine Init
 
   !-----------------------------------------------------------------------
   subroutine InitFromInputs(this, begg, endg, &
        glacier_region_map, glacier_region_behavior_str, glacier_region_melt_behavior_str, &
-       glacier_region_ice_runoff_behavior_str)
+       glacier_region_ice_runoff_behavior_str, glacier_region_ice_runoff_residence_time)
     !
     ! !DESCRIPTION:
     ! Initialize a glc_behavior_type object given a map of glacier region IDs and an
@@ -228,6 +257,9 @@ contains
     !
     ! This version should generally only be called directly by tests, but it is also used
     ! by the main production Init method.
+    !
+    ! Note that this does not set ice_runoff_turnover_rate_grc; that requires a later
+    ! call to InitIceRunoffTurnoverRate.
     !
     ! !USES:
     !
@@ -261,6 +293,11 @@ contains
     ! - 'remains_ice'
     ! - 'melted'
     character(len=*), intent(in) :: glacier_region_ice_runoff_behavior_str(min_glacier_region_id:)
+
+    ! residence time of the ice runoff storage pool for each glacier region ID [years];
+    ! 0 means that ice runoff is not temporally buffered in this region; must be >= 0 for
+    ! all regions present in glacier_region_map
+    real(r8), intent(in) :: glacier_region_ice_runoff_residence_time(min_glacier_region_id:)
 
     !
     ! !LOCAL VARIABLES:
@@ -311,6 +348,7 @@ contains
     call translate_glacier_region_behavior
     call translate_glacier_region_melt_behavior
     call translate_glacier_region_ice_runoff_behavior
+    call check_glacier_region_ice_runoff_residence_time
     call check_behaviors
 
     call this%InitAllocate(begg, endg)
@@ -342,6 +380,13 @@ contains
           this%ice_runoff_melted_grc(g) = .true.
        else
           this%ice_runoff_melted_grc(g) = .false.
+       end if
+
+       this%ice_runoff_residence_time_grc(g) = glacier_region_ice_runoff_residence_time(my_id)
+       if (this%ice_runoff_residence_time_grc(g) > 0._r8) then
+          this%ice_runoff_buffered_grc(g) = .true.
+       else
+          this%ice_runoff_buffered_grc(g) = .false.
        end if
 
        ! For now, allow_multiple_columns_grc is simply the opposite of
@@ -483,23 +528,60 @@ contains
       end do
     end subroutine translate_glacier_region_ice_runoff_behavior
 
+    subroutine check_glacier_region_ice_runoff_residence_time
+      ! Make sure we have a valid (>= 0) value for every glacier region present in the map
+      integer :: i
+
+      do i = min_glacier_region_id, max_glacier_region_id
+         if (glacier_region_present(i)) then
+            SHR_ASSERT_ALL_FL((ubound(glacier_region_ice_runoff_residence_time) >= (/i/)), sourcefile, __LINE__)
+
+            if (glacier_region_ice_runoff_residence_time(i) < 0._r8) then
+               write(iulog,*) ' ERROR: glacier_region_ice_runoff_residence_time not specified or negative for ID ', i
+               write(iulog,*) 'Value is ', glacier_region_ice_runoff_residence_time(i)
+               write(iulog,*) 'Values must be >= 0 for all glacier regions present in the surface dataset.'
+               write(iulog,*) 'You may need to extend the glacier_region_ice_runoff_residence_time namelist array.'
+               call endrun(msg='ERROR: glacier_region_ice_runoff_residence_time not specified or negative', &
+                    file=sourcefile, line=__LINE__)
+            end if
+         end if
+      end do
+    end subroutine check_glacier_region_ice_runoff_residence_time
+
     subroutine check_behaviors
       ! Check the various behaviors for validity / consistency
       integer :: i
 
       do i = min_glacier_region_id, max_glacier_region_id
-         if (glacier_region_melt_behavior(i) == MELT_BEHAVIOR_REPLACED_BY_ICE .and. &
-              glacier_region_ice_runoff_behavior(i) == ICE_RUNOFF_BEHAVIOR_MELTED) then
-            write(iulog,*) ' ERROR: Bad glacier region behavior combination for ID ', i
-            write(iulog,*) 'You cannot combine glacier_region_melt_behavior = "replaced_by_ice"'
-            write(iulog,*) 'with glacier_region_ice_runoff_behavior = "melted".'
-            write(iulog,*) 'While there is nothing fundamentally wrong with this combination,'
-            write(iulog,*) 'it can result in problematic, non-physical fluxes (particularly,'
-            write(iulog,*) 'a large positive sensible heat flux during glacial melt in regions'
-            write(iulog,*) 'where the icesheet is not fully dynamic and two-way-coupled;'
-            write(iulog,*) 'see https://github.com/ESCOMP/ctsm/issues/423 for details).'
-            call endrun(msg=' ERROR: Bad glacier region behavior combination '// &
-                 errMsg(sourcefile, __LINE__))
+         if (glacier_region_present(i)) then
+            if (glacier_region_melt_behavior(i) == MELT_BEHAVIOR_REPLACED_BY_ICE .and. &
+                 glacier_region_ice_runoff_behavior(i) == ICE_RUNOFF_BEHAVIOR_MELTED) then
+               write(iulog,*) ' ERROR: Bad glacier region behavior combination for ID ', i
+               write(iulog,*) 'You cannot combine glacier_region_melt_behavior = "replaced_by_ice"'
+               write(iulog,*) 'with glacier_region_ice_runoff_behavior = "melted".'
+               write(iulog,*) 'While there is nothing fundamentally wrong with this combination,'
+               write(iulog,*) 'it can result in problematic, non-physical fluxes (particularly,'
+               write(iulog,*) 'a large positive sensible heat flux during glacial melt in regions'
+               write(iulog,*) 'where the icesheet is not fully dynamic and two-way-coupled;'
+               write(iulog,*) 'see https://github.com/ESCOMP/ctsm/issues/423 for details).'
+               call endrun(msg=' ERROR: Bad glacier region behavior combination '// &
+                    errMsg(sourcefile, __LINE__))
+            end if
+
+            if (glacier_region_ice_runoff_behavior(i) == ICE_RUNOFF_BEHAVIOR_MELTED .and. &
+                 glacier_region_ice_runoff_residence_time(i) /= 0._r8) then
+               write(iulog,*) ' ERROR: Bad glacier region behavior combination for ID ', i
+               write(iulog,*) 'You cannot combine glacier_region_ice_runoff_behavior = "melted"'
+               write(iulog,*) 'with a non-zero glacier_region_ice_runoff_residence_time.'
+               write(iulog,*) 'In regions where ice runoff is melted, there is little or no'
+               write(iulog,*) 'ice runoff that could be temporally buffered.'
+               write(iulog,*) '(Note that this rationale does not hold if'
+               write(iulog,*) 'melt_non_icesheet_ice_runoff is .false., because then the "melted"'
+               write(iulog,*) 'behavior is ignored; however, this combination is still disallowed.)'
+               call endrun(msg='ERROR: Cannot combine glacier_region_ice_runoff_behavior = "melted"'// &
+                    ' with non-zero glacier_region_ice_runoff_residence_time', &
+                    file=sourcefile, line=__LINE__)
+            end if
          end if
       end do
     end subroutine check_behaviors
@@ -562,8 +644,83 @@ contains
     allocate(this%melt_replaced_by_ice_grc(begg:endg)); this%melt_replaced_by_ice_grc(:) = .false.
     allocate(this%collapse_to_atm_topo_grc(begg:endg)); this%collapse_to_atm_topo_grc(:) = .false.
     allocate(this%ice_runoff_melted_grc(begg:endg)); this%ice_runoff_melted_grc(:) = .false.
+    allocate(this%ice_runoff_buffered_grc(begg:endg)); this%ice_runoff_buffered_grc(:) = .false.
+    allocate(this%ice_runoff_residence_time_grc(begg:endg)); this%ice_runoff_residence_time_grc(:) = 0._r8
+
+    ! Note that ice_runoff_turnover_rate_grc is allocated later, in
+    ! InitIceRunoffTurnoverRate
 
   end subroutine InitAllocate
+
+  !-----------------------------------------------------------------------
+  subroutine InitIceRunoffTurnoverRate(this)
+    !
+    ! !DESCRIPTION:
+    ! Convert ice runoff residence times (in years) to turnover rates (in 1/s), setting
+    ! ice_runoff_turnover_rate_grc. The residence times are deallocated after this
+    ! conversion, since they are no longer needed.
+    !
+    ! This must be called after Init (or InitFromInputs or InitSetDirectly). It must also
+    ! be called after the time manager has been initialized, because converting the
+    ! residence time to a turnover rate depends on the model calendar, and checking the
+    ! turnover rate depends on the model time step.
+    !
+    ! !USES:
+    use shr_const_mod    , only : SHR_CONST_CDAY
+    use clm_time_manager , only : get_average_days_per_year, get_step_size_real
+    !
+    ! !ARGUMENTS:
+    class(glc_behavior_type), intent(inout) :: this
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g
+    integer  :: begg, endg
+    real(r8) :: secs_per_year
+    real(r8) :: dtime  ! model time step (s)
+
+    character(len=*), parameter :: subname = 'InitIceRunoffTurnoverRate'
+    !-----------------------------------------------------------------------
+
+    if (.not. allocated(this%ice_runoff_residence_time_grc)) then
+       call endrun(msg=subname//' ERROR: ice_runoff_residence_time_grc not allocated;'// &
+            ' this can happen if this routine is called twice, or before Init', &
+            file=sourcefile, line=__LINE__)
+    end if
+
+    begg = lbound(this%ice_runoff_residence_time_grc, 1)
+    endg = ubound(this%ice_runoff_residence_time_grc, 1)
+    allocate(this%ice_runoff_turnover_rate_grc(begg:endg))
+
+    secs_per_year = get_average_days_per_year() * SHR_CONST_CDAY
+    dtime = get_step_size_real()
+    do g = begg, endg
+       if (this%ice_runoff_buffered_grc(g)) then
+          this%ice_runoff_turnover_rate_grc(g) = 1._r8 / &
+               (this%ice_runoff_residence_time_grc(g) * secs_per_year)
+
+          ! The explicit update of the ice runoff storage pool releases a fraction
+          ! (turnover_rate * dtime) of the pool each time step. If this fraction exceeds
+          ! 1 (i.e., the residence time is shorter than the time step), the pool would
+          ! go negative, and (for a fraction exceeding 2) oscillate with growing
+          ! amplitude, so we disallow this.
+          if (this%ice_runoff_turnover_rate_grc(g) * dtime > 1._r8) then
+             write(iulog,*) subname//' ERROR: glacier_region_ice_runoff_residence_time'
+             write(iulog,*) 'is shorter than the model time step.'
+             write(iulog,*) 'g, residence time (years), time step (s) = ', &
+                  g, this%ice_runoff_residence_time_grc(g), dtime
+             call endrun(msg='ERROR: glacier_region_ice_runoff_residence_time is shorter'// &
+                  ' than the model time step', file=sourcefile, line=__LINE__)
+          end if
+       else
+          ! See notes in the declaration of ice_runoff_turnover_rate_grc for why we set
+          ! this to 0 here
+          this%ice_runoff_turnover_rate_grc(g) = 0._r8
+       end if
+    end do
+
+    deallocate(this%ice_runoff_residence_time_grc)
+
+  end subroutine InitIceRunoffTurnoverRate
 
   !-----------------------------------------------------------------------
   subroutine read_surface_dataset(begg, endg, glacier_region_map)
@@ -613,7 +770,8 @@ contains
 
   !-----------------------------------------------------------------------
   subroutine read_namelist(NLFilename, glacier_region_behavior, &
-       glacier_region_melt_behavior, glacier_region_ice_runoff_behavior)
+       glacier_region_melt_behavior, glacier_region_ice_runoff_behavior, &
+       glacier_region_ice_runoff_residence_time)
     !
     ! !DESCRIPTION:
     ! Read local namelist items
@@ -633,6 +791,8 @@ contains
          glacier_region_melt_behavior(min_glacier_region_id:max_glacier_region_id)
     character(len=max_behavior_name_len), intent(out) :: &
          glacier_region_ice_runoff_behavior(min_glacier_region_id:max_glacier_region_id)
+    real(r8), intent(out) :: &
+         glacier_region_ice_runoff_residence_time(min_glacier_region_id:max_glacier_region_id)
     !
     ! !LOCAL VARIABLES:
     integer :: unitn     ! unit for namelist file
@@ -643,12 +803,13 @@ contains
 
     namelist /clm_glacier_behavior/ &
          glacier_region_behavior, glacier_region_melt_behavior, &
-         glacier_region_ice_runoff_behavior
+         glacier_region_ice_runoff_behavior, glacier_region_ice_runoff_residence_time
 
     ! Initialize options to default values
     glacier_region_behavior(:) = behavior_str_unset
     glacier_region_melt_behavior(:) = behavior_str_unset
     glacier_region_ice_runoff_behavior(:) = behavior_str_unset
+    glacier_region_ice_runoff_residence_time(:) = residence_time_unset
 
     if (masterproc) then
        unitn = getavu()
@@ -670,6 +831,7 @@ contains
     call shr_mpi_bcast(glacier_region_behavior, mpicom)
     call shr_mpi_bcast(glacier_region_melt_behavior, mpicom)
     call shr_mpi_bcast(glacier_region_ice_runoff_behavior, mpicom)
+    call shr_mpi_bcast(glacier_region_ice_runoff_residence_time, mpicom)
 
     if (masterproc) then
        write(iulog,*) ' '

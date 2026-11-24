@@ -62,7 +62,7 @@ It is also possible to run CESM with an evolving ice sheet (CISM). In this case,
 Glacier regions and their behaviors
 -----------------------------------
 
-The world's glaciers and ice sheets are broken down into a number of different regions (three by default) that differ in three respects:
+The world's glaciers and ice sheets are broken down into a number of different regions (three by default) that differ in four respects:
 
 #. Whether the gridcell's glacier land unit contains:
 
@@ -84,25 +84,32 @@ The world's glaciers and ice sheets are broken down into a number of different r
 
    b. Ice runoff from snow capping is melted (generating a negative sensible heat flux) and runs off as liquid. This matches the behavior for non-glacier columns. This is appropriate in regions that have little iceberg calving in reality. This can be important to avoid unrealistic cooling of the ocean and consequent runaway sea ice growth.
 
+#. Temporal buffering of ice runoff that is sent to the river model as ice (i.e., ice runoff that is not melted as described above). This includes both positive ice runoff (which primarily comes from snow capping, but there may be other small contributing terms as well) and negative ice runoff (which can arise during glacial melt as discussed elsewhere in this section, and possibly other sources); it does **not** include the ice runoff generated from the conservation corrections for dynamic landunits:
+
+   a. No temporal buffering: the gridcell's ice runoff is sent to the river model instantaneously.
+
+   b. Ice runoff is temporally buffered: the gridcell's ice runoff first goes into a storage pool, which is drained to the river model at a rate equal to the pool's current storage divided by a specified residence time (set in years via the ``glacier_region_ice_runoff_residence_time`` namelist parameter). This smooths out large pulses of ice runoff (such as those that can arise from snow capping) while still conserving mass over time. This behavior cannot be combined with the ``Ice runoff = Melted`` behavior, since there is little or no ice runoff to buffer in regions with that behavior.
+
 The default behaviors for the world's glacier and ice sheet regions are described in :numref:`Table Glacier region behaviors`. Note that the Greenland region stops at the edge of Greenland as defined by CISM/DGLC. This means that, by default, SMB is not computed for grid cells outside Greenland but within the CISM/DGLC domain. (This treatment of the non-Greenland portion of the CISM/DGLC domain as being the same as the world's mountain glaciers rather than like Greenland itself is mainly for the sake of avoiding unrealistic fluxes from the Canadian archipelago that can potentially result in runaway sea ice growth in that region.)
 
 .. _Table Glacier region behaviors:
 
 .. table:: Glacier region behaviors
 
- +---------------+---------------+---------------+---------------+
- | Region        | Elevation     | Glacial melt  | Ice runoff    |
- |               | classes       |               |               |
- +===============+===============+===============+===============+
- | Greenland     | Virtual       | Replaced by   | Remains ice   |
- |               |               | ice           |               |
- +---------------+---------------+---------------+---------------+
- | Antarctica    | Multiple      | Replaced by   | Remains ice   |
- |               |               | ice           |               |
- +---------------+---------------+---------------+---------------+
- | All others    | Single        | Remains in    | Melted        |
- |               |               | place         |               |
- +---------------+---------------+---------------+---------------+
+ +---------------+---------------+---------------+---------------+---------------+
+ | Region        | Elevation     | Glacial melt  | Ice runoff    | Ice runoff    |
+ |               | classes       |               |               | buffering     |
+ +===============+===============+===============+===============+===============+
+ | Greenland     | Virtual       | Replaced by   | Remains ice   | None          |
+ |               |               | ice           |               |               |
+ +---------------+---------------+---------------+---------------+---------------+
+ | Antarctica    | Multiple      | Replaced by   | Remains ice   | 10-year       |
+ |               |               | ice           |               | residence     |
+ |               |               |               |               | time          |
+ +---------------+---------------+---------------+---------------+---------------+
+ | All others    | Single        | Remains in    | Melted        | None          |
+ |               |               | place         |               |               |
+ +---------------+---------------+---------------+---------------+---------------+
 
 .. note::
 
@@ -111,6 +118,10 @@ The default behaviors for the world's glacier and ice sheet regions are describe
 .. note::
 
    The combination of the ``Glacial melt = Replaced by ice`` and the ``Ice runoff = Melted`` behaviors results in particularly non-physical behavior: During periods of glacial melt, a negative ice runoff is generated (due to the ``Glacial melt = Replaced by ice`` behavior); this negative ice runoff is converted to a negative liquid runoff plus a positive sensible heat flux (due to the ``Ice runoff = Melted`` behavior). The net result is zero runoff but a positive sensible heat flux generated from glacial melt. Because of how physically unrealistic this is, CLM does not allow this combination of behaviors.
+
+.. note::
+
+   The absence of ice runoff buffering over Greenland is for the sake of avoiding late-stage answer changes in this region in CESM3 runs. If it weren't for that, it would probably make sense to use the same buffering over Greenland as over Antarctica. However, note that, in most CESM3 runs, this is much less relevant over Greenland than over Antarctica because most ice runoff is handled by DGLC or CISM over Greenland.
 
 .. _Multiple elevation class scheme:
 

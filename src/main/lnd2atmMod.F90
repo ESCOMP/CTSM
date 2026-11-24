@@ -13,6 +13,7 @@ module lnd2atmMod
   use clm_varpar           , only : numrad, ndst, nlevgrnd, nlevmaxurbgrnd !ndst = number of dust bins.
   use clm_varcon           , only : rair, grav, cpair, hfus, tfrz, spval
   use clm_varctl           , only : iulog, use_lch4
+  use clm_time_manager     , only : get_step_size_real
   use shr_drydep_mod       , only : n_drydep
   use decompMod            , only : bounds_type
   use subgridAveMod        , only : p2g, c2g, l2g
@@ -49,6 +50,7 @@ module lnd2atmMod
   !
   ! !PRIVATE MEMBER FUNCTIONS:
   private :: handle_ice_runoff
+  private :: buffer_ice_runoff
 
   character(len=*), parameter, private :: sourcefile = &
        __FILE__
@@ -182,6 +184,7 @@ contains
     ! !LOCAL VARIABLES:
     integer  :: c, l, g  ! indices
     real(r8) :: eflx_sh_ice_to_liq_grc(bounds%begg:bounds%endg) ! sensible heat flux generated from the ice to liquid conversion, averaged to gridcell
+    real(r8) :: qflx_ice_runoff_grc(bounds%begg:bounds%endg)    ! qflx_ice_runoff_col averaged to gridcell, before any temporal buffering (mm H2O /s)
     real(r8), allocatable :: qflx_surf_col_to_rof(:)          ! surface runoff that is sent directly to rof
     real(r8), allocatable :: qflx_drain_col_to_rof(:)         ! drainagec that is sent directly to rof
     real(r8), allocatable :: qflx_drain_perched_col_to_rof(:) ! perched drainage that is sent directly to rof
@@ -459,8 +462,15 @@ contains
 
     call c2g( bounds, &
          water_inst%waterlnd2atmbulk_inst%qflx_ice_runoff_col(bounds%begc:bounds%endc),  &
-         water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg),  &
+         qflx_ice_runoff_grc(bounds%begg:bounds%endg),  &
          c2l_scale_type= 'urbanf', l2g_scale_type='unity' )
+    call buffer_ice_runoff(bounds, glc_behavior, &
+         qflx_ice_runoff_grc = qflx_ice_runoff_grc(bounds%begg:bounds%endg), &
+         ice_runoff_storage_grc = water_inst%waterstatebulk_inst%ice_runoff_storage_grc(bounds%begg:bounds%endg), &
+         qflx_rofice_grc = water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(bounds%begg:bounds%endg))
+    ! Note that the dynbal ice flux is added after (rather than being routed through)
+    ! the ice runoff storage pool, since the dynbal fluxes already have their own
+    ! temporal buffering.
     do g = bounds%begg, bounds%endg
        water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) = &
          water_inst%waterlnd2atmbulk_inst%qflx_rofice_grc(g) + &
@@ -471,6 +481,11 @@ contains
     ! first set tws to gridcell total endwb
     ! second add river storage as gridcell average depth (1.e-3 converts [m3/km2] to [mm])
     ! TODO - this was in BalanceCheckMod - not sure where it belongs?
+    !
+    ! Note that tws intentionally excludes some gridcell-level water storage pools that
+    ! are included in the gridcell-level water balance check (in BalanceCheckMod), such
+    ! as the ice runoff storage pool (ice_runoff_storage_grc), because tws is used by
+    ! other science code (e.g., ch4) and we don't want these pools to affect that.
 
     call c2g( bounds, &
          water_inst%waterbalancebulk_inst%endwb_col(bounds%begc:bounds%endc), &
@@ -572,6 +587,63 @@ contains
     end if
 
   end subroutine handle_ice_runoff
+
+  !-----------------------------------------------------------------------
+  subroutine buffer_ice_runoff(bounds, glc_behavior, &
+       qflx_ice_runoff_grc, ice_runoff_storage_grc, qflx_rofice_grc)
+    !
+    ! !DESCRIPTION:
+    ! Apply temporal buffering of gridcell-level ice runoff, in gridcells where this is
+    ! enabled.
+    !
+    ! In gridcells where ice runoff is buffered, qflx_ice_runoff_grc goes into a storage
+    ! pool, which is drained with a turnover rate given by the glacier region behavior;
+    ! qflx_rofice_grc is set to the outflux from this pool. This can smooth out large
+    ! pulses of ice runoff (e.g., from snow capping).
+    !
+    ! In gridcells where ice runoff is not buffered, qflx_rofice_grc is simply set to
+    ! qflx_ice_runoff_grc.
+    !
+    ! The main intent is to buffer snow capping, but it is most straightforward to buffer
+    ! all ice runoff; this may include some (generally small) other contributions besides
+    ! just snow capping.
+    !
+    ! !ARGUMENTS:
+    type(bounds_type)       , intent(in)    :: bounds
+    type(glc_behavior_type) , intent(in)    :: glc_behavior
+    real(r8)                , intent(in)    :: qflx_ice_runoff_grc( bounds%begg: )    ! gridcell-level ice runoff, before buffering (mm H2O /s)
+    real(r8)                , intent(inout) :: ice_runoff_storage_grc( bounds%begg: ) ! storage pool for buffering ice runoff (mm H2O)
+    real(r8)                , intent(out)   :: qflx_rofice_grc( bounds%begg: )        ! gridcell-level ice runoff, after buffering (mm H2O /s)
+    !
+    ! !LOCAL VARIABLES:
+    integer  :: g
+    real(r8) :: dtime ! model time step [s]
+
+    character(len=*), parameter :: subname = 'buffer_ice_runoff'
+    !-----------------------------------------------------------------------
+
+    SHR_ASSERT_ALL_FL((ubound(qflx_ice_runoff_grc) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(ice_runoff_storage_grc) == (/bounds%endg/)), sourcefile, __LINE__)
+    SHR_ASSERT_ALL_FL((ubound(qflx_rofice_grc) == (/bounds%endg/)), sourcefile, __LINE__)
+
+    dtime = get_step_size_real()
+
+    do g = bounds%begg, bounds%endg
+       if (glc_behavior%ice_runoff_buffered_grc(g)) then
+          ! Add this time step's ice runoff to the storage pool, then release a portion
+          ! of the pool as this time step's flux.
+          ice_runoff_storage_grc(g) = ice_runoff_storage_grc(g) + (qflx_ice_runoff_grc(g) * dtime)
+          qflx_rofice_grc(g) = ice_runoff_storage_grc(g) * glc_behavior%ice_runoff_turnover_rate_grc(g)
+          ice_runoff_storage_grc(g) = ice_runoff_storage_grc(g) - (qflx_rofice_grc(g) * dtime)
+       else
+          ! Note that, if buffering was previously enabled in this gridcell (e.g., in the
+          ! run that generated the initial conditions), any existing storage is left
+          ! stranded in the pool.
+          qflx_rofice_grc(g) = qflx_ice_runoff_grc(g)
+       end if
+    end do
+
+  end subroutine buffer_ice_runoff
 
 
 end module lnd2atmMod
