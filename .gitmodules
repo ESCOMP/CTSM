@@ -91,8 +91,11 @@ fxDONOTUSEurl = https://github.com/ESCOMP/CMEPS.git
 
 [submodule "cdeps"]
 path = components/cdeps
-url = https://github.com/ESCOMP/CDEPS.git
-fxtag = cdeps1.0.110
+#url = https://github.com/ESCOMP/CDEPS.git
+url = https://github.com/ekluzek/CDEPS.git
+#fxtag = cdeps1.0.110
+#branch = 1850_cesm3_aero_cmip7_co2
+fxtag = 76ff021275667760195f6df7c155a64cd5a28894
 fxrequired = ToplevelRequired
 # Standard Fork to compare to with "git fleximod test" to ensure personal forks aren't committed
 fxDONOTUSEurl = https://github.com/ESCOMP/CDEPS.git
