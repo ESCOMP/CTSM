@@ -97,15 +97,20 @@ contains
     integer :: c,j,k,l,m                                    !indices
     integer :: fc                                           !filter column index
     integer :: begc,endc                                    !bounds 
-    real(r8):: immob(bounds%begc:bounds%endc,1:nlevdecomp)  !potential N immobilization
-    real(r8):: p_decomp_cpool_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential C gain by receiver pool
-    real(r8):: p_decomp_npool_gain(bounds%begc:bounds%endc,1:nlevdecomp,1:ndecomp_cascade_transitions)  ! potential N gain by receiver pool
+    integer :: kd                                           ! donor pool index for transition k
+    integer :: kr                                           ! receiver pool index for transition k
+    logical :: fixed_kr                                     ! true when receiver pool kr has fixed C:N
+    logical :: non_atm_kr                                   ! true when receiver pool kr is not i_atm
+    real(r8), allocatable :: p_decomp_cpool_gain(:,:,:)     ! potential C gain by receiver pool
+    real(r8), allocatable :: p_decomp_npool_gain(:,:,:)     ! potential N gain by receiver pool
     real(r8):: p_decomp_cpool_gain_sum(1:ndecomp_pools)  ! total potential C gain by receiver pool (only microbial pools)
     real(r8):: p_decomp_npool_gain_sum(1:ndecomp_pools)  ! total potential N gain by receiver pool (only microbial pools)
     real(r8):: decomp_nc_loss_donor  ! N:C ratio of donor pool
     real(r8):: p_decomp_cn_diff_ratio  ! relative change in receiver pool C:N
     real(r8):: adjusted_c_to_mic  ! relative change in receiver pool C:N
     real(r8):: p_decomp_npool_loss  ! potential N flux out of donor pool
+    real(r8):: cpool_loss                                   ! potential C flux out of donor pool (gC/m3/s)
+    real(r8):: cn_kr                                        ! fixed receiver pool C:N ratio (gC/gN)
     real(r8):: ratio                                        !temporary variable
     !-----------------------------------------------------------------------
    
@@ -141,9 +146,11 @@ contains
          )
 
       
-      ! set initial values for potential C and N fluxes
-      p_decomp_cpool_loss(begc:endc, :, :) = 0._r8
-      pmnf_decomp_cascade(begc:endc, :, :) = 0._r8
+      ! MIMICS-only potential gain work arrays
+      if (decomp_method == mimics_decomp) then
+         allocate(p_decomp_cpool_gain(begc:endc, 1:nlevdecomp, 1:ndecomp_cascade_transitions))
+         allocate(p_decomp_npool_gain(begc:endc, 1:nlevdecomp, 1:ndecomp_cascade_transitions))
+      end if
 
       ! column loop to calculate potential decomp rates and total immobilization demand
 
@@ -174,29 +181,37 @@ contains
       ! calculated on a per timestep basis.
 
       do k = 1, ndecomp_cascade_transitions
+         kd = cascade_donor_pool(k)
+         kr = cascade_receiver_pool(k)
+         fixed_kr = .not. floating_cn_ratio_decomp_pools(kr)
+         non_atm_kr = (kr /= i_atm)
+         cn_kr = 0._r8
+         ! initial_cn_ratio(kr) equals cn_decomp_pools(c,j,kr) for fixed-C:N pools (set above)
+         if (fixed_kr .and. non_atm_kr) cn_kr = initial_cn_ratio(kr)
          do j = 1,nlevdecomp
             do fc = 1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
 
-               if (decomp_cpools_vr(c,j,cascade_donor_pool(k)) > 0._r8 .and. &
-                    decomp_k(c,j,cascade_donor_pool(k)) > 0._r8 ) then
-                  p_decomp_cpool_loss(c,j,k) = decomp_cpools_vr(c,j,cascade_donor_pool(k)) &
-                       * decomp_k(c,j,cascade_donor_pool(k))  * pathfrac_decomp_cascade(c,j,k)
+               if (decomp_cpools_vr(c,j,kd) > 0._r8 .and. &
+                    decomp_k(c,j,kd) > 0._r8 ) then
+                  cpool_loss = decomp_cpools_vr(c,j,kd) &
+                       * decomp_k(c,j,kd)  * pathfrac_decomp_cascade(c,j,k)
+                  p_decomp_cpool_loss(c,j,k) = cpool_loss
 
-                  if ( .not. floating_cn_ratio_decomp_pools(cascade_receiver_pool(k)) ) then  !! not transition of cwd to litter
+                  if ( fixed_kr ) then  !! not transition of cwd to litter
 
-                     if (cascade_receiver_pool(k) /= i_atm ) then  ! not 100% respiration
+                     if ( non_atm_kr ) then  ! not 100% respiration
                         ratio = 0._r8
 
-                        if (decomp_npools_vr(c,j,cascade_donor_pool(k)) > 0._r8) then
-                           ratio = cn_decomp_pools(c,j,cascade_receiver_pool(k))/cn_decomp_pools(c,j,cascade_donor_pool(k))
+                        if (decomp_npools_vr(c,j,kd) > 0._r8) then
+                           ratio = cn_kr / cn_decomp_pools(c,j,kd)
                         endif
 
-                        pmnf_decomp_cascade(c,j,k) = (p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
-                             / cn_decomp_pools(c,j,cascade_receiver_pool(k)) )
+                        pmnf_decomp_cascade(c,j,k) = (cpool_loss * (1.0_r8 - rf_decomp_cascade(c,j,k) - ratio) &
+                             / cn_kr )
 
                      else   ! 100% respiration
-                        pmnf_decomp_cascade(c,j,k) = - p_decomp_cpool_loss(c,j,k) / cn_decomp_pools(c,j,cascade_donor_pool(k))
+                        pmnf_decomp_cascade(c,j,k) = - cpool_loss / cn_decomp_pools(c,j,kd)
                      endif
                   else   ! CWD -> litter OR mimics_decomp is true
                      pmnf_decomp_cascade(c,j,k) = 0._r8
@@ -206,16 +221,16 @@ contains
                         ! N:C ratio of donor pools (N:C instead of C:N because
                         ! already checked that we're not dividing by zero)
                         decomp_nc_loss_donor = &
-                           decomp_npools_vr(c,j,cascade_donor_pool(k)) / &
-                           decomp_cpools_vr(c,j,cascade_donor_pool(k))
+                           decomp_npools_vr(c,j,kd) / &
+                           decomp_cpools_vr(c,j,kd)
                         ! calculate N fluxes from donor pools
                         p_decomp_npool_loss = &
-                           p_decomp_cpool_loss(c,j,k) * decomp_nc_loss_donor
+                           cpool_loss * decomp_nc_loss_donor
                         ! Track N lost to DIN from messy eating, ie the
                         ! diff between p_decomp_npool_loss (pertains to
                         ! donor) and p_decomp_npool_gain (receiver)
                         p_decomp_cpool_gain(c,j,k) = &
-                           p_decomp_cpool_loss(c,j,k) * (1.0_r8 - rf_decomp_cascade(c,j,k))
+                           cpool_loss * (1.0_r8 - rf_decomp_cascade(c,j,k))
                         p_decomp_npool_gain(c,j,k) = &
                            p_decomp_npool_loss * nue_decomp_cascade(k)
                         p_decomp_npool_to_din(c,j,k) = &
@@ -223,9 +238,14 @@ contains
                      end if  ! using mimics
                   end if  ! floating_cn_ratio_decomp_pools = .true.
                else  ! donors not donating
-                  p_decomp_cpool_gain(c,j,k) = 0.0_r8
-                  p_decomp_npool_gain(c,j,k) = 0.0_r8
-                  p_decomp_npool_to_din(c,j,k) = 0.0_r8
+                  ! Only filter columns are set (callers read via filter_bgc_soilc); p_decomp_npool_to_din is MIMICS-only.
+                  p_decomp_cpool_loss(c,j,k) = 0._r8
+                  pmnf_decomp_cascade(c,j,k) = 0._r8
+                  if (decomp_method == mimics_decomp) then
+                     p_decomp_cpool_gain(c,j,k) = 0.0_r8
+                     p_decomp_npool_gain(c,j,k) = 0.0_r8
+                     p_decomp_npool_to_din(c,j,k) = 0.0_r8
+                  end if
                end if  ! donors donating? (ie decomp_cpools_vr & decomp_k > 0)
             end do  ! column loop
 
@@ -310,39 +330,11 @@ contains
 
       ! Sum up all the potential immobilization fluxes (positive pmnf flux)
       ! and all the mineralization fluxes (negative pmnf flux)
-      do j = 1,nlevdecomp
-         do fc = 1,num_bgc_soilc
-            c = filter_bgc_soilc(fc)
-            immob(c,j) = 0._r8
-         end do
-      end do
-      do k = 1, ndecomp_cascade_transitions
-         do j = 1,nlevdecomp
-            do fc = 1,num_bgc_soilc
-               c = filter_bgc_soilc(fc)
-               if (pmnf_decomp_cascade(c,j,k) > 0._r8) then
-                  immob(c,j) = immob(c,j) + pmnf_decomp_cascade(c,j,k)
-               else
-                  gross_nmin_vr(c,j) = gross_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
-               end if
-               if (decomp_method == mimics_decomp) then
-                  gross_nmin_vr(c,j) = gross_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
-               end if
-            end do
-         end do
-      end do
-
-      do j = 1,nlevdecomp
-         do fc = 1,num_bgc_soilc
-            c = filter_bgc_soilc(fc)
-            potential_immob_vr(c,j) = immob(c,j)
-         end do
-      end do
-
       ! Add up potential hr for methane calculations
       do j = 1,nlevdecomp
          do fc = 1,num_bgc_soilc
             c = filter_bgc_soilc(fc)
+            potential_immob_vr(c,j) = 0._r8
             phr_vr(c,j) = 0._r8
          end do
       end do
@@ -350,11 +342,23 @@ contains
          do j = 1,nlevdecomp
             do fc = 1,num_bgc_soilc
                c = filter_bgc_soilc(fc)
+               if (pmnf_decomp_cascade(c,j,k) > 0._r8) then
+                  potential_immob_vr(c,j) = potential_immob_vr(c,j) + pmnf_decomp_cascade(c,j,k)
+               else
+                  gross_nmin_vr(c,j) = gross_nmin_vr(c,j) - pmnf_decomp_cascade(c,j,k)
+               end if
+               if (decomp_method == mimics_decomp) then
+                  gross_nmin_vr(c,j) = gross_nmin_vr(c,j) + p_decomp_npool_to_din(c,j,k)
+               end if
                phr_vr(c,j) = phr_vr(c,j) + rf_decomp_cascade(c,j,k) * p_decomp_cpool_loss(c,j,k)
             end do
          end do
       end do
 
+
+      if (decomp_method == mimics_decomp) then
+         deallocate(p_decomp_cpool_gain, p_decomp_npool_gain)
+      end if
 
     end associate
 
