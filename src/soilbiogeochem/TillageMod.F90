@@ -224,13 +224,19 @@ contains
             phase = 3
         end if
     else
-        idpp = DaysPastPlanting(idop)
-        if (idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
-            phase = 1
-        else if (idpp < 45) then ! based on Field and Row Cultivator multipliers
-            phase = 2
-        else if (idpp < 75) then ! based on Rod Weed Row Planter
-            phase = 3
+        ! idop is huge(1) until a patch is first sown, which would make DaysPastPlanting
+        ! hugely negative. Do not till patches without a valid planting date.
+        if (idop < 1 .or. idop > 366) then
+            phase = 0
+        else
+            idpp = DaysPastPlanting(idop)
+            if (idpp >= 0 .and. idpp < 15) then ! based on Point Chisel Tandem Disk multipliers
+                phase = 1
+            else if (idpp >= 15 .and. idpp < 45) then ! based on Field and Row Cultivator multipliers
+                phase = 2
+            else if (idpp >= 45 .and. idpp < 75) then ! based on Rod Weed Row Planter
+                phase = 3
+            end if
         end if
     end if
 
