@@ -984,6 +984,9 @@ contains
         if(f /= 0)then
            num_actfirep = num_actfirep + 1
            filter_actfirep(num_actfirep) = p
+        else if (.not. use_matrixcn .and. .not. use_cndv) then
+           ! Zeroed in CNZero SetValues; CNDV updates nind/leafcmax and matrix mode needs matrix_update_fic/fin.
+           cycle
         end if
 
         m_gresp_storage_to_fire(p)       =  gresp_storage(p)      * f * cc_other(patch%itype(p))
@@ -1325,8 +1328,8 @@ contains
      ! fire-induced transfer of carbon and nitrogen pools to litter and cwd
 
      do j = 1,nlevdecomp
-        do fp = 1, num_soilp
-           p = filter_soilp(fp)
+        do fp = 1, num_actfirep
+           p = filter_actfirep(fp)
            c = patch%column(p)
 
            fire_mortality_c_to_cwdc(c,j) = fire_mortality_c_to_cwdc(c,j) + &
@@ -1408,9 +1411,12 @@ contains
 
         f = farea_burned(c)
 
-        if(f .ne. 0 .or. f .ne. baf_crop(c))then
+        ! filter_actfirec must hold every column with a burning patch; transient patches use fbac.
+        if (f /= 0._r8 .or. f /= baf_crop(c) .or. (transient_landcover .and. fbac(c) /= baf_crop(c))) then
            num_actfirec = num_actfirec + 1
            filter_actfirec(num_actfirec) = c
+        else
+           cycle
         end if
 
         ! change CC for litter from 0.4_r8 to 0.5_r8 and CC for CWD from 0.2_r8

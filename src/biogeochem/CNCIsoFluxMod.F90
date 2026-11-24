@@ -86,6 +86,7 @@ contains
     ! !LOCAL VARIABLES:
     integer :: fp,l,fc,cc,j,k,p
     integer :: cdp 
+    real(r8) :: iso_ratio ! isotope-to-total C ratio of the donor pool (unitless)
     !-----------------------------------------------------------------------
 
     associate(                                                            &
@@ -550,34 +551,20 @@ contains
 
       ! column-level non-mortality fluxes
 
-      do fc = 1,num_soilc
-         cc = filter_soilc(fc)
+      do l = 1, ndecomp_cascade_transitions
+         cdp = cascade_donor_pool(l)
          do j = 1, nlevdecomp
-            do l = 1, ndecomp_cascade_transitions
-               cdp = cascade_donor_pool(l)
-               if ( soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) /= 0._r8) then
-                  iso_soilbiogeochem_cf%decomp_cascade_hr_vr_col(cc,j,l)  =  &
-                      soilbiogeochem_cf%decomp_cascade_hr_vr_col(cc,j,l) * &
-                      (iso_soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) &
-                         / soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp)) * 1._r8
+            do fc = 1, num_soilc
+               cc = filter_soilc(fc)
+               if (soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) /= 0._r8) then
+                  iso_ratio = iso_soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) &
+                       / soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp)
+                  iso_soilbiogeochem_cf%decomp_cascade_hr_vr_col(cc,j,l) = &
+                       soilbiogeochem_cf%decomp_cascade_hr_vr_col(cc,j,l) * iso_ratio
+                  iso_soilbiogeochem_cf%decomp_cascade_ctransfer_vr_col(cc,j,l) = &
+                       soilbiogeochem_cf%decomp_cascade_ctransfer_vr_col(cc,j,l) * iso_ratio
                else
                   iso_soilbiogeochem_cf%decomp_cascade_hr_vr_col(cc,j,l) = 0._r8
-               end if
-            end do
-         end do
-      end do
-
-      do fc = 1,num_soilc
-         cc = filter_soilc(fc)
-         do j = 1, nlevdecomp
-            do l = 1, ndecomp_cascade_transitions
-               cdp = cascade_donor_pool(l)
-               if ( soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) /= 0._r8) then
-                  iso_soilbiogeochem_cf%decomp_cascade_ctransfer_vr_col(cc,j,l)  =  &
-                      soilbiogeochem_cf%decomp_cascade_ctransfer_vr_col(cc,j,l) * &
-                      (iso_soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp) &
-                      / soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,cdp)) * 1._r8
-               else
                   iso_soilbiogeochem_cf%decomp_cascade_ctransfer_vr_col(cc,j,l) = 0._r8
                end if
             end do
@@ -1021,7 +1008,7 @@ contains
   end subroutine CIsoFlux2g
 
   !-----------------------------------------------------------------------
-  subroutine CIsoFlux3(num_soilp, filter_soilp,                             &
+  subroutine CIsoFlux3(num_soilc, filter_soilc, num_soilp, filter_soilp,    &
        soilbiogeochem_state_inst , soilbiogeochem_carbonstate_inst,         &
        cnveg_carbonflux_inst, cnveg_carbonstate_inst,                       &
        iso_cnveg_carbonflux_inst, iso_cnveg_carbonstate_inst,               &
@@ -1031,6 +1018,8 @@ contains
     ! On the radiation time step, set the carbon isotopic fluxes for fire mortality
     !
     ! !ARGUMENTS:
+    integer                               , intent(in)    :: num_soilc       ! number of soil columns in filter
+    integer                               , intent(in)    :: filter_soilc(:) ! filter for soil columns
     integer                               , intent(in)    :: num_soilp       ! number of soil patches in filter
     integer                               , intent(in)    :: filter_soilp(:) ! filter for soil patches
     type(soilbiogeochem_state_type)       , intent(in)    :: soilbiogeochem_state_inst
@@ -1043,7 +1032,7 @@ contains
     character(len=*)                      , intent(in)    :: isotope         ! 'c13' or 'c14'
     !
     ! !LOCAL VARIABLES:
-    integer :: fp,pp,l,cc,j,i
+    integer :: fc,fp,pp,l,cc,j,i
     !-----------------------------------------------------------------------
 
     associate(                                                                 &
@@ -1293,9 +1282,16 @@ contains
                  iso_cnveg_cf%m_livecrootc_to_litter_fire_patch(pp)) * &
                  patch%wtcol(pp) * croot_prof(pp,j)
          end do
+      end do
 
+      ! Column-level flux, so loop over filter_soilc rather than once per patch.
+      ! set_active forbids active patches on inactive columns, and
+      ! check_weights(active_only=.true.) requires every active column to have active
+      ! patches (both run in reweight_wrapup before setFilters); CStateUpdate3 matches.
+      do l = 1, ndecomp_pools
          do j = 1, nlevdecomp
-            do l = 1, ndecomp_pools
+            do fc = 1, num_soilc
+               cc = filter_soilc(fc)
                if ( soilbiogeochem_cs%decomp_cpools_vr_col(cc,j,l) /= 0._r8) then
                   iso_cnveg_cf%m_decomp_cpools_to_fire_vr_col(cc,j,l)  =  &
                       cnveg_cf%m_decomp_cpools_to_fire_vr_col(cc,j,l) * &
