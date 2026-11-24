@@ -84,11 +84,8 @@ contains
 
     ! read data PCT_CROP and PCT_CFT corresponding to correct year
     !
-    ! Note: if you want to change transient crops so that they are interpolated, rather
-    ! than jumping to each year's value on Jan 1 of that year, simply change wtcrop and
-    ! wtcft to be of type dyn_var_time_interp_type (rather than
-    ! dyn_var_time_uninterp_type), and change the following constructors to construct
-    ! variables of dyn_var_time_interp_type. That's all you need to do.
+    ! Note: the use of dyn_var_time_uninterp_type means that crop areas jump to each
+    ! year's value on Jan 1 of that year.
     num_points = (bounds%endg - bounds%begg + 1)
     wtcrop = dyn_var_time_uninterp_type( &
          dyn_file = dyncrop_file, varname=crop_varname, &
@@ -116,10 +113,7 @@ contains
     !
     ! Sets col%wtlunit and lun%wtgcell for crop landunits.
     !
-    ! Note that crop cover currently jumps to its new value at the start of the year.
-    ! However, as mentioned above, this behavior can be changed to time interpolation
-    ! simply by making wtcrop and wtcft dyn_var_time_interp_type variables rather than
-    ! dyn_var_time_uninterp_type. 
+    ! Note that crop cover jumps to its new value at the start of the year.
     !
     ! !USES:
     use CropType          , only : crop_type
