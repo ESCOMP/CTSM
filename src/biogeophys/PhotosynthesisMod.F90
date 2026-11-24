@@ -67,6 +67,7 @@ module PhotosynthesisMod
   private :: getqflx        ! calculate sunlit and shaded transpiration
   private :: spacF          ! flux divergence across each vegetation segment
   private :: spacA          ! the inverse Jacobian matrix relating delta(vegwp) to f, d(vegwp)=A*f
+  private :: plc_eval       ! evaluate Weibull conductance attenuation and optional 1st deriv
 
   ! !PRIVATE DATA:
   integer, parameter, private :: leafresp_mtd_ryan1991  = 1  ! Ryan 1991 method for lmr25top
@@ -2713,7 +2714,7 @@ contains
        cnveg_nitrogenstate_inst, &
        atm2lnd_inst, temperature_inst, soilstate_inst, waterdiagnosticbulk_inst, &
        surfalb_inst, solarabs_inst, canopystate_inst, ozone_inst, &
-       photosyns_inst, waterfluxbulk_inst, froot_carbon, croot_carbon)
+       photosyns_inst, waterfluxbulk_inst, froot_carbon, croot_carbon, calc_root_cond)
     !
     ! !DESCRIPTION:
     ! Leaf photosynthesis and stomatal conductance calculation as described by
@@ -2752,6 +2753,7 @@ contains
     real(r8)               , intent(inout) :: btran( bounds%begp: )          ! transpiration wetness factor (0 to 1) [pft]
     real(r8)               , intent(in)    :: froot_carbon( bounds%begp: )    ! fine root carbon (gC/m2) [pft]   
     real(r8)               , intent(in)    :: croot_carbon( bounds%begp: )    ! live coarse root carbon (gC/m2) [pft]   
+    logical, intent(in), optional :: calc_root_cond ! recompute soil-root conductance (default .true.)
 
     type(cnveg_nitrogenstate_type), intent(in) :: cnveg_nitrogenstate_inst
     type(atm2lnd_type)     , intent(in)    :: atm2lnd_inst
@@ -2913,6 +2915,7 @@ contains
     real(r8) :: gsminsha                ! Minimum stomatal conductance shaded
     real(r8) :: gs_slope_sun            ! Slope stomatal conductance sunlit
     real(r8) :: gs_slope_sha            ! Slope stomatal conductance shaded
+    logical  :: do_root_cond            ! true when soil-root conductance should be recomputed
     real(r8), parameter :: croot_lateral_length = 0.25_r8   ! specified lateral coarse root length [m]
     real(r8), parameter :: c_to_b = 2.0_r8           !(g biomass /g C)
 !Note that root density is for dry biomass not carbon. CLM provides root biomass as carbon. The conversion is 0.5 g C / g biomass
@@ -3066,6 +3069,11 @@ contains
       lmrc    = fth25 (params_inst%lmrhd, params_inst%lmrse)
 
 ! calculate root-soil interface conductance 
+      ! Inputs to k_soil_root are fixed across CanopyFluxes ITERATION and filterp
+      ! only shrinks, so compute soil-root conductance once on itlef == 0.
+      do_root_cond = .true.
+      if (present(calc_root_cond)) do_root_cond = calc_root_cond
+      if (do_root_cond) then
       do f = 1, fn
          p = filterp(f)
          c = patch%column(p)
@@ -3118,6 +3126,7 @@ contains
             
          end do
       enddo
+      end if ! do_root_cond
 
       ! Miscellaneous parameters, from Bonan et al (2011) JGR, 116, doi:10.1029/2010JG001593
 
@@ -4515,6 +4524,7 @@ contains
     use clm_varpar        , only : nlevsoi
     use clm_varcon        , only : rgas
     use clm_time_manager  , only : get_local_time
+    use ColumnType        , only : col
     !!
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
@@ -4539,6 +4549,11 @@ contains
     real(r8) :: A(nvegwcs,nvegwcs)    ! matrix relating d(vegwp) and f: d(vegwp)=A*f 
     real(r8) :: f(nvegwcs)            ! flux divergence (mm/s)
     real(r8) :: dx(nvegwcs)           ! change in vegwp from one iter to the next [mm]
+    real(r8) :: f_plc(nvegwcs)        ! Weibull vulnerability values at current iterate [-]
+    real(r8) :: df_plc(nvegwcs)       ! 1st deriv of vulnerability values at current iterate [1/mm]
+    real(r8) :: grav2_loc(nlevsoi)    ! soil layer gravitational potential (mm H2O)
+    real(r8) :: sum_k                 ! sum of soil-root conductance across layers (mm/s)
+    real(r8) :: sum_ksmp              ! sum of k_soil_root * smp across layers (mm/s * mm)
     real(r8) :: efpot                 ! potential latent energy flux [kg/m2/s]
     real(r8) :: rppdry_sun            ! fraction of potential evaporation through transp - sunlit [-]
     real(r8) :: rppdry_sha            ! fraction of potential evaporation through transp - shaded [-]
@@ -4595,13 +4610,18 @@ contains
     if ((laisun(p)>tol_lai .or. laisha(p)>tol_lai).and.&
          (qflx_sun>0._r8 .or. qflx_sha>0._r8))then
 
+       grav2_loc(1:nlevsoi) = col%z(c,1:nlevsoi) * 1000._r8
+       sum_k = sum( soilstate_inst%k_soil_root_patch(p,1:nlevsoi) )
+       sum_ksmp = sum( soilstate_inst%k_soil_root_patch(p,1:nlevsoi) * soilstate_inst%smp_l_col(c,1:nlevsoi) )
+
     !newton's method solves for matching fluxes through the spac
     iter=0
     do
        
        iter=iter+1
 
-       call spacF(p,c,x,f,qflx_sun,qflx_sha, &
+       call spacF(p,x,f,qflx_sun,qflx_sha, &
+            grav2_loc,sum_ksmp,f_plc,df_plc, &
             atm2lnd_inst,canopystate_inst,soilstate_inst,temperature_inst,waterfluxbulk_inst)
           
        if ( sqrt(sum(f*f)) < tolf*(qflx_sun+qflx_sha) ) then  !fluxes balanced -> exit
@@ -4613,8 +4633,10 @@ contains
           exit
        end if
        
+       ! spacF populated f_plc and df_plc at this same iterate x.
        call spacA(p,c,x,A,qflx_sun,qflx_sha,flag, &
-            atm2lnd_inst,canopystate_inst,soilstate_inst,temperature_inst,waterfluxbulk_inst)
+            sum_k,f_plc,df_plc, &
+            atm2lnd_inst,canopystate_inst,temperature_inst,waterfluxbulk_inst)
 
        if (flag) then
           ! cannot invert the matrix, solve for x algebraically assuming no flux                            
@@ -4729,7 +4751,8 @@ contains
    
   !------------------------------------------------------------------------------
   subroutine spacA(p,c,x,invA,qflx_sun,qflx_sha,flag, &
-       atm2lnd_inst,canopystate_inst,soilstate_inst, &
+       sum_k,f_plc,df_plc, &
+       atm2lnd_inst,canopystate_inst, &
        temperature_inst, waterfluxbulk_inst)
     
     !
@@ -4744,7 +4767,6 @@ contains
     ! example a LINPACK linear algebra solver.
     !
     ! USES
-    use clm_varpar        , only : nlevsoi
     use clm_varcon        , only : rgas
     !
     ! !ARGUMENTS:
@@ -4755,9 +4777,11 @@ contains
     real(r8)               , intent(in)  :: qflx_sun        ! Sunlit leaf transpiration [kg/m2/s] 
     real(r8)               , intent(in)  :: qflx_sha        ! Shaded leaf transpiration [kg/m2/s]
     logical                , intent(out) :: flag            ! tells calling function that the matrix is not invertible
+    real(r8)               , intent(in)  :: sum_k           ! sum of soil-root conductance across layers (mm/s)
+    real(r8)               , intent(in)  :: f_plc(nvegwcs)  ! Weibull vulnerability values [-]
+    real(r8)               , intent(in)  :: df_plc(nvegwcs) ! 1st deriv of vulnerability values [1/mm]
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
-    type(soilstate_type)   , intent(in)  :: soilstate_inst
     type(temperature_type) , intent(in)  :: temperature_inst
     type(waterfluxbulk_type)   , intent(in)  :: waterfluxbulk_inst
     !
@@ -4788,7 +4812,6 @@ contains
 #endif
     
     associate(                                                    &
-         k_soil_root  => soilstate_inst%k_soil_root_patch       , & ! Input:  [real(r8) (:,:) ]  soil-root interface conductance (mm/s)
          laisun        => canopystate_inst%laisun_patch         , & ! Input:  [real(r8) (:)   ]  sunlit leaf area
          laisha        => canopystate_inst%laisha_patch         , & ! Input:  [real(r8) (:)   ]  shaded leaf area
          htop          => canopystate_inst%htop_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy top (m)
@@ -4803,16 +4826,16 @@ contains
     grav1 = htop(p)*1000._r8
     
     !compute conductance attentuation for each segment
-    fsto1=  plc(x(sun),p,sun,veg)
-    fsto2=  plc(x(sha),p,sha,veg)
-    fx=     plc(x(xyl),p,xyl,veg)
-    fr=     plc(x(root),p,root,veg)
+    fsto1=  f_plc(sun)
+    fsto2=  f_plc(sha)
+    fx=     f_plc(xyl)
+    fr=     f_plc(root)
     
     !compute 1st deriv of conductance attenuation for each segment
-    dfsto1=  d1plc(x(sun),p,sun,veg)
-    dfsto2=  d1plc(x(sha),p,sha,veg)
-    dfx=     d1plc(x(xyl),p,xyl,veg)
-    dfr=     d1plc(x(root),p,root,veg)
+    dfsto1= df_plc(sun)
+    dfsto2= df_plc(sha)
+    dfx=    df_plc(xyl)
+    dfr=    df_plc(root)
     
     !A - f=A*d(vegwp)
     A(1,1)= - laisun(p) * params_inst%kmax(ivt(p),sun) * fx&
@@ -4835,7 +4858,7 @@ contains
     A(4,3)= tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr
     A(4,4)= - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr&
          - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * dfr * (x(root)-x(xyl)-grav1)&
-         - sum(k_soil_root(p,1:nlevsoi))
+         - sum_k
 
     invfactor=1._r8
     A=invfactor*A
@@ -4911,7 +4934,8 @@ contains
   !--------------------------------------------------------------------------------
   
   !------------------------------------------------------------------------------
-  subroutine spacF(p,c,x,f,qflx_sun,qflx_sha, &
+  subroutine spacF(p,x,f,qflx_sun,qflx_sha, &
+       grav2,sum_ksmp,f_plc,df_plc, &
        atm2lnd_inst,canopystate_inst,soilstate_inst, &
        temperature_inst, waterfluxbulk_inst)
     !
@@ -4922,15 +4946,17 @@ contains
     ! USES
     use clm_varpar        , only : nlevsoi
     use clm_varcon        , only : rgas
-    use ColumnType        , only : col
     !
     ! !ARGUMENTS:
     integer                , intent(in)  :: p               ! pft index
-    integer                , intent(in)  :: c               ! column index
     real(r8)               , intent(in)  :: x(nvegwcs)      ! working copy of veg water potential for patch p [mm H2O]
     real(r8)               , intent(out) :: f(nvegwcs)      ! water flux divergence [mm/s]
     real(r8)               , intent(in)  :: qflx_sun        ! Sunlit leaf transpiration [kg/m2/s] 
     real(r8)               , intent(in)  :: qflx_sha        ! Shaded leaf transpiration [kg/m2/s] 
+    real(r8)               , intent(in)  :: grav2(nlevsoi)  ! soil layer gravitational potential relative to surface (mm H2O)
+    real(r8)               , intent(in)  :: sum_ksmp        ! sum of k_soil_root * smp across layers (mm/s * mm)
+    real(r8)               , intent(out) :: f_plc(nvegwcs)  ! Weibull vulnerability values [-]
+    real(r8)               , intent(out) :: df_plc(nvegwcs) ! 1st deriv of vulnerability values [1/mm]
     type(atm2lnd_type)     , intent(in)  :: atm2lnd_inst
     type(canopystate_type) , intent(in)  :: canopystate_inst
     type(soilstate_type)   , intent(in)  :: soilstate_inst
@@ -4944,7 +4970,6 @@ contains
     real(r8) :: fx                    ! fraction of maximum conductance, xylem-to-leaf [-] 
     real(r8) :: fr                    ! fraction of maximum conductance, root-to-xylem [-]
     real(r8) :: grav1                 ! gravitational potential surface to canopy top (mm H2O) 
-    real(r8) :: grav2(nlevsoi)        ! soil layer gravitational potential relative to surface (mm H2O) 
     real(r8) :: temp                  ! used to copy f(sun) to f(sha) for special case
     real(r8), parameter :: tol_lai=.001_r8  ! needs to be the same as in calcstress and spacA (poor form, refactor)<
     integer  :: j                     ! index
@@ -4956,18 +4981,19 @@ contains
          laisha        => canopystate_inst%laisha_patch         , & ! Input:  [real(r8) (:)   ]  shaded leaf area
          htop          => canopystate_inst%htop_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy top (m)
          tsai          => canopystate_inst%tsai_patch           , & ! Input:  [real(r8) (:)   ]  patch canopy one-sided stem area index, no burying by snow
-         smp           => soilstate_inst%smp_l_col              , & ! Input: [real(r8) (:,:) ]  soil matrix potential [mm]
-         ivt           => patch%itype                           , & ! Input:  [integer  (:)   ]  patch vegetation type
-         z             => col%z                                   & ! Input:  [real(r8) (:,:) ]  layer node depth (m)
+         ivt           => patch%itype                             & ! Input:  [integer  (:)   ]  patch vegetation type
          )
     
     grav1 = htop(p) * 1000._r8
-    grav2(1:nlevsoi) = z(c,1:nlevsoi) * 1000._r8
     
-    fsto1=  plc(x(sun),p,sun,veg)
-    fsto2=  plc(x(sha),p,sha,veg)
-    fx=     plc(x(xyl),p,xyl,veg)
-    fr=     plc(x(root),p,root,veg)
+    call plc_eval(x(sun),  p, sun,  veg, f_plc(sun),  'PLC', d1plc_val=df_plc(sun))
+    call plc_eval(x(sha),  p, sha,  veg, f_plc(sha),  'PLC', d1plc_val=df_plc(sha))
+    call plc_eval(x(xyl),  p, xyl,  veg, f_plc(xyl),  'PLC', d1plc_val=df_plc(xyl))
+    call plc_eval(x(root), p, root, veg, f_plc(root), 'PLC', d1plc_val=df_plc(root))
+    fsto1=  f_plc(sun)
+    fsto2=  f_plc(sha)
+    fx=     f_plc(xyl)
+    fr=     f_plc(root)
     
     !compute flux divergence across each plant segment
     f(sun)= qflx_sun * fsto1 - laisun(p) * params_inst%kmax(ivt(p),sun) * fx * (x(xyl)-x(sun))
@@ -4977,7 +5003,7 @@ contains
          - tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1)
     f(root)= tsai(p) * params_inst%kmax(ivt(p),xyl) / htop(p) * fr * (x(root)-x(xyl)-grav1) &
          + sum( k_soil_root(p,1:nlevsoi) * (x(root)+grav2(1:nlevsoi)) ) &
-         - sum( k_soil_root(p,1:nlevsoi) * smp(c,1:nlevsoi) )
+         - sum_ksmp
 
     if (laisha(p)<tol_lai) then
        ! special case for laisha ~ 0
@@ -5190,24 +5216,8 @@ contains
     integer  , intent(in)  :: level         ! veg segment lvl (1:nvegwcs) 
     integer  , intent(in)  :: plc_method    !
     real(r8)               :: plc           ! attenuated conductance [0:1] 0=no flow
-    !
     !------------------------------------------------------------------------------
-    associate(                                                    &
-         ivt  => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
-             )
-    
-    select case (plc_method)
-       !possible to add other methods later
-    case (vegetation_weibull)
-       plc=2._r8**(-(x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level))
-       if ( plc < 0.005_r8) plc = 0._r8
-    case default
-       plc = nan
-       call endrun( 'ERROR:: Photosynthesis::PLC must choose plc method' )
-    end select
-
-    end associate
-    
+    call plc_eval(x, p, level, plc_method, plc, 'PLC')
   end function plc
   !--------------------------------------------------------------------------------
   
@@ -5222,25 +5232,51 @@ contains
     integer  , intent(in) :: level            ! veg segment lvl (1:nvegwcs)
     integer  , intent(in) :: plc_method       ! 0 for vegetation, 1 for soil
     real(r8)              :: d1plc            ! first deriv of plc curve at x
-    !
+    real(r8)              :: unused_plc       ! discarded conductance value from plc_eval
     !------------------------------------------------------------------------------
-    associate(                                                    &
-         ivt           => patch%itype                             & ! Input: [integer  (:)   ]  patch vegetation type
-             )
+    call plc_eval(x, p, level, plc_method, unused_plc, 'D1PLC', d1plc_val=d1plc)
+  end function d1plc
+
+  !--------------------------------------------------------------------------------
+  subroutine plc_eval(x, p, level, plc_method, plc_val, caller, d1plc_val)
+    ! !DESCRIPTION
+    ! Evaluate Weibull vulnerability curve and optional 1st derivative at x.
+    !
+    ! !ARGUMENTS
+    real(r8)         , intent(in)            :: x          ! water potential input
+    integer          , intent(in)            :: p          ! index for pft
+    integer          , intent(in)            :: level      ! veg segment lvl (1:nvegwcs)
+    integer          , intent(in)            :: plc_method ! 0 for vegetation, 1 for soil
+    real(r8)         , intent(out)           :: plc_val    ! attenuated conductance [0:1]
+    character(len=*) , intent(in)            :: caller     ! 'PLC' or 'D1PLC' to preserve endrun message
+    real(r8)         , intent(out), optional :: d1plc_val  ! first deriv of plc curve at x
+    !
+    ! !LOCAL VARIABLES
+    real(r8) :: u ! normalized water potential term (x/psi50)**ck [-]
+    real(r8) :: w ! unthresholded Weibull conductance 2**(-u) [-]
+    !------------------------------------------------------------------------------
+    associate(ivt => patch%itype)
 
     select case (plc_method)
-       !possible to add other methods later
     case (vegetation_weibull)
-       d1plc= -params_inst%ck(ivt(p),level) * log(2._r8) * (2._r8**(-(x/params_inst%psi50(ivt(p),level)) &
-              **params_inst%ck(ivt(p),level))) &
-              * ((x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level)) / x
+       u = (x/params_inst%psi50(ivt(p),level))**params_inst%ck(ivt(p),level)
+       w = 2._r8**(-u)
+       plc_val = w
+       if (plc_val < 0.005_r8) plc_val = 0._r8
+       if (present(d1plc_val)) then
+          if (x == 0._r8) then
+             d1plc_val = 0._r8
+          else
+             d1plc_val = -params_inst%ck(ivt(p),level) * log(2._r8) * w * u / x
+          end if
+       end if
     case default
-       d1plc = nan
-       call endrun( 'ERROR:: Photosynthesis::D1PLC must choose plc method' )
+       plc_val = nan
+       if (present(d1plc_val)) d1plc_val = nan
+       call endrun( 'ERROR:: Photosynthesis::'//trim(caller)//' must choose plc method' )
     end select
 
     end associate
-    
-  end function d1plc  
+  end subroutine plc_eval
   
 end module PhotosynthesisMod
