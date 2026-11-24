@@ -705,5 +705,35 @@ contains
 
   end subroutine check_get_doy_tomorrow_leap
 
+  @Test
+  subroutine check_step_cache_and_reset(this)
+    class(TestTimeManager), intent(inout) :: this
+    integer :: yr, mon, day, tod, yr0, mon0, day0, tod0
+
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.true.)
+    call set_date(yr=2000, mon=12, day=31, tod=secs_in_day_int - dtime_int)
+    call get_curr_date(yr, mon, day, tod)
+    call get_curr_date(yr0, mon0, day0, tod0, offset=0)
+    @assertEqual([2000, 12, 31, secs_in_day_int - dtime_int], [yr, mon, day, tod])
+    @assertEqual([2000, 12, 31, secs_in_day_int - dtime_int], [yr0, mon0, day0, tod0])
+    @assertEqual(366, get_curr_days_per_year())
+    @assertEqual(366, get_curr_days_per_year(offset=0))
+    @assertEqual(365.2425_r8, get_average_days_per_year())
+
+    ! Advance across the leap-year boundary into 2001-01-01 tod=0 and verify cache refresh
+    call advance_timestep()
+    call get_curr_date(yr, mon, day, tod)
+    @assertEqual([2001, 1, 1, 0], [yr, mon, day, tod])
+    @assertEqual(365, get_curr_days_per_year())
+    @assertEqual(366, get_prev_days_per_year())
+
+    ! Reset and re-initialize with NO_LEAP to ensure no cached Gregorian values leak across tests
+    call unittest_timemgr_teardown()
+    call unittest_timemgr_setup(dtime=dtime_int, use_gregorian_calendar=.false.)
+    @assertTrue(is_first_step())
+    @assertEqual(365, get_curr_days_per_year())
+    @assertEqual(365._r8, get_average_days_per_year())
+  end subroutine check_step_cache_and_reset
+
 
 end module test_clm_time_manager

@@ -102,6 +102,19 @@ module clm_time_manager
    type(ESMF_Calendar), target, save   :: tm_cal       ! calendar
    type(ESMF_Clock),    save   :: tm_clock     ! model clock
    integer,             save   :: tm_clock_step_size_sec ! Cache of clock timestep.
+   ! Per-step cache of tm_clock queries, following tm_clock_step_size_sec (#207).
+   ! dtime, calendar, and perpetual date are fixed after init/restart; any routine
+   ! mutating tm_clock after timemgr_set is true must refresh or clear tm_cache_valid.
+   logical,             save   :: tm_cache_valid = .false.
+   integer,             save   :: tm_nstep       = uninit_int ! cached get_nstep()
+   integer,             save   :: tm_yr          = uninit_int ! cached get_curr_date year
+   integer,             save   :: tm_mon         = uninit_int ! cached get_curr_date month
+   integer,             save   :: tm_day         = uninit_int ! cached get_curr_date day of month
+   integer,             save   :: tm_tod         = uninit_int ! cached get_curr_date time of day (s)
+   integer,             save   :: tm_curr_dpy    = uninit_int ! cached get_curr_days_per_year()
+   integer,             save   :: tm_prev_dpy    = uninit_int ! cached get_prev_days_per_year()
+   real(r8),            save   :: tm_avg_dpy     = uninit_r8  ! cached get_average_days_per_year()
+   real(r8),            save   :: tm_prev_calday = uninit_r8  ! cached get_prev_calday()
    type(ESMF_Time),     save   :: tm_perp_date ! perpetual date
 
    ! Data required to restart time manager (only set if timemgr_restart_io is called):
@@ -131,6 +144,7 @@ module clm_time_manager
    private :: timemgr_print
    private :: TimeGetymd
    private :: check_timemgr_initialized
+   private :: refresh_time_cache
 
    character(len=*), parameter, private :: sourcefile = &
         __FILE__
@@ -255,6 +269,9 @@ contains
     if (masterproc) call timemgr_print()
 
     timemgr_set = .true.
+    ! advance_timestep above ran before timemgr_set, so fill the cache here.
+    ! Continue/branch runs fill it via advance_timestep in timemgr_restart.
+    if (nsrest /= nsrContinue .and. nsrest /= nsrBranch) call refresh_time_cache()
 
   end subroutine timemgr_init
 
@@ -681,8 +698,24 @@ contains
     call chkrc(rc, sub//': error return from ESMF_ClockAdvance')
 
     tm_first_restart_step = .false.
+    if (timemgr_set) call refresh_time_cache()
 
   end subroutine advance_timestep
+
+  !=========================================================================================
+
+  subroutine refresh_time_cache()
+    ! Refresh per-step cached values via the existing getters after tm_clock changes.
+    ! tm_cache_valid must be false while getters run; call only from serial code.
+    tm_cache_valid = .false.
+    tm_nstep = get_nstep()
+    call get_curr_date(tm_yr, tm_mon, tm_day, tm_tod)
+    tm_curr_dpy = get_curr_days_per_year()
+    tm_prev_dpy = get_prev_days_per_year()
+    tm_prev_calday = get_prev_calday()
+    tm_avg_dpy = get_average_days_per_year()
+    tm_cache_valid = .true.
+  end subroutine refresh_time_cache
 
   !=========================================================================================
 
@@ -784,6 +817,10 @@ contains
     integer(ESMF_KIND_I8) :: step_no
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    if (tm_cache_valid) then
+       get_nstep = tm_nstep
+       return
+    end if
 
     call ESMF_ClockGet(tm_clock, advanceCount=step_no, rc=rc)
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -823,12 +860,21 @@ contains
     ! for previous times.
 
     character(len=*), parameter :: sub = 'clm::get_curr_date'
-    integer :: rc
+    integer :: rc, off_sec
     type(ESMF_Time) :: date
     type(ESMF_TimeInterval) :: off
     !-----------------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    off_sec = 0
+    if (present(offset)) off_sec = offset
+    if (tm_cache_valid .and. off_sec == 0) then
+       yr  = tm_yr
+       mon = tm_mon
+       day = tm_day
+       tod = tm_tod
+       return
+    end if
 
     call ESMF_ClockGet( tm_clock, currTime=date, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -1192,6 +1238,10 @@ contains
     !-----------------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    if (tm_cache_valid .and. .not. present(reuse_day_365_for_day_366)) then
+       get_prev_calday = tm_prev_calday
+       return
+    end if
 
     get_prev_calday = get_curr_calday( &
          offset = -dtime, &
@@ -1328,6 +1378,10 @@ contains
 
     character(len=*), parameter :: subname = 'get_average_days_per_year'
     !---------------------------------------------------------------------------------
+    if (tm_cache_valid) then
+       get_average_days_per_year = tm_avg_dpy
+       return
+    end if
 
     ! BUG(wjs, 2022-02-01, ESCOMP/CTSM#1624) Ideally we would use ESMF_CalendarGet here,
     ! but that currently isn't possible (see notes in issue 1624 for details)
@@ -1384,6 +1438,10 @@ contains
     !---------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    if (tm_cache_valid .and. .not. present(offset)) then
+       get_curr_days_per_year = tm_curr_dpy
+       return
+    end if
 
     if ( present(offset) )then
        call get_curr_date(yr, mon, day, tod, offset )
@@ -1409,6 +1467,10 @@ contains
     character(len=*), parameter :: sub = 'clm::get_prev_days_per_year'
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    if (tm_cache_valid) then
+       get_prev_days_per_year = tm_prev_dpy
+       return
+    end if
 
     get_prev_days_per_year = get_curr_days_per_year(offset = -dtime)
 
@@ -1743,6 +1805,10 @@ contains
     !---------------------------------------------------------------------------------
 
     if ( .not. check_timemgr_initialized(sub) ) return
+    if (tm_cache_valid) then
+       is_first_step = (tm_nstep == 1)
+       return
+    end if
 
     call ESMF_ClockGet( tm_clock, advanceCount=step_no, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockGet')
@@ -2036,6 +2102,16 @@ contains
     tm_first_restart_step = .false.
     tm_perp_calendar      = .false.
     timemgr_set           = .false.
+    tm_cache_valid        = .false.
+    tm_nstep              = uninit_int
+    tm_yr                 = uninit_int
+    tm_mon                = uninit_int
+    tm_day                = uninit_int
+    tm_tod                = uninit_int
+    tm_curr_dpy           = uninit_int
+    tm_prev_dpy           = uninit_int
+    tm_avg_dpy            = uninit_r8
+    tm_prev_calday        = uninit_r8
 
     ! ------------------------------------------------------------------------
     ! Reset other module-level variables to some reasonable default, to ensure that they
@@ -2129,6 +2205,7 @@ contains
     ! correctly).
     call ESMF_ClockAdvance( tm_clock, rc=rc )
     call chkrc(rc, sub//': error return from ESMF_ClockAdvance')
+    call refresh_time_cache()
 
   end subroutine for_test_set_curr_date
 
