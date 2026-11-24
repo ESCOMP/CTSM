@@ -116,4 +116,3 @@ Depends
 # Docs build and testing output
 _build*/
 _publish*/
-doc/.coverage
