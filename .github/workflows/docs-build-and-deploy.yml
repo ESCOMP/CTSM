@@ -37,7 +37,7 @@ jobs:
   build-and-deploy:
 
     # Only run on upstream repository
-    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+    if: ${{ !github.event.repository.fork }}
 
     environment:
       name: github-pages

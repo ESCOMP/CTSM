@@ -20,7 +20,7 @@ jobs:
   build-docs-omnibus-test:
     # Don't run on forks, because part(s) of omnibus testing script will look for
     # branch(es) that forks may not have.
-    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+    if: ${{ !github.event.repository.fork }}
 
     runs-on: ubuntu-latest
     steps:
