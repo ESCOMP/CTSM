@@ -25,14 +25,15 @@ begin
 ; The script assumes that your history files are in /glade/derecho/scratch/$username/archive/$caseid/lnd/hist
 ;=======================================================================;
 
-  caseid = "clm50sp_cesm23a02cPPEn08ctsm51d030_1deg_GSWP3V1_1850spin"
-  username = "oleson"
+  caseid = "I1850Clm60FatesSpCrujraRsGs_spinup"
+  username = "slevis"
   annual_hist = "False"
   cplot = "Global"
   subper = 20
   h2osoi_layer = 8               ; Desired soil layer (layer 8 is about 1m)
   tsoi_layer = 10                ; Desired soil layer (layer 10 is about 3m)
   hist_ext = "h0a"               ; Valid options: h0a, h0
+  fates = "True"
 
   do_plot = "True"
 ;=======================================================================;
@@ -109,7 +110,11 @@ begin
   if (annual_hist .eq. "True") then
     fsh              = data[:]->FSH(year,:,:)
     lh               = data[:]->EFLX_LH_TOT(year,:,:)
-    gpp              = data[:]->FPSN(year,:,:)
+    if (fates .eq. "True") then
+      gpp              = data[:]->FATES_GPP(year,:,:) * 1000
+    else
+      gpp              = data[:]->FPSN(year,:,:)
+    end if
     tws              = data[:]->TWS(year,:,:)
     h2osoi           = data[:]->H2OSOI(year,h2osoi_layer-1,:,:)
     tsoi             = data[:]->TSOI(year,tsoi_layer-1,:,:)
@@ -129,7 +134,11 @@ begin
       delete(tmp3)
       delete(tot)
     end if
-    gpp              = month_to_annual(data[:]->FPSN,1)
+    if (fates .eq. "True") then 
+      gpp              = month_to_annual(data[:]->FATES_GPP,1) * 1000
+    else
+      gpp              = month_to_annual(data[:]->FPSN,1)
+    end if
     if (isfilevar(data[0],"TWS")) then
       tws              = month_to_annual(data[:]->TWS,1)
     else
@@ -178,7 +187,7 @@ begin
   fsh_glob           = dim_sum_n(fsh*landareaL/areasum,(/1,2/))   ; weighted global fsh (W m-2)
   fsh_glob!0         = "year"                                                
   fsh_glob&year      = yearplt                                               
-  fsh_glob_del       = new(nyrs-1,"float")
+  fsh_glob_del       = new(nyrs-1,typeof(fsh_glob))
   do i = 0,nyrs-2
     fsh_glob_del(i) = (fsh_glob(i+1) - fsh_glob(i))/subper
   end do
@@ -209,7 +218,7 @@ begin
     fsh_glob_equil = -999
     fsh_glob       = new(dimsizes(dim_sum_n(fsh,(/1,2/))),typeof(fsh),-999)
     fsh_glob       = -999
-    fsh_glob_del   = new(nyrs-1,"float",-999.)
+    fsh_glob_del   = new(nyrs-1,typeof(fsh_glob),-999.)
     fsh_glob_del   = -999.
   end if
 
@@ -219,7 +228,7 @@ begin
   lh_glob           = dim_sum_n(lh*landareaL/areasum,(/1,2/))    ; weighted global lh (W m-2)
   lh_glob!0         = "year"                                                
   lh_glob&year      = yearplt                                               
-  lh_glob_del       = new(nyrs-1,"float")
+  lh_glob_del       = new(nyrs-1,typeof(lh_glob))
   do i = 0,nyrs-2
     lh_glob_del(i) = (lh_glob(i+1) - lh_glob(i))/subper
   end do
@@ -257,11 +266,15 @@ begin
 ; GPP
   landareaC             = conform_dims(dimsizes(gpp),landarea,(/1,2/))                    ; conforming dimensions of landarea to gpp
   gpp_area              = gpp*landareaC                                                   ; correcting gpp for total land area
-  gpp_pg                = gpp_area*gtoPg*secinyr*umoleCO2tomoleCO2*moleCO2togCO2*gCO2togC ; umole CO2/s->Pg Carbon
+  if (fates .eq. "True") then 
+    gpp_pg = gpp_area*gtoPg*secinyr
+  else
+    gpp_pg                = gpp_area*gtoPg*secinyr*umoleCO2tomoleCO2*moleCO2togCO2*gCO2togC ; umole CO2/s->Pg Carbon
+  end if
   gpp_glob              = dim_sum_n(gpp_pg, (/1,2/))                                      ; sums over all latitudes
   gpp_glob!0            = "year"                                                
   gpp_glob&year         = yearplt                                               
-  gpp_glob_del       = new(nyrs-1,"float")
+  gpp_glob_del       = new(nyrs-1,typeof(gpp_glob))
   do i = 0,nyrs-2
     gpp_glob_del(i) = (gpp_glob(i+1) - gpp_glob(i))/subper
   end do
@@ -291,7 +304,7 @@ begin
   tws_glob           = (dim_sum_n(tws*landareaL/areasum,(/1,2/)))/1.e3    ; weighted global tws (meters)
   tws_glob!0         = "year"                                                
   tws_glob&year      = yearplt                                               
-  tws_glob_del       = new(nyrs-1,"float")
+  tws_glob_del       = new(nyrs-1,typeof(tws_glob))
   do i = 0,nyrs-2
     tws_glob_del(i) = (tws_glob(i+1) - tws_glob(i))/subper
   end do
@@ -323,7 +336,7 @@ begin
   h2osoi_glob           = dim_sum_n(h2osoi*landareaL/areasum,(/1,2/))    ; weighted global h2osoi (mm)
   h2osoi_glob!0         = "year"                                                
   h2osoi_glob&year      = yearplt                                               
-  h2osoi_glob_del       = new(nyrs-1,"float")
+  h2osoi_glob_del       = new(nyrs-1,typeof(h2osoi_glob))
   do i = 0,nyrs-2
     h2osoi_glob_del(i) = (h2osoi_glob(i+1) - h2osoi_glob(i))/subper
   end do
@@ -355,7 +368,7 @@ begin
     h2osoi_glob_equil = -999
     h2osoi_glob       = new(dimsizes(dim_sum_n(h2osoi,(/1,2/))),typeof(h2osoi),-999)
     h2osoi_glob       = -999
-    h2osoi_glob_del   = new(nyrs-1,"float",-999.)
+    h2osoi_glob_del   = new(nyrs-1,typeof(h2osoi_glob),-999.)
     h2osoi_glob_del   = -999.
   end if
 
@@ -365,7 +378,7 @@ begin
   tsoi_glob           = dim_sum_n(tsoi*landareaL/areasum,(/1,2/))    ; weighted global tsoi (mm)
   tsoi_glob!0         = "year"                                                
   tsoi_glob&year      = yearplt                                               
-  tsoi_glob_del       = new(nyrs-1,"float")
+  tsoi_glob_del       = new(nyrs-1,typeof(tsoi_glob))
   do i = 0,nyrs-2
     tsoi_glob_del(i) = (tsoi_glob(i+1) - tsoi_glob(i))/subper
   end do
@@ -397,12 +410,12 @@ begin
     h2osno_glob_equil = -999
     h2osno_glob       = new(dimsizes(dim_sum_n(h2osno,(/1,2/))),typeof(h2osno),-999)
     h2osno_glob       = -999
-    h2osno_glob_del   = new(nyrs-1,"float",-999.)
+    h2osno_glob_del   = new(nyrs-1,typeof(h2osno_glob),-999.)
     h2osno_glob_del   = -999.
   end if
 
 ; Land area not in TWS equilibrium
-  landarea_noequil = new((/nyrs-1,nlat,nlon/),"float")
+  landarea_noequil = new((/nyrs-1,nlat,nlon/),typeof(landarea))
   do i = 0,nyrs-2
     landarea_noequil(i,:,:) = where(abs(tws(i+1,:,:)/1.e3 - tws(i,:,:)/1.e3)/subper .gt. tws_thresh, landarea, 0.)
   end do
