@@ -1255,6 +1255,10 @@ Miller, J.R., Russell, G.L., and Caliri, G. 1994. Continental-scale river flow i
 
 Millington, R. and Quirk, J.P., 1961. Permeability of Porous Solids. Transactions of the Faraday Society 57:1200-1207.
 
+.. _Minallah2025:
+
+Minallah, S., Lipscomb, W. H., Leguy, G., and Zekollari, H. 2025. A framework for three-dimensional dynamic modeling of mountain glaciers in the Community Ice Sheet Model (CISM v2.2), Geosci. Model Dev., 18, 5467–5486, https://doi.org/10.5194/gmd-18-5467-2025. 
+
 .. _Mironovetal2010:
 
 Mironov, D. et al., 2010. Implementation of the lake parameterisation scheme FLake into the numerical weather prediction model COSMO. Boreal Environment Research 15:218-230.
@@ -1574,6 +1578,10 @@ Rastetter, E.B., Ryan, M.G., Shaver, G.R., Melillo, J.M., Nadelhoffer, K.J., Hob
 .. _Rastneretal2012:
 
 Rastner, P., Bolch, T., Mölg, N., Machguth, H., and Paul, F., 2012. The first complete glacier inventory for the whole of Greenland, The Cryosphere Discuss., 6, 2399-2436, 10.5194/tcd-6-2399-2012.
+
+.. _RGIConsortium2017:
+
+RGI Consortium, 2017. Randolph Glacier Inventory - A Dataset of Global Glacier Outlines, Version 6. Boulder, Colorado USA. NSIDC: National Snow and Ice Data Center. doi: https://doi.org/10.7265/4m1f-gd79.
 
 .. _Rileyetal2011a:
 
