@@ -50,7 +50,8 @@ jobs:
   file-issue-on-failure:
     if: |
       failure() &&
-      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
+      github.repository == 'ESCOMP/CTSM'
     needs: [test-build-docs-ctsm_pylib, test-update-dependency]
     runs-on: ubuntu-latest
     permissions:
