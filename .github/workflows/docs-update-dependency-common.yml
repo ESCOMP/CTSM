@@ -23,7 +23,7 @@ jobs:
     # Don't run on forks, because test_container_eq_ctsm_pylib.sh uses
     # build_docs_to_publish, which will look for branch(es) that forks
     # may not have
-    if: ${{ github.repository == 'ESCOMP/CTSM' }}
+    if: ${{ !github.event.repository.fork }}
 
     runs-on: ubuntu-latest
     steps:
