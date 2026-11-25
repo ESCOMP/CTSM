@@ -1083,9 +1083,12 @@ contains
                !       balance check errors as it doesn't know about it.
 
                ! cool frozen h2osfc layer with extra heat
-               t_h2osfc(c) = t_h2osfc(c) - temp1*hfus/(dtime*dhsdT(c) - c_h2osfc(c))
+               ! temp1*hfus is a grid-cell mean energy, while c_h2osfc is per unit
+               ! area of h2osfc, so the remaining energy is spread over frac_h2osfc
+               t_h2osfc(c) = t_h2osfc(c) + temp1*hfus/(frac_h2osfc(c)*(c_h2osfc(c) - dtime*dhsdT(c)))
 
-               xmf_h2osfc(c) = (hm(c) - frac_h2osfc(c)*temp1*hfus/dtime)
+               ! latent heat of the h2osfc that was actually frozen: -hfus*h2osfc/dtime
+               xmf_h2osfc(c) = (hm(c) - temp1*hfus/dtime)
 
                ! next, determine equilibrium temperature of combined ice/snow layer
                if (snl(c) == 0) then
