@@ -623,8 +623,9 @@ sub process_namelist_user_input {
   my ($opts, $nl_flags, $definition, $defaults, $nl, $cfg, $envxml_ref, $physv) = @_;
 
   # Get the inputs that will be coming from the user...
-  process_namelist_commandline_namelist($opts, $definition, $nl, $envxml_ref);
-  process_namelist_commandline_infile($opts, $definition, $nl, $envxml_ref);
+  my %namelist_opts_vars;
+  process_namelist_commandline_namelist($opts, $definition, $nl, $envxml_ref, \%namelist_opts_vars);
+  process_namelist_commandline_infile($opts, $definition, $nl, $envxml_ref, \%namelist_opts_vars);
 
   # Apply the commandline options and make sure the user didn't change it above
   process_namelist_commandline_options($opts, $nl_flags, $definition, $defaults, $nl, $envxml_ref, $physv);
@@ -1523,7 +1524,7 @@ sub setup_cmdl_vichydro {
 
 sub process_namelist_commandline_namelist {
   # Process the commandline '-namelist' arg.
-  my ($opts, $definition, $nl, $envxml_ref, %settings) = @_;
+    my ($opts, $definition, $nl, $envxml_ref, $namelist_opts_vars, %settings) = @_;
 
   if (defined $opts->{'namelist'}) {
     # Parse commandline namelist
@@ -1541,11 +1542,19 @@ sub process_namelist_commandline_namelist {
     # Merge input values into namelist.  Previously specified values have higher precedence
     # and are not overwritten.
     $nl->merge_nl($nl_arg_valid);
+    foreach my $group ($nl_arg_valid->get_group_names()) {
+      foreach my $var ($nl_arg_valid->get_variable_names($group)) {
+        next if $var eq 'start_ymd';
+        $namelist_opts_vars->{"${group}::${var}"} = 1;
+      }
+    }
   }
 }
 
 sub process_namelist_infile {
    my ($definition, $nl, $envxml_ref, $infile, %settings) = @_;
+   my $check_conflicts = delete $settings{'check_namelist_opts_conflicts'};
+   my $namelist_opts_vars = delete $settings{'namelist_opts_vars'};
 
    # Make sure a valid file was found
    if (    -f "$infile" ) {
@@ -1564,7 +1573,26 @@ sub process_namelist_infile {
    }
    # Go through all variables and expand any XML env settings in them
    expand_xml_variables_in_namelist( $nl_infile_valid, $envxml_ref );
-
+   
+   # Die if the user set the same variable via CLM_NAMELIST_OPTS (-namelist)
+   # and this user infile (user_nl_clm). Skip finidat/nrevsn: buildnml injects
+   # those into the combined infile for branch/hybrid runs.
+   if ($check_conflicts && $namelist_opts_vars) {
+      my @conflicts;
+      foreach my $group ($nl_infile_valid->get_group_names()) {
+         foreach my $var ($nl_infile_valid->get_variable_names($group)) {
+            next if $var eq 'finidat' || $var eq 'nrevsn';
+            push @conflicts, "$var (in group &$group)" if $namelist_opts_vars->{"${group}::${var}"};
+         }
+      }
+      if (@conflicts) {
+         $log->fatal_error(
+            "The following namelist item(s) are set in BOTH CLM_NAMELIST_OPTS and user_nl_clm:\n" .
+            "  " . join("\n  ", @conflicts) . "\n" .
+            "Remove the setting from one or the other (change CLM_NAMELIST_OPTS or edit user_nl_clm)."
+         );
+      }
+   }
    # Merge input values into namelist.  Previously specified values have higher precedence
    # and are not overwritten.
    $nl->merge_nl($nl_infile_valid, %settings);
@@ -1574,12 +1602,14 @@ sub process_namelist_infile {
 
 sub process_namelist_commandline_infile {
   # Process the commandline '-infile' arg.
-  my ($opts, $definition, $nl, $envxml_ref) = @_;
+  my ($opts, $definition, $nl, $envxml_ref, $namelist_opts_vars) = @_;
 
   if (defined $opts->{'infile'}) {
     my @infiles = split( /,/, $opts->{'infile'} );
     foreach my $infile ( @infiles ) {
-      process_namelist_infile( $definition, $nl, $envxml_ref, $infile );
+      process_namelist_infile( $definition, $nl, $envxml_ref, $infile,
+                               check_namelist_opts_conflicts => 1,
+                               namelist_opts_vars => $namelist_opts_vars );
     }
   }
 }

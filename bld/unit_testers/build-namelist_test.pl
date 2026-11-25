@@ -636,6 +636,11 @@ my $finidat  = "thing.nc";
 system( "touch $finidat" );
 
 my %failtest = (
+      "namelist_opts_infile_conflict"
+                       =>{ options=>"--envxml_dir . -infile namelist_opts_conflict_user_nl_clm",
+                           namelst=>"mksrf_lsmlon=96",
+                           phys=>"clm6_0",
+                           },
      "building humidity mode below range"
                                   =>{ options=>"-envxml_dir .",
                                      namelst=>"building_humidity_mode=-1",
