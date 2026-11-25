@@ -5,6 +5,7 @@ This guide describes the features and usage of the `query_paramfile` and `set_pa
 
 Note that you need to have the `ctsm_pylib` conda environment activated to use these tools. See Sect. {numref}`using-ctsm-pylib` for more information.
 
+(query-paramfile)=
 ## `query_paramfile`
 **Purpose:** Print the values of one or more parameters from a CTSM parameter file (netCDF format).
 
@@ -32,6 +33,7 @@ Print values for specific PFTs:
 tools/param_utils/query_paramfile -i paramfile.nc -p needleleaf_evergreen_temperate_tree,c4_grass medlynintercept medlynslope
 ```
 
+(set-paramfile)=
 ## `set_paramfile`
 **Purpose:** Change values of one or more parameters in a CTSM parameter file (netCDF format).
 

@@ -66,6 +66,26 @@ tex = {
 ### Purely custom variables ###
 ###############################
 
+nonparamfile_disclaimer_md = (
+    "**Note:** The values here should be up-to-date with those used in {{version_label}},"
+    " but there may be mistakes."
+)
+nonparamfile_disclaimer_rst = (
+    "**Note:** The values here should be up-to-date with those used in |version_label|,"
+    " but there may be mistakes."
+)
+
+paramfile_disclaimer_md = (
+    nonparamfile_disclaimer_md +
+    " If you want to check the values for your version, use"
+    " [](query-paramfile) on the `paramfile` for your case."
+)
+paramfile_disclaimer_rst = (
+    nonparamfile_disclaimer_rst +
+    " If you want to check the values for your version, use"
+    " :ref:`query-paramfile` on the ``paramfile`` for your case."
+)
+
 cesmrelease = "CESM2.2 beta"
 
 ctsm_gh = "https://github.com/ESCOMP/ctsm"
