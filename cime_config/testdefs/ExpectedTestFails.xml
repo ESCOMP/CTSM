@@ -197,15 +197,6 @@
 
   <!--- NOTE: Tests also in aux_clm can be included under this comment to avoid duplication -->
 
-  <!-- This is commented out because cime currently does NOT allow longnames in the XML in the XSD for this file
-  <test name="ERS_D_Ld30.f45_f45_mt201.HIST_DATM%CRUv7_CLM50%FATES_SICE_SOCN_SROF_SGLC_SWAV_SESP.izumi_nag.clm-FatesColdLandUse">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>#3500</issue>
-    </phase>
-  </test>
-  -->
-
   <test name="ERP_D_Ld90.f45_f45_mt201.I2000Clm60Fates.izumi_nag.clm-FatesColdCStarvationExp">
     <phase name="MEMLEAK">
       <status>FAIL</status>
@@ -242,13 +233,6 @@
     </phase>
   </test>
 
-  <test name="SMS_D_Ld180.f45_f45_mt201.I2000Clm60Fates.derecho_intel.clm-FatesColdTRS">
-    <phase name="RUN">
-      <status>FAIL</status>
-      <issue>FATES#1534</issue>
-    </phase>
-  </test>
-
   <test name="ERS_D_Ld30.f45_f45_mt201.I2000Clm50Fates.izumi_nag.clm-FatesColdLUH2">
     <phase name="RUN">
       <status>FAIL</status>
@@ -260,6 +244,27 @@
     <phase name="RUN">
       <status>FAIL</status>
       <issue>#2321</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesRsGs.izumi_nag.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>fates#1634</issue>
+    </phase>
+  </test>
+
+  <test name="ERS_D_Ld5.1x1_brazil.I2000Clm50FatesRsGs.derecho_intel.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>fates#1634</issue>
+    </phase>
+  </test>
+
+  <test name="SMS_Lm3_D_Mmpi-serial.1x1_brazil.I2000Clm50FatesRsGs.izumi_nag.clm-FatesColdHydro">
+    <phase name="RUN">
+      <status>FAIL</status>
+      <issue>fates#1634</issue>
     </phase>
   </test>
 
