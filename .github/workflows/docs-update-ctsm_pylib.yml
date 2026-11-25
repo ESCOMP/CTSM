@@ -30,7 +30,8 @@ permissions:
   contents: read
 jobs:
   test-build-docs-ctsm_pylib:
-    if: ${{ always() }}
+    # Skip scheduled runs on forks
+    if: ${{ always() && (github.event_name != 'schedule' || !github.event.repository.fork) }}
     name: Build with ctsm_pylib
     uses: ./.github/workflows/docs-common.yml
     with:
@@ -39,7 +40,8 @@ jobs:
       conda_env_name: ctsm_pylib
 
   test-update-dependency:
-    if: ${{ always() }}
+    # Skip scheduled runs on forks
+    if: ${{ always() && (github.event_name != 'schedule' || !github.event.repository.fork) }}
     name: Docs dependency update tests
     uses: ./.github/workflows/docs-update-dependency-common.yml
 
