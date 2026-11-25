@@ -51,7 +51,7 @@ jobs:
     if: |
       failure() &&
       (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') &&
-      github.repository == 'ESCOMP/CTSM'
+      !github.event.repository.fork
     needs: [test-build-docs-ctsm_pylib, test-update-dependency]
     runs-on: ubuntu-latest
     permissions:
