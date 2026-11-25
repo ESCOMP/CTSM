@@ -21,6 +21,7 @@ module CNSoilMatrixMod
   use spmdMod                            , only : masterproc
   use clm_time_manager                   , only : get_step_size, is_end_curr_month,get_curr_date,update_DA_nstep
   use clm_time_manager                   , only : is_first_restart_step,is_beg_curr_year,is_end_curr_year,is_first_step_of_this_run_segment
+  use clm_time_manager                   , only : is_first_step
   use clm_varpar                         , only : ndecomp_pools, nlevdecomp, ndecomp_pools_vr        !number of biogeochemically active soil layers
   use clm_varpar                         , only : ndecomp_cascade_transitions, ndecomp_cascade_outtransitions
   use clm_varpar                         , only : i_cwd
@@ -610,11 +611,12 @@ contains
          if ( is_first_restart_step() )then
            call AKXcacc%CopyIdxSM( AKallsoilc )
          end if
-         if ( AKXcacc%IsValuesSetSM() )then
-            call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
-         else
-            ! This should only happen on the first time-step
+         ! Use is_first_step() instead of IsValuesSetSM() to avoid race condition related to metadata
+         ! filling; see https://github.com/ESCOMP/CTSM/issues/3360#issuecomment-6862429821 for details
+         if (is_first_step()) then
             call AKXcacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoilc)
+         else
+            call AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoilc)
          end if
 
          !
@@ -625,11 +627,12 @@ contains
             if ( is_first_restart_step() )then
                call cs13_soil%AKXcacc%CopyIdxSM( cf13_soil%AKallsoilc )
             end if
-            if ( cs13_soil%AKXcacc%IsValuesSetSM() )then
-               call cs13_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf13_soil%AKallsoilc)
-            else
-            ! This should only happen on the first time-step
+            ! Use is_first_step() instead of IsValuesSetSM() to avoid race condition related to metadata
+            ! filling; see https://github.com/ESCOMP/CTSM/issues/3360#issuecomment-6862429821 for details
+            if (is_first_step()) then
                call cs13_soil%AKXcacc%SetValueCopySM(num_soilc,filter_soilc,cf13_soil%AKallsoilc)
+            else
+               call cs13_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf13_soil%AKallsoilc)
             end if
          end if
 
@@ -641,11 +644,12 @@ contains
             if ( is_first_restart_step() )then
                call cs14_soil%AKXcacc%CopyIdxSM( cf14_soil%AKallsoilc )
             end if
-            if ( cs14_soil%AKXcacc%IsValuesSetSM() )then
-               call cs14_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
-            else
-            ! This should only happen on the first time-step
+            ! Use is_first_step() instead of IsValuesSetSM() to avoid race condition related to metadata
+            ! filling; see https://github.com/ESCOMP/CTSM/issues/3360#issuecomment-6862429821 for details
+            if (is_first_step()) then
                call cs14_soil%AKXcacc%SetValueCopySM(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
+            else
+               call cs14_soil%AKXcacc%SPMP_B_ACC(num_soilc,filter_soilc,cf14_soil%AKallsoilc)
             end if
          end if
 
@@ -656,11 +660,12 @@ contains
          if ( is_first_restart_step() )then
            call AKXnacc%CopyIdxSM( AKallsoiln )
          end if
-         if ( AKXnacc%IsValuesSetSM() )then
-            call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
-         else
-            ! This should only happen on the first time-step
+         ! Use is_first_step() instead of IsValuesSetSM() to avoid race condition related to metadata
+         ! filling; see https://github.com/ESCOMP/CTSM/issues/3360#issuecomment-6862429821 for details
+         if (is_first_step()) then
             call AKXnacc%SetValueCopySM(num_soilc,filter_soilc,AKallsoiln)
+         else
+            call AKXnacc%SPMP_B_ACC(num_soilc,filter_soilc,AKallsoiln)
          end if
 
          call t_startf('CN Soil matrix-calc. C capacity')
