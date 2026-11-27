@@ -63,12 +63,11 @@ contains
     real(r8),        intent(out) :: molecwght      ! molecular weight of the compound of intrest
     !
     ! LOCAL VARS:
-    integer :: hashkey, ndx
+    integer :: ndx
     character(len=120) :: errmes
     !-----------------------------------------------------------------------
 
-    hashkey = gen_hashkey(comp_name)
-    ndx = hash_table_indices(hashkey)
+    ndx = get_table_index(comp_name)
 
     if (ndx<1) then 
        errmes = 'megan_factors_get: '//trim(comp_name)//' compound not found in MEGAN table'
@@ -114,7 +113,7 @@ contains
     real(r8),allocatable :: class_factors(:)
 
     allocate(comp_factors_table(150))
-    allocate(hash_table_indices(tbl_hash_sz))
+    allocate(hash_table_indices(0:tbl_hash_sz-1)) ! gen_hashkey returns values on [0, tbl_hash_sz-1]
 
 
     call getfil(filename, locfn, 0)
@@ -215,17 +214,73 @@ contains
   subroutine bld_hash_table_indices( names )
     character(len=*),intent(in) :: names(:)
 
-    integer :: n, i, hashkey
+    integer :: n, i, hashkey, nprobe
 
     hash_table_indices(:) = 0
 
     n = size(names)
     do i=1,n
+       ! Resolve hash collisions by linear probing to the next free slot
+       ! (e.g., 'thujone_b' and 'cubebene_b' have the same hash key)
        hashkey = gen_hashkey(names(i))
+       nprobe = 0
+       do while (hash_table_indices(hashkey) /= 0)
+          if (names_match(names(hash_table_indices(hashkey)), names(i))) then
+             call endrun(msg='MEGAN factors file has duplicate compound name: '//trim(names(i))//' '// &
+                  errMsg(sourcefile, __LINE__))
+          end if
+          nprobe = nprobe + 1
+          if (nprobe >= tbl_hash_sz) then
+             call endrun(msg='MEGAN hash table is full: '//errMsg(sourcefile, __LINE__))
+          end if
+          hashkey = iand(hashkey+1, tbl_hash_sz-1)
+       end do
        hash_table_indices(hashkey) = i
     enddo
 
   endsubroutine bld_hash_table_indices
+
+  !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  integer function get_table_index( name )
+    ! Return the index in comp_names / comp_factors_table of compound name,
+    ! or 0 if it is not found. Follows the linear probing used in
+    ! bld_hash_table_indices and checks the stored name, so that compounds
+    ! with colliding hash keys are distinguished.
+    character(len=*), intent(in) :: name
+
+    integer :: hashkey, ndx, nprobe
+
+    get_table_index = 0
+    hashkey = gen_hashkey(name)
+    do nprobe = 1, tbl_hash_sz
+       ndx = hash_table_indices(hashkey)
+       if (ndx == 0) return
+       if (names_match(comp_names(ndx), name)) then
+          get_table_index = ndx
+          return
+       end if
+       hashkey = iand(hashkey+1, tbl_hash_sz-1)
+    end do
+
+  end function get_table_index
+
+  !-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  logical function names_match( name1, name2 )
+    ! Compare two compound names, ignoring trailing blanks and anything
+    ! after a null character (netCDF char padding)
+    character(len=*), intent(in) :: name1, name2
+
+    integer :: n1, n2
+
+    n1 = index(name1, achar(0)) - 1
+    if (n1 < 0) n1 = len(name1)
+    n2 = index(name2, achar(0)) - 1
+    if (n2 < 0) n2 = len(name2)
+    names_match = (trim(name1(1:n1)) == trim(name2(1:n2)))
+
+  end function names_match
 
   !-----------------------------------------------------------------------
   !-----------------------------------------------------------------------
@@ -235,13 +290,15 @@ contains
     integer,  intent(in) :: class_n
     real(r8), intent(in) :: molec_wght
 
-    integer :: hashkey, ndx
+    integer :: ndx
     integer :: nfactors
 
-    hashkey = gen_hashkey(name)
     nfactors = size(data)
 
-    ndx = hash_table_indices(hashkey)
+    ndx = get_table_index(name)
+    if (ndx < 1) then
+       call endrun(msg='MEGAN compound not found in hash table: '//trim(name)//' '//errMsg(sourcefile, __LINE__))
+    end if
 
     allocate (comp_factors_table(ndx)%eff(nfactors))
 

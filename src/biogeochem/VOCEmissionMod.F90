@@ -862,7 +862,7 @@ contains
        gamma_p_LDF = fsun_in * ( cp * alpha * par_sun_in * (1._r8 + alpha*alpha*par_sun_in*par_sun_in)**(-0.5_r8) )
        ! SHADE:
        alpha = ca1 - ca2 * log(par240_sha_in)
-       cp = ca3 * exp(ca2 * (par_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
+       cp = ca3 * exp(ca2 * (par24_sha_in-par0_shade))*par240_sha_in**(0.6_r8)
        gamma_p_LDF = gamma_p_LDF + (1._r8-fsun_in) * (cp*alpha*par_sha_in*(1._r8 + alpha*alpha*par_sha_in*par_sha_in)**(-0.5_r8))
     else
        ! With fixed alpha and cp (from MEGAN User's Guide):
@@ -1056,6 +1056,10 @@ contains
 
        if ( (elai240_in > 0.0_r8) .and. (elai240_in < 1.e30_r8) )then
           elai_prev = 2._r8*elai240_in-elai_in  ! have accumulated average lai over last 10 days
+          ! During rapid leaf-out elai can exceed 2*elai240, which would give a negative
+          ! previous LAI estimate and leaf-age fractions outside [0,1] (fnew > 1, fmat < 0).
+          ! A negative previous LAI is not physical; bound it at zero (all leaves new).
+          elai_prev = max(0._r8, elai_prev)
           if (elai_prev == elai_in) then
              fnew = 0.0_r8
              fgro = 0.0_r8
