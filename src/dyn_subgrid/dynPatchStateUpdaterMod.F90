@@ -76,6 +76,10 @@ module dynPatchStateUpdaterMod
      ! non-zero weight in this time step
      procedure, public :: patch_initiating
 
+     ! returns a column-level array of column weights on the gridcell prior to weight
+     ! updates (needed to convert per-column-area fluxes to per-gridcell-area)
+     procedure, public :: get_cwtgcell_old
+
   end type patch_state_updater_type
 
   interface patch_state_updater_type
@@ -395,6 +399,27 @@ contains
     end do
 
   end function old_weight_was_zero
+
+  !-----------------------------------------------------------------------
+  function get_cwtgcell_old(this, bounds) result(cwtgcell_old)
+    !
+    ! !DESCRIPTION:
+    ! Returns a column-level array of the column weights on the gridcell prior to weight
+    ! updates (as saved by the last call to set_old_weights)
+    !
+    ! !ARGUMENTS:
+    class(patch_state_updater_type), intent(in) :: this
+    type(bounds_type), intent(in) :: bounds
+    real(r8) :: cwtgcell_old(bounds%begc:bounds%endc)  ! function result
+    !
+    ! !LOCAL VARIABLES:
+
+    character(len=*), parameter :: subname = 'get_cwtgcell_old'
+    !-----------------------------------------------------------------------
+
+    cwtgcell_old(bounds%begc:bounds%endc) = this%cwtgcell_old(bounds%begc:bounds%endc)
+
+  end function get_cwtgcell_old
 
   !-----------------------------------------------------------------------
   function patch_grew(this, bounds)

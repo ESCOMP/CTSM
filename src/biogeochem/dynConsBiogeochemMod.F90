@@ -90,6 +90,7 @@ contains
     integer                       :: ier                           ! error code
     real(r8)                      :: dt                            ! land model time step (sec)
     real(r8), allocatable         :: dwt(:)                        ! change in patch weight (relative to gridcell)
+    real(r8), allocatable         :: cwtgcell_old(:)               ! column weight on the gridcell before weight updates
     real(r8), allocatable         :: dwt_leafc_seed(:)             ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_leafn_seed(:)             ! patch-level mass gain due to seeding of new area
     real(r8), allocatable         :: dwt_deadstemc_seed(:)         ! patch-level mass gain due to seeding of new area
@@ -729,37 +730,43 @@ contains
     end do
 
        ! calculate patch-to-gridcell slash fluxes into litter and CWD pools
-       ! Note that patch-level fluxes are stored per unit GRIDCELL area - thus, we don't
-       ! need to multiply by the patch's gridcell weight when translating patch-level
-       ! fluxes into gridcell-level fluxes.
-       
+       ! Note that the root-to-litter patch-level fluxes are stored per unit COLUMN area
+       ! (relative to the OLD column weight; see flux_out_col_area in
+       ! update_patch_state), so they must be multiplied by the old column weight to
+       ! express them per unit GRIDCELL area. The resulting patch-level slash fluxes are
+       ! then per unit GRIDCELL area and can be summed directly into gridcell fluxes.
+
+    allocate(cwtgcell_old(bounds%begc:bounds%endc))
+    cwtgcell_old(bounds%begc:bounds%endc) = patch_state_updater%get_cwtgcell_old(bounds)
+
     do p = bounds%begp, bounds%endp
        g = patch%gridcell(p)
+       c = patch%column(p)
 
        ! fine and coarse root to litter and CWD slash carbon fluxes
-       cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+       cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = cwtgcell_old(c) * ( &
                dwt_frootc_to_litter(p)/dt + &
                dwt_livecrootc_to_litter(p)/dt + &
-               dwt_deadcrootc_to_litter(p)/dt
+               dwt_deadcrootc_to_litter(p)/dt )
        cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
                cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
                cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
 
        if ( use_c13 ) then
-          c13_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+          c13_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = cwtgcell_old(c) * ( &
                   dwt_frootc13_to_litter(p)/dt + &
                   dwt_livecrootc13_to_litter(p)/dt + &
-                  dwt_deadcrootc13_to_litter(p)/dt
+                  dwt_deadcrootc13_to_litter(p)/dt )
           c13_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
                   c13_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
                   c13_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
        endif
 
        if ( use_c14 ) then
-          c14_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = &
+          c14_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p) = cwtgcell_old(c) * ( &
                   dwt_frootc14_to_litter(p)/dt + &
                   dwt_livecrootc14_to_litter(p)/dt + &
-                  dwt_deadcrootc14_to_litter(p)/dt
+                  dwt_deadcrootc14_to_litter(p)/dt )
           c14_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) = &
                   c14_cnveg_carbonflux_inst%dwt_slash_cflux_grc(g) + &
                   c14_cnveg_carbonflux_inst%dwt_slash_cflux_patch(p)
@@ -770,6 +777,7 @@ contains
     
     ! Deallocate patch-level flux arrays
     deallocate(dwt)
+    deallocate(cwtgcell_old)
     deallocate(dwt_leafc_seed)
     deallocate(dwt_leafn_seed)
     deallocate(dwt_deadstemc_seed)
