@@ -3891,6 +3891,20 @@ contains
                      ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1 EBK (11/26/2019)
                      !                                        and CNNStateUpdate1::NStateUpdate1
                   end if ! use_matrixcn
+               else
+                  ! Non-crop deciduous PFTs: drop all remaining leaf C on the last step of
+                  ! the offset period (the end point of the linearly increasing litterfall ramp)
+                  leafc_to_litter(p)  = t1 * leafc(p)  + cpool_to_leafc(p)
+                  if (use_matrixcn) then
+                     if (leafc(p) > 0._r8) then
+                        leafc_to_litter(p) = leafc(p) * matrix_update_phc(p,ileaf_to_iout_phc,leafc_to_litter(p) / leafc(p),dt,cnveg_carbonflux_inst,matrixcheck_ph,acc_ph)
+                     else
+                        leafc_to_litter(p) = 0._r8
+                     end if
+                  else
+                     ! NOTE: The non matrix version of this is in CNCStateUpdate1::CStateUpdate1
+                     !                                        and CNNStateUpdate1::NStateUpdate1
+                  end if ! use_matrixcn
                end if
             else
                t1 = dt * 2.0_r8 / (offset_counter(p) * offset_counter(p))
