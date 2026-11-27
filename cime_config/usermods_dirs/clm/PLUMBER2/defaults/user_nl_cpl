@@ -19,3 +19,7 @@
 !------------------------------------------------------------------------
 ! average year of all PLUMBER2 170 sites is 2007
 orb_iyear = 2007
+! For HIST compsets CMEPS uses orb_mode=variable_year with a default orb_iyear_align
+! of 1850, so align the orbit year with the model year here (orbit year = model year).
+! For 2000 (spin-up) compsets orb_mode=fixed_year and orb_iyear_align is ignored.
+orb_iyear_align = 2007
